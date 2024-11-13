@@ -1,0 +1,19 @@
+project(Atlas)
+
+add_library(rvm
+    OBJECT
+    RvmInsts.cpp
+    div.cpp
+    divu.cpp
+    divuw.cpp
+    divw.cpp
+    mul.cpp
+    mulh.cpp
+    mulhsu.cpp
+    mulhu.cpp
+    mulw.cpp
+    rem.cpp
+    remu.cpp
+    remuw.cpp
+    remw.cpp
+)

@@ -1,0 +1,25 @@
+[
+  {
+    "name": "fp_reg",
+    "num": 1000,
+    "desc": "description",
+    "size": 8,
+    "aliases": [],
+    "fields": {
+      "dp": {
+        "desc": "Double precision",
+        "low_bit": 0,
+        "high_bit": 63,
+        "readonly": false
+      },
+      "sp": {
+        "desc": "single precision",
+        "low_bit": 0,
+        "high_bit": 31,
+        "readonly": false
+      }
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  }
+]

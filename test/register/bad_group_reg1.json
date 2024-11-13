@@ -1,0 +1,13 @@
+[
+  {
+    "name": "x",
+    "num": 0,
+    "desc": "description",
+    "size": 4,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 1
+  }
+]

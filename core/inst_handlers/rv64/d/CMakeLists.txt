@@ -1,0 +1,42 @@
+project(Atlas)
+
+add_library(rvd
+    OBJECT
+    RvdInsts.cpp
+    fadd_d.cpp
+    fclass_d.cpp
+    fcvt_d_l.cpp
+    fcvt_d_lu.cpp
+    fcvt_d_s.cpp
+    fcvt_d_w.cpp
+    fcvt_d_wu.cpp
+    fcvt_l_d.cpp
+    fcvt_lu_d.cpp
+    fcvt_s_d.cpp
+    fcvt_w_d.cpp
+    fcvt_wu_d.cpp
+    fdiv_d.cpp
+    feq_d.cpp
+    fld.cpp
+    fle_d.cpp
+    flt_d.cpp
+    flw.cpp
+    fmadd_d.cpp
+    fmax_d.cpp
+    fmin_d.cpp
+    fmsub_d.cpp
+    fmul_d.cpp
+    fmv_d_x.cpp
+    fmv_w_x.cpp
+    fmv_x_d.cpp
+    fmv_x_w.cpp
+    fnmadd_d.cpp
+    fnmsub_d.cpp
+    fsd.cpp
+    fsgnj_d.cpp
+    fsgnjn_d.cpp
+    fsgnjx_d.cpp
+    fsqrt_d.cpp
+    fsub_d.cpp
+    fsw.cpp
+)

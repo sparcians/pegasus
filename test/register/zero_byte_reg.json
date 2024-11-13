@@ -1,0 +1,24 @@
+[
+  {
+    "name": "x",
+    "num": 0,
+    "desc": "description",
+    "size": 0,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_byte",
+    "num": 1006,
+    "desc": "description",
+    "size": 1,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  }
+]

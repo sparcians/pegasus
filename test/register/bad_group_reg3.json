@@ -1,0 +1,24 @@
+[
+  {
+    "name": "x",
+    "num": 0,
+    "desc": "description",
+    "size": 4,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "group_name",
+    "group_num": 1
+  },
+  {
+    "name": "y",
+    "num": 0,
+    "desc": "description",
+    "size": 4,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "different_group_name_for_same_num",
+    "group_num": 1
+  }
+]

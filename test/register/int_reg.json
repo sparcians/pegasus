@@ -1,0 +1,79 @@
+[
+  {
+    "name": "dummy_long_x5",
+    "num": 1000,
+    "desc": "description",
+    "size": 64,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_long_x4",
+    "num": 1001,
+    "desc": "description",
+    "size": 32,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_long_x3",
+    "num": 1002,
+    "desc": "description",
+    "size": 16,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_long_long",
+    "num": 1003,
+    "desc": "description",
+    "size": 8,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_long",
+    "num": 1004,
+    "desc": "description",
+    "size": 4,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_short",
+    "num": 1005,
+    "desc": "description",
+    "size": 2,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  },
+  {
+    "name": "dummy_byte",
+    "num": 1006,
+    "desc": "description",
+    "size": 1,
+    "aliases": [],
+    "fields": {
+    },
+    "group_name": "",
+    "group_num": 4294967295
+  }
+]
