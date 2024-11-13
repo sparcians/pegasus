@@ -63,6 +63,7 @@ else()
     message (STATUS "If needed, please provide the location where sparta is installed: -DSPARTA_SEARCH_DIR=<directory>")
   endif()
   set(CMAKE_MODULE_PATH "${SPARTA_SEARCH_DIR}/lib/cmake/sparta" ${CMAKE_MODULE_PATH})
+  include(${SPARTA_SEARCH_DIR}/lib/cmake/sparta/sparta-config.cmake)
 
   find_package(Sparta REQUIRED)
 
@@ -70,7 +71,7 @@ else()
     message (FATAL_ERROR "Sparta was not found in ${SPARTA_SEARCH_DIR}")
   else()
     message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
-    set(SPARTA_LIBS SPARTA::sparta)
+    set(SPARTA_LIBS ${Sparta_LIBS})
   endif()
 
   include_directories(${SPARTA_INCLUDE_DIRS})
