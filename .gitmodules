@@ -1,6 +1,6 @@
 [submodule "mavis"]
 	path = mavis
 	url = git@github.com:sparcians/mavis.git
-[submodule "ELFIO"]
-	path = ELFIO
+[submodule "elfio"]
+	path = elfio
 	url = git@github.com:serge1/ELFIO.git
