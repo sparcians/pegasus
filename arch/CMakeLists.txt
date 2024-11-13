@@ -13,11 +13,10 @@ set(AUTOGEN_RV64_REG_JSON_FILES
 )
 
 set(AUTOGEN_CSR_HEADERS
-  ${SIM_BASE}/arch/rv32/CSRBitMasks32.hpp 
-  ${SIM_BASE}/arch/rv32/CSRNums.hpp
-  ${SIM_BASE}/arch/rv32/CSRFieldIdxs32.hpp
-  ${SIM_BASE}/include/CSRBitMasks64.hpp
   ${SIM_BASE}/include/CSRNums.hpp
+  ${SIM_BASE}/include/CSRBitMasks32.hpp
+  ${SIM_BASE}/include/CSRFieldIdxs32.hpp
+  ${SIM_BASE}/include/CSRBitMasks64.hpp
   ${SIM_BASE}/include/CSRFieldIdxs64.hpp
 )
 
