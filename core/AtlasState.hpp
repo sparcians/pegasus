@@ -65,6 +65,14 @@ namespace atlas
 
         Addr getNextPc() const { return next_pc_; }
 
+        void setPrivMode(PrivMode priv_mode) { priv_mode_ = priv_mode; }
+
+        PrivMode getPrivMode() const { return priv_mode_; }
+
+        void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
+
+        PrivMode getNextPrivMode() const { return next_priv_mode_; }
+
         uint64_t assignUid() { return uid_++; }
 
         struct SimState
