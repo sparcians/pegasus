@@ -12,7 +12,7 @@ target_link_libraries(atlascosimlib
     atlasinsts
     atlassys
     atlassim
-    ${SPARTA_LIBS}
+    SPARTA::sparta
     mavis
 )
 
