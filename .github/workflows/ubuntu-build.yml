@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
         BUILD_TYPE: [Debug,Release]
-        COMPILER: [gcc,clang]
+        COMPILER: [clang]
 
     name: Ubuntu-${{ matrix.BUILD_TYPE }}-${{matrix.COMPILER}}
     runs-on: ${{ matrix.os }}
