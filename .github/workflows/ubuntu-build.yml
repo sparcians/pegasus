@@ -1,7 +1,7 @@
 on:
   pull_request:
     branches:
-      - master
+      - main
 
 env:
   CACHE_VERSION: v1
@@ -63,7 +63,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache-${{ github.ref_name }}
           restore-keys: |
-            ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache-master
+            ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache-main
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache
 
       - name: Setup Conda Environment
