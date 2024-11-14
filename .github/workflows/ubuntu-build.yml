@@ -12,7 +12,7 @@ jobs:
     strategy:
       # Strategy is a matrix of debug and release builds/regression
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         BUILD_TYPE: [Debug,Release]
         COMPILER: [gcc,clang]
 
