@@ -5,6 +5,6 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../mavis/json               ${CMAK
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../core/inst_handlers/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
 
 add_executable(Translate_test Translate_test.cpp)
-target_link_libraries(Translate_test atlascore atlasinsts atlassys atlassim ${SPARTA_LIBS} mavis)
+target_link_libraries(Translate_test atlassim atlascore atlasinsts atlassys SPARTA::sparta mavis)
 
 sparta_named_test(Translate_test_run Translate_test)

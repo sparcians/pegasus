@@ -1,6 +1,6 @@
 project(Atlas)
 
 add_library(atlassys
-    OBJECT
+    STATIC
     AtlasSystem.cpp
 )

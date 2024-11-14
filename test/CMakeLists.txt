@@ -1,6 +1,6 @@
 project(Atlas_Tests)
 
-# Enable testing 
+# Enable testing
 include(CTest)
 
 # Handy parallel processor library
