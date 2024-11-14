@@ -173,6 +173,12 @@ namespace atlas
         //! Next pc
         Addr next_pc_ = 0x0;
 
+        //! Current privilege mode
+        PrivMode priv_mode_ = PrivMode::MACHINE;
+
+        //! Next privilege mode
+        PrivMode next_priv_mode_ = PrivMode::INVALID;
+
         //! Unique instruction ID
         uint64_t uid_ = 0;
 
