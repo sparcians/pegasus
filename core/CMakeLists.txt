@@ -1,7 +1,7 @@
 project(Atlas)
 
 add_library(atlascore
-    OBJECT
+    STATIC
     AtlasState.cpp
     ActionTags.cpp
     Fetch.cpp

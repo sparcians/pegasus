@@ -11,7 +11,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER)
     set(CMAKE_CXX_COMPILER "clang++")
 endif()
 
-set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+# HDF5 and PThreads do not have static libraries
+#set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
@@ -41,38 +42,46 @@ else()
     -Woverloaded-virtual -Wmissing-field-initializers -pipe)
 endif()
 
+# Use ccache if installed
+find_program (CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+  set_property (GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+  message ("-- Using ccache")
+endif ()
+
 ################################################################################
 # Set up Sparta
 
 set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 
-if(BUILD_SPARTA_FROM_SOURCE)
-  message (STATUS "Building SPARTA from source in ${SPARTA_SEARCH_DIR}")
-  add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta")
-  include_directories(${SPARTA_SEARCH_DIR})
-  include(${SPARTA_SEARCH_DIR}/cmake/SpartaTestingMacros.cmake)
-  include(${SPARTA_SEARCH_DIR}/cmake/sparta-config.cmake)
+# To build/use a side sparta, the suggestion is to install sparta in a
+# local directory and set SPARTA_SEARCH_DIR to that:
+#
+#   cd /my/path/to/map/sparta/build
+#   cmake --install . --prefix .
+#
+#   cd atlas/build
+#   SPARTA_SEARCH_DIR=/my/path/to/map/sparta/build cmake ....args
+#
+if(IS_DIRECTORY ${SPARTA_SEARCH_DIR})
+  message (STATUS "Using '${SPARTA_SEARCH_DIR}' for sparta install")
+elseif(DEFINED ENV{CONDA_PREFIX})
+  message (STATUS "Looking for SPARTA in the conda environment: '$ENV{CONDA_PREFIX}'")
+  set(SPARTA_SEARCH_DIR $ENV{CONDA_PREFIX})
 else()
-  if(IS_DIRECTORY ${SPARTA_SEARCH_DIR})
-    message (STATUS "Using '${SPARTA_SEARCH_DIR}' for sparta install")
-  elseif(DEFINED ENV{CONDA_PREFIX})
-    message (STATUS "Looking for SPARTA in the conda environment: '$ENV{CONDA_PREFIX}'")
-    set(SPARTA_SEARCH_DIR $ENV{CONDA_PREFIX})
-  else()
-    message (STATUS "If needed, please provide the location where sparta is installed: -DSPARTA_SEARCH_DIR=<directory>")
-  endif()
-  set(CMAKE_MODULE_PATH "${SPARTA_SEARCH_DIR}/lib/cmake/sparta" ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-
-  find_package(Sparta REQUIRED)
-
-  if (NOT SPARTA_FOUND)
-    message (FATAL_ERROR "Sparta was not found in ${SPARTA_SEARCH_DIR}")
-  else()
-    message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
-  endif()
-
-  include_directories(${SPARTA_INCLUDE_DIRS})
+  message (STATUS "If needed, please provide the location where sparta is installed: -DSPARTA_SEARCH_DIR=<directory>")
 endif()
+set(CMAKE_MODULE_PATH "${SPARTA_SEARCH_DIR}/lib/cmake/sparta" ${CMAKE_MODULE_PATH})
+
+find_package(Sparta REQUIRED)
+
+if (NOT SPARTA_FOUND)
+  message (FATAL_ERROR "Sparta was not found in ${SPARTA_SEARCH_DIR}")
+else()
+  message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
+endif()
+
+include_directories(${SPARTA_INCLUDE_DIRS})
 
 ################################################################################
 

@@ -1,17 +1,15 @@
 project(AtlasCoSim)
 
-add_library(atlascosim
-    OBJECT
+add_library(atlascosimlib
+    STATIC
     AtlasCoSim.cpp
 )
 
-add_library(atlascosimlib)
 target_link_libraries(atlascosimlib
-    atlascosim
+    atlassim
     atlascore
     atlasinsts
     atlassys
-    atlassim
     SPARTA::sparta
     mavis
 )

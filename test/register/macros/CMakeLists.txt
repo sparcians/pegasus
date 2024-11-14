@@ -1,7 +1,7 @@
 project(AtlasRegisterMacros_Test)
 
 add_executable(AtlasRegisterMacros_test RegisterMacros_test.cpp)
-target_link_libraries(AtlasRegisterMacros_test atlascore atlasinsts atlassys atlassim SPARTA::sparta mavis)
+target_link_libraries(AtlasRegisterMacros_test atlassim atlascore atlasinsts atlassys SPARTA::sparta mavis)
 
 sparta_named_test(RegisterMacros_test_run AtlasRegisterMacros_test)
 
