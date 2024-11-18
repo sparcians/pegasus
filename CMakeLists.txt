@@ -33,12 +33,12 @@ endif()
 if(NOT BUILD_SPARTA_FROM_SOURCE)
   add_compile_options ( -Werror
     -Wall -Wextra -Winline -Winit-self -Wunused-function
-    -Wuninitialized -Wsequence-point -Winline -Wunknown-pragmas
+    -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
 else()
   add_compile_options (
     -Winline -Winit-self -Wunused-function
-    -Wuninitialized -Wsequence-point -Winline -Wunknown-pragmas
+    -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wmissing-field-initializers -pipe)
 endif()
 
@@ -72,7 +72,6 @@ else()
   message (STATUS "If needed, please provide the location where sparta is installed: -DSPARTA_SEARCH_DIR=<directory>")
 endif()
 set(CMAKE_MODULE_PATH "${SPARTA_SEARCH_DIR}/lib/cmake/sparta" ${CMAKE_MODULE_PATH})
-
 find_package(Sparta REQUIRED)
 
 if (NOT SPARTA_FOUND)

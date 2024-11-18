@@ -49,6 +49,8 @@ namespace atlas
         {
         }
 
+        ~ActionGroup();
+
         const std::string & getName() const { return name_; }
 
         const std::vector<Action> & getActions() const { return action_group_; };

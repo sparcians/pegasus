@@ -51,6 +51,9 @@ namespace atlas
 
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
 
+        // Not default -- defined in source file to reduce massive inlining
+        ~AtlasState();
+
         uint64_t getXlen() const { return xlen_; }
 
         HartId getHartId() const { return hart_id_; }

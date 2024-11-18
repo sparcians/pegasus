@@ -64,6 +64,9 @@ namespace atlas
         stop_sim_action_group_.addAction(stop_action_);
     }
 
+    // Not default -- defined in source file to reduce massive inlining
+    AtlasState::~AtlasState() {}
+
     void AtlasState::onBindTreeEarly_()
     {
         fetch_unit_ = getContainer()->getChild("fetch")->getResourceAs<Fetch*>();
