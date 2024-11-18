@@ -4,7 +4,7 @@
 
 /*!
  * \file AtlasAllocators.hpp
-  * \brief Defines a general TreeNode that contains all allocators used
+ * \brief Defines a general TreeNode that contains all allocators used
  *        in simulation
  */
 
@@ -22,29 +22,32 @@ namespace atlas
      */
     class AtlasAllocators : public sparta::TreeNode
     {
-    public:
+      public:
         static constexpr char name[] = "allocators";
 
-        AtlasAllocators(sparta::TreeNode *node) :
+        AtlasAllocators(sparta::TreeNode* node) :
             sparta::TreeNode(node, name, "Allocators used in simulation")
-        {}
-
-        static AtlasAllocators * getAllocators(sparta::TreeNode *node)
         {
-            AtlasAllocators * allocators = nullptr;
-            if(node)
+        }
+
+        static AtlasAllocators* getAllocators(sparta::TreeNode* node)
+        {
+            AtlasAllocators* allocators = nullptr;
+            if (node)
             {
-                if(node->hasChild(AtlasAllocators::name)) {
+                if (node->hasChild(AtlasAllocators::name))
+                {
                     allocators = node->getChildAs<AtlasAllocators>(AtlasAllocators::name);
                 }
-                else {
+                else
+                {
                     return getAllocators(node->getParent());
                 }
             }
             return allocators;
         }
 
-        AtlasInstAllocator      inst_allocator      {3000, 2500};
-        AtlasExtractorAllocator extractor_allocator {3000, 2500};
+        AtlasInstAllocator inst_allocator{3000, 2500};
+        AtlasExtractorAllocator extractor_allocator{3000, 2500};
     };
-}
+} // namespace atlas

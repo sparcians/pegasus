@@ -7,26 +7,26 @@
 #include "sparta/utils/SpartaAssert.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
-
-
 namespace atlas
 {
 #ifndef COSIMLOG
 #define COSIMLOG(msg) SPARTA_LOG(cosim_logger_, msg)
 #endif
 
-    CoSimMemoryInterface::CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode * memory) :
+    CoSimMemoryInterface::CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode* memory) :
         memory_(memory)
     {
     }
 
-    bool CoSimMemoryInterface::peek(HartId, Addr paddr, size_t size, std::vector<uint8_t> & buffer) const
+    bool CoSimMemoryInterface::peek(HartId, Addr paddr, size_t size,
+                                    std::vector<uint8_t> & buffer) const
     {
         const bool success = memory_->tryPeek(paddr, size, buffer.data());
         return success;
     }
 
-    bool CoSimMemoryInterface::read(HartId, Addr paddr, size_t size, std::vector<uint8_t> & buffer) const
+    bool CoSimMemoryInterface::read(HartId, Addr paddr, size_t size,
+                                    std::vector<uint8_t> & buffer) const
     {
         const bool success = memory_->tryRead(paddr, size, buffer.data());
         return success;
@@ -37,7 +37,7 @@ namespace atlas
         const size_t size = buffer.size() * sizeof(uint8_t);
         const bool success = memory_->tryPoke(paddr, size, buffer.data());
         return success;
-     }
+    }
 
     bool CoSimMemoryInterface::write(HartId, Addr paddr, std::vector<uint8_t> & buffer) const
     {
@@ -46,31 +46,30 @@ namespace atlas
         return success;
     }
 
-    AtlasCoSim::AtlasCoSim(sparta::Scheduler * scheduler, const std::string & workload, uint64_t ilimit) :
+    AtlasCoSim::AtlasCoSim(sparta::Scheduler* scheduler, const std::string & workload,
+                           uint64_t ilimit) :
         AtlasSim(scheduler, workload, ilimit),
         cosim_logger_(getRoot(), "cosim", "Atlas Cosim Logger")
 
     {
-        buildTree(); // Calls AtlasSim::buildTree_
+        buildTree();     // Calls AtlasSim::buildTree_
         configureTree(); // Calls AtlasSim::configureTree_
-        finalizeTree(); // Calls AtlasCoSim::bindTree_
+        finalizeTree();  // Calls AtlasCoSim::bindTree_
     }
 
-    AtlasCoSim::~AtlasCoSim()
-    {
-        getRoot()->enterTeardown();
-    }
+    AtlasCoSim::~AtlasCoSim() { getRoot()->enterTeardown(); }
 
     void AtlasCoSim::bindTree_()
     {
         AtlasSim::bindTree_();
 
         const uint32_t num_harts = 1;
-        for(uint32_t hart_id = 0;  hart_id < num_harts; ++hart_id)
+        for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
         {
             // Get Fetch for each hart
             const std::string core_name = "core" + std::to_string(hart_id);
-            fetch_.emplace_back(getRoot()->getChild(core_name + ".fetch")->getResourceAs<atlas::Fetch>());
+            fetch_.emplace_back(
+                getRoot()->getChild(core_name + ".fetch")->getResourceAs<atlas::Fetch>());
 
             // Create and attach CoSimObserver to AtlasState for each hart
             cosim_observer_.emplace_back(new CoSimObserver());
@@ -95,11 +94,11 @@ namespace atlas
         const cosim::Event event = cosim_observer_.at(hart_id)->getLastEvent();
         event_list_.at(hart_id).emplace_back(event);
         COSIMLOG(event);
-        if(event.getRegisterReads().empty() == false)
+        if (event.getRegisterReads().empty() == false)
         {
             COSIMLOG("    " << event.getRegisterReads());
         }
-        if(event.getRegisterWrites().empty() == false)
+        if (event.getRegisterWrites().empty() == false)
         {
             COSIMLOG("    " << event.getRegisterWrites());
         }
@@ -125,27 +124,23 @@ namespace atlas
     void AtlasCoSim::commit(HartId hart_id)
     {
         const cosim::Event & event = event_list_.at(hart_id).front();
-        //COSIMLOG(event);
-        sparta_assert(event.isDone(),
-            "Cannot commit an event that isn't done! " << event);
+        // COSIMLOG(event);
+        sparta_assert(event.isDone(), "Cannot commit an event that isn't done! " << event);
 
         last_committed_event_.at(hart_id) = event;
         event_list_.at(hart_id).pop_front();
         // TODO: commit store writes
     }
 
-    void AtlasCoSim::commit(const cosim::Event * event)
+    void AtlasCoSim::commit(const cosim::Event* event)
     {
         const HartId hart_id = event->getHartId();
 
         // Find event in the event list
         const cosim::EventList & event_list = event_list_.at(hart_id);
         auto it = std::find_if(event_list.begin(), event_list.end(),
-            [event](const cosim::Event& e)
-            {
-                return e.getEuid() == event->getEuid();
-            }
-        );
+                               [event](const cosim::Event & e)
+                               { return e.getEuid() == event->getEuid(); });
         sparta_assert(it != event_list.end(), "Event not found in event list!");
 
         // Commit all events up to and including the event
@@ -157,37 +152,34 @@ namespace atlas
         COSIMLOG("Number of events committed: " << num_events_to_commit);
     }
 
-    void AtlasCoSim::commitStoreWrite(const cosim::Event *)
+    void AtlasCoSim::commitStoreWrite(const cosim::Event*)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void AtlasCoSim::commitStoreWrite(const cosim::Event *, Addr)
+    void AtlasCoSim::commitStoreWrite(const cosim::Event*, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void AtlasCoSim::dropStoreWrite(const cosim::Event *)
+    void AtlasCoSim::dropStoreWrite(const cosim::Event*)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void AtlasCoSim::dropStoreWrite(const cosim::Event *, Addr)
+    void AtlasCoSim::dropStoreWrite(const cosim::Event*, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void AtlasCoSim::flush(const cosim::Event *, bool)
+    void AtlasCoSim::flush(const cosim::Event*, bool)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    cosim::MemoryInterface * AtlasCoSim::getMemoryInterface()
-    {
-        return cosim_memory_if_;
-    }
+    cosim::MemoryInterface* AtlasCoSim::getMemoryInterface() { return cosim_memory_if_; }
 
-    void AtlasCoSim::setMemoryInterface(cosim::MemoryInterface *)
+    void AtlasCoSim::setMemoryInterface(cosim::MemoryInterface*)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
@@ -218,10 +210,7 @@ namespace atlas
         state_.at(hart_id)->setPc(addr);
     }
 
-    Addr AtlasCoSim::getPc(HartId hart_id) const
-    {
-        return state_.at(hart_id)->getPc();
-    }
+    Addr AtlasCoSim::getPc(HartId hart_id) const { return state_.at(hart_id)->getPc(); }
 
     void AtlasCoSim::setPrivilegeMode(HartId, PrivMode)
     {
@@ -259,12 +248,12 @@ namespace atlas
         return state_.at(hart_id)->getSimState()->inst_count - getNumUncommittedEvents(hart_id);
     }
 
-    const cosim::Event& AtlasCoSim::getLastCommittedEvent(HartId hart_id) const
+    const cosim::Event & AtlasCoSim::getLastCommittedEvent(HartId hart_id) const
     {
         return last_committed_event_.at(hart_id);
     }
 
-    const cosim::EventList& AtlasCoSim::getUncommittedEvents(HartId hart_id) const
+    const cosim::EventList & AtlasCoSim::getUncommittedEvents(HartId hart_id) const
     {
         return event_list_.at(hart_id);
     }
@@ -274,7 +263,7 @@ namespace atlas
         return event_list_.at(hart_id).size();
     }
 
-    uint64_t AtlasCoSim::getNumUncommittedWrites(HartId)  const
+    uint64_t AtlasCoSim::getNumUncommittedWrites(HartId) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }

@@ -20,7 +20,7 @@ namespace atlas::cosim
      * \class CoSim
      *
      * TODO
-     * 
+     *
      * Event
      *
      * Event List (Step, Commit and Flush)
@@ -30,7 +30,7 @@ namespace atlas::cosim
      */
     class CoSim
     {
-    public:
+      public:
         //! Allow derivation
         virtual ~CoSim() {}
 
@@ -87,7 +87,7 @@ namespace atlas::cosim
          * \brief Commit the event and all older events in the event list
          * \param event The event to commit
          */
-        virtual void commit(const cosim::Event * event) = 0;
+        virtual void commit(const cosim::Event* event) = 0;
 
         /**
          * \brief Commit the memory write(s) of a store instruction to memory
@@ -101,7 +101,7 @@ namespace atlas::cosim
          *       the comitStoreWrite(event, paddr) method or drop their memory writes using the
          *       dropStoreWrite(event) and dropStoreWrite(event, paddr) methods.
          */
-        virtual void commitStoreWrite(const cosim::Event * event) = 0;
+        virtual void commitStoreWrite(const cosim::Event* event) = 0;
 
         /**
          * \brief Commit a specified memory write of a store instruction
@@ -116,20 +116,20 @@ namespace atlas::cosim
          *       the comitStoreWrite(event, paddr) method or drop their memory writes using the
          *       dropStoreWrite(event) and dropStoreWrite(event, paddr) methods.
          */
-        virtual void commitStoreWrite(const cosim::Event * event, Addr paddr) = 0;
+        virtual void commitStoreWrite(const cosim::Event* event, Addr paddr) = 0;
 
         /**
          * \brief Drop a store event's memory write(s)
          * \param event The store event with memory write(s) to drop
          */
-        virtual void dropStoreWrite(const cosim::Event * event) = 0;
+        virtual void dropStoreWrite(const cosim::Event* event) = 0;
 
         /**
          * \brief Drop a store event's memory write to the specified physical address
          * \param event The store event with memory write(s) to drop
          * \param paddr The physical address of the memory write to drop
          */
-        virtual void dropStoreWrite(const cosim::Event * event, Addr paddr) = 0;
+        virtual void dropStoreWrite(const cosim::Event* event, Addr paddr) = 0;
 
         /**
          * \brief Flush the event and all younger uncommitted events
@@ -140,7 +140,7 @@ namespace atlas::cosim
          *       write(s) and removes it from the event list. Events will be flushed from youngest
          *       to oldest.
          */
-        virtual void flush(const cosim::Event * event, bool flush_younger_only = false) = 0;
+        virtual void flush(const cosim::Event* event, bool flush_younger_only = false) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Memory Interface
@@ -149,13 +149,13 @@ namespace atlas::cosim
          * \brief Get the pointer to the cosim's memory interface
          * \return Pointer to the cosim's memory interface
          */
-        virtual cosim::MemoryInterface * getMemoryInterface() = 0;
-        
+        virtual cosim::MemoryInterface* getMemoryInterface() = 0;
+
         /**
          * \brief Set the cosim's memory interface
          * \param mem_if Pointer to a cosim::MemoryInterface object
          */
-        virtual void setMemoryInterface(cosim::MemoryInterface * mem_if) = 0;
+        virtual void setMemoryInterface(cosim::MemoryInterface* mem_if) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Program State
@@ -190,10 +190,10 @@ namespace atlas::cosim
         // Debug
 
         virtual uint64_t getNumCommittedEvents(HartId hart) const = 0;
-        virtual const cosim::Event& getLastCommittedEvent(HartId hart) const = 0;
-        virtual const cosim::EventList& getUncommittedEvents(HartId hart) const = 0;
+        virtual const cosim::Event & getLastCommittedEvent(HartId hart) const = 0;
+        virtual const cosim::EventList & getUncommittedEvents(HartId hart) const = 0;
         virtual uint64_t getNumUncommittedEvents(HartId hart) const = 0;
-        virtual uint64_t getNumUncommittedWrites(HartId hart)  const = 0;
+        virtual uint64_t getNumUncommittedWrites(HartId hart) const = 0;
     };
 
     /**
@@ -204,4 +204,4 @@ namespace atlas::cosim
      * \todo Need to define extension for cosim params so we can sue yamls as config files
      */
     std::unique_ptr<CoSim> createCoSimInstance(const std::string & config_yaml);
-}
+} // namespace atlas::cosim

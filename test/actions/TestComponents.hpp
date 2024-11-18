@@ -11,20 +11,23 @@ namespace atlas
 {
     class AtlasInst
     {
-    public:
+      public:
         using base_type = AtlasInst;
 
         AtlasInst(const uint64_t uid, const std::string & mnemonic, const bool is_wfi = false) :
             uid_(uid),
             mnemonic_(mnemonic),
             is_wfi_(is_wfi)
-        {}
+        {
+        }
 
         uint64_t getUid() const { return uid_; }
+
         const std::string & getMnemonic() const { return mnemonic_; }
+
         bool isWfi() const { return is_wfi_; }
 
-    private:
+      private:
         const uint64_t uid_;
         const std::string mnemonic_;
         const bool is_wfi_;
@@ -34,42 +37,44 @@ namespace atlas
 
     class AtlasState
     {
-    public:
+      public:
         using base_type = AtlasState;
 
-        AtlasState()
-        {
-            reset();
-        }
+        AtlasState() { reset(); }
 
         void incrUid() { ++uid_; }
+
         uint64_t getUid() const { return uid_; }
 
         void incrPc() { pc_ += 4; }
+
         uint64_t getPc() const { return pc_; }
 
         void setCurrentInst(const AtlasInstPtr & inst_ptr) { current_inst_ptr_ = inst_ptr; }
+
         const AtlasInstPtr & getCurrentInst() const { return current_inst_ptr_; }
 
         void incrNumInstsExecuted() { ++num_insts_executed_; }
+
         uint64_t getNumInstsExecuted() const { return num_insts_executed_; }
 
         void incrNumActionsExecuted() { ++num_actions_executed_; }
+
         uint64_t getNumActionsExecuted() const { return num_actions_executed_; }
 
-        atlas::ActionGroup * dummy_action(atlas::AtlasState * state)
+        atlas::ActionGroup* dummy_action(atlas::AtlasState* state)
         {
-            (void) state;
+            (void)state;
             std::cout << "Executing dummy action" << std::endl;
             ++num_actions_executed_;
             return nullptr;
         }
 
-        atlas::ActionGroup * getStopActionGroup() { return &stop_sim; }
+        atlas::ActionGroup* getStopActionGroup() { return &stop_sim; }
 
-        atlas::ActionGroup * stopSim(AtlasState * state)
+        atlas::ActionGroup* stopSim(AtlasState* state)
         {
-            (void) state;
+            (void)state;
             std::cout << "Num insts executed: " << num_insts_executed_ << std::endl;
             std::cout << "Num actions executed: " << num_actions_executed_ << std::endl;
             std::cout << std::endl;
@@ -87,28 +92,28 @@ namespace atlas
             num_actions_executed_ = 0;
         }
 
-    private:
+      private:
         uint64_t uid_;
         atlas::Addr pc_;
         AtlasInstPtr current_inst_ptr_;
 
-        atlas::ActionGroup stop_sim {"stop_sim",
-            atlas::Action::createAction<&atlas::AtlasState::stopSim>(this, "StopSim", atlas::ActionTags::STOP_SIM_TAG)
-        };
+        atlas::ActionGroup stop_sim{"stop_sim",
+                                    atlas::Action::createAction<&atlas::AtlasState::stopSim>(
+                                        this, "StopSim", atlas::ActionTags::STOP_SIM_TAG)};
 
         // For testing
         uint32_t num_insts_executed_;
         uint32_t num_actions_executed_;
     };
-}
+} // namespace atlas
 
-std::ostream& operator<<(std::ostream& os, const atlas::AtlasInst & inst)
+std::ostream & operator<<(std::ostream & os, const atlas::AtlasInst & inst)
 {
     os << inst.getMnemonic() << " uid:" << std::dec << inst.getUid();
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const atlas::AtlasInstPtr & inst)
+std::ostream & operator<<(std::ostream & os, const atlas::AtlasInstPtr & inst)
 {
     os << *inst;
     return os;
@@ -117,37 +122,35 @@ std::ostream& operator<<(std::ostream& os, const atlas::AtlasInstPtr & inst)
 // Base Unit class
 class Unit
 {
-public:
+  public:
     using base_type = Unit;
 
-    Unit(const std::string name) :
-        name_(name)
-    {}
+    Unit(const std::string name) : name_(name) {}
 
-    virtual ~Unit() {};
+    virtual ~Unit(){};
 
     const std::string & getName() const { return name_; }
 
-private:
+  private:
     const std::string name_;
 };
 
 class FetchUnit : public Unit
 {
-public:
-    FetchUnit() :
-        Unit("Fetch")
+  public:
+    FetchUnit() : Unit("Fetch")
     {
         // Initialize a fake workload
         atlas::Addr pc = 0;
-        while(pc < 0x12) {
+        while (pc < 0x12)
+        {
             workload_[pc] = "nop";
             pc += 4;
         }
         workload_[pc] = "wfi";
     }
 
-    atlas::ActionGroup * fetch_inst(atlas::AtlasState * state)
+    atlas::ActionGroup* fetch_inst(atlas::AtlasState* state)
     {
         // Set the current inst, using the PC as an index
         const atlas::Addr pc = state->getPc();
@@ -168,21 +171,19 @@ public:
         return nullptr;
     }
 
-private:
+  private:
     std::map<atlas::Addr, std::string> workload_;
     std::vector<atlas::AtlasInstPtr> fetched_insts_;
 };
 
 class TranslateUnit : public Unit
 {
-public:
-    TranslateUnit() :
-        Unit("Translate")
-    {}
+  public:
+    TranslateUnit() : Unit("Translate") {}
 
-    atlas::ActionGroup * translate_addr(atlas::AtlasState * state)
+    atlas::ActionGroup* translate_addr(atlas::AtlasState* state)
     {
-        //std::cout << "Translating" << std::endl;
+        // std::cout << "Translating" << std::endl;
         state->incrNumActionsExecuted();
 
         // Always go to Decode
@@ -192,14 +193,12 @@ public:
 
 class DecodeUnit : public Unit
 {
-public:
-    DecodeUnit() :
-        Unit("Decode")
-    {}
+  public:
+    DecodeUnit() : Unit("Decode") {}
 
-    atlas::ActionGroup * decode_inst(atlas::AtlasState * state)
+    atlas::ActionGroup* decode_inst(atlas::AtlasState* state)
     {
-        //std::cout << "Decoding" << std::endl;
+        // std::cout << "Decoding" << std::endl;
         state->incrNumActionsExecuted();
 
         // Always go to Execute
@@ -209,30 +208,28 @@ public:
 
 class ExecuteUnit : public Unit
 {
-public:
-    ExecuteUnit(atlas::ActionGroup * atlas_core) :
-        Unit("Execute"),
-        atlas_core_(atlas_core)
-    {}
+  public:
+    ExecuteUnit(atlas::ActionGroup* atlas_core) : Unit("Execute"), atlas_core_(atlas_core) {}
 
-    atlas::ActionGroup * execute_inst(atlas::AtlasState * state)
+    atlas::ActionGroup* execute_inst(atlas::AtlasState* state)
     {
         // Get current inst
         const atlas::AtlasInstPtr inst = state->getCurrentInst();
 
         auto inst_action_group_it = inst_action_groups_.find(inst->getMnemonic());
-        if(inst_action_group_it == inst_action_groups_.end())
+        if (inst_action_group_it == inst_action_groups_.end())
         {
             auto ret = inst_action_groups_.insert({inst->getMnemonic(), {inst->getMnemonic()}});
             sparta_assert(ret.second == true,
-                "Failed to create instruction ActionGroup for " << inst);
+                          "Failed to create instruction ActionGroup for " << inst);
 
             // Create an ActionGroup for the current instruction
             inst_action_group_it = ret.first;
             atlas::ActionGroup & inst_action_group = inst_action_group_it->second;
-            inst_action_group.addAction(atlas::Action::createAction<&ExecuteUnit::inst_handler>(this, inst->getMnemonic().c_str()));
+            inst_action_group.addAction(atlas::Action::createAction<&ExecuteUnit::inst_handler>(
+                this, inst->getMnemonic().c_str()));
 
-            if(inst->isWfi())
+            if (inst->isWfi())
             {
                 inst_action_group.setNextActionGroup(state->getStopActionGroup());
             }
@@ -249,7 +246,7 @@ public:
         return &inst_action_group_it->second;
     }
 
-    atlas::ActionGroup * inst_handler(atlas::AtlasState * state)
+    atlas::ActionGroup* inst_handler(atlas::AtlasState* state)
     {
         const atlas::AtlasInstPtr & inst = state->getCurrentInst();
         std::cout << "Executing " << inst << std::endl;
@@ -263,7 +260,7 @@ public:
         return nullptr;
     }
 
-    private:
-        atlas::ActionGroup * atlas_core_;
-        std::map<std::string, atlas::ActionGroup> inst_action_groups_;
+  private:
+    atlas::ActionGroup* atlas_core_;
+    std::map<std::string, atlas::ActionGroup> inst_action_groups_;
 };

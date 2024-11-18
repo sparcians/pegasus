@@ -150,12 +150,14 @@ namespace atlas
         class_name = "Rv" + ext_str + "Insts"
 
         inst_handler_string = f"""#include \"core/inst_handlers/{self.isa_string}/{ext_str}/{class_name}.hpp\"
-#include \"core/ActionGroup.hpp\"
-#include \"core/AtlasState.hpp\"
-#include \"core/AtlasInst.hpp\"
+//#include \"core/ActionGroup.hpp\"
+//#include \"core/AtlasState.hpp\"
+//#include \"core/AtlasInst.hpp\"
 
 namespace atlas
 {{"""
+        
+        inst_handler_string += "\n    class AtlasState;\n\n"
 
         if inst["memory"]:
             inst_handler_string += f"""

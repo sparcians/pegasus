@@ -44,27 +44,27 @@ void testConvertToByteVector()
 void testConvertFromByteVector()
 {
     {
-        const std::vector<uint8_t> byte_vector {0xef, 0xbe, 0xad, 0xde, 0x0, 0x0, 0x0, 0x0};
+        const std::vector<uint8_t> byte_vector{0xef, 0xbe, 0xad, 0xde, 0x0, 0x0, 0x0, 0x0};
         const uint64_t value = atlas::convertFromByteVector<uint64_t>(byte_vector);
         EXPECT_EQUAL(value, 0xdeadbeef);
     }
     {
-        const std::vector<uint8_t> byte_vector {0x78, 0x56, 0x34, 0x12};
+        const std::vector<uint8_t> byte_vector{0x78, 0x56, 0x34, 0x12};
         const uint32_t value = atlas::convertFromByteVector<uint32_t>(byte_vector);
         EXPECT_EQUAL(value, 0x12345678);
     }
     {
-        const std::vector<uint8_t> byte_vector {0xcd, 0xab};
+        const std::vector<uint8_t> byte_vector{0xcd, 0xab};
         const uint16_t value = atlas::convertFromByteVector<uint16_t>(byte_vector);
         EXPECT_EQUAL(value, 0xabcd);
     }
     {
-        const std::vector<uint8_t> byte_vector {0xff};
+        const std::vector<uint8_t> byte_vector{0xff};
         const uint8_t value = atlas::convertFromByteVector<uint8_t>(byte_vector);
         EXPECT_EQUAL(value, 0xff);
     }
     {
-        const std::vector<uint8_t> byte_vector {0xff};
+        const std::vector<uint8_t> byte_vector{0xff};
         EXPECT_THROW(atlas::convertFromByteVector<uint64_t>(byte_vector));
     }
 }
