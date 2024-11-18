@@ -135,7 +135,7 @@ add_custom_target(clangformat
   WORKING_DIRECTORY
      ${CMAKE_SOURCE_DIR}
   COMMENT
-     "Formatting ${prefix} with ${CLANGFORMAT_EXECUTABLE} ..."
+     "Formatting Atlas with ${CLANGFORMAT_EXECUTABLE} ..."
   )
 
 add_custom_target(clangformat-check
@@ -145,5 +145,5 @@ add_custom_target(clangformat-check
   WORKING_DIRECTORY
      ${CMAKE_SOURCE_DIR}
   COMMENT
-     "Formatting ${prefix} with ${CLANGFORMAT_EXECUTABLE} ..."
+     "Formatting Atlas with ${CLANGFORMAT_EXECUTABLE} ..."
   )
