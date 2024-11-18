@@ -51,6 +51,9 @@ namespace atlas
 
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
 
+        // Not default -- defined in source file to reduce massive inlining
+        ~AtlasState();
+
         uint64_t getXlen() const { return xlen_; }
 
         HartId getHartId() const { return hart_id_; }
@@ -64,6 +67,14 @@ namespace atlas
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
+
+        void setPrivMode(PrivMode priv_mode) { priv_mode_ = priv_mode; }
+
+        PrivMode getPrivMode() const { return priv_mode_; }
+
+        void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
+
+        PrivMode getNextPrivMode() const { return next_priv_mode_; }
 
         uint64_t assignUid() { return uid_++; }
 
@@ -172,6 +183,12 @@ namespace atlas
 
         //! Next pc
         Addr next_pc_ = 0x0;
+
+        //! Current privilege mode
+        PrivMode priv_mode_ = PrivMode::MACHINE;
+
+        //! Next privilege mode
+        PrivMode next_priv_mode_ = PrivMode::INVALID;
 
         //! Unique instruction ID
         uint64_t uid_ = 0;

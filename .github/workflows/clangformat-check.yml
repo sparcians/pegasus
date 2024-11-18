@@ -6,17 +6,17 @@ on:
 env:
   CACHE_VERSION: v1
 
-name: Regress Atlas on Ubuntu
+name: Run Clangformat Check
 jobs:
   build_test_job:
     strategy:
       # Strategy is a matrix of debug and release builds/regression
       matrix:
         os: [ubuntu-24.04]
-        BUILD_TYPE: [Debug,Release]
-        COMPILER: [gcc,clang]
+        BUILD_TYPE: [Release]
+        COMPILER: [clang]
 
-    name: Ubuntu-${{ matrix.BUILD_TYPE }}-${{matrix.COMPILER}}
+    name: Ubuntu-clangformat-check
     runs-on: ${{ matrix.os }}
 
     # Set up a global environment variable for build scripts
@@ -42,7 +42,7 @@ jobs:
         with:
           repository: sparcians/map
           path: map
-          ref: map_v2.0.19
+          ref: 05ba8532be5d90fcebf28e7a7a7aa799a7b4d29e
 
       # Setup Conda and build environment
       - name: Grab Python v3.8
@@ -74,8 +74,8 @@ jobs:
           $CONDA/bin/conda init bash
 
       # Build
-      - name: Build & Regress
-        run: ./.github/actions/build/entrypoint.sh
+      - name: Run Clangformat Check
+        run: ./.github/actions/clangformat-check.sh
 
       # Save error logs, etc
       - name: Save artifacts
@@ -83,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: ErrorLogs-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}
-          path: ${{matrix.BUILD_TYPE}}/
+          path: ${{matrix.BUILD_TYPE}}/test/
 
       #- name: CTest
       #  # Run CTests without Valgrind tests otherwise the runtime will be TOO long

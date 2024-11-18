@@ -17,8 +17,8 @@
 #define PTE_R_MASK 0x2
 #define PTE_V_MASK 0x1
 
-#define PT_ENTRIES_SV32 1024     // Sv32 has 1,024 entries in a page table
-#define PT_ENTRIES_SV39 512      // Sv39 has 512 entries in a page table
+#define PT_ENTRIES_SV32 1024 // Sv32 has 1,024 entries in a page table
+#define PT_ENTRIES_SV39 512  // Sv39 has 512 entries in a page table
 
 namespace atlas
 {
