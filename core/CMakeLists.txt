@@ -4,7 +4,6 @@ add_library(atlascore
     STATIC
     ActionGroup.cpp
     AtlasState.cpp
-    ActionGroup.cpp
     ActionTags.cpp
     Fetch.cpp
     Translate.cpp
