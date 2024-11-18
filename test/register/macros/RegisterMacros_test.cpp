@@ -8,7 +8,7 @@
 
 class RegisterTester
 {
-public:
+  public:
     RegisterTester()
     {
         atlas_sim_.buildTree();
@@ -17,11 +17,9 @@ public:
         state_ = atlas_sim_.getAtlasState();
     }
 
-    atlas::AtlasState* getAtlasState() {
-        return state_;
-    }
+    atlas::AtlasState* getAtlasState() { return state_; }
 
-private:
+  private:
     sparta::Scheduler scheduler_;
     atlas::AtlasSim atlas_sim_{&scheduler_, "", 0};
     atlas::AtlasState* state_ = nullptr;
@@ -70,7 +68,7 @@ void testFpRegs()
     // Generate a random uint64_t
     uint64_t rand_val = dis(gen);
 
-    // Verify the sp field for the f0 register. 
+    // Verify the sp field for the f0 register.
     WRITE_FP_FIELD(F0, sp, rand_val);
     auto f0_sp_val = READ_FP_FIELD(F0, sp);
     EXPECT_EQUAL(f0_sp_val, rand_val & 0x00000000ffffffff);
@@ -137,7 +135,8 @@ void testCsrRegs()
     // We need a separate test for multi-bit fields since the mask
     // impl is different for single- vs. multi-bit fields.
     reg_val_bits.reset();
-    for (int i = 16; i <= 25; i++) {
+    for (int i = 16; i <= 25; i++)
+    {
         reg_val_bits.set(i);
     }
 
@@ -150,7 +149,8 @@ void testCsrRegs()
 
     dmcontrol_reg_val = READ_CSR_REG(DMCONTROL);
     new_dmcontrol_reg_val_bits = std::bitset<64>(dmcontrol_reg_val);
-    for (int i = 16; i <= 25; i++) {
+    for (int i = 16; i <= 25; i++)
+    {
         EXPECT_FALSE(new_dmcontrol_reg_val_bits.test(i));
     }
 
@@ -158,7 +158,8 @@ void testCsrRegs()
     // DMSTATUS register's "version" field is read-only from bit
     // positions 0-3.
     reg_val_bits.reset();
-    for (int i = 0; i <= 3; i++) {
+    for (int i = 0; i <= 3; i++)
+    {
         reg_val_bits.set(i);
     }
 
@@ -171,7 +172,8 @@ void testCsrRegs()
 
     dmstatus_reg_val = READ_CSR_REG(DMSTATUS);
     new_dmcontrol_reg_val_bits = std::bitset<64>(dmstatus_reg_val);
-    for (int i = 0; i <= 3; i++) {
+    for (int i = 0; i <= 3; i++)
+    {
         EXPECT_TRUE(new_dmcontrol_reg_val_bits.test(i));
     }
 

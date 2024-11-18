@@ -130,7 +130,7 @@ endif()
 # collapse the array of structures in clang-format v16, but we're not
 # there yet
 add_custom_target(clangformat
-  find core -name "*.[hc]pp" > clang-format-files.out
+  find core system sim arch include cosim test -name "*.[hc]pp" > clang-format-files.out
   COMMAND
      ${CLANGFORMAT_EXECUTABLE} -i --files=clang-format-files.out
   WORKING_DIRECTORY
@@ -140,7 +140,7 @@ add_custom_target(clangformat
   )
 
 add_custom_target(clangformat-check
-  find core -name "*.[hc]pp" > clang-format-files.out
+  find core system sim arch include cosim test -name "*.[hc]pp" > clang-format-files.out
   COMMAND
      ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=clang-format-files.out
   WORKING_DIRECTORY

@@ -6,7 +6,7 @@ namespace atlas
 {
     class ActionTags
     {
-    public:
+      public:
         // Core Actions
         static const ActionTagType FETCH_TAG;
         static const ActionTagType INST_TRANSLATE_TAG;
@@ -18,4 +18,4 @@ namespace atlas
         // Stop Simulation
         static const ActionTagType STOP_SIM_TAG;
     };
-}
+} // namespace atlas

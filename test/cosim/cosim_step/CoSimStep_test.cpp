@@ -9,8 +9,8 @@ void testSingleStepNop()
     atlas::AtlasCoSim cosim(&scheduler, workload, ilimit);
     cosim.enableLogger();
 
-    atlas::AtlasState * state = cosim.getAtlasState();
-    const atlas::AtlasState::SimState * sim_state = state->getSimState();
+    atlas::AtlasState* state = cosim.getAtlasState();
+    const atlas::AtlasState::SimState* sim_state = state->getSimState();
 
     // Load a nop instruction into memory
     const atlas::HartId hart_id = 0;
@@ -36,26 +36,27 @@ void testSingleStepNop()
     EXPECT_EQUAL(event.getEventType(), atlas::cosim::Event::Type::INSTRUCTION);
     EXPECT_EQUAL(event.getHartId(), hart_id);
     EXPECT_EQUAL(event.isDone(), true);
-    //EXPECT_EQUAL(event.isLastEvent(), false);
-    //EXPECT_EQUAL(event.isEventInRoi(), false);
-    //EXPECT_EQUAL(event.isEventEnteringRoi(), false);
-    //EXPECT_EQUAL(event.isEventExitingRoi(), false);
+    // EXPECT_EQUAL(event.isLastEvent(), false);
+    // EXPECT_EQUAL(event.isEventInRoi(), false);
+    // EXPECT_EQUAL(event.isEventEnteringRoi(), false);
+    // EXPECT_EQUAL(event.isEventExitingRoi(), false);
     EXPECT_EQUAL(event.getArchId(), 0);
     EXPECT_EQUAL(event.getOpcode(), opcode);
     EXPECT_EQUAL(event.getOpcodeSize(), 4);
-    //EXPECT_EQUAL(event.getInstType(), atlas::InstType);
-    //EXPECT_EQUAL(event.isChangeOfFlowEvent(), false);
+    // EXPECT_EQUAL(event.getInstType(), atlas::InstType);
+    // EXPECT_EQUAL(event.isChangeOfFlowEvent(), false);
     EXPECT_EQUAL(event.getPc(), paddr);
     EXPECT_EQUAL(event.getNextPc(), 0x1004);
-    //EXPECT_EQUAL(event.getAltNextPc(), 0);
-    //EXPECT_EQUAL(event.getPrivilegeMode(), atlas::PrivMode::MACHINE);
-    //EXPECT_EQUAL(event.getNextPrivilegeMode(), atlas::PrivMode::MACHINE);
-    //EXPECT_EQUAL(event.getExceptionType(), atlas::ExcpType::NONE);
-    //EXPECT_EQUAL(event.getExceptionCode(), 0);
+    // EXPECT_EQUAL(event.getAltNextPc(), 0);
+    // EXPECT_EQUAL(event.getPrivilegeMode(), atlas::PrivMode::MACHINE);
+    // EXPECT_EQUAL(event.getNextPrivilegeMode(), atlas::PrivMode::MACHINE);
+    // EXPECT_EQUAL(event.getExceptionType(), atlas::ExcpType::NONE);
+    // EXPECT_EQUAL(event.getExceptionCode(), 0);
 
     // Validate CoSim
     EXPECT_EQUAL(cosim.getNumCommittedEvents(hart_id), 0);
-    EXPECT_EQUAL(cosim.getLastCommittedEvent(hart_id).getEventType(), atlas::cosim::Event::Type::INVALID);
+    EXPECT_EQUAL(cosim.getLastCommittedEvent(hart_id).getEventType(),
+                 atlas::cosim::Event::Type::INVALID);
     EXPECT_EQUAL(cosim.getNumUncommittedEvents(hart_id), 1);
 
     // Validate AtlasState
@@ -79,8 +80,8 @@ void testSingleStepAdd()
     atlas::AtlasCoSim cosim(&scheduler, workload, ilimit);
     cosim.enableLogger();
 
-    atlas::AtlasState * state = cosim.getAtlasState();
-    const atlas::AtlasState::SimState * sim_state = state->getSimState();
+    atlas::AtlasState* state = cosim.getAtlasState();
+    const atlas::AtlasState::SimState* sim_state = state->getSimState();
 
     // Load an add instruction into memory
     const atlas::HartId hart_id = 0;
@@ -112,28 +113,29 @@ void testSingleStepAdd()
     EXPECT_EQUAL(event.getEventType(), atlas::cosim::Event::Type::INSTRUCTION);
     EXPECT_EQUAL(event.getHartId(), hart_id);
     EXPECT_EQUAL(event.isDone(), true);
-    //EXPECT_EQUAL(event.isLastEvent(), false);
-    //EXPECT_EQUAL(event.isEventInRoi(), false);
-    //EXPECT_EQUAL(event.isEventEnteringRoi(), false);
-    //EXPECT_EQUAL(event.isEventExitingRoi(), false);
+    // EXPECT_EQUAL(event.isLastEvent(), false);
+    // EXPECT_EQUAL(event.isEventInRoi(), false);
+    // EXPECT_EQUAL(event.isEventEnteringRoi(), false);
+    // EXPECT_EQUAL(event.isEventExitingRoi(), false);
     EXPECT_EQUAL(event.getArchId(), 0);
     EXPECT_EQUAL(event.getOpcode(), opcode);
     EXPECT_EQUAL(event.getOpcodeSize(), 4);
-    //EXPECT_EQUAL(event.getInstType(), atlas::InstType);
-    //EXPECT_EQUAL(event.isChangeOfFlowEvent(), false);
+    // EXPECT_EQUAL(event.getInstType(), atlas::InstType);
+    // EXPECT_EQUAL(event.isChangeOfFlowEvent(), false);
     EXPECT_EQUAL(event.getPc(), paddr);
     EXPECT_EQUAL(event.getNextPc(), 0x1004);
-    //EXPECT_EQUAL(event.getAltNextPc(), 0);
-    //EXPECT_EQUAL(event.getPrivilegeMode(), atlas::PrivMode::MACHINE);
-    //EXPECT_EQUAL(event.getNextPrivilegeMode(), atlas::PrivMode::MACHINE);
-    //EXPECT_EQUAL(event.getExceptionType(), atlas::ExcpType::NONE);
-    //EXPECT_EQUAL(event.getExceptionCode(), 0);
+    // EXPECT_EQUAL(event.getAltNextPc(), 0);
+    // EXPECT_EQUAL(event.getPrivilegeMode(), atlas::PrivMode::MACHINE);
+    // EXPECT_EQUAL(event.getNextPrivilegeMode(), atlas::PrivMode::MACHINE);
+    // EXPECT_EQUAL(event.getExceptionType(), atlas::ExcpType::NONE);
+    // EXPECT_EQUAL(event.getExceptionCode(), 0);
 
     // TODO: Validate register values
 
     // Validate CoSim
     EXPECT_EQUAL(cosim.getNumCommittedEvents(hart_id), 0);
-    EXPECT_EQUAL(cosim.getLastCommittedEvent(hart_id).getEventType(), atlas::cosim::Event::Type::INVALID);
+    EXPECT_EQUAL(cosim.getLastCommittedEvent(hart_id).getEventType(),
+                 atlas::cosim::Event::Type::INVALID);
     EXPECT_EQUAL(cosim.getNumUncommittedEvents(hart_id), 1);
 
     // Validate AtlasState
