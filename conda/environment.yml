@@ -23,6 +23,8 @@ dependencies:
   - certifi=2024.8.30=pyhd8ed1ab_0
   - clang=15.0.7=h39da44c_5
   - clang-15=15.0.7=default_h127d8a8_5
+  - clang-format=14.0.0=default_h2e3cab8_0
+  - clang-format-14=14.0.0=default_h2e3cab8_0
   - clangxx=15.0.7=default_h127d8a8_5
   - cmake=3.30.5=hf9cb763_0
   - contourpy=1.2.1=py310hd41b1e2_0
@@ -77,6 +79,7 @@ dependencies:
   - libbrotlidec=1.1.0=hb9d3cd8_2
   - libbrotlienc=1.1.0=hb9d3cd8_2
   - libcblas=3.9.0=25_linux64_openblas
+  - libclang-cpp14=14.0.6=default_h7634d5b_1
   - libclang-cpp15=15.0.7=default_h127d8a8_5
   - libcups=2.3.3=h4637d8d_4
   - libcurl=8.10.1=hbbe4b11_0
@@ -96,6 +99,7 @@ dependencies:
   - libiconv=1.17=hd590300_2
   - libjpeg-turbo=3.0.0=hd590300_1
   - liblapack=3.9.0=25_linux64_openblas
+  - libllvm14=14.0.6=hcd5def8_4
   - libllvm15=15.0.7=hb3ce162_4
   - libnghttp2=1.64.0=h161d5f1_0
   - libnsl=2.0.1=hd590300_0
