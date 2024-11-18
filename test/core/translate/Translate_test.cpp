@@ -85,7 +85,7 @@ class AtlasTranslateTester
         EXPECT_EQUAL(result.size, access_size);
     }
 
-    void testPageTableEntryCreation()   //unit test for PageTableEntry.cpp
+    void testPageTableEntryCreation() // unit test for PageTableEntry.cpp
     {
         const bool v = true;
         const bool r = true;
@@ -101,8 +101,7 @@ class AtlasTranslateTester
         uint32_t examplePTEValue;
         examplePTEValue = (ppn1 << 20) | (ppn0 << 10) | ((rsw & TWO_BIT_MASK) << 8) | (d << 7)
                           | (a << 6) | (g << 5) | (u << 4) | (x << 3) | (w << 2) | (r << 1) | (v);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PageTableEntry(
-            examplePTEValue);
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PageTableEntry(examplePTEValue);
         EXPECT_TRUE(sv32PageTableEntry.isValid());
         EXPECT_TRUE(sv32PageTableEntry.canRead());
         EXPECT_TRUE(sv32PageTableEntry.canWrite());
@@ -116,16 +115,22 @@ class AtlasTranslateTester
         EXPECT_EQUAL(sv32PageTableEntry.getPPN1(), ppn1);
     }
 
-    void testPageTable()    //unit test for PageTable.cpp
+    void testPageTable() // unit test for PageTable.cpp
     {
         uint32_t pa = 0x7B1EEFF;
         uint32_t baseAddrOfPT = 0xFFFF0000;
         atlas::PageTable<atlas::MMUMode::SV32> pt(baseAddrOfPT);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(pa);    //Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE2(0xABC12FF);    //Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE3(0x7F03D4C3);    //Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(0xABC12FF);    //Invalid PTE (0000 0000 0000 0000 0000 0000 0000 0000)
-        
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(
+            pa); // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111
+                 // 0000 1111)
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE2(
+            0xABC12FF); // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010
+                        // 1111 0000 1111)
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE3(
+            0x7F03D4C3); // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(
+            0xABC12FF); // Invalid PTE (0000 0000 0000 0000 0000 0000 0000 0000)
+
         pt.addEntry(baseAddrOfPT + 1, sv32PTE1);
         pt.addEntry(baseAddrOfPT + 10, sv32PTE2);
         pt.addEntry(baseAddrOfPT + 100, sv32PTE3);
@@ -136,12 +141,17 @@ class AtlasTranslateTester
         EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100).getPPN(), sv32PTE3.getPPN());
         EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1024).getPPN(), sv32PTE4.getPPN());
 
-        EXPECT_THROW(pt.addEntry(baseAddrOfPT + 1025, sv32PTE4));  //Page table has reached its maximum capacity/PageTable index out of bound!
-        EXPECT_THROW(pt.addEntry(baseAddrOfPT, sv32PTE4));     //Page table has reached its maximum capacity/PageTable index out of bound!
+        EXPECT_THROW(pt.addEntry(
+            baseAddrOfPT + 1025,
+            sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
+        EXPECT_THROW(pt.addEntry(
+            baseAddrOfPT,
+            sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
 
-        EXPECT_THROW(pt.getEntry(baseAddrOfPT + 1023).getPPN());   //entry not present at the provided index
+        EXPECT_THROW(
+            pt.getEntry(baseAddrOfPT + 1023).getPPN()); // entry not present at the provided index
 
-        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044)); //Index Invalid
+        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044)); // Index Invalid
 
         EXPECT_TRUE(pt.contains(baseAddrOfPT + 1024));
         pt.removeEntry(baseAddrOfPT + 1024);
@@ -162,20 +172,21 @@ class AtlasTranslateTester
 
     void testSv32Translation()
     {
-        //const atlas::Addr pa = 0x1000;
-        //const uint64_t value = 0xdeadbeef;
-        //state_->writeMemory<uint64_t>(pa, value);
+        // const atlas::Addr pa = 0x1000;
+        // const uint64_t value = 0xdeadbeef;
+        // state_->writeMemory<uint64_t>(pa, value);
 
-        //presetup fopr the test, install all the addresses in pageTable Setups
+        // presetup fopr the test, install all the addresses in pageTable Setups
 
         // uint32_t va = 0xABCD;
         // uint64_t satpBaseAddress = 0x0000;
 
-        //call ptw with the above fields
+        // call ptw with the above fields
 
         // indexFromVa  = extract index from VA
         // pte          = use that index to get PTE from the PageTable Map
-        // PA           = use the pte to get PA from it, pass the PA to next level page for the further walk
+        // PA           = use the pte to get PA from it, pass the PA to next level page for the
+        // further walk
     }
 
   private:
