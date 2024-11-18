@@ -2,7 +2,8 @@ namespace atlas
 {
     // Constructor to initialize from a 32-bit PTE value
     template <>
-    PageTableEntry<uint32_t, MMUMode::SV32>::PageTableEntry(uint32_t pte){
+    PageTableEntry<MMUMode::SV32>::PageTableEntry(uint32_t pte){
+        // using xlen = RV32;
         pageTableEntryValue_ = pte;
         unUsedBits_ = 0;   //no such field exist here hence 0
         uint32_t PPN1 = (pte >> 20) & TWELVE_BIT_MASK;   // 12 bits
@@ -12,40 +13,40 @@ namespace atlas
     }
 
     template <>
-    void PageTableEntry<uint32_t, MMUMode::SV32>::setUnusedBits_(uint32_t unusedBits){
+    void PageTableEntry<MMUMode::SV32>::setUnusedBits_(uint32_t unusedBits){
         (void)unusedBits;
         unUsedBits_ = 0;    //unUsedBits not present in PTE
     }
 
     template <>
-    void PageTableEntry<uint32_t, MMUMode::SV32>::setPPN_(uint32_t ppn) {PPN_ = ppn;} // Setter for full PPN
+    void PageTableEntry<MMUMode::SV32>::setPPN_(uint32_t ppn) {PPN_ = ppn;} // Setter for full PPN
 
     template <> // Setter for lower 10 bits (PPN0)
-    void PageTableEntry<uint32_t, MMUMode::SV32>::setPPN0_(uint32_t ppn0) {
+    void PageTableEntry<MMUMode::SV32>::setPPN0_(uint32_t ppn0) {
         PPN_ &= ~0x3FF;           // Clear the lower 10 bits (PPN0)
         PPN_ |= (ppn0 & 0x3FF);   // Set the lower 10 bits (PPN0) 
     }
 
     template <> // Setter for upper 12 bits (PPN1)
-    void PageTableEntry<uint32_t, MMUMode::SV32>::setPPN1_(uint32_t ppn1) {
+    void PageTableEntry<MMUMode::SV32>::setPPN1_(uint32_t ppn1) {
         PPN_ &= ~(0xFFF << 10);        // Clear bits 21-10 (PPN1)
         PPN_ |= (ppn1 & 0xFFF) << 10;  // Set bits 21-10 (PPN1) 
     }
 
     template <>
-    uint32_t PageTableEntry<uint32_t, MMUMode::SV32>::getPPN() const {return PPN_;}
+    uint32_t PageTableEntry<MMUMode::SV32>::getPPN() const {return PPN_;}
 
     template <>
-    uint32_t PageTableEntry<uint32_t, MMUMode::SV32>::getPPN1() const {return (PPN_ >> 10) & 0xFFF;}  // 12 bits for PPN1
+    uint32_t PageTableEntry<MMUMode::SV32>::getPPN1() const {return (PPN_ >> 10) & 0xFFF;}  // 12 bits for PPN1
 
     template <>
-    uint32_t PageTableEntry<uint32_t, MMUMode::SV32>::getPPN0() const {return PPN_ & 0x3FF;}  // 10 bits for PPN0
+    uint32_t PageTableEntry<MMUMode::SV32>::getPPN0() const {return PPN_ & 0x3FF;}  // 10 bits for PPN0
 
     template <>
-    uint32_t PageTableEntry<uint32_t, MMUMode::SV32>::getUnusedBits() const {return 0;}
+    uint32_t PageTableEntry<MMUMode::SV32>::getUnusedBits() const {return 0;}
 
-    template <typename xLen, MMUMode Mode>
-    void PageTableEntry<xLen, Mode>::decodePTEFields_(xLen pte) {
+    template <MMUMode Mode>
+    void PageTableEntry<Mode>::decodePTEFields_(xLen pte) {
         RSW_ = (pte >> 8) & TWO_BIT_MASK;           // Extract RSW_ (bits 9-8) // 2 bits
         D_ = pte & PTE_D_MASK;                      // Extract D_ (Dirty bit, bit 7) // 1 bit
         A_ = pte & PTE_A_MASK;                      // Extract A_ (Accessed bit, bit 6) // 1 bit

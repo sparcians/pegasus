@@ -1,10 +1,12 @@
 #include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
-#include "core/ActionGroup.hpp"
-#include "core/AtlasState.hpp"
-#include "core/AtlasInst.hpp"
+
+//#include "core/ActionGroup.hpp"
+//#include "core/AtlasState.hpp"
+//#include "core/AtlasInst.hpp"
 
 namespace atlas
 {
+    class AtlasState;
 
     ActionGroup* RvzicsrInsts::csrrw_64_handler(atlas::AtlasState* state)
     {

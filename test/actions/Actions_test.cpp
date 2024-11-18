@@ -3,12 +3,11 @@
 
 #include "sparta/utils/SpartaTester.hpp"
 
-void runSim(atlas::AtlasState * state, atlas::ActionGroup * atlas_core,
-            const uint32_t expected_num_insts,
-            const uint32_t expected_num_actions)
+void runSim(atlas::AtlasState* state, atlas::ActionGroup* atlas_core,
+            const uint32_t expected_num_insts, const uint32_t expected_num_actions)
 {
-    atlas::ActionGroup * action_group = atlas_core;
-    while(action_group)
+    atlas::ActionGroup* action_group = atlas_core;
+    while (action_group)
     {
         action_group = action_group->execute(state);
     }
@@ -31,16 +30,16 @@ int main()
 
     FetchUnit fetch_unit;
     DecodeUnit decode_unit;
-    ExecuteUnit execute_unit {&fetch};
+    ExecuteUnit execute_unit{&fetch};
 
-    atlas::Action fetch_action = \
-        atlas::Action::createAction<&FetchUnit::fetch_inst>(&fetch_unit, fetch_unit.getName().c_str());
+    atlas::Action fetch_action = atlas::Action::createAction<&FetchUnit::fetch_inst>(
+        &fetch_unit, fetch_unit.getName().c_str());
     fetch_action.addTag(atlas::ActionTags::FETCH_TAG);
-    atlas::Action decode_action = \
-        atlas::Action::createAction<&DecodeUnit::decode_inst>(&decode_unit, decode_unit.getName().c_str());
+    atlas::Action decode_action = atlas::Action::createAction<&DecodeUnit::decode_inst>(
+        &decode_unit, decode_unit.getName().c_str());
     decode_action.addTag(atlas::ActionTags::DECODE_TAG);
-    atlas::Action execute_action = \
-        atlas::Action::createAction<&ExecuteUnit::execute_inst>(&execute_unit, execute_unit.getName().c_str());
+    atlas::Action execute_action = atlas::Action::createAction<&ExecuteUnit::execute_inst>(
+        &execute_unit, execute_unit.getName().c_str());
     execute_action.addTag(atlas::ActionTags::EXECUTE_TAG);
 
     fetch.addAction(fetch_action);
@@ -54,8 +53,8 @@ int main()
 
     // Dummy Action
     const std::string dummy_action_name = "Dummy";
-    atlas::Action dummy_action = \
-        atlas::Action::createAction<&atlas::AtlasState::dummy_action>(&state, dummy_action_name.c_str());
+    atlas::Action dummy_action = atlas::Action::createAction<&atlas::AtlasState::dummy_action>(
+        &state, dummy_action_name.c_str());
     const atlas::ActionTagType DUMMY_TAG = atlas::ActionTagFactory::createTag("DUMMY_TAG");
     dummy_action.addTag(DUMMY_TAG);
 
@@ -119,8 +118,8 @@ int main()
     //
     atlas::ActionGroup translate{"translate"};
     TranslateUnit translate_unit;
-    atlas::Action translate_action = \
-        atlas::Action::createAction<&TranslateUnit::translate_addr>(&translate_unit, translate_unit.getName().c_str());
+    atlas::Action translate_action = atlas::Action::createAction<&TranslateUnit::translate_addr>(
+        &translate_unit, translate_unit.getName().c_str());
     translate_action.addTag(atlas::ActionTags::INST_TRANSLATE_TAG);
     translate.addAction(translate_action);
     fetch.setNextActionGroup(&translate);

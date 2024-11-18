@@ -1,10 +1,13 @@
 #include "core/inst_handlers/rv64/f/RvfInsts.hpp"
-#include "core/ActionGroup.hpp"
-#include "core/AtlasState.hpp"
-#include "core/AtlasInst.hpp"
+
+//#include "core/ActionGroup.hpp"
+//#include "core/AtlasState.hpp"
+//#include "core/AtlasInst.hpp"
 
 namespace atlas
 {
+    class AtlasState;
+
     ActionGroup* RvfInsts::fmv_x_w_64_handler(atlas::AtlasState* state)
     {
         (void)state;
