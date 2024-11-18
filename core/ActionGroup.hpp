@@ -49,6 +49,7 @@ namespace atlas
         {
         }
 
+        // Not default -- defined in source file to reduce massive inlining
         ~ActionGroup();
 
         const std::string & getName() const { return name_; }
