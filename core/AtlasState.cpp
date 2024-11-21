@@ -74,10 +74,8 @@ namespace atlas
         translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
     }
 
-    template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr vaddr)
+    template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
     {
-        // TODO: Get physical address from translation result
-        const Addr paddr = vaddr;
         auto* memory = atlas_system_->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
@@ -93,10 +91,8 @@ namespace atlas
     }
 
     template <typename MemoryType>
-    void AtlasState::writeMemory(const Addr vaddr, const MemoryType value)
+    void AtlasState::writeMemory(const Addr paddr, const MemoryType value)
     {
-        // TODO: Get physical address from translation result
-        const Addr paddr = vaddr;
         auto* memory = atlas_system_->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
