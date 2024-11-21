@@ -25,11 +25,6 @@ jobs:
       COMPILER:           ${{ matrix.COMPILER }}
 
     steps:
-      - name: Setup Keys
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       # Get Atlas
       - name: Clone Atlas
         uses: actions/checkout@v4
