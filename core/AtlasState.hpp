@@ -155,9 +155,9 @@ namespace atlas
             return csr_rset_->getRegister(reg_num);
         }
 
-        template <typename MemoryType> MemoryType readMemory(const Addr vaddr);
+        template <typename MemoryType> MemoryType readMemory(const Addr paddr);
 
-        template <typename MemoryType> void writeMemory(const Addr vaddr, const MemoryType value);
+        template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);
 
         void addObserver(Observer* observer) { observers_.push_back(observer); }
 
