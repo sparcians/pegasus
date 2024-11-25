@@ -4,6 +4,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
+
 namespace atlas
 {
     void RviInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
@@ -228,8 +229,6 @@ namespace atlas
                               atlas::Action::createAction<&RviInsts::xori_64_handler, RviInsts>(
                                   nullptr, "xori", ActionTags::EXECUTE_TAG));
     }
-
-
 
     ActionGroup* RviInsts::cflush_i_l1_64_handler(atlas::AtlasState* state)
     {

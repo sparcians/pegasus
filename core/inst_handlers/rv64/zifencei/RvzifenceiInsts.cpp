@@ -1,6 +1,7 @@
 #include "core/inst_handlers/rv64/zifencei/RvzifenceiInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+
 namespace atlas
 {
     void RvzifenceiInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -10,8 +11,6 @@ namespace atlas
             atlas::Action::createAction<&RvzifenceiInsts::fence_i_64_handler, RvzifenceiInsts>(
                 nullptr, "fence_i", ActionTags::EXECUTE_TAG));
     }
-
-
 
     ActionGroup* RvzifenceiInsts::fence_i_64_handler(atlas::AtlasState* state)
     {

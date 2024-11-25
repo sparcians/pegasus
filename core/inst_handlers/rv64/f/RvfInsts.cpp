@@ -1,6 +1,7 @@
 #include "core/inst_handlers/rv64/f/RvfInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+
 namespace atlas
 {
     void RvfInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
@@ -106,8 +107,6 @@ namespace atlas
                               atlas::Action::createAction<&RvfInsts::fsw_64_handler, RvfInsts>(
                                   nullptr, "fsw", ActionTags::EXECUTE_TAG));
     }
-
-
 
     ActionGroup* RvfInsts::fsqrt_s_64_handler(atlas::AtlasState* state)
     {

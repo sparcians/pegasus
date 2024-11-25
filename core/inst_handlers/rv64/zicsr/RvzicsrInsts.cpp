@@ -1,6 +1,7 @@
 #include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+
 namespace atlas
 {
     void RvzicsrInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -24,8 +25,6 @@ namespace atlas
             "csrrwi", atlas::Action::createAction<&RvzicsrInsts::csrrwi_64_handler, RvzicsrInsts>(
                           nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
     }
-
-
 
     ActionGroup* RvzicsrInsts::csrrs_64_handler(atlas::AtlasState* state)
     {

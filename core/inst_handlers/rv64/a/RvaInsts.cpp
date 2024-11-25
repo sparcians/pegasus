@@ -1,6 +1,7 @@
 #include "core/inst_handlers/rv64/a/RvaInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+
 namespace atlas
 {
     void RvaInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
@@ -164,8 +165,6 @@ namespace atlas
                               atlas::Action::createAction<&RvaInsts::sc_w_64_handler, RvaInsts>(
                                   nullptr, "sc_w", ActionTags::EXECUTE_TAG));
     }
-
-
 
     ActionGroup* RvaInsts::amoadd_w_64_compute_address_handler(atlas::AtlasState* state)
     {
