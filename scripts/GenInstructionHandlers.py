@@ -102,6 +102,7 @@ namespace atlas
         source_string = f"""#include "core/inst_handlers/{self.isa_string}/{ext_str}/{class_name}.hpp"
 #include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
 
 namespace atlas
 {{"""
