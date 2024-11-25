@@ -1,9 +1,6 @@
 #include "core/inst_handlers/rv64/m/RvmInsts.hpp"
-<<<<<<< HEAD
-=======
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "core/ActionGroup.hpp"
->>>>>>> main
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 namespace atlas
@@ -55,242 +52,162 @@ namespace atlas
 
     ActionGroup* RvmInsts::remu_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // reg_t lhs = zext_xlen(RS1);
-        // reg_t rhs = zext_xlen(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(sext_xlen(RS1));
-        // else
-        //     WRITE_RD(sext_xlen(lhs % rhs));
+        reg_t lhs = zext_xlen(rs1_val);
+        reg_t rhs = zext_xlen(rs2_val);
+        if (rhs == 0) {
+            insn->getRd()->write(sext_xlen(lhs));
+        } else {
+            insn->getRd()->write(sext_xlen(lhs % rhs));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::div_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // sreg_t lhs = sext_xlen(RS1);
-        // sreg_t rhs = sext_xlen(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(UINT64_MAX);
-        // else if (lhs == INT64_MIN && rhs == -1)
-        //     WRITE_RD(lhs);
-        // else
-        //     WRITE_RD(sext_xlen(lhs / rhs));
+        sreg_t lhs = sext_xlen(rs1_val);
+        sreg_t rhs = sext_xlen(rs2_val);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        if (rhs == 0) {
+            insn->getRd()->write(UINT64_MAX);
+        } else if (lhs == INT64_MIN && rhs == -1) {
+            insn->getRd()->write(lhs);
+        } else {
+            insn->getRd()->write(sext_xlen(lhs / rhs));
+        }
+
         return nullptr;
     }
 
     ActionGroup* RvmInsts::rem_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // sreg_t lhs = sext_xlen(RS1);
-        // sreg_t rhs = sext_xlen(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(lhs);
-        // else if (lhs == INT64_MIN && rhs == -1)
-        //     WRITE_RD(0);
-        // else
-        //     WRITE_RD(sext_xlen(lhs % rhs));
+        sreg_t lhs = sext_xlen(rs1_val);
+        sreg_t rhs = sext_xlen(rs2_val);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        if (rhs == 0) {
+            insn->getRd()->write(lhs);
+        } else if (lhs == INT64_MIN && rhs == -1) {
+            insn->getRd()->write(0);
+        } else {
+            insn->getRd()->write(sext_xlen(lhs % rhs));
+        }
+
         return nullptr;
     }
 
     ActionGroup* RvmInsts::divw_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // require_rv64;
-        // sreg_t lhs = sext32(RS1);
-        // sreg_t rhs = sext32(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(UINT64_MAX);
-        // else
-        //     WRITE_RD(sext32(lhs / rhs));
+        sreg_t lhs = sext32(rs1_val);
+        sreg_t rhs = sext32(rs2_val);
+        if (rhs == 0) {
+            insn->getRd()->write(UINT64_MAX);
+        } else {
+            insn->getRd()->write(sext32(lhs / rhs));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::remuw_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // require_rv64;
-        // reg_t lhs = zext32(RS1);
-        // reg_t rhs = zext32(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(sext32(lhs));
-        // else
-        //     WRITE_RD(sext32(lhs % rhs));
+        reg_t lhs = zext32(rs1_val);
+        reg_t rhs = zext32(rs2_val);
+        if (rhs == 0) {
+            insn->getRd()->write(sext32(lhs));
+        } else {
+            insn->getRd()->write(sext32(lhs % rhs));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::mulh_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_either_extension('M', EXT_ZMMUL);
-        // if (xlen == 64)
-        //     WRITE_RD(mulh(RS1, RS2));
-        // else
-        //     WRITE_RD(sext32((sext32(RS1) * sext32(RS2)) >> 32));
+        if (xlen == 64) {
+            insn->getRd()->write(mulh(rs1_val, rs2_val));
+        } else {
+            insn->getRd()->write(sext32((sext32(rs1_val) * sext32(rs2_val)) >> 32));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::divuw_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_extension('M');
-        // require_rv64;
-        // reg_t lhs = zext32(RS1);
-        // reg_t rhs = zext32(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(UINT64_MAX);
-        // else
-        //     WRITE_RD(sext32(lhs / rhs));
+        reg_t lhs = zext32(rs1_val);
+        reg_t rhs = zext32(rs2_val);
+        if (rhs == 0) {
+            insn->getRd()->write(UINT64_MAX);
+        } else {
+            insn->getRd()->write(sext32(lhs / rhs));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::mulw_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // require_either_extension('M', EXT_ZMMUL);
-        // require_rv64;
-        // WRITE_RD(sext32(RS1 * RS2));
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
+        insn->getRd()->write(sext32(rs1_val * rs2_val));
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-        return nullptr;
-    }
-
-    ActionGroup* RvmInsts::mulhu_64_handler(atlas::AtlasState* state)
-    {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_either_extension('M', EXT_ZMMUL);
-        // if (xlen == 64)
-        //     WRITE_RD(mulhu(RS1, RS2));
-        // else
-        //     WRITE_RD(sext32(((uint64_t)(uint32_t)RS1 * (uint64_t)(uint32_t)RS2) >> 32));
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-        return nullptr;
-    }
-
-    ActionGroup* RvmInsts::remw_64_handler(atlas::AtlasState* state)
-    {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_extension('M');
-        // require_rv64;
-        // sreg_t lhs = sext32(RS1);
-        // sreg_t rhs = sext32(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(lhs);
-        // else
-        //     WRITE_RD(sext32(lhs % rhs));
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-        return nullptr;
-    }
-
-    ActionGroup* RvmInsts::divu_64_handler(atlas::AtlasState* state)
-    {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_extension('M');
-        // reg_t lhs = zext_xlen(RS1);
-        // reg_t rhs = zext_xlen(RS2);
-        // if (rhs == 0)
-        //     WRITE_RD(UINT64_MAX);
-        // else
-        //     WRITE_RD(sext_xlen(lhs / rhs));
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::mul_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // require_either_extension('M', EXT_ZMMUL);
-        // WRITE_RD(sext_xlen(RS1 * RS2));
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
+        const uint64_t rd_val = rs1_val * rs2_val;
+        insn->getRd()->write(rd_val);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
 
     ActionGroup* RvmInsts::mulhsu_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs1_val = insn->getRs1()->read();
+        const uint64_t rs2_val = insn->getRs2()->read();
 
-        // require_either_extension('M', EXT_ZMMUL);
-        // if (xlen == 64)
-        //     WRITE_RD(mulhsu(RS1, RS2));
-        // else
-        //     WRITE_RD(sext32((sext32(RS1) * reg_t((uint32_t)RS2)) >> 32));
+        if (xlen == 64) {
+            insn->getRd()->write(mulhsu(rs1_val, rs2_val));
+        } else {
+            insn->getRd()->write(sext32((sext32(rs1_val) * reg_t((uint32_t)rs2_val)) >> 32));
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
         return nullptr;
     }
-
 } // namespace atlas
