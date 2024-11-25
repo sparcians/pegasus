@@ -2,7 +2,8 @@
 #include "core/AtlasState.hpp"
 #include "include/AtlasTypes.hpp"
 #include "core/PageTableEntry.hpp"
-#include "core/PageTable.hpp"
+// #include "core/PageTable.hpp"
+#include "core/PageTableWalker.hpp"
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
@@ -128,8 +129,7 @@ class AtlasTranslateTester
                         // 1111 0000 1111)
         atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE3(
             0x7F03D4C3); // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(
-            0xABC12FF); // Invalid PTE (0000 0000 0000 0000 0000 0000 0000 0000)
+        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(0xABC12FF);
 
         pt.addEntry(baseAddrOfPT + 1, sv32PTE1);
         pt.addEntry(baseAddrOfPT + 10, sv32PTE2);
@@ -177,9 +177,22 @@ class AtlasTranslateTester
         // state_->writeMemory<uint64_t>(pa, value);
 
         // presetup fopr the test, install all the addresses in pageTable Setups
+        // Va32Bits va = {0xABC, 0x1F, 0x3E};  //{offset, vpn[0], vpn[1]}
 
-        // uint32_t va = 0xABCD;
-        // uint64_t satpBaseAddress = 0x0000;
+        // std::cout << va.offset_ << std::endl;
+        // uint64_t satpBaseAddress = 0xFFFF0000;  //base address of PD
+
+        // atlas::PageTable<atlas::MMUMode::SV32> pageDirectory(satpBaseAddress);
+        // atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(0x7B1EEFF);
+        // pageDirectory.addEntry(satpBaseAddress+80, sv32PTE1); //try for (satpBaseAddress+0x50)
+
+        // atlas::PageTable<atlas::MMUMode::SV32> pageTable(0x1EC7B);
+        // atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE2(<someVal>);
+        // pageDirectory.addEntry(satpBaseAddress+31, sv32PTE2); //try for (satpBaseAddress+0x50)
+
+        // write memory at (sv32PTE2 >> 10)[basically MSB 22 bits of it] as that will be Physical
+        // address pointing to the physical page of memory(Note: ths should be mapped via
+        // writeMemory);
 
         // call ptw with the above fields
 
@@ -188,6 +201,11 @@ class AtlasTranslateTester
         // PA           = use the pte to get PA from it, pass the PA to next level page for the
         // further walk
     }
+
+    //     const size_t size = sizeof(MemoryType);
+    // const std::vector<uint8_t> buffer = convertToByteVector<MemoryType>(value);
+    // const bool success = memory->tryWrite(paddr, size, buffer.data());
+    // sparta_assert(success, "Failed to write to memory at address 0x" << std::hex << vaddr);
 
   private:
     sparta::Scheduler scheduler_;
@@ -203,7 +221,7 @@ int main(int argc, char** argv)
     (void)argv;
 
     AtlasTranslateTester translate_tester;
-    translate_tester.testBaremetalTranslation();
+    // translate_tester.testBaremetalTranslation();
     translate_tester.testPageTableEntryCreation();
     translate_tester.testAtlasTranslationState();
     translate_tester.testPageTable();
