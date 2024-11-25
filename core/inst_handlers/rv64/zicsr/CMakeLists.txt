@@ -1,12 +1,7 @@
 project(Atlas)
 
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(rvzicsr
     OBJECT
-    RvzicsrInsts.cpp
-    csrrc.cpp
-    csrrci.cpp
-    csrrs.cpp
-    csrrsi.cpp
-    csrrw.cpp
-    csrrwi.cpp
+    ${SOURCES}
 )

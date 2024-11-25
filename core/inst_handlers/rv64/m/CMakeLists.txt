@@ -1,19 +1,7 @@
 project(Atlas)
 
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(rvm
     OBJECT
-    RvmInsts.cpp
-    div.cpp
-    divu.cpp
-    divuw.cpp
-    divw.cpp
-    mul.cpp
-    mulh.cpp
-    mulhsu.cpp
-    mulhu.cpp
-    mulw.cpp
-    rem.cpp
-    remu.cpp
-    remuw.cpp
-    remw.cpp
+    ${SOURCES}
 )

@@ -35,7 +35,7 @@ def main():
     tests = [test for test in tests if "-p-" in test]
     # TODO: Atlas does not support zba, zbb, zbc, zbs or zfh extensions
     print("WARNING: Skipping all non-G extension tests")
-    tests = [test for test in tests if any(ext in test for ext in SUPPORTED_EXTENSIONS)]
+    tests = [test for test in tests if any(ext+"-" in test for ext in SUPPORTED_EXTENSIONS)]
 
     # Run RV64 tests
     passing_tests = []

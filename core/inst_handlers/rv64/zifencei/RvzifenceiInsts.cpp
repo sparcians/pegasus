@@ -1,6 +1,6 @@
 #include "core/inst_handlers/rv64/zifencei/RvzifenceiInsts.hpp"
-#include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"
+#include "core/ActionGroup.hpp"
 
 namespace atlas
 {
@@ -11,4 +11,18 @@ namespace atlas
             atlas::Action::createAction<&RvzifenceiInsts::fence_i_64_handler, RvzifenceiInsts>(
                 nullptr, "fence_i", ActionTags::EXECUTE_TAG));
     }
-}; // namespace atlas
+
+    ActionGroup* RvzifenceiInsts::fence_i_64_handler(atlas::AtlasState* state)
+    {
+        (void)state;
+        ///////////////////////////////////////////////////////////////////////
+        // START OF SPIKE CODE
+
+        // MMU.flush_icache();
+
+        // END OF SPIKE CODE
+        ///////////////////////////////////////////////////////////////////////
+        return nullptr;
+    }
+
+} // namespace atlas

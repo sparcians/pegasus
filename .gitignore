@@ -16,3 +16,4 @@ arch/rv64/**
 spike
 .vscode/**
 mavis_json
+riscv-tests

@@ -1,28 +1,7 @@
 project(Atlas)
 
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(rva
     OBJECT
-    RvaInsts.cpp
-    amoadd_d.cpp
-    amoadd_w.cpp
-    amoand_d.cpp
-    amoand_w.cpp
-    amomax_d.cpp
-    amomax_w.cpp
-    amomaxu_d.cpp
-    amomaxu_w.cpp
-    amomin_d.cpp
-    amomin_w.cpp
-    amominu_d.cpp
-    amominu_w.cpp
-    amoor_d.cpp
-    amoor_w.cpp
-    amoswap_d.cpp
-    amoswap_w.cpp
-    amoxor_d.cpp
-    amoxor_w.cpp
-    lr_d.cpp
-    lr_w.cpp
-    sc_d.cpp
-    sc_w.cpp
+    ${SOURCES}
 )
