@@ -102,6 +102,7 @@ namespace atlas
         source_string = f"""#include "core/inst_handlers/{self.isa_string}/{ext_str}/{class_name}.hpp"
 #include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
 
 namespace atlas
 {{"""
@@ -156,7 +157,7 @@ namespace atlas
 
 namespace atlas
 {{"""
-        
+
         inst_handler_string += "\n    class AtlasState;\n\n"
 
         if inst["memory"]:
@@ -234,15 +235,17 @@ def main():
     inst_handler_gen = InstHandlerGenerator(xlen, ext, spike_path)
 
     # File path is isa_string/ext/ e.g. rv64/i/
-    # Create rv64/rv32 directory if it doesn't already exist
     dir_name = isa_string[0:4]
     if (not os.path.isdir(dir_name)):
         os.mkdir(dir_name)
     os.chdir(dir_name)
 
-    # Create extension subdir if it doesn't already exist
-    if (not os.path.isdir(ext)):
-        os.mkdir(ext)
+    # Create extension subdir
+    if (os.path.isdir(ext)):
+        print("ERROR: Directory \'"+ext+"\' already exists!")
+        print("This script SHOULD NOT be used to regenerate existing instruction handlers.")
+        return
+    os.mkdir(ext)
     os.chdir(ext)
 
     # Write extension class header and source file

@@ -1,36 +1,7 @@
 project(Atlas)
 
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(rvf
     OBJECT
-    RvfInsts.cpp
-    fadd_s.cpp
-    fclass_s.cpp
-    fcvt_l_s.cpp
-    fcvt_lu_s.cpp
-    fcvt_s_l.cpp
-    fcvt_s_lu.cpp
-    fcvt_s_w.cpp
-    fcvt_s_wu.cpp
-    fcvt_w_s.cpp
-    fcvt_wu_s.cpp
-    fdiv_s.cpp
-    feq_s.cpp
-    fle_s.cpp
-    flt_s.cpp
-    flw.cpp
-    fmadd_s.cpp
-    fmax_s.cpp
-    fmin_s.cpp
-    fmsub_s.cpp
-    fmul_s.cpp
-    fmv_w_x.cpp
-    fmv_x_w.cpp
-    fnmadd_s.cpp
-    fnmsub_s.cpp
-    fsgnj_s.cpp
-    fsgnjn_s.cpp
-    fsgnjx_s.cpp
-    fsqrt_s.cpp
-    fsub_s.cpp
-    fsw.cpp
+    ${SOURCES}
 )

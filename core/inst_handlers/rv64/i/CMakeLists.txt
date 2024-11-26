@@ -1,70 +1,7 @@
 project(Atlas)
 
+file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(rvi
     OBJECT
-    RviInsts.cpp
-    add.cpp
-    addi.cpp
-    addiw.cpp
-    addw.cpp
-    and.cpp
-    andi.cpp
-    auipc.cpp
-    beq.cpp
-    bge.cpp
-    bgeu.cpp
-    blt.cpp
-    bltu.cpp
-    bne.cpp
-    cdiscard_d_l1.cpp
-    cflush_d_l1.cpp
-    cflush_i_l1.cpp
-    dret.cpp
-    ebreak.cpp
-    ecall.cpp
-    fence.cpp
-    jal.cpp
-    jalr.cpp
-    lb.cpp
-    lbu.cpp
-    ld.cpp
-    lh.cpp
-    lhu.cpp
-    li.cpp
-    lui.cpp
-    lw.cpp
-    lwu.cpp
-    mret.cpp
-    mv.cpp
-    nop.cpp
-    or.cpp
-    ori.cpp
-    sb.cpp
-    sd.cpp
-    sfence_vma.cpp
-    sh.cpp
-    sll.cpp
-    slli.cpp
-    slliw.cpp
-    sllw.cpp
-    slt.cpp
-    slti.cpp
-    sltiu.cpp
-    sltu.cpp
-    sra.cpp
-    srai.cpp
-    sraiw.cpp
-    sraw.cpp
-    sret.cpp
-    srl.cpp
-    srli.cpp
-    srliw.cpp
-    srlw.cpp
-    sub.cpp
-    subw.cpp
-    sw.cpp
-    uret.cpp
-    wfi.cpp
-    xor.cpp
-    xori.cpp
+    ${SOURCES}
 )
