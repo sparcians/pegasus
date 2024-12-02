@@ -2,8 +2,8 @@
 #include "core/AtlasState.hpp"
 #include "include/AtlasTypes.hpp"
 #include "core/PageTableEntry.hpp"
-// #include "core/PageTable.hpp"
-#include "core/PageTableWalker.hpp"
+ #include "core/PageTable.hpp"
+//#include "core/PageTableWalker.hpp"
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
     (void)argv;
 
     AtlasTranslateTester translate_tester;
-    // translate_tester.testBaremetalTranslation();
+     translate_tester.testBaremetalTranslation();
     translate_tester.testPageTableEntryCreation();
     translate_tester.testAtlasTranslationState();
     translate_tester.testPageTable();
