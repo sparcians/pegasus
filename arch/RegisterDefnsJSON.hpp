@@ -60,7 +60,7 @@ namespace atlas
                 cached_strings_.emplace_back(item["name"].GetString());
                 const char* name = cached_strings_.back().raw();
 
-                const sparta::RegisterBase::group_num_type group_num = item["group_num"].GetInt();
+                const sparta::RegisterBase::group_num_type group_num = item["group_num"].GetUint();
                 auto iter = group_idx_map_.find(group_num);
                 if (iter == group_idx_map_.end())
                 {
