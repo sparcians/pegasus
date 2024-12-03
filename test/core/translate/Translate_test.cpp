@@ -131,43 +131,40 @@ class AtlasTranslateTester
             0x7F03D4C3); // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
         atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(0xABC12FF);
 
-        pt.addEntry(baseAddrOfPT + 1, sv32PTE1);
-        pt.addEntry(baseAddrOfPT + 10, sv32PTE2);
-        pt.addEntry(baseAddrOfPT + 100, sv32PTE3);
-        pt.addEntry(baseAddrOfPT + 1024, sv32PTE4);
+        pt.addEntry(baseAddrOfPT + 1*PTE_SIZE, sv32PTE1);
+        pt.addEntry(baseAddrOfPT + 10*PTE_SIZE, sv32PTE2);
+        pt.addEntry(baseAddrOfPT + 100*PTE_SIZE, sv32PTE3);
+        pt.addEntry(baseAddrOfPT + 1023*PTE_SIZE, sv32PTE4);
 
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1).getPPN(), sv32PTE1.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 10).getPPN(), sv32PTE2.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100).getPPN(), sv32PTE3.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1024).getPPN(), sv32PTE4.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1*PTE_SIZE).getPPN(), sv32PTE1.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 10*PTE_SIZE).getPPN(), sv32PTE2.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100*PTE_SIZE).getPPN(), sv32PTE3.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1023*PTE_SIZE).getPPN(), sv32PTE4.getPPN());
 
         EXPECT_THROW(pt.addEntry(
-            baseAddrOfPT + 1025,
-            sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
-        EXPECT_THROW(pt.addEntry(
-            baseAddrOfPT,
+            baseAddrOfPT + 1024*PTE_SIZE,
             sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
 
         EXPECT_THROW(
-            pt.getEntry(baseAddrOfPT + 1023).getPPN()); // entry not present at the provided index
+            pt.getEntry(baseAddrOfPT + 1022*PTE_SIZE).getPPN()); // entry not present at the provided index
 
-        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044)); // Index Invalid
+        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044*PTE_SIZE)); // Index Invalid
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1024));
-        pt.removeEntry(baseAddrOfPT + 1024);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1024));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1023*PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 1023*PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1023*PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 100));
-        pt.removeEntry(baseAddrOfPT + 100);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 100));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 100*PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 100*PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 100*PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 10));
-        pt.removeEntry(baseAddrOfPT + 10);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 10));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 10*PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 10*PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 10*PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1));
-        pt.removeEntry(baseAddrOfPT + 1);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1*PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 1*PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1*PTE_SIZE));
     }
 
     void testSv32Translation()
@@ -177,7 +174,7 @@ class AtlasTranslateTester
         // state_->writeMemory<uint64_t>(pa, value);
 
         // presetup fopr the test, install all the addresses in pageTable Setups
-        // Va32Bits va = {0xABC, 0x1F, 0x3E};  //{offset, vpn[0], vpn[1]}
+//         Va32Bits va = {0xABC, 0xFF, 0x50};  //{offset, vpn[0], vpn[1]}
 
         // std::cout << va.offset_ << std::endl;
         // uint64_t satpBaseAddress = 0xFFFF0000;  //base address of PD
@@ -221,7 +218,7 @@ int main(int argc, char** argv)
     (void)argv;
 
     AtlasTranslateTester translate_tester;
-     translate_tester.testBaremetalTranslation();
+    translate_tester.testBaremetalTranslation();
     translate_tester.testPageTableEntryCreation();
     translate_tester.testAtlasTranslationState();
     translate_tester.testPageTable();
