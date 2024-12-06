@@ -31,7 +31,11 @@ namespace atlas
         static_assert(sizeof(RV) >= sizeof(SIZE));
 
         using Op =
+<<<<<<< HEAD:core/inst_handlers/a/inst_helpers.hpp
             typename std::conditional<std::is_same_v<RV, RV64>,
+=======
+            typename std::conditional<std::is_same<RV, RV64>::value,
+>>>>>>> 97db081 (clang-format):core/inst_handlers/rv64/a/inst_helpers.hpp
                                       typename std::conditional<U, uint64_t, int64_t>::type,
                                       typename std::conditional<U, uint32_t, int32_t>::type>::type;
 
