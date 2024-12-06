@@ -167,7 +167,6 @@ namespace atlas
                                   nullptr, "sc_w", ActionTags::EXECUTE_TAG));
     }
 
-
     ActionGroup* RvaInsts::amoadd_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -177,7 +176,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, std::plus>(state);
     }
-
 
     ActionGroup* RvaInsts::amoadd_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -189,7 +187,6 @@ namespace atlas
         return amo_handler<RV64, W, std::plus>(state);
     }
 
-
     ActionGroup* RvaInsts::amoand_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -199,7 +196,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, std::bit_and>(state);
     }
-
 
     ActionGroup* RvaInsts::amoand_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -211,7 +207,6 @@ namespace atlas
         return amo_handler<RV64, W, std::bit_and>(state);
     }
 
-
     ActionGroup* RvaInsts::amomax_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -221,7 +216,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, MaxFunctor, false>(state);
     }
-
 
     ActionGroup* RvaInsts::amomax_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -233,7 +227,6 @@ namespace atlas
         return amo_handler<RV64, W, MaxFunctor, false>(state);
     }
 
-
     ActionGroup* RvaInsts::amomaxu_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -243,7 +236,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, MaxFunctor>(state);
     }
-
 
     ActionGroup* RvaInsts::amomaxu_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -255,7 +247,6 @@ namespace atlas
         return amo_handler<RV64, W, MaxFunctor>(state);
     }
 
-
     ActionGroup* RvaInsts::amomin_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -265,7 +256,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, MinFunctor, false>(state);
     }
-
 
     ActionGroup* RvaInsts::amomin_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -277,7 +267,6 @@ namespace atlas
         return amo_handler<RV64, W, MinFunctor, false>(state);
     }
 
-
     ActionGroup* RvaInsts::amominu_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -287,7 +276,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, MinFunctor>(state);
     }
-
 
     ActionGroup* RvaInsts::amominu_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -299,7 +287,6 @@ namespace atlas
         return amo_handler<RV64, W, MinFunctor>(state);
     }
 
-
     ActionGroup* RvaInsts::amoor_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -309,7 +296,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, std::bit_or>(state);
     }
-
 
     ActionGroup* RvaInsts::amoor_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -321,7 +307,6 @@ namespace atlas
         return amo_handler<RV64, W, std::bit_or>(state);
     }
 
-
     ActionGroup* RvaInsts::amoswap_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -331,7 +316,6 @@ namespace atlas
     {
         return amo_handler<RV64, D, SwapFunctor>(state);
     }
-
 
     ActionGroup* RvaInsts::amoswap_w_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -343,7 +327,6 @@ namespace atlas
         return amo_handler<RV64, W, SwapFunctor>(state);
     }
 
-
     ActionGroup* RvaInsts::amoxor_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -354,7 +337,6 @@ namespace atlas
         return amo_handler<RV64, D, std::bit_xor>(state);
     }
 
-
     ActionGroup* RvaInsts::amoxor_w_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -364,7 +346,6 @@ namespace atlas
     {
         return amo_handler<RV64, W, std::bit_xor>(state);
     }
-
 
     ActionGroup* RvaInsts::lr_d_64_compute_address_handler(atlas::AtlasState* state)
     {
@@ -380,7 +361,6 @@ namespace atlas
         return nullptr;
     }
 
-
     ActionGroup* RvaInsts::lr_w_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -395,7 +375,6 @@ namespace atlas
         return nullptr;
     }
 
-
     ActionGroup* RvaInsts::sc_d_64_compute_address_handler(atlas::AtlasState* state)
     {
         return compute_address_handler<RV64>(state);
@@ -409,7 +388,6 @@ namespace atlas
         state->writeMemory<uint64_t>(paddr, rs2_val);
         return nullptr;
     }
-
 
     ActionGroup* RvaInsts::sc_w_64_compute_address_handler(atlas::AtlasState* state)
     {

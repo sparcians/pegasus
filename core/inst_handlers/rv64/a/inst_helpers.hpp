@@ -9,9 +9,8 @@ namespace atlas
 
     using W = uint32_t;
     using D = uint64_t;
-    
-    template <typename T>
-    ActionGroup* compute_address_handler(AtlasState* state)
+
+    template <typename T> ActionGroup* compute_address_handler(AtlasState* state)
     {
         static_assert(std::is_same<T, RV64>::value || std::is_same<T, RV32>::value);
 
@@ -31,20 +30,20 @@ namespace atlas
         static_assert(std::is_same<SIZE, W>::value || std::is_same<SIZE, D>::value);
         static_assert(sizeof(RV) >= sizeof(SIZE));
 
-        using Op = typename std::conditional<
-            std::is_same<RV, RV64>::value, 
-            typename std::conditional<U, uint64_t, int64_t>::type,
-            typename std::conditional<U, uint32_t, int32_t>::type
-        >::type;
+        using Op =
+            typename std::conditional<std::is_same<RV, RV64>::value,
+                                      typename std::conditional<U, uint64_t, int64_t>::type,
+                                      typename std::conditional<U, uint32_t, int32_t>::type>::type;
 
         BinaryOp<Op> binary_op;
         const AtlasInstPtr & inst = state->getCurrentInst();
         const RV paddr = state->getTranslationState()->getTranslationResult().getPaddr();
         RV rd_val = 0;
-        if constexpr(sizeof(RV) > sizeof(SIZE))
+        if constexpr (sizeof(RV) > sizeof(SIZE))
         {
             rd_val = signExtend<SIZE, RV>(state->readMemory<SIZE>(paddr));
-        } else
+        }
+        else
         {
             rd_val = state->readMemory<SIZE>(paddr);
         }
@@ -54,28 +53,19 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename T>
-    struct MaxFunctor
+    template <typename T> struct MaxFunctor
     {
-        constexpr T operator()(const T& lhs, const T& rhs) const 
-        {
-            return lhs > rhs? lhs : rhs;
-        }
+        constexpr T operator()(const T & lhs, const T & rhs) const { return lhs > rhs ? lhs : rhs; }
     };
 
-    template <typename T>
-    struct MinFunctor
+    template <typename T> struct MinFunctor
     {
-        constexpr T operator()(const T& lhs, const T& rhs) const 
-        {
-            return lhs > rhs? rhs : lhs;
-        }
+        constexpr T operator()(const T & lhs, const T & rhs) const { return lhs > rhs ? rhs : lhs; }
     };
 
-    template <typename T>
-    struct SwapFunctor
+    template <typename T> struct SwapFunctor
     {
-        constexpr T operator()(const T& lhs, const T& rhs) const 
+        constexpr T operator()(const T & lhs, const T & rhs) const
         {
             (void)lhs;
             return rhs;
