@@ -2,14 +2,15 @@
 #include "core/AtlasState.hpp"
 #include "include/AtlasTypes.hpp"
 #include "core/PageTableEntry.hpp"
- #include "core/PageTable.hpp"
+#include "core/PageTable.hpp"
 #include "core/PageTableWalker.hpp"
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
 class AtlasTranslateTester
 {
-    bool writeToMemory(uint64_t pa, uint64_t val){
+    bool writeToMemory(uint64_t pa, uint64_t val)
+    {
         state_->writeMemory<uint64_t>(pa, val);
         uint64_t valueFromMem = state_->readMemory<uint64_t>(pa);
         return (valueFromMem == val);
@@ -137,53 +138,54 @@ class AtlasTranslateTester
             0x7F03D4C3); // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
         atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(0xABC12FF);
 
-        pt.addEntry(baseAddrOfPT + 1*PTE_SIZE, sv32PTE1);
-        pt.addEntry(baseAddrOfPT + 10*PTE_SIZE, sv32PTE2);
-        pt.addEntry(baseAddrOfPT + 100*PTE_SIZE, sv32PTE3);
-        pt.addEntry(baseAddrOfPT + 1023*PTE_SIZE, sv32PTE4);
+        pt.addEntry(baseAddrOfPT + 1 * PTE_SIZE, sv32PTE1);
+        pt.addEntry(baseAddrOfPT + 10 * PTE_SIZE, sv32PTE2);
+        pt.addEntry(baseAddrOfPT + 100 * PTE_SIZE, sv32PTE3);
+        pt.addEntry(baseAddrOfPT + 1023 * PTE_SIZE, sv32PTE4);
 
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1*PTE_SIZE).getPPN(), sv32PTE1.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 10*PTE_SIZE).getPPN(), sv32PTE2.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100*PTE_SIZE).getPPN(), sv32PTE3.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1023*PTE_SIZE).getPPN(), sv32PTE4.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1 * PTE_SIZE).getPPN(), sv32PTE1.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 10 * PTE_SIZE).getPPN(), sv32PTE2.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100 * PTE_SIZE).getPPN(), sv32PTE3.getPPN());
+        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1023 * PTE_SIZE).getPPN(), sv32PTE4.getPPN());
 
         EXPECT_THROW(pt.addEntry(
-            baseAddrOfPT + 1024*PTE_SIZE,
+            baseAddrOfPT + 1024 * PTE_SIZE,
             sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
 
-        EXPECT_THROW(
-            pt.getEntry(baseAddrOfPT + 1022*PTE_SIZE).getPPN()); // entry not present at the provided index
+        EXPECT_THROW(pt.getEntry(baseAddrOfPT + 1022 * PTE_SIZE)
+                         .getPPN()); // entry not present at the provided index
 
-        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044*PTE_SIZE)); // Index Invalid
+        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044 * PTE_SIZE)); // Index Invalid
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1023*PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 1023*PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1023*PTE_SIZE));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1023 * PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 1023 * PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1023 * PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 100*PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 100*PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 100*PTE_SIZE));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 100 * PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 100 * PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 100 * PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 10*PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 10*PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 10*PTE_SIZE));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 10 * PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 10 * PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 10 * PTE_SIZE));
 
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1*PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 1*PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1*PTE_SIZE));
+        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1 * PTE_SIZE));
+        pt.removeEntry(baseAddrOfPT + 1 * PTE_SIZE);
+        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1 * PTE_SIZE));
     }
 
     void testSv32Translation()
     {
         atlas::PageTableWalker walker;
-        uint32_t va = 0x143FFABC;    //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) , offset-->0xABC-->d(2748)}
-        uint32_t satpBaseAddress = 0xFFFF0000;  //base address of PD
+        uint32_t va = 0x143FFABC;              //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) ,
+                                               //offset-->0xABC-->d(2748)}
+        uint32_t satpBaseAddress = 0xFFFF0000; // base address of PD
         uint32_t pdeAddress = satpBaseAddress + (80 * PTE_SIZE);
         uint32_t pdeVal = 0x7B1EEFF;
-        uint32_t pageTableBaseAddr = (pdeVal >> 10) << 10;    //7B1EC00
+        uint32_t pageTableBaseAddr = (pdeVal >> 10) << 10; // 7B1EC00
         uint32_t pteAddress = pageTableBaseAddr + (1023 * PTE_SIZE);
         uint32_t pteVal = 0x7F03D4C3;
-        const atlas::Addr phyMemoryBaseAddr = (pteVal >> 10) << 10;    //0x7F03D400
+        const atlas::Addr phyMemoryBaseAddr = (pteVal >> 10) << 10; // 0x7F03D400
         const atlas::Addr pa = (phyMemoryBaseAddr + (2748 * PTE_SIZE));
         const uint64_t val = 0xABCD1234;
 

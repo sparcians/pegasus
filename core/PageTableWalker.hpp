@@ -1,7 +1,8 @@
 //
 // Created by skhan on 11/20/24.
 //
-namespace atlas{
+namespace atlas
+{
 
     struct Va32Bits
     {
@@ -114,14 +115,15 @@ namespace atlas{
         }
     };
 
-    class PageTableWalker{
+    class PageTableWalker
+    {
 
-        public:
+      public:
         PageTableWalker();
         uint32_t getPFN(uint32_t, AtlasState*);
         uint32_t sv32PageTableWalk(uint32_t, uint32_t, AtlasState*);
     };
 
-}
+} // namespace atlas
 
 #include "PageTableWalker.cpp"
