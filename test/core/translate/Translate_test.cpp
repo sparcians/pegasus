@@ -3,12 +3,18 @@
 #include "include/AtlasTypes.hpp"
 #include "core/PageTableEntry.hpp"
  #include "core/PageTable.hpp"
-//#include "core/PageTableWalker.hpp"
+#include "core/PageTableWalker.hpp"
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
 class AtlasTranslateTester
 {
+    bool writeToMemory(uint64_t pa, uint64_t val){
+        state_->writeMemory<uint64_t>(pa, val);
+        uint64_t valueFromMem = state_->readMemory<uint64_t>(pa);
+        return (valueFromMem == val);
+    }
+
   public:
     AtlasTranslateTester()
     {
@@ -169,40 +175,34 @@ class AtlasTranslateTester
 
     void testSv32Translation()
     {
-        // const atlas::Addr pa = 0x1000;
-        // const uint64_t value = 0xdeadbeef;
-        // state_->writeMemory<uint64_t>(pa, value);
+        atlas::PageTableWalker walker;
+        uint32_t va = 0x143FFABC;    //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) , offset-->0xABC-->d(2748)}
+        uint32_t satpBaseAddress = 0xFFFF0000;  //base address of PD
+        uint32_t pdeAddress = satpBaseAddress + (80 * PTE_SIZE);
+        uint32_t pdeVal = 0x7B1EEFF;
+        uint32_t pageTableBaseAddr = (pdeVal >> 10) << 10;    //7B1EC00
+        uint32_t pteAddress = pageTableBaseAddr + (1023 * PTE_SIZE);
+        uint32_t pteVal = 0x7F03D4C3;
+        const atlas::Addr phyMemoryBaseAddr = (pteVal >> 10) << 10;    //0x7F03D400
+        const atlas::Addr pa = (phyMemoryBaseAddr + (2748 * PTE_SIZE));
+        const uint64_t val = 0xABCD1234;
 
-        // presetup fopr the test, install all the addresses in pageTable Setups
-//         Va32Bits va = {0xABC, 0xFF, 0x50};  //{offset, vpn[0], vpn[1]}
+        atlas::PageTable<atlas::MMUMode::SV32> pageDirectory(satpBaseAddress);
+        atlas::PageTableEntry<atlas::MMUMode::SV32> pageDirectoryEntry(pdeVal);
+        pageDirectory.addEntry(pdeAddress, pageDirectoryEntry);
+        atlas::PageTable<atlas::MMUMode::SV32> pageTable(pageTableBaseAddr);
+        atlas::PageTableEntry<atlas::MMUMode::SV32> PageTableEntry(pteVal);
+        pageTable.addEntry(pteAddress, PageTableEntry);
 
-        // std::cout << va.offset_ << std::endl;
-        // uint64_t satpBaseAddress = 0xFFFF0000;  //base address of PD
+        EXPECT_TRUE(writeToMemory(pa, val));
+        EXPECT_TRUE(writeToMemory(pdeAddress, pdeVal));
+        EXPECT_TRUE(writeToMemory(pteAddress, pteVal));
 
-        // atlas::PageTable<atlas::MMUMode::SV32> pageDirectory(satpBaseAddress);
-        // atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(0x7B1EEFF);
-        // pageDirectory.addEntry(satpBaseAddress+80, sv32PTE1); //try for (satpBaseAddress+0x50)
+        uint32_t transaltedPA = walker.sv32PageTableWalk(va, satpBaseAddress, state_);
 
-        // atlas::PageTable<atlas::MMUMode::SV32> pageTable(0x1EC7B);
-        // atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE2(<someVal>);
-        // pageDirectory.addEntry(satpBaseAddress+31, sv32PTE2); //try for (satpBaseAddress+0x50)
-
-        // write memory at (sv32PTE2 >> 10)[basically MSB 22 bits of it] as that will be Physical
-        // address pointing to the physical page of memory(Note: ths should be mapped via
-        // writeMemory);
-
-        // call ptw with the above fields
-
-        // indexFromVa  = extract index from VA
-        // pte          = use that index to get PTE from the PageTable Map
-        // PA           = use the pte to get PA from it, pass the PA to next level page for the
-        // further walk
+        EXPECT_EQUAL(pa, transaltedPA);
+        EXPECT_EQUAL(val, state_->readMemory<uint64_t>(transaltedPA));
     }
-
-    //     const size_t size = sizeof(MemoryType);
-    // const std::vector<uint8_t> buffer = convertToByteVector<MemoryType>(value);
-    // const bool success = memory->tryWrite(paddr, size, buffer.data());
-    // sparta_assert(success, "Failed to write to memory at address 0x" << std::hex << vaddr);
 
   private:
     sparta::Scheduler scheduler_;
@@ -221,6 +221,7 @@ int main(int argc, char** argv)
     translate_tester.testBaremetalTranslation();
     translate_tester.testPageTableEntryCreation();
     translate_tester.testAtlasTranslationState();
+    translate_tester.testSv32Translation();
     translate_tester.testPageTable();
 
     REPORT_ERROR;
