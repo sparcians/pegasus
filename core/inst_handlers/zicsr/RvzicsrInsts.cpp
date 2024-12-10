@@ -1,4 +1,4 @@
-#include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
+#include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 

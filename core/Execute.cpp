@@ -6,13 +6,13 @@
 
 #include "sparta/utils/LogUtils.hpp"
 
-#include "core/inst_handlers/rv64/a/RvaInsts.hpp"
-#include "core/inst_handlers/rv64/d/RvdInsts.hpp"
-#include "core/inst_handlers/rv64/f/RvfInsts.hpp"
-#include "core/inst_handlers/rv64/i/RviInsts.hpp"
-#include "core/inst_handlers/rv64/m/RvmInsts.hpp"
-#include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
-#include "core/inst_handlers/rv64/zifencei/RvzifenceiInsts.hpp"
+#include "core/inst_handlers/a/RvaInsts.hpp"
+#include "core/inst_handlers/d/RvdInsts.hpp"
+#include "core/inst_handlers/f/RvfInsts.hpp"
+#include "core/inst_handlers/i/RviInsts.hpp"
+#include "core/inst_handlers/m/RvmInsts.hpp"
+#include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
+#include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
 
 namespace atlas
 {
@@ -26,7 +26,7 @@ namespace atlas
         execute_action_group_.addAction(execute_action);
 
         // Get instruction handlers
-        RviInsts::getInstHandlers(inst_handlers_);
+        RviInsts::getInstHandlers<RV64>(inst_handlers_);
         RvmInsts::getInstHandlers(inst_handlers_);
         RvaInsts::getInstHandlers(inst_handlers_);
         RvfInsts::getInstHandlers(inst_handlers_);
@@ -35,7 +35,7 @@ namespace atlas
         RvzifenceiInsts::getInstHandlers(inst_handlers_);
 
         // Get instruction compute address handlers
-        RviInsts::getInstComputeAddressHandlers(inst_compute_address_handlers_);
+        RviInsts::getInstComputeAddressHandlers<RV64>(inst_compute_address_handlers_);
         RvaInsts::getInstComputeAddressHandlers(inst_compute_address_handlers_);
         RvfInsts::getInstComputeAddressHandlers(inst_compute_address_handlers_);
         RvdInsts::getInstComputeAddressHandlers(inst_compute_address_handlers_);

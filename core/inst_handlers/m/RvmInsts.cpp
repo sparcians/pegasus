@@ -1,4 +1,4 @@
-#include "core/inst_handlers/rv64/m/RvmInsts.hpp"
+#include "core/inst_handlers/m/RvmInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"

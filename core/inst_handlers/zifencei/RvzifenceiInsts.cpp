@@ -1,4 +1,4 @@
-#include "core/inst_handlers/rv64/zifencei/RvzifenceiInsts.hpp"
+#include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 
