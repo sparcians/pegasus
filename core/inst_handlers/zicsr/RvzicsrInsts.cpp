@@ -4,27 +4,42 @@
 
 namespace atlas
 {
+    template <typename XLEN>
     void RvzicsrInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        inst_handlers.emplace(
-            "csrrc", atlas::Action::createAction<&RvzicsrInsts::csrrc_64_handler, RvzicsrInsts>(
-                         nullptr, "csrrc", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "csrrci", atlas::Action::createAction<&RvzicsrInsts::csrrci_64_handler, RvzicsrInsts>(
-                          nullptr, "csrrci", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "csrrs", atlas::Action::createAction<&RvzicsrInsts::csrrs_64_handler, RvzicsrInsts>(
-                         nullptr, "csrrs", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "csrrsi", atlas::Action::createAction<&RvzicsrInsts::csrrsi_64_handler, RvzicsrInsts>(
-                          nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "csrrw", atlas::Action::createAction<&RvzicsrInsts::csrrw_64_handler, RvzicsrInsts>(
-                         nullptr, "csrrw", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "csrrwi", atlas::Action::createAction<&RvzicsrInsts::csrrwi_64_handler, RvzicsrInsts>(
-                          nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
+        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same<XLEN, RV64>::value)
+        {
+            inst_handlers.emplace(
+                "csrrc", atlas::Action::createAction<&RvzicsrInsts::csrrc_64_handler, RvzicsrInsts>(
+                             nullptr, "csrrc", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "csrrci",
+                atlas::Action::createAction<&RvzicsrInsts::csrrci_64_handler, RvzicsrInsts>(
+                    nullptr, "csrrci", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "csrrs", atlas::Action::createAction<&RvzicsrInsts::csrrs_64_handler, RvzicsrInsts>(
+                             nullptr, "csrrs", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "csrrsi",
+                atlas::Action::createAction<&RvzicsrInsts::csrrsi_64_handler, RvzicsrInsts>(
+                    nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "csrrw", atlas::Action::createAction<&RvzicsrInsts::csrrw_64_handler, RvzicsrInsts>(
+                             nullptr, "csrrw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "csrrwi",
+                atlas::Action::createAction<&RvzicsrInsts::csrrwi_64_handler, RvzicsrInsts>(
+                    nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
+        }
+        else if constexpr (std::is_same<XLEN, RV32>::value)
+        {
+            sparta_assert(false, "RV32 is not supported yet!");
+        }
     }
+
+    template void RvzicsrInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
+    template void RvzicsrInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     ActionGroup* RvzicsrInsts::csrrs_64_handler(atlas::AtlasState* state)
     {

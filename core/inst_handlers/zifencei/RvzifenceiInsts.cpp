@@ -4,13 +4,25 @@
 
 namespace atlas
 {
+    template <typename XLEN>
     void RvzifenceiInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        inst_handlers.emplace(
-            "fence.i",
-            atlas::Action::createAction<&RvzifenceiInsts::fence_i_64_handler, RvzifenceiInsts>(
-                nullptr, "fence_i", ActionTags::EXECUTE_TAG));
+        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same<XLEN, RV64>::value)
+        {
+            inst_handlers.emplace(
+                "fence.i",
+                atlas::Action::createAction<&RvzifenceiInsts::fence_i_64_handler, RvzifenceiInsts>(
+                    nullptr, "fence_i", ActionTags::EXECUTE_TAG));
+        }
+        else if constexpr (std::is_same<XLEN, RV32>::value)
+        {
+            sparta_assert(false, "RV32 is not supported yet!");
+        }
     }
+
+    template void RvzifenceiInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
+    template void RvzifenceiInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     ActionGroup* RvzifenceiInsts::fence_i_64_handler(atlas::AtlasState* state)
     {
