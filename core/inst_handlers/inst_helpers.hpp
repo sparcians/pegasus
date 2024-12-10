@@ -57,3 +57,39 @@ inline int64_t mulh(int64_t a, int64_t b)
     uint64_t res = mulhu(a < 0 ? -a : a, b < 0 ? -b : b);
     return negate ? ~res + ((uint64_t)a * (uint64_t)b == 0) : res;
 }
+
+namespace atlas
+{
+    template <uint64_t Mask> struct RegisterBitMask
+    {
+        static uint64_t mask(const uint64_t old_val, const uint64_t new_val)
+        {
+            // The 'Mask' template parameter is a bit mask that specifies which bits are writable.
+            // We need to preserve the 'old_val' bits that are not writable, and replace the
+            // writable bits with 'new_val'.
+            return (old_val & ~Mask) | (new_val & Mask);
+        }
+    };
+
+    template <> struct RegisterBitMask<0>;
+
+    template <> struct RegisterBitMask<0xffffffffffffffff>
+    {
+        static uint64_t mask(const uint64_t old_val, const uint64_t new_val)
+        {
+            (void)old_val;
+            return new_val;
+        }
+    };
+
+    template <typename FieldT, typename Enable = void> struct CSRFields
+    {
+        static uint64_t readField(const uint64_t reg_val)
+        {
+            constexpr uint64_t num_field_bits = FieldT::high_bit - FieldT::low_bit + 1;
+            constexpr uint64_t mask = (1 << num_field_bits) - 1;
+            return (reg_val >> FieldT::low_bit) & mask;
+        }
+    };
+
+} // namespace atlas

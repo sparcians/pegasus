@@ -31,30 +31,6 @@ namespace atlas
         csr_rset_ =
             RegisterSet::create(core_node, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
-        // Initialize integer registers
-        for (uint32_t reg_num = 0; reg_num < p->num_int_regs; ++reg_num)
-        {
-            const std::string reg_name = "x" + std::to_string(reg_num);
-            const RegId reg_id{RegType::INTEGER, reg_num, reg_name};
-            int_regs_.emplace_back(new AtlasRegister(reg_id));
-        }
-
-        // Initialize floating point registers
-        for (uint32_t reg_num = 0; reg_num < p->num_fp_regs; ++reg_num)
-        {
-            const std::string reg_name = "f" + std::to_string(reg_num);
-            const RegId reg_id{RegType::FLOATING_POINT, reg_num, reg_name};
-            fp_regs_.emplace_back(new AtlasRegister(reg_id));
-        }
-
-        // Initialize vector registers
-        for (uint32_t reg_num = 0; reg_num < p->num_vec_regs; ++reg_num)
-        {
-            const std::string reg_name = "v" + std::to_string(reg_num);
-            const RegId reg_id{RegType::VECTOR, reg_num, reg_name};
-            vec_regs_.emplace_back(new AtlasRegister(reg_id));
-        }
-
         // Increment PC Action
         increment_pc_action_ =
             atlas::Action::createAction<&AtlasState::incrementPc_>(this, "increment pc");

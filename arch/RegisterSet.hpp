@@ -7,6 +7,31 @@
 
 namespace atlas
 {
+    inline RegId getRegId(const sparta::Register* reg)
+    {
+        RegId reg_id;
+
+        switch (reg->getGroupNum()) {
+            case 0:
+                reg_id.reg_type = RegType::INTEGER;
+                break;
+            case 1:
+                reg_id.reg_type = RegType::FLOATING_POINT;
+                break;
+            case 2:
+                reg_id.reg_type = RegType::VECTOR;
+                break;
+            case 3:
+                reg_id.reg_type = RegType::CSR;
+                break;
+            default:
+                sparta_assert(false, "Invalid register group number");
+        }
+
+        reg_id.reg_num = reg->getID();
+        reg_id.reg_name = reg->getName();
+        return reg_id;
+    }
 
     class RegisterSet : public sparta::RegisterSet
     {
