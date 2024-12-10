@@ -9,12 +9,6 @@
 
 class AtlasTranslateTester
 {
-    bool writeToMemory(uint64_t pa, uint64_t val)
-    {
-        state_->writeMemory<uint64_t>(pa, val);
-        uint64_t valueFromMem = state_->readMemory<uint64_t>(pa);
-        return (valueFromMem == val);
-    }
 
   public:
     AtlasTranslateTester()
@@ -126,6 +120,7 @@ class AtlasTranslateTester
     void testPageTable() // unit test for PageTable.cpp
     {
         uint32_t pa = 0x7B1EEFF;
+        uint32_t PTE_SIZE = sizeof(atlas::RV32);    //since test is for SV32
         uint32_t baseAddrOfPT = 0xFFFF0000;
         atlas::PageTable<atlas::MMUMode::SV32> pt(baseAddrOfPT);
         atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(
@@ -177,6 +172,7 @@ class AtlasTranslateTester
     void testSv32Translation()
     {
         atlas::PageTableWalker walker;
+        uint32_t PTE_SIZE = sizeof(atlas::RV32);
         uint32_t va = 0x143FFABC;              //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) ,
                                                //offset-->0xABC-->d(2748)}
         uint32_t satpBaseAddress = 0xFFFF0000; // base address of PD
@@ -196,9 +192,9 @@ class AtlasTranslateTester
         atlas::PageTableEntry<atlas::MMUMode::SV32> PageTableEntry(pteVal);
         pageTable.addEntry(pteAddress, PageTableEntry);
 
-        EXPECT_TRUE(writeToMemory(pa, val));
-        EXPECT_TRUE(writeToMemory(pdeAddress, pdeVal));
-        EXPECT_TRUE(writeToMemory(pteAddress, pteVal));
+        state_->writeMemory<uint64_t>(pa, val);
+        state_->writeMemory<uint64_t>(pdeAddress, pdeVal);
+        state_->writeMemory<uint64_t>(pteAddress, pteVal);
 
         uint32_t transaltedPA = walker.sv32PageTableWalk(va, satpBaseAddress, state_);
 

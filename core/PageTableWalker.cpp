@@ -6,25 +6,25 @@
 
 namespace atlas
 {
-    PageTableWalker::PageTableWalker() {}
 
     uint32_t PageTableWalker::sv32PageTableWalk(uint32_t virtAddr, uint32_t satpRegVal,
                                                 AtlasState* state)
     {
+        uint32_t PTE_SIZE = sizeof(RV32);
         Va32 va(virtAddr);
         // TODO: getBaseAddrFromSatpReg();
-        uint32_t PDEaddresss = satpRegVal + va.vpn1() * PTE_SIZE;
-        uint32_t ptbaseAddress = getPFN(PDEaddresss, state);
-        uint32_t pteAddress = ptbaseAddress + va.vpn0() * PTE_SIZE;
-        uint32_t PhyMembaseAddress = getPFN(pteAddress, state);
-        uint32_t PhyMemFrameAddress = PhyMembaseAddress + va.offset() * PTE_SIZE;
+        const uint32_t PDEaddresss = satpRegVal + va.vpn1() * PTE_SIZE;
+        const uint32_t ptbaseAddress = getPFN(PDEaddresss, state);
+        const uint32_t pteAddress = ptbaseAddress + va.vpn0() * PTE_SIZE;
+        const uint32_t PhyMembaseAddress = getPFN(pteAddress, state);
+        const uint32_t PhyMemFrameAddress = PhyMembaseAddress + va.offset() * PTE_SIZE;
         return PhyMemFrameAddress;
     }
 
     // convert this to template method, make uint32_t as template
-    uint32_t PageTableWalker::getPFN(uint32_t entryValues, AtlasState* state)
+    uint32_t PageTableWalker::getPFN(const uint32_t entryValues, AtlasState* state)
     {
-        uint64_t pteValueFromMem = state->readMemory<uint64_t>(entryValues);
+        const uint64_t pteValueFromMem = state->readMemory<uint64_t>(entryValues);
         PageTableEntry<MMUMode::SV32> entry(pteValueFromMem);
         // TODO:
         //  If accessing pte violates a PMA or PMP check, raise an access-fault exception

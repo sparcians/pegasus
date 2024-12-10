@@ -119,7 +119,7 @@ namespace atlas
     {
 
       public:
-        PageTableWalker();
+        PageTableWalker() {}
         uint32_t getPFN(uint32_t, AtlasState*);
         uint32_t sv32PageTableWalk(uint32_t, uint32_t, AtlasState*);
     };
