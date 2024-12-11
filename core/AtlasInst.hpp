@@ -96,9 +96,9 @@ namespace atlas
         Addr next_pc_;
 
         // Registers
-        sparta::Register *rs1_;
-        sparta::Register *rs2_;
-        sparta::Register *rd_;
+        sparta::Register* rs1_;
+        sparta::Register* rs2_;
+        sparta::Register* rd_;
 
         ActionGroup inst_action_group_;
 

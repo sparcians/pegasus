@@ -11,7 +11,8 @@ namespace atlas
     {
         RegId reg_id;
 
-        switch (reg->getGroupNum()) {
+        switch (reg->getGroupNum())
+        {
             case 0:
                 reg_id.reg_type = RegType::INTEGER;
                 break;
