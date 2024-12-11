@@ -118,6 +118,11 @@ namespace atlas
                     cached_initial_values_.emplace_back(item["initial_value"].GetString());
                     initial_value = cached_initial_values_.back().raw();
                 }
+                else
+                {
+                    cached_initial_values_.emplace_back(bytes);
+                    initial_value = cached_initial_values_.back().raw();
+                }
 
                 constexpr sparta::RegisterBase::Definition::HintsT hints = 0;
                 constexpr sparta::RegisterBase::Definition::RegDomainT regdomain = 0;
@@ -191,6 +196,11 @@ namespace atlas
                     iss >> std::hex >> byte;
                     hex_bytes_[i / 2] = static_cast<char>(byte);
                 }
+            }
+
+            InitialValueRef(size_t num_bytes)
+            {
+                hex_bytes_ = std::vector<unsigned char>(num_bytes, 0);
             }
 
             const unsigned char* raw() const { return hex_bytes_.data(); }

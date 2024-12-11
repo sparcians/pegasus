@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/AtlasRegister.hpp"
 #include "core/AtlasTranslationState.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "arch/RegisterSet.hpp"
@@ -43,9 +42,6 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(uint32_t, num_int_regs, 32, "Number of integer registers")
-            PARAMETER(uint32_t, num_fp_regs, 32, "Number of floating point registers")
-            PARAMETER(uint32_t, num_vec_regs, 32, "Number of vector registers")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
         };
 
@@ -108,27 +104,6 @@ namespace atlas
         Execute* getExecuteUnit() const { return execute_unit_; }
 
         Translate* getTranslateUnit() const { return translate_unit_; }
-
-        // TODO AtlasRegister: Replace with methods to access registers in the Sparta RegisterSet
-        // Probably best to have multiple methods for each register type (e.g.
-        // getIntegerRegister(uint32_t reg_num))
-        AtlasRegisterPtr getAtlasRegister(RegType reg_type, uint32_t reg_num) const
-        {
-            switch (reg_type)
-            {
-                case RegType::INTEGER:
-                    return int_regs_.at(reg_num);
-                case RegType::FLOATING_POINT:
-                    return fp_regs_.at(reg_num);
-                case RegType::VECTOR:
-                    return vec_regs_.at(reg_num);
-                case RegType::CSR:
-                case RegType::INVALID:
-                    sparta_assert(false, "Invalid Atlas Register Type!");
-            }
-
-            return nullptr;
-        }
 
         atlas::RegisterSet* getIntRegisterSet() { return int_rset_.get(); }
 
@@ -214,11 +189,6 @@ namespace atlas
 
         // Translate Unit
         Translate* translate_unit_ = nullptr;
-
-        // TODO AtlasRegister: Replace with Sparta RegisterSet (int, fp, vec and csrs)
-        std::vector<AtlasRegisterPtr> int_regs_;
-        std::vector<AtlasRegisterPtr> fp_regs_;
-        std::vector<AtlasRegisterPtr> vec_regs_;
 
         // Register set holding all Sparta registers from all generated JSON files
         std::unique_ptr<RegisterSet> int_rset_;

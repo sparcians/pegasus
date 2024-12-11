@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/inst_handlers/inst_helpers.hpp"
+
 #define READ_INT_REG(reg_name)                                                                     \
     (atlas::INT::reg_name::reg_num == 0)                                                           \
         ? 0                                                                                        \
