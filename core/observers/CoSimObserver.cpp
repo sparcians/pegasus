@@ -34,23 +34,23 @@ namespace atlas
         if (inst->hasRs1())
         {
             const auto rs1 = inst->getRs1();
-            const std::vector<uint8_t> value = convertToByteVector(rs1->read());
-            src_regs_.emplace_back(rs1->getRegId(), value);
+            const std::vector<uint8_t> value = convertToByteVector(rs1->dmiRead<uint64_t>());
+            src_regs_.emplace_back(getRegId(rs1), value);
         }
 
         if (inst->hasRs2())
         {
             const auto rs2 = inst->getRs2();
-            const std::vector<uint8_t> value = convertToByteVector(rs2->read());
-            src_regs_.emplace_back(rs2->getRegId(), value);
+            const std::vector<uint8_t> value = convertToByteVector(rs2->dmiRead<uint64_t>());
+            src_regs_.emplace_back(getRegId(rs2), value);
         }
 
         // Get initial value of destination registers
         if (inst->hasRd())
         {
             const auto rd = inst->getRd();
-            const std::vector<uint8_t> value = convertToByteVector(rd->read());
-            dst_regs_.emplace_back(rd->getRegId(), value);
+            const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
+            dst_regs_.emplace_back(getRegId(rd), value);
         }
 
         last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
@@ -71,7 +71,7 @@ namespace atlas
             sparta_assert(dst_regs_.size() == 1);
             const auto & rd = inst->getRd();
             std::vector<uint8_t> value(sizeof(uint64_t));
-            const uint64_t rd_value = rd->read();
+            const uint64_t rd_value = rd->dmiRead<uint64_t>();
             std::memcpy(value.data(), &rd_value, sizeof(uint64_t));
             dst_regs_[0].setValue(value);
         }

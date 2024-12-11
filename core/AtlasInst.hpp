@@ -1,11 +1,13 @@
 #pragma once
 
 #include "core/AtlasExtractor.hpp"
-#include "core/AtlasRegister.hpp"
-
 #include "mavis/OpcodeInfo.h"
-
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+
+namespace sparta
+{
+    class Register;
+}
 
 namespace atlas
 {
@@ -52,19 +54,19 @@ namespace atlas
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
-        AtlasRegisterPtr & getRs1()
+        sparta::Register* getRs1()
         {
             sparta_assert(rs1_, "Operand RS1 is a nullptr! " << *this);
             return rs1_;
         }
 
-        AtlasRegisterPtr & getRs2()
+        sparta::Register* getRs2()
         {
             sparta_assert(rs2_, "Operand RS2 is a nullptr! " << *this);
             return rs2_;
         }
 
-        AtlasRegisterPtr & getRd()
+        sparta::Register* getRd()
         {
             sparta_assert(rd_, "Operand RD is a nullptr! " << *this);
             return rd_;
@@ -94,9 +96,9 @@ namespace atlas
         Addr next_pc_;
 
         // Registers
-        AtlasRegisterPtr rs1_;
-        AtlasRegisterPtr rs2_;
-        AtlasRegisterPtr rd_;
+        sparta::Register* rs1_;
+        sparta::Register* rs2_;
+        sparta::Register* rd_;
 
         ActionGroup inst_action_group_;
 
