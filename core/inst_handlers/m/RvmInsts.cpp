@@ -10,8 +10,8 @@ namespace atlas
     template <typename XLEN>
     void RvmInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
-        if constexpr (std::is_same<XLEN, RV64>::value)
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace("div",
                                   atlas::Action::createAction<&RvmInsts::div_64_handler, RvmInsts>(
@@ -53,7 +53,7 @@ namespace atlas
                                   atlas::Action::createAction<&RvmInsts::remw_64_handler, RvmInsts>(
                                       nullptr, "remw", ActionTags::EXECUTE_TAG));
         }
-        else if constexpr (std::is_same<XLEN, RV32>::value)
+        else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             sparta_assert(false, "RV32 is not supported yet!");
         }

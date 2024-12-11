@@ -7,8 +7,8 @@ namespace atlas
     template <typename XLEN>
     void RvzicsrInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
-        if constexpr (std::is_same<XLEN, RV64>::value)
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "csrrc", atlas::Action::createAction<&RvzicsrInsts::csrrc_64_handler, RvzicsrInsts>(
@@ -32,7 +32,7 @@ namespace atlas
                 atlas::Action::createAction<&RvzicsrInsts::csrrwi_64_handler, RvzicsrInsts>(
                     nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
         }
-        else if constexpr (std::is_same<XLEN, RV32>::value)
+        else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             sparta_assert(false, "RV32 is not supported yet!");
         }

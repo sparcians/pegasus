@@ -7,8 +7,8 @@ namespace atlas
     template <typename XLEN>
     void RvaInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
-        if constexpr (std::is_same<XLEN, RV64>::value)
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "amoadd.d",
@@ -117,7 +117,7 @@ namespace atlas
                 atlas::Action::createAction<&RvaInsts::sc_w_64_compute_address_handler, RvaInsts>(
                     nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
         }
-        else if constexpr (std::is_same<XLEN, RV32>::value)
+        else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             sparta_assert(false, "RV32 is not supported yet!");
         }
@@ -126,8 +126,8 @@ namespace atlas
     template <typename XLEN>
     void RvaInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
-        if constexpr (std::is_same<XLEN, RV64>::value)
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "amoadd.d", atlas::Action::createAction<&RvaInsts::amoadd_d_64_handler, RvaInsts>(
@@ -196,7 +196,7 @@ namespace atlas
                                   atlas::Action::createAction<&RvaInsts::sc_w_64_handler, RvaInsts>(
                                       nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
-        else if constexpr (std::is_same<XLEN, RV32>::value)
+        else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             sparta_assert(false, "RV32 is not supported yet!");
         }
