@@ -1,6 +1,6 @@
 project(Utils_Test)
 
 add_executable(ByteVector_test ByteVector_test.cpp)
-target_link_libraries(ByteVector_test atlascore atlasinsts ${SPARTA} mavis)
+target_link_libraries(ByteVector_test atlascore atlasinsts ${SPARTA_LIBS} mavis)
 
 sparta_named_test(ByteVector_test_run ByteVector_test)

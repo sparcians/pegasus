@@ -5,6 +5,6 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../mavis/json               ${CMAK
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../core/inst_handlers/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
 
 add_executable(Fetch_test Fetch_test.cpp)
-target_link_libraries(Fetch_test atlascore atlasinsts atlassys atlassim ${SPARTA} mavis)
+target_link_libraries(Fetch_test atlascore atlasinsts atlassys atlassim ${SPARTA_LIBS} mavis)
 
 sparta_named_test(Fetch_test_run Fetch_test)

@@ -10,7 +10,7 @@ target_link_libraries(atlascosimlib
     atlascore
     atlasinsts
     atlassys
-    ${SPARTA}
+    ${SPARTA_LIBS}
     mavis
 )
 
