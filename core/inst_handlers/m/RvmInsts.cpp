@@ -10,7 +10,7 @@ namespace atlas
     template <typename XLEN>
     void RvmInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace("div",
@@ -55,11 +55,12 @@ namespace atlas
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
-            sparta_assert(false, "RV32 is not supported yet!");
+            // RV32 is not supported yet
+            static_assert(std::is_same_v<XLEN, RV32> == false);
         }
     }
 
-    template void RvmInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
+    // template void RvmInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvmInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     ActionGroup* RvmInsts::div_64_handler(atlas::AtlasState* state)

@@ -7,7 +7,7 @@ namespace atlas
     template <typename XLEN>
     void RvzifenceiInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
-        static_assert(std::is_same_v<XLEN, RV64> || std::is_same<XLEN, RV32>::value);
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
