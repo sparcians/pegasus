@@ -383,7 +383,7 @@ namespace atlas
     ActionGroup* RvaInsts::sc_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t rs2_val = inst->getRs2()->read();
+        const uint64_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
         const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
         state->writeMemory<uint64_t>(paddr, rs2_val);
         return nullptr;
@@ -397,7 +397,7 @@ namespace atlas
     ActionGroup* RvaInsts::sc_w_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t rs2_val = inst->getRs2()->read();
+        const uint64_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
         const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
         state->writeMemory<uint32_t>(paddr, rs2_val);
         return nullptr;
