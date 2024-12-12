@@ -12,14 +12,22 @@ namespace atlas
     uint32_t PageTableWalker::sv32PageTableWalk(uint32_t virtAddr, uint32_t satpRegVal,
                                                 AtlasState* state)
     {
-        uint32_t PTE_SIZE = sizeof(RV32);
-        Va32 va(virtAddr);
+        uint32_t PTEaddresss, ptbaseAddress;
+        const uint32_t PTE_SIZE = sizeof(RV32);
+        const uint32_t offset = extractOffset(virtAddr, MMUMode::SV32);
+        const std::vector<uint32_t> vpnValues = extractVPN(virtAddr, MMUMode::SV32);
         // TODO: getBaseAddrFromSatpReg();
-        const uint32_t PDEaddresss = satpRegVal + va.vpn1() * PTE_SIZE;
-        const uint32_t ptbaseAddress = getPFN(PDEaddresss, state);
-        const uint32_t pteAddress = ptbaseAddress + va.vpn0() * PTE_SIZE;
-        const uint32_t PhyMembaseAddress = getPFN(pteAddress, state);
-        const uint32_t PhyMemFrameAddress = PhyMembaseAddress + va.offset() * PTE_SIZE;
+        int vpnVectorIndex = vpnValues.size() - 1;
+        ptbaseAddress = satpRegVal;
+        while (vpnVectorIndex > (-1))
+        {
+            PTEaddresss = ptbaseAddress + vpnValues[vpnVectorIndex] * PTE_SIZE;
+            ptbaseAddress = getPFN(PTEaddresss, state);
+            vpnVectorIndex--;
+        }
+        const uint32_t PhyMemFrameAddress =
+            ptbaseAddress
+            + offset * PTE_SIZE; // ptbaseAddress points to the Physical Memory base Address
         return PhyMemFrameAddress;
     }
 

@@ -120,7 +120,7 @@ class AtlasTranslateTester
     void testPageTable() // unit test for PageTable.cpp
     {
         uint32_t pa = 0x7B1EEFF;
-        uint32_t PTE_SIZE = sizeof(atlas::RV32);    //since test is for SV32
+        uint32_t PTE_SIZE = sizeof(atlas::RV32); // since test is for SV32
         uint32_t baseAddrOfPT = 0xFFFF0000;
         atlas::PageTable<atlas::MMUMode::SV32> pt(baseAddrOfPT);
         atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(
@@ -174,7 +174,7 @@ class AtlasTranslateTester
         atlas::PageTableWalker walker;
         uint32_t PTE_SIZE = sizeof(atlas::RV32);
         uint32_t va = 0x143FFABC;              //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) ,
-                                               //offset-->0xABC-->d(2748)}
+                                               // offset-->0xABC-->d(2748)}
         uint32_t satpBaseAddress = 0xFFFF0000; // base address of PD
         uint32_t pdeAddress = satpBaseAddress + (80 * PTE_SIZE);
         uint32_t pdeVal = 0x7B1EEFF;
