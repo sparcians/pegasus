@@ -8,7 +8,7 @@ add_library(atlassim
 # Atlas simulator
 add_executable(atlas atlas.cpp)
 
-target_link_libraries(atlas atlassim atlascore atlasinsts atlassys SPARTA::sparta mavis)
+target_link_libraries(atlas atlassim atlascore atlasinsts atlassys ${SPARTA_LIBS} mavis)
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../arch                    ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json              ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)

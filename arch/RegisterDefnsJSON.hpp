@@ -60,7 +60,7 @@ namespace atlas
                 cached_strings_.emplace_back(item["name"].GetString());
                 const char* name = cached_strings_.back().raw();
 
-                const sparta::RegisterBase::group_num_type group_num = item["group_num"].GetInt();
+                const sparta::RegisterBase::group_num_type group_num = item["group_num"].GetUint();
                 auto iter = group_idx_map_.find(group_num);
                 if (iter == group_idx_map_.end())
                 {
@@ -116,6 +116,11 @@ namespace atlas
                 if (item.HasMember("initial_value"))
                 {
                     cached_initial_values_.emplace_back(item["initial_value"].GetString());
+                    initial_value = cached_initial_values_.back().raw();
+                }
+                else
+                {
+                    cached_initial_values_.emplace_back(bytes);
                     initial_value = cached_initial_values_.back().raw();
                 }
 
@@ -191,6 +196,11 @@ namespace atlas
                     iss >> std::hex >> byte;
                     hex_bytes_[i / 2] = static_cast<char>(byte);
                 }
+            }
+
+            InitialValueRef(size_t num_bytes)
+            {
+                hex_bytes_ = std::vector<unsigned char>(num_bytes, 0);
             }
 
             const unsigned char* raw() const { return hex_bytes_.data(); }
