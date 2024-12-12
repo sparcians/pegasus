@@ -3,6 +3,8 @@
 //
 
 #include "../include/AtlasTypes.hpp"
+#include "PageTableWalker.hpp"
+#include "PageTableEntry.hpp"
 
 namespace atlas
 {
@@ -31,7 +33,6 @@ namespace atlas
         //  corresponding to the original access type
         if (!entry.isValid() || ((!entry.canRead()) && entry.canWrite()))
         {
-            std::cout << "throwing page-fault exception" << std::endl;
             throw std::runtime_error("page-fault exception");
         }
         // TODO: maybe this should be in PageTableWalk method itself, as this should be controlling

@@ -1,6 +1,10 @@
 //
 // Created by skhan on 11/20/24.
 //
+#pragma once
+
+#include "AtlasState.hpp"
+
 namespace atlas
 {
 
@@ -125,5 +129,3 @@ namespace atlas
     };
 
 } // namespace atlas
-
-#include "PageTableWalker.cpp"
