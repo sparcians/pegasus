@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include "../include/AtlasTypes.hpp"
 
@@ -33,92 +35,120 @@ namespace atlas
         bool V_;      // Valid bit
 
       public:
-        PageTableEntry(xLen pte);
+        PageTableEntry(xLen pte)
+        {
+            if constexpr (Mode == MMUMode::SV32)
+            {
+                pageTableEntryValue_ = pte;
+                unUsedBits_ = 0;                               // no such field exist here hence 0
+                uint32_t PPN1 = (pte >> 20) & TWELVE_BIT_MASK; // 12 bits
+                uint32_t PPN0 =
+                    (pte >> 10) & TEN_BIT_MASK; // Extract PPN[0] (bits 19-10) // 10 bits
+                this->PPN_ = (PPN1 << 10)
+                             | PPN0; // Combine PPN1 and PPN0 to form the full PPN // 22 bits total
+                decodePTEFields_(pte);
+            }
+        }
 
         // Getter methods for each field
-        xLen getPTE() const;
-        uint32_t getUnusedBits() const;
-        uint32_t getPPN() const;
-        uint32_t getPPN1() const;
-        uint32_t getPPN0() const;
-        uint8_t getRSW() const;
-        bool isDirty() const;
-        bool isAccessed() const;
-        bool isGlobal() const;
-        bool isUserMode() const;
-        bool canExecute() const;
-        bool canWrite() const;
-        bool canRead() const;
-        bool isValid() const;
+        xLen getPTE() const { return pageTableEntryValue_; }
+
+        uint32_t getUnusedBits() const { return (Mode == MMUMode::SV32) ? 0 : unUsedBits_; }
+
+        uint32_t getPPN() const { return PPN_; }
+
+        uint32_t getPPN1() const
+        {
+            return (Mode == MMUMode::SV32) ? ((PPN_ >> 10) & 0xFFF) : 0;
+        } // 12 bits for PPN1
+
+        uint32_t getPPN0() const
+        {
+            return (Mode == MMUMode::SV32) ? (PPN_ & 0x3FF) : 0;
+        } // 10 bits for PPN0
+
+        uint8_t getRSW() const { return RSW_; }
+
+        bool isDirty() const { return D_; }
+
+        bool isAccessed() const { return A_; }
+
+        bool isGlobal() const { return G_; }
+
+        bool isUserMode() const { return U_; }
+
+        bool canExecute() const { return X_; }
+
+        bool canWrite() const { return W_; }
+
+        bool canRead() const { return R_; }
+
+        bool isValid() const { return V_; }
 
       private:
         // Setter methods for each field
-        void setPTE_(xLen pte);
-        void setUnusedBits_(uint32_t unusedBits);
-        void setPPN_(uint32_t ppn);
-        void setPPN0_(uint32_t ppn0);
-        void setPPN1_(uint32_t ppn1);
-        void setRSW_(uint8_t rsw);
-        void setDirty_(bool d);
-        void setAccessed_(bool a);
-        void setGlobal_(bool g);
-        void setUserMode_(bool u);
-        void setExecute_(bool x);
-        void setWrite_(bool w);
-        void setRead_(bool r);
-        void setValid_(bool v);
+        void setPTE_(xLen pte) { pageTableEntryValue_ = pte; }
 
-        void decodePTEFields_(xLen pte);
+        void setUnusedBits_(uint32_t unusedBits)
+        {
+            if constexpr (Mode != MMUMode::SV32)
+            {
+                unUsedBits_ = unusedBits;
+            }
+        }
+
+        void setPPN_(uint32_t ppn) { PPN_ = ppn; } // Setter for full PPN
+
+        void setPPN0_(uint32_t ppn0)
+        {
+            if constexpr (Mode == MMUMode::SV32)
+            {
+                PPN_ &= ~0x3FF;         // Clear the lower 10 bits (PPN0)
+                PPN_ |= (ppn0 & 0x3FF); // Set the lower 10 bits (PPN0)
+            }
+        }
+
+        void setPPN1_(uint32_t ppn1)
+        {
+            if constexpr (Mode == MMUMode::SV32)
+            {
+                PPN_ &= ~(0xFFF << 10);       // Clear bits 21-10 (PPN1)
+                PPN_ |= (ppn1 & 0xFFF) << 10; // Set bits 21-10 (PPN1)
+            }
+        }
+
+        void setRSW_(uint8_t rsw) { RSW_ = rsw & 0x3; } // Mask to ensure it's a 2-bit value
+
+        void setDirty_(bool d) { D_ = d; }
+
+        void setAccessed_(bool a) { A_ = a; }
+
+        void setGlobal_(bool g) { G_ = g; }
+
+        void setUserMode_(bool u) { U_ = u; }
+
+        void setExecute_(bool x) { X_ = x; }
+
+        void setWrite_(bool w) { W_ = w; }
+
+        void setRead_(bool r) { R_ = r; }
+
+        void setValid_(bool v) { V_ = v; }
+
+        void decodePTEFields_(xLen pte)
+        {
+            if constexpr (Mode == MMUMode::SV32)
+            {
+                RSW_ = (pte >> 8) & TWO_BIT_MASK; // Extract RSW_ (bits 9-8) // 2 bits
+                D_ = pte & PTE_D_MASK;            // Extract D_ (Dirty bit, bit 7) // 1 bit
+                A_ = pte & PTE_A_MASK;            // Extract A_ (Accessed bit, bit 6) // 1 bit
+                G_ = pte & PTE_G_MASK;            // Extract G_ (Global bit, bit 5) // 1 bit
+                U_ = pte & PTE_U_MASK;            // Extract U_ (User-mode bit, bit 4) // 1 bit
+                X_ = pte & PTE_X_MASK;            // Extract X_ (Execute bit, bit 3) // 1 bit
+                W_ = pte & PTE_W_MASK;            // Extract W_ (Write bit, bit 2) // 1 bit
+                R_ = pte & PTE_R_MASK;            // Extract R_ (Read bit, bit 1) // 1 bit
+                V_ = pte & PTE_V_MASK;            // Extract V_ (Valid bit, bit 0) // 1 bit
+            }
+        }
     };
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setPTE_(xLen pte)
-    {
-        pageTableEntryValue_ = pte;
-    }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setRSW_(uint8_t rsw)
-    {
-        RSW_ = rsw & 0x3;
-    } // Mask to ensure it's a 2-bit value
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setDirty_(bool d) { D_ = d; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setAccessed_(bool a) { A_ = a; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setGlobal_(bool g) { G_ = g; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setUserMode_(bool u) { U_ = u; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setExecute_(bool x) { X_ = x; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setWrite_(bool w) { W_ = w; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setRead_(bool r) { R_ = r; }
-
-    template <MMUMode Mode> void PageTableEntry<Mode>::setValid_(bool v) { V_ = v; }
-
-    template <MMUMode Mode> typename PageTableEntry<Mode>::xLen PageTableEntry<Mode>::getPTE() const
-    {
-        return pageTableEntryValue_;
-    }
-
-    template <MMUMode Mode> uint8_t PageTableEntry<Mode>::getRSW() const { return RSW_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::isDirty() const { return D_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::isAccessed() const { return A_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::isGlobal() const { return G_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::isUserMode() const { return U_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::canExecute() const { return X_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::canWrite() const { return W_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::canRead() const { return R_; }
-
-    template <MMUMode Mode> bool PageTableEntry<Mode>::isValid() const { return V_; }
 } // namespace atlas
-
-#include "PageTableEntry.tpp"
