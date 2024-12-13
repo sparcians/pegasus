@@ -12,7 +12,7 @@ namespace atlas
 
     template <typename T> ActionGroup* compute_address_handler(AtlasState* state)
     {
-        static_assert(std::is_same<T, RV64>::value || std::is_same<T, RV32>::value);
+        static_assert(std::is_same_v<T, RV64> || std::is_same_v<T, RV32>);
 
         const AtlasInstPtr & inst = state->getCurrentInst();
         const T rs1_val = inst->getRs1()->dmiRead<uint64_t>();
@@ -26,12 +26,12 @@ namespace atlas
     template <typename RV, typename SIZE, template <typename> class BinaryOp, bool U = true>
     ActionGroup* amo_handler(atlas::AtlasState* state)
     {
-        static_assert(std::is_same<RV, RV64>::value || std::is_same<RV, RV32>::value);
-        static_assert(std::is_same<SIZE, W>::value || std::is_same<SIZE, D>::value);
+        static_assert(std::is_same_v<RV, RV64> || std::is_same_v<RV, RV32>);
+        static_assert(std::is_same_v<SIZE, W> || std::is_same_v<SIZE, D>);
         static_assert(sizeof(RV) >= sizeof(SIZE));
 
         using Op =
-            typename std::conditional<std::is_same<RV, RV64>::value,
+            typename std::conditional<std::is_same_v<RV, RV64>,
                                       typename std::conditional<U, uint64_t, int64_t>::type,
                                       typename std::conditional<U, uint32_t, int32_t>::type>::type;
 
