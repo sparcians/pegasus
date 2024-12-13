@@ -127,10 +127,13 @@ namespace atlas
                 constexpr sparta::RegisterBase::Definition::HintsT hints = 0;
                 constexpr sparta::RegisterBase::Definition::RegDomainT regdomain = 0;
 
+                const bool writable = id != 0 || group_num != 0;
+
                 sparta::RegisterBase::Definition defn = {
                     id,        name,          group_num,     group,           group_idx,
                     desc,      bytes,         field_defns,   bank_membership, aliases,
-                    subset_of, subset_offset, initial_value, hints,           regdomain};
+                    subset_of, subset_offset, initial_value, hints,           regdomain,
+                    writable};
 
                 register_defns_.push_back(defn);
             }
