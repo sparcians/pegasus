@@ -22,7 +22,12 @@ def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")
     parser.add_argument("xlen", type=str, choices=['rv32', 'rv64'], help="The XLEN value (rv32 or rv64)")
     parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
+    parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     args = parser.parse_args()
+
+    if args.extensions:
+        assert [ext in SUPPORTED_EXTENSIONS for ext in args.extensions], "Unsupported extension(s) provided"
+        SUPPORTED_EXTENSIONS = args.extensions
 
     tests = get_tests(args.directory)
     if args.xlen == "rv32":
