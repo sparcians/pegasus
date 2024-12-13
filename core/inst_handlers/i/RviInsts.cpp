@@ -1,4 +1,6 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
+#include "arch/register_macros.hpp"
 #include "include/AtlasUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
@@ -167,9 +169,10 @@ namespace atlas
             inst_handlers.emplace("lwu",
                                   atlas::Action::createAction<&RviInsts::lwu_64_handler, RviInsts>(
                                       nullptr, "lwu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("mret",
-                                  atlas::Action::createAction<&RviInsts::mret_64_handler, RviInsts>(
-                                      nullptr, "mret", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "mret",
+                atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::MACHINE>,
+                                            RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("mv",
                                   atlas::Action::createAction<&RviInsts::mv_64_handler, RviInsts>(
                                       nullptr, "mv", ActionTags::EXECUTE_TAG));
@@ -231,9 +234,10 @@ namespace atlas
             inst_handlers.emplace("sraw",
                                   atlas::Action::createAction<&RviInsts::sraw_64_handler, RviInsts>(
                                       nullptr, "sraw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sret",
-                                  atlas::Action::createAction<&RviInsts::sret_64_handler, RviInsts>(
-                                      nullptr, "sret", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sret",
+                atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::SUPERVISOR>,
+                                            RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
                                   atlas::Action::createAction<&RviInsts::srl_64_handler, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
@@ -342,40 +346,66 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::mret_64_handler(atlas::AtlasState* state)
+    template <typename XLEN, PrivMode PRIV_MODE>
+    ActionGroup* RviInsts::xret_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        static_assert(PRIV_MODE == PrivMode::MACHINE || PRIV_MODE == PrivMode::SUPERVISOR);
 
-        // require_privilege(PRV_M);
-        // set_pc_and_serialize(p->get_state()->mepc->read());
-        // reg_t s = STATE.mstatus->read();
-        // reg_t prev_prv = get_field(s, MSTATUS_MPP);
-        // reg_t prev_virt = get_field(s, MSTATUS_MPV);
-        // if (prev_prv != PRV_M)
-        //   s = set_field(s, MSTATUS_MPRV, 0);
-        // s = set_field(s, MSTATUS_MIE, get_field(s, MSTATUS_MPIE));
-        // s = set_field(s, MSTATUS_MPIE, 1);
-        // s = set_field(s, MSTATUS_MPP, p->extension_enabled('U') ? PRV_U : PRV_M);
-        // s = set_field(s, MSTATUS_MPV, 0);
-        // if (ZICFILP_xLPE(prev_virt, prev_prv)) {
-        //   STATE.elp = static_cast<elp_t>(get_field(s, MSTATUS_MPELP));
-        // }
-        // s = set_field(s, MSTATUS_MPELP, elp_t::NO_LP_EXPECTED);
-        // s = set_field(s, MSTATUS_MDT, 0);
-        // if (prev_prv == PRV_U || prev_virt)
-        //   s = set_field(s, MSTATUS_SDT, 0);
-        // if (prev_virt && prev_prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // STATE.mstatus->write(s);
-        // if (STATE.mstatush) STATE.mstatush->write(s >> 32); // log mstatush change
-        // STATE.tcontrol->write((STATE.tcontrol->read() & CSR_TCONTROL_MPTE) ?
-        // (CSR_TCONTROL_MPTE | CSR_TCONTROL_MTE) : 0); p->set_privilege(prev_prv,
-        // prev_virt);
+        // mret can only be executed in Machine mode
+        // sret can be executee in Supervisor or Machine mode
+        if (state->getPrivMode() >= PRIV_MODE)
+        {
+            // TODO: Hook up illegal instruction exception to the Exception Unit
+            sparta_assert(false, "Illegal instruction exception - not supported yet!");
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        // FIXME: Register macros are currently hardcoded for RV64
+        PrivMode prev_priv_mode = PrivMode::INVALID;
+        if constexpr (PRIV_MODE == PrivMode::MACHINE)
+        {
+            // Update the PC with MEPC value
+            state->setNextPc(READ_CSR_REG(MEPC));
+
+            // Get the previous privilege mode from the MPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD(MSTATUS, mpp);
+
+            // If the mret instruction changes the privilege mode to a mode less privileged
+            // than Machine mode, the MPRV bit is reset to 0
+            if (prev_priv_mode != PrivMode::MACHINE)
+            {
+                WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+            }
+
+            // Set MIE = MPIE and reset MPIE
+            WRITE_CSR_FIELD(MSTATUS, mie, READ_CSR_FIELD(MSTATUS, mpie));
+            WRITE_CSR_FIELD(MSTATUS, mpie, (XLEN)1);
+
+            // Reset MPP
+            WRITE_CSR_FIELD(MSTATUS, mpp, (XLEN)PrivMode::MACHINE);
+        }
+        else
+        {
+            // Update the PC with SEPC value
+            state->setNextPc(READ_CSR_REG(SEPC));
+
+            // Get the previous privilege mode from the MPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD(SSTATUS, spp);
+
+            // TODO:
+            WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+
+            // Set MIE = MPIE and reset MPIE
+            WRITE_CSR_FIELD(SSTATUS, sie, READ_CSR_FIELD(SSTATUS, spie));
+            WRITE_CSR_FIELD(SSTATUS, spie, (XLEN)1);
+
+            // Reset MPP
+            WRITE_CSR_FIELD(SSTATUS, spp, (XLEN)PrivMode::USER);
+        }
+
+        // TODO: Update MSTATUSH
+
+        // Update the privilege mode to the previous privilege mode
+        state->setNextPrivMode(prev_priv_mode);
 
         return nullptr;
     }
@@ -977,67 +1007,6 @@ namespace atlas
         const uint32_t IMM_SIZE = 12;
         const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
         insn->getRd()->dmiWrite(imm);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sret_64_handler(atlas::AtlasState* state)
-    {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_extension('S');
-        // reg_t prev_hstatus = STATE.hstatus->read();
-        // if (STATE.v) {
-        //   if (STATE.prv == PRV_U || get_field(prev_hstatus, HSTATUS_VTSR))
-        //     require_novirt();
-        // } else {
-        //   require_privilege(get_field(STATE.mstatus->read(), MSTATUS_TSR) ? PRV_M :
-        //   PRV_S);
-        // }
-        // reg_t next_pc = p->get_state()->sepc->read();
-        // set_pc_and_serialize(next_pc);
-        // reg_t s = STATE.sstatus->read();
-        // reg_t prev_prv = get_field(s, MSTATUS_SPP);
-        // s = set_field(s, MSTATUS_SIE, get_field(s, MSTATUS_SPIE));
-        // s = set_field(s, MSTATUS_SPIE, 1);
-        // s = set_field(s, MSTATUS_SPP, PRV_U);
-        // bool prev_virt = STATE.v;
-        // if (!STATE.v) {
-        //   if (p->extension_enabled('H')) {
-        //     prev_virt = get_field(prev_hstatus, HSTATUS_SPV);
-        //     reg_t new_hstatus = set_field(prev_hstatus, HSTATUS_SPV, 0);
-        //     STATE.hstatus->write(new_hstatus);
-        //   }
-        //
-        //   STATE.mstatus->write(set_field(STATE.mstatus->read(), MSTATUS_MPRV, 0));
-        // }
-        // if (ZICFILP_xLPE(prev_virt, prev_prv)) {
-        //   STATE.elp = static_cast<elp_t>(get_field(s, SSTATUS_SPELP));
-        // }
-        //
-        // if (STATE.prv == PRV_M) {
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MDT);
-        //   if (prev_prv == PRV_U || prev_virt)
-        //     STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //   if (prev_virt && prev_prv == PRV_U)
-        //     STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // }
-        //
-        // s = set_field(s, SSTATUS_SPELP, elp_t::NO_LP_EXPECTED);
-        //
-        // if (STATE.prv == PRV_S) {
-        //   s = set_field(s, SSTATUS_SDT, 0);
-        //   if (!STATE.v && prev_virt && prev_prv == PRV_U)
-        //     STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // }
-        //
-        // STATE.sstatus->write(s);
-        // p->set_privilege(prev_prv, prev_virt);
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
 
         return nullptr;
     }
