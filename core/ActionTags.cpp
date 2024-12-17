@@ -10,6 +10,7 @@ namespace atlas
     const ActionTagType ActionTags::DECODE_TAG = ActionTagFactory::createTag("DECODE");
     const ActionTagType ActionTags::COMPUTE_ADDR_TAG = ActionTagFactory::createTag("COMPUTE_ADDR");
     const ActionTagType ActionTags::EXECUTE_TAG = ActionTagFactory::createTag("EXECUTE");
+    const ActionTagType ActionTags::EXCEPTION_TAG = ActionTagFactory::createTag("EXCEPTION");
     const ActionTagType ActionTags::DATA_TRANSLATE_TAG =
         ActionTagFactory::createTag("DATA_TRANSLATE");
 

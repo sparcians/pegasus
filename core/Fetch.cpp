@@ -3,6 +3,7 @@
 #include "core/AtlasState.hpp"
 #include "core/Execute.hpp"
 #include "core/Translate.hpp"
+#include "core/Exception.hpp"
 #include "include/ActionTags.hpp"
 
 #include "mavis/mavis/Mavis.h"
@@ -70,6 +71,14 @@ namespace atlas
         inst_translate_action_group->setNextActionGroup(&decode_action_group_);
         decode_action_group_.setNextActionGroup(execute_action_group);
         execute_action_group->setNextActionGroup(&fetch_action_group_);
+
+        auto exception_unit = core_tn->getChild("exception")->getResourceAs<Exception*>();
+        ActionGroup* exception_action_group = exception_unit->getActionGroup();
+        exception_action_group->setNextActionGroup(&fetch_action_group_);
+
+        // Note that even though we also have the Exception unit, we do not wire up the ActionGroups
+        // now since we do not expect many exceptions to be hit. The trap() method will insert the
+        // handler's ActionGroup on demand.
 
         sparta::TreeNode* fetch_node = core_tn->getChild("fetch");
         mavis_.reset(new MavisType(

@@ -1,6 +1,12 @@
 #include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
+#include "arch/register_macros.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+#include "core/AtlasState.hpp"
+#include "core/AtlasInst.hpp"
+#include "core/Exception.hpp"
+#include "core/Trap.hpp"
 
 namespace atlas
 {
@@ -28,115 +34,150 @@ namespace atlas
 
     ActionGroup* RvzicsrInsts::csrrs_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // bool write = insn.rs1() != 0;
-        // int csr = validate_csr(insn.csr(), write);
-        // reg_t old = p->get_csr(csr, insn, write);
-        // if (write) {
-        //     p->put_csr(csr, old | RS1);
-        // }
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const auto & rs1 = insn->getRs1();
+        const auto rs1_val = rs1->dmiRead<uint64_t>();
+        const auto write = rs1_val != 0;
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
+
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+
+        if (write) {
+            reg->write(old | rs1_val); //dmiWrite?
+        }
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 
     ActionGroup* RvzicsrInsts::csrrc_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // bool write = insn.rs1() != 0;
-        // int csr = validate_csr(insn.csr(), write);
-        // reg_t old = p->get_csr(csr, insn, write);
-        // if (write) {
-        //     p->put_csr(csr, old & ~RS1);
-        // }
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const auto & rs1 = insn->getRs1();
+        const auto rs1_val = rs1->dmiRead<uint64_t>();
+        const auto write = rs1_val != 0;
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
+
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+        if (write) {
+            reg->write(old & ~rs1_val); //dmiWrite?
+        }
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 
     ActionGroup* RvzicsrInsts::csrrwi_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // int csr = validate_csr(insn.csr(), true);
-        // reg_t old = p->get_csr(csr, insn, true);
-        // p->put_csr(csr, insn.rs1());
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
+        reg->write(imm); //dmiWrite?
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 
     ActionGroup* RvzicsrInsts::csrrw_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // int csr = validate_csr(insn.csr(), true);
-        // reg_t old = p->get_csr(csr, insn, true);
-        // p->put_csr(csr, RS1);
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        const auto & rs1 = insn->getRs1();
+        const auto rs1_val = rs1->dmiRead<uint64_t>();
+
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+        reg->write(old | rs1_val); //dmiWrite?
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 
     ActionGroup* RvzicsrInsts::csrrsi_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // bool write = insn.rs1() != 0;
-        // int csr = validate_csr(insn.csr(), write);
-        // reg_t old = p->get_csr(csr, insn, write);
-        // if (write) {
-        //     p->put_csr(csr, old | insn.rs1());
-        // }
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
+        if (imm) {
+            reg->write(old | imm); //dmiWrite?
+        }
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 
     ActionGroup* RvzicsrInsts::csrrci_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // bool write = insn.rs1() != 0;
-        // int csr = validate_csr(insn.csr(), write);
-        // reg_t old = p->get_csr(csr, insn, write);
-        // if (write) {
-        //     p->put_csr(csr, old & ~(reg_t)insn.rs1());
-        // }
-        // WRITE_RD(sext_xlen(old));
-        // serialize();
+        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
+            mavis::OpcodeInfo::SpecialField::CSR);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        auto reg = state->getCsrRegister(csr);
+        if (!reg) {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
+
+        const reg_t old = reg->dmiRead<uint64_t>();
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
+        if (imm) {
+            reg->write(old & ~imm); //dmiWrite?
+        }
+
+        const auto rd_val = sext_xlen(old);
+        insn->getRd()->write(rd_val); //dmiWrite?
+
         return nullptr;
     }
 

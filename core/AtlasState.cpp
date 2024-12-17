@@ -3,6 +3,7 @@
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/Translate.hpp"
+#include "core/Exception.hpp"
 #include "include/ActionTags.hpp"
 #include "include/AtlasUtils.hpp"
 #include "system/AtlasSystem.hpp"
@@ -48,6 +49,7 @@ namespace atlas
         fetch_unit_ = getContainer()->getChild("fetch")->getResourceAs<Fetch*>();
         execute_unit_ = getContainer()->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
+        exception_unit_ = getContainer()->getChild("exception")->getResourceAs<Exception*>();
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
