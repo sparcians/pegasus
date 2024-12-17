@@ -64,6 +64,11 @@ namespace atlas
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             core_tn, "execute", sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
             "Execute Unit", &execute_factory_));
+
+        // top.core.exception
+        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
+            core_tn, "exception", sparta::TreeNode::GROUP_NAME_NONE,
+            sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
     }
 
     void AtlasSim::configureTree_()

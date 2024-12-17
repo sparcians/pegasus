@@ -4,6 +4,7 @@
 #include "core/Fetch.hpp"
 #include "core/Translate.hpp"
 #include "core/Execute.hpp"
+#include "core/Exception.hpp"
 #include "system/AtlasSystem.hpp"
 
 #include "sparta/app/Simulation.hpp"
@@ -32,6 +33,8 @@ namespace atlas
         sparta::ResourceFactory<atlas::Translate, atlas::Translate::TranslateParameters>
             translate_factory_;
         sparta::ResourceFactory<atlas::Execute, atlas::Execute::ExecuteParameters> execute_factory_;
+        sparta::ResourceFactory<atlas::Exception, atlas::Exception::ExceptionParameters>
+            exception_factory_;
         sparta::ResourceFactory<atlas::AtlasState, atlas::AtlasState::AtlasStateParameters>
             state_factory_;
         sparta::ResourceFactory<atlas::AtlasSystem, atlas::AtlasSystem::AtlasSystemParameters>

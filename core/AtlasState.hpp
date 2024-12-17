@@ -28,6 +28,7 @@ namespace atlas
     class Fetch;
     class Execute;
     class Translate;
+    class Exception;
 
     class AtlasState : public sparta::Unit
     {
@@ -140,6 +141,8 @@ namespace atlas
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
+        Exception* getExceptionUnit() const { return exception_unit_; }
+
       private:
         void onBindTreeEarly_() override;
 
@@ -189,6 +192,9 @@ namespace atlas
 
         // Translate Unit
         Translate* translate_unit_ = nullptr;
+
+        // Exception Unit
+        Exception* exception_unit_ = nullptr;
 
         // Register set holding all Sparta registers from all generated JSON files
         std::unique_ptr<RegisterSet> int_rset_;
