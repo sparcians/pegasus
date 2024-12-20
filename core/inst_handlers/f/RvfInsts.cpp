@@ -152,9 +152,6 @@ namespace atlas
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
 
-        const float32_t fs1 {0xdeadbeef};
-        const float32_t test = f32_sqrt(fs1);
-        (void) test;
         return nullptr;
     }
 
