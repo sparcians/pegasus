@@ -1,6 +1,7 @@
 #include "core/inst_handlers/f/RvfInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+#include "core/inst_handlers/softfloat.hpp"
 
 namespace atlas
 {
@@ -148,6 +149,10 @@ namespace atlas
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
+
+        const float32_t fs1 {0xdeadbeef};
+        const float32_t test = f32_sqrt(fs1);
+        (void) test;
         return nullptr;
     }
 

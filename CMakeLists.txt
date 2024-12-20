@@ -31,7 +31,7 @@ else()
 endif()
 
 if(NOT BUILD_SPARTA_FROM_SOURCE)
-  add_compile_options ( -Werror
+  add_compile_options (
     -Wall -Wextra -Winline -Winit-self -Wunused-function
     -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
@@ -100,6 +100,9 @@ include_directories(${CMAKE_SOURCE_DIR})
 # Mavis
 include_directories(SYSTEM mavis)
 
+# SoftFloat
+include_directories(SYSTEM softfloat)
+
 # ELFIO
 include_directories(SYSTEM elfio)
 
@@ -108,6 +111,7 @@ add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
 add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
 
 add_subdirectory(mavis)
+add_subdirectory(softfloat)
 add_subdirectory(arch)
 add_subdirectory(core)
 add_subdirectory(core/inst_handlers)
