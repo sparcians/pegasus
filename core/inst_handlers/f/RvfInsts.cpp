@@ -1,7 +1,9 @@
 #include "core/inst_handlers/f/RvfInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
-#include "core/inst_handlers/softfloat.hpp"
+extern "C" {
+#include "source/include/softfloat.h"
+}
 
 namespace atlas
 {
