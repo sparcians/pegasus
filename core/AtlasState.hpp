@@ -75,6 +75,13 @@ namespace atlas
 
         uint64_t assignUid() { return uid_++; }
 
+        uint64_t getMStatusInitialValue() const
+        {
+            return AtlasState::getMStatusInitialValue(this, getXlen());
+        }
+
+        static uint64_t getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val);
+
         struct SimState
         {
             AtlasInstPtr current_inst = nullptr;
@@ -140,6 +147,8 @@ namespace atlas
         void insertExecuteActions(ActionGroup* action_group);
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
+
+        ActionGroup* getPostExceptionActionGroup() { return &post_exception_action_group_; }
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
@@ -211,5 +220,8 @@ namespace atlas
         // Stop simulation Action
         Action stop_action_;
         ActionGroup stop_sim_action_group_;
+
+        // Post-exception ActionGroup
+        ActionGroup post_exception_action_group_;
     };
 } // namespace atlas

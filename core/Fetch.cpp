@@ -12,6 +12,11 @@
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include "include/CSRFieldIdxs64.hpp"
+#include "arch/register_macros.hpp"
+//#include "core/inst_handlers/inst_helpers.hpp"
+//#include "arch/register_macros.hpp"
+
 namespace atlas
 {
     std::vector<std::string> getIsaFiles(const std::string & isa_file_path)
@@ -146,6 +151,10 @@ namespace atlas
 
     void Fetch::advanceSim_()
     {
+        const auto mstatus = state_->getMStatusInitialValue();
+        auto state = state_;
+        POKE_CSR_REG(MSTATUS, mstatus);
+
         // Run
         ActionGroup* next_action_group = &fetch_action_group_;
         while (next_action_group && (next_action_group->hasTag(ActionTags::STOP_SIM_TAG) == false))

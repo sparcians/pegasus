@@ -40,6 +40,12 @@ private:
 
     ActionGroup* handleException_(atlas::AtlasState* state);
 
+    ActionGroup* handleUModeException_(atlas::AtlasState* state);
+
+    ActionGroup* handleSModeException_(atlas::AtlasState* state);
+
+    ActionGroup* handleMModeException_(atlas::AtlasState* state);
+
     sparta::utils::ValidValue<TrapCauses> cause_;
 };
 
