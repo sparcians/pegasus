@@ -151,7 +151,6 @@ namespace atlas
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
-
         return nullptr;
     }
 
