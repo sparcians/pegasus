@@ -64,6 +64,18 @@ namespace atlas
         AtlasInstPtr inst = state->getCurrentInst();
         sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
 
+        if (!inst->hasRd()) {
+            INSTLOG("core   0: " << (uint64_t)state->getPrivMode() /*<< " " << HEX16(state->getPc())*/
+                                 << " " << "(" << HEX8(inst->getOpcode()) << ")");
+        } else {
+            INSTLOG("core   0: " << (uint64_t)state->getPrivMode() /*<< " " << HEX16(state->getPc())*/
+                                 << " " << "(" << HEX8(inst->getOpcode()) << ")"
+                                 << " " << "[" << inst->getRd()->getName()
+                                 << " " << HEX16(inst->getRd()->dmiRead<uint64_t>()) << "]");
+        }
+
+        return nullptr;
+
         if (inst->hasRd())
         {
             sparta_assert(dst_regs_.size() == 1);

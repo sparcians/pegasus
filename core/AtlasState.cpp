@@ -20,7 +20,8 @@ namespace atlas
         hart_id_(p->hart_id),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         inst_logger_(core_node),
-        stop_sim_action_group_("stop_sim")
+        stop_sim_action_group_("stop_sim"),
+        post_exception_action_group_("post_exception")
     {
         auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
@@ -39,6 +40,9 @@ namespace atlas
         // Create Action to stop simulation
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
+
+        // Create Action to return to Fetch after handling an exception
+        post_exception_action_group_.addAction(increment_pc_action_);
     }
 
     // Not default -- defined in source file to reduce massive inlining
@@ -50,6 +54,7 @@ namespace atlas
         execute_unit_ = getContainer()->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
         exception_unit_ = getContainer()->getChild("exception")->getResourceAs<Exception*>();
+        post_exception_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
@@ -129,5 +134,12 @@ namespace atlas
         ++sim_state_.inst_count;
 
         return nullptr;
+    }
+
+    uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)
+    {
+        // yyy cnyce
+        (void)state; (void)xlen;
+        return 42949672960;
     }
 } // namespace atlas
