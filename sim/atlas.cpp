@@ -60,19 +60,20 @@ int main(int argc, char** argv)
         {
             cls.runSimulator(&sim);
 
-	    cls.postProcess(&sim);
+            cls.postProcess(&sim);
 
-	    // Get workload exit code
+            // Get workload exit code
             const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
             exit_code = sim_state->workload_exit_code;
             std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
         }
-	else
+        else
         {
-	    std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run" << std::endl;
+            std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
+                      << std::endl;
             std::cout << USAGE;
-	    return 0;
-	}
+            return 0;
+        }
     }
     catch (...)
     {
