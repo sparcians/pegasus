@@ -4,6 +4,11 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 
+extern "C"
+{
+#include "source/include/softfloat.h"
+}
+
 namespace atlas
 {
     template <typename XLEN>

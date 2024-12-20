@@ -9,6 +9,7 @@ target_link_libraries(atlascosimlib
     atlassim
     atlascore
     atlasinsts
+    softfloat
     atlassys
     ${SPARTA_LIBS}
     mavis
