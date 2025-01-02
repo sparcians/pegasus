@@ -7,7 +7,7 @@
 
 namespace atlas
 {
-    uint_fast8_t getRM(const AtlasInstPtr & inst)
+    inline uint_fast8_t getRM(const AtlasInstPtr & inst)
     {
         uint64_t static_rm = inst->getRM();
         if (static_rm == 7) // RM field "DYN"

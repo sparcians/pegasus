@@ -166,7 +166,7 @@ namespace atlas
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
         const uint32_t rs3_val = inst->getRs3()->dmiRead<uint64_t>();
         const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
-        inst->getRd()->write(f32_add(float32_t{product ^ 0x80000000}, float32_t{rs3_val}).v);
+        inst->getRd()->write(f32_add(float32_t{product ^ 1 << 31}, float32_t{rs3_val}).v);
         return nullptr;
     }
 
@@ -248,7 +248,7 @@ namespace atlas
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
         const uint32_t rs3_val = inst->getRs3()->dmiRead<uint64_t>();
         const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
-        inst->getRd()->write(f32_sub(float32_t{product ^ 0x80000000}, float32_t{rs3_val}).v);
+        inst->getRd()->write(f32_sub(float32_t{product ^ 1 << 31}, float32_t{rs3_val}).v);
         return nullptr;
     }
 
@@ -303,7 +303,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
-        const uint32_t sign_mask = 0x80000000;
+        const uint32_t sign_mask = 1 << 31;
         inst->getRd()->write((rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask));
         return nullptr;
     }
@@ -371,7 +371,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
-        const uint32_t sign_mask = 0x80000000;
+        const uint32_t sign_mask = 1 << 31;
         inst->getRd()->write((rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask));
         return nullptr;
     }
@@ -379,7 +379,7 @@ namespace atlas
     ActionGroup* RvfInsts::fcvt_s_lu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         inst->getRd()->write(ui64_to_f32(rs1_val).v);
         return nullptr;
     }
@@ -407,7 +407,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
-        const uint32_t sign_mask = 0x80000000;
+        const uint32_t sign_mask = 1 << 31;
         inst->getRd()->write((rs1_val & ~sign_mask) | (rs2_val & sign_mask));
         return nullptr;
     }
