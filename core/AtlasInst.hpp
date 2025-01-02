@@ -54,9 +54,12 @@ namespace atlas
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
-        uint64_t getRM() { return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::RM); }
+        uint64_t getRM()
+        {
+            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::RM);
+        }
 
-        sparta::Register* & getRs1()
+        sparta::Register*& getRs1()
         {
             sparta_assert(rs1_, "Operand RS1 is a nullptr! " << *this);
             return rs1_;
@@ -68,13 +71,13 @@ namespace atlas
             return rs2_;
         }
 
-        sparta::Register* & getRs3()
+        sparta::Register*& getRs3()
         {
             sparta_assert(rs3_, "Operand RS2 is a nullptr! " << *this);
             return rs3_;
         }
 
-        sparta::Register* & getRd()
+        sparta::Register*& getRd()
         {
             sparta_assert(rd_, "Operand RD is a nullptr! " << *this);
             return rd_;

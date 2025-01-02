@@ -211,7 +211,8 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
-        inst->getRd()->write(f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val : rs2_val);
+        inst->getRd()->write(f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val
+                                                                                  : rs2_val);
         return nullptr;
     }
 
@@ -292,7 +293,8 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
-        inst->getRd()->write(f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val : rs1_val);
+        inst->getRd()->write(f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val
+                                                                                  : rs1_val);
         return nullptr;
     }
 
@@ -351,7 +353,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
-        inst->getRd()->write(signExtend<int32_t, int64_t>(f32_to_i32(float32_t{rs1_val}, getRM(inst), true)));
+        inst->getRd()->write(
+            signExtend<int32_t, int64_t>(f32_to_i32(float32_t{rs1_val}, getRM(inst), true)));
         return nullptr;
     }
 
