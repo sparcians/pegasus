@@ -53,7 +53,11 @@ namespace atlas
         fetch_unit_ = getContainer()->getChild("fetch")->getResourceAs<Fetch*>();
         execute_unit_ = getContainer()->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
-        exception_unit_ = getContainer()->getChild("exception")->getResourceAs<Exception*>();
+        if (auto exc = getContainer()->getChild("exception", false)) {
+            exception_unit_ = exc->getResourceAs<Exception*>();
+        } else {
+            exception_unit_ = nullptr;
+        }
         post_exception_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
 

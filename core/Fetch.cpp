@@ -77,9 +77,10 @@ namespace atlas
         decode_action_group_.setNextActionGroup(execute_action_group);
         execute_action_group->setNextActionGroup(&fetch_action_group_);
 
-        auto exception_unit = core_tn->getChild("exception")->getResourceAs<Exception*>();
-        ActionGroup* exception_action_group = exception_unit->getActionGroup();
-        exception_action_group->setNextActionGroup(&fetch_action_group_);
+        if (auto exception_unit = core_tn->getChild("exception", false)) {
+            ActionGroup* exception_action_group = exception_unit->getResourceAs<Exception*>()->getActionGroup();
+            exception_action_group->setNextActionGroup(&fetch_action_group_);
+        }
 
         // Note that even though we also have the Exception unit, we do not wire up the ActionGroups
         // now since we do not expect many exceptions to be hit. The trap() method will insert the
