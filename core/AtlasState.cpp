@@ -13,6 +13,20 @@
 #include "arch/register_macros.hpp"
 #include "include/AtlasTypes.hpp"
 
+//Core database headers
+#include "simdb/ObjectManager.hpp"
+#include "simdb/ObjectRef.hpp"
+#include "simdb/TableRef.hpp"
+#include "simdb/utils/ObjectQuery.hpp"
+#include "simdb/utils/BlobHelpers.hpp"
+#include "simdb/async/AsyncTaskEval.hpp"
+
+//SQLite-specific headers
+#include "simdb/impl/sqlite/SQLiteConnProxy.hpp"
+#include "simdb/impl/sqlite/TransactionUtils.hpp"
+#include "simdb/impl/sqlite/Errors.hpp"
+#include <sqlite3.h>
+
 namespace atlas
 {
     AtlasState::AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p) :
@@ -130,6 +144,10 @@ namespace atlas
 
     ActionGroup* AtlasState::incrementPc_(AtlasState*)
     {
+        if (SPARTA_EXPECT_FALSE(cosim_db_)) {
+            snapshotAndSyncWithCoSim_();
+        }
+
         // Set PC
         pc_ = next_pc_;
         next_pc_ = 0;
@@ -138,6 +156,182 @@ namespace atlas
         ++sim_state_.inst_count;
 
         return nullptr;
+    }
+
+    void AtlasState::enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
+                                         std::shared_ptr<CoSimQuery> query)
+    {
+        bool valid = inst_logger_.enabled();
+        if (!valid) {
+            for (auto obs : observers_) {
+                if (obs->enabled()) {
+                    valid = true;
+                    break;
+                }
+            }
+        }
+
+        sparta_assert(valid, "No observers enabled, nothing to debug!");
+        cosim_db_ = db;
+        cosim_query_ = query;
+
+        auto tbl = cosim_db_->getTable("Registers");
+
+        auto int_rset = getIntRegisterSet();
+        for (int reg_idx = 0; reg_idx < (int)int_rset->getNumRegisters(); ++reg_idx) {
+            auto reg = int_rset->getRegister(reg_idx);
+            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 0, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+            auto reg_name = "x" + std::to_string(reg_idx);
+            reg_ids_by_name_[reg_name] = record->getId();
+        }
+
+        auto fp_rset = getFpRegisterSet();
+        for (int reg_idx = 0; reg_idx < (int)fp_rset->getNumRegisters(); ++reg_idx) {
+            auto reg = fp_rset->getRegister(reg_idx);
+            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 1, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+            auto reg_name = "f" + std::to_string(reg_idx);
+            reg_ids_by_name_[reg_name] = record->getId();
+        }
+
+        auto vec_rset = getVecRegisterSet();
+        for (int reg_idx = 0; reg_idx < (int)vec_rset->getNumRegisters(); ++reg_idx) {
+            auto reg = vec_rset->getRegister(reg_idx);
+            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 2, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+            auto reg_name = "v" + std::to_string(reg_idx);
+            reg_ids_by_name_[reg_name] = record->getId();
+        }
+
+        auto csr_rset = getCsrRegisterSet();
+        for (int reg_idx = 0; reg_idx < (int)csr_rset->getNumRegisters(); ++reg_idx) {
+            if (auto reg = csr_rset->getRegister(reg_idx)) {
+                auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 3, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+                auto reg_name = "csr" + std::to_string(reg_idx);
+                reg_ids_by_name_[reg_name] = record->getId();
+            }
+        }
+    }
+
+    class InstSnapshotter : public simdb::WorkerTask
+    {
+    public:
+        InstSnapshotter(simdb::ObjectManager* obj_mgr, int hart,
+                        const std::string& rs1_name, uint64_t rs1_val,
+                        const std::string& rs2_name, uint64_t rs2_val,
+                        const std::string& rd_name, uint64_t rd_val_before, uint64_t rd_val_after,
+                        int has_imm, uint64_t imm,
+                        const std::string& disasm,
+                        const std::string& mnemonic,
+                        uint64_t opcode, uint64_t pc, int priv, int result_code)
+            : obj_mgr_(obj_mgr)
+            , hart_(hart)
+            , rs1_name_(rs1_name)
+            , rs1_val_(rs1_val)
+            , rs2_name_(rs2_name)
+            , rs2_val_(rs2_val)
+            , rd_name_(rd_name)
+            , rd_val_before_(rd_val_before)
+            , rd_val_after_(rd_val_after)
+            , has_imm_(has_imm)
+            , imm_(imm)
+            , disasm_(disasm)
+            , mnemonic_(mnemonic)
+            , opcode_(opcode)
+            , pc_(pc)
+            , priv_(priv)
+            , result_code_(result_code)
+        {}
+
+        void completeTask() override
+        {
+            auto tbl = obj_mgr_->getTable("Instructions");
+
+            tbl->createObjectWithArgs("HartId", hart_,
+                                      "Rs1", rs1_name_,
+                                      "Rs1Val", rs1_val_,
+                                      "Rs2", rs2_name_,
+                                      "Rs2Val", rs2_val_,
+                                      "Rd", rd_name_,
+                                      "RdValBefore", rd_val_before_,
+                                      "RdValAfter", rd_val_after_,
+                                      "HasImm", has_imm_,
+                                      "Imm", imm_,
+                                      "Disasm", disasm_,
+                                      "Mnemonic", mnemonic_,
+                                      "Opcode", opcode_,
+                                      "PC", pc_,
+                                      "Priv", priv_,
+                                      "ResultCode", result_code_);
+        }
+
+    private:
+        simdb::ObjectManager* obj_mgr_;
+        int hart_;
+        std::string rs1_name_;
+        uint64_t rs1_val_;
+        std::string rs2_name_;
+        uint64_t rs2_val_;
+        std::string rd_name_;
+        uint64_t rd_val_before_;
+        uint64_t rd_val_after_;
+        int has_imm_;
+        uint64_t imm_;
+        std::string disasm_;
+        std::string mnemonic_;
+        uint64_t opcode_;
+        uint64_t pc_;
+        int priv_;
+        int result_code_;
+    };
+
+    void AtlasState::snapshotAndSyncWithCoSim_()
+    {
+        const AtlasInstPtr & insn = getCurrentInst();
+
+        int hart = getHartId();
+        std::string rs1_name = insn->hasRs1() ? insn->getRs1()->getName() : "";
+        uint64_t rs1_val = insn->hasRs1() ? insn->getRs1()->dmiRead<uint64_t>() : 0;
+        std::string rs2_name = insn->hasRs2() ? insn->getRs2()->getName() : "";
+        uint64_t rs2_val = insn->hasRs2() ? insn->getRs2()->dmiRead<uint64_t>() : 0;
+        std::string rd_name = insn->hasRd() ? insn->getRd()->getName() : "";
+
+        uint64_t rd_val_before = 0;
+        uint64_t rd_val_after = 0;
+        if (insn->hasRd()) {
+            Observer* obs = nullptr;
+            if (inst_logger_.enabled()) {
+                obs = &inst_logger_;
+            } else {
+                for (auto observer : observers_) {
+                    if (observer->enabled()) {
+                        obs = observer;
+                        break;
+                    }
+                }
+            }
+
+            sparta_assert(obs, "No observers enabled, nothing to debug!");
+            rd_val_before = obs->getPrevRdValue();
+            rd_val_after = insn->getRd()->dmiRead<uint64_t>();
+        }
+
+        int has_imm = insn->hasImmediate() ? 1 : 0;
+        uint64_t imm = insn->hasImmediate() ? insn->getImmediate() : 0;
+        std::string disasm = insn->dasmString();
+        std::string mnemonic = insn->getMnemonic();
+        uint64_t opcode = insn->getOpcode();
+        uint64_t pc = getPc();
+        int priv = (int)priv_mode_;
+        int result_code = 0; // yyy
+
+        std::unique_ptr<simdb::WorkerTask> task(new InstSnapshotter(cosim_db_.get(), hart,
+                                                                    rs1_name, rs1_val,
+                                                                    rs2_name, rs2_val,
+                                                                    rd_name, rd_val_before, rd_val_after,
+                                                                    has_imm, imm,
+                                                                    disasm, mnemonic,
+                                                                    opcode, pc, priv, result_code));
+
+        cosim_db_->getTaskQueue()->addWorkerTask(std::move(task));
     }
 
     uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)

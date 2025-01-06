@@ -24,6 +24,8 @@ namespace atlas
 
         AtlasSystem* getAtlasSystem() const { return system_; }
 
+        void enableCoSimDebugger(std::unique_ptr<CoSimQuery> query);
+
       private:
         void buildTree_() override;
         void configureTree_() override;
@@ -50,6 +52,8 @@ namespace atlas
 
         const std::string workload_;
         const uint64_t ilimit_;
+        std::shared_ptr<CoSimQuery> cosim_query_;
+        std::shared_ptr<simdb::ObjectManager> cosim_db_;
 
         friend class AtlasCoSim;
     };

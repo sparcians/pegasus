@@ -20,6 +20,11 @@
 #error "REG64_JSON_DIR must be defined"
 #endif
 
+namespace simdb
+{
+    class ObjectManager;
+}
+
 namespace atlas
 {
     class AtlasInst;
@@ -29,6 +34,14 @@ namespace atlas
     class Execute;
     class Translate;
     class Exception;
+
+    class CoSimQuery
+    {
+    public:
+        virtual ~CoSimQuery() = default;
+        virtual uint64_t getExpectedRegValue(RegType type, uint32_t regidx, uint64_t hart) const = 0;
+        virtual uint64_t getExpectedPC(uint64_t hart) const = 0;
+    };
 
     class AtlasState : public sparta::Unit
     {
@@ -152,6 +165,9 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
+        void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
+                                 std::shared_ptr<CoSimQuery> query);
+
       private:
         void onBindTreeEarly_() override;
 
@@ -186,6 +202,9 @@ namespace atlas
         // Increment PC Action
         ActionGroup* incrementPc_(AtlasState* state);
         atlas::Action increment_pc_action_;
+
+        // Take register snapshot and send to the database (Atlas IDE backend support)
+        void snapshotAndSyncWithCoSim_();
 
         // Translation state
         AtlasTranslationState translation_state_;
@@ -223,5 +242,10 @@ namespace atlas
 
         // Post-exception ActionGroup
         ActionGroup post_exception_action_group_;
+
+        // Co-simulation debug utils
+        std::shared_ptr<simdb::ObjectManager> cosim_db_;
+        std::shared_ptr<CoSimQuery> cosim_query_;
+        std::unordered_map<std::string, int> reg_ids_by_name_;
     };
 } // namespace atlas

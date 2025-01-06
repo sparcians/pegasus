@@ -1,4 +1,20 @@
 #include "AtlasSim.hpp"
+#include "include/ActionTags.hpp"
+#include <filesystem>
+
+//Core database headers
+#include "simdb/ObjectManager.hpp"
+#include "simdb/ObjectRef.hpp"
+#include "simdb/TableRef.hpp"
+#include "simdb/utils/ObjectQuery.hpp"
+#include "simdb/utils/BlobHelpers.hpp"
+#include "simdb/async/AsyncTaskEval.hpp"
+
+//SQLite-specific headers
+#include "simdb/impl/sqlite/SQLiteConnProxy.hpp"
+#include "simdb/impl/sqlite/TransactionUtils.hpp"
+#include "simdb/impl/sqlite/Errors.hpp"
+#include <sqlite3.h>
 
 namespace atlas
 {
@@ -10,10 +26,28 @@ namespace atlas
     {
     }
 
-    AtlasSim::~AtlasSim() { getRoot()->enterTeardown(); }
+    AtlasSim::~AtlasSim()
+    {
+        getRoot()->enterTeardown();
+
+        if (cosim_db_) {
+            cosim_db_->getTaskQueue()->flushQueue();
+
+            const std::string cmd = "mv " + cosim_db_->getDatabaseFile() + " " + std::filesystem::path(workload_).filename().string() + ".wdb";
+            cosim_db_.reset();
+            (void)system(cmd.c_str());
+        }
+    }
 
     void AtlasSim::run(uint64_t run_time)
     {
+        for (auto state : state_) {
+            const auto mstatus = state->getMStatusInitialValue();
+            POKE_CSR_REG(MSTATUS, mstatus);
+        }
+
+        enableCoSimDebugger(nullptr);
+
         getSimulationConfiguration()->scheduler_exacting_run = true;
         getSimulationConfiguration()->scheduler_measure_run_time = false;
         auto start = std::chrono::system_clock::system_clock::now();
@@ -29,6 +63,98 @@ namespace atlas
         std::cout << "MIPS: " << std::dec << (inst_count / (sim_time / 1000000.0)) << std::endl;
 
         // TODO: mem usage, workload exit code
+    }
+
+    void AtlasSim::enableCoSimDebugger(std::unique_ptr<CoSimQuery> query)
+    {
+        // First verify that the starting register/PC values are all the same. The debugger
+        // is not resilient to starting with different values.
+        if (query) {
+            for (uint32_t hart = 0; hart < state_.size(); ++hart) {
+                auto state = state_.at(hart);
+
+                if (state->getPc() != query->getExpectedPC(hart)) {
+                    throw sparta::SpartaException("Starting PC values do not match!");
+                }
+
+                auto int_rset = state->getIntRegisterSet();
+                for (uint32_t reg_idx = 0; reg_idx < int_rset->getNumRegisters(); ++reg_idx) {
+                    const uint64_t expected = query->getExpectedRegValue(RegType::INTEGER, reg_idx, hart);
+                    const uint64_t actual = int_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                    if (expected != actual) {
+                        throw sparta::SpartaException("Starting register values do not match!");
+                    }
+                }
+
+                auto fp_rset = state->getFpRegisterSet();
+                for (uint32_t reg_idx = 0; reg_idx < fp_rset->getNumRegisters(); ++reg_idx) {
+                    const uint64_t expected = query->getExpectedRegValue(RegType::FLOATING_POINT, reg_idx, hart);
+                    const uint64_t actual = fp_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                    if (expected != actual) {
+                        throw sparta::SpartaException("Starting register values do not match!");
+                    }
+                }
+
+                auto vec_rset = state->getVecRegisterSet();
+                for (uint32_t reg_idx = 0; reg_idx < vec_rset->getNumRegisters(); ++reg_idx) {
+                    const uint64_t expected = query->getExpectedRegValue(RegType::VECTOR, reg_idx, hart);
+                    const uint64_t actual = vec_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                    if (expected != actual) {
+                        throw sparta::SpartaException("Starting register values do not match!");
+                    }
+                }
+
+                auto csr_rset = state->getCsrRegisterSet();
+                for (uint32_t reg_idx = 0; reg_idx < csr_rset->getNumRegisters(); ++reg_idx) {
+                    const uint64_t expected = query->getExpectedRegValue(RegType::CSR, reg_idx, hart);
+                    const uint64_t actual = csr_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                    if (expected != actual) {
+                        throw sparta::SpartaException("Starting register values do not match!");
+                    }
+                }
+            }
+        }
+
+        cosim_query_.reset(query.release());
+
+        using dt = simdb::ColumnDataType;
+        simdb::Schema schema;
+
+        schema.addTable("Registers")
+            .addColumn("HartId", dt::int32_t)
+            .addColumn("RegType", dt::int32_t)
+            .addColumn("RegIdx", dt::int32_t)
+            .addColumn("InitVal", dt::uint64_t);
+
+        schema.addTable("Instructions")
+            .addColumn("HartId", dt::int32_t)
+            .addColumn("Rs1", dt::string_t)
+            .addColumn("Rs1Val", dt::uint64_t)
+            .addColumn("Rs2", dt::string_t)
+            .addColumn("Rs2Val", dt::uint64_t)
+            .addColumn("Rd", dt::string_t)
+            .addColumn("RdValBefore", dt::uint64_t)
+            .addColumn("RdValAfter", dt::uint64_t)
+            .addColumn("HasImm", dt::int32_t)
+            .addColumn("Imm", dt::uint64_t)
+            .addColumn("Disasm", dt::string_t)
+            .addColumn("Mnemonic", dt::string_t)
+            .addColumn("Opcode", dt::uint64_t)
+            .addColumn("PC", dt::uint64_t)
+            .addColumn("Priv", dt::int32_t)
+            .addColumn("ResultCode", dt::int32_t);
+
+        cosim_db_.reset(new simdb::ObjectManager);
+        cosim_db_->disableWarningMessages();
+        cosim_db_->createDatabaseFromSchema(
+            schema, std::make_unique<simdb::SQLiteConnProxy>());
+
+        cosim_db_->safeTransaction([&]() {
+            for (uint32_t hart = 0; hart < state_.size(); ++hart) {
+                auto state = state_.at(hart);
+                state->enableCoSimDebugger(cosim_db_, cosim_query_);
+            }
+        });
     }
 
     void AtlasSim::buildTree_()
