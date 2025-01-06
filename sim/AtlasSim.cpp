@@ -46,8 +46,6 @@ namespace atlas
             POKE_CSR_REG(MSTATUS, mstatus);
         }
 
-        enableCoSimDebugger(nullptr);
-
         getSimulationConfiguration()->scheduler_exacting_run = true;
         getSimulationConfiguration()->scheduler_measure_run_time = false;
         auto start = std::chrono::system_clock::system_clock::now();
