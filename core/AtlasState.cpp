@@ -314,6 +314,7 @@ namespace atlas
                         const std::string& rs1_name, uint64_t rs1_val,
                         const std::string& rs2_name, uint64_t rs2_val,
                         const std::string& rd_name, uint64_t rd_val_before, uint64_t rd_val_after,
+                        uint64_t cosim_rd_val_after,
                         int has_imm, uint64_t imm,
                         const std::string& disasm,
                         const std::string& mnemonic,
@@ -327,6 +328,7 @@ namespace atlas
             , rd_name_(rd_name)
             , rd_val_before_(rd_val_before)
             , rd_val_after_(rd_val_after)
+            , cosim_rd_val_after_(cosim_rd_val_after)
             , has_imm_(has_imm)
             , imm_(imm)
             , disasm_(disasm)
@@ -349,6 +351,7 @@ namespace atlas
                                       "Rd", rd_name_,
                                       "RdValBefore", rd_val_before_,
                                       "RdValAfter", rd_val_after_,
+                                      "TruthRdValAfter", cosim_rd_val_after_,
                                       "HasImm", has_imm_,
                                       "Imm", imm_,
                                       "Disasm", disasm_,
@@ -369,6 +372,7 @@ namespace atlas
         std::string rd_name_;
         uint64_t rd_val_before_;
         uint64_t rd_val_after_;
+        uint64_t cosim_rd_val_after_;
         int has_imm_;
         uint64_t imm_;
         std::string disasm_;
@@ -396,6 +400,8 @@ namespace atlas
 
         uint64_t rd_val_before = 0;
         uint64_t rd_val_after = 0;
+        uint64_t cosim_rd_val_after = 0;
+
         if (insn->hasRd()) {
             Observer* obs = nullptr;
             if (inst_logger_.enabled()) {
@@ -410,8 +416,30 @@ namespace atlas
             }
 
             sparta_assert(obs, "No observers enabled, nothing to debug!");
+
+            auto rd = insn->getRd();
             rd_val_before = obs->getPrevRdValue();
-            rd_val_after = insn->getRd()->dmiRead<uint64_t>();
+            rd_val_after = rd->dmiRead<uint64_t>();
+
+            switch (rd->getGroupNum()) {
+            case 0:
+                // INT
+                cosim_rd_val_after = cosim_query_->getIntRegValue(getHartId(), rd->getID());
+                break;
+            case 1:
+                // FP
+                cosim_rd_val_after = cosim_query_->getFpRegValue(getHartId(), rd->getID());
+                break;
+            case 2:
+                // VEC
+                cosim_rd_val_after = cosim_query_->getVecRegValue(getHartId(), rd->getID());
+                break;
+            case 3:
+                // Let this go to the default case assert. CSRs should not be written to in RD.
+            default:
+                sparta_assert(false, "Invalid register group num!");
+                break;
+            }
         }
 
         int has_imm = insn->hasImmediate() ? 1 : 0;
@@ -427,6 +455,7 @@ namespace atlas
                                                                     rs1_name, rs1_val,
                                                                     rs2_name, rs2_val,
                                                                     rd_name, rd_val_before, rd_val_after,
+                                                                    cosim_rd_val_after,
                                                                     has_imm, imm,
                                                                     disasm, mnemonic,
                                                                     opcode, pc, priv, result_code));

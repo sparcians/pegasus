@@ -139,6 +139,7 @@ namespace atlas
             .addColumn("Rd", dt::string_t)
             .addColumn("RdValBefore", dt::uint64_t)
             .addColumn("RdValAfter", dt::uint64_t)
+            .addColumn("TruthRdValAfter", dt::uint64_t)
             .addColumn("HasImm", dt::int32_t)
             .addColumn("Imm", dt::uint64_t)
             .addColumn("Disasm", dt::string_t)
