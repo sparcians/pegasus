@@ -1,5 +1,6 @@
 #include "AtlasSim.hpp"
 #include "include/ActionTags.hpp"
+#include "include/CSRFieldIdxs64.hpp"
 #include "arch/register_macros.hpp"
 #include <filesystem>
 
@@ -72,32 +73,31 @@ namespace atlas
             for (uint32_t hart = 0; hart < state_.size(); ++hart) {
                 auto state = state_.at(hart);
 
-                if (state->getPc() != query->getExpectedPC(hart)) {
-                    throw sparta::SpartaException("Starting PC values do not match!");
-                }
-
                 auto int_rset = state->getIntRegisterSet();
-                for (uint32_t reg_idx = 0; reg_idx < int_rset->getNumRegisters(); ++reg_idx) {
-                    const uint64_t expected = query->getExpectedRegValue(RegType::INTEGER, reg_idx, hart);
-                    const uint64_t actual = int_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                for (uint32_t reg_idx = 0; reg_idx < query->getNumIntRegisters(); ++reg_idx) {
+                    auto reg = int_rset->getRegister(reg_idx);
+                    const uint64_t expected = query->getIntRegValue(hart, reg->getID());
+                    const uint64_t actual = reg->dmiRead<uint64_t>();
                     if (expected != actual) {
                         throw sparta::SpartaException("Starting register values do not match!");
                     }
                 }
 
                 auto fp_rset = state->getFpRegisterSet();
-                for (uint32_t reg_idx = 0; reg_idx < fp_rset->getNumRegisters(); ++reg_idx) {
-                    const uint64_t expected = query->getExpectedRegValue(RegType::FLOATING_POINT, reg_idx, hart);
-                    const uint64_t actual = fp_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                for (uint32_t reg_idx = 0; reg_idx < query->getNumFpRegisters(); ++reg_idx) {
+                    auto reg = fp_rset->getRegister(reg_idx);
+                    const uint64_t expected = query->getFpRegValue(hart, reg->getID());
+                    const uint64_t actual = reg->dmiRead<uint64_t>();
                     if (expected != actual) {
                         throw sparta::SpartaException("Starting register values do not match!");
                     }
                 }
 
                 auto vec_rset = state->getVecRegisterSet();
-                for (uint32_t reg_idx = 0; reg_idx < vec_rset->getNumRegisters(); ++reg_idx) {
-                    const uint64_t expected = query->getExpectedRegValue(RegType::VECTOR, reg_idx, hart);
-                    const uint64_t actual = vec_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
+                for (uint32_t reg_idx = 0; reg_idx < query->getNumVecRegisters(); ++reg_idx) {
+                    auto reg = vec_rset->getRegister(reg_idx);
+                    const uint64_t expected = query->getVecRegValue(hart, reg->getID());
+                    const uint64_t actual = reg->dmiRead<uint64_t>();
                     if (expected != actual) {
                         throw sparta::SpartaException("Starting register values do not match!");
                     }
@@ -105,10 +105,14 @@ namespace atlas
 
                 auto csr_rset = state->getCsrRegisterSet();
                 for (uint32_t reg_idx = 0; reg_idx < csr_rset->getNumRegisters(); ++reg_idx) {
-                    const uint64_t expected = query->getExpectedRegValue(RegType::CSR, reg_idx, hart);
-                    const uint64_t actual = csr_rset->getRegister(reg_idx)->dmiRead<uint64_t>();
-                    if (expected != actual) {
-                        throw sparta::SpartaException("Starting register values do not match!");
+                    if (auto reg = csr_rset->getRegister(reg_idx)) {
+                        if (query->isCsrImplemented(reg->getName())) {
+                            const uint64_t expected = query->getCsrRegValue(hart, reg->getName());
+                            const uint64_t actual = reg->dmiRead<uint64_t>();
+                            if (expected != actual) {
+                                throw sparta::SpartaException("Starting register values do not match!");
+                            }
+                        }
                     }
                 }
             }
@@ -121,6 +125,7 @@ namespace atlas
 
         schema.addTable("Registers")
             .addColumn("HartId", dt::int32_t)
+            .addColumn("RegName", dt::string_t)
             .addColumn("RegType", dt::int32_t)
             .addColumn("RegIdx", dt::int32_t)
             .addColumn("InitVal", dt::uint64_t);

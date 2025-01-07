@@ -172,35 +172,45 @@ namespace atlas
         auto tbl = cosim_db_->getTable("Registers");
 
         auto int_rset = getIntRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)int_rset->getNumRegisters(); ++reg_idx) {
+        for (int reg_idx = 0; reg_idx < (int)query->getNumIntRegisters(); ++reg_idx) {
             auto reg = int_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 0, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-            auto reg_name = "x" + std::to_string(reg_idx);
-            reg_ids_by_name_[reg_name] = record->getId();
+            auto record = tbl->createObjectWithArgs(
+                "HartId", (int)getHartId(), "RegName", reg->getName(),
+                "RegType", 0, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+
+            reg_ids_by_name_[reg->getName()] = record->getId();
         }
 
         auto fp_rset = getFpRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)fp_rset->getNumRegisters(); ++reg_idx) {
+        for (int reg_idx = 0; reg_idx < (int)query->getNumFpRegisters(); ++reg_idx) {
             auto reg = fp_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 1, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-            auto reg_name = "f" + std::to_string(reg_idx);
-            reg_ids_by_name_[reg_name] = record->getId();
+            auto record = tbl->createObjectWithArgs(
+                "HartId", (int)getHartId(), "RegName", reg->getName(),
+                "RegType", 1, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+
+            reg_ids_by_name_[reg->getName()] = record->getId();
         }
 
         auto vec_rset = getVecRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)vec_rset->getNumRegisters(); ++reg_idx) {
+        for (int reg_idx = 0; reg_idx < (int)query->getNumVecRegisters(); ++reg_idx) {
             auto reg = vec_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 2, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-            auto reg_name = "v" + std::to_string(reg_idx);
-            reg_ids_by_name_[reg_name] = record->getId();
+            auto record = tbl->createObjectWithArgs(
+                "HartId", (int)getHartId(), "RegName", reg->getName(),
+                "RegType", 2, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+
+            reg_ids_by_name_[reg->getName()] = record->getId();
         }
 
         auto csr_rset = getCsrRegisterSet();
         for (int reg_idx = 0; reg_idx < (int)csr_rset->getNumRegisters(); ++reg_idx) {
             if (auto reg = csr_rset->getRegister(reg_idx)) {
-                auto record = tbl->createObjectWithArgs("HartId", (int)getHartId(), "RegType", 3, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-                auto reg_name = "csr" + std::to_string(reg_idx);
-                reg_ids_by_name_[reg_name] = record->getId();
+                if (query->isCsrImplemented(reg->getName())) {
+                    auto record = tbl->createObjectWithArgs(
+                        "HartId", (int)getHartId(), "RegName", reg->getName(),
+                        "RegType", 3, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
+
+                    reg_ids_by_name_[reg->getName()] = record->getId();
+                }
             }
         }
     }
