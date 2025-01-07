@@ -71,6 +71,97 @@ namespace atlas
         }
     }
 
+    // Check all PC/reg/csr values against our cosim comparator,
+    // and return the result code as follows:
+    //
+    //   success            0x00
+    //   exception          0x1x (x encodes the exception cause)
+    //   pc mismatch        0x2- (- means ignored)
+    //   reg val mismatch   0x3-
+    //   unimplemented inst 0x4-
+    //
+    // At the end of this method, all PC/reg/csr values will be
+    // synced with the other simulation ("truth").
+    int AtlasState::compareWithCoSimAndSync_()
+    {
+        sparta::utils::ValidValue<int> rc;
+        const auto& exc = exception_unit_->getUnhandledException();
+        if (exc.isValid()) {
+            rc = (1 << 16) | static_cast<int>(exc.getValue());
+        }
+
+        auto atlas_pc = getPc();
+        auto cosim_pc = cosim_query_->getExpectedPC(getHartId());
+        if (atlas_pc != cosim_pc) {
+            if (!rc.isValid()) {
+                rc = 0x2 << 16;
+            }
+            // Force overwrite to keep the cosim going.
+            pc_ = cosim_pc;
+        }
+
+        for (uint32_t reg_idx = 0; reg_idx < cosim_query_->getNumIntRegisters(); ++reg_idx) {
+            auto atlas_reg = int_rset_->getRegister(reg_idx);
+            auto atlas_val = atlas_reg->dmiRead<uint64_t>();
+            auto cosim_val = cosim_query_->getIntRegValue(getHartId(), reg_idx);
+            if (atlas_val != cosim_val) {
+                if (!rc.isValid()) {
+                    rc = 0x3 << 16;
+                }
+                // Force overwrite to keep the cosim going.
+                atlas_reg->dmiWrite(cosim_val);
+            }
+        }
+
+        for (uint32_t reg_idx = 0; reg_idx < cosim_query_->getNumFpRegisters(); ++reg_idx) {
+            auto atlas_reg = fp_rset_->getRegister(reg_idx);
+            auto atlas_val = atlas_reg->dmiRead<uint64_t>();
+            auto cosim_val = cosim_query_->getFpRegValue(getHartId(), reg_idx);
+            if (atlas_val != cosim_val) {
+                if (!rc.isValid()) {
+                    rc = 0x3 << 16;
+                }
+                // Force overwrite to keep the cosim going.
+                atlas_reg->dmiWrite(cosim_val);
+            }
+        }
+
+        for (uint32_t reg_idx = 0; reg_idx < cosim_query_->getNumVecRegisters(); ++reg_idx) {
+            auto atlas_reg = vec_rset_->getRegister(reg_idx);
+            auto atlas_val = atlas_reg->dmiRead<uint64_t>();
+            auto cosim_val = cosim_query_->getVecRegValue(getHartId(), reg_idx);
+            if (atlas_val != cosim_val) {
+                if (!rc.isValid()) {
+                    rc =0x3 << 16;
+                }
+                // Force overwrite to keep the cosim going.
+                atlas_reg->dmiWrite(cosim_val);
+            }
+        }
+
+        for (uint32_t reg_idx = 0; reg_idx < csr_rset_->getNumRegisters(); ++reg_idx) {
+            if (auto atlas_reg = csr_rset_->getRegister(reg_idx)) {
+                if (cosim_query_->isCsrImplemented(atlas_reg->getName())) {
+                    auto atlas_val = atlas_reg->dmiRead<uint64_t>();
+                    auto cosim_val = cosim_query_->getCsrRegValue(getHartId(), atlas_reg->getName());
+
+                    if (atlas_val != cosim_val) {
+                        if (!rc.isValid()) {
+                            rc = 0x3 << 16;
+                        }
+                        // Force overwrite to keep the cosim going.
+                        atlas_reg->dmiWrite(cosim_val);
+                    }
+                }
+            }
+        }
+
+        if (rc.isValid()) {
+            return rc;
+        }
+        return 0;
+    }
+
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
     {
         auto* memory = atlas_system_->getSystemMemory();
@@ -321,14 +412,6 @@ namespace atlas
             sparta_assert(obs, "No observers enabled, nothing to debug!");
             rd_val_before = obs->getPrevRdValue();
             rd_val_after = insn->getRd()->dmiRead<uint64_t>();
-
-            // Force overwrite any differences to keep the cosim going.
-            // This builds a complete IDE backend despite there being
-            // problems in the code such as unimplemented instruction
-            // handlers.
-            if (rd_val_before != rd_val_after) {
-                // TODO cnyce
-            }
         }
 
         int has_imm = insn->hasImmediate() ? 1 : 0;
@@ -338,7 +421,7 @@ namespace atlas
         uint64_t opcode = insn->getOpcode();
         uint64_t pc = getPc();
         int priv = (int)priv_mode_;
-        int result_code = 0; // TODO cnyce
+        int result_code = compareWithCoSimAndSync_();
 
         std::unique_ptr<simdb::WorkerTask> task(new InstSnapshotter(cosim_db_.get(), hart,
                                                                     rs1_name, rs1_val,

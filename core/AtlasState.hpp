@@ -199,6 +199,19 @@ namespace atlas
             return nullptr;
         }
 
+        // Check all PC/reg/csr values against our cosim comparator,
+        // and return the result code as follows:
+        //
+        //   success            0x00
+        //   exception          0x1x (x encodes the exception cause)
+        //   pc mismatch        0x2- (- means ignored)
+        //   reg val mismatch   0x3-
+        //   unimplemented inst 0x4-
+        //
+        // At the end of this method, all PC/reg/csr values will be
+        // synced with the other simulation ("truth").
+        int compareWithCoSimAndSync_();
+
         //! XLEN, 32 or 64
         // FIXME: Get value from ISA string param
         const uint64_t xlen_ = 64;

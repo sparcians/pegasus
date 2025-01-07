@@ -30,6 +30,11 @@ public:
 
     void setUnhandledException(const TrapCauses cause) { cause_ = cause; }
 
+    const sparta::utils::ValidValue<TrapCauses> &getUnhandledException() const
+    {
+        return cause_;
+    }
+
     void insertExecuteActions(ActionGroup* action_group)
     {
         action_group->insertActionAfter(post_inst_handler_action_, ActionTags::EXECUTE_TAG);
