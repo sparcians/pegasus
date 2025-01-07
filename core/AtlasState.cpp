@@ -316,7 +316,7 @@ namespace atlas
             // problems in the code such as unimplemented instruction
             // handlers.
             if (rd_val_before != rd_val_after) {
-                // yyy
+                // TODO cnyce
             }
         }
 
@@ -327,7 +327,7 @@ namespace atlas
         uint64_t opcode = insn->getOpcode();
         uint64_t pc = getPc();
         int priv = (int)priv_mode_;
-        int result_code = 0; // yyy
+        int result_code = 0; // TODO cnyce
 
         std::unique_ptr<simdb::WorkerTask> task(new InstSnapshotter(cosim_db_.get(), hart,
                                                                     rs1_name, rs1_val,
@@ -342,7 +342,7 @@ namespace atlas
 
     uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)
     {
-        // yyy cnyce
+        // TODO cnyce
         (void)state; (void)xlen;
         return 42949672960;
     }
