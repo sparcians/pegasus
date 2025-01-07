@@ -7,6 +7,8 @@
 
 namespace atlas
 {
+    constexpr uint64_t rv64_l32_mask = 0x0000FFFF;
+    
     inline uint_fast8_t getRM(const AtlasInstPtr & inst)
     {
         uint64_t static_rm = inst->getRM();
@@ -15,10 +17,7 @@ namespace atlas
             // TODO: use fcsr::frm
             return 0;
         }
-        else
-        {
-            return static_rm;
-        }
+        return static_rm;
     }
 
     template <typename T> ActionGroup* compute_address_handler(AtlasState* state)
@@ -37,8 +36,8 @@ namespace atlas
     using S = uint32_t;
     using D = uint64_t;
 
-    template <typename RV, typename SIZE>
-    ActionGroup* float_ls_handler(atlas::AtlasState* state, bool load)
+    template <typename RV, typename SIZE, bool LOAD>
+    ActionGroup* float_ls_handler(atlas::AtlasState* state)
     {
         static_assert(std::is_same<RV, RV64>::value || std::is_same<RV, RV32>::value);
         static_assert(std::is_same<SIZE, S>::value || std::is_same<SIZE, D>::value);
@@ -47,7 +46,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const RV paddr = state->getTranslationState()->getTranslationResult().getPaddr();
 
-        if (load)
+        if constexpr (LOAD)
         {
             inst->getRd()->write(state->readMemory<SIZE>(paddr));
         }

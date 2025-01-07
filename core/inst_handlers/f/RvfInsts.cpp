@@ -220,7 +220,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = inst->getRs1()->dmiRead<uint64_t>();
-        inst->getRd()->write(rs1_val & 0x0000FFFF);
+        inst->getRd()->write(rs1_val & rv64_l32_mask);
         return nullptr;
     }
 
@@ -248,7 +248,7 @@ namespace atlas
         const uint32_t rs2_val = inst->getRs2()->dmiRead<uint64_t>();
         const uint32_t rs3_val = inst->getRs3()->dmiRead<uint64_t>();
         const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
-        inst->getRd()->write(f32_sub(float32_t{product ^ 1 << 31}, float32_t{rs3_val}).v);
+        inst->getRd()->write(f32_sub(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v);
         return nullptr;
     }
 
@@ -277,7 +277,7 @@ namespace atlas
 
     ActionGroup* RvfInsts::fsw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, S>(state, false);
+        return float_ls_handler<RV64, S, false>(state);
     }
 
     ActionGroup* RvfInsts::fmv_x_w_64_handler(atlas::AtlasState* state)
@@ -315,7 +315,7 @@ namespace atlas
 
     ActionGroup* RvfInsts::flw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, S>(state, true);
+        return float_ls_handler<RV64, S, true>(state);
     }
 
     ActionGroup* RvfInsts::fmadd_s_64_handler(atlas::AtlasState* state)
