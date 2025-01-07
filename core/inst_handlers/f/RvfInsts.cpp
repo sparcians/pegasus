@@ -277,7 +277,7 @@ namespace atlas
 
     ActionGroup* RvfInsts::fsw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, S, false>(state);
+        return float_ls_handler<RV64, SP, false>(state);
     }
 
     ActionGroup* RvfInsts::fmv_x_w_64_handler(atlas::AtlasState* state)
@@ -315,7 +315,7 @@ namespace atlas
 
     ActionGroup* RvfInsts::flw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, S, true>(state);
+        return float_ls_handler<RV64, SP, true>(state);
     }
 
     ActionGroup* RvfInsts::fmadd_s_64_handler(atlas::AtlasState* state)

@@ -11,7 +11,7 @@ namespace atlas
     
     inline uint_fast8_t getRM(const AtlasInstPtr & inst)
     {
-        uint64_t static_rm = inst->getRM();
+        const uint64_t static_rm = inst->getRM();
         if (static_rm == 7) // RM field "DYN"
         {
             // TODO: use fcsr::frm
@@ -33,14 +33,11 @@ namespace atlas
         return nullptr;
     }
 
-    using S = uint32_t;
-    using D = uint64_t;
-
     template <typename RV, typename SIZE, bool LOAD>
     ActionGroup* float_ls_handler(atlas::AtlasState* state)
     {
         static_assert(std::is_same<RV, RV64>::value || std::is_same<RV, RV32>::value);
-        static_assert(std::is_same<SIZE, S>::value || std::is_same<SIZE, D>::value);
+        static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
         static_assert(sizeof(RV) >= sizeof(SIZE));
 
         const AtlasInstPtr & inst = state->getCurrentInst();

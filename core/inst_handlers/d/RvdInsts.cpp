@@ -270,7 +270,7 @@ namespace atlas
 
     ActionGroup* RvdInsts::fld_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, D, true>(state);
+        return float_ls_handler<RV64, DP, true>(state);
     }
 
     ActionGroup* RvdInsts::fsgnjx_d_64_handler(atlas::AtlasState* state)
@@ -370,7 +370,7 @@ namespace atlas
 
     ActionGroup* RvdInsts::fsd_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, D, false>(state);
+        return float_ls_handler<RV64, DP, false>(state);
     }
 
     ActionGroup* RvdInsts::fmax_d_64_handler(atlas::AtlasState* state)
