@@ -148,8 +148,6 @@ namespace atlas
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
-        ActionGroup* getPostExceptionActionGroup() { return &post_exception_action_group_; }
-
         Exception* getExceptionUnit() const { return exception_unit_; }
 
       private:
@@ -220,8 +218,5 @@ namespace atlas
         // Stop simulation Action
         Action stop_action_;
         ActionGroup stop_sim_action_group_;
-
-        // Post-exception ActionGroup
-        ActionGroup post_exception_action_group_;
     };
 } // namespace atlas

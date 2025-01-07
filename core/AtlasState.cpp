@@ -20,8 +20,7 @@ namespace atlas
         hart_id_(p->hart_id),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         inst_logger_(core_node),
-        stop_sim_action_group_("stop_sim"),
-        post_exception_action_group_("post_exception")
+        stop_sim_action_group_("stop_sim")
     {
         auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
@@ -40,9 +39,6 @@ namespace atlas
         // Create Action to stop simulation
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
-
-        // Create Action to return to Fetch after handling an exception
-        post_exception_action_group_.addAction(increment_pc_action_);
     }
 
     // Not default -- defined in source file to reduce massive inlining
@@ -58,7 +54,6 @@ namespace atlas
         } else {
             exception_unit_ = nullptr;
         }
-        post_exception_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
@@ -126,6 +121,9 @@ namespace atlas
 
         // Increment PC and upate simulation state
         action_group->insertActionAfter(increment_pc_action_, ActionTags::EXECUTE_TAG);
+
+        // Allow the Exception unit to deal with any unhandled exceptions
+        exception_unit_->insertExecuteActions(action_group);
     }
 
     ActionGroup* AtlasState::incrementPc_(AtlasState*)
