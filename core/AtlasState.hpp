@@ -161,12 +161,13 @@ namespace atlas
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
-        ActionGroup* getPostExceptionActionGroup() { return &post_exception_action_group_; }
-
         Exception* getExceptionUnit() const { return exception_unit_; }
 
         void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
                                  std::shared_ptr<CoSimQuery> query);
+
+        // Take register snapshot and send to the database (Atlas IDE backend support)
+        void snapshotAndSyncWithCoSim();
 
       private:
         void onBindTreeEarly_() override;
@@ -203,9 +204,6 @@ namespace atlas
         ActionGroup* incrementPc_(AtlasState* state);
         atlas::Action increment_pc_action_;
 
-        // Take register snapshot and send to the database (Atlas IDE backend support)
-        void snapshotAndSyncWithCoSim_();
-
         // Translation state
         AtlasTranslationState translation_state_;
 
@@ -239,9 +237,6 @@ namespace atlas
         // Stop simulation Action
         Action stop_action_;
         ActionGroup stop_sim_action_group_;
-
-        // Post-exception ActionGroup
-        ActionGroup post_exception_action_group_;
 
         // Co-simulation debug utils
         std::shared_ptr<simdb::ObjectManager> cosim_db_;

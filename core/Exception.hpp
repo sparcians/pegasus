@@ -4,6 +4,7 @@
 #include "core/Trap.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
+#include "include/ActionTags.hpp"
 
 namespace atlas
 {
@@ -29,22 +30,25 @@ public:
 
     void setUnhandledException(const TrapCauses cause) { cause_ = cause; }
 
-    ActionGroup* getActionGroup() { return &exception_action_group_; }
+    void insertExecuteActions(ActionGroup* action_group)
+    {
+        action_group->insertActionAfter(post_inst_handler_action_, ActionTags::EXECUTE_TAG);
+    }
 
 private:
     void onBindTreeEarly_() override;
 
     AtlasState* state_ = nullptr;
 
-    ActionGroup exception_action_group_{"Exception"};
+    Action post_inst_handler_action_;
 
-    ActionGroup* handleException_(atlas::AtlasState* state);
+    ActionGroup* postInstHandler_(atlas::AtlasState* state);
 
-    ActionGroup* handleUModeException_(atlas::AtlasState* state);
+    void handleUModeException_(atlas::AtlasState* state);
 
-    ActionGroup* handleSModeException_(atlas::AtlasState* state);
+    void handleSModeException_(atlas::AtlasState* state);
 
-    ActionGroup* handleMModeException_(atlas::AtlasState* state);
+    void handleMModeException_(atlas::AtlasState* state);
 
     sparta::utils::ValidValue<TrapCauses> cause_;
 };

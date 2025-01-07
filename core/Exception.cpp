@@ -14,9 +14,7 @@ namespace atlas
 Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters*)
     : sparta::Unit(exception_node)
 {
-    Action exception_action = atlas::Action::createAction<&Exception::handleException_>(this, "Exception");
-    exception_action.addTag(ActionTags::EXCEPTION_TAG);
-    exception_action_group_.addAction(exception_action);
+    post_inst_handler_action_ = atlas::Action::createAction<&Exception::postInstHandler_>(this, "handle exception");
 }
 
 void Exception::onBindTreeEarly_()
@@ -25,36 +23,42 @@ void Exception::onBindTreeEarly_()
     state_ = core_tn->getResourceAs<AtlasState>();
 }
 
-ActionGroup* Exception::handleException_(atlas::AtlasState* state)
+ActionGroup* Exception::postInstHandler_(atlas::AtlasState* state)
 {
-    switch (state->getPrivMode())
-    {
-    case PrivMode::USER:
-        return handleUModeException_(state);
-    case PrivMode::MACHINE:
-        return handleMModeException_(state);
-    case PrivMode::SUPERVISOR:
-        return handleSModeException_(state);
-    default:
-        sparta_assert(false, "Illegal privilege mode");
+    if (cause_.isValid()) {
+        switch (state->getPrivMode()) {
+        case PrivMode::USER:
+            handleUModeException_(state);
+            break;
+        case PrivMode::MACHINE:
+            handleMModeException_(state);
+            break;
+        case PrivMode::SUPERVISOR:
+            handleSModeException_(state);
+            break;
+        default:
+            sparta_assert(false, "Illegal privilege mode");
+        }
     }
 
+    state->snapshotAndSyncWithCoSim();
+    cause_.clearValid();
     return nullptr;
 }
 
-ActionGroup* Exception::handleUModeException_(atlas::AtlasState* state)
+void Exception::handleUModeException_(atlas::AtlasState* state)
 {
     // TODO
-    return state->getPostExceptionActionGroup();
+    (void)state;
 }
 
-ActionGroup* Exception::handleSModeException_(atlas::AtlasState* state)
+void Exception::handleSModeException_(atlas::AtlasState* state)
 {
     // TODO
-    return state->getPostExceptionActionGroup();
+    (void)state;
 }
 
-ActionGroup* Exception::handleMModeException_(atlas::AtlasState* state)
+void Exception::handleMModeException_(atlas::AtlasState* state)
 {
     const reg_t trap_handler_address = (READ_CSR_REG(MTVEC) & ~(reg_t)1);
     state->setNextPc(trap_handler_address);
@@ -106,9 +110,6 @@ ActionGroup* Exception::handleMModeException_(atlas::AtlasState* state)
     mstatus = READ_CSR_REG(MSTATUS);
 
     (void)mstatus;
-    cause_.clearValid();
-
-    return state->getPostExceptionActionGroup();
 }
 
 } // namespace atlas

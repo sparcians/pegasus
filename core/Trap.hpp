@@ -35,7 +35,7 @@ enum class TrapCauses : uint64_t
     {                                                        \
         auto exception_unit = state->getExceptionUnit();     \
         exception_unit->setUnhandledException(cause);        \
-        return exception_unit->getActionGroup();             \
+        return nullptr;             \
     }
 
 #define THROW_MISALIGNED_FETCH                   TRAP_IMPL(TrapCauses::MISALIGNED_FETCH)

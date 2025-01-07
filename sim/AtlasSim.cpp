@@ -1,5 +1,6 @@
 #include "AtlasSim.hpp"
 #include "include/ActionTags.hpp"
+#include "arch/register_macros.hpp"
 #include <filesystem>
 
 //Core database headers
