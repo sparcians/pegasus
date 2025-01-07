@@ -184,6 +184,21 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
+        ActionGroup* stopSim_(AtlasState*)
+        {
+            if (inst_logger_.enabled()) {
+                inst_logger_.stopSim();
+            }
+
+            for (auto obs : observers_) {
+                if (obs->enabled()) {
+                    obs->stopSim();
+                }
+            }
+
+            return nullptr;
+        }
+
         //! XLEN, 32 or 64
         // FIXME: Get value from ISA string param
         const uint64_t xlen_ = 64;

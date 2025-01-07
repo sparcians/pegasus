@@ -53,6 +53,8 @@ namespace atlas
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
 
+        virtual void stopSim() {}
+
       protected:
         bool enabled_ = false;
 

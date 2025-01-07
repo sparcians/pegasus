@@ -51,6 +51,7 @@ namespace atlas
             atlas::Action::createAction<&AtlasState::incrementPc_>(this, "increment pc");
 
         // Create Action to stop simulation
+        stop_action_ = atlas::Action::createAction<&AtlasState::stopSim_>(this, "stop sim");
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
     }
