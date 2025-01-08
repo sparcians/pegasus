@@ -41,7 +41,6 @@ ActionGroup* Exception::postInstHandler_(atlas::AtlasState* state)
         }
     }
 
-    state->snapshotAndSyncWithCoSim();
     cause_.clearValid();
     return nullptr;
 }
