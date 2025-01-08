@@ -65,20 +65,16 @@ class TestViewer(wx.Panel):
         wx.Panel.__init__(self, parent, -1)
         self.wdb = wdb
 
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.initial_diffs_viewer = InitialDiffsViewer(self, wdb)
-        self.SetSizer(self.sizer)
+        self.inst_viewer = InstructionViewer(self, wdb)
+        self.initial_diffs_viewer.Hide()
 
-        # we should have the windows: Info, Registers, Atlas Code, Spike Code, and a python prompt.
-        self.inst_info = TestViewer.InstInfo(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.inst_viewer, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
 
     def LoadTest(self, test_name):
         pass
-
-    class InstInfo:
-        def __init__(self, parent):
-            #self.pc = wx.StaticText(parent, -1, "PC: 0x00000000")l
-            pass
 
 class TestResults(wx.Panel):
     def __init__(self, parent, wdb):
@@ -89,6 +85,214 @@ class TestResults(wx.Panel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
+
+class InitialDiffsViewer(wx.Panel):
+    def __init__(self, parent, wdb):
+        wx.Panel.__init__(self, parent, -1)
+        self.wdb = wdb
+        self.grid = None
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+
+class InstructionViewer(wx.Panel):
+    def __init__(self, parent, wdb):
+        wx.Panel.__init__(self, parent, -1)
+        self.wdb = wdb
+
+        self.inst_info_panel = InstructionInfoPanel(self)
+        self.register_info_panel = RegisterInfoPanel(self)
+        self.inst_list_panel = InstructionListPanel(self)
+        self.spike_code_panel = SpikeCodePanel(self)
+        self.atlas_experimental_code_panel = AtlasExperimentalCodePanel(self)
+        self.atlas_cpp_code_panel = AtlasCppCodePanel(self)
+        self.python_terminal = PythonTerminal(self)
+
+        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row1_sizer.Add(self.inst_info_panel, 0, wx.EXPAND)
+        row1_sizer.Add(self.register_info_panel, 0, wx.EXPAND)
+        row1_sizer.Add(self.spike_code_panel, 0, wx.EXPAND)
+
+        row2_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row2_sizer.Add(self.atlas_experimental_code_panel, 0, wx.EXPAND)
+        row2_sizer.AddStretchSpacer(1)
+        row2_sizer.Add(self.atlas_cpp_code_panel, 0, wx.EXPAND)
+
+        gridlike_sizer = wx.BoxSizer(wx.VERTICAL)
+        gridlike_sizer.Add(row1_sizer, 0, wx.EXPAND)
+        gridlike_sizer.AddSpacer(30)
+        gridlike_sizer.Add(row2_sizer, 0, wx.EXPAND)
+
+        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row1_sizer.Add(gridlike_sizer, 0, wx.EXPAND)
+        row1_sizer.AddStretchSpacer(1)
+        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
+        self.sizer.AddStretchSpacer(1)
+        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
+
+        self.SetSizer(self.sizer)
+        self.Layout()
+
+class InstructionInfoPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Instruction Info")
+        self.help.SetFont(mono12bold)
+
+        self.pc_label = wx.StaticText(self, -1, "PC:")
+        self.pc_label.SetFont(mono10)
+
+        self.pc = wx.StaticText(self, -1, "0x--------")
+        self.pc.SetFont(mono10)
+
+        self.mnemonic_label = wx.StaticText(self, -1, "Inst:")
+        self.mnemonic_label.SetFont(mono10)
+
+        self.mnemonic = wx.StaticText(self, -1, "----")
+        self.mnemonic.SetFont(mono10)
+
+        self.opcode_label = wx.StaticText(self, -1, "Opcode:")
+        self.opcode_label.SetFont(mono10)
+
+        self.opcode = wx.StaticText(self, -1, "0x--------")
+        self.opcode.SetFont(mono10)
+
+        self.priv_label = wx.StaticText(self, -1, "Priv:")
+        self.priv_label.SetFont(mono10)
+
+        self.priv = wx.StaticText(self, -1, "-")
+        self.priv.SetFont(mono10)
+
+        self.result_label = wx.StaticText(self, -1, "Result:")
+        self.result_label.SetFont(mono10)
+
+        self.result = wx.StaticText(self, -1, "----")
+        self.result.SetFont(mono10)
+
+        # Use a grid sizer to lay out the instruction fields
+        gridsizer = wx.FlexGridSizer(0, 2, 5, 5)
+        gridsizer.AddGrowableCol(1)
+        gridsizer.Add(self.pc_label, 0, wx.ALIGN_LEFT)
+        gridsizer.Add(self.pc, 1, wx.EXPAND)
+        gridsizer.Add(self.mnemonic_label, 0, wx.ALIGN_LEFT)
+        gridsizer.Add(self.mnemonic, 1, wx.EXPAND)
+        gridsizer.Add(self.opcode_label, 0, wx.ALIGN_LEFT)
+        gridsizer.Add(self.opcode, 1, wx.EXPAND)
+        gridsizer.Add(self.priv_label, 0, wx.ALIGN_LEFT)
+        gridsizer.Add(self.priv, 1, wx.EXPAND)
+        gridsizer.Add(self.result_label, 0, wx.ALIGN_LEFT)
+        gridsizer.Add(self.result, 1, wx.EXPAND)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(gridsizer, 0, wx.EXPAND)
+
+        self.SetSizer(self.sizer)
+        self.SetMinSize((400, -1))
+        self.Layout()
+
+class RegisterInfoPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Register Info")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((400, -1))
+        self.Layout()
+
+class InstructionListPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Instruction List")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((400, -1))
+        self.Layout()
+
+class SpikeCodePanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Spike Code")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((400, -1))
+        self.Layout()
+
+class AtlasExperimentalCodePanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Atlas Experimental Code")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((450, -1))
+        self.Layout()
+
+class AtlasCppCodePanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Atlas C++ Code")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((450, -1))
+        self.Layout()
+
+class PythonTerminal(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, -1)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
+
+        self.help = wx.StaticText(self, -1, "Python Terminal")
+        self.help.SetFont(mono12bold)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.SetMinSize((wx.DisplaySize()[0], 40))
+        self.Layout()
 
 class WorkloadsDB:
     def __init__(self, wdb_file):
