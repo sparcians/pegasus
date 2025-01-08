@@ -1,6 +1,8 @@
 #include "core/inst_handlers/rv64/zifencei/RvzifenceiInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+#include "core/AtlasState.hpp"
+#include "core/AtlasInst.hpp"
 
 namespace atlas
 {
@@ -14,7 +16,7 @@ namespace atlas
 
     ActionGroup* RvzifenceiInsts::fence_i_64_handler(atlas::AtlasState* state)
     {
-        (void)state;
+        state->getCurrentInst()->markUnimplemented();
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
 

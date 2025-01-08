@@ -85,8 +85,13 @@ namespace atlas
     int AtlasState::compareWithCoSimAndSync_()
     {
         sparta::utils::ValidValue<int> rc;
+        const auto& insn = getCurrentInst();
+        if (insn->unimplemented()) {
+            rc = 0x4 << 16;
+        }
+
         const auto& exc = exception_unit_->getUnhandledException();
-        if (exc.isValid()) {
+        if (!rc.isValid() && exc.isValid()) {
             rc = (1 << 16) | static_cast<int>(exc.getValue());
         }
 
