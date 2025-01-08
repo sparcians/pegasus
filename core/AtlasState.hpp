@@ -175,8 +175,12 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
+        // tuple: group num, reg id, expected val, actual val
+        using InitValDiff = std::tuple<uint32_t, uint32_t, uint64_t, uint64_t>;
+
         void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
-                                 std::shared_ptr<CoSimQuery> query);
+                                 std::shared_ptr<CoSimQuery> query,
+                                 const std::vector<InitValDiff> &init_val_diffs);
 
         // Take register snapshot and send to the database (Atlas IDE backend support)
         void snapshotAndSyncWithCoSim();

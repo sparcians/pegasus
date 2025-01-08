@@ -245,7 +245,8 @@ namespace atlas
     }
 
     void AtlasState::enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
-                                         std::shared_ptr<CoSimQuery> query)
+                                         std::shared_ptr<CoSimQuery> query,
+                                         const std::vector<InitValDiff> &init_val_diffs)
     {
         bool valid = inst_logger_.enabled();
         if (!valid) {
@@ -261,7 +262,39 @@ namespace atlas
         cosim_db_ = db;
         cosim_query_ = query;
 
-        auto tbl = cosim_db_->getTable("Registers");
+        auto tbl = cosim_db_->getTable("InitValDiffs");
+
+        for (const auto& tup : init_val_diffs) {
+            const auto group_num = std::get<0>(tup);
+            const auto reg_id = std::get<1>(tup);
+            const auto expected_val = std::get<2>(tup);
+            const auto actual_val = std::get<3>(tup);
+
+            tbl->createObjectWithArgs("HartId", (int)getHartId(),
+                                      "GroupNum", (int)group_num,
+                                      "RegIdx", (int)reg_id,
+                                      "ExpectedVal", expected_val,
+                                      "ActualVal", actual_val);
+
+            switch (group_num) {
+                case 0:
+                    getIntRegisterSet()->getRegister(reg_id)->dmiWrite(expected_val);
+                    break;
+                case 1:
+                    getFpRegisterSet()->getRegister(reg_id)->dmiWrite(expected_val);
+                    break;
+                case 2:
+                    getVecRegisterSet()->getRegister(reg_id)->dmiWrite(expected_val);
+                    break;
+                case 3:
+                    getCsrRegisterSet()->getRegister(reg_id)->dmiWrite(expected_val);
+                    break;
+                default:
+                    throw sparta::SpartaException("Invalid group num!");
+            }
+        }
+
+        tbl = cosim_db_->getTable("Registers");
 
         auto int_rset = getIntRegisterSet();
         for (int reg_idx = 0; reg_idx < (int)query->getNumIntRegisters(); ++reg_idx) {
