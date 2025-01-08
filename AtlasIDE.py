@@ -41,12 +41,11 @@ class TestSelector(wx.TreeCtrl):
 
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.__OnSelChanged)
 
-        # Add "baz" to passing (demo)
-        self.AppendItem(self.passing_root, "baz")
+        for test_name in self.wdb.GetPassingTestNames():
+            self.AppendItem(self.passing_root, test_name)
 
-        # Add "foo" and "bar" to failing (demo)
-        self.AppendItem(self.failing_root, "foo")
-        self.AppendItem(self.failing_root, "bar")
+        for test_name in self.wdb.GetFailingTestNames():
+            self.AppendItem(self.failing_root, test_name)
 
         self.Collapse(self.passing_root)
         self.Expand(self.failing_root)
@@ -324,6 +323,16 @@ class WorkloadsDB:
         if isinstance(test_id, str):
             test_id = self.GetTestId(test_id)
         return test_id in self.failing_test_ids
+
+    def GetPassingTestNames(self):
+        test_names = [test_name for test_id, test_name in self.test_names_by_id.items() if not self.IsFailing(test_id)]
+        test_names.sort()
+        return test_names
+
+    def GetFailingTestNames(self):
+        test_names = [test_name for test_id, test_name in self.test_names_by_id.items() if self.IsFailing(test_id)]
+        test_names.sort()
+        return test_names
 
 if __name__ == "__main__":
     app = wx.App()
