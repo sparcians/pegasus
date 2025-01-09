@@ -634,19 +634,71 @@ class AtlasCppCodePanel(AtlasPanel):
         self.help = wx.StaticText(self, -1, "Atlas C++ Code")
         self.help.SetFont(mono12bold)
 
+        self.atlas_cpp_code_text = wx.StaticText(self, -1, "")
+        self.atlas_cpp_code_text.SetFont(mono10)
+        self.atlas_cpp_code_by_mnemonic = {}
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.atlas_cpp_code_text, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        #self.SetMinSize((450, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
-        # TODO cnyce
-        pass
+        self.test_id = self.frame.wdb.GetTestId(test_name)
 
     def ShowInstruction(self, pc):
-        self.help.SetLabel('GOTO {}'.format(pc))
-        pass
+        cmd = 'SELECT mnemonic,ResultCode FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+        mnemonic, result_code = self.frame.wdb.cursor.fetchone()
+
+        if mnemonic not in self.atlas_cpp_code_by_mnemonic:
+            self.atlas_cpp_code_by_mnemonic[mnemonic] = self.__GetAtlasCppCode(mnemonic, result_code)
+
+        self.atlas_cpp_code_text.SetLabel(self.atlas_cpp_code_by_mnemonic[mnemonic])
+
+    def __GetAtlasCppCode(self, mnemonic, result_code):
+        # First check the result_code to see if this instruction is unimplemented.
+        if result_code >> 16 == 0x4:
+            return f'// "{mnemonic}" is unimplemented in Atlas.'
+
+        atlas_root = os.path.dirname(__file__)
+        inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers', 'rv64')
+        lookfor = f"ActionGroup* {mnemonic}_64_handler(atlas::AtlasState* state);"
+
+        # find the .hpp file under isnt_handler_root that has this <lookfor> string
+        hpp_file = None
+        for root, dirs, files in os.walk(inst_handler_root):
+            for file in files:
+                if file.endswith('.hpp'):
+                    with open(os.path.join(root, file), 'r') as f:
+                        if lookfor in f.read():
+                            hpp_file = os.path.join(root, file)
+                            break
+
+        impl_file = hpp_file.replace('.hpp', '.cpp')
+
+        cpp_code = []
+        if os.path.exists(impl_file):
+            lookfor = f"::{mnemonic}_64_handler(atlas::AtlasState* state)"
+            other_mnemonic_lookfor = '_64_handler(atlas::AtlasState* state)'
+            copy_line = False
+            with open(impl_file, 'r') as f:
+                for line in f.readlines():
+                    # Stop copying lines when we get to the next function signature
+                    if line.find(other_mnemonic_lookfor) != -1 and copy_line:
+                        break
+
+                    # Start copying over the code when we get to our exact function signature for this mnemonic
+                    if line.find(lookfor) != -1:
+                        copy_line = True
+
+                    if copy_line:
+                        cpp_code.append(line)
+
+        # Remove 4 whitespaces from the front of each line
+        cpp_code = [line[4:] for line in cpp_code]
+        return ''.join(cpp_code)
 
 class PythonTerminal(AtlasPanel):
     def __init__(self, parent):
