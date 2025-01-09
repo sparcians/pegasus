@@ -1,4 +1,5 @@
 import os, sys, wx, sqlite3
+import wx.grid
 
 class AtlasIDE(wx.Frame):
     def __init__(self, wdb_file):
@@ -12,9 +13,14 @@ class AtlasIDE(wx.Frame):
         self.notebook.AddPage(self.test_debugger, "Test Debugger")
         self.notebook.AddPage(self.test_results, "Test Results")
 
-class TestDebugger(wx.Panel):
+class AtlasPanel(wx.Panel):
+    def __init__(self, *args, **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
+        self.frame = self.GetTopLevelParent()
+
+class TestDebugger(AtlasPanel):
     def __init__(self, parent, wdb):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
 
         self.test_selector = TestSelector(self, wdb)
@@ -59,9 +65,9 @@ class TestSelector(wx.TreeCtrl):
             test = self.GetItemText(item)
             self.test_debugger.LoadTest(test)
 
-class TestViewer(wx.Panel):
+class TestViewer(AtlasPanel):
     def __init__(self, parent, wdb):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
 
         self.initial_diffs_viewer = InitialDiffsViewer(self, wdb)
@@ -73,11 +79,20 @@ class TestViewer(wx.Panel):
         self.SetSizer(self.sizer)
 
     def LoadTest(self, test_name):
-        pass
+        self.frame.SetTitle(test_name)
+        self.initial_diffs_viewer.OnLoadTest(test_name)
+        self.inst_viewer.OnLoadTest(test_name)
 
-class TestResults(wx.Panel):
+        self.initial_diffs_viewer.Show()
+        self.inst_viewer.Hide()
+
+        self.sizer.Clear()
+        self.sizer.Add(self.initial_diffs_viewer, 1, wx.EXPAND)
+        self.Layout()
+
+class TestResults(AtlasPanel):
     def __init__(self, parent, wdb):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
 
         self.help = wx.StaticText(self, -1, "Test Results")
@@ -85,18 +100,71 @@ class TestResults(wx.Panel):
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
 
-class InitialDiffsViewer(wx.Panel):
+class InitialDiffsViewer(AtlasPanel):
     def __init__(self, parent, wdb):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
         self.grid = None
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
 
-class InstructionViewer(wx.Panel):
+    def OnLoadTest(self, test_name):
+        if self.grid:
+            self.sizer.Clear()
+            self.grid.Destroy()
+            self.grid = None
+
+        self.grid = wx.grid.Grid(self, -1)
+        test_id = self.wdb.GetTestId(test_name)
+
+        # Algo:
+        #  1. Go through all the appropriate rows in the Registers table.
+        #  2. For each register, get its initial value and expected value.
+        #  3. Append the row info and use the "actual!=expected" test to set the background color.
+
+        # diffs.append({'group_num': group_num, 'reg_idx': reg_idx, 'expected_val': expected_val, 'actual_val': actual_val})
+        init_reg_diffs = self.wdb.GetInitialDiffs(test_id)
+
+        # reg_vals.append({'reg_type': reg_type, 'reg_idx': reg_idx, 'init_val': init_val})
+        init_reg_vals = self.wdb.GetInitialRegVals(test_id)
+
+        row_content = []
+        for reg_val in init_reg_vals:
+            group_num = reg_val['reg_type']
+            reg_idx = reg_val['reg_idx']
+            actual_val = reg_val['init_val']
+            expected_val = actual_val
+
+            for diff in init_reg_diffs:
+                if diff['group_num'] == group_num and diff['reg_idx'] == reg_idx:
+                    expected_val = diff['expected_val']
+                    break
+
+            reg_name = self.wdb.GetRegisterName(group_num, reg_idx)
+            row_content.append({'reg_name': reg_name, 'expected_val': expected_val, 'actual_val': actual_val})
+
+        self.grid.CreateGrid(len(row_content), 3)
+        self.grid.SetColLabelValue(0, "Register")
+        self.grid.SetColLabelValue(1, "Expected Value")
+        self.grid.SetColLabelValue(2, "Actual Value")
+
+        for row, content in enumerate(row_content):
+            self.grid.SetCellValue(row, 0, content['reg_name'])
+            self.grid.SetCellValue(row, 1, hex(content['expected_val'] & 0xFFFFFFFFFFFFFFFF))
+            self.grid.SetCellValue(row, 2, hex(content['actual_val'] & 0xFFFFFFFFFFFFFFFF))
+
+            if content['expected_val'] != content['actual_val']:
+                for col in range(3):
+                    self.grid.SetCellBackgroundColour(row, col, 'pink')
+
+        self.sizer.Add(self.grid, 1, wx.EXPAND)
+        self.Layout()
+        self.grid.AutoSize()
+
+class InstructionViewer(AtlasPanel):
     def __init__(self, parent, wdb):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
 
         self.inst_info_panel = InstructionInfoPanel(self)
@@ -135,9 +203,12 @@ class InstructionViewer(wx.Panel):
         self.SetSizer(self.sizer)
         self.Layout()
 
-class InstructionInfoPanel(wx.Panel):
+    def OnLoadTest(self, test_name):
+        pass
+
+class InstructionInfoPanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -197,9 +268,9 @@ class InstructionInfoPanel(wx.Panel):
         self.SetMinSize((400, -1))
         self.Layout()
 
-class RegisterInfoPanel(wx.Panel):
+class RegisterInfoPanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -213,9 +284,9 @@ class RegisterInfoPanel(wx.Panel):
         self.SetMinSize((400, -1))
         self.Layout()
 
-class InstructionListPanel(wx.Panel):
+class InstructionListPanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -229,9 +300,9 @@ class InstructionListPanel(wx.Panel):
         self.SetMinSize((400, -1))
         self.Layout()
 
-class SpikeCodePanel(wx.Panel):
+class SpikeCodePanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -245,9 +316,9 @@ class SpikeCodePanel(wx.Panel):
         self.SetMinSize((400, -1))
         self.Layout()
 
-class AtlasExperimentalCodePanel(wx.Panel):
+class AtlasExperimentalCodePanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -261,9 +332,9 @@ class AtlasExperimentalCodePanel(wx.Panel):
         self.SetMinSize((450, -1))
         self.Layout()
 
-class AtlasCppCodePanel(wx.Panel):
+class AtlasCppCodePanel(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -277,9 +348,9 @@ class AtlasCppCodePanel(wx.Panel):
         self.SetMinSize((450, -1))
         self.Layout()
 
-class PythonTerminal(wx.Panel):
+class PythonTerminal(AtlasPanel):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, -1)
+        AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
@@ -295,6 +366,7 @@ class PythonTerminal(wx.Panel):
 
 class WorkloadsDB:
     def __init__(self, wdb_file):
+        import pdb; pdb.set_trace()
         self.conn = sqlite3.connect(wdb_file)
         self.cursor = self.conn.cursor()
 
@@ -302,16 +374,19 @@ class WorkloadsDB:
         self.test_names_by_id = dict(self.cursor.fetchall())
         self.test_ids_by_name = dict((v,k) for k,v in self.test_names_by_id.items())
 
-        self.cursor.execute('SELECT DISTINCT(TestId) FROM InitValDiffs')
-        self.failing_test_ids = {row[0] for row in self.cursor.fetchall()}
-
         self.cursor.execute('SELECT TestId,ResultCode FROM Instructions')
+        self.failing_test_ids = set()
         for test_id, result_code in self.cursor.fetchall():
             # 2: pc invalid
             # 3: reg val invalid
             # 4: unimplemented inst
             if result_code >> 16 in (2,3,4):
                 self.failing_test_ids.add(test_id)
+
+        self.cursor.execute('SELECT RegName,RegType,RegIdx FROM Registers')
+        self.reg_names_by_key = {}
+        for reg_name, reg_type, reg_idx in self.cursor.fetchall():
+            self.reg_names_by_key[(reg_type, reg_idx)] = reg_name
 
     def GetTestId(self, test_name):
         return self.test_ids_by_name[test_name]
@@ -333,6 +408,25 @@ class WorkloadsDB:
         test_names = [test_name for test_id, test_name in self.test_names_by_id.items() if self.IsFailing(test_id)]
         test_names.sort()
         return test_names
+
+    def GetInitialDiffs(self, test_id, hart_id=0):
+        self.cursor.execute('SELECT RegType,RegIdx,ExpectedInitVal,ActualInitVal FROM Registers WHERE TestId=? AND HartId=?', (test_id, hart_id))
+        diffs = []
+        for group_num, reg_idx, expected_val, actual_val in self.cursor.fetchall():
+            diffs.append({'group_num': group_num, 'reg_idx': reg_idx, 'expected_val': expected_val, 'actual_val': actual_val})
+
+        return diffs
+
+    def GetInitialRegVals(self, test_id, hart_id=0):
+        self.cursor.execute('SELECT RegType,RegIdx,ActualInitVal FROM Registers WHERE TestId=? AND HartId=?', (test_id, hart_id))
+        reg_vals = []
+        for reg_type, reg_idx, init_val in self.cursor.fetchall():
+            reg_vals.append({'reg_type': reg_type, 'reg_idx': reg_idx, 'init_val': init_val})
+
+        return reg_vals
+
+    def GetRegisterName(self, group_num, reg_idx):
+        return self.reg_names_by_key[(group_num, reg_idx)]
 
 if __name__ == "__main__":
     app = wx.App()
