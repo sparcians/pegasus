@@ -1,5 +1,6 @@
 import os, sys, wx, sqlite3
 import wx.grid
+import wx.py.shell
 from enum import IntEnum
 
 class AtlasIDE(wx.Frame):
@@ -122,6 +123,7 @@ class TestViewer(AtlasPanel):
         self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
 
         self.inst_viewer.ShowInstruction(pc)
+        self.python_terminal.ShowInstruction(pc)
         self.Layout()
 
 class TestResults(AtlasPanel):
@@ -383,7 +385,6 @@ class RegisterInfoPanel(AtlasPanel):
         self.sizer.Add(self.reg_info_text, 1, wx.EXPAND)
 
         self.SetSizer(self.sizer)
-        #self.SetMinSize((400, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
@@ -463,7 +464,7 @@ class InstructionListPanel(AtlasPanel):
         self.sizer.Add(self.inst_list_ctrl, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
 
-        self.SetMinSize((-1, self.frame.GetSize().GetHeight()))
+        self.SetMinSize((-1, self.frame.GetSize().GetHeight()-150))
         self.Layout()
 
     def OnLoadTest(self, test_name, hart_id=0):
@@ -698,16 +699,132 @@ class PythonTerminal(AtlasPanel):
 
         self.help = wx.StaticText(self, -1, "Python Terminal")
         self.help.SetFont(mono12bold)
+        self.shell = None
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((wx.DisplaySize()[0], 120))
+        self.SetMinSize((wx.DisplaySize()[0], 150))
         self.Layout()
 
     def OnLoadTest(self, test_name):
-        # TODO cnyce
-        pass
+        self.test_id = self.frame.wdb.GetTestId(test_name)
+
+    def ShowInstruction(self, pc):
+        cmd = 'SELECT Rs1,Rs1Val,Rs2,Rs2Val,Rd,RdValBefore,RdValAfter,TruthRdValAfter,HasImm,Imm FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+
+        row = self.frame.wdb.cursor.fetchone()
+        rs1, rs1_val, rs2, rs2_val, rd, rd_val_before, rd_val_after, truth_rd_val_after, has_imm, imm = row
+
+        vars = {}
+        if rs1 not in (None, ''):
+            vars['rs1'] = PythonSourceRegister(rs1, rs1_val)
+
+        if rs2 not in (None, ''):
+            vars['rs2'] = PythonSourceRegister(rs2, rs2_val)
+
+        if has_imm:
+            vars['imm'] = PythonImmediate(imm)
+
+        if rd not in (None, ''): 
+            vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
+
+        vars['whos'] = self.__whos__
+        self.varnames = list(vars.keys())
+
+        if self.shell:
+            self.GetSizer().Clear()
+            self.shell.destroy()
+            self.shell = None
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        self.shell = wx.py.shell.Shell(self, locals=vars)
+        self.shell.SetFont(mono10)
+
+        self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.shell, 1, wx.EXPAND)
+        self.Layout()
+
+    def __whos__(self):
+        return [varname for varname in self.varnames if varname != 'whos']
+
+class PythonSourceRegister:
+    def __init__(self, reg_name, reg_val):
+        self.reg_name = reg_name
+        self.reg_val = reg_val
+
+    def __repr__(self):
+        rep = self.reg_name + '\n'
+        rep += '    int val: ' + str(self.reg_val) + '\n'
+        rep += '    hex val: ' + f'0x{self.reg_val:016X}' + '\n'
+        return rep
+
+    def __str__(self):
+        return f'0x{self.reg_val:016X}'
+
+    @property
+    def regname(self):
+        return self.reg_name
+
+    @property
+    def regval(self):
+        return self.reg_val
+
+    @property
+    def hex(self):
+        return f'0x{self.reg_val:016X}'
+
+class PythonDestRegister:
+    def __init__(self, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):
+        self.reg_name = reg_name
+        self.rd_val_before = rd_val_before
+        self.rd_val_after = rd_val_after
+        self.truth_rd_val_after = truth_rd_val_after
+
+    def __repr__(self):
+        rep = self.reg_name + '\n'
+        rep += '    rd val before: ' + f'0x{self.rd_val_before:016X}' + '\n'
+        rep += '    rd val after:  ' + f'0x{self.rd_val_after:016X}' + '\n'
+        if self.rd_val_after != self.truth_rd_val_after:
+            rep += '    expected:      ' + f'0x{self.truth_rd_val_after:016X}' + '\n'
+
+        return rep
+
+    def __str__(self):
+        return f'0x{self.rd_val_after:016X}'
+
+    @property
+    def regname(self):
+        return self.reg_name
+
+    @property
+    def regval(self):
+        return self.rd_val_after
+
+    @property
+    def hex(self):
+        return f'0x{self.rd_val_after:016X}'
+
+class PythonImmediate:
+    def __init__(self, imm_val):
+        self.imm_val = imm_val
+
+    def __repr__(self):
+        rep = 'imm\n'
+        rep += '    int val: ' + str(self.imm_val) + '\n'
+        rep += '    hex val: ' + f'0x{self.imm_val:016X}' + '\n'
+        return rep
+
+    def __str__(self):
+        return f'0x{self.imm_val:016X}'
+
+    @property
+    def int(self):
+        return self.imm_val
+
+    @property
+    def hex(self):
+        return f'0x{self.imm_val:016X}'
 
 class WorkloadsDB:
     def __init__(self, wdb_file):
