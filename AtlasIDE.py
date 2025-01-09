@@ -314,6 +314,12 @@ class InstructionInfoPanel(AtlasPanel):
         self.test_id = self.frame.wdb.GetTestId(test_name)
 
     def ShowInstruction(self, pc):
+        self.pc.SetLabel('')
+        self.mnemonic.SetLabel('')
+        self.opcode.SetLabel('')
+        self.priv.SetLabel('')
+        self.result.SetLabel('')
+
         cmd = 'SELECT Mnemonic,Opcode,Priv,ResultCode FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
         self.frame.wdb.cursor.execute(cmd)
         mnemonic, opcode, priv, result_code = self.frame.wdb.cursor.fetchone()
@@ -381,19 +387,73 @@ class RegisterInfoPanel(AtlasPanel):
         self.help = wx.StaticText(self, -1, "Register Info")
         self.help.SetFont(mono12bold)
 
+        self.reg_info_text = wx.StaticText(self, -1, "")
+        self.reg_info_text.SetFont(mono10)
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.reg_info_text, 1, wx.EXPAND)
+
         self.SetSizer(self.sizer)
         self.SetMinSize((400, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
-        # TODO cnyce
-        pass
+        self.test_id = self.frame.wdb.GetTestId(test_name)
+        self.reg_info_text.SetLabel('')
 
     def ShowInstruction(self, pc):
-        self.help.SetLabel('GOTO {}'.format(pc))
-        pass
+        self.reg_info_text.SetLabel('')
+
+        cmd = 'SELECT Rs1,Rs1Val,Rs2,Rs2Val,Rd,RdValBefore,RdValAfter,TruthRdValAfter,HasImm,Imm FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+
+        row = self.frame.wdb.cursor.fetchone()
+        rs1, rs1_val, rs2, rs2_val, rd, rd_val_before, rd_val_after, truth_rd_val_after, has_imm, imm = row
+
+        # Example:
+        #
+        # rs1: x7        0xefefefef
+        # rs2: x10       0x12345678
+        # rd:  x5
+        #      before:   0xdeadbeef
+        #      after:    0xbaadf00d
+        #      expected: 0xbaadf00d
+
+        # Example:
+        #
+        # rs1: x7        0xefefefef
+        # imm:           0x1234
+        # rd:  x7
+        #      before:   0xdeadbeef
+        #      after:    0xbaadf00d
+        #      expected: 0xdeadbeef
+
+        lines = []
+        if rs1 not in (None, ''):
+            lines.append(['rs1:', rs1, f"0x{rs1_val:016X}"])
+
+        if rs2 not in (None, ''):
+            lines.append(['rs2:', rs2, f"0x{rs2_val:016X}"])
+
+        if has_imm:
+            lines.append(['imm:', '', f"0x{imm:016X}"])
+
+        if rd not in (None, ''):
+            lines.append(['rd:', rd, ''])
+            lines.append(['', 'before:', f"0x{rd_val_before:016X}"])
+            lines.append(['', 'after:', f"0x{rd_val_after:016X}"])
+            lines.append(['', 'expected:', f"0x{truth_rd_val_after:016X}"])
+
+        text = ''
+        if len(lines):
+            max_col0_len = max(len(line[0]) for line in lines)
+            max_col1_len = max(len(line[1]) for line in lines)
+            max_col2_len = max(len(line[2]) for line in lines)
+            for line in lines:
+                text += line[0].ljust(max_col0_len) + ' ' + line[1].ljust(max_col1_len) + ' ' + line[2].ljust(max_col2_len) + '\n'
+
+        self.reg_info_text.SetLabel(text)
 
 class InstructionListPanel(AtlasPanel):
     def __init__(self, parent):
