@@ -71,7 +71,8 @@ class TestViewer(AtlasPanel):
     def __init__(self, parent, wdb):
         AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
-        self.top_panel = wx.Panel(self, -1)
+        self.top_splitter = wx.SplitterWindow(self)
+        self.top_panel = wx.Panel(self.top_splitter, -1)
 
         self.initial_diffs_viewer = InitialDiffsViewer(self.top_panel, wdb)
         self.inst_viewer = InstructionViewer(self.top_panel, wdb)
@@ -80,7 +81,7 @@ class TestViewer(AtlasPanel):
         self.inst_viewer.Hide()
 
         self.inst_list_panel = InstructionListPanel(self.top_panel)
-        self.python_terminal = PythonTerminal(self)
+        self.python_terminal = PythonTerminal(self.top_splitter)
 
         top_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.top_panel.SetSizer(top_panel_sizer)
@@ -107,10 +108,11 @@ class TestViewer(AtlasPanel):
         top_panel_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
 
         self.sizer.Clear()
-        self.sizer.Add(self.top_panel, 1, wx.EXPAND)
-        self.sizer.AddStretchSpacer(1)
-        self.sizer.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
+        self.top_splitter.SplitHorizontally(self.top_panel, self.python_terminal)
+        self.sizer.Add(self.top_splitter, 1, wx.EXPAND)
+
+        self.top_splitter.Bind(wx.EVT_SPLITTER_DCLICK, lambda evt: None)
+        self.top_splitter.SetSashPosition(int(0.75 * self.GetSize().GetHeight()))
 
         self.Layout()
 
@@ -126,13 +128,14 @@ class TestViewer(AtlasPanel):
         top_panel_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
 
         self.sizer.Clear()
-        self.sizer.Add(self.top_panel, 1, wx.EXPAND)
-        self.sizer.AddStretchSpacer(1)
-        self.sizer.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
-        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
+        self.top_splitter.SplitHorizontally(self.top_panel, self.python_terminal)
+        self.sizer.Add(self.top_splitter, 1, wx.EXPAND)
 
         self.inst_viewer.ShowInstruction(pc)
         self.python_terminal.ShowInstruction(pc)
+
+        self.top_splitter.Bind(wx.EVT_SPLITTER_DCLICK, lambda evt: None)
+        self.top_splitter.SetSashPosition(int(0.75 * self.GetSize().GetHeight()))
 
         self.Layout()
 
