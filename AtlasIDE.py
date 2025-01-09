@@ -71,15 +71,19 @@ class TestViewer(AtlasPanel):
     def __init__(self, parent, wdb):
         AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
+        self.top_panel = wx.Panel(self, -1)
 
-        self.initial_diffs_viewer = InitialDiffsViewer(self, wdb)
-        self.inst_viewer = InstructionViewer(self, wdb)
+        self.initial_diffs_viewer = InitialDiffsViewer(self.top_panel, wdb)
+        self.inst_viewer = InstructionViewer(self.top_panel, wdb)
 
         self.initial_diffs_viewer.Hide()
         self.inst_viewer.Hide()
 
-        self.inst_list_panel = InstructionListPanel(self)
+        self.inst_list_panel = InstructionListPanel(self.top_panel)
         self.python_terminal = PythonTerminal(self)
+
+        top_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.top_panel.SetSizer(top_panel_sizer)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
@@ -96,12 +100,14 @@ class TestViewer(AtlasPanel):
         self.initial_diffs_viewer.Show()
         self.inst_viewer.Hide()
 
-        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row1_sizer.Add(self.initial_diffs_viewer, 1, wx.EXPAND)
-        row1_sizer.AddStretchSpacer(1)
-        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+        top_panel_sizer = self.top_panel.GetSizer()
+        top_panel_sizer.Clear()
+        top_panel_sizer.Add(self.initial_diffs_viewer, 1, wx.EXPAND)
+        top_panel_sizer.AddStretchSpacer(1)
+        top_panel_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
 
-        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
+        self.sizer.Clear()
+        self.sizer.Add(self.top_panel, 1, wx.EXPAND)
         self.sizer.AddStretchSpacer(1)
         self.sizer.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
         self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
@@ -113,17 +119,21 @@ class TestViewer(AtlasPanel):
         self.initial_diffs_viewer.Hide()
         self.inst_viewer.Show()
 
-        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row1_sizer.Add(self.inst_viewer, 1, wx.EXPAND)
-        row1_sizer.AddStretchSpacer(1)
-        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+        top_panel_sizer = self.top_panel.GetSizer()
+        top_panel_sizer.Clear()
+        top_panel_sizer.Add(self.inst_viewer, 1, wx.EXPAND)
+        top_panel_sizer.AddStretchSpacer(1)
+        top_panel_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
 
-        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
+        self.sizer.Clear()
+        self.sizer.Add(self.top_panel, 1, wx.EXPAND)
         self.sizer.AddStretchSpacer(1)
+        self.sizer.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
         self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
 
         self.inst_viewer.ShowInstruction(pc)
         self.python_terminal.ShowInstruction(pc)
+
         self.Layout()
 
 class TestResults(AtlasPanel):
@@ -697,11 +707,12 @@ class PythonTerminal(AtlasPanel):
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
 
-        self.help = wx.StaticText(self, -1, "Python Terminal")
-        self.help.SetFont(mono12bold)
-        self.shell = None
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
+        self.shell = wx.py.shell.Shell(self)
+        self.shell.SetFont(mono10)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.shell, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.SetMinSize((wx.DisplaySize()[0], 150))
         self.Layout()
@@ -740,8 +751,6 @@ class PythonTerminal(AtlasPanel):
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         self.shell = wx.py.shell.Shell(self, locals=vars)
         self.shell.SetFont(mono10)
-
-        self.sizer.Add(self.help, 0, wx.EXPAND)
         self.sizer.Add(self.shell, 1, wx.EXPAND)
         self.Layout()
 
