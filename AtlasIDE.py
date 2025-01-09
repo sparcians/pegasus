@@ -209,7 +209,7 @@ class InstructionViewer(AtlasPanel):
 
         row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         row1_sizer.Add(self.inst_info_panel, 0, wx.EXPAND)
-        row1_sizer.Add(self.register_info_panel, 0, wx.EXPAND)
+        row1_sizer.Add(self.register_info_panel, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
         row1_sizer.Add(self.spike_code_panel, 0, wx.EXPAND)
 
         row2_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -306,7 +306,6 @@ class InstructionInfoPanel(AtlasPanel):
         self.sizer.Add(gridsizer, 0, wx.EXPAND)
 
         self.SetSizer(self.sizer)
-        self.SetMinSize((400, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
@@ -395,7 +394,7 @@ class RegisterInfoPanel(AtlasPanel):
         self.sizer.Add(self.reg_info_text, 1, wx.EXPAND)
 
         self.SetSizer(self.sizer)
-        self.SetMinSize((400, -1))
+        #self.SetMinSize((400, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
@@ -555,19 +554,51 @@ class SpikeCodePanel(AtlasPanel):
         self.help = wx.StaticText(self, -1, "Spike Code")
         self.help.SetFont(mono12bold)
 
+        self.spike_code_text = wx.StaticText(self, -1, "")
+        self.spike_code_text.SetFont(mono10)
+
+        self.spike_code_hardcoded_text = '''// ...macros...
+#define sext32(x) ((sreg_t)(int32_t)(x))
+#define zext32(x) ((reg_t)(uint32_t)(x))
+#define sext(x, pos) (((sreg_t)(x) << (64 - (pos))) >> (64 - (pos)))
+#define zext(x, pos) (((reg_t)(x) << (64 - (pos))) >> (64 - (pos)))
+#define sext_xlen(x) sext(x, xlen)
+#define zext_xlen(x) zext(x, xlen)
+
+// ...code...'''
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.spike_code_text, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((400, -1))
         self.Layout()
 
+        self.spike_code_by_mnemonic = {}
+
     def OnLoadTest(self, test_name):
-        # TODO cnyce
-        pass
+        self.test_id = self.frame.wdb.GetTestId(test_name)
 
     def ShowInstruction(self, pc):
-        self.help.SetLabel('GOTO {}'.format(pc))
-        pass
+        cmd = 'SELECT mnemonic FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+        mnemonic = self.frame.wdb.cursor.fetchone()[0]
+        if mnemonic not in self.spike_code_by_mnemonic:
+            self.spike_code_by_mnemonic[mnemonic] = self.__GetSpikeCode(mnemonic)
+
+        self.spike_code_text.SetLabel(self.spike_code_by_mnemonic[mnemonic])
+
+    def __GetSpikeCode(self, mnemonic):
+        atlas_root = os.path.dirname(__file__)
+        spike_root = os.path.join(atlas_root, 'spike')
+        insns_root = os.path.join(spike_root, 'riscv', 'insns')
+        impl_file = os.path.join(insns_root, mnemonic + '.h')
+
+        spike_code = ''
+        if os.path.exists(impl_file):
+            with open(impl_file, 'r') as f:
+                spike_code = f.read()
+
+        return self.spike_code_hardcoded_text + '\n' + spike_code
 
 class AtlasExperimentalCodePanel(AtlasPanel):
     def __init__(self, parent):
@@ -582,7 +613,7 @@ class AtlasExperimentalCodePanel(AtlasPanel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((450, -1))
+        #self.SetMinSize((450, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
@@ -606,7 +637,7 @@ class AtlasCppCodePanel(AtlasPanel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((450, -1))
+        #self.SetMinSize((450, -1))
         self.Layout()
 
     def OnLoadTest(self, test_name):
