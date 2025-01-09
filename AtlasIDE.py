@@ -1,5 +1,6 @@
 import os, sys, wx, sqlite3
 import wx.grid
+from enum import IntEnum
 
 class AtlasIDE(wx.Frame):
     def __init__(self, wdb_file):
@@ -72,22 +73,55 @@ class TestViewer(AtlasPanel):
 
         self.initial_diffs_viewer = InitialDiffsViewer(self, wdb)
         self.inst_viewer = InstructionViewer(self, wdb)
+
         self.initial_diffs_viewer.Hide()
+        self.inst_viewer.Hide()
+
+        self.inst_list_panel = InstructionListPanel(self)
+        self.python_terminal = PythonTerminal(self)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.inst_viewer, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
 
     def LoadTest(self, test_name):
         self.frame.SetTitle(test_name)
         self.initial_diffs_viewer.OnLoadTest(test_name)
         self.inst_viewer.OnLoadTest(test_name)
+        self.python_terminal.OnLoadTest(test_name)
+        self.inst_list_panel.OnLoadTest(test_name)
 
+    def ShowInitialState(self):
+        self.sizer.Clear()
         self.initial_diffs_viewer.Show()
         self.inst_viewer.Hide()
 
+        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row1_sizer.Add(self.initial_diffs_viewer, 1, wx.EXPAND)
+        row1_sizer.AddStretchSpacer(1)
+        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+
+        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
+        self.sizer.AddStretchSpacer(1)
+        self.sizer.Add(wx.StaticLine(self, -1, style=wx.LI_HORIZONTAL), 0, wx.EXPAND)
+        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
+
+        self.Layout()
+
+    def ShowInstruction(self, pc):
         self.sizer.Clear()
-        self.sizer.Add(self.initial_diffs_viewer, 1, wx.EXPAND)
+        self.initial_diffs_viewer.Hide()
+        self.inst_viewer.Show()
+
+        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row1_sizer.Add(self.inst_viewer, 1, wx.EXPAND)
+        row1_sizer.AddStretchSpacer(1)
+        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+
+        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
+        self.sizer.AddStretchSpacer(1)
+        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
+
+        self.inst_viewer.ShowInstruction(pc)
         self.Layout()
 
 class TestResults(AtlasPanel):
@@ -169,11 +203,9 @@ class InstructionViewer(AtlasPanel):
 
         self.inst_info_panel = InstructionInfoPanel(self)
         self.register_info_panel = RegisterInfoPanel(self)
-        self.inst_list_panel = InstructionListPanel(self)
         self.spike_code_panel = SpikeCodePanel(self)
         self.atlas_experimental_code_panel = AtlasExperimentalCodePanel(self)
         self.atlas_cpp_code_panel = AtlasCppCodePanel(self)
-        self.python_terminal = PythonTerminal(self)
 
         row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         row1_sizer.Add(self.inst_info_panel, 0, wx.EXPAND)
@@ -192,19 +224,26 @@ class InstructionViewer(AtlasPanel):
 
         row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         row1_sizer.Add(gridlike_sizer, 0, wx.EXPAND)
-        row1_sizer.AddStretchSpacer(1)
-        row1_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(row1_sizer, 1, wx.EXPAND)
-        self.sizer.AddStretchSpacer(1)
-        self.sizer.Add(self.python_terminal, 0, wx.EXPAND)
 
         self.SetSizer(self.sizer)
         self.Layout()
 
     def OnLoadTest(self, test_name):
-        pass
+        self.inst_info_panel.OnLoadTest(test_name)
+        self.register_info_panel.OnLoadTest(test_name)
+        self.spike_code_panel.OnLoadTest(test_name)
+        self.atlas_experimental_code_panel.OnLoadTest(test_name)
+        self.atlas_cpp_code_panel.OnLoadTest(test_name)
+
+    def ShowInstruction(self, pc):
+        self.inst_info_panel.ShowInstruction(pc)
+        self.register_info_panel.ShowInstruction(pc)
+        self.spike_code_panel.ShowInstruction(pc)
+        self.atlas_experimental_code_panel.ShowInstruction(pc)
+        self.atlas_cpp_code_panel.ShowInstruction(pc)
 
 class InstructionInfoPanel(AtlasPanel):
     def __init__(self, parent):
@@ -219,32 +258,34 @@ class InstructionInfoPanel(AtlasPanel):
         self.pc_label = wx.StaticText(self, -1, "PC:")
         self.pc_label.SetFont(mono10)
 
-        self.pc = wx.StaticText(self, -1, "0x--------")
+        self.pc = wx.StaticText(self, -1, "")
         self.pc.SetFont(mono10)
 
         self.mnemonic_label = wx.StaticText(self, -1, "Inst:")
         self.mnemonic_label.SetFont(mono10)
 
-        self.mnemonic = wx.StaticText(self, -1, "----")
+        self.mnemonic = wx.StaticText(self, -1, "")
         self.mnemonic.SetFont(mono10)
 
         self.opcode_label = wx.StaticText(self, -1, "Opcode:")
         self.opcode_label.SetFont(mono10)
 
-        self.opcode = wx.StaticText(self, -1, "0x--------")
+        self.opcode = wx.StaticText(self, -1, "")
         self.opcode.SetFont(mono10)
 
         self.priv_label = wx.StaticText(self, -1, "Priv:")
         self.priv_label.SetFont(mono10)
 
-        self.priv = wx.StaticText(self, -1, "-")
+        self.priv = wx.StaticText(self, -1, "")
         self.priv.SetFont(mono10)
 
         self.result_label = wx.StaticText(self, -1, "Result:")
         self.result_label.SetFont(mono10)
 
-        self.result = wx.StaticText(self, -1, "----")
+        self.result = wx.StaticText(self, -1, "")
         self.result.SetFont(mono10)
+
+        self.__ClearInfoPanel()
 
         # Use a grid sizer to lay out the instruction fields
         gridsizer = wx.FlexGridSizer(0, 2, 5, 5)
@@ -268,6 +309,19 @@ class InstructionInfoPanel(AtlasPanel):
         self.SetMinSize((400, -1))
         self.Layout()
 
+    def OnLoadTest(self, test_name):
+        self.__ClearInfoPanel()
+
+    def ShowInstruction(self, pc):
+        self.help.SetLabel('GOTO {}'.format(pc))
+
+    def __ClearInfoPanel(self):
+        self.pc.SetLabel("0x--------")
+        self.mnemonic.SetLabel("--------")
+        self.opcode.SetLabel("--------")
+        self.priv.SetLabel("--------")
+        self.result.SetLabel("--------")
+
 class RegisterInfoPanel(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -284,6 +338,14 @@ class RegisterInfoPanel(AtlasPanel):
         self.SetMinSize((400, -1))
         self.Layout()
 
+    def OnLoadTest(self, test_name):
+        # TODO cnyce
+        pass
+
+    def ShowInstruction(self, pc):
+        self.help.SetLabel('GOTO {}'.format(pc))
+        pass
+
 class InstructionListPanel(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -294,10 +356,85 @@ class InstructionListPanel(AtlasPanel):
         self.help = wx.StaticText(self, -1, "Instruction List")
         self.help.SetFont(mono12bold)
 
+        self.inst_list_ctrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_NO_HEADER|wx.LC_HRULES)
+        self.inst_list_ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.__OnItemSelected)
+        self.inst_list_ctrl.InsertColumn(0, "Instruction", width=200)
+        self.inst_list_ctrl.SetFont(mono10)
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.inst_list_ctrl, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((400, -1))
+
+        self.SetMinSize((-1, self.frame.GetSize().GetHeight()))
+        self.Layout()
+
+    def OnLoadTest(self, test_name, hart_id=0):
+        # Clear the ListCtrl first.
+        self.inst_list_ctrl.DeleteAllItems()
+
+        # Create a ListCtrl with two columns. The first column holds a bitmap which is just a
+        # colored square (green:pass, red:fail, yellow:unimplemented). The second column holds
+        # the disassembled instruction.
+
+        # Add the first row: uncolored square in the first column, and "Initial State" in the second column.
+        self.inst_list_ctrl.InsertItem(0, "")
+        self.inst_list_ctrl.SetItem(0, 0, "Initial State")
+
+        # Add the remaining rows: colored square in the first column, and the disassembled instruction in the second column.
+        test_id = self.frame.wdb.GetTestId(test_name)
+        cmd = 'SELECT Disasm,PC,ResultCode FROM Instructions WHERE TestId={} AND HartId={}'.format(test_id, hart_id)
+        cursor = self.frame.wdb.cursor
+        cursor.execute(cmd)
+        import pdb; pdb.set_trace()
+        for idx, (disasm, pc, result_code) in enumerate(cursor.fetchall()):
+            if result_code == 0:
+                status = SquareStatus.PASS
+            elif result_code >> 16 in (0x2, 0x3):
+                status = SquareStatus.FAIL
+            elif result_code >> 16 == 0x4:
+                status = SquareStatus.UNIMPLEMENTED
+            else:
+                status = SquareStatus.UNSPECIFIED
+
+            bg_color = SquareStatusColor.GetColor(status)
+            self.inst_list_ctrl.InsertItem(idx+1, "")
+            self.inst_list_ctrl.SetItemBackgroundColour(idx+1, bg_color)
+            self.inst_list_ctrl.SetItem(idx+1, 0, disasm.replace('\t', ' '))
+            self.inst_list_ctrl.SetItemData(idx+1, pc)
+
+        self.__AlignInstListItems()
+        self.inst_list_ctrl.Select(0)
+
+    def __OnItemSelected(self, evt):
+        idx = self.inst_list_ctrl.GetFirstSelected()
+        if idx == 0:
+            self.frame.test_debugger.test_viewer.ShowInitialState()
+        else:
+            pc = self.inst_list_ctrl.GetItemData(idx)
+            self.frame.test_debugger.test_viewer.ShowInstruction(pc)
+
+        self.__AlignInstListItems()
+
+    def __AlignInstListItems(self):
+        mnemonics = set()
+        for idx in range(self.inst_list_ctrl.GetItemCount()):
+            if idx == 0:
+                continue
+            mnemonic = self.inst_list_ctrl.GetItemText(idx).split(' ')[0]
+            mnemonics.add(mnemonic)
+
+        max_mnemonic_len = max(len(mnemonic) for mnemonic in mnemonics) + 4
+        for idx in range(self.inst_list_ctrl.GetItemCount()):
+            if idx == 0:
+                continue
+            disasm = self.inst_list_ctrl.GetItemText(idx)
+            mnemonic = disasm.split(' ')[0]
+            disasm = disasm.replace(mnemonic, '').lstrip()
+            disasm = mnemonic.ljust(max_mnemonic_len) + disasm.replace('  ', ' ')
+            self.inst_list_ctrl.SetItem(idx, 0, disasm)
+
+        self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.Layout()
 
 class SpikeCodePanel(AtlasPanel):
@@ -316,6 +453,14 @@ class SpikeCodePanel(AtlasPanel):
         self.SetMinSize((400, -1))
         self.Layout()
 
+    def OnLoadTest(self, test_name):
+        # TODO cnyce
+        pass
+
+    def ShowInstruction(self, pc):
+        self.help.SetLabel('GOTO {}'.format(pc))
+        pass
+
 class AtlasExperimentalCodePanel(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -331,6 +476,14 @@ class AtlasExperimentalCodePanel(AtlasPanel):
         self.SetSizer(self.sizer)
         self.SetMinSize((450, -1))
         self.Layout()
+
+    def OnLoadTest(self, test_name):
+        # TODO cnyce
+        pass
+
+    def ShowInstruction(self, pc):
+        self.help.SetLabel('GOTO {}'.format(pc))
+        pass
 
 class AtlasCppCodePanel(AtlasPanel):
     def __init__(self, parent):
@@ -348,6 +501,14 @@ class AtlasCppCodePanel(AtlasPanel):
         self.SetMinSize((450, -1))
         self.Layout()
 
+    def OnLoadTest(self, test_name):
+        # TODO cnyce
+        pass
+
+    def ShowInstruction(self, pc):
+        self.help.SetLabel('GOTO {}'.format(pc))
+        pass
+
 class PythonTerminal(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -361,12 +522,15 @@ class PythonTerminal(AtlasPanel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetMinSize((wx.DisplaySize()[0], 40))
+        self.SetMinSize((wx.DisplaySize()[0], 120))
         self.Layout()
+
+    def OnLoadTest(self, test_name):
+        # TODO cnyce
+        pass
 
 class WorkloadsDB:
     def __init__(self, wdb_file):
-        import pdb; pdb.set_trace()
         self.conn = sqlite3.connect(wdb_file)
         self.cursor = self.conn.cursor()
 
@@ -427,6 +591,31 @@ class WorkloadsDB:
 
     def GetRegisterName(self, group_num, reg_idx):
         return self.reg_names_by_key[(group_num, reg_idx)]
+
+class SquareStatus(IntEnum):
+    PASS = 0
+    FAIL = 1
+    UNIMPLEMENTED = 2
+    UNSPECIFIED = 3
+
+class SquareStatusColor:
+    @staticmethod
+    def GetColor(status):
+        if status == SquareStatus.PASS:
+            return wx.GREEN
+        elif status == SquareStatus.FAIL:
+            return wx.RED
+        elif status == SquareStatus.UNIMPLEMENTED:
+            return wx.YELLOW
+        elif status == SquareStatus.UNSPECIFIED:
+            return wx.WHITE
+
+def CreateStatusSquare(parent, size, status):
+    if isinstance(size, int):
+        size = (size, size)
+    square = wx.Panel(parent, -1, size=size)
+    square.SetBackgroundColour(SquareStatusColor.GetColor(status))
+    return square
 
 if __name__ == "__main__":
     app = wx.App()
