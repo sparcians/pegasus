@@ -207,28 +207,17 @@ class InstructionViewer(AtlasPanel):
         self.atlas_experimental_code_panel = AtlasExperimentalCodePanel(self)
         self.atlas_cpp_code_panel = AtlasCppCodePanel(self)
 
-        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row1_sizer.Add(self.inst_info_panel, 0, wx.EXPAND)
-        row1_sizer.Add(self.register_info_panel, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
-        row1_sizer.Add(self.spike_code_panel, 0, wx.EXPAND)
+        info_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        info_sizer.Add(self.inst_info_panel, 0, wx.EXPAND)
+        info_sizer.Add(self.register_info_panel, 0, wx.EXPAND|wx.LEFT, 20)
 
-        row2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row2_sizer.Add(self.atlas_experimental_code_panel, 0, wx.EXPAND)
-        row2_sizer.AddStretchSpacer(1)
-        row2_sizer.Add(self.atlas_cpp_code_panel, 0, wx.EXPAND)
+        grid_sizer = wx.FlexGridSizer(2, 2, 30, 30)
+        grid_sizer.Add(info_sizer, 1, wx.EXPAND)
+        grid_sizer.Add(self.spike_code_panel, 1, wx.EXPAND)
+        grid_sizer.Add(self.atlas_experimental_code_panel, 1, wx.EXPAND)
+        grid_sizer.Add(self.atlas_cpp_code_panel, 1, wx.EXPAND)
 
-        gridlike_sizer = wx.BoxSizer(wx.VERTICAL)
-        gridlike_sizer.Add(row1_sizer, 0, wx.EXPAND)
-        gridlike_sizer.AddSpacer(30)
-        gridlike_sizer.Add(row2_sizer, 0, wx.EXPAND)
-
-        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row1_sizer.Add(gridlike_sizer, 0, wx.EXPAND)
-
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(row1_sizer, 1, wx.EXPAND)
-
-        self.SetSizer(self.sizer)
+        self.SetSizer(grid_sizer)
         self.Layout()
 
     def OnLoadTest(self, test_name):
