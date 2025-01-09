@@ -311,16 +311,65 @@ class InstructionInfoPanel(AtlasPanel):
 
     def OnLoadTest(self, test_name):
         self.__ClearInfoPanel()
+        self.test_id = self.frame.wdb.GetTestId(test_name)
 
     def ShowInstruction(self, pc):
-        self.help.SetLabel('GOTO {}'.format(pc))
+        cmd = 'SELECT Mnemonic,Opcode,Priv,ResultCode FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+        mnemonic, opcode, priv, result_code = self.frame.wdb.cursor.fetchone()
+
+        self.pc.SetLabel("0x{:08X}".format(pc))
+        self.mnemonic.SetLabel(mnemonic)
+        self.opcode.SetLabel("0x{:08X}".format(opcode))
+        self.priv.SetLabel(["U({})", "S({})", "H({})", "M({})", "VU({})", "VS({})"][priv].format(priv))
+
+        if result_code == 0:
+            self.result.SetLabel('OKAY')
+        elif result_code >> 16 == 0x1:
+            exception_cause = result_code & 0xFFFF
+
+            cause_strs = [
+                'MISSALIGNED_FETCH',
+                'FETCH_ACCESS',
+                'ILLEGAL_INSTRUCTION',
+                'BREAKPOINT',
+                'MISSALIGNED_LOAD',
+                'LOAD_ACCESS',
+                'MISSALIGNED_STORE',
+                'STORE_ACCESS',
+                'USER_ECALL',
+                'SUPERVISOR_ECALL',
+                'VIRTUAL_SUPERVISOR_ECALL',
+                'MACHINE_ECALL',
+                'FETCH_PAGE_FAULT',
+                'LOAD_PAGE_FAULT',
+                'STORE_PAGE_FAULT',
+                'DOUBLE_TRAP',
+                'SOFTWARE_CHECK_FAULT',
+                'HARDWARE_ERROR_FAULT',
+                'FETCH_GUEST_PAGE_FAULT',
+                'LOAD_GUEST_PAGE_FAULT',
+                'VIRTUAL_INSTRUCTION',
+                'STORE_GUEST_PAGE_FAULT'
+            ]
+
+            self.result.SetLabel(cause_strs[exception_cause])
+        elif result_code >> 16 == 0x2:
+            self.result.SetLabel('PC INVALID')
+        elif result_code >> 16 == 0x3:
+            self.result.SetLabel('REG VAL INVALID')
+        elif result_code >> 16 == 0x4:
+            self.result.SetLabel('UNIMPLEMENTED')
+
+        self.Update()
+        self.Layout()
 
     def __ClearInfoPanel(self):
-        self.pc.SetLabel("0x--------")
-        self.mnemonic.SetLabel("--------")
-        self.opcode.SetLabel("--------")
-        self.priv.SetLabel("--------")
-        self.result.SetLabel("--------")
+        self.pc.SetLabel("")
+        self.mnemonic.SetLabel("")
+        self.opcode.SetLabel("")
+        self.priv.SetLabel("")
+        self.result.SetLabel("")
 
 class RegisterInfoPanel(AtlasPanel):
     def __init__(self, parent):
@@ -383,10 +432,9 @@ class InstructionListPanel(AtlasPanel):
 
         # Add the remaining rows: colored square in the first column, and the disassembled instruction in the second column.
         test_id = self.frame.wdb.GetTestId(test_name)
-        cmd = 'SELECT Disasm,PC,ResultCode FROM Instructions WHERE TestId={} AND HartId={}'.format(test_id, hart_id)
+        cmd = 'SELECT Disasm,PC,ResultCode FROM Instructions WHERE TestId={} AND HartId={} ORDER BY PC ASC'.format(test_id, hart_id)
         cursor = self.frame.wdb.cursor
         cursor.execute(cmd)
-        import pdb; pdb.set_trace()
         for idx, (disasm, pc, result_code) in enumerate(cursor.fetchall()):
             if result_code == 0:
                 status = SquareStatus.PASS
