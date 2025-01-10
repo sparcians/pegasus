@@ -97,6 +97,7 @@ class TestViewer(AtlasPanel):
         AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
         self.top_splitter = wx.SplitterWindow(self)
+        self.top_splitter.SetMinimumPaneSize(50)
         self.top_panel = wx.Panel(self.top_splitter, -1)
 
         self.initial_diffs_viewer = InitialDiffsViewer(self.top_panel, wdb)
@@ -827,6 +828,69 @@ class AtlasCppCodePanel(AtlasPanel):
         cpp_code = [line[4:] for line in cpp_code]
         return ''.join(cpp_code)
 
+# Function to extract the register value from any register
+def GetRegVal(reg):
+    if isinstance(reg, PythonImmediate):
+        return reg.int
+    elif isinstance(reg, int):
+        return reg
+    else:
+        return reg.regval
+
+# Function to simulate a cast to int32_t (signed 32-bit integer)
+def int32(x):
+    return (x & 0xFFFFFFFF) - (1 << 32) if x & (1 << 31) else x & 0xFFFFFFFF
+
+# Function to simulate a cast to uint32_t (unsigned 32-bit integer)
+def uint32(x):
+    return x & 0xFFFFFFFF
+
+# Function to simulate a cast to int64_t (signed 64-bit integer)
+def int64(x):
+    return (x & 0xFFFFFFFFFFFFFFFF) - (1 << 64) if x & (1 << 63) else x & 0xFFFFFFFFFFFFFFFF
+
+# Function to simulate a cast to uint64_t (unsigned 64-bit integer)
+def uint64(x):
+    return x & 0xFFFFFFFFFFFFFFFF
+
+# Function to sign-extend a 32-bit value (sext32)
+def sext32(x):
+    reg_name = x.regname
+    x = GetRegVal(x)
+    x = int64(int32(x))
+    return PythonPrettyRegister(reg_name, x)
+
+# Function to zero-extend a 32-bit value (zext32)
+def zext32(x):
+    reg_name = x.regname
+    x = GetRegVal(x)
+    x = uint64(uint32(x))
+    return PythonPrettyRegister(reg_name, x)
+
+# Function to sign-extend a value by shifting (sext)
+def sext(x, pos):
+    reg_name = x.regname
+    x = GetRegVal(x)
+    x = int64(((x) << (64 - pos)) >> (64 - pos))
+    return PythonPrettyRegister(reg_name, x)
+
+# Function to zero-extend a value by shifting (zext)
+def zext(x, pos):
+    reg_name = x.regname
+    x = GetRegVal(x)
+    x = uint64(((x) << (64 - pos)) >> (64 - pos))
+    return PythonPrettyRegister(reg_name, x)
+
+# Function to sign-extend a value for xlen (64 bits)
+def sext_xlen(x):
+    reg_name = x.regname
+    return PythonPrettyRegister(reg_name, GetRegVal(sext(x, 64)))
+
+# Function to zero-extend a value for xlen (64 bits)
+def zext_xlen(x):
+    reg_name = x.regname
+    return PythonPrettyRegister(reg_name, GetRegVal(zext(x, 64)))
+
 class PythonTerminal(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -867,7 +931,13 @@ class PythonTerminal(AtlasPanel):
         if rd not in (None, ''): 
             vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
 
-        vars['whos'] = self.__whos__
+        vars['whos'] = self.whos
+        vars['sext32'] = sext32
+        vars['zext32'] = zext32
+        vars['sext'] = sext
+        vars['zext'] = zext
+        vars['sext_xlen'] = sext_xlen
+        vars['zext_xlen'] = zext_xlen
         self.vars = vars
 
         if self.shell:
@@ -881,8 +951,8 @@ class PythonTerminal(AtlasPanel):
         self.sizer.Add(self.shell, 1, wx.EXPAND)
         self.Layout()
 
-    def __whos__(self):
-        return [varname for varname in list(self.vars.keys()) if varname not in ('whos', '__builtins__', 'shell')]
+    def whos(self):
+        return [varname for varname in list(self.vars.keys()) if varname not in ('whos', '__builtins__', 'shell', 'sext32', 'zext32', 'sext', 'zext', 'sext_xlen', 'zext_xlen')]
 
 class PythonSourceRegister:
     def __init__(self, reg_name, reg_val):
@@ -940,6 +1010,32 @@ class PythonDestRegister:
     @property
     def hex(self):
         return f'0x{self.rd_val_after:016X}'
+
+class PythonPrettyRegister:
+    def __init__(self, reg_name, reg_val):
+        self.reg_name = reg_name
+        self.reg_val = reg_val
+
+    def __repr__(self):
+        rep = self.reg_name + '\n'
+        rep += '    reg val (int): ' + f'{self.reg_val}' + '\n'
+        rep += '    reg val (hex): ' + f'0x{self.reg_val:016X}' + '\n'
+        return rep
+
+    def __str__(self):
+        return f'0x{self.reg_val:016X}'
+
+    @property
+    def regname(self):
+        return self.reg_name
+
+    @property
+    def regval(self):
+        return self.reg_val
+
+    @property
+    def hex(self):
+        return f'0x{self.reg_val:016X}'
 
 class PythonImmediate:
     def __init__(self, imm_val):
