@@ -1,4 +1,4 @@
-import os, sys, wx, sqlite3
+import os, sys, wx, sqlite3, re
 import wx.grid
 import wx.py.shell
 from enum import IntEnum
@@ -480,11 +480,11 @@ class RegisterInfoPanel(AtlasPanel):
     def ShowInstruction(self, pc):
         self.reg_info_text.SetLabel('')
 
-        cmd = 'SELECT Rs1,Rs1Val,Rs2,Rs2Val,Rd,RdValBefore,RdValAfter,TruthRdValAfter,HasImm,Imm FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        cmd = 'SELECT Rs1,Rs1Val,Rs2,Rs2Val,Rd,RdValBefore,RdValAfter,TruthRdValAfter,HasImm,Imm,Disasm FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
         self.frame.wdb.cursor.execute(cmd)
 
         row = self.frame.wdb.cursor.fetchone()
-        rs1, rs1_val, rs2, rs2_val, rd, rd_val_before, rd_val_after, truth_rd_val_after, has_imm, imm = row
+        rs1, rs1_val, rs2, rs2_val, rd, rd_val_before, rd_val_after, truth_rd_val_after, has_imm, imm, disasm = row
 
         # Example:
         #
@@ -513,6 +513,10 @@ class RegisterInfoPanel(AtlasPanel):
 
         if has_imm:
             lines.append(['imm:', '', f"0x{imm:016X}"])
+
+        if disasm.find('CSR=') != -1:
+            csr_num = int(re.search(r'CSR=0x([0-9a-fA-F]+)', disasm).group(1), 16)
+            lines.append(['csr:', str(csr_num), ''])
 
         if rd not in (None, ''):
             lines.append(['rd:', rd, ''])
