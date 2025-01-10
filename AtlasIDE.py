@@ -3,6 +3,31 @@ import wx.grid
 import wx.py.shell
 from enum import IntEnum
 
+cause_strs = [
+    'MISSALIGNED_FETCH',
+    'FETCH_ACCESS',
+    'ILLEGAL_INSTRUCTION',
+    'BREAKPOINT',
+    'MISSALIGNED_LOAD',
+    'LOAD_ACCESS',
+    'MISSALIGNED_STORE',
+    'STORE_ACCESS',
+    'USER_ECALL',
+    'SUPERVISOR_ECALL',
+    'VIRTUAL_SUPERVISOR_ECALL',
+    'MACHINE_ECALL',
+    'FETCH_PAGE_FAULT',
+    'LOAD_PAGE_FAULT',
+    'STORE_PAGE_FAULT',
+    'DOUBLE_TRAP',
+    'SOFTWARE_CHECK_FAULT',
+    'HARDWARE_ERROR_FAULT',
+    'FETCH_GUEST_PAGE_FAULT',
+    'LOAD_GUEST_PAGE_FAULT',
+    'VIRTUAL_INSTRUCTION',
+    'STORE_GUEST_PAGE_FAULT'
+]
+
 class AtlasIDE(wx.Frame):
     def __init__(self, wdb_file):
         wx.Frame.__init__(self, None, -1, "Atlas IDE", size=wx.DisplaySize())
@@ -76,9 +101,11 @@ class TestViewer(AtlasPanel):
 
         self.initial_diffs_viewer = InitialDiffsViewer(self.top_panel, wdb)
         self.inst_viewer = InstructionViewer(self.top_panel, wdb)
+        self.post_exception_csr_vals_viewer = PostExceptionCsrValsViewer(self.top_panel, wdb)
 
         self.initial_diffs_viewer.Hide()
         self.inst_viewer.Hide()
+        self.post_exception_csr_vals_viewer.Hide()
 
         self.inst_list_panel = InstructionListPanel(self.top_panel)
         self.python_terminal = PythonTerminal(self.top_splitter)
@@ -93,6 +120,7 @@ class TestViewer(AtlasPanel):
         self.frame.SetTitle(test_name)
         self.initial_diffs_viewer.OnLoadTest(test_name)
         self.inst_viewer.OnLoadTest(test_name)
+        self.post_exception_csr_vals_viewer.OnLoadTest(test_name)
         self.python_terminal.OnLoadTest(test_name)
         self.inst_list_panel.OnLoadTest(test_name)
 
@@ -100,6 +128,7 @@ class TestViewer(AtlasPanel):
         self.sizer.Clear()
         self.initial_diffs_viewer.Show()
         self.inst_viewer.Hide()
+        self.post_exception_csr_vals_viewer.Hide()
 
         top_panel_sizer = self.top_panel.GetSizer()
         top_panel_sizer.Clear()
@@ -120,6 +149,7 @@ class TestViewer(AtlasPanel):
         self.sizer.Clear()
         self.initial_diffs_viewer.Hide()
         self.inst_viewer.Show()
+        self.post_exception_csr_vals_viewer.Hide()
 
         top_panel_sizer = self.top_panel.GetSizer()
         top_panel_sizer.Clear()
@@ -132,6 +162,30 @@ class TestViewer(AtlasPanel):
         self.sizer.Add(self.top_splitter, 1, wx.EXPAND)
 
         self.inst_viewer.ShowInstruction(pc)
+        self.python_terminal.ShowInstruction(pc)
+
+        self.top_splitter.Bind(wx.EVT_SPLITTER_DCLICK, lambda evt: None)
+        self.top_splitter.SetSashPosition(int(0.75 * self.GetSize().GetHeight()))
+
+        self.Layout()
+
+    def ShowCsrValues(self, pc):
+        self.sizer.Clear()
+        self.initial_diffs_viewer.Hide()
+        self.inst_viewer.Hide()
+        self.post_exception_csr_vals_viewer.Show()
+
+        top_panel_sizer = self.top_panel.GetSizer()
+        top_panel_sizer.Clear()
+        top_panel_sizer.Add(self.post_exception_csr_vals_viewer, 1, wx.EXPAND)
+        top_panel_sizer.AddStretchSpacer(1)
+        top_panel_sizer.Add(self.inst_list_panel, 0, wx.EXPAND)
+
+        self.sizer.Clear()
+        self.top_splitter.SplitHorizontally(self.top_panel, self.python_terminal)
+        self.sizer.Add(self.top_splitter, 1, wx.EXPAND)
+
+        self.post_exception_csr_vals_viewer.ShowInstruction(pc)
         self.python_terminal.ShowInstruction(pc)
 
         self.top_splitter.Bind(wx.EVT_SPLITTER_DCLICK, lambda evt: None)
@@ -249,6 +303,51 @@ class InstructionViewer(AtlasPanel):
         self.atlas_experimental_code_panel.ShowInstruction(pc)
         self.atlas_cpp_code_panel.ShowInstruction(pc)
 
+class PostExceptionCsrValsViewer(AtlasPanel):
+    def __init__(self, parent, wdb):
+        AtlasPanel.__init__(self, parent, -1)
+        self.wdb = wdb
+        self.grid = None
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+
+    def OnLoadTest(self, test_name):
+        self.test_id = self.wdb.GetTestId(test_name)
+
+    def ShowInstruction(self, pc):
+        if self.grid:
+            self.sizer.Clear()
+            self.grid.Destroy()
+            self.grid = None
+
+        cmd = 'SELECT CsrName,AtlasCsrVal,CosimCsrVal FROM PostInstCsrVals WHERE PC={} AND TestId={} AND HartId=0 ORDER BY CsrName ASC'.format(pc, self.test_id)
+        self.wdb.cursor.execute(cmd)
+
+        rows = len(self.wdb.cursor.fetchall())
+        cols = 3
+
+        self.grid = wx.grid.Grid(self, -1)
+        self.grid.CreateGrid(rows, cols)
+
+        self.grid.SetColLabelValue(0, "CSR")
+        self.grid.SetColLabelValue(1, "Expected Value")
+        self.grid.SetColLabelValue(2, "Actual Value")
+
+        self.wdb.cursor.execute(cmd)
+        for idx, (csr_name, atlas_val, cosim_val) in enumerate(self.wdb.cursor.fetchall()):
+            self.grid.SetCellValue(idx, 0, csr_name)
+            self.grid.SetCellValue(idx, 1, hex(atlas_val & 0xFFFFFFFFFFFFFFFF))
+            self.grid.SetCellValue(idx, 2, hex(cosim_val & 0xFFFFFFFFFFFFFFFF))
+
+            if atlas_val != cosim_val:
+                for col in range(cols):
+                    self.grid.SetCellBackgroundColour(idx, col, 'pink')
+
+        self.sizer.Add(self.grid, 1, wx.EXPAND)
+        self.Layout()
+        self.grid.AutoSize()
+
 class InstructionInfoPanel(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
@@ -336,32 +435,6 @@ class InstructionInfoPanel(AtlasPanel):
             self.result.SetLabel('OKAY')
         elif result_code >> 16 == 0x1:
             exception_cause = result_code & 0xFFFF
-
-            cause_strs = [
-                'MISSALIGNED_FETCH',
-                'FETCH_ACCESS',
-                'ILLEGAL_INSTRUCTION',
-                'BREAKPOINT',
-                'MISSALIGNED_LOAD',
-                'LOAD_ACCESS',
-                'MISSALIGNED_STORE',
-                'STORE_ACCESS',
-                'USER_ECALL',
-                'SUPERVISOR_ECALL',
-                'VIRTUAL_SUPERVISOR_ECALL',
-                'MACHINE_ECALL',
-                'FETCH_PAGE_FAULT',
-                'LOAD_PAGE_FAULT',
-                'STORE_PAGE_FAULT',
-                'DOUBLE_TRAP',
-                'SOFTWARE_CHECK_FAULT',
-                'HARDWARE_ERROR_FAULT',
-                'FETCH_GUEST_PAGE_FAULT',
-                'LOAD_GUEST_PAGE_FAULT',
-                'VIRTUAL_INSTRUCTION',
-                'STORE_GUEST_PAGE_FAULT'
-            ]
-
             self.result.SetLabel(cause_strs[exception_cause])
         elif result_code >> 16 == 0x2:
             self.result.SetLabel('PC INVALID')
@@ -513,6 +586,14 @@ class InstructionListPanel(AtlasPanel):
             self.inst_list_ctrl.SetItem(idx+1, 0, disasm.replace('\t', ' '))
             self.inst_list_ctrl.SetItemData(idx+1, pc)
 
+            # Add another listctrl item in the event of an exception. Clicking this
+            # item will show the CSR values after exception handling.
+            if result_code >> 16 == 0x1:
+                exception_cause = result_code & 0xFFFF
+                self.inst_list_ctrl.InsertItem(idx+1, "")
+                self.inst_list_ctrl.SetItem(idx+1, 0, '  ' + cause_strs[exception_cause])
+                self.inst_list_ctrl.SetItemData(idx+1, pc)
+
         self.__AlignInstListItems()
         self.inst_list_ctrl.Select(0)
 
@@ -522,7 +603,11 @@ class InstructionListPanel(AtlasPanel):
             self.frame.test_debugger.test_viewer.ShowInitialState()
         else:
             pc = self.inst_list_ctrl.GetItemData(idx)
-            self.frame.test_debugger.test_viewer.ShowInstruction(pc)
+            text = self.inst_list_ctrl.GetItemText(idx)
+            if text.strip() in cause_strs:
+                self.frame.test_debugger.test_viewer.ShowCsrValues(pc)
+            else:
+                self.frame.test_debugger.test_viewer.ShowInstruction(pc)
 
         self.__AlignInstListItems()
 
