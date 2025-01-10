@@ -613,19 +613,37 @@ class AtlasExperimentalCodePanel(AtlasPanel):
         self.help = wx.StaticText(self, -1, "Atlas Experimental Code")
         self.help.SetFont(mono12bold)
 
+        self.editor = wx.TextCtrl(self, -1, style=wx.TE_MULTILINE)
+        self.editor.SetFont(mono10)
+        self.editor.SetValue('# Implement instruction handlers here in Python!\n\n')
+        self.editor.Bind(wx.EVT_TEXT, self.__OnEdits)
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
+        self.sizer.Add(self.editor, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        #self.SetMinSize((450, -1))
         self.Layout()
 
+        self.experimental_code_by_mnemonic = {}
+        self.active_mnemonic = None
+
     def OnLoadTest(self, test_name):
-        # TODO cnyce
-        pass
+        self.test_id = self.frame.wdb.GetTestId(test_name)
+        self.editor.SetValue('')
 
     def ShowInstruction(self, pc):
-        self.help.SetLabel('GOTO {}'.format(pc))
-        pass
+        cmd = 'SELECT Disasm FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
+        disasm = self.frame.wdb.cursor.execute(cmd).fetchone()[0]
+        mnemonic = disasm.replace('\t', ' ').split(' ')[0]
+
+        if mnemonic not in self.experimental_code_by_mnemonic:
+            self.experimental_code_by_mnemonic[mnemonic] = '# Implement instruction handlers here in Python!\n\n'
+
+        self.editor.ChangeValue(self.experimental_code_by_mnemonic[mnemonic])
+        self.active_mnemonic = mnemonic
+
+    def __OnEdits(self, evt):
+        self.experimental_code_by_mnemonic[self.active_mnemonic] = self.editor.GetValue()
 
 class AtlasCppCodePanel(AtlasPanel):
     def __init__(self, parent):
@@ -744,7 +762,7 @@ class PythonTerminal(AtlasPanel):
             vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
 
         vars['whos'] = self.__whos__
-        self.varnames = list(vars.keys())
+        self.vars = vars
 
         if self.shell:
             self.GetSizer().Clear()
@@ -758,7 +776,7 @@ class PythonTerminal(AtlasPanel):
         self.Layout()
 
     def __whos__(self):
-        return [varname for varname in self.varnames if varname != 'whos']
+        return [varname for varname in list(self.vars.keys()) if varname not in ('whos', '__builtins__', 'shell')]
 
 class PythonSourceRegister:
     def __init__(self, reg_name, reg_val):
