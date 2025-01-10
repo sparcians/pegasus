@@ -117,6 +117,8 @@ class InstReplayer:
             return csr_names
 
 inst_replayer = InstReplayer()
+GROUP_NUMS_BY_REG_NAME = {}
+REG_IDS_BY_REG_NAME = {}
 
 class AtlasIDE(wx.Frame):
     def __init__(self, wdb_file):
@@ -1019,7 +1021,18 @@ class PythonTerminal(AtlasPanel):
             vars['imm'] = PythonImmediate(imm)
 
         if rd not in (None, ''): 
-            vars['rd'] = PythonDestRegister(self.frame.wdb, rd, rd_val_before, rd_val_after, truth_rd_val_after)
+            vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
+
+        cmd = 'SELECT CsrName,AtlasCsrVal FROM PostInstCsrVals WHERE PC<={} AND TestId={} AND HartId=0 ORDER BY PC ASC'.format(pc, self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+        for csr_name, atlas_csr_val in self.frame.wdb.cursor.fetchall():
+            vars[csr_name] = PythonPrettyRegister(csr_name, atlas_csr_val)
+
+        cmd = 'SELECT RegName,ActualInitVal FROM Registers WHERE TestId={} AND HartId=0 AND RegType=3'.format(self.test_id)
+        self.frame.wdb.cursor.execute(cmd)
+        for csr_name, atlas_csr_val in self.frame.wdb.cursor.fetchall():
+            if csr_name not in vars:
+                vars[csr_name] = PythonPrettyRegister(csr_name, atlas_csr_val)
 
         vars['whos'] = self.whos
         vars['helpers'] = self.helpers
@@ -1084,14 +1097,48 @@ class PythonSourceRegister:
     def hex(self):
         return f'0x{self.reg_val:016X}'
 
-class PythonDestRegister:
-    def __init__(self, wdb, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):
-        self.wdb = wdb
+class MaskedRegister:
+    def __init__(self, reg_name):
         self.reg_name = reg_name
+        self._mask = None
+
+    @property
+    def mask(self):
+        if self._mask is None:
+            group_num = GROUP_NUMS_BY_REG_NAME[self.reg_name]
+            reg_idx = REG_IDS_BY_REG_NAME[self.reg_name]
+            if group_num == 0:
+                self._mask = 0xFFFFFFFFFFFFFFFF if reg_idx > 0 else 0x0
+            elif group_num in (1,2):
+                self._mask = 0xFFFFFFFFFFFFFFFF
+            else:
+                atlas_root = os.path.dirname(__file__)
+                with open(os.path.join(atlas_root, 'arch', 'rv64', 'reg_csr.json'), 'r') as fin:
+                    all_json = json.load(fin)
+                    for reg_json in all_json:
+                        if reg_json['name'] == self.reg_name:
+                            fields = reg_json['fields']
+                            bit_mask = 0
+                            for _, field_defn in fields.items():
+                                if not field_defn['readonly']:
+                                    low_bit = field_defn['low_bit']
+                                    high_bit = field_defn['high_bit']
+
+                                    # Set the bits from (low_bit, high_bit) in bit_mask to 1 (inclusive)
+                                    for i in range(low_bit, high_bit + 1):
+                                        bit_mask |= (1 << i)
+
+                            self._mask = bit_mask
+                            break
+
+        return PythonPrettyInteger('mask', self._mask)
+
+class PythonDestRegister(MaskedRegister):
+    def __init__(self, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):
+        MaskedRegister.__init__(self, reg_name)
         self.rd_val_before = rd_val_before
         self.rd_val_after = rd_val_after
         self.truth_rd_val_after = truth_rd_val_after
-        self._mask = None
 
     def __repr__(self):
         rep = self.reg_name + '\n'
@@ -1116,42 +1163,32 @@ class PythonDestRegister:
     @property
     def hex(self):
         return f'0x{self.rd_val_after:016X}'
-    
-    @property
-    def mask(self):
-        if self._mask is None:
-            group_num = self.wdb.GetGroupNum(self.reg_name)
-            reg_idx = self.wdb.GetRegIdx(self.reg_name)
-            if group_num == 0:
-                self._mask = 0xFFFFFFFFFFFFFFFF if reg_idx > 0 else 0x0
-            elif group_num in (1,2):
-                self._mask = 0xFFFFFFFFFFFFFFFF
-            else:
-                script_dir = os.path.dirname(__file__)
-                atlas_root = os.path.dirname(script_dir)
-                with open(os.path.join(atlas_root, 'arch', 'rv64', 'reg_csr.json'), 'r') as fin:
-                    all_json = json.load(fin)
-                    for reg_json in all_json:
-                        if reg_json['name'] == self.reg_name:
-                            fields = reg_json['fields']
-                            bit_mask = 0
-                            for _, field_defn in fields.items():
-                                if not field_defn['readonly']:
-                                    low_bit = field_defn['low_bit']
-                                    high_bit = field_defn['high_bit']
 
-                                    # Set the bits from (low_bit, high_bit) in bit_mask to 1 (inclusive)
-                                    for i in range(low_bit, high_bit + 1):
-                                        bit_mask |= (1 << i)
-
-                            self._mask = bit_mask
-                            break
-
-        return PythonPrettyRegister('mask', self._mask)
-
-class PythonPrettyRegister:
+class PythonPrettyInteger:
     def __init__(self, reg_name, reg_val):
         self.reg_name = reg_name
+        self.reg_val = reg_val
+
+    def __repr__(self):
+        rep = self.reg_name + '\n'
+        rep += '    int val: ' + str(self.reg_val) + '\n'
+        rep += '    hex val: ' + f'0x{self.reg_val:016X}' + '\n'
+        return rep
+
+    def __str__(self):
+        return f'0x{self.reg_val:016X}'
+
+    @property
+    def hex(self):
+        return f'0x{self.reg_val:016X}'
+
+    @property
+    def int(self):
+        return self.reg_val
+
+class PythonPrettyRegister(MaskedRegister):
+    def __init__(self, reg_name, reg_val):
+        MaskedRegister.__init__(self, reg_name)
         self.reg_val = reg_val
 
     def __repr__(self):
@@ -1218,6 +1255,8 @@ class WorkloadsDB:
         self.reg_names_by_key = {}
         for reg_name, reg_type, reg_idx in self.cursor.fetchall():
             self.reg_names_by_key[(reg_type, reg_idx)] = reg_name
+            GROUP_NUMS_BY_REG_NAME[reg_name] = reg_type
+            REG_IDS_BY_REG_NAME[reg_name] = reg_idx
 
     def GetTestId(self, test_name):
         return self.test_ids_by_name[test_name]
