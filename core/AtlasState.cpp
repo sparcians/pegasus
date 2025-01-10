@@ -3,33 +3,55 @@
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/Translate.hpp"
+#include "include/AtlasTypes.hpp"
 #include "include/ActionTags.hpp"
 #include "include/AtlasUtils.hpp"
+#include "arch/register_macros.hpp"
 #include "system/AtlasSystem.hpp"
 
+#include "mavis/mavis/Mavis.h"
+
+#include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
-#include "arch/register_macros.hpp"
-#include "include/AtlasTypes.hpp"
 
 namespace atlas
 {
-    AtlasState::AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p) :
-        sparta::Unit(core_node),
+    mavis::FileNameListType getUArchFiles(const std::string & uarch_file_path)
+    {
+        const std::string rv64_uarch_file_path = uarch_file_path + "/rv64";
+        const mavis::FileNameListType uarch_files = {
+            rv64_uarch_file_path + "/atlas_uarch_rv64i.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64m.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64a.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64f.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64d.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64zicsr.json",
+            rv64_uarch_file_path + "/atlas_uarch_rv64zifencei.json"};
+        return uarch_files;
+    }
+
+    AtlasState::AtlasState(sparta::TreeNode* core_tn, const AtlasStateParameters* p) :
+        sparta::Unit(core_tn),
         hart_id_(p->hart_id),
+        isa_string_(p->isa_string),
+        isa_file_path_(p->isa_file_path),
+        uarch_file_path_(p->uarch_file_path),
+        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
+            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
-        inst_logger_(core_node),
+        xlen_(extension_manager_.getXLEN()),
+        inst_logger_(core_tn),
         stop_sim_action_group_("stop_sim")
     {
         auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
-            RegisterSet::create(core_node, json_dir + std::string("/reg_int.json"), "int_regs");
-        fp_rset_ =
-            RegisterSet::create(core_node, json_dir + std::string("/reg_fp.json"), "fp_regs");
+            RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
+        fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
         vec_rset_ =
-            RegisterSet::create(core_node, json_dir + std::string("/reg_vec.json"), "vec_regs");
+            RegisterSet::create(core_tn, json_dir + std::string("/reg_vec.json"), "vec_regs");
         csr_rset_ =
-            RegisterSet::create(core_node, json_dir + std::string("/reg_csr.json"), "csr_regs");
+            RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
         // Increment PC Action
         increment_pc_action_ =
@@ -45,9 +67,21 @@ namespace atlas
 
     void AtlasState::onBindTreeEarly_()
     {
-        fetch_unit_ = getContainer()->getChild("fetch")->getResourceAs<Fetch*>();
-        execute_unit_ = getContainer()->getChild("execute")->getResourceAs<Execute*>();
-        translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
+        auto core_tn = getContainer();
+        fetch_unit_ = core_tn->getChild("fetch")->getResourceAs<Fetch*>();
+        execute_unit_ = core_tn->getChild("execute")->getResourceAs<Execute*>();
+        translate_unit_ = core_tn->getChild("translate")->getResourceAs<Translate*>();
+
+        mavis_ = std::make_unique<MavisType>(
+            extension_manager_.constructMavis<
+                AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
+                AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
+                getUArchFiles(uarch_file_path_),
+                AtlasInstAllocatorWrapper<AtlasInstAllocator>(
+                    sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
+                AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
+                    sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
+                    this)));
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)

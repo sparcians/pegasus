@@ -5,44 +5,15 @@
 #include "core/Translate.hpp"
 #include "include/ActionTags.hpp"
 
-#include "mavis/mavis/Mavis.h"
-
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
 namespace atlas
 {
-    std::vector<std::string> getIsaFiles(const std::string & isa_file_path)
+    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) : sparta::Unit(fetch_node)
     {
-        std::vector<std::string> isa_files = {
-            isa_file_path + "/isa_rv64i.json",       isa_file_path + "/isa_rv64m.json",
-            isa_file_path + "/isa_rv64a.json",       isa_file_path + "/isa_rv64f.json",
-            isa_file_path + "/isa_rv64d.json",       isa_file_path + "/isa_rv64zicsr.json",
-            isa_file_path + "/isa_rv64zifencei.json"};
-        return isa_files;
-    }
-
-    std::vector<std::string> getUArchFiles(const std::string & uarch_file_path)
-    {
-        const std::string rv64_uarch_file_path = uarch_file_path + "/rv64";
-        std::vector<std::string> uarch_files = {
-            rv64_uarch_file_path + "/atlas_uarch_rv64i.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64m.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64a.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64f.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64d.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64zicsr.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64zifencei.json"};
-
-        return uarch_files;
-    }
-
-    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
-        sparta::Unit(fetch_node),
-        isa_file_path_(p->isa_file_path),
-        uarch_file_path_(p->uarch_file_path)
-    {
+        (void)p;
         Action fetch_action =
             atlas::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
         fetch_action_group_.addAction(fetch_action);
@@ -70,15 +41,6 @@ namespace atlas
         inst_translate_action_group->setNextActionGroup(&decode_action_group_);
         decode_action_group_.setNextActionGroup(execute_action_group);
         execute_action_group->setNextActionGroup(&fetch_action_group_);
-
-        sparta::TreeNode* fetch_node = core_tn->getChild("fetch");
-        mavis_.reset(new MavisType(
-            getIsaFiles(isa_file_path_), getUArchFiles(uarch_file_path_),
-            AtlasInstAllocatorWrapper<AtlasInstAllocator>(
-                sparta::notNull(AtlasAllocators::getAllocators(fetch_node))->inst_allocator),
-            AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
-                sparta::notNull(AtlasAllocators::getAllocators(fetch_node))->extractor_allocator,
-                state_)));
     }
 
     ActionGroup* Fetch::fetch_(AtlasState* state)
@@ -119,7 +81,7 @@ namespace atlas
         AtlasInstPtr inst = nullptr;
         try
         {
-            inst = mavis_->makeInst(opcode, state);
+            inst = state->getMavis()->makeInst(opcode, state);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);

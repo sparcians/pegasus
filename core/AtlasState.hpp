@@ -6,6 +6,10 @@
 #include "arch/RegisterSet.hpp"
 #include "include/AtlasTypes.hpp"
 
+#include "core/AtlasAllocatorWrapper.hpp"
+#include "sim/AtlasAllocators.hpp"
+#include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
+
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "core/AtlasInst.hpp"
@@ -20,6 +24,8 @@
 #error "REG64_JSON_DIR must be defined"
 #endif
 
+template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
+
 namespace atlas
 {
     class AtlasInst;
@@ -28,6 +34,10 @@ namespace atlas
     class Fetch;
     class Execute;
     class Translate;
+
+    using MavisType =
+        Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
+              AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>;
 
     class AtlasState : public sparta::Unit
     {
@@ -42,6 +52,9 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
+            PARAMETER(std::string, isa_string, "rv64g", "ISA string")
+            PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
+            PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
         };
 
@@ -50,9 +63,11 @@ namespace atlas
         // Not default -- defined in source file to reduce massive inlining
         ~AtlasState();
 
+        HartId getHartId() const { return hart_id_; }
+
         uint64_t getXlen() const { return xlen_; }
 
-        HartId getHartId() const { return hart_id_; }
+        MavisType* getMavis() { return mavis_.get(); }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -143,15 +158,29 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
-        //! XLEN, 32 or 64
-        // FIXME: Get value from ISA string param
-        const uint64_t xlen_ = 64;
-
         //! Hart ID
         const HartId hart_id_;
 
+        // ISA string
+        const std::string isa_string_;
+
+        // Path to Mavis
+        const std::string isa_file_path_;
+
+        // Path to Atlas
+        const std::string uarch_file_path_;
+
+        // Mavis extension manager
+        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        // Mavis
+        std::unique_ptr<MavisType> mavis_;
+
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        // XLEN (either 32 or 64 bit)
+        uint64_t xlen_ = 64;
 
         //! Current pc
         Addr pc_ = 0x0;
