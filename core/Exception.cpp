@@ -49,12 +49,14 @@ void Exception::handleUModeException_(atlas::AtlasState* state)
 {
     // TODO
     (void)state;
+    sparta_assert(false, "Not implemented");
 }
 
 void Exception::handleSModeException_(atlas::AtlasState* state)
 {
     // TODO
     (void)state;
+    sparta_assert(false, "Not implemented");
 }
 
 void Exception::handleMModeException_(atlas::AtlasState* state)

@@ -49,6 +49,8 @@ namespace atlas
         fetch_unit_ = getContainer()->getChild("fetch")->getResourceAs<Fetch*>();
         execute_unit_ = getContainer()->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = getContainer()->getChild("translate")->getResourceAs<Translate*>();
+
+        // FIXME: Add the Exception unit to the various unit tests like Fetch/Execute/Translate
         if (auto exc = getContainer()->getChild("exception", false)) {
             exception_unit_ = exc->getResourceAs<Exception*>();
         } else {
