@@ -554,14 +554,7 @@ class InstructionListPanel(AtlasPanel):
         self.Layout()
 
     def OnLoadTest(self, test_name, hart_id=0):
-        # Clear the ListCtrl first.
         self.inst_list_ctrl.DeleteAllItems()
-
-        # Create a ListCtrl with two columns. The first column holds a bitmap which is just a
-        # colored square (green:pass, red:fail, yellow:unimplemented). The second column holds
-        # the disassembled instruction.
-
-        # Add the first row: uncolored square in the first column, and "Initial State" in the second column.
         self.inst_list_ctrl.InsertItem(0, "")
         self.inst_list_ctrl.SetItem(0, 0, "Initial State")
 
@@ -570,21 +563,39 @@ class InstructionListPanel(AtlasPanel):
         cmd = 'SELECT Disasm,PC,ResultCode FROM Instructions WHERE TestId={} AND HartId={} ORDER BY PC ASC'.format(test_id, hart_id)
         cursor = self.frame.wdb.cursor
         cursor.execute(cmd)
-        for idx, (disasm, pc, result_code) in enumerate(cursor.fetchall()):
+        idx = 0
+        for disasm, pc, result_code in cursor.fetchall():
             if result_code == 0:
-                status = SquareStatus.PASS
-            elif result_code >> 16 in (0x2, 0x3):
-                status = SquareStatus.FAIL
-            elif result_code >> 16 == 0x4:
-                status = SquareStatus.UNIMPLEMENTED
-            else:
-                status = SquareStatus.UNSPECIFIED
+                status = InstStatus.PASS
+            elif result_code >> 16 == 0x1:
+                cmd = 'SELECT * FROM PostInstCsrVals WHERE PC={} AND TestId={} AND HartId={} AND AtlasCsrVal != CosimCsrVal'.format(pc, test_id, hart_id)
+                cursor.execute(cmd)
+                failed = False
+                for row in cursor.fetchall():
+                    failed = True
+                    break
 
-            bg_color = SquareStatusColor.GetColor(status)
+                if failed:
+                    status = InstStatus.EXCEPTION_FAILING
+                else:
+                    status = InstStatus.EXCEPTION_PASSING
+            elif result_code >> 16 == 0x2:
+                status = InstStatus.MISMATCH_PC
+            elif result_code >> 16 == 0x3:
+                status = InstStatus.MISMATCH_REG_VAL
+            elif result_code >> 16 == 0x4:
+                status = InstStatus.UNIMPL_PASSING
+            elif result_code >> 16 == 0x5:
+                status = InstStatus.UNIMPL_FAILING
+            else:
+                status = InstStatus.UNSPECIFIED
+
+            bg_color = GetInstStatusColor(status)
             self.inst_list_ctrl.InsertItem(idx+1, "")
             self.inst_list_ctrl.SetItemBackgroundColour(idx+1, bg_color)
             self.inst_list_ctrl.SetItem(idx+1, 0, disasm.replace('\t', ' '))
             self.inst_list_ctrl.SetItemData(idx+1, pc)
+            idx += 1
 
             # Add another listctrl item in the event of an exception. Clicking this
             # item will show the CSR values after exception handling.
@@ -593,6 +604,12 @@ class InstructionListPanel(AtlasPanel):
                 self.inst_list_ctrl.InsertItem(idx+1, "")
                 self.inst_list_ctrl.SetItem(idx+1, 0, '  ' + cause_strs[exception_cause])
                 self.inst_list_ctrl.SetItemData(idx+1, pc)
+
+                if status == InstStatus.EXCEPTION_FAILING:
+                    bg_color = GetInstStatusColor(InstStatus.EXCEPTION_FAILING)
+                    self.inst_list_ctrl.SetItemBackgroundColour(idx+1, bg_color)
+
+                idx += 1
 
         self.__AlignInstListItems()
         self.inst_list_ctrl.Select(0)
@@ -1004,30 +1021,25 @@ class WorkloadsDB:
     def GetRegisterName(self, group_num, reg_idx):
         return self.reg_names_by_key[(group_num, reg_idx)]
 
-class SquareStatus(IntEnum):
+class InstStatus(IntEnum):
     PASS = 0
-    FAIL = 1
-    UNIMPLEMENTED = 2
-    UNSPECIFIED = 3
+    MISMATCH_PC = 1
+    MISMATCH_REG_VAL = 2
+    UNIMPL_PASSING = 3
+    UNIMPL_FAILING = 4
+    EXCEPTION_PASSING = 5
+    EXCEPTION_FAILING = 6
+    UNSPECIFIED = 7
 
-class SquareStatusColor:
-    @staticmethod
-    def GetColor(status):
-        if status == SquareStatus.PASS:
-            return wx.GREEN
-        elif status == SquareStatus.FAIL:
-            return wx.RED
-        elif status == SquareStatus.UNIMPLEMENTED:
-            return wx.YELLOW
-        elif status == SquareStatus.UNSPECIFIED:
-            return wx.WHITE
-
-def CreateStatusSquare(parent, size, status):
-    if isinstance(size, int):
-        size = (size, size)
-    square = wx.Panel(parent, -1, size=size)
-    square.SetBackgroundColour(SquareStatusColor.GetColor(status))
-    return square
+def GetInstStatusColor(status):
+    if status in (InstStatus.PASS, InstStatus.EXCEPTION_PASSING):
+        return wx.WHITE
+    elif status in (InstStatus.MISMATCH_PC, InstStatus.MISMATCH_REG_VAL, InstStatus.UNIMPL_FAILING, InstStatus.EXCEPTION_FAILING):
+        return wx.RED
+    elif status == InstStatus.UNIMPL_PASSING:
+        return wx.YELLOW
+    else:
+        return wx.GRAY
 
 if __name__ == "__main__":
     app = wx.App()
