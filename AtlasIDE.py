@@ -1,4 +1,4 @@
-import os, sys, wx, sqlite3, re, copy
+import os, sys, wx, sqlite3, re, copy, json
 import wx.grid
 import wx.py.shell
 from enum import IntEnum
@@ -1019,7 +1019,7 @@ class PythonTerminal(AtlasPanel):
             vars['imm'] = PythonImmediate(imm)
 
         if rd not in (None, ''): 
-            vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
+            vars['rd'] = PythonDestRegister(self.frame.wdb, rd, rd_val_before, rd_val_after, truth_rd_val_after)
 
         vars['whos'] = self.whos
         vars['helpers'] = self.helpers
@@ -1085,11 +1085,13 @@ class PythonSourceRegister:
         return f'0x{self.reg_val:016X}'
 
 class PythonDestRegister:
-    def __init__(self, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):
+    def __init__(self, wdb, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):
+        self.wdb = wdb
         self.reg_name = reg_name
         self.rd_val_before = rd_val_before
         self.rd_val_after = rd_val_after
         self.truth_rd_val_after = truth_rd_val_after
+        self._mask = None
 
     def __repr__(self):
         rep = self.reg_name + '\n'
@@ -1114,6 +1116,38 @@ class PythonDestRegister:
     @property
     def hex(self):
         return f'0x{self.rd_val_after:016X}'
+    
+    @property
+    def mask(self):
+        if self._mask is None:
+            group_num = self.wdb.GetGroupNum(self.reg_name)
+            reg_idx = self.wdb.GetRegIdx(self.reg_name)
+            if group_num == 0:
+                self._mask = 0xFFFFFFFFFFFFFFFF if reg_idx > 0 else 0x0
+            elif group_num in (1,2):
+                self._mask = 0xFFFFFFFFFFFFFFFF
+            else:
+                script_dir = os.path.dirname(__file__)
+                atlas_root = os.path.dirname(script_dir)
+                with open(os.path.join(atlas_root, 'arch', 'rv64', 'reg_csr.json'), 'r') as fin:
+                    all_json = json.load(fin)
+                    for reg_json in all_json:
+                        if reg_json['name'] == self.reg_name:
+                            fields = reg_json['fields']
+                            bit_mask = 0
+                            for _, field_defn in fields.items():
+                                if not field_defn['readonly']:
+                                    low_bit = field_defn['low_bit']
+                                    high_bit = field_defn['high_bit']
+
+                                    # Set the bits from (low_bit, high_bit) in bit_mask to 1 (inclusive)
+                                    for i in range(low_bit, high_bit + 1):
+                                        bit_mask |= (1 << i)
+
+                            self._mask = bit_mask
+                            break
+
+        return PythonPrettyRegister('mask', self._mask)
 
 class PythonPrettyRegister:
     def __init__(self, reg_name, reg_val):
@@ -1224,6 +1258,20 @@ class WorkloadsDB:
 
     def GetRegisterName(self, group_num, reg_idx):
         return self.reg_names_by_key[(group_num, reg_idx)]
+
+    def GetGroupNum(self, reg_name):
+        for key, name in self.reg_names_by_key.items():
+            if name == reg_name:
+                return key[0]
+
+        return None
+
+    def GetRegIdx(self, reg_name):
+        for key, name in self.reg_names_by_key.items():
+            if name == reg_name:
+                return key[1]
+
+        return None
 
 class InstStatus(IntEnum):
     PASS = 0
