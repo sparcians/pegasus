@@ -1,4 +1,4 @@
-import os, sys, wx, sqlite3, re
+import os, sys, wx, sqlite3, re, copy
 import wx.grid
 import wx.py.shell
 from enum import IntEnum
@@ -27,6 +27,96 @@ cause_strs = [
     'VIRTUAL_INSTRUCTION',
     'STORE_GUEST_PAGE_FAULT'
 ]
+
+class InstReplayer:
+    def CreateRegsReplayer(self, wdb, test_id, pc):
+        return InstReplayer.RegsReplayer(wdb, test_id, pc)
+
+    @staticmethod
+    def GetRegNames(wdb, test_id):
+        cmd = 'SELECT RegName FROM Registers WHERE TestId={} AND HartId=0'.format(test_id)
+        wdb.cursor.execute(cmd)
+        return [row[0] for row in wdb.cursor.fetchall()]
+
+    @staticmethod
+    def Replay(wdb, test_id, pc, registers_table):
+        cmd = 'SELECT RegName,ActualInitVal FROM Registers WHERE TestId={} AND HartId=0'.format(test_id)
+        wdb.cursor.execute(cmd)
+
+        for reg_name, actual_init_val in wdb.cursor.fetchall():
+            registers_table[reg_name] = actual_init_val
+
+        cmd = 'SELECT PC,Rd,RdValAfter,ResultCode FROM Instructions WHERE PC<={} AND TestId={} AND HartId=0 ORDER BY PC ASC'.format(pc, test_id)
+        wdb.cursor.execute(cmd)
+
+        did_reach_end = False
+        for inst_pc, rd, rd_val, result_code in wdb.cursor.fetchall():
+            did_reach_end = inst_pc == pc
+
+            # Update the register table for successful instructions.
+            if result_code == 0 and rd:
+                registers_table[rd] = rd_val
+
+            # Update the CSRs after exceptions.
+            if result_code >> 16 == 0x1:
+                cmd = 'SELECT CsrName,AtlasCsrVal FROM PostInstCsrVals WHERE PC={} AND TestId={} AND HartId=0'.format(inst_pc, test_id)
+                wdb.cursor.execute(cmd)
+
+                for csr_name, csr_val in wdb.cursor.fetchall():
+                    registers_table[csr_name] = csr_val
+
+            # Do not advance on any inst failure.
+            #  0x2: PC INVALID
+            #  0x3: REG VAL INVALID
+            #  0x5: UNIMPLEMENTED (but passing anyway)
+            if result_code >> 16 in (0x2,0x3,0x5):
+                break
+
+        if not did_reach_end:
+            raise ValueError(f"Could not replay the instructions all the way to PC {pc}!")
+
+    class RegsReplayer:
+        def __init__(self, wdb, test_id, pc):
+            self.wdb = wdb
+            self.test_id = test_id
+            self.pc = pc
+
+            self.reg_names = []
+            for reg_name in InstReplayer.GetRegNames(wdb, test_id):
+                self.reg_names.append(reg_name)
+
+            self.reg_names.sort()
+
+        def __getitem__(self, reg_name):
+            if reg_name not in self.reg_names:
+                raise AttributeError(f"Register {reg_name} not found")
+
+            registers_table = {}
+            InstReplayer.Replay(self.wdb, self.test_id, self.pc, registers_table)
+            return registers_table[reg_name]
+
+        @property
+        def names(self):
+            return copy.deepcopy(self.reg_names)
+
+        @property
+        def csrs(self):
+            csr_names = []
+            for reg_name in self.reg_names:
+                if reg_name[0] in ('x', 'f', 'v'):
+                    rest = reg_name[1:]
+                    try:
+                        csr_num = int(rest)
+                        # If we got here, it is not a CSR
+                        continue
+                    except:
+                        csr_names.append(reg_name)
+                else:
+                    csr_names.append(reg_name)
+
+            return csr_names
+
+inst_replayer = InstReplayer()
 
 class AtlasIDE(wx.Frame):
     def __init__(self, wdb_file):
@@ -932,12 +1022,15 @@ class PythonTerminal(AtlasPanel):
             vars['rd'] = PythonDestRegister(rd, rd_val_before, rd_val_after, truth_rd_val_after)
 
         vars['whos'] = self.whos
+        vars['helpers'] = self.helpers
         vars['sext32'] = sext32
         vars['zext32'] = zext32
         vars['sext'] = sext
         vars['zext'] = zext
         vars['sext_xlen'] = sext_xlen
         vars['zext_xlen'] = zext_xlen
+        vars['regs'] = inst_replayer.CreateRegsReplayer(self.frame.wdb, self.test_id, pc)
+        vars['pc'] = pc
         self.vars = vars
 
         if self.shell:
@@ -952,7 +1045,18 @@ class PythonTerminal(AtlasPanel):
         self.Layout()
 
     def whos(self):
-        return [varname for varname in list(self.vars.keys()) if varname not in ('whos', '__builtins__', 'shell', 'sext32', 'zext32', 'sext', 'zext', 'sext_xlen', 'zext_xlen')]
+        return [varname for varname in list(self.vars.keys()) if varname not in ('whos', '__builtins__', 'shell') and varname not in self.helpers()]
+
+    def helpers(self):
+        return ['sext32', 'zext32', 'sext', 'zext', 'sext_xlen', 'zext_xlen']
+
+    @property
+    def regs(self):
+        return inst_replayer.regs
+
+    @property
+    def csrs(self):
+        return inst_replayer.csrs
 
 class PythonSourceRegister:
     def __init__(self, reg_name, reg_val):
