@@ -9,7 +9,7 @@ namespace atlas
     {
         if (post_execute_action_)
         {
-            action_group->insertActionAfter(post_execute_action_, ActionTags::EXECUTE_TAG);
+            action_group->addAction(post_execute_action_);
         }
     }
 

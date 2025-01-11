@@ -149,9 +149,11 @@ namespace atlas
 
         template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);
 
-        void addObserver(Observer* observer) { observers_.push_back(observer); }
+        void addObserver(Observer* observer);
 
         void insertExecuteActions(ActionGroup* action_group);
+
+        ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
@@ -230,6 +232,9 @@ namespace atlas
 
         // Observers
         std::vector<Observer*> observers_;
+
+        // Finish ActionGroup for post-execute simulator Actions
+        ActionGroup finish_action_group_;
 
         // Stop simulation Action
         Action stop_action_;

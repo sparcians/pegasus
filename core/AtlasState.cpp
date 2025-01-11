@@ -42,6 +42,7 @@ namespace atlas
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         xlen_(extension_manager_.getXLEN()),
         inst_logger_(core_tn),
+        finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
         auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
@@ -56,6 +57,9 @@ namespace atlas
         // Increment PC Action
         increment_pc_action_ =
             atlas::Action::createAction<&AtlasState::incrementPc_>(this, "increment pc");
+
+        // Add increment PC Action to finish ActionGroup
+        finish_action_group_.addAction(increment_pc_action_);
 
         // Create Action to stop simulation
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
@@ -72,6 +76,7 @@ namespace atlas
         execute_unit_ = core_tn->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = core_tn->getChild("translate")->getResourceAs<Translate*>();
 
+        // Initialize Mavis
         mavis_ = std::make_unique<MavisType>(
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -82,6 +87,9 @@ namespace atlas
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
+
+        // Connect finish ActionGroup to Fetch
+        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
@@ -128,6 +136,13 @@ namespace atlas
     template void AtlasState::writeMemory<uint32_t>(const Addr, const uint32_t);
     template void AtlasState::writeMemory<uint64_t>(const Addr, const uint64_t);
 
+    void AtlasState::addObserver(Observer* observer)
+    {
+        observers_.push_back(observer);
+
+        observer->insertPostExecuteAction(&finish_action_group_);
+    }
+
     void AtlasState::insertExecuteActions(ActionGroup* action_group)
     {
         // FIXME: InstructionLogger's enable method doesn't work when using a BaseObserver
@@ -143,12 +158,8 @@ namespace atlas
             if (observer->enabled())
             {
                 observer->insertPreExecuteAction(action_group);
-                observer->insertPostExecuteAction(action_group);
             }
         }
-
-        // Increment PC and upate simulation state
-        action_group->insertActionAfter(increment_pc_action_, ActionTags::EXECUTE_TAG);
     }
 
     ActionGroup* AtlasState::incrementPc_(AtlasState*)
