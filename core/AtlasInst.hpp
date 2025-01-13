@@ -82,6 +82,10 @@ namespace atlas
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
+        void markUnimplemented() { unimplemented_ = true; }
+
+        bool unimplemented() const { return unimplemented_; }
+
       private:
         // Unique ID
         const uint64_t uid_;
@@ -101,6 +105,7 @@ namespace atlas
         sparta::Register* rd_;
 
         ActionGroup inst_action_group_;
+        bool unimplemented_ = false;
 
         friend std::ostream & operator<<(std::ostream & os, const AtlasInst & inst);
     };

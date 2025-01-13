@@ -2,6 +2,7 @@
 
 #include "core/Action.hpp"
 #include "mavis/OpcodeInfo.h"
+#include "include/AtlasUtils.hpp"
 
 namespace atlas
 {
@@ -45,6 +46,14 @@ namespace atlas
         void insertPreExecuteAction(ActionGroup* action_group);
 
         void insertPostExecuteAction(ActionGroup* action_group);
+
+        uint64_t getPrevRdValue() const
+        {
+            sparta_assert(dst_regs_.size() == 1);
+            return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
+        }
+
+        virtual void stopSim() {}
 
       protected:
         bool enabled_ = false;

@@ -20,6 +20,11 @@
 #error "REG64_JSON_DIR must be defined"
 #endif
 
+namespace simdb
+{
+    class ObjectManager;
+}
+
 namespace atlas
 {
     class AtlasInst;
@@ -28,6 +33,27 @@ namespace atlas
     class Fetch;
     class Execute;
     class Translate;
+    class Exception;
+
+    class CoSimQuery
+    {
+    public:
+        virtual ~CoSimQuery() = default;
+
+        virtual uint32_t getNumIntRegisters() const = 0;
+        virtual uint64_t getIntRegValue(uint64_t hart, int reg_id) const = 0;
+
+        virtual uint32_t getNumFpRegisters() const = 0;
+        virtual uint64_t getFpRegValue(uint64_t hart, int reg_id) const = 0;
+
+        virtual uint32_t getNumVecRegisters() const = 0;
+        virtual uint64_t getVecRegValue(uint64_t hart, int reg_id) const = 0;
+
+        virtual bool isCsrImplemented(const std::string& csr_name) const = 0;
+        virtual uint64_t getCsrRegValue(uint64_t hart, const std::string& csr_name) const = 0;
+
+        virtual uint64_t getExpectedPC(uint64_t hart) const = 0;
+    };
 
     class AtlasState : public sparta::Unit
     {
@@ -73,6 +99,13 @@ namespace atlas
         PrivMode getNextPrivMode() const { return next_priv_mode_; }
 
         uint64_t assignUid() { return uid_++; }
+
+        uint64_t getMStatusInitialValue() const
+        {
+            return AtlasState::getMStatusInitialValue(this, getXlen());
+        }
+
+        static uint64_t getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val);
 
         struct SimState
         {
@@ -140,8 +173,48 @@ namespace atlas
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
+        Exception* getExceptionUnit() const { return exception_unit_; }
+
+        // tuple: reg name, group num, reg id, initial expected val, initial actual val
+        using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
+
+        void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
+                                 std::shared_ptr<CoSimQuery> query,
+                                 const std::vector<RegisterInfo> &reg_info);
+
+        // Take register snapshot and send to the database (Atlas IDE backend support)
+        void snapshotAndSyncWithCoSim();
+
       private:
         void onBindTreeEarly_() override;
+
+        ActionGroup* stopSim_(AtlasState*)
+        {
+            if (inst_logger_.enabled()) {
+                inst_logger_.stopSim();
+            }
+
+            for (auto obs : observers_) {
+                if (obs->enabled()) {
+                    obs->stopSim();
+                }
+            }
+
+            return nullptr;
+        }
+
+        // Check all PC/reg/csr values against our cosim comparator,
+        // and return the result code as follows:
+        //
+        //   success            0x00
+        //   exception          0x1x (x encodes the exception cause)
+        //   pc mismatch        0x2- (- means ignored)
+        //   reg val mismatch   0x3-
+        //   unimplemented inst 0x4-
+        //
+        // At the end of this method, all PC/reg/csr values will be
+        // synced with the other simulation ("truth").
+        int compareWithCoSimAndSync_();
 
         //! XLEN, 32 or 64
         // FIXME: Get value from ISA string param
@@ -190,6 +263,9 @@ namespace atlas
         // Translate Unit
         Translate* translate_unit_ = nullptr;
 
+        // Exception Unit
+        Exception* exception_unit_ = nullptr;
+
         // Register set holding all Sparta registers from all generated JSON files
         std::unique_ptr<RegisterSet> int_rset_;
         std::unique_ptr<RegisterSet> fp_rset_;
@@ -205,5 +281,10 @@ namespace atlas
         // Stop simulation Action
         Action stop_action_;
         ActionGroup stop_sim_action_group_;
+
+        // Co-simulation debug utils
+        std::shared_ptr<simdb::ObjectManager> cosim_db_;
+        std::shared_ptr<CoSimQuery> cosim_query_;
+        std::unordered_map<std::string, int> reg_ids_by_name_;
     };
 } // namespace atlas
