@@ -20,6 +20,12 @@ namespace atlas
             return last_event_;
         }
 
+        void stopSim() override
+        {
+            last_event_.done_ = true;
+            last_event_.event_ends_sim_ = true;
+        }
+
       private:
         ActionGroup* preExecute_(AtlasState* state);
         ActionGroup* postExecute_(AtlasState* state);

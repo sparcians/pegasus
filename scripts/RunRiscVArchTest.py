@@ -25,7 +25,7 @@ def main():
 
     SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
     if args.extensions:
-        assert [ext in SUPPORTED_EXTENSIONS for ext in args.extensions], "Unsupported extension(s) provided"
+        assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
 
     tests = get_tests(args.directory)

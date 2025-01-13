@@ -3,6 +3,7 @@
 #include "core/AtlasState.hpp"
 #include "core/Execute.hpp"
 #include "core/Translate.hpp"
+#include "core/Exception.hpp"
 #include "include/ActionTags.hpp"
 
 #include "mavis/mavis/Mavis.h"
@@ -10,6 +11,9 @@
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
+
+#include "include/CSRFieldIdxs64.hpp"
+#include "arch/register_macros.hpp"
 
 namespace atlas
 {

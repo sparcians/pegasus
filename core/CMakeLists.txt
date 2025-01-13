@@ -8,6 +8,7 @@ add_library(atlascore
     Fetch.cpp
     Translate.cpp
     Execute.cpp
+    Exception.cpp
     AtlasExtractor.cpp
     AtlasInst.cpp
     PageTableWalker.cpp
