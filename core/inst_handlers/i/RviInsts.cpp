@@ -281,6 +281,7 @@ namespace atlas
 
     ActionGroup* RviInsts::cflush_i_l1_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -344,6 +345,7 @@ namespace atlas
 
     ActionGroup* RviInsts::mret_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -525,6 +527,7 @@ namespace atlas
 
     ActionGroup* RviInsts::sfence_vma_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -548,6 +551,7 @@ namespace atlas
 
     ActionGroup* RviInsts::dret_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -863,6 +867,7 @@ namespace atlas
 
     ActionGroup* RviInsts::nop_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -983,6 +988,7 @@ namespace atlas
 
     ActionGroup* RviInsts::sret_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1159,6 +1165,7 @@ namespace atlas
 
     ActionGroup* RviInsts::cflush_d_l1_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -1178,6 +1185,7 @@ namespace atlas
 
     ActionGroup* RviInsts::uret_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -1216,6 +1224,7 @@ namespace atlas
 
     ActionGroup* RviInsts::cdiscard_d_l1_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -1253,6 +1262,7 @@ namespace atlas
 
     ActionGroup* RviInsts::fence_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
@@ -1272,6 +1282,7 @@ namespace atlas
 
     ActionGroup* RviInsts::ebreak_64_handler(atlas::AtlasState* state)
     {
+        state->getCurrentInst()->markUnimplemented();
         (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE

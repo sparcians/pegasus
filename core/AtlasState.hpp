@@ -11,7 +11,6 @@
 #include "core/AtlasInst.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 #include "include/CSRBitMasks64.hpp"
-#include "core/CoSimQuery.hpp"
 
 #ifndef REG32_JSON_DIR
 #error "REG32_JSON_DIR must be defined"
@@ -35,6 +34,14 @@ namespace atlas
     class Execute;
     class Translate;
     class Exception;
+
+    class CoSimQuery
+    {
+    public:
+        virtual ~CoSimQuery() = default;
+        virtual uint64_t getExpectedRegValue(RegType type, uint32_t regidx, uint64_t hart) const = 0;
+        virtual uint64_t getExpectedPC(uint64_t hart) const = 0;
+    };
 
     class AtlasState : public sparta::Unit
     {

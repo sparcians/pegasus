@@ -365,7 +365,7 @@ class InstructionViewer(AtlasPanel):
 
         self.inst_info_panel = InstructionInfoPanel(self)
         self.register_info_panel = RegisterInfoPanel(self)
-        self.spike_code_panel = SpikeCodePanel(self)
+        self.helpers_code_panel = HelpersCodePanel(self)
         self.atlas_experimental_code_panel = AtlasExperimentalCodePanel(self)
         self.atlas_cpp_code_panel = AtlasCppCodePanel(self)
 
@@ -375,7 +375,7 @@ class InstructionViewer(AtlasPanel):
 
         grid_sizer = wx.FlexGridSizer(2, 2, 30, 30)
         grid_sizer.Add(info_sizer, 1, wx.EXPAND)
-        grid_sizer.Add(self.spike_code_panel, 1, wx.EXPAND)
+        grid_sizer.Add(self.helpers_code_panel, 1, wx.EXPAND)
         grid_sizer.Add(self.atlas_experimental_code_panel, 1, wx.EXPAND)
         grid_sizer.Add(self.atlas_cpp_code_panel, 1, wx.EXPAND)
 
@@ -385,14 +385,14 @@ class InstructionViewer(AtlasPanel):
     def OnLoadTest(self, test_name):
         self.inst_info_panel.OnLoadTest(test_name)
         self.register_info_panel.OnLoadTest(test_name)
-        self.spike_code_panel.OnLoadTest(test_name)
+        self.helpers_code_panel.OnLoadTest(test_name)
         self.atlas_experimental_code_panel.OnLoadTest(test_name)
         self.atlas_cpp_code_panel.OnLoadTest(test_name)
 
     def ShowInstruction(self, pc):
         self.inst_info_panel.ShowInstruction(pc)
         self.register_info_panel.ShowInstruction(pc)
-        self.spike_code_panel.ShowInstruction(pc)
+        self.helpers_code_panel.ShowInstruction(pc)
         self.atlas_experimental_code_panel.ShowInstruction(pc)
         self.atlas_cpp_code_panel.ShowInstruction(pc)
 
@@ -746,20 +746,21 @@ class InstructionListPanel(AtlasPanel):
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.Layout()
 
-class SpikeCodePanel(AtlasPanel):
+class HelpersCodePanel(AtlasPanel):
     def __init__(self, parent):
         AtlasPanel.__init__(self, parent, -1)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Monospace")
         mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, "Monospace")
 
-        self.help = wx.StaticText(self, -1, "Spike Code")
+        self.help = wx.StaticText(self, -1, "Helpers")
         self.help.SetFont(mono12bold)
 
-        self.spike_code_text = wx.StaticText(self, -1, "")
-        self.spike_code_text.SetFont(mono10)
+        self.helpers_text = wx.StaticText(self, -1, "")
+        self.helpers_text.SetFont(mono10)
 
-        self.spike_code_hardcoded_text = '''// ...macros...
+        self.helpers_hardcoded_text = '''// ...macros...
+
 #define sext32(x) ((sreg_t)(int32_t)(x))
 #define zext32(x) ((reg_t)(uint32_t)(x))
 #define sext(x, pos) (((sreg_t)(x) << (64 - (pos))) >> (64 - (pos)))
@@ -771,11 +772,11 @@ class SpikeCodePanel(AtlasPanel):
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
-        self.sizer.Add(self.spike_code_text, 1, wx.EXPAND)
+        self.sizer.Add(self.helpers_text, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.Layout()
 
-        self.spike_code_by_mnemonic = {}
+        self.helper_code_by_mnemonic = {}
 
     def OnLoadTest(self, test_name):
         self.test_id = self.frame.wdb.GetTestId(test_name)
@@ -784,23 +785,23 @@ class SpikeCodePanel(AtlasPanel):
         cmd = 'SELECT mnemonic FROM Instructions WHERE PC={} AND TestId={} AND HartId=0'.format(pc, self.test_id)
         self.frame.wdb.cursor.execute(cmd)
         mnemonic = self.frame.wdb.cursor.fetchone()[0]
-        if mnemonic not in self.spike_code_by_mnemonic:
-            self.spike_code_by_mnemonic[mnemonic] = self.__GetSpikeCode(mnemonic)
+        if mnemonic not in self.helper_code_by_mnemonic:
+            self.helper_code_by_mnemonic[mnemonic] = self.__GetHelperCode(mnemonic)
 
-        self.spike_code_text.SetLabel(self.spike_code_by_mnemonic[mnemonic])
+        self.helpers_text.SetLabel(self.helper_code_by_mnemonic[mnemonic])
 
-    def __GetSpikeCode(self, mnemonic):
+    def __GetHelperCode(self, mnemonic):
         atlas_root = os.path.dirname(__file__)
         spike_root = os.path.join(atlas_root, 'spike')
         insns_root = os.path.join(spike_root, 'riscv', 'insns')
         impl_file = os.path.join(insns_root, mnemonic + '.h')
 
-        spike_code = ''
+        helper_code = ''
         if os.path.exists(impl_file):
             with open(impl_file, 'r') as f:
-                spike_code = f.read()
+                helper_code = f.read()
 
-        return self.spike_code_hardcoded_text + '\n' + spike_code
+        return self.helpers_hardcoded_text + '\n' + helper_code
 
 class AtlasExperimentalCodePanel(AtlasPanel):
     def __init__(self, parent):
