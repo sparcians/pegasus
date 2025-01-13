@@ -34,6 +34,7 @@ namespace atlas
 
         if (cosim_db_) {
             cosim_db_->getTaskQueue()->flushQueue();
+            cosim_db_->getTaskQueue()->stopThread();
 
             const std::string cmd = "mv " + cosim_db_->getDatabaseFile() + " " + std::filesystem::path(workload_).filename().string() + ".wdb";
             cosim_db_.reset();
@@ -67,9 +68,9 @@ namespace atlas
 
     void AtlasSim::enableCoSimDebugger(std::unique_ptr<CoSimQuery> query)
     {
-        using InitValDiff = std::tuple<uint32_t, uint32_t, uint64_t, uint64_t>;
-        using InitValDiffsByHart = std::unordered_map<uint32_t, std::vector<InitValDiff>>;
-        InitValDiffsByHart init_val_diffs;
+        using RegisterInfo = AtlasState::RegisterInfo;
+        using RegisterInfoByHart = std::unordered_map<uint32_t, std::vector<RegisterInfo>>;
+        RegisterInfoByHart reg_info_by_hart;
 
         for (uint32_t hart = 0; hart < state_.size(); ++hart) {
             auto state = state_.at(hart);
@@ -79,9 +80,7 @@ namespace atlas
                 auto reg = int_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getIntRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                if (expected != actual) {
-                    init_val_diffs[hart].push_back(std::make_tuple(reg->getGroupNum(), reg->getID(), expected, actual));
-                }
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
             }
 
             auto fp_rset = state->getFpRegisterSet();
@@ -89,9 +88,7 @@ namespace atlas
                 auto reg = fp_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getFpRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                if (expected != actual) {
-                    init_val_diffs[hart].push_back(std::make_tuple(reg->getGroupNum(), reg->getID(), expected, actual));
-                }
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
             }
 
             auto vec_rset = state->getVecRegisterSet();
@@ -99,9 +96,7 @@ namespace atlas
                 auto reg = vec_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getVecRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                if (expected != actual) {
-                    init_val_diffs[hart].push_back(std::make_tuple(reg->getGroupNum(), reg->getID(), expected, actual));
-                }
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
             }
 
             auto csr_rset = state->getCsrRegisterSet();
@@ -110,9 +105,7 @@ namespace atlas
                     if (query->isCsrImplemented(reg->getName())) {
                         const uint64_t expected = query->getCsrRegValue(hart, reg->getName());
                         const uint64_t actual = reg->dmiRead<uint64_t>();
-                        if (expected != actual) {
-                            init_val_diffs[hart].push_back(std::make_tuple(reg->getGroupNum(), reg->getID(), expected, actual));
-                        }
+                        reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
                     }
                 }
             }
@@ -123,19 +116,13 @@ namespace atlas
         using dt = simdb::ColumnDataType;
         simdb::Schema schema;
 
-        schema.addTable("InitValDiffs")
-            .addColumn("HartId", dt::int32_t)
-            .addColumn("GroupNum", dt::int32_t)
-            .addColumn("RegIdx", dt::int32_t)
-            .addColumn("ExpectedVal", dt::uint64_t)
-            .addColumn("ActualVal", dt::uint64_t);
-
         schema.addTable("Registers")
             .addColumn("HartId", dt::int32_t)
             .addColumn("RegName", dt::string_t)
             .addColumn("RegType", dt::int32_t)
             .addColumn("RegIdx", dt::int32_t)
-            .addColumn("InitVal", dt::uint64_t);
+            .addColumn("ExpectedInitVal", dt::uint64_t)
+            .addColumn("ActualInitVal", dt::uint64_t);
 
         schema.addTable("Instructions")
             .addColumn("HartId", dt::int32_t)
@@ -156,6 +143,13 @@ namespace atlas
             .addColumn("Priv", dt::int32_t)
             .addColumn("ResultCode", dt::int32_t);
 
+        schema.addTable("PostInstCsrVals")
+            .addColumn("HartId", dt::int32_t)
+            .addColumn("PC", dt::uint64_t)
+            .addColumn("CsrName", dt::string_t)
+            .addColumn("AtlasCsrVal", dt::uint64_t)
+            .addColumn("CosimCsrVal", dt::uint64_t);
+
         cosim_db_.reset(new simdb::ObjectManager);
         cosim_db_->disableWarningMessages();
         cosim_db_->createDatabaseFromSchema(
@@ -164,7 +158,7 @@ namespace atlas
         cosim_db_->safeTransaction([&]() {
             for (uint32_t hart = 0; hart < state_.size(); ++hart) {
                 auto state = state_.at(hart);
-                state->enableCoSimDebugger(cosim_db_, cosim_query_, init_val_diffs[hart]);
+                state->enableCoSimDebugger(cosim_db_, cosim_query_, reg_info_by_hart[hart]);
             }
         });
     }

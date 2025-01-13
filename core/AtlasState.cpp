@@ -89,6 +89,7 @@ namespace atlas
         sparta::utils::ValidValue<int> rc;
         const auto& insn = getCurrentInst();
         if (insn->unimplemented()) {
+            // status 0x4 means "unimplemented but passing reg val checks"
             rc = 0x4 << 16;
         }
 
@@ -102,6 +103,9 @@ namespace atlas
         if (atlas_pc != cosim_pc) {
             if (!rc.isValid()) {
                 rc = 0x2 << 16;
+            } else if (insn->unimplemented()) {
+                // status 0x5 means "unimplemented and fails reg val checks"
+                rc = 0x5 << 16;
             }
             // Force overwrite to keep the cosim going.
             pc_ = cosim_pc;
@@ -114,6 +118,9 @@ namespace atlas
             if (atlas_val != cosim_val) {
                 if (!rc.isValid()) {
                     rc = 0x3 << 16;
+                } else if (insn->unimplemented()) {
+                    // status 0x5 means "unimplemented and fails reg val checks"
+                    rc = 0x5 << 16;
                 }
                 // Force overwrite to keep the cosim going.
                 atlas_reg->dmiWrite(cosim_val);
@@ -127,6 +134,9 @@ namespace atlas
             if (atlas_val != cosim_val) {
                 if (!rc.isValid()) {
                     rc = 0x3 << 16;
+                } else if (insn->unimplemented()) {
+                    // status 0x5 means "unimplemented and fails reg val checks"
+                    rc = 0x5 << 16;
                 }
                 // Force overwrite to keep the cosim going.
                 atlas_reg->dmiWrite(cosim_val);
@@ -140,6 +150,9 @@ namespace atlas
             if (atlas_val != cosim_val) {
                 if (!rc.isValid()) {
                     rc =0x3 << 16;
+                } else if (insn->unimplemented()) {
+                    // status 0x5 means "unimplemented and fails reg val checks"
+                    rc = 0x5 << 16;
                 }
                 // Force overwrite to keep the cosim going.
                 atlas_reg->dmiWrite(cosim_val);
@@ -153,8 +166,12 @@ namespace atlas
                     auto cosim_val = cosim_query_->getCsrRegValue(getHartId(), atlas_reg->getName());
 
                     if (atlas_val != cosim_val) {
-                        if (!rc.isValid()) {
+                        // We should only count the CSR mismatches during exceptions
+                        if (!rc.isValid() && exc.isValid()) {
                             rc = 0x3 << 16;
+                        } else if (insn->unimplemented()) {
+                            // status 0x5 means "unimplemented and fails reg val checks"
+                            rc = 0x5 << 16;
                         }
                         // Force overwrite to keep the cosim going.
                         atlas_reg->dmiWrite(cosim_val);
@@ -253,7 +270,7 @@ namespace atlas
 
     void AtlasState::enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
                                          std::shared_ptr<CoSimQuery> query,
-                                         const std::vector<InitValDiff> &init_val_diffs)
+                                         const std::vector<RegisterInfo> &reg_info)
     {
         bool valid = inst_logger_.enabled();
         if (!valid) {
@@ -269,19 +286,21 @@ namespace atlas
         cosim_db_ = db;
         cosim_query_ = query;
 
-        auto tbl = cosim_db_->getTable("InitValDiffs");
+        auto tbl = cosim_db_->getTable("Registers");
 
-        for (const auto& tup : init_val_diffs) {
-            const auto group_num = std::get<0>(tup);
-            const auto reg_id = std::get<1>(tup);
-            const auto expected_val = std::get<2>(tup);
-            const auto actual_val = std::get<3>(tup);
+        for (const auto& tup : reg_info) {
+            const auto& reg_name = std::get<0>(tup);
+            const auto group_num = std::get<1>(tup);
+            const auto reg_id = std::get<2>(tup);
+            const auto expected_val = std::get<3>(tup);
+            const auto actual_val = std::get<4>(tup);
 
             tbl->createObjectWithArgs("HartId", (int)getHartId(),
-                                      "GroupNum", (int)group_num,
+                                      "RegName", reg_name,
+                                      "RegType", (int)group_num,
                                       "RegIdx", (int)reg_id,
-                                      "ExpectedVal", expected_val,
-                                      "ActualVal", actual_val);
+                                      "ExpectedInitVal", expected_val,
+                                      "ActualInitVal", actual_val);
 
             switch (group_num) {
                 case 0:
@@ -298,51 +317,6 @@ namespace atlas
                     break;
                 default:
                     throw sparta::SpartaException("Invalid group num!");
-            }
-        }
-
-        tbl = cosim_db_->getTable("Registers");
-
-        auto int_rset = getIntRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)query->getNumIntRegisters(); ++reg_idx) {
-            auto reg = int_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs(
-                "HartId", (int)getHartId(), "RegName", reg->getName(),
-                "RegType", 0, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-
-            reg_ids_by_name_[reg->getName()] = record->getId();
-        }
-
-        auto fp_rset = getFpRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)query->getNumFpRegisters(); ++reg_idx) {
-            auto reg = fp_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs(
-                "HartId", (int)getHartId(), "RegName", reg->getName(),
-                "RegType", 1, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-
-            reg_ids_by_name_[reg->getName()] = record->getId();
-        }
-
-        auto vec_rset = getVecRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)query->getNumVecRegisters(); ++reg_idx) {
-            auto reg = vec_rset->getRegister(reg_idx);
-            auto record = tbl->createObjectWithArgs(
-                "HartId", (int)getHartId(), "RegName", reg->getName(),
-                "RegType", 2, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-
-            reg_ids_by_name_[reg->getName()] = record->getId();
-        }
-
-        auto csr_rset = getCsrRegisterSet();
-        for (int reg_idx = 0; reg_idx < (int)csr_rset->getNumRegisters(); ++reg_idx) {
-            if (auto reg = csr_rset->getRegister(reg_idx)) {
-                if (query->isCsrImplemented(reg->getName())) {
-                    auto record = tbl->createObjectWithArgs(
-                        "HartId", (int)getHartId(), "RegName", reg->getName(),
-                        "RegType", 3, "RegIdx", reg_idx, "InitVal", reg->dmiRead<uint64_t>());
-
-                    reg_ids_by_name_[reg->getName()] = record->getId();
-                }
             }
         }
     }
@@ -423,6 +397,39 @@ namespace atlas
         int result_code_;
     };
 
+    class CsrValuesSnapshotter : public simdb::WorkerTask
+    {
+    public:
+        CsrValuesSnapshotter(simdb::ObjectManager* obj_mgr, int hart, uint64_t pc, const std::vector<std::tuple<std::string, uint64_t, uint64_t>> &all_csr_vals)
+            : obj_mgr_(obj_mgr)
+            , hart_(hart)
+            , pc_(pc)
+            , all_csr_vals_(all_csr_vals)
+        {}
+
+        void completeTask() override
+        {
+            auto tbl = obj_mgr_->getTable("PostInstCsrVals");
+            for (const auto& tup : all_csr_vals_) {
+                const auto& csr_name = std::get<0>(tup);
+                const auto atlas_csr_val = std::get<1>(tup);
+                const auto cosim_csr_val = std::get<2>(tup);
+
+                tbl->createObjectWithArgs("HartId", hart_,
+                                          "PC", pc_,
+                                          "CsrName", csr_name,
+                                          "AtlasCsrVal", atlas_csr_val,
+                                          "CosimCsrVal", cosim_csr_val);
+            }
+        }
+
+    private:
+        simdb::ObjectManager* obj_mgr_;
+        int hart_;
+        uint64_t pc_;
+        std::vector<std::tuple<std::string, uint64_t, uint64_t>> all_csr_vals_;
+    };
+
     void AtlasState::snapshotAndSyncWithCoSim()
     {
         if (SPARTA_EXPECT_TRUE(!cosim_db_)) {
@@ -489,6 +496,21 @@ namespace atlas
         uint64_t opcode = insn->getOpcode();
         uint64_t pc = getPc();
         int priv = (int)priv_mode_;
+
+        // Capture the CSR values from both simulators after processing an exception.
+        std::vector<std::tuple<std::string, uint64_t, uint64_t>> all_csr_vals;
+        if (exception_unit_->getUnhandledException().isValid()) {
+            for (uint32_t reg_idx = 0; reg_idx < csr_rset_->getNumRegisters(); ++reg_idx) {
+                if (auto atlas_reg = csr_rset_->getRegister(reg_idx)) {
+                    if (cosim_query_->isCsrImplemented(atlas_reg->getName())) {
+                        auto atlas_val = atlas_reg->dmiRead<uint64_t>();
+                        auto cosim_val = cosim_query_->getCsrRegValue(getHartId(), atlas_reg->getName());
+                        all_csr_vals.push_back(std::make_tuple(atlas_reg->getName(), atlas_val, cosim_val));
+                    }
+                }
+            }
+        }
+
         int result_code = compareWithCoSimAndSync_();
 
         std::unique_ptr<simdb::WorkerTask> task(new InstSnapshotter(cosim_db_.get(), hart,
@@ -501,6 +523,11 @@ namespace atlas
                                                                     opcode, pc, priv, result_code));
 
         cosim_db_->getTaskQueue()->addWorkerTask(std::move(task));
+
+        if (!all_csr_vals.empty()) {
+            task.reset(new CsrValuesSnapshotter(cosim_db_.get(), hart, pc, all_csr_vals));
+            cosim_db_->getTaskQueue()->addWorkerTask(std::move(task));
+        }
     }
 
     uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)
