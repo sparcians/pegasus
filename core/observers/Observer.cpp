@@ -5,16 +5,13 @@
 namespace atlas
 {
 
-    void Observer::insertPostExecuteAction(ActionGroup* action_group)
+    void Observer::insertExecuteActions(ActionGroup* action_group)
     {
         if (post_execute_action_)
         {
             action_group->insertActionAfter(post_execute_action_, ActionTags::EXECUTE_TAG);
         }
-    }
 
-    void Observer::insertPreExecuteAction(ActionGroup* action_group)
-    {
         if (pre_execute_action_)
         {
             action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
