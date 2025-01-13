@@ -1,4 +1,3 @@
-#include "core/inst_handlers/rv64/zicsr/RvzicsrInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "arch/register_macros.hpp"
 #include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
