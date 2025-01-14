@@ -81,16 +81,7 @@ namespace atlas
         fetch_unit_ = core_tn->getChild("fetch")->getResourceAs<Fetch*>();
         execute_unit_ = core_tn->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = core_tn->getChild("translate")->getResourceAs<Translate*>();
-
-        // FIXME: Add the Exception unit to the various unit tests like Fetch/Execute/Translate
-        if (auto exc = core_tn->getChild("exception", false))
-        {
-            exception_unit_ = exc->getResourceAs<Exception*>();
-        }
-        else
-        {
-            exception_unit_ = nullptr;
-        }
+        exception_unit_ = core_tn->getChild("exception")->getResourceAs<Exception*>();
 
         // Initialize Mavis
         mavis_ = std::make_unique<MavisType>(
