@@ -14,6 +14,7 @@ namespace atlas
         static const ActionTagType EXECUTE_TAG;
         static const ActionTagType COMPUTE_ADDR_TAG;
         static const ActionTagType DATA_TRANSLATE_TAG;
+        static const ActionTagType EXCEPTION_TAG;
 
         // Stop Simulation
         static const ActionTagType STOP_SIM_TAG;

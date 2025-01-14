@@ -14,34 +14,37 @@ namespace atlas
     Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters*) :
         sparta::Unit(exception_node)
     {
-        post_inst_handler_action_ =
-            atlas::Action::createAction<&Exception::postInstHandler_>(this, "handle exception");
+        Action exception_action = atlas::Action::createAction<&Exception::handleException_>(
+            this, "exception", ActionTags::EXCEPTION_TAG);
+        exception_action_group_.addAction(exception_action);
     }
 
     void Exception::onBindTreeEarly_()
     {
         auto core_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
-        state_ = core_tn->getResourceAs<AtlasState>();
+        AtlasState* state = core_tn->getResourceAs<AtlasState>();
+
+        // Connect exception ActionGroup to instruction finish ActionGroup
+        exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
     }
 
-    ActionGroup* Exception::postInstHandler_(atlas::AtlasState* state)
+    ActionGroup* Exception::handleException_(atlas::AtlasState* state)
     {
-        if (cause_.isValid())
+        sparta_assert(cause_.isValid(), "Exception cause is not valid!");
+
+        switch (state->getPrivMode())
         {
-            switch (state->getPrivMode())
-            {
-                case PrivMode::USER:
-                    handleUModeException_(state);
-                    break;
-                case PrivMode::MACHINE:
-                    handleMModeException_(state);
-                    break;
-                case PrivMode::SUPERVISOR:
-                    handleSModeException_(state);
-                    break;
-                default:
-                    sparta_assert(false, "Illegal privilege mode");
-            }
+            case PrivMode::USER:
+                handleUModeException_(state);
+                break;
+            case PrivMode::MACHINE:
+                handleMModeException_(state);
+                break;
+            case PrivMode::SUPERVISOR:
+                handleSModeException_(state);
+                break;
+            default:
+                sparta_assert(false, "Illegal privilege mode");
         }
 
         state->snapshotAndSyncWithCoSim();

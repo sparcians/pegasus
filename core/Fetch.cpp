@@ -11,9 +11,8 @@
 
 namespace atlas
 {
-    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) : sparta::Unit(fetch_node)
+    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters*) : sparta::Unit(fetch_node)
     {
-        (void)p;
         Action fetch_action =
             atlas::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
         fetch_action_group_.addAction(fetch_action);

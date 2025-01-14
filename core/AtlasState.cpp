@@ -69,6 +69,7 @@ namespace atlas
         // Note that just because we are adding the InstructionLogger right here
         // doesn't mean that it will be enabled. The user must enable it at the
         // command prompt with the "-l" option.
+        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
         addObserver(std::make_unique<InstructionLogger>(core_tn));
     }
 
@@ -97,9 +98,6 @@ namespace atlas
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
-
-        // Allow the Exception unit to deal with any unhandled exceptions
-        finish_action_group_.addAction(exception_unit_->getPostExecuteAction());
     }
 
     // Check all PC/reg/csr values against our cosim comparator,

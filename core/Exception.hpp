@@ -35,16 +35,14 @@ namespace atlas
             return cause_;
         }
 
-        Action & getPostExecuteAction() { return post_inst_handler_action_; }
+	ActionGroup* getActionGroup() { return &exception_action_group_; }
 
       private:
         void onBindTreeEarly_() override;
 
-        AtlasState* state_ = nullptr;
+        ActionGroup* handleException_(atlas::AtlasState* state);
 
-        Action post_inst_handler_action_;
-
-        ActionGroup* postInstHandler_(atlas::AtlasState* state);
+        ActionGroup exception_action_group_{"Exception"};
 
         void handleUModeException_(atlas::AtlasState* state);
 

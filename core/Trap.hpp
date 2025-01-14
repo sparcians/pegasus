@@ -35,7 +35,7 @@ namespace atlas
     {                                                                                              \
         auto exception_unit = state->getExceptionUnit();                                           \
         exception_unit->setUnhandledException(cause);                                              \
-        return nullptr;                                                                            \
+        return exception_unit->getActionGroup();                                                   \
     }
 
 #define THROW_MISALIGNED_FETCH TRAP_IMPL(TrapCauses::MISALIGNED_FETCH)
