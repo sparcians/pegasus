@@ -5,6 +5,7 @@
 #include "core/observers/InstructionLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "include/AtlasTypes.hpp"
+#include "core/CoSimQuery.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
@@ -34,26 +35,6 @@ namespace atlas
     class Execute;
     class Translate;
     class Exception;
-
-    class CoSimQuery
-    {
-    public:
-        virtual ~CoSimQuery() = default;
-
-        virtual uint32_t getNumIntRegisters() const = 0;
-        virtual uint64_t getIntRegValue(uint64_t hart, int reg_id) const = 0;
-
-        virtual uint32_t getNumFpRegisters() const = 0;
-        virtual uint64_t getFpRegValue(uint64_t hart, int reg_id) const = 0;
-
-        virtual uint32_t getNumVecRegisters() const = 0;
-        virtual uint64_t getVecRegValue(uint64_t hart, int reg_id) const = 0;
-
-        virtual bool isCsrImplemented(const std::string& csr_name) const = 0;
-        virtual uint64_t getCsrRegValue(uint64_t hart, const std::string& csr_name) const = 0;
-
-        virtual uint64_t getExpectedPC(uint64_t hart) const = 0;
-    };
 
     class AtlasState : public sparta::Unit
     {
