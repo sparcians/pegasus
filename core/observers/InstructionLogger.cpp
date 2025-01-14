@@ -58,7 +58,10 @@ namespace atlas
 
     ActionGroup* InstructionLogger::postExecute_(AtlasState* state)
     {
-        sparta_assert(inst_logger_.observed(), "Instruction logging is not enabled");
+        if (inst_logger_.observed() == false)
+        {
+            return nullptr;
+        }
 
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
