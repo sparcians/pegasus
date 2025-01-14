@@ -55,22 +55,24 @@ namespace atlas
         const auto rs1_val = rs1->dmiRead<uint64_t>();
         const auto write = rs1_val != 0;
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
 
-        if (write) {
-            reg->write(old | rs1_val); //dmiWrite?
+        if (write)
+        {
+            reg->write(old | rs1_val); // dmiWrite?
         }
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }
@@ -83,21 +85,23 @@ namespace atlas
         const auto rs1_val = rs1->dmiRead<uint64_t>();
         const auto write = rs1_val != 0;
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
-        if (write) {
-            reg->write(old & ~rs1_val); //dmiWrite?
+        if (write)
+        {
+            reg->write(old & ~rs1_val); // dmiWrite?
         }
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }
@@ -106,20 +110,21 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
         const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
-        reg->write(imm); //dmiWrite?
+        reg->write(imm); // dmiWrite?
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }
@@ -128,22 +133,23 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         const auto & rs1 = insn->getRs1();
         const auto rs1_val = rs1->dmiRead<uint64_t>();
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
-        reg->write(old | rs1_val); //dmiWrite?
+        reg->write(old | rs1_val); // dmiWrite?
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }
@@ -152,22 +158,24 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
         const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
-        if (imm) {
-            reg->write(old | imm); //dmiWrite?
+        if (imm)
+        {
+            reg->write(old | imm); // dmiWrite?
         }
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }
@@ -176,22 +184,24 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const int csr = insn->getMavisOpcodeInfo()->getSpecialField(
-            mavis::OpcodeInfo::SpecialField::CSR);
+        const int csr =
+            insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         auto reg = state->getCsrRegister(csr);
-        if (!reg) {
+        if (!reg)
+        {
             THROW_ILLEGAL_INSTRUCTION;
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
         const uint64_t imm = insn->getSignExtendedImmediate<RV64, 5>();
-        if (imm) {
-            reg->write(old & ~imm); //dmiWrite?
+        if (imm)
+        {
+            reg->write(old & ~imm); // dmiWrite?
         }
 
         const auto rd_val = sext(old, state->getXlen());
-        insn->getRd()->write(rd_val); //dmiWrite?
+        insn->getRd()->write(rd_val); // dmiWrite?
 
         return nullptr;
     }

@@ -4,7 +4,7 @@
 #include "arch/register_macros.hpp"
 #include <filesystem>
 
-//Core database headers
+// Core database headers
 #include "simdb/ObjectManager.hpp"
 #include "simdb/ObjectRef.hpp"
 #include "simdb/TableRef.hpp"
@@ -12,7 +12,7 @@
 #include "simdb/utils/BlobHelpers.hpp"
 #include "simdb/async/AsyncTaskEval.hpp"
 
-//SQLite-specific headers
+// SQLite-specific headers
 #include "simdb/impl/sqlite/SQLiteConnProxy.hpp"
 #include "simdb/impl/sqlite/TransactionUtils.hpp"
 #include "simdb/impl/sqlite/Errors.hpp"
@@ -32,11 +32,13 @@ namespace atlas
     {
         getRoot()->enterTeardown();
 
-        if (cosim_db_) {
+        if (cosim_db_)
+        {
             cosim_db_->getTaskQueue()->flushQueue();
             cosim_db_->getTaskQueue()->stopThread();
 
-            const std::string cmd = "mv " + cosim_db_->getDatabaseFile() + " " + std::filesystem::path(workload_).filename().string() + ".wdb";
+            const std::string cmd = "mv " + cosim_db_->getDatabaseFile() + " "
+                                    + std::filesystem::path(workload_).filename().string() + ".wdb";
             cosim_db_.reset();
             (void)system(cmd.c_str());
         }
@@ -44,7 +46,8 @@ namespace atlas
 
     void AtlasSim::run(uint64_t run_time)
     {
-        for (auto state : state_) {
+        for (auto state : state_)
+        {
             const auto mstatus = state->getMStatusInitialValue();
             POKE_CSR_REG(MSTATUS, mstatus);
         }
@@ -72,40 +75,51 @@ namespace atlas
         using RegisterInfoByHart = std::unordered_map<uint32_t, std::vector<RegisterInfo>>;
         RegisterInfoByHart reg_info_by_hart;
 
-        for (uint32_t hart = 0; hart < state_.size(); ++hart) {
+        for (uint32_t hart = 0; hart < state_.size(); ++hart)
+        {
             auto state = state_.at(hart);
 
             auto int_rset = state->getIntRegisterSet();
-            for (uint32_t reg_idx = 0; reg_idx < query->getNumIntRegisters(); ++reg_idx) {
+            for (uint32_t reg_idx = 0; reg_idx < query->getNumIntRegisters(); ++reg_idx)
+            {
                 auto reg = int_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getIntRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(),
+                                                                 reg->getID(), expected, actual));
             }
 
             auto fp_rset = state->getFpRegisterSet();
-            for (uint32_t reg_idx = 0; reg_idx < query->getNumFpRegisters(); ++reg_idx) {
+            for (uint32_t reg_idx = 0; reg_idx < query->getNumFpRegisters(); ++reg_idx)
+            {
                 auto reg = fp_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getFpRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(),
+                                                                 reg->getID(), expected, actual));
             }
 
             auto vec_rset = state->getVecRegisterSet();
-            for (uint32_t reg_idx = 0; reg_idx < query->getNumVecRegisters(); ++reg_idx) {
+            for (uint32_t reg_idx = 0; reg_idx < query->getNumVecRegisters(); ++reg_idx)
+            {
                 auto reg = vec_rset->getRegister(reg_idx);
                 const uint64_t expected = query->getVecRegValue(hart, reg->getID());
                 const uint64_t actual = reg->dmiRead<uint64_t>();
-                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
+                reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(),
+                                                                 reg->getID(), expected, actual));
             }
 
             auto csr_rset = state->getCsrRegisterSet();
-            for (uint32_t reg_idx = 0; reg_idx < csr_rset->getNumRegisters(); ++reg_idx) {
-                if (auto reg = csr_rset->getRegister(reg_idx)) {
-                    if (query->isCsrImplemented(reg->getName())) {
+            for (uint32_t reg_idx = 0; reg_idx < csr_rset->getNumRegisters(); ++reg_idx)
+            {
+                if (auto reg = csr_rset->getRegister(reg_idx))
+                {
+                    if (query->isCsrImplemented(reg->getName()))
+                    {
                         const uint64_t expected = query->getCsrRegValue(hart, reg->getName());
                         const uint64_t actual = reg->dmiRead<uint64_t>();
-                        reg_info_by_hart[hart].push_back(std::make_tuple(reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
+                        reg_info_by_hart[hart].push_back(std::make_tuple(
+                            reg->getName(), reg->getGroupNum(), reg->getID(), expected, actual));
                     }
                 }
             }
@@ -152,15 +166,17 @@ namespace atlas
 
         cosim_db_.reset(new simdb::ObjectManager);
         cosim_db_->disableWarningMessages();
-        cosim_db_->createDatabaseFromSchema(
-            schema, std::make_unique<simdb::SQLiteConnProxy>());
+        cosim_db_->createDatabaseFromSchema(schema, std::make_unique<simdb::SQLiteConnProxy>());
 
-        cosim_db_->safeTransaction([&]() {
-            for (uint32_t hart = 0; hart < state_.size(); ++hart) {
-                auto state = state_.at(hart);
-                state->enableCoSimDebugger(cosim_db_, cosim_query_, reg_info_by_hart[hart]);
-            }
-        });
+        cosim_db_->safeTransaction(
+            [&]()
+            {
+                for (uint32_t hart = 0; hart < state_.size(); ++hart)
+                {
+                    auto state = state_.at(hart);
+                    state->enableCoSimDebugger(cosim_db_, cosim_query_, reg_info_by_hart[hart]);
+                }
+            });
     }
 
     void AtlasSim::buildTree_()

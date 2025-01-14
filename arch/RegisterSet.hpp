@@ -90,10 +90,7 @@ namespace atlas
 #endif
         }
 
-        uint32_t getNumRegisters() const
-        {
-            return registers_by_reg_num_.size();
-        }
+        uint32_t getNumRegisters() const { return registers_by_reg_num_.size(); }
 
         // Bring in getRegister(const char* reg_name) from sparta::RegisterSet
         using sparta::RegisterSet::getRegister;

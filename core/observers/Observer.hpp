@@ -45,7 +45,7 @@ namespace atlas
 
         void insertPreExecuteActions(ActionGroup* action_group);
 
-	void insertFinishActions(ActionGroup* action_group);
+        void insertFinishActions(ActionGroup* action_group);
 
         uint64_t getPrevRdValue() const
         {

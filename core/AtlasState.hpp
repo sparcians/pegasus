@@ -178,7 +178,7 @@ namespace atlas
 
         void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
                                  std::shared_ptr<CoSimQuery> query,
-                                 const std::vector<RegisterInfo> &reg_info);
+                                 const std::vector<RegisterInfo> & reg_info);
 
         // Take register snapshot and send to the database (Atlas IDE backend support)
         void snapshotAndSyncWithCoSim();
@@ -188,8 +188,10 @@ namespace atlas
 
         ActionGroup* stopSim_(AtlasState*)
         {
-            for (auto& obs : observers_) {
-                if (obs->enabled()) {
+            for (auto & obs : observers_)
+            {
+                if (obs->enabled())
+                {
                     obs->stopSim();
                 }
             }
