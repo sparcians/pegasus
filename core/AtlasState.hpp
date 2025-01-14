@@ -94,8 +94,6 @@ namespace atlas
 
         PrivMode getNextPrivMode() const { return next_priv_mode_; }
 
-        uint64_t assignUid() { return uid_++; }
-
         uint64_t getMStatusInitialValue() const
         {
             return AtlasState::getMStatusInitialValue(this, getXlen());
@@ -120,7 +118,11 @@ namespace atlas
 
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
-        void setCurrentInst(AtlasInstPtr inst) { sim_state_.current_inst = inst; }
+        void setCurrentInst(AtlasInstPtr inst)
+        {
+            inst->setUid(uid_++);
+            sim_state_.current_inst = inst;
+        }
 
         AtlasTranslationState* getTranslationState() { return &translation_state_; }
 
