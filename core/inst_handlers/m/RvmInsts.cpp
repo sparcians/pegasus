@@ -69,8 +69,8 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        sreg_t lhs = sext_xlen(rs1_val);
-        sreg_t rhs = sext_xlen(rs2_val);
+        sreg_t lhs = sext(rs1_val, state->getXlen());
+        sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
@@ -82,7 +82,7 @@ namespace atlas
         }
         else
         {
-            insn->getRd()->dmiWrite(sext_xlen(lhs / rhs));
+            insn->getRd()->dmiWrite(sext((lhs / rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -94,15 +94,15 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        reg_t lhs = zext_xlen(rs1_val);
-        reg_t rhs = zext_xlen(rs2_val);
+        reg_t lhs = zext(rs1_val, state->getXlen());
+        reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
             insn->getRd()->dmiWrite(UINT64_MAX);
         }
         else
         {
-            insn->getRd()->dmiWrite(sext_xlen(lhs / rhs));
+            insn->getRd()->dmiWrite(sext((lhs / rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -166,7 +166,7 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        if (xlen == 64)
+        if (state->getXlen() == 64)
         {
             insn->getRd()->dmiWrite(mulh(rs1_val, rs2_val));
         }
@@ -184,7 +184,7 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        if (xlen == 64)
+        if (state->getXlen() == 64)
         {
             insn->getRd()->dmiWrite(mulhsu(rs1_val, rs2_val));
         }
@@ -202,7 +202,7 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        if (xlen == 64)
+        if (state->getXlen() == 64)
         {
             insn->getRd()->dmiWrite(mulhu(rs1_val, rs2_val));
         }
@@ -232,8 +232,8 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        sreg_t lhs = sext_xlen(rs1_val);
-        sreg_t rhs = sext_xlen(rs2_val);
+        sreg_t lhs = sext(rs1_val, state->getXlen());
+        sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
@@ -245,7 +245,7 @@ namespace atlas
         }
         else
         {
-            insn->getRd()->dmiWrite(sext_xlen(lhs % rhs));
+            insn->getRd()->dmiWrite(sext((lhs % rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -257,15 +257,15 @@ namespace atlas
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
 
-        reg_t lhs = zext_xlen(rs1_val);
-        reg_t rhs = zext_xlen(rs2_val);
+        reg_t lhs = zext(rs1_val, state->getXlen());
+        reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
-            insn->getRd()->dmiWrite(sext_xlen(lhs));
+            insn->getRd()->dmiWrite(sext(lhs, state->getXlen()));
         }
         else
         {
-            insn->getRd()->dmiWrite(sext_xlen(lhs % rhs));
+            insn->getRd()->dmiWrite(sext((lhs % rhs), state->getXlen()));
         }
 
         return nullptr;

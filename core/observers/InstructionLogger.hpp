@@ -18,6 +18,7 @@ namespace atlas
       private:
         ActionGroup* preExecute_(AtlasState* state);
         ActionGroup* postExecute_(AtlasState* state);
+        ActionGroup* preException_(AtlasState* state);
 
         sparta::log::MessageSource inst_logger_;
     };

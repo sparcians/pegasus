@@ -5,16 +5,27 @@
 namespace atlas
 {
 
-    void Observer::insertExecuteActions(ActionGroup* action_group)
+    void Observer::insertPreExecuteActions(ActionGroup* action_group)
     {
-        if (post_execute_action_)
-        {
-            action_group->insertActionAfter(post_execute_action_, ActionTags::EXECUTE_TAG);
-        }
-
         if (pre_execute_action_)
         {
             action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
+        }
+    }
+
+    void Observer::insertPreExceptionActions(ActionGroup* action_group)
+    {
+        if (pre_exception_action_)
+        {
+            action_group->insertActionBefore(pre_exception_action_, ActionTags::EXCEPTION_TAG);
+        }
+    }
+
+    void Observer::insertFinishActions(ActionGroup* action_group)
+    {
+        if (post_execute_action_)
+        {
+            action_group->addAction(post_execute_action_);
         }
     }
 

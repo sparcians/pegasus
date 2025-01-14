@@ -99,14 +99,12 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 # Mavis
 include_directories(SYSTEM mavis)
+include_directories(SYSTEM mavis/elfio)
 add_subdirectory(mavis)
 
 # SoftFloat
 include_directories(SYSTEM softfloat)
 add_subdirectory(softfloat)
-
-# ELFIO
-include_directories(SYSTEM elfio)
 
 # 32-bit register JSON directory
 add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")

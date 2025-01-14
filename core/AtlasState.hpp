@@ -7,6 +7,10 @@
 #include "include/AtlasTypes.hpp"
 #include "core/CoSimQuery.hpp"
 
+#include "core/AtlasAllocatorWrapper.hpp"
+#include "sim/AtlasAllocators.hpp"
+#include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
+
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "core/AtlasInst.hpp"
@@ -20,6 +24,8 @@
 #ifndef REG64_JSON_DIR
 #error "REG64_JSON_DIR must be defined"
 #endif
+
+template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
 namespace simdb
 {
@@ -36,6 +42,10 @@ namespace atlas
     class Translate;
     class Exception;
 
+    using MavisType =
+        Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
+              AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>;
+
     class AtlasState : public sparta::Unit
     {
       public:
@@ -49,6 +59,9 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
+            PARAMETER(std::string, isa_string, "rv64g", "ISA string")
+            PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
+            PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
         };
 
@@ -57,9 +70,11 @@ namespace atlas
         // Not default -- defined in source file to reduce massive inlining
         ~AtlasState();
 
+        HartId getHartId() const { return hart_id_; }
+
         uint64_t getXlen() const { return xlen_; }
 
-        HartId getHartId() const { return hart_id_; }
+        MavisType* getMavis() { return mavis_.get(); }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -78,8 +93,6 @@ namespace atlas
         void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
 
         PrivMode getNextPrivMode() const { return next_priv_mode_; }
-
-        uint64_t assignUid() { return uid_++; }
 
         uint64_t getMStatusInitialValue() const
         {
@@ -105,7 +118,11 @@ namespace atlas
 
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
-        void setCurrentInst(AtlasInstPtr inst) { sim_state_.current_inst = inst; }
+        void setCurrentInst(AtlasInstPtr inst)
+        {
+            inst->setUid(uid_++);
+            sim_state_.current_inst = inst;
+        }
 
         AtlasTranslationState* getTranslationState() { return &translation_state_; }
 
@@ -148,9 +165,11 @@ namespace atlas
 
         template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);
 
-        void addObserver(std::unique_ptr<Observer> observer) { observers_.emplace_back(std::move(observer)); }
+        void addObserver(std::unique_ptr<Observer> observer);
 
         void insertExecuteActions(ActionGroup* action_group);
+
+        ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
@@ -161,7 +180,7 @@ namespace atlas
 
         void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
                                  std::shared_ptr<CoSimQuery> query,
-                                 const std::vector<RegisterInfo> &reg_info);
+                                 const std::vector<RegisterInfo> & reg_info);
 
         // Take register snapshot and send to the database (Atlas IDE backend support)
         void snapshotAndSyncWithCoSim();
@@ -171,8 +190,10 @@ namespace atlas
 
         ActionGroup* stopSim_(AtlasState*)
         {
-            for (auto& obs : observers_) {
-                if (obs->enabled()) {
+            for (auto & obs : observers_)
+            {
+                if (obs->enabled())
+                {
                     obs->stopSim();
                 }
             }
@@ -193,15 +214,29 @@ namespace atlas
         // synced with the other simulation ("truth").
         int compareWithCoSimAndSync_();
 
-        //! XLEN, 32 or 64
-        // FIXME: Get value from ISA string param
-        const uint64_t xlen_ = 64;
-
         //! Hart ID
         const HartId hart_id_;
 
+        // ISA string
+        const std::string isa_string_;
+
+        // Path to Mavis
+        const std::string isa_file_path_;
+
+        // Path to Atlas
+        const std::string uarch_file_path_;
+
+        // Mavis extension manager
+        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        // Mavis
+        std::unique_ptr<MavisType> mavis_;
+
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        // XLEN (either 32 or 64 bit)
+        uint64_t xlen_ = 64;
 
         //! Current pc
         Addr pc_ = 0x0;
@@ -251,6 +286,9 @@ namespace atlas
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
+
+        // Finish ActionGroup for post-execute simulator Actions
+        ActionGroup finish_action_group_;
 
         // Stop simulation Action
         Action stop_action_;

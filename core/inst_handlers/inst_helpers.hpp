@@ -4,7 +4,6 @@
 
 typedef int64_t sreg_t;
 typedef uint64_t reg_t;
-#define xlen 64
 
 template <typename T> inline sreg_t sext32(T x) { return (sreg_t)(int32_t)(x); }
 
@@ -19,10 +18,6 @@ template <typename T> inline reg_t zext(T x, uint32_t pos)
 {
     return (((reg_t)(x) << (64 - (pos))) >> (64 - (pos)));
 }
-
-template <typename T> inline sreg_t sext_xlen(T x) { return sext(x, xlen); }
-
-template <typename T> inline reg_t zext_xlen(T x) { return zext(x, xlen); }
 
 inline uint64_t mulhu(uint64_t a, uint64_t b)
 {

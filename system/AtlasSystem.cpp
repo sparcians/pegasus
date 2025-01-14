@@ -88,7 +88,7 @@ namespace atlas
         // Get symbols for debugging
         for (const auto & section : elf_reader_.sections)
         {
-            ELFIO::symbol_section_accessor symbols(elf_reader_, section);
+            ELFIO::symbol_section_accessor symbols(elf_reader_, section.get());
             for (uint32_t symbol_id = 0; symbol_id < symbols.get_symbols_num(); ++symbol_id)
             {
                 std::string name;

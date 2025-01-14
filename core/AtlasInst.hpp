@@ -23,6 +23,8 @@ namespace atlas
 
         uint64_t getUid() const { return uid_; }
 
+        void setUid(const uint64_t uid) { uid_ = uid; }
+
         mavis::OpcodeInfo::PtrType getMavisOpcodeInfo() { return opcode_info_; }
 
         const std::string & getMnemonic() const { return opcode_info_->getMnemonic(); }
@@ -88,7 +90,7 @@ namespace atlas
 
       private:
         // Unique ID
-        const uint64_t uid_;
+        uint64_t uid_;
 
         mavis::OpcodeInfo::PtrType opcode_info_;
         AtlasExtractorPtr extractor_info_;
