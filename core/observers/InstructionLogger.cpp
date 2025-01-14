@@ -18,6 +18,8 @@ namespace atlas
     {
         pre_execute_action_ =
             atlas::Action::createAction<&InstructionLogger::preExecute_>(this, "pre execute");
+        pre_exception_action_ =
+            atlas::Action::createAction<&InstructionLogger::preException_>(this, "pre exception");
         post_execute_action_ =
             atlas::Action::createAction<&InstructionLogger::postExecute_>(this, "post execute");
     }
@@ -56,6 +58,12 @@ namespace atlas
         return nullptr;
     }
 
+    ActionGroup* InstructionLogger::preException_(AtlasState* state)
+    {
+        trap_cause_ = state->getExceptionUnit()->getUnhandledException();
+        return nullptr;
+    }
+
     ActionGroup* InstructionLogger::postExecute_(AtlasState* state)
     {
         if (inst_logger_.observed() == false)
@@ -79,10 +87,16 @@ namespace atlas
         const auto & symbols = state->getAtlasSystem()->getSymbols();
         if (symbols.find(pc_) != symbols.end())
         {
-            INSTLOG(HEX8(pc_) << " <" << symbols.at(pc_) << ">:");
+            INSTLOG("<" << symbols.at(pc_) << ">");
         }
 
-        INSTLOG(HEX8(pc_) << ": " << HEX8(opcode_) << " " << inst->dasmString());
+        INSTLOG(HEX8(pc_) << ": " << inst->dasmString() << " (" << HEX8(opcode_)
+                          << ") uid:" << inst->getUid());
+
+        if (trap_cause_.isValid())
+        {
+            INSTLOG("trap cause: " << HEX16((uint64_t)trap_cause_.getValue()));
+        }
 
         if (inst->hasImmediate())
         {

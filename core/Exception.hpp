@@ -35,7 +35,7 @@ namespace atlas
             return cause_;
         }
 
-	ActionGroup* getActionGroup() { return &exception_action_group_; }
+        ActionGroup* getActionGroup() { return &exception_action_group_; }
 
       private:
         void onBindTreeEarly_() override;
