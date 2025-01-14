@@ -72,8 +72,9 @@ namespace atlas
                 getRoot()->getChild(core_name + ".fetch")->getResourceAs<atlas::Fetch>());
 
             // Create and attach CoSimObserver to AtlasState for each hart
-            cosim_observer_.emplace_back(new CoSimObserver());
-            state_.at(hart_id)->addObserver(cosim_observer_.back());
+            auto cosim_obs = std::make_unique<CoSimObserver>();
+            cosim_observer_.emplace_back(cosim_obs.get());
+            state_.at(hart_id)->addObserver(std::move(cosim_obs));
         }
 
         event_list_.resize(num_harts);

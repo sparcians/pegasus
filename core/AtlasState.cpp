@@ -20,7 +20,6 @@ namespace atlas
         sparta::Unit(core_node),
         hart_id_(p->hart_id),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
-        inst_logger_(core_node),
         stop_sim_action_group_("stop_sim")
     {
         auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
@@ -41,6 +40,11 @@ namespace atlas
         stop_action_ = atlas::Action::createAction<&AtlasState::stopSim_>(this, "stop sim");
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
+
+        // Note that just because we are adding the InstructionLogger right here
+        // doesn't mean that it will be enabled. The user must enable it at the
+        // command prompt with the "-l" option.
+        observers_.emplace_back(std::make_unique<InstructionLogger>(core_node));
     }
 
     // Not default -- defined in source file to reduce massive inlining
@@ -219,20 +223,11 @@ namespace atlas
 
     void AtlasState::insertExecuteActions(ActionGroup* action_group)
     {
-        // FIXME: InstructionLogger's enable method doesn't work when using a BaseObserver
-        // pointer...
-        if (inst_logger_.enabled())
-        {
-            inst_logger_.insertPreExecuteAction(action_group);
-            inst_logger_.insertPostExecuteAction(action_group);
-        }
-
-        for (auto observer : observers_)
+        for (auto& observer : observers_)
         {
             if (observer->enabled())
             {
-                observer->insertPreExecuteAction(action_group);
-                observer->insertPostExecuteAction(action_group);
+                observer->insertExecuteActions(action_group);
             }
         }
 
@@ -259,13 +254,11 @@ namespace atlas
                                          std::shared_ptr<CoSimQuery> query,
                                          const std::vector<RegisterInfo> &reg_info)
     {
-        bool valid = inst_logger_.enabled();
-        if (!valid) {
-            for (auto obs : observers_) {
-                if (obs->enabled()) {
-                    valid = true;
-                    break;
-                }
+        bool valid = false;
+        for (auto& obs : observers_) {
+            if (obs->enabled()) {
+                valid = true;
+                break;
             }
         }
 
@@ -329,14 +322,10 @@ namespace atlas
 
         if (insn->hasRd()) {
             Observer* obs = nullptr;
-            if (inst_logger_.enabled()) {
-                obs = &inst_logger_;
-            } else {
-                for (auto observer : observers_) {
-                    if (observer->enabled()) {
-                        obs = observer;
-                        break;
-                    }
+            for (auto& observer : observers_) {
+                if (observer->enabled()) {
+                    obs = observer.get();
+                    break;
                 }
             }
 

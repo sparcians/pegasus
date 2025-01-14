@@ -148,7 +148,7 @@ namespace atlas
 
         template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);
 
-        void addObserver(Observer* observer) { observers_.push_back(observer); }
+        void addObserver(std::unique_ptr<Observer> observer) { observers_.emplace_back(std::move(observer)); }
 
         void insertExecuteActions(ActionGroup* action_group);
 
@@ -171,11 +171,7 @@ namespace atlas
 
         ActionGroup* stopSim_(AtlasState*)
         {
-            if (inst_logger_.enabled()) {
-                inst_logger_.stopSim();
-            }
-
-            for (auto obs : observers_) {
+            for (auto& obs : observers_) {
                 if (obs->enabled()) {
                     obs->stopSim();
                 }
@@ -253,11 +249,8 @@ namespace atlas
         std::unique_ptr<RegisterSet> vec_rset_;
         std::unique_ptr<RegisterSet> csr_rset_;
 
-        // Instruction Logger
-        InstructionLogger inst_logger_;
-
         // Observers
-        std::vector<Observer*> observers_;
+        std::vector<std::unique_ptr<Observer>> observers_;
 
         // Stop simulation Action
         Action stop_action_;
