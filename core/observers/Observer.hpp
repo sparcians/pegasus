@@ -43,9 +43,7 @@ namespace atlas
             std::vector<uint8_t> reg_prev_value;
         };
 
-        void insertPreExecuteAction(ActionGroup* action_group);
-
-        void insertPostExecuteAction(ActionGroup* action_group);
+        void insertExecuteActions(ActionGroup* action_group);
 
         uint64_t getPrevRdValue() const
         {
