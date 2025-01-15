@@ -14,7 +14,7 @@ make
 make regress
 ```
 
-To build Atlas without Conda, you can provide a path to your Sparta repo and Atlas will build the Sparta library for you. Since Sparta already has a make target named `regress`, the Atlas regression make target is renamed to `atlas_regress`.
+Alternatively, you can build Atlas without Conda by providing a path to your Sparta repo and Atlas will build the Sparta library for you. Since Sparta already has a make target named `regress`, the Atlas regression make target is renamed to `atlas_regress`.
 ```
 mkdir release
 cd release
