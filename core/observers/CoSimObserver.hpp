@@ -26,10 +26,10 @@ namespace atlas
             last_event_.event_ends_sim_ = true;
         }
 
-      private:
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
+        void preExecute(AtlasState* state) override;
+        void postExecute(AtlasState* state) override;
 
+      private:
         uint64_t event_uid_ = 0;
         cosim::Event last_event_ = cosim::Event(event_uid_, cosim::Event::Type::INSTRUCTION);
 

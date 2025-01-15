@@ -17,8 +17,6 @@ namespace atlas
 
         virtual ~Observer() = default;
 
-        virtual bool enabled() const { return enabled_; }
-
         struct SrcReg
         {
             SrcReg(const RegId id) : reg_id(id) {}
@@ -44,23 +42,21 @@ namespace atlas
             std::vector<uint8_t> reg_prev_value;
         };
 
-        void insertPreExecuteActions(ActionGroup* action_group);
-
-        void insertPreExceptionActions(ActionGroup* action_group);
-
-        void insertFinishActions(ActionGroup* action_group);
-
         uint64_t getPrevRdValue() const
         {
             sparta_assert(dst_regs_.size() == 1);
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
 
+        virtual void preExecute(AtlasState*) {}
+
+        virtual void postExecute(AtlasState*) {}
+
+        virtual void preException(AtlasState*) {}
+
         virtual void stopSim() {}
 
       protected:
-        bool enabled_ = false;
-
         uint64_t pc_;
         uint64_t opcode_;
 
@@ -81,9 +77,5 @@ namespace atlas
             dst_regs_.clear();
             trap_cause_.clearValid();
         }
-
-        Action pre_execute_action_;
-        Action post_execute_action_;
-        Action pre_exception_action_;
     };
 } // namespace atlas

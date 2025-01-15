@@ -188,14 +188,19 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
+        ActionGroup* preExecute_(AtlasState* state);
+        ActionGroup* postExecute_(AtlasState* state);
+        ActionGroup* preException_(AtlasState* state);
+
+        Action pre_execute_action_;
+        Action post_execute_action_;
+        Action pre_exception_action_;
+
         ActionGroup* stopSim_(AtlasState*)
         {
             for (auto & obs : observers_)
             {
-                if (obs->enabled())
-                {
-                    obs->stopSim();
-                }
+                obs->stopSim();
             }
 
             return nullptr;
@@ -286,6 +291,9 @@ namespace atlas
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
+
+        // MessageSource used for InstructionLogger
+        sparta::log::MessageSource inst_logger_;
 
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;
