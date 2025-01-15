@@ -42,6 +42,7 @@ namespace atlas
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         xlen_(extension_manager_.getXLEN()),
+        inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -65,12 +66,6 @@ namespace atlas
         stop_action_ = atlas::Action::createAction<&AtlasState::stopSim_>(this, "stop sim");
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
-
-        // Note that just because we are adding the InstructionLogger right here
-        // doesn't mean that it will be enabled. The user must enable it at the
-        // command prompt with the "-l" option.
-        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        observers_.emplace_back(std::make_unique<InstructionLogger>(core_tn));
     }
 
     // Not default -- defined in source file to reduce massive inlining
@@ -99,12 +94,84 @@ namespace atlas
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
 
-        // Connect the instruction logger
-        sparta_assert(
-            observers_.size() == 1,
-            "The InstructionLogger should be the only Observer registered at this point!");
-        observers_.back()->insertFinishActions(&finish_action_group_);
-        observers_.back()->insertPreExceptionActions(exception_unit_->getActionGroup());
+        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
+        if (inst_logger_.observed())
+        {
+            addObserver(std::make_unique<InstructionLogger>(inst_logger_));
+        }
+    }
+
+    ActionGroup* AtlasState::preExecute_(AtlasState* state)
+    {
+        // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
+        // and change the observers' preExecute() to take both AtlasState
+        // and ObserverContainer as arguments.
+        //
+        // class ObserverContainer {
+        // public:
+        //     void preExecute(AtlasState* state) {
+        //         for (const auto & observer : observers_) {
+        //             observer->preExecute(state, this);
+        //         }
+        //     }
+        //
+        //     uint64_t getPc() const;
+        //     uint64_t getOpcode() const;
+        //
+        //     bool hasRs1() const;
+        //     const Observer::SrcReg & getRs1() const;
+        //
+        //     bool hasRs2() const;
+        //     const Observer::SrcReg & getRs2() const;
+        //
+        //     bool hasRs3() const;
+        //     const Observer::SrcReg & getRs3() const;
+        //
+        //     bool hasRd() const;
+        //     const Observer::DestReg & getRd() const;
+        //
+        //     bool hasImmediate() const;
+        //     uint64_t getImmediate() const;
+        //
+        //     TrapCause getTrapCause() const;
+        //     std::string getMnemonic() const;
+        //     std::string getDasmString() const;
+        //
+        //     enum class InstResult { PASS, INVALID_PC, INVALID_REG_VAL, UNIMPLEMENTED };
+        //     InstResult getResult() const;
+        // };
+        //
+        // AtlasState.hpp:
+        //     std::unique_ptr<ObserverContainer> observer_container_;
+
+        for (const auto & observer : observers_)
+        {
+            observer->preExecute(state);
+        }
+
+        return nullptr;
+    }
+
+    ActionGroup* AtlasState::postExecute_(AtlasState* state)
+    {
+        // TODO cnyce: See comments in preExecute_()
+        for (const auto & observer : observers_)
+        {
+            observer->postExecute(state);
+        }
+
+        return nullptr;
+    }
+
+    ActionGroup* AtlasState::preException_(AtlasState* state)
+    {
+        // TODO cnyce: See comments in preExecute_()
+        for (const auto & observer : observers_)
+        {
+            observer->preException(state);
+        }
+
+        return nullptr;
     }
 
     // Check all PC/reg/csr values against our cosim comparator,
@@ -296,19 +363,28 @@ namespace atlas
 
     void AtlasState::addObserver(std::unique_ptr<Observer> observer)
     {
+        if (observers_.empty())
+        {
+            pre_execute_action_ =
+                atlas::Action::createAction<&AtlasState::preExecute_>(this, "pre execute");
+            post_execute_action_ =
+                atlas::Action::createAction<&AtlasState::postExecute_>(this, "post execute");
+            pre_exception_action_ =
+                atlas::Action::createAction<&AtlasState::preException_>(this, "pre exception");
+
+            finish_action_group_.addAction(post_execute_action_);
+            exception_unit_->getActionGroup()->insertActionBefore(pre_exception_action_,
+                                                                  ActionTags::EXCEPTION_TAG);
+        }
+
         observers_.emplace_back(std::move(observer));
-        observers_.back()->insertFinishActions(&finish_action_group_);
-        observers_.back()->insertPreExceptionActions(exception_unit_->getActionGroup());
     }
 
     void AtlasState::insertExecuteActions(ActionGroup* action_group)
     {
-        for (auto & observer : observers_)
+        if (pre_execute_action_)
         {
-            if (observer->enabled())
-            {
-                observer->insertPreExecuteActions(action_group);
-            }
+            action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
         }
     }
 
@@ -328,17 +404,6 @@ namespace atlas
                                          std::shared_ptr<CoSimQuery> query,
                                          const std::vector<RegisterInfo> & reg_info)
     {
-        bool valid = false;
-        for (auto & obs : observers_)
-        {
-            if (obs->enabled())
-            {
-                valid = true;
-                break;
-            }
-        }
-
-        sparta_assert(valid, "No observers enabled, nothing to debug!");
         cosim_db_ = db;
         cosim_query_ = query;
 
@@ -398,16 +463,7 @@ namespace atlas
 
         if (insn->hasRd())
         {
-            Observer* obs = nullptr;
-            for (auto & observer : observers_)
-            {
-                if (observer->enabled())
-                {
-                    obs = observer.get();
-                    break;
-                }
-            }
-
+            Observer* obs = !observers_.empty() ? observers_.front().get() : nullptr;
             sparta_assert(obs, "No observers enabled, nothing to debug!");
 
             auto rd = insn->getRd();

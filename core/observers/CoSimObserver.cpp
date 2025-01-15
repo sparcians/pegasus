@@ -7,16 +7,9 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver()
-    {
-        enabled_ = true;
-        pre_execute_action_ =
-            atlas::Action::createAction<&CoSimObserver::preExecute_>(this, "pre execute");
-        post_execute_action_ =
-            atlas::Action::createAction<&CoSimObserver::postExecute_>(this, "post execute");
-    }
+    CoSimObserver::CoSimObserver() {}
 
-    ActionGroup* CoSimObserver::preExecute_(AtlasState* state)
+    void CoSimObserver::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -54,14 +47,10 @@ namespace atlas
         }
 
         last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
-
-        return nullptr;
     }
 
-    ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
+    void CoSimObserver::postExecute(AtlasState* state)
     {
-        sparta_assert(enabled_, "Instruction logging is not enabled");
-
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
         sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
@@ -96,7 +85,5 @@ namespace atlas
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
         // TODO: next_priv_
-
-        return nullptr;
     }
 } // namespace atlas
