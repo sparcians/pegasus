@@ -329,10 +329,9 @@ namespace atlas
 
         // mret can only be executed in Machine mode
         // sret can be executee in Supervisor or Machine mode
-        if (state->getPrivMode() >= PRIV_MODE)
+        if (state->getPrivMode() < PRIV_MODE)
         {
-            // TODO: Hook up illegal instruction exception to the Exception Unit
-            sparta_assert(false, "Illegal instruction exception - not supported yet!");
+            THROW_ILLEGAL_INSTRUCTION;
         }
 
         // FIXME: Register macros are currently hardcoded for RV64
