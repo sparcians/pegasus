@@ -188,6 +188,14 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
+        ActionGroup* preExecute_(AtlasState* state);
+        ActionGroup* postExecute_(AtlasState* state);
+        ActionGroup* preException_(AtlasState* state);
+
+        Action pre_execute_action_;
+        Action post_execute_action_;
+        Action pre_exception_action_;
+
         ActionGroup* stopSim_(AtlasState*)
         {
             for (auto & obs : observers_)

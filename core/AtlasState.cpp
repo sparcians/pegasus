@@ -100,6 +100,51 @@ namespace atlas
         }
     }
 
+    ActionGroup* AtlasState::preExecute_(AtlasState* state)
+    {
+        ActionGroup* fail_action_group = nullptr;
+        for (const auto & observer : observers_)
+        {
+            fail_action_group = observer->preExecute(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
+        }
+
+        return nullptr;
+    }
+
+    ActionGroup* AtlasState::postExecute_(AtlasState* state)
+    {
+        ActionGroup* fail_action_group = nullptr;
+        for (const auto & observer : observers_)
+        {
+            fail_action_group = observer->postExecute(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
+        }
+
+        return nullptr;
+    }
+
+    ActionGroup* AtlasState::preException_(AtlasState* state)
+    {
+        ActionGroup* fail_action_group = nullptr;
+        for (const auto & observer : observers_)
+        {
+            fail_action_group = observer->preException(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
+        }
+
+        return nullptr;
+    }
+
     // Check all PC/reg/csr values against our cosim comparator,
     // and return the result code as follows:
     //
@@ -289,16 +334,23 @@ namespace atlas
 
     void AtlasState::addObserver(std::unique_ptr<Observer> observer)
     {
+        if (observers_.empty()) {
+            pre_execute_action_ = atlas::Action::createAction<&AtlasState::preExecute_>(this, "pre execute");
+            post_execute_action_ = atlas::Action::createAction<&AtlasState::postExecute_>(this, "post execute");
+            pre_exception_action_ = atlas::Action::createAction<&AtlasState::preException_>(this, "pre exception");
+
+            finish_action_group_.addAction(post_execute_action_);
+            exception_unit_->getActionGroup()->insertActionBefore(pre_exception_action_, ActionTags::EXCEPTION_TAG);
+        }
+
         observers_.emplace_back(std::move(observer));
-        observers_.back()->insertFinishActions(&finish_action_group_);
-        observers_.back()->insertPreExceptionActions(exception_unit_->getActionGroup());
     }
 
     void AtlasState::insertExecuteActions(ActionGroup* action_group)
     {
-        for (auto & observer : observers_)
+        if (pre_execute_action_)
         {
-            observer->insertPreExecuteActions(action_group);
+            action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
         }
     }
 

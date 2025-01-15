@@ -42,17 +42,17 @@ namespace atlas
             std::vector<uint8_t> reg_prev_value;
         };
 
-        void insertPreExecuteActions(ActionGroup* action_group);
-
-        void insertPreExceptionActions(ActionGroup* action_group);
-
-        void insertFinishActions(ActionGroup* action_group);
-
         uint64_t getPrevRdValue() const
         {
             sparta_assert(dst_regs_.size() == 1);
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
+
+        virtual ActionGroup* preExecute(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* postExecute(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* preException(AtlasState*) { return nullptr; }
 
         virtual void stopSim() {}
 
@@ -77,9 +77,5 @@ namespace atlas
             dst_regs_.clear();
             trap_cause_.clearValid();
         }
-
-        Action pre_execute_action_;
-        Action post_execute_action_;
-        Action pre_exception_action_;
     };
 } // namespace atlas

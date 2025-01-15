@@ -9,13 +9,9 @@ namespace atlas
 {
     CoSimObserver::CoSimObserver()
     {
-        pre_execute_action_ =
-            atlas::Action::createAction<&CoSimObserver::preExecute_>(this, "pre execute");
-        post_execute_action_ =
-            atlas::Action::createAction<&CoSimObserver::postExecute_>(this, "post execute");
     }
 
-    ActionGroup* CoSimObserver::preExecute_(AtlasState* state)
+    ActionGroup* CoSimObserver::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -57,7 +53,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
+    ActionGroup* CoSimObserver::postExecute(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();

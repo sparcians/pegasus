@@ -16,15 +16,9 @@ namespace atlas
     InstructionLogger::InstructionLogger(sparta::log::MessageSource& inst_logger)
         : inst_logger_(inst_logger)
     {
-        pre_execute_action_ =
-            atlas::Action::createAction<&InstructionLogger::preExecute_>(this, "pre execute");
-        pre_exception_action_ =
-            atlas::Action::createAction<&InstructionLogger::preException_>(this, "pre exception");
-        post_execute_action_ =
-            atlas::Action::createAction<&InstructionLogger::postExecute_>(this, "post execute");
     }
 
-    ActionGroup* InstructionLogger::preExecute_(AtlasState* state)
+    ActionGroup* InstructionLogger::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -58,19 +52,14 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* InstructionLogger::preException_(AtlasState* state)
+    ActionGroup* InstructionLogger::preException(AtlasState* state)
     {
         trap_cause_ = state->getExceptionUnit()->getUnhandledException();
         return nullptr;
     }
 
-    ActionGroup* InstructionLogger::postExecute_(AtlasState* state)
+    ActionGroup* InstructionLogger::postExecute(AtlasState* state)
     {
-        if (inst_logger_.observed() == false)
-        {
-            return nullptr;
-        }
-
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
         sparta_assert(inst != nullptr, "Instruction is not valid for logging!");

@@ -13,11 +13,11 @@ namespace atlas
 
         InstructionLogger(sparta::log::MessageSource& inst_logger);
 
-      private:
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
-        ActionGroup* preException_(AtlasState* state);
+        ActionGroup* preExecute(AtlasState* state) override;
+        ActionGroup* postExecute(AtlasState* state) override;
+        ActionGroup* preException(AtlasState* state) override;
 
+      private:
         sparta::log::MessageSource& inst_logger_;
     };
 } // namespace atlas
