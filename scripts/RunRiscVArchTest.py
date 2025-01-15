@@ -16,8 +16,6 @@ def get_tests(directory):
     tests.sort()
     return tests
 
-SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
-
 def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")
     parser.add_argument("xlen", type=str, choices=['rv32', 'rv64'], help="The XLEN value (rv32 or rv64)")
@@ -25,8 +23,9 @@ def main():
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     args = parser.parse_args()
 
+    SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
     if args.extensions:
-        assert [ext in SUPPORTED_EXTENSIONS for ext in args.extensions], "Unsupported extension(s) provided"
+        assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
 
     tests = get_tests(args.directory)

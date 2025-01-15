@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/Action.hpp"
+#include "core/Exception.hpp"
 #include "mavis/OpcodeInfo.h"
+#include "include/AtlasUtils.hpp"
 
 namespace atlas
 {
@@ -42,9 +44,19 @@ namespace atlas
             std::vector<uint8_t> reg_prev_value;
         };
 
-        void insertPreExecuteAction(ActionGroup* action_group);
+        void insertPreExecuteActions(ActionGroup* action_group);
 
-        void insertPostExecuteAction(ActionGroup* action_group);
+        void insertPreExceptionActions(ActionGroup* action_group);
+
+        void insertFinishActions(ActionGroup* action_group);
+
+        uint64_t getPrevRdValue() const
+        {
+            sparta_assert(dst_regs_.size() == 1);
+            return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
+        }
+
+        virtual void stopSim() {}
 
       protected:
         bool enabled_ = false;
@@ -58,15 +70,20 @@ namespace atlas
         std::vector<SrcReg> src_regs_;
         std::vector<DestReg> dst_regs_;
 
+        // Exception cause
+        sparta::utils::ValidValue<TrapCauses> trap_cause_;
+
         virtual void reset_()
         {
             pc_ = 0;
             opcode_ = 0;
             src_regs_.clear();
             dst_regs_.clear();
+            trap_cause_.clearValid();
         }
 
         Action pre_execute_action_;
         Action post_execute_action_;
+        Action pre_exception_action_;
     };
 } // namespace atlas

@@ -2,6 +2,7 @@
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/Translate.hpp"
+#include "core/Exception.hpp"
 #include "sparta/simulation/RootTreeNode.hpp"
 #include "sparta/simulation/ResourceFactory.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
@@ -33,6 +34,10 @@ class AtlasStateTester
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             core_tn, "translate", sparta::TreeNode::GROUP_NAME_NONE,
             sparta::TreeNode::GROUP_IDX_NONE, "Translate Unit", &translate_factory_));
+        // top.core.exception
+        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
+            core_tn, "exception", sparta::TreeNode::GROUP_NAME_NONE,
+            sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
 
         root_tn_.enterConfiguring();
         root_tn_.enterFinalized();
@@ -62,6 +67,8 @@ class AtlasStateTester
     sparta::ResourceFactory<atlas::Execute, atlas::Execute::ExecuteParameters> execute_factory_;
     sparta::ResourceFactory<atlas::Translate, atlas::Translate::TranslateParameters>
         translate_factory_;
+    sparta::ResourceFactory<atlas::Exception, atlas::Exception::ExceptionParameters>
+        exception_factory_;
     std::unique_ptr<atlas::AtlasAllocators> allocators_tn_;
     std::vector<std::unique_ptr<sparta::ResourceTreeNode>> tns_to_delete_;
 

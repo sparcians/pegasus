@@ -47,7 +47,7 @@ namespace atlas
         // Connect instruction to Fetch
         const auto inst = state->getCurrentInst();
         ActionGroup* inst_action_group = inst->getActionGroup();
-        inst_action_group->setNextActionGroup(execute_action_group_.getNextActionGroup());
+        inst_action_group->setNextActionGroup(state->getFinishActionGroup());
 
         // Insert translation Action into instruction's ActionGroup between the compute address
         // handler and the execute handler

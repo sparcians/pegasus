@@ -23,6 +23,8 @@ namespace atlas
 
         uint64_t getUid() const { return uid_; }
 
+        void setUid(const uint64_t uid) { uid_ = uid; }
+
         mavis::OpcodeInfo::PtrType getMavisOpcodeInfo() { return opcode_info_; }
 
         const std::string & getMnemonic() const { return opcode_info_->getMnemonic(); }
@@ -82,9 +84,13 @@ namespace atlas
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
+        void markUnimplemented() { unimplemented_ = true; }
+
+        bool unimplemented() const { return unimplemented_; }
+
       private:
         // Unique ID
-        const uint64_t uid_;
+        uint64_t uid_;
 
         mavis::OpcodeInfo::PtrType opcode_info_;
         AtlasExtractorPtr extractor_info_;
@@ -101,6 +107,7 @@ namespace atlas
         sparta::Register* rd_;
 
         ActionGroup inst_action_group_;
+        bool unimplemented_ = false;
 
         friend std::ostream & operator<<(std::ostream & os, const AtlasInst & inst);
     };

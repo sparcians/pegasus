@@ -10,3 +10,4 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 
 # Tests
 sparta_named_test(atlas_nop_test atlas -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
+sparta_named_test(atlas_inst_logger_test atlas -p top.core0.params.stop_sim_on_wfi true -l top inst nop.instlog workloads/nop.elf)

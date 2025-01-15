@@ -37,7 +37,6 @@ namespace atlas
 
     AtlasInst::AtlasInst(const mavis::OpcodeInfo::PtrType & opcode_info,
                          const AtlasExtractorPtr & extractor_info, AtlasState* state) :
-        uid_(state->assignUid()),
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),

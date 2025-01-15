@@ -74,6 +74,12 @@ namespace atlas
         //! Add Action to the back of the group
         void addAction(const Action & action) { action_group_.emplace_back(action); }
 
+        //! Add Action to the front of the group
+        void insertActionFront(const Action & action)
+        {
+            action_group_.insert(action_group_.begin(), action);
+        }
+
         //! Insert Action before the first Action in the group with the specified Tag
         void insertActionBefore(const Action & action, const ActionTagType tag)
         {
