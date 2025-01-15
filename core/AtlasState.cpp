@@ -95,7 +95,8 @@ namespace atlas
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
 
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        if (inst_logger_.observed()) {
+        if (inst_logger_.observed())
+        {
             addObserver(std::make_unique<InstructionLogger>(inst_logger_));
         }
     }
@@ -362,13 +363,18 @@ namespace atlas
 
     void AtlasState::addObserver(std::unique_ptr<Observer> observer)
     {
-        if (observers_.empty()) {
-            pre_execute_action_ = atlas::Action::createAction<&AtlasState::preExecute_>(this, "pre execute");
-            post_execute_action_ = atlas::Action::createAction<&AtlasState::postExecute_>(this, "post execute");
-            pre_exception_action_ = atlas::Action::createAction<&AtlasState::preException_>(this, "pre exception");
+        if (observers_.empty())
+        {
+            pre_execute_action_ =
+                atlas::Action::createAction<&AtlasState::preExecute_>(this, "pre execute");
+            post_execute_action_ =
+                atlas::Action::createAction<&AtlasState::postExecute_>(this, "post execute");
+            pre_exception_action_ =
+                atlas::Action::createAction<&AtlasState::preException_>(this, "pre exception");
 
             finish_action_group_.addAction(post_execute_action_);
-            exception_unit_->getActionGroup()->insertActionBefore(pre_exception_action_, ActionTags::EXCEPTION_TAG);
+            exception_unit_->getActionGroup()->insertActionBefore(pre_exception_action_,
+                                                                  ActionTags::EXCEPTION_TAG);
         }
 
         observers_.emplace_back(std::move(observer));

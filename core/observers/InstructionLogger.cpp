@@ -13,8 +13,8 @@ namespace atlas
 #define INSTLOG(msg) SPARTA_LOG(inst_logger_, msg)
 #endif
 
-    InstructionLogger::InstructionLogger(sparta::log::MessageSource& inst_logger)
-        : inst_logger_(inst_logger)
+    InstructionLogger::InstructionLogger(sparta::log::MessageSource & inst_logger) :
+        inst_logger_(inst_logger)
     {
     }
 

@@ -7,9 +7,7 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver()
-    {
-    }
+    CoSimObserver::CoSimObserver() {}
 
     void CoSimObserver::preExecute(AtlasState* state)
     {
