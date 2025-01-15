@@ -18,7 +18,7 @@ namespace atlas
     {
     }
 
-    ActionGroup* InstructionLogger::preExecute(AtlasState* state)
+    void InstructionLogger::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -48,17 +48,14 @@ namespace atlas
             const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
             dst_regs_.emplace_back(getRegId(rd), value);
         }
-
-        return nullptr;
     }
 
-    ActionGroup* InstructionLogger::preException(AtlasState* state)
+    void InstructionLogger::preException(AtlasState* state)
     {
         trap_cause_ = state->getExceptionUnit()->getUnhandledException();
-        return nullptr;
     }
 
-    ActionGroup* InstructionLogger::postExecute(AtlasState* state)
+    void InstructionLogger::postExecute(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
@@ -111,7 +108,5 @@ namespace atlas
         }
 
         INSTLOG("");
-
-        return nullptr;
     }
 } // namespace atlas

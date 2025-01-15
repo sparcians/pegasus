@@ -11,7 +11,7 @@ namespace atlas
     {
     }
 
-    ActionGroup* CoSimObserver::preExecute(AtlasState* state)
+    void CoSimObserver::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -49,11 +49,9 @@ namespace atlas
         }
 
         last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
-
-        return nullptr;
     }
 
-    ActionGroup* CoSimObserver::postExecute(AtlasState* state)
+    void CoSimObserver::postExecute(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
@@ -89,7 +87,5 @@ namespace atlas
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
         // TODO: next_priv_
-
-        return nullptr;
     }
 } // namespace atlas

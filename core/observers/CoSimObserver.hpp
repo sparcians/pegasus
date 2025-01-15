@@ -26,8 +26,8 @@ namespace atlas
             last_event_.event_ends_sim_ = true;
         }
 
-        ActionGroup* preExecute(AtlasState* state) override;
-        ActionGroup* postExecute(AtlasState* state) override;
+        void preExecute(AtlasState* state) override;
+        void postExecute(AtlasState* state) override;
 
       private:
         uint64_t event_uid_ = 0;

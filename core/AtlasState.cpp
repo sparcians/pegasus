@@ -143,14 +143,9 @@ namespace atlas
         // AtlasState.hpp:
         //     std::unique_ptr<ObserverContainer> observer_container_;
 
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->preExecute(state);
         }
 
         return nullptr;
@@ -159,15 +154,9 @@ namespace atlas
     ActionGroup* AtlasState::postExecute_(AtlasState* state)
     {
         // TODO cnyce: See comments in preExecute_()
-
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->postExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->postExecute(state);
         }
 
         return nullptr;
@@ -176,15 +165,9 @@ namespace atlas
     ActionGroup* AtlasState::preException_(AtlasState* state)
     {
         // TODO cnyce: See comments in preExecute_()
-
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preException(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->preException(state);
         }
 
         return nullptr;

@@ -13,9 +13,9 @@ namespace atlas
 
         InstructionLogger(sparta::log::MessageSource& inst_logger);
 
-        ActionGroup* preExecute(AtlasState* state) override;
-        ActionGroup* postExecute(AtlasState* state) override;
-        ActionGroup* preException(AtlasState* state) override;
+        void preExecute(AtlasState* state) override;
+        void postExecute(AtlasState* state) override;
+        void preException(AtlasState* state) override;
 
       private:
         sparta::log::MessageSource& inst_logger_;
