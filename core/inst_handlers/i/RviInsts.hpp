@@ -28,11 +28,11 @@ namespace atlas
         template <typename XLEN, typename SIZE>
         ActionGroup* compute_address_handler(atlas::AtlasState* state);
 
-        // add,slt,and,or,xor,sub
+        // add,slt,sltu,and,or,xor,sub
         template <typename XLEN, typename OPERATOR>
         ActionGroup* integer_reg_reg_handler(atlas::AtlasState* state);
 
-        // addi,slti,andi,ori,xori
+        // addi,slti,sltui,andi,ori,xori
         template <typename XLEN, typename OPERATOR>
         ActionGroup* integer_reg_imm_handler(atlas::AtlasState* state);
 
@@ -69,8 +69,6 @@ namespace atlas
         ActionGroup* slli_64_handler(atlas::AtlasState* state);
         ActionGroup* slliw_64_handler(atlas::AtlasState* state);
         ActionGroup* sllw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sltiu_64_handler(atlas::AtlasState* state);
-        ActionGroup* sltu_64_handler(atlas::AtlasState* state);
         ActionGroup* sra_64_handler(atlas::AtlasState* state);
         ActionGroup* srai_64_handler(atlas::AtlasState* state);
         ActionGroup* sraiw_64_handler(atlas::AtlasState* state);
