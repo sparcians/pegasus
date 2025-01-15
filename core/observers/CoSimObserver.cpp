@@ -9,7 +9,6 @@ namespace atlas
 {
     CoSimObserver::CoSimObserver()
     {
-        enabled_ = true;
         pre_execute_action_ =
             atlas::Action::createAction<&CoSimObserver::preExecute_>(this, "pre execute");
         post_execute_action_ =
@@ -60,8 +59,6 @@ namespace atlas
 
     ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
     {
-        sparta_assert(enabled_, "Instruction logging is not enabled");
-
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
         sparta_assert(inst != nullptr, "Instruction is not valid for logging!");

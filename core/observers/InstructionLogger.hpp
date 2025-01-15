@@ -11,15 +11,13 @@ namespace atlas
       public:
         using base_type = InstructionLogger;
 
-        InstructionLogger(sparta::TreeNode* node);
-
-        bool enabled() const override { return inst_logger_.observed(); }
+        InstructionLogger(sparta::log::MessageSource& inst_logger);
 
       private:
         ActionGroup* preExecute_(AtlasState* state);
         ActionGroup* postExecute_(AtlasState* state);
         ActionGroup* preException_(AtlasState* state);
 
-        sparta::log::MessageSource inst_logger_;
+        sparta::log::MessageSource& inst_logger_;
     };
 } // namespace atlas

@@ -17,8 +17,6 @@ namespace atlas
 
         virtual ~Observer() = default;
 
-        virtual bool enabled() const { return enabled_; }
-
         struct SrcReg
         {
             SrcReg(const RegId id) : reg_id(id) {}
@@ -59,8 +57,6 @@ namespace atlas
         virtual void stopSim() {}
 
       protected:
-        bool enabled_ = false;
-
         uint64_t pc_;
         uint64_t opcode_;
 

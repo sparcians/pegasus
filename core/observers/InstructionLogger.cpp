@@ -13,8 +13,8 @@ namespace atlas
 #define INSTLOG(msg) SPARTA_LOG(inst_logger_, msg)
 #endif
 
-    InstructionLogger::InstructionLogger(sparta::TreeNode* node) :
-        inst_logger_(node, "inst", "Atlas Instruction Logger")
+    InstructionLogger::InstructionLogger(sparta::log::MessageSource& inst_logger)
+        : inst_logger_(inst_logger)
     {
         pre_execute_action_ =
             atlas::Action::createAction<&InstructionLogger::preExecute_>(this, "pre execute");
