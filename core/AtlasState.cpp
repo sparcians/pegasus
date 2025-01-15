@@ -102,6 +102,47 @@ namespace atlas
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
     {
+        // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
+        // and change the observers' preExecute() to take both AtlasState
+        // and ObserverContainer as arguments.
+        //
+        // class ObserverContainer {
+        // public:
+        //     void preExecute(AtlasState* state) {
+        //         for (const auto & observer : observers_) {
+        //             observer->preExecute(state, this);
+        //         }
+        //     }
+        //
+        //     uint64_t getPc() const;
+        //     uint64_t getOpcode() const;
+        //
+        //     bool hasRs1() const;
+        //     const Observer::SrcReg & getRs1() const;
+        //
+        //     bool hasRs2() const;
+        //     const Observer::SrcReg & getRs2() const;
+        //
+        //     bool hasRs3() const;
+        //     const Observer::SrcReg & getRs3() const;
+        //
+        //     bool hasRd() const;
+        //     const Observer::DestReg & getRd() const;
+        //
+        //     bool hasImmediate() const;
+        //     uint64_t getImmediate() const;
+        //
+        //     TrapCause getTrapCause() const;
+        //     std::string getMnemonic() const;
+        //     std::string getDasmString() const;
+        //
+        //     enum class InstResult { PASS, INVALID_PC, INVALID_REG_VAL, UNIMPLEMENTED };
+        //     InstResult getResult() const;
+        // };
+        //
+        // AtlasState.hpp:
+        //     std::unique_ptr<ObserverContainer> observer_container_;
+
         ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
@@ -117,6 +158,8 @@ namespace atlas
 
     ActionGroup* AtlasState::postExecute_(AtlasState* state)
     {
+        // TODO cnyce: See comments in preExecute_()
+
         ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
@@ -132,6 +175,8 @@ namespace atlas
 
     ActionGroup* AtlasState::preException_(AtlasState* state)
     {
+        // TODO cnyce: See comments in preExecute_()
+
         ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
