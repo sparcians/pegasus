@@ -37,10 +37,6 @@ namespace atlas
         ActionGroup* blt_64_handler(atlas::AtlasState* state);
         ActionGroup* bltu_64_handler(atlas::AtlasState* state);
         ActionGroup* bne_64_handler(atlas::AtlasState* state);
-        ActionGroup* cdiscard_d_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* cflush_d_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* cflush_i_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* dret_64_handler(atlas::AtlasState* state);
         ActionGroup* ebreak_64_handler(atlas::AtlasState* state);
         ActionGroup* ecall_64_handler(atlas::AtlasState* state);
         ActionGroup* fence_64_handler(atlas::AtlasState* state);
@@ -93,7 +89,6 @@ namespace atlas
         ActionGroup* subw_64_handler(atlas::AtlasState* state);
         ActionGroup* sw_64_compute_address_handler(atlas::AtlasState* state);
         ActionGroup* sw_64_handler(atlas::AtlasState* state);
-        ActionGroup* uret_64_handler(atlas::AtlasState* state);
         ActionGroup* wfi_64_handler(atlas::AtlasState* state);
         ActionGroup* xor_64_handler(atlas::AtlasState* state);
         ActionGroup* xori_64_handler(atlas::AtlasState* state);

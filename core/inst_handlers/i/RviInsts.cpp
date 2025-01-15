@@ -113,21 +113,6 @@ namespace atlas
                                   atlas::Action::createAction<&RviInsts::bne_64_handler, RviInsts>(
                                       nullptr, "bne", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "cdiscard.d.l1",
-                atlas::Action::createAction<&RviInsts::cdiscard_d_l1_64_handler, RviInsts>(
-                    nullptr, "cdiscard_d_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "cflush.d.l1",
-                atlas::Action::createAction<&RviInsts::cflush_d_l1_64_handler, RviInsts>(
-                    nullptr, "cflush_d_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "cflush.i.l1",
-                atlas::Action::createAction<&RviInsts::cflush_i_l1_64_handler, RviInsts>(
-                    nullptr, "cflush_i_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("dret",
-                                  atlas::Action::createAction<&RviInsts::dret_64_handler, RviInsts>(
-                                      nullptr, "dret", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
                 "ebreak", atlas::Action::createAction<&RviInsts::ebreak_64_handler, RviInsts>(
                               nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
@@ -259,9 +244,6 @@ namespace atlas
             inst_handlers.emplace("sw",
                                   atlas::Action::createAction<&RviInsts::sw_64_handler, RviInsts>(
                                       nullptr, "sw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("uret",
-                                  atlas::Action::createAction<&RviInsts::uret_64_handler, RviInsts>(
-                                      nullptr, "uret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
                                   atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
                                       nullptr, "wfi", ActionTags::EXECUTE_TAG));
@@ -282,13 +264,6 @@ namespace atlas
     template void RviInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
     // template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
-
-    ActionGroup* RviInsts::cflush_i_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
 
     ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
     {
@@ -571,48 +546,6 @@ namespace atlas
         //   PRV_S);
         // }
         // MMU.flush_tlb();
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::dret_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require(STATE.debug_mode);
-        // set_pc_and_serialize(STATE.dpc->read());
-        // if (ZICFILP_xLPE(STATE.dcsr->v, STATE.dcsr->prv)) {
-        //   STATE.elp = STATE.dcsr->pelp;
-        // }
-        // p->set_privilege(STATE.dcsr->prv, STATE.dcsr->v);
-        // if (STATE.prv < PRV_M) {
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MPRV);
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MDT);
-        // }
-        //
-        // if (STATE.dcsr->prv == PRV_U || STATE.dcsr->v)
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //
-        // if (STATE.dcsr->v && STATE.dcsr->prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        //
-        // if (STATE.dcsr->prv == PRV_U || STATE.dcsr->v)
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //
-        // if (STATE.dcsr->v && STATE.dcsr->prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        //
-        ///* We're not in Debug Mode anymore. */
-        // STATE.debug_mode = false;
-        //
-        // if (STATE.dcsr->step)
-        //   STATE.single_step = STATE.STEP_STEPPING;
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
@@ -1130,13 +1063,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::cflush_d_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::sraiw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -1147,13 +1073,6 @@ namespace atlas
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
         insn->getRd()->dmiWrite(rd_val);
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::uret_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         return nullptr;
     }
 
@@ -1186,13 +1105,6 @@ namespace atlas
         const uint64_t rd_val = rs1_val - rs2_val;
         insn->getRd()->dmiWrite(rd_val);
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::cdiscard_d_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         return nullptr;
     }
 
