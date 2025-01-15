@@ -348,6 +348,8 @@ namespace atlas
             // than Machine mode, the MPRV bit is reset to 0
             if (prev_priv_mode != PrivMode::MACHINE)
             {
+                // TODO: Will need to update the load/store translation mode when translation is
+                // supported
                 WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
             }
 
@@ -366,7 +368,9 @@ namespace atlas
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD(SSTATUS, spp);
 
-            // TODO:
+            // Reset the MPRV bit
+            // TODO: Will need to update the load/store translation mode when translation is
+            // supported
             WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
 
             // Set MIE = MPIE and reset MPIE
