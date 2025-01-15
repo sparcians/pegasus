@@ -1,5 +1,7 @@
 #pragma once
 
+#include "include/AtlasTypes.hpp"
+
 #include <map>
 #include <string>
 
@@ -19,6 +21,9 @@ namespace atlas
         template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
 
       private:
+        template <typename XLEN, PrivMode PRIV_MODE>
+        ActionGroup* xret_handler(atlas::AtlasState* state);
+
         ActionGroup* add_64_handler(atlas::AtlasState* state);
         ActionGroup* addi_64_handler(atlas::AtlasState* state);
         ActionGroup* addiw_64_handler(atlas::AtlasState* state);
@@ -32,10 +37,6 @@ namespace atlas
         ActionGroup* blt_64_handler(atlas::AtlasState* state);
         ActionGroup* bltu_64_handler(atlas::AtlasState* state);
         ActionGroup* bne_64_handler(atlas::AtlasState* state);
-        ActionGroup* cdiscard_d_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* cflush_d_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* cflush_i_l1_64_handler(atlas::AtlasState* state);
-        ActionGroup* dret_64_handler(atlas::AtlasState* state);
         ActionGroup* ebreak_64_handler(atlas::AtlasState* state);
         ActionGroup* ecall_64_handler(atlas::AtlasState* state);
         ActionGroup* fence_64_handler(atlas::AtlasState* state);
@@ -57,7 +58,6 @@ namespace atlas
         ActionGroup* lw_64_handler(atlas::AtlasState* state);
         ActionGroup* lwu_64_compute_address_handler(atlas::AtlasState* state);
         ActionGroup* lwu_64_handler(atlas::AtlasState* state);
-        ActionGroup* mret_64_handler(atlas::AtlasState* state);
         ActionGroup* mv_64_handler(atlas::AtlasState* state);
         ActionGroup* nop_64_handler(atlas::AtlasState* state);
         ActionGroup* or_64_handler(atlas::AtlasState* state);
@@ -81,7 +81,6 @@ namespace atlas
         ActionGroup* srai_64_handler(atlas::AtlasState* state);
         ActionGroup* sraiw_64_handler(atlas::AtlasState* state);
         ActionGroup* sraw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sret_64_handler(atlas::AtlasState* state);
         ActionGroup* srl_64_handler(atlas::AtlasState* state);
         ActionGroup* srli_64_handler(atlas::AtlasState* state);
         ActionGroup* srliw_64_handler(atlas::AtlasState* state);
@@ -90,7 +89,6 @@ namespace atlas
         ActionGroup* subw_64_handler(atlas::AtlasState* state);
         ActionGroup* sw_64_compute_address_handler(atlas::AtlasState* state);
         ActionGroup* sw_64_handler(atlas::AtlasState* state);
-        ActionGroup* uret_64_handler(atlas::AtlasState* state);
         ActionGroup* wfi_64_handler(atlas::AtlasState* state);
         ActionGroup* xor_64_handler(atlas::AtlasState* state);
         ActionGroup* xori_64_handler(atlas::AtlasState* state);
