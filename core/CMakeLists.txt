@@ -12,7 +12,6 @@ add_library(atlascore
     AtlasExtractor.cpp
     AtlasInst.cpp
     PageTableWalker.cpp
-    observers/Observer.cpp
     observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
 )
