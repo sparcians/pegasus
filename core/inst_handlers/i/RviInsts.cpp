@@ -317,6 +317,32 @@ namespace atlas
         return nullptr;
     }
 
+    ActionGroup* RviInsts::addw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + rs2_val));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val - rs2_val));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
     template <typename XLEN, class OPERATOR>
     ActionGroup* RviInsts::integer_reg_imm_handler(atlas::AtlasState* state)
     {
@@ -328,6 +354,36 @@ namespace atlas
         const uint64_t rd_val = OPERATOR()(rs1_val, imm);
         insn->getRd()->dmiWrite(rd_val);
 
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::addiw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t IMM_SIZE = 12;
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + imm));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::mv_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        insn->getRd()->dmiWrite(rs1_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::nop_64_handler(atlas::AtlasState* state)
+    {
+        (void)state;
         return nullptr;
     }
 
@@ -388,14 +444,234 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::jal_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        // CHECK_RD();
+        int64_t rd_val = state->getPc() + insn->getOpcodeSize();
+        const uint64_t jump_target = state->getPc() + insn->getImmediate();
+        state->setNextPc(jump_target);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::jalr_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        // CHECK_RD();
+        uint64_t rd_val = state->getPc() + insn->getOpcodeSize();
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        constexpr uint32_t IMM_SIZE = 12;
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        const uint64_t jump_target = (rs1_val + imm) & ~int64_t(1);
+        state->setNextPc(jump_target);
+        insn->getRd()->dmiWrite(rd_val);
+
+        // if (ZICFILP_xLPE(STATE.v, STATE.prv)) {
+        //     STATE.elp = ZICFILP_IS_LP_EXPECTED(insn.rs1());
+        //     serialize();
+        // }
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::li_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t IMM_SIZE = 12;
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        insn->getRd()->dmiWrite(imm);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::lui_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 32>();
+        insn->getRd()->dmiWrite(imm);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::auipc_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t IMM_SIZE = 32;
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        const uint64_t pc = state->getPc();
+        const uint64_t rd_val =
+            ((int64_t)(imm + pc) << (64 - (state->getXlen()))) >> (64 - (state->getXlen()));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::srl_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::srliw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
         // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val - rs2_val));
+        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::sll_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        const uint64_t rd_val = rs1_val << (rs2_val & (state->getXlen() - 1));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::srai_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        // require(SHAMT < state->getXlen());
+        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const int64_t rd_val = (int64_t)(rs1_val >> shift_amount);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::sraw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const int32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::li_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t IMM_SIZE = 12;
+        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        insn->getRd()->dmiWrite(imm);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::srli_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        // require(SHAMT < state->getXlen());
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const int64_t rd_val = (int64_t)(rs1_val >> shift_amount);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::sllw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint32_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const int64_t rd_val = (int64_t)(int32_t)(rs1_val << (rs2_val & 0x1F));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::slliw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & 0x1F;
+        // Casting from int32_t to int64_t will sign extend the value
+        const int64_t rd_val = (int64_t)(int32_t)(rs1_val << shift_amount);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::sraiw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const int32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::sra_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::slli_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        // require(SHAMT < state->getXlen());
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const uint64_t rd_val = rs1_val << shift_amount;
+        insn->getRd()->dmiWrite(rd_val);
+
+        return nullptr;
+    }
+
+    ActionGroup* RviInsts::srlw_64_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        // Casting from int32_t to int64_t will sign extend the value
+        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
         insn->getRd()->dmiWrite(rd_val);
 
         return nullptr;
@@ -468,35 +744,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::wfi_64_handler(atlas::AtlasState* state)
-    {
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // if (get_field(STATE.mstatus->read(), MSTATUS_TW)) {
-        //   require_privilege(PRV_M);
-        // } else if (STATE.v) {
-        //   if (STATE.prv == PRV_U || get_field(STATE.hstatus->read(), HSTATUS_VTW))
-        //     require_novirt();
-        // } else if (p->extension_enabled('S')) {
-        //   // When S-mode is implemented, then executing WFI in
-        //   // U-mode causes an illegal instruction exception.
-        //   require_privilege(PRV_S);
-        // }
-        // wfi();
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        if (state->getStopSimOnWfi())
-        {
-            AtlasState::SimState* sim_state = state->getSimState();
-            sim_state->sim_stopped = true;
-            return state->getStopSimActionGroup();
-        }
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::ecall_64_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
@@ -538,276 +785,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sfence_vma_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_extension('S');
-        // require_impl(IMPL_MMU);
-        // if (STATE.v) {
-        //   if (STATE.prv == PRV_U || get_field(STATE.hstatus->read(), HSTATUS_VTVM))
-        //     require_novirt();
-        // } else {
-        //   require_privilege(get_field(STATE.mstatus->read(), MSTATUS_TVM) ? PRV_M :
-        //   PRV_S);
-        // }
-        // MMU.flush_tlb();
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::addw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + rs2_val));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::mv_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        insn->getRd()->dmiWrite(rs1_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::jalr_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        // CHECK_RD();
-        uint64_t rd_val = state->getPc() + insn->getOpcodeSize();
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        constexpr uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        const uint64_t jump_target = (rs1_val + imm) & ~int64_t(1);
-        state->setNextPc(jump_target);
-        insn->getRd()->dmiWrite(rd_val);
-
-        // if (ZICFILP_xLPE(STATE.v, STATE.prv)) {
-        //     STATE.elp = ZICFILP_IS_LP_EXPECTED(insn.rs1());
-        //     serialize();
-        // }
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::srl_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::lui_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 32>();
-        insn->getRd()->dmiWrite(imm);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::auipc_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint32_t IMM_SIZE = 32;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        const uint64_t pc = state->getPc();
-        const uint64_t rd_val =
-            ((int64_t)(imm + pc) << (64 - (state->getXlen()))) >> (64 - (state->getXlen()));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::srliw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::nop_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sll_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t rd_val = rs1_val << (rs2_val & (state->getXlen() - 1));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::srai_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        // require(SHAMT < state->getXlen());
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const int64_t rd_val = (int64_t)(rs1_val >> shift_amount);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sraw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::li_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        insn->getRd()->dmiWrite(imm);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::jal_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        // CHECK_RD();
-        int64_t rd_val = state->getPc() + insn->getOpcodeSize();
-        const uint64_t jump_target = state->getPc() + insn->getImmediate();
-        state->setNextPc(jump_target);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::srli_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        // require(SHAMT < state->getXlen());
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const int64_t rd_val = (int64_t)(rs1_val >> shift_amount);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sllw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint32_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        // Casting from int32_t to int64_t will sign extend the value
-        const int64_t rd_val = (int64_t)(int32_t)(rs1_val << (rs2_val & 0x1F));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::slliw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & 0x1F;
-        // Casting from int32_t to int64_t will sign extend the value
-        const int64_t rd_val = (int64_t)(int32_t)(rs1_val << shift_amount);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sraiw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sra_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::fence_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::slli_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        // require(SHAMT < state->getXlen());
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const uint64_t rd_val = rs1_val << shift_amount;
-        insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::ebreak_64_handler(atlas::AtlasState* state)
     {
         state->getCurrentInst()->markUnimplemented();
@@ -832,30 +809,63 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::addiw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::fence_64_handler(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        state->getCurrentInst()->markUnimplemented();
+        (void)state;
+        return nullptr;
+    }
 
-        const uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + imm));
-        insn->getRd()->dmiWrite(rd_val);
+    ActionGroup* RviInsts::sfence_vma_64_handler(atlas::AtlasState* state)
+    {
+        state->getCurrentInst()->markUnimplemented();
+        (void)state;
+        ///////////////////////////////////////////////////////////////////////
+        // START OF SPIKE CODE
+
+        // require_extension('S');
+        // require_impl(IMPL_MMU);
+        // if (STATE.v) {
+        //   if (STATE.prv == PRV_U || get_field(STATE.hstatus->read(), HSTATUS_VTVM))
+        //     require_novirt();
+        // } else {
+        //   require_privilege(get_field(STATE.mstatus->read(), MSTATUS_TVM) ? PRV_M :
+        //   PRV_S);
+        // }
+        // MMU.flush_tlb();
+
+        // END OF SPIKE CODE
+        ///////////////////////////////////////////////////////////////////////
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srlw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::wfi_64_handler(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        ///////////////////////////////////////////////////////////////////////
+        // START OF SPIKE CODE
 
-        const uint32_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        // Casting from int32_t to int64_t will sign extend the value
-        const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
-        insn->getRd()->dmiWrite(rd_val);
+        // if (get_field(STATE.mstatus->read(), MSTATUS_TW)) {
+        //   require_privilege(PRV_M);
+        // } else if (STATE.v) {
+        //   if (STATE.prv == PRV_U || get_field(STATE.hstatus->read(), HSTATUS_VTW))
+        //     require_novirt();
+        // } else if (p->extension_enabled('S')) {
+        //   // When S-mode is implemented, then executing WFI in
+        //   // U-mode causes an illegal instruction exception.
+        //   require_privilege(PRV_S);
+        // }
+        // wfi();
 
+        // END OF SPIKE CODE
+        ///////////////////////////////////////////////////////////////////////
+
+        if (state->getStopSimOnWfi())
+        {
+            AtlasState::SimState* sim_state = state->getSimState();
+            sim_state->sim_stopped = true;
+            return state->getStopSimActionGroup();
+        }
         return nullptr;
     }
 
