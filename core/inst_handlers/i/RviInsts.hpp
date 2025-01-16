@@ -40,6 +40,10 @@ namespace atlas
         template <typename XLEN, typename SIZE, bool SIGN_EXTEND = false>
         ActionGroup* load_handler(atlas::AtlasState* state);
 
+	// sb,sh,sw,sd
+        template <typename XLEN, typename SIZE>
+        ActionGroup* store_handler(atlas::AtlasState* state);
+
         ActionGroup* addiw_64_handler(atlas::AtlasState* state);
         ActionGroup* addw_64_handler(atlas::AtlasState* state);
         ActionGroup* auipc_64_handler(atlas::AtlasState* state);
@@ -58,10 +62,7 @@ namespace atlas
         ActionGroup* lui_64_handler(atlas::AtlasState* state);
         ActionGroup* mv_64_handler(atlas::AtlasState* state);
         ActionGroup* nop_64_handler(atlas::AtlasState* state);
-        ActionGroup* sb_64_handler(atlas::AtlasState* state);
-        ActionGroup* sd_64_handler(atlas::AtlasState* state);
         ActionGroup* sfence_vma_64_handler(atlas::AtlasState* state);
-        ActionGroup* sh_64_handler(atlas::AtlasState* state);
         ActionGroup* sll_64_handler(atlas::AtlasState* state);
         ActionGroup* slli_64_handler(atlas::AtlasState* state);
         ActionGroup* slliw_64_handler(atlas::AtlasState* state);
@@ -75,7 +76,6 @@ namespace atlas
         ActionGroup* srliw_64_handler(atlas::AtlasState* state);
         ActionGroup* srlw_64_handler(atlas::AtlasState* state);
         ActionGroup* subw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sw_64_handler(atlas::AtlasState* state);
         ActionGroup* wfi_64_handler(atlas::AtlasState* state);
     };
 } // namespace atlas

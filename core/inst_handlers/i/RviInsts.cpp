@@ -192,17 +192,17 @@ namespace atlas
                            &RviInsts::integer_reg_imm_handler<RV64, std::bit_or<RV64>>, RviInsts>(
                            nullptr, "ori", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sb",
-                                  atlas::Action::createAction<&RviInsts::sb_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint8_t>, RviInsts>(
                                       nullptr, "sb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sd",
-                                  atlas::Action::createAction<&RviInsts::sd_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
                                       nullptr, "sd", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sfence.vma",
                 atlas::Action::createAction<&RviInsts::sfence_vma_64_handler, RviInsts>(
                     nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sh",
-                                  atlas::Action::createAction<&RviInsts::sh_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint16_t>, RviInsts>(
                                       nullptr, "sh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sll",
                                   atlas::Action::createAction<&RviInsts::sll_64_handler, RviInsts>(
@@ -268,7 +268,7 @@ namespace atlas
                                   atlas::Action::createAction<&RviInsts::subw_64_handler, RviInsts>(
                                       nullptr, "subw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sw",
-                                  atlas::Action::createAction<&RviInsts::sw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint32_t>, RviInsts>(
                                       nullptr, "sw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
                                   atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
@@ -348,6 +348,16 @@ namespace atlas
         return nullptr;
     }
 
+    template<typename XLEN, typename SIZE>
+    ActionGroup* RviInsts::store_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const uint64_t rs2_val = insn->getRs2()->dmiRead<XLEN>();
+        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
+        state->writeMemory<SIZE>(paddr, rs2_val);
+        return nullptr;
+    }
+
     ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -358,15 +368,6 @@ namespace atlas
         const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val - rs2_val));
         insn->getRd()->dmiWrite(rd_val);
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sh_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
-        state->writeMemory<uint16_t>(paddr, rs2_val);
         return nullptr;
     }
 
@@ -437,15 +438,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sb_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
-        state->writeMemory<uint8_t>(paddr, rs2_val);
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::wfi_64_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
@@ -472,15 +464,6 @@ namespace atlas
             sim_state->sim_stopped = true;
             return state->getStopSimActionGroup();
         }
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sw_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
-        state->writeMemory<uint32_t>(paddr, rs2_val);
         return nullptr;
     }
 
@@ -609,15 +592,6 @@ namespace atlas
         //     serialize();
         // }
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::sd_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
-        state->writeMemory<uint64_t>(paddr, rs2_val);
         return nullptr;
     }
 
