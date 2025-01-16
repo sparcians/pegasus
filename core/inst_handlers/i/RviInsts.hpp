@@ -24,10 +24,6 @@ namespace atlas
         template <typename XLEN, PrivMode PRIV_MODE>
         ActionGroup* xret_handler(atlas::AtlasState* state);
 
-        // compute address for loads and stores
-        template <typename XLEN, typename SIZE>
-        ActionGroup* compute_address_handler(atlas::AtlasState* state);
-
         // add,slt,sltu,and,or,xor,sub
         template <typename XLEN, typename OPERATOR>
         ActionGroup* integer_reg_reg_handler(atlas::AtlasState* state);
@@ -35,6 +31,14 @@ namespace atlas
         // addi,slti,sltui,andi,ori,xori
         template <typename XLEN, typename OPERATOR>
         ActionGroup* integer_reg_imm_handler(atlas::AtlasState* state);
+
+        // compute address for loads and stores
+        template <typename XLEN, typename SIZE>
+        ActionGroup* compute_address_handler(atlas::AtlasState* state);
+
+        // lb,lbu,lh,lw,ld
+        template <typename XLEN, typename SIZE, bool SIGN_EXTEND = false>
+        ActionGroup* load_handler(atlas::AtlasState* state);
 
         ActionGroup* addiw_64_handler(atlas::AtlasState* state);
         ActionGroup* addw_64_handler(atlas::AtlasState* state);
@@ -50,15 +54,8 @@ namespace atlas
         ActionGroup* fence_64_handler(atlas::AtlasState* state);
         ActionGroup* jal_64_handler(atlas::AtlasState* state);
         ActionGroup* jalr_64_handler(atlas::AtlasState* state);
-        ActionGroup* lb_64_handler(atlas::AtlasState* state);
-        ActionGroup* lbu_64_handler(atlas::AtlasState* state);
-        ActionGroup* ld_64_handler(atlas::AtlasState* state);
-        ActionGroup* lh_64_handler(atlas::AtlasState* state);
-        ActionGroup* lhu_64_handler(atlas::AtlasState* state);
         ActionGroup* li_64_handler(atlas::AtlasState* state);
         ActionGroup* lui_64_handler(atlas::AtlasState* state);
-        ActionGroup* lw_64_handler(atlas::AtlasState* state);
-        ActionGroup* lwu_64_handler(atlas::AtlasState* state);
         ActionGroup* mv_64_handler(atlas::AtlasState* state);
         ActionGroup* nop_64_handler(atlas::AtlasState* state);
         ActionGroup* sb_64_handler(atlas::AtlasState* state);
