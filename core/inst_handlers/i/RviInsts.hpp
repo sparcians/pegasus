@@ -40,19 +40,17 @@ namespace atlas
         template <typename XLEN, typename SIZE, bool SIGN_EXTEND = false>
         ActionGroup* load_handler(atlas::AtlasState* state);
 
-	// sb,sh,sw,sd
+        // sb,sh,sw,sd
         template <typename XLEN, typename SIZE>
         ActionGroup* store_handler(atlas::AtlasState* state);
+
+        // beq,bge,bgeu,blt,bltu,bne
+        template <typename XLEN, typename OPERATOR>
+        ActionGroup* branch_handler(atlas::AtlasState* state);
 
         ActionGroup* addiw_64_handler(atlas::AtlasState* state);
         ActionGroup* addw_64_handler(atlas::AtlasState* state);
         ActionGroup* auipc_64_handler(atlas::AtlasState* state);
-        ActionGroup* beq_64_handler(atlas::AtlasState* state);
-        ActionGroup* bge_64_handler(atlas::AtlasState* state);
-        ActionGroup* bgeu_64_handler(atlas::AtlasState* state);
-        ActionGroup* blt_64_handler(atlas::AtlasState* state);
-        ActionGroup* bltu_64_handler(atlas::AtlasState* state);
-        ActionGroup* bne_64_handler(atlas::AtlasState* state);
         ActionGroup* ebreak_64_handler(atlas::AtlasState* state);
         ActionGroup* ecall_64_handler(atlas::AtlasState* state);
         ActionGroup* fence_64_handler(atlas::AtlasState* state);

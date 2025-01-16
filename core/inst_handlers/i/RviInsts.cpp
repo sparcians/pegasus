@@ -106,24 +106,31 @@ namespace atlas
             inst_handlers.emplace(
                 "auipc", atlas::Action::createAction<&RviInsts::auipc_64_handler, RviInsts>(
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("beq",
-                                  atlas::Action::createAction<&RviInsts::beq_64_handler, RviInsts>(
-                                      nullptr, "beq", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("bge",
-                                  atlas::Action::createAction<&RviInsts::bge_64_handler, RviInsts>(
-                                      nullptr, "bge", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("bgeu",
-                                  atlas::Action::createAction<&RviInsts::bgeu_64_handler, RviInsts>(
-                                      nullptr, "bgeu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("blt",
-                                  atlas::Action::createAction<&RviInsts::blt_64_handler, RviInsts>(
-                                      nullptr, "blt", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("bltu",
-                                  atlas::Action::createAction<&RviInsts::bltu_64_handler, RviInsts>(
-                                      nullptr, "bltu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("bne",
-                                  atlas::Action::createAction<&RviInsts::bne_64_handler, RviInsts>(
-                                      nullptr, "bne", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "beq",
+                atlas::Action::createAction<&RviInsts::branch_handler<RV64, std::equal_to<int64_t>>,
+                                            RviInsts>(nullptr, "beq", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "bge", atlas::Action::createAction<
+                           &RviInsts::branch_handler<RV64, std::greater_equal<int64_t>>, RviInsts>(
+                           nullptr, "bge", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "bgeu",
+                atlas::Action::createAction<
+                    &RviInsts::branch_handler<RV64, std::greater_equal<uint64_t>>, RviInsts>(
+                    nullptr, "bgeu", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "blt",
+                atlas::Action::createAction<&RviInsts::branch_handler<RV64, std::less<int64_t>>,
+                                            RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "bltu",
+                atlas::Action::createAction<&RviInsts::branch_handler<RV64, std::less<uint64_t>>,
+                                            RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "bne", atlas::Action::createAction<
+                           &RviInsts::branch_handler<RV64, std::not_equal_to<uint64_t>>, RviInsts>(
+                           nullptr, "bne", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "ebreak", atlas::Action::createAction<&RviInsts::ebreak_64_handler, RviInsts>(
                               nullptr, "ebreak", ActionTags::EXECUTE_TAG));
@@ -191,19 +198,22 @@ namespace atlas
                 "ori", atlas::Action::createAction<
                            &RviInsts::integer_reg_imm_handler<RV64, std::bit_or<RV64>>, RviInsts>(
                            nullptr, "ori", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sb",
-                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint8_t>, RviInsts>(
-                                      nullptr, "sb", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sd",
-                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
-                                      nullptr, "sd", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sb",
+                atlas::Action::createAction<&RviInsts::store_handler<RV64, uint8_t>, RviInsts>(
+                    nullptr, "sb", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sd",
+                atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
+                    nullptr, "sd", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sfence.vma",
                 atlas::Action::createAction<&RviInsts::sfence_vma_64_handler, RviInsts>(
                     nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sh",
-                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint16_t>, RviInsts>(
-                                      nullptr, "sh", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sh",
+                atlas::Action::createAction<&RviInsts::store_handler<RV64, uint16_t>, RviInsts>(
+                    nullptr, "sh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sll",
                                   atlas::Action::createAction<&RviInsts::sll_64_handler, RviInsts>(
                                       nullptr, "sll", ActionTags::EXECUTE_TAG));
@@ -267,9 +277,10 @@ namespace atlas
             inst_handlers.emplace("subw",
                                   atlas::Action::createAction<&RviInsts::subw_64_handler, RviInsts>(
                                       nullptr, "subw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sw",
-                                  atlas::Action::createAction<&RviInsts::store_handler<RV64, uint32_t>, RviInsts>(
-                                      nullptr, "sw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sw",
+                atlas::Action::createAction<&RviInsts::store_handler<RV64, uint32_t>, RviInsts>(
+                    nullptr, "sw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
                                   atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
                                       nullptr, "wfi", ActionTags::EXECUTE_TAG));
@@ -348,13 +359,32 @@ namespace atlas
         return nullptr;
     }
 
-    template<typename XLEN, typename SIZE>
+    template <typename XLEN, typename SIZE>
     ActionGroup* RviInsts::store_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const uint64_t rs2_val = insn->getRs2()->dmiRead<XLEN>();
         const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
         state->writeMemory<SIZE>(paddr, rs2_val);
+        return nullptr;
+    }
+
+    template <typename XLEN, typename OPERATOR>
+    ActionGroup* RviInsts::branch_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+        const XLEN rs1_val = insn->getRs1()->dmiRead<XLEN>();
+        const XLEN rs2_val = insn->getRs2()->dmiRead<XLEN>();
+
+        if (OPERATOR()(rs1_val, rs2_val))
+        {
+            const uint64_t pc = state->getPc();
+            constexpr uint32_t IMM_SIZE = 13;
+            const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+            const uint64_t branch_target = pc + imm;
+            state->setNextPc(branch_target);
+        }
+
         return nullptr;
     }
 
@@ -545,25 +575,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::bltu_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val < rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
-
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::mv_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -607,25 +618,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::bne_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const int64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val != rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
-
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::lui_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -646,25 +638,6 @@ namespace atlas
         const uint64_t rd_val =
             ((int64_t)(imm + pc) << (64 - (state->getXlen()))) >> (64 - (state->getXlen()));
         insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::blt_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const int64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val < rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
 
         return nullptr;
     }
@@ -738,44 +711,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::bge_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const int64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val >= rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::bgeu_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val >= rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
-
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::jal_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -837,25 +772,6 @@ namespace atlas
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
         insn->getRd()->dmiWrite(rd_val);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::beq_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const int64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        const int64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-
-        if (rs1_val == rs2_val)
-        {
-            const uint64_t pc = state->getPc();
-            const uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
-            state->setNextPc(branch_target);
-        }
 
         return nullptr;
     }
