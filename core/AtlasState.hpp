@@ -41,6 +41,7 @@ namespace atlas
     class Execute;
     class Translate;
     class Exception;
+    class SimController;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -130,6 +131,8 @@ namespace atlas
 
         void setAtlasSystem(AtlasSystem* atlas_system) { atlas_system_ = atlas_system; }
 
+        void enableInteractiveMode() { interactive_mode_ = true; }
+
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
         Execute* getExecuteUnit() const { return execute_unit_; }
@@ -184,6 +187,10 @@ namespace atlas
 
         // Take register snapshot and send to the database (Atlas IDE backend support)
         void snapshotAndSyncWithCoSim();
+
+        // For standalone Atlas simulations, this method will be called
+        // at the top of AtlasSim::run()
+        void postInit();
 
       private:
         void onBindTreeEarly_() override;
@@ -271,6 +278,9 @@ namespace atlas
         //! AtlasSystem for accessing memory
         AtlasSystem* atlas_system_;
 
+        //! Interactive mode
+        bool interactive_mode_ = false;
+
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
 
@@ -306,5 +316,6 @@ namespace atlas
         std::shared_ptr<simdb::ObjectManager> cosim_db_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::unordered_map<std::string, int> reg_ids_by_name_;
+        SimController* sim_controller_ = nullptr;
     };
 } // namespace atlas

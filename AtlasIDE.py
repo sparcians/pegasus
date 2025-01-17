@@ -1,4 +1,4 @@
-import os, sys, wx, sqlite3, re, copy, json
+import os, sys, wx, sqlite3, re, copy, json, socket
 import wx.grid
 import wx.py.shell
 from enum import IntEnum
@@ -27,6 +27,246 @@ cause_strs = [
     'VIRTUAL_INSTRUCTION',
     'STORE_GUEST_PAGE_FAULT'
 ]
+
+# This class handles socket communication between the IDE and the running
+# Atlas simulation instance.
+class SimSocket:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def connect(self):
+        self.sock.connect((self.host, self.port))
+
+    def send(self, message):
+        self.sock.sendall(message.encode())
+
+    def receive(self):
+        return self.sock.recv(1024).decode()
+
+    def close(self):
+        self.sock.close()
+
+# Various states the simulation can be in.
+class SimStatus(IntEnum):
+    # Just created the simulator
+    NOT_STARTED = 0
+
+    # postInit() just called
+    POST_INIT = 1
+
+    # Sitting idle in preExecute()
+    PRE_EXECUTE = 2
+
+    # Sitting idle in preException()
+    PRE_EXCEPTION = 3
+
+    # Sitting idle in postExecute()
+    POST_EXECUTE = 4
+
+    # Sitting idle after the sim loop (fail: invalid PC)
+    FINISHED_INVALID_PC = 5
+
+    # Sitting idle after the sim loop (fail: invalid register value)
+    FINISHED_INVALID_REG_VAL = 6
+
+    # Sitting idle after the sim loop (success)
+    FINISHED_SUCCESS = 7
+
+def ConvertSimStatusStringToEnum(s):
+    if s == 'NOT_STARTED':
+        return SimStatus.NOT_STARTED
+    elif s == 'POST_INIT':
+        return SimStatus.POST_INIT
+    elif s == 'PRE_EXECUTE':
+        return SimStatus.PRE_EXECUTE
+    elif s == 'PRE_EXCEPTION':
+        return SimStatus.PRE_EXCEPTION
+    elif s == 'POST_EXECUTE':
+        return SimStatus.POST_EXECUTE
+    elif s == 'FINISHED_INVALID_PC':
+        return SimStatus.FINISHED_INVALID_PC
+    elif s == 'FINISHED_INVALID_REG_VAL':
+        return SimStatus.FINISHED_INVALID_REG_VAL
+    elif s == 'FINISHED_SUCCESS':
+        return SimStatus.FINISHED_SUCCESS
+
+class MaskedRegister:
+    def __init__(self, reg_name):
+        self.reg_name = reg_name
+        self._mask = None
+
+    @property
+    def mask(self):
+        if self._mask is None:
+            group_num = GROUP_NUMS_BY_REG_NAME[self.reg_name]
+            reg_idx = REG_IDS_BY_REG_NAME[self.reg_name]
+            if group_num == 0:
+                self._mask = 0xFFFFFFFFFFFFFFFF if reg_idx > 0 else 0x0
+            elif group_num in (1,2):
+                self._mask = 0xFFFFFFFFFFFFFFFF
+            else:
+                atlas_root = os.path.dirname(__file__)
+                with open(os.path.join(atlas_root, 'arch', 'rv64', 'reg_csr.json'), 'r') as fin:
+                    all_json = json.load(fin)
+                    for reg_json in all_json:
+                        if reg_json['name'] == self.reg_name:
+                            fields = reg_json['fields']
+                            bit_mask = 0
+                            for _, field_defn in fields.items():
+                                if not field_defn['readonly']:
+                                    low_bit = field_defn['low_bit']
+                                    high_bit = field_defn['high_bit']
+
+                                    # Set the bits from (low_bit, high_bit) in bit_mask to 1 (inclusive)
+                                    for i in range(low_bit, high_bit + 1):
+                                        bit_mask |= (1 << i)
+
+                            self._mask = bit_mask
+                            break
+
+        return PythonPrettyInteger('mask', self._mask)
+
+# This class wraps the sparta::Register, specifically the group num / reg id / name
+# and its value.
+#
+# TODO cnyce: refactor all the utility classes like PythonSourceRegister, 
+# PythonImmediate, etc. as there is duplicate functionality.
+class SpartaRegister(MaskedRegister):
+    def __init__(self, sim_endpoint, **kwargs):
+        MaskedRegister.__init__(self, kwargs['name'])
+        self.sim_endpoint = sim_endpoint
+        self.name = kwargs['name']
+        self.group_num = kwargs['group_num']
+        self.reg_id = kwargs['reg_id']
+
+    # Note that the python code here is lower camel case since that
+    # is the convention for C++ and we want auto-complete to reflect
+    # what the C++ code should be, not what the experimental python
+    # code is.
+    def getGroupNum(self):
+        return self.group_num
+
+    def getID(self):
+        return self.reg_id
+
+    def getName(self):
+        return self.name
+
+    def read(self):
+        # yyy
+        pass
+
+# TODO cnyce: refactor all the utility classes like PythonSourceRegister, 
+# PythonImmediate, etc. as there is duplicate functionality.
+class SpartaSourceRegister(SpartaRegister):
+    def __init__(self, **kwargs):
+        SpartaRegister.__init__(self, **kwargs)
+
+# This class unpacks all the rs1, rs2, imm, etc. values from the JSON string
+# returned by the "inst" command to ask for details about the current inst.
+class CurrentInst:
+    def __init__(self, **kwargs):
+        self.rs1 = SpartaRegister(**kwargs['rs1']) if 'rs1' in kwargs else None
+        self.rs2 = SpartaRegister(**kwargs['rs1']) if 'rs2' in kwargs else None
+        self.rs3 = SpartaRegister(**kwargs['rs1']) if 'rs3' in kwargs else None
+        self.imm = Immediate(**kwargs['rs1']) if 'imm' in kwargs else None
+        self.pc  = kwargs['pc']
+        self.mnemonic = kwargs['mnemonic']
+        self.opcode = kwargs['opcode']
+        self.priv = kwargs['priv']
+
+# This class wraps all breakpoint setting/deleting.
+class BreakpointManager:
+    def __init__(self, sim_socket):
+        self.sim_socket = sim_socket
+
+    def GetBreakpoints(self):
+        cmd = 'break info'
+        self.sim_socket.send(cmd)
+        return self.sim_socket.receive()
+
+    def DeleteBreakpoints(self, n=-1):
+        cmd = 'break delete' + (' ' + str(n) if n != -1 else '')
+        self.sim_socket.send(cmd)
+
+    def BreakPC(self, pc, condition='=='):
+        cmd = 'break pc ' + condition + ' ' + str(pc)
+        self.sim_socket.send(cmd)
+
+    def BreakInstruction(self, mnemonic):
+        cmd = 'break ' + mnemonic
+        self.sim_socket.send(cmd)
+
+    def BreakException(self):
+        cmd = 'break exception'
+        self.sim_socket.send(cmd)
+
+# This class wraps the SimSocket and provides commonly accessed data.
+class SimEndpoint:
+    def __init__(self, host='localhost', port=65432):
+        self.sim_socket = SimSocket(host, port)
+        self.breakpoint_mgr = BreakpointManager(self.sim_socket)
+
+    def GetSimStatus(self):
+        self.sim_socket.send('status')
+        status = self.sim_socket.receive()
+        return ConvertSimStatusStringToEnum(status)
+
+    def GetCurrentInst(self):
+        self.sim_socket.send('inst')
+        inst_json = self.sim_socket.receive()
+        return CurrentInst(**inst_json)
+
+    def DumpRegisterValues(self, json_filename, group_num, reg_id=-1):
+        if os.path.isfile(json_filename):
+            os.remove(json_filename)
+        cmd = 'dump ' + str(group_num) + (' ' + str(reg_id) + ' ' if reg_id != -1 else ' ') + json_filename
+        self.sim_socket.send(cmd)
+        return os.path.isfile(json_filename)
+
+    def EditInstImpl(self, mnemonic, edit=True):
+        cmd = 'edit ' + mnemonic + ' true' if edit else ' false'
+        self.sim_socket.send(cmd)
+
+    def ReadRegValue(self, name, group_num, reg_id):
+        cmd = 'read {} {}'.format(group_num, reg_id)
+        self.sim_socket.send(cmd)
+        return PythonPrettyInteger(name, int(self.sim_socket.receive(), 16))
+
+    def GetRegMask(self, name):
+        reg = MaskedRegister(name)
+        return reg.mask
+
+    def WriteRegValue(self, group_num, reg_id, value, dmi=False):
+        cmd = 'dmiwrite ' if dmi else 'write '
+        cmd += '{} {} {}'.format(group_num, reg_id, value)
+        self.sim_socket.send(cmd)
+
+    def GetBreakpoints(self):
+        return self.breakpoint_mgr.GetBreakpointInfo()
+
+    def DeleteBreakpoints(self, n=-1):
+        self.breakpoint_mgr.DeleteBreakpoints(n)
+
+    def BreakPC(self, pc):
+        self.breakpoint_mgr.BreakPC(pc)
+
+    def BreakInstruction(self, mnemonic):
+        self.breakpoint_mgr.BreakInstruction(mnemonic)
+
+    def BreakException(self):
+        self.breakpoint_mgr.BreakException()
+
+    def ContinueSim(self):
+        self.sim_socket.send('cont')
+
+    def FinishSim(self):
+        self.sim_socket.send('finish')
+
+    def ExitSim(self):
+        self.sim_socket.send('exit')
 
 class InstReplayer:
     def CreateRegsReplayer(self, wdb, test_id, pc):
@@ -125,12 +365,12 @@ class AtlasIDE(wx.Frame):
         wx.Frame.__init__(self, None, -1, "Atlas IDE", size=wx.DisplaySize())
         self.wdb = WorkloadsDB(wdb_file)
 
-        # Create a notebook with two tabs: "Test Debugger" and "Test Results"
+        # Create a notebook with two tabs: "Test Debugger" and "Test Cases"
         self.notebook = wx.Notebook(self, -1, style=wx.NB_TOP)
         self.test_debugger = TestDebugger(self.notebook, self.wdb)
         self.test_results = TestResults(self.notebook, self.wdb)
         self.notebook.AddPage(self.test_debugger, "Test Debugger")
-        self.notebook.AddPage(self.test_results, "Test Results")
+        self.notebook.AddPage(self.test_results, "Test Cases")
 
 class AtlasPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -291,7 +531,7 @@ class TestResults(AtlasPanel):
         AtlasPanel.__init__(self, parent, -1)
         self.wdb = wdb
 
-        self.help = wx.StaticText(self, -1, "Test Results")
+        self.help = wx.StaticText(self, -1, "Test Cases")
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.help, 0, wx.EXPAND)
         self.SetSizer(self.sizer)
@@ -883,7 +1123,7 @@ class AtlasCppCodePanel(AtlasPanel):
             return f'// "{mnemonic}" is unimplemented in Atlas.'
 
         atlas_root = os.path.dirname(__file__)
-        inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers', 'rv64')
+        inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers')
         lookfor = f"ActionGroup* {mnemonic}_64_handler(atlas::AtlasState* state);"
 
         # find the .hpp file under isnt_handler_root that has this <lookfor> string
@@ -1096,42 +1336,6 @@ class PythonSourceRegister:
     @property
     def hex(self):
         return f'0x{self.reg_val:016X}'
-
-class MaskedRegister:
-    def __init__(self, reg_name):
-        self.reg_name = reg_name
-        self._mask = None
-
-    @property
-    def mask(self):
-        if self._mask is None:
-            group_num = GROUP_NUMS_BY_REG_NAME[self.reg_name]
-            reg_idx = REG_IDS_BY_REG_NAME[self.reg_name]
-            if group_num == 0:
-                self._mask = 0xFFFFFFFFFFFFFFFF if reg_idx > 0 else 0x0
-            elif group_num in (1,2):
-                self._mask = 0xFFFFFFFFFFFFFFFF
-            else:
-                atlas_root = os.path.dirname(__file__)
-                with open(os.path.join(atlas_root, 'arch', 'rv64', 'reg_csr.json'), 'r') as fin:
-                    all_json = json.load(fin)
-                    for reg_json in all_json:
-                        if reg_json['name'] == self.reg_name:
-                            fields = reg_json['fields']
-                            bit_mask = 0
-                            for _, field_defn in fields.items():
-                                if not field_defn['readonly']:
-                                    low_bit = field_defn['low_bit']
-                                    high_bit = field_defn['high_bit']
-
-                                    # Set the bits from (low_bit, high_bit) in bit_mask to 1 (inclusive)
-                                    for i in range(low_bit, high_bit + 1):
-                                        bit_mask |= (1 << i)
-
-                            self._mask = bit_mask
-                            break
-
-        return PythonPrettyInteger('mask', self._mask)
 
 class PythonDestRegister(MaskedRegister):
     def __init__(self, reg_name, rd_val_before, rd_val_after, truth_rd_val_after):

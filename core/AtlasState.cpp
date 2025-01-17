@@ -9,6 +9,7 @@
 #include "arch/register_macros.hpp"
 #include "system/AtlasSystem.hpp"
 #include "core/Snapshotters.hpp"
+#include "core/observers/SimController.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
@@ -558,4 +559,16 @@ namespace atlas
         (void)xlen_val;
         return 42949672960;
     }
+
+    void AtlasState::postInit()
+    {
+        if (interactive_mode_)
+        {
+            auto observer = std::make_unique<SimController>();
+            sim_controller_ = observer.get();
+            addObserver(std::move(observer));
+            sim_controller_->postInit(this);
+        }
+    }
+
 } // namespace atlas

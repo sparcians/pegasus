@@ -36,6 +36,8 @@ int main(int argc, char** argv)
             "inst-limit,i",
             sparta::app::named_value<uint64_t>("LIMIT", &ilimit)->default_value(ilimit),
             "Stop simulation after the instruction limit has been reached")(
+            "interactive",
+            "Enable interactive mode")(
             WORKLOAD, sparta::app::named_value<std::string>(WORKLOAD, &workload),
             "Worklad to run (ELF or JSON)");
 
@@ -50,9 +52,12 @@ int main(int argc, char** argv)
             return err_code; // Any errors already printed to cerr
         }
 
+        const auto& vm = cls.getVariablesMap();
+        const bool interactive = vm.count("interactive") > 0;
+
         // Create the simulator
         sparta::Scheduler scheduler;
-        atlas::AtlasSim sim(&scheduler, workload, ilimit);
+        atlas::AtlasSim sim(&scheduler, workload, ilimit, interactive);
 
         cls.populateSimulation(&sim);
 
