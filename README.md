@@ -1,7 +1,7 @@
 # Atlas
 RISC-V Functional Model
 
-## Build
+## Build and Regress
 
 Download and build the [Sparta](https://github.com/sparcians/map) framework. Follow the directions on the [Sparta README](https://github.com/sparcians/map#readme) to build _and install_ Sparta.
 
@@ -11,11 +11,16 @@ mkdir release
 cd release
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
+make regress
 ```
 
-## Regress
+Alternatively, you can build Atlas without Conda by providing a path to your Sparta repo and Atlas will build the Sparta library for you. Since Sparta already has a make target named `regress`, the Atlas regression make target is renamed to `atlas_regress`.
 ```
-make regress
+mkdir release
+cd release
+cmake .. -CMAKE_BUILD_TYPE=Release -DSPARTA_SEARCH_DIR=<full path to map/sparta>
+make
+make atlas_regress
 ```
 
 ## Validate

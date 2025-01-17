@@ -1,4 +1,6 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
+#include "arch/register_macros.hpp"
 #include "include/AtlasUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
@@ -111,21 +113,6 @@ namespace atlas
                                   atlas::Action::createAction<&RviInsts::bne_64_handler, RviInsts>(
                                       nullptr, "bne", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "cdiscard.d.l1",
-                atlas::Action::createAction<&RviInsts::cdiscard_d_l1_64_handler, RviInsts>(
-                    nullptr, "cdiscard_d_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "cflush.d.l1",
-                atlas::Action::createAction<&RviInsts::cflush_d_l1_64_handler, RviInsts>(
-                    nullptr, "cflush_d_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "cflush.i.l1",
-                atlas::Action::createAction<&RviInsts::cflush_i_l1_64_handler, RviInsts>(
-                    nullptr, "cflush_i_l1", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("dret",
-                                  atlas::Action::createAction<&RviInsts::dret_64_handler, RviInsts>(
-                                      nullptr, "dret", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
                 "ebreak", atlas::Action::createAction<&RviInsts::ebreak_64_handler, RviInsts>(
                               nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
@@ -167,9 +154,10 @@ namespace atlas
             inst_handlers.emplace("lwu",
                                   atlas::Action::createAction<&RviInsts::lwu_64_handler, RviInsts>(
                                       nullptr, "lwu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("mret",
-                                  atlas::Action::createAction<&RviInsts::mret_64_handler, RviInsts>(
-                                      nullptr, "mret", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "mret",
+                atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::MACHINE>,
+                                            RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("mv",
                                   atlas::Action::createAction<&RviInsts::mv_64_handler, RviInsts>(
                                       nullptr, "mv", ActionTags::EXECUTE_TAG));
@@ -231,9 +219,10 @@ namespace atlas
             inst_handlers.emplace("sraw",
                                   atlas::Action::createAction<&RviInsts::sraw_64_handler, RviInsts>(
                                       nullptr, "sraw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sret",
-                                  atlas::Action::createAction<&RviInsts::sret_64_handler, RviInsts>(
-                                      nullptr, "sret", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sret",
+                atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::SUPERVISOR>,
+                                            RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
                                   atlas::Action::createAction<&RviInsts::srl_64_handler, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
@@ -255,9 +244,6 @@ namespace atlas
             inst_handlers.emplace("sw",
                                   atlas::Action::createAction<&RviInsts::sw_64_handler, RviInsts>(
                                       nullptr, "sw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("uret",
-                                  atlas::Action::createAction<&RviInsts::uret_64_handler, RviInsts>(
-                                      nullptr, "uret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
                                   atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
                                       nullptr, "wfi", ActionTags::EXECUTE_TAG));
@@ -278,13 +264,6 @@ namespace atlas
     template void RviInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
     // template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
-
-    ActionGroup* RviInsts::cflush_i_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
 
     ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
     {
@@ -343,41 +322,69 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::mret_64_handler(atlas::AtlasState* state)
+    template <typename XLEN, PrivMode PRIV_MODE>
+    ActionGroup* RviInsts::xret_handler(atlas::AtlasState* state)
     {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        static_assert(PRIV_MODE == PrivMode::MACHINE || PRIV_MODE == PrivMode::SUPERVISOR);
 
-        // require_privilege(PRV_M);
-        // set_pc_and_serialize(p->get_state()->mepc->read());
-        // reg_t s = STATE.mstatus->read();
-        // reg_t prev_prv = get_field(s, MSTATUS_MPP);
-        // reg_t prev_virt = get_field(s, MSTATUS_MPV);
-        // if (prev_prv != PRV_M)
-        //   s = set_field(s, MSTATUS_MPRV, 0);
-        // s = set_field(s, MSTATUS_MIE, get_field(s, MSTATUS_MPIE));
-        // s = set_field(s, MSTATUS_MPIE, 1);
-        // s = set_field(s, MSTATUS_MPP, p->extension_enabled('U') ? PRV_U : PRV_M);
-        // s = set_field(s, MSTATUS_MPV, 0);
-        // if (ZICFILP_xLPE(prev_virt, prev_prv)) {
-        //   STATE.elp = static_cast<elp_t>(get_field(s, MSTATUS_MPELP));
-        // }
-        // s = set_field(s, MSTATUS_MPELP, elp_t::NO_LP_EXPECTED);
-        // s = set_field(s, MSTATUS_MDT, 0);
-        // if (prev_prv == PRV_U || prev_virt)
-        //   s = set_field(s, MSTATUS_SDT, 0);
-        // if (prev_virt && prev_prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // STATE.mstatus->write(s);
-        // if (STATE.mstatush) STATE.mstatush->write(s >> 32); // log mstatush change
-        // STATE.tcontrol->write((STATE.tcontrol->read() & CSR_TCONTROL_MPTE) ?
-        // (CSR_TCONTROL_MPTE | CSR_TCONTROL_MTE) : 0); p->set_privilege(prev_prv,
-        // prev_virt);
+        // mret can only be executed in Machine mode
+        // sret can be executee in Supervisor or Machine mode
+        if (state->getPrivMode() < PRIV_MODE)
+        {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+        // FIXME: Register macros are currently hardcoded for RV64
+        PrivMode prev_priv_mode = PrivMode::INVALID;
+        if constexpr (PRIV_MODE == PrivMode::MACHINE)
+        {
+            // Update the PC with MEPC value
+            state->setNextPc(READ_CSR_REG(MEPC));
+
+            // Get the previous privilege mode from the MPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD(MSTATUS, mpp);
+
+            // If the mret instruction changes the privilege mode to a mode less privileged
+            // than Machine mode, the MPRV bit is reset to 0
+            if (prev_priv_mode != PrivMode::MACHINE)
+            {
+                // TODO: Will need to update the load/store translation mode when translation is
+                // supported
+                WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+            }
+
+            // Set MIE = MPIE and reset MPIE
+            WRITE_CSR_FIELD(MSTATUS, mie, READ_CSR_FIELD(MSTATUS, mpie));
+            WRITE_CSR_FIELD(MSTATUS, mpie, (XLEN)1);
+
+            // Reset MPP
+            WRITE_CSR_FIELD(MSTATUS, mpp, (XLEN)PrivMode::MACHINE);
+        }
+        else
+        {
+            // Update the PC with SEPC value
+            state->setNextPc(READ_CSR_REG(SEPC));
+
+            // Get the previous privilege mode from the MPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD(SSTATUS, spp);
+
+            // Reset the MPRV bit
+            // TODO: Will need to update the load/store translation mode when translation is
+            // supported
+            WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+
+            // Set MIE = MPIE and reset MPIE
+            WRITE_CSR_FIELD(SSTATUS, sie, READ_CSR_FIELD(SSTATUS, spie));
+            WRITE_CSR_FIELD(SSTATUS, spie, (XLEN)1);
+
+            // Reset MPP
+            WRITE_CSR_FIELD(SSTATUS, spp, (XLEN)PrivMode::USER);
+        }
+
+        // TODO: Update MSTATUSH
+
+        // Update the privilege mode to the previous privilege mode
+        state->setNextPrivMode(prev_priv_mode);
 
         return nullptr;
     }
@@ -542,48 +549,6 @@ namespace atlas
         //   PRV_S);
         // }
         // MMU.flush_tlb();
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::dret_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require(STATE.debug_mode);
-        // set_pc_and_serialize(STATE.dpc->read());
-        // if (ZICFILP_xLPE(STATE.dcsr->v, STATE.dcsr->prv)) {
-        //   STATE.elp = STATE.dcsr->pelp;
-        // }
-        // p->set_privilege(STATE.dcsr->prv, STATE.dcsr->v);
-        // if (STATE.prv < PRV_M) {
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MPRV);
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MDT);
-        // }
-        //
-        // if (STATE.dcsr->prv == PRV_U || STATE.dcsr->v)
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //
-        // if (STATE.dcsr->v && STATE.dcsr->prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        //
-        // if (STATE.dcsr->prv == PRV_U || STATE.dcsr->v)
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //
-        // if (STATE.dcsr->v && STATE.dcsr->prv == PRV_U)
-        //   STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        //
-        ///* We're not in Debug Mode anymore. */
-        // STATE.debug_mode = false;
-        //
-        // if (STATE.dcsr->step)
-        //   STATE.single_step = STATE.STEP_STEPPING;
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
@@ -986,68 +951,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sret_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // require_extension('S');
-        // reg_t prev_hstatus = STATE.hstatus->read();
-        // if (STATE.v) {
-        //   if (STATE.prv == PRV_U || get_field(prev_hstatus, HSTATUS_VTSR))
-        //     require_novirt();
-        // } else {
-        //   require_privilege(get_field(STATE.mstatus->read(), MSTATUS_TSR) ? PRV_M :
-        //   PRV_S);
-        // }
-        // reg_t next_pc = p->get_state()->sepc->read();
-        // set_pc_and_serialize(next_pc);
-        // reg_t s = STATE.sstatus->read();
-        // reg_t prev_prv = get_field(s, MSTATUS_SPP);
-        // s = set_field(s, MSTATUS_SIE, get_field(s, MSTATUS_SPIE));
-        // s = set_field(s, MSTATUS_SPIE, 1);
-        // s = set_field(s, MSTATUS_SPP, PRV_U);
-        // bool prev_virt = STATE.v;
-        // if (!STATE.v) {
-        //   if (p->extension_enabled('H')) {
-        //     prev_virt = get_field(prev_hstatus, HSTATUS_SPV);
-        //     reg_t new_hstatus = set_field(prev_hstatus, HSTATUS_SPV, 0);
-        //     STATE.hstatus->write(new_hstatus);
-        //   }
-        //
-        //   STATE.mstatus->write(set_field(STATE.mstatus->read(), MSTATUS_MPRV, 0));
-        // }
-        // if (ZICFILP_xLPE(prev_virt, prev_prv)) {
-        //   STATE.elp = static_cast<elp_t>(get_field(s, SSTATUS_SPELP));
-        // }
-        //
-        // if (STATE.prv == PRV_M) {
-        //   STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_MDT);
-        //   if (prev_prv == PRV_U || prev_virt)
-        //     STATE.mstatus->write(STATE.mstatus->read() & ~MSTATUS_SDT);
-        //   if (prev_virt && prev_prv == PRV_U)
-        //     STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // }
-        //
-        // s = set_field(s, SSTATUS_SPELP, elp_t::NO_LP_EXPECTED);
-        //
-        // if (STATE.prv == PRV_S) {
-        //   s = set_field(s, SSTATUS_SDT, 0);
-        //   if (!STATE.v && prev_virt && prev_prv == PRV_U)
-        //     STATE.vsstatus->write(STATE.vsstatus->read() & ~SSTATUS_SDT);
-        // }
-        //
-        // STATE.sstatus->write(s);
-        // p->set_privilege(prev_prv, prev_virt);
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::bge_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -1163,13 +1066,6 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::cflush_d_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        return nullptr;
-    }
-
     ActionGroup* RviInsts::sraiw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -1180,13 +1076,6 @@ namespace atlas
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
         insn->getRd()->dmiWrite(rd_val);
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::uret_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         return nullptr;
     }
 
@@ -1219,13 +1108,6 @@ namespace atlas
         const uint64_t rd_val = rs1_val - rs2_val;
         insn->getRd()->dmiWrite(rd_val);
 
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::cdiscard_d_l1_64_handler(atlas::AtlasState* state)
-    {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         return nullptr;
     }
 
