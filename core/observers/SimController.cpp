@@ -292,59 +292,10 @@ private:
 class SimController::SimEndpoint
 {
 public:
-    SimEndpoint(const std::string& host = "localhost", int port = PORT)
-        : host_(host)
-        , port_(port)
-        , server_fd_(-1)
-        , new_socket_(-1)
-    {}
-
-    ~SimEndpoint()
-    {
-        closeEndpoint();
-    }
-
-    void openEndpoint()
-    {
-        // Create the server socket
-        server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-        if (server_fd_ == 0) {
-            perror("Socket failed");
-            exit(EXIT_FAILURE);
-        }
-
-        struct sockaddr_in address;
-        address.sin_family = AF_INET;
-        address.sin_addr.s_addr = INADDR_ANY;
-        address.sin_port = htons(port_);
-
-        // Bind the socket to the address
-        if (bind(server_fd_, (struct sockaddr *)&address, sizeof(address)) < 0) {
-            perror("Bind failed");
-            close(server_fd_);
-            exit(EXIT_FAILURE);
-        }
-
-        // Listen for incoming connections
-        if (listen(server_fd_, 1) < 0) {
-            perror("Listen failed");
-            close(server_fd_);
-            exit(EXIT_FAILURE);
-        }
-
-        std::cout << "Waiting for connection...\n";
-
-        // Accept an incoming connection
-        new_socket_ = accept(server_fd_, nullptr, nullptr);
-        if (new_socket_ < 0) {
-            perror("Accept failed");
-            close(server_fd_);
-            exit(EXIT_FAILURE);
-        }
-    }
-
     void postInit(AtlasState* state)
     {
+        std::cout << "\nATLAS_IDE_READY\n";
+        std::cout.flush();
         enterLoop_(state);
     }
 
@@ -387,19 +338,6 @@ public:
         const auto json = "{\"action\": \"sim_finished\"}";
         sendJson_(json);
         enterLoop_(state);
-        closeEndpoint();
-    }
-
-    void closeEndpoint()
-    {
-        if (new_socket_ != -1) {
-            close(new_socket_);
-            new_socket_ = -1;
-        }
-        if (server_fd_ != -1) {
-            close(server_fd_);
-            server_fd_ = -1;
-        }
     }
 
 private:
@@ -465,21 +403,14 @@ private:
     std::string receiveRequest_()
     {
         std::string response;
-
-        char buffer[4096] = {0};
-        int valread = read(new_socket_, buffer, sizeof(buffer));
-        while (valread > 0) {
-            response += std::string(buffer, valread);
-            valread = read(new_socket_, buffer, sizeof(buffer));
-        }
-
+        std::getline(std::cin, response);
         return response;
     }
 
     void sendJson_(const std::string& message)
     {
-        std::cout << "<-- Sending response: " << message << std::endl;
-        send(new_socket_, message.c_str(), message.length(), 0);
+        std::cout << "ATLAS_IDE_RESPONSE: " << message << "\n";
+        std::cout.flush();
     }
 
     // Note that the IDE doesn't really do anything with these
@@ -501,19 +432,10 @@ private:
         sendJson_("{\"error\": \"" + err + "\"}");
     }
 
-    // For developer use only / debugging purposes.
-    void printIncomingRequest_(const std::string& request)
-    {
-        if (!request.empty()) {
-            std::cout << "--> Received request: " << request << std::endl;
-        }
-    }
-
     ActionGroup* enterLoop_(AtlasState* state)
     {
         while (true) {
             const std::string request = receiveRequest_();
-            printIncomingRequest_(request);
             std::vector<std::string> args;
 
             switch (getSimCommand_(request, args)) {
@@ -932,7 +854,6 @@ private:
 SimController::SimController()
     : endpoint_(std::make_shared<SimEndpoint>())
 {
-    endpoint_->openEndpoint();
 }
 
 void SimController::postInit(AtlasState* state)

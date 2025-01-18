@@ -21,7 +21,7 @@ std::string getSimStatusJson(AtlasState::SimState* sim_state)
     document.AddMember("inst_count", rapidjson::Value().SetUint64(sim_state->inst_count), document.GetAllocator());
 
     rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     document.Accept(writer);
 
     return buffer.GetString();
@@ -65,7 +65,7 @@ std::string getInstJson(AtlasInst* insn)
     }
 
     rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     document.Accept(writer);
 
     return buffer.GetString();

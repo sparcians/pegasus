@@ -1,4 +1,4 @@
-import os, subprocess, socket, json
+import os, subprocess, json
 
 # Use case 1: We want to run the simulation one instruction at a time,
 # and get the disassembly of all the instructions in the test. This
@@ -43,43 +43,52 @@ class SimWrapper:
         self.sim_exe_path = sim_exe_path
         self.test_name = test_name
         self.return_dir = os.getcwd()
-        self.socket_server = SocketServer('localhost', 65432)
+        self.endpoint = SimEndpoint()
 
     def __enter__(self):
         os.chdir(os.path.dirname(self.sim_exe_path))
         program_path = "./atlas"
         program_args = ["--interactive", f"{self.riscv_tests_dir}/{self.test_name}"]
-        self.socket_server.start_server(program_path, *program_args)
-        return self
+        return self if self.endpoint.start_server(program_path, *program_args) else None
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.socket_server.close()
+        if self.endpoint.process:
+            self.endpoint.close()
         os.chdir(self.return_dir)
 
     def BreakOnPreExecute(self):
-        self.socket_server.request('break action pre_execute')
+        self.endpoint.request('break action pre_execute')
 
     def BreakOnPostExecute(self):
-        self.socket_server.request('break action post_execute')
+        self.endpoint.request('break action post_execute')
 
     def BreakOnPreException(self):
-        self.socket_server.request('break action pre_exception')
+        self.endpoint.request('break action pre_exception')
 
     def GetRegisterValues(self, group_num=-1):
         if group_num == -1:
-            return {
-                0: self.socket_server.request('dump 0'),
-                1: self.socket_server.request('dump 1'),
-                2: self.socket_server.request('dump 2'),
-                3: self.socket_server.request('dump 3'),
+            regs = {
+                0: self.endpoint.request('dump 0'),
+                1: self.endpoint.request('dump 1'),
+                2: self.endpoint.request('dump 2'),
+                3: self.endpoint.request('dump 3'),
+            }
+        else:
+            regs = {
+                group_num: self.endpoint.request('dump {}'.format(group_num)),
             }
 
-        return {
-            group_num: self.socket_server.request('dump {}'.format(group_num)),
-        }
+        for group_num, reg_dump in regs.items():
+            if isinstance(reg_dump, str):
+                reg_dump = json.loads(reg_dump)
+            if 'regfile' in reg_dump:
+                with open(reg_dump['regfile'].strip(), 'r') as f:
+                    regs[group_num] = json.load(f)
+
+        return regs
 
     def GetCurrentInst(self):
-        descriptor = self.socket_server.request('inst')
+        descriptor = self.endpoint.request('inst')
         if descriptor == '{}':
             return None
 
@@ -90,7 +99,7 @@ class SimWrapper:
         return AtlasInst(**descriptor)
 
     def GetSimState(self):
-        descriptor = self.socket_server.request('status')
+        descriptor = self.endpoint.request('status')
         if descriptor == '{}':
             return None
 
@@ -101,7 +110,7 @@ class SimWrapper:
         return SimState(**descriptor)
 
     def Continue(self):
-        ack = self.socket_server.request('cont')
+        ack = self.endpoint.request('cont')
         return json.loads(ack)['action']
 
 class AtlasInst:
@@ -134,58 +143,51 @@ class SimState:
         self.sim_stopped = kwargs['sim_stopped']
         self.inst_count = kwargs['inst_count']
 
-class SocketServer:
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.server_socket = None
-        self.client_socket = None
+class SimEndpoint:
+    def __init__(self):
         self.process = None
 
     def start_server(self, program_path, *program_args):
-        """Start the server and subprocess."""
-        # Setup the socket
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind((self.host, self.port))
-        self.server_socket.listen(1)
-        print(f"Server listening on {self.host}:{self.port}")
-
-        # Start the long-running subprocess
         self.process = subprocess.Popen(
             [program_path, *program_args],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True
         )
 
-        # Accept incoming client connection
-        self.client_socket, _ = self.server_socket.accept()
-        print("Client connected.")
+        ide_ready = False
+        while not ide_ready:
+            response = self.__receive().strip()
+            if response == 'ATLAS_IDE_READY':
+                ide_ready = True
+
+        if not ide_ready:
+            self.close()
+
+        return self.process is not None
 
     def request(self, request):
-        self.send(request)
-        return self.receive().strip()
+        self.__send(request)
 
-    def send(self, message):
-        message = message.encode().strip()
-        print ('-> Sending request: {}'.format(message))
-        self.client_socket.send(message)
+        response = None
+        while response is None:
+            recvd = self.__receive()
+            if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
+                response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
+                break
 
-    def receive(self):
-        response = self.client_socket.recv(4096).decode().strip()
-        print ('<- Received response: {}'.format(response))
         return response
 
     def close(self):
-        if self.client_socket:
-            self.client_socket.close()
-            self.client_socket = None
-        if self.server_socket:
-            self.server_socket.close()
-            self.server_socket = None
         if self.process:
             self.process.terminate()
             self.process.wait()
             self.process = None
-        print("Server and subprocess cleaned up.")
+
+    def __send(self, message):
+        self.process.stdin.write(message.strip() + '\n')
+        self.process.stdin.flush()
+
+    def __receive(self):
+        return self.process.stdout.readline().strip()
