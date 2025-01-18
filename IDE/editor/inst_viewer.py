@@ -22,15 +22,17 @@ class InstViewer(wx.Panel):
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
 
         with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
-            init_regs = sim.GetRegisterValues()
-            sim.BreakOnPostExecute()
+            # We could get the instruction disassembly from pre- or post-execute but the
+            # PC value can only be obtained during pre-execute. It will have advance to
+            # the next PC by the time we get to post-execute.
+            sim.BreakOnPreExecute()
 
             list_items = []
             while True:
                 last_response = sim.Continue()
                 assert isinstance(last_response, str)
 
-                if last_response == 'post_execute':
+                if last_response == 'pre_execute':
                     inst = sim.GetCurrentInst()
                     if inst is None:
                         continue
