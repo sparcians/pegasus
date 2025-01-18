@@ -57,33 +57,30 @@ class SimWrapper:
         os.chdir(self.return_dir)
 
     def BreakOnPreExecute(self):
-        self.endpoint.request('break action pre_execute')
+        self.endpoint.request('break action pre_execute', 'ack')
 
     def BreakOnPostExecute(self):
-        self.endpoint.request('break action post_execute')
+        self.endpoint.request('break action post_execute', 'ack')
 
     def BreakOnPreException(self):
-        self.endpoint.request('break action pre_exception')
+        self.endpoint.request('break action pre_exception', 'ack')
 
     def GetRegisterValues(self, group_num=-1):
         if group_num == -1:
             regs = {
-                0: self.endpoint.request('dump 0'),
-                1: self.endpoint.request('dump 1'),
-                2: self.endpoint.request('dump 2'),
-                3: self.endpoint.request('dump 3'),
+                0: self.endpoint.request('dump 0', 'regfile'),
+                1: self.endpoint.request('dump 1', 'regfile'),
+                2: self.endpoint.request('dump 2', 'regfile'),
+                3: self.endpoint.request('dump 3', 'regfile'),
             }
         else:
             regs = {
-                group_num: self.endpoint.request('dump {}'.format(group_num)),
+                group_num: self.endpoint.request('dump {}'.format(group_num), 'regfile')
             }
 
-        for group_num, reg_dump in regs.items():
-            if isinstance(reg_dump, str):
-                reg_dump = json.loads(reg_dump)
-            if 'regfile' in reg_dump:
-                with open(reg_dump['regfile'].strip(), 'r') as f:
-                    regs[group_num] = json.load(f)
+        for group_num, reg_file in regs.items():
+            with open(reg_file.strip(), 'r') as fin:
+                regs[group_num] = json.load(fin)
 
         return regs
 
@@ -110,8 +107,11 @@ class SimWrapper:
         return SimState(**descriptor)
 
     def Continue(self):
-        ack = self.endpoint.request('cont')
-        return json.loads(ack)['action']
+        sim_state = self.GetSimState()
+        if sim_state.sim_stopped:
+            return 'sim_finished'
+
+        return self.endpoint.request('cont', 'action')
 
 class AtlasInst:
     def __init__(self, **kwargs):
@@ -120,21 +120,10 @@ class AtlasInst:
         self.opcode = kwargs['opcode']
         self.opcode_size = kwargs['opcode_size']
         self.is_memory_inst = kwargs['is_memory_inst']
-
-        if kwargs['has_immediate']:
-            self.immediate = kwargs['immediate']
-        else:
-            self.immediate = None
-
-        if kwargs['has_rs1']:
-            self.rs1 = kwargs['rs1']
-        else:
-            self.rs1 = None
-
-        if kwargs['has_rs2']:
-            self.rs2 = kwargs['rs2']
-        else:
-            self.rs2 = None
+        self.immediate = kwargs.get('immediate', None)
+        self.rs1 = kwargs.get('rs1', None)
+        self.rs2 = kwargs.get('rs2', None)
+        self.rd = kwargs.get('rd', None)
 
 class SimState:
     def __init__(self, **kwargs):
@@ -167,7 +156,7 @@ class SimEndpoint:
 
         return self.process is not None
 
-    def request(self, request):
+    def request(self, request, response_key=None):
         self.__send(request)
 
         response = None
@@ -175,7 +164,12 @@ class SimEndpoint:
             recvd = self.__receive()
             if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
                 response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
-                break
+                if response_key is not None:
+                    try:
+                        response_json = json.loads(response)
+                        response = response_json[response_key]
+                    except:
+                        response = None
 
         return response
 

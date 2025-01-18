@@ -15,11 +15,19 @@ class InstViewer(wx.Panel):
             sim.BreakOnPostExecute()
 
             list_items = []
-            while sim.Continue() == 'post_execute':
-                inst = sim.GetCurrentInst()
-                if inst is None:
-                    continue
+            while True:
+                last_response = sim.Continue()
+                assert isinstance(last_response, str)
 
-                mnemonic = inst.mnemonic
-                dasm = inst.dasm
-                list_items.append((mnemonic, dasm))
+                if last_response == 'post_execute':
+                    inst = sim.GetCurrentInst()
+                    if inst is None:
+                        continue
+
+                    mnemonic = inst.mnemonic
+                    dasm = inst.dasm
+                    list_items.append((mnemonic, dasm))
+                elif last_response in ('no_response', 'sim_finished'):
+                    break
+
+            import pdb; pdb.set_trace()
