@@ -73,4 +73,3 @@ class InstViewer(wx.Panel):
 
         inst = self.insts_by_pc[pc]
         self.inst_editor.LoadInst(pc, inst)
-        self.inst_editor.SetFocus()

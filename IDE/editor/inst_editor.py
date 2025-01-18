@@ -38,17 +38,12 @@ class InstEditor(wx.Panel):
 class InstInfo(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.info = wx.StaticText(self, label="Instruction")
         self.inst_info_text = wx.StaticText(self)
 
-        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, 'Consolas')
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
-
-        self.info.SetFont(mono12bold)
         self.inst_info_text.SetFont(mono10)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.info, 0, wx.EXPAND)
         sizer.Add(self.inst_info_text, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
@@ -70,16 +65,12 @@ class InstInfo(wx.Panel):
 class RegInfo(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.info = wx.StaticText(self, label="Registers")
         self.reg_info_text = wx.StaticText(self)
 
-        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, 'Consolas')
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
-
-        self.info.SetFont(mono12bold)
         self.reg_info_text.SetFont(mono10)
+
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.info, 1, wx.EXPAND)
         sizer.Add(self.reg_info_text, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
@@ -94,16 +85,12 @@ class RegInfo(wx.Panel):
 class ExampleImpl(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.info = wx.StaticText(self, label="Example")
         self.example_impl_text = wx.StaticText(self)
 
-        mono12bold = wx.Font(12, wx.MODERN, wx.NORMAL, wx.BOLD, False, 'Consolas')
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
-
-        self.info.SetFont(mono12bold)
         self.example_impl_text.SetFont(mono10)
+
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.info, 1, wx.EXPAND)
         sizer.Add(self.example_impl_text, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
@@ -114,7 +101,12 @@ class ExampleImpl(wx.Panel):
         spike_root = os.path.join(atlas_root, 'spike')
         insns_root = os.path.join(spike_root, 'riscv', 'insns')
         impl_file = os.path.join(insns_root, inst.mnemonic + '.h')
-        self.example_impl_text.SetLabel('TODO: ExampleImpl {}'.format(impl_file))
+
+        if os.path.isfile(impl_file):
+            with open(impl_file, 'r') as fin:
+                self.example_impl_text.SetLabel(fin.read())
+        else:
+            self.example_impl_text.SetLabel('')
 
 class InstImpl(wx.Panel):
     def __init__(self, parent):
