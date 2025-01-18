@@ -19,10 +19,10 @@ namespace atlas
 {
 
 // These methods are in SimControllerJSON.cpp
-extern std::string getSimStatusJson(const AtlasState::SimState* sim_state);
-extern std::string getInstJson(const AtlasInst* insn);
-extern std::string getRegisterSetJson(const RegisterSet* rset);
-extern std::string getRegisterJson(const sparta::Register* reg);
+extern std::string getSimStatusJson(AtlasState::SimState* sim_state);
+extern std::string getInstJson(AtlasInst* insn);
+extern std::string getRegisterSetJson(RegisterSet* rset);
+extern std::string getRegisterJson(sparta::Register* reg);
 extern std::string getBreakpointsJson();
 // -----------------------------------------
 
@@ -321,12 +321,14 @@ public:
         // Bind the socket to the address
         if (bind(server_fd_, (struct sockaddr *)&address, sizeof(address)) < 0) {
             perror("Bind failed");
+            close(server_fd_);
             exit(EXIT_FAILURE);
         }
 
         // Listen for incoming connections
-        if (listen(server_fd_, 3) < 0) {
+        if (listen(server_fd_, 1) < 0) {
             perror("Listen failed");
+            close(server_fd_);
             exit(EXIT_FAILURE);
         }
 
@@ -336,6 +338,7 @@ public:
         new_socket_ = accept(server_fd_, nullptr, nullptr);
         if (new_socket_ < 0) {
             perror("Accept failed");
+            close(server_fd_);
             exit(EXIT_FAILURE);
         }
     }
@@ -463,7 +466,7 @@ private:
     {
         std::string response;
 
-        char buffer[1024] = {0};
+        char buffer[4096] = {0};
         int valread = read(new_socket_, buffer, sizeof(buffer));
         while (valread > 0) {
             response += std::string(buffer, valread);

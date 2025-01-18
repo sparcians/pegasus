@@ -1,6 +1,5 @@
-import wx, os
-from backend.sim_endpoint import SimEndpoint
-from backend.sim_endpoint import Interactivity
+import wx
+from backend.sim_wrapper import SimWrapper
 
 class InstViewer(wx.Panel):
     def __init__(self, parent, frame):
@@ -9,27 +8,18 @@ class InstViewer(wx.Panel):
         self.frame = frame
 
     def LoadTest(self, test):
-        test_path = os.path.join(self.frame.riscv_tests_dir, test)
+        import pdb; pdb.set_trace()
 
-        sim_endpoint = SimEndpoint()
-        sim_endpoint.Bind(Interactivity.PostInit, self.__OnPostInit)
-        sim_endpoint.Bind(Interactivity.PreExecute, self.__OnPreExecute)
-        sim_endpoint.Bind(Interactivity.PreException, self.__OnPreException)
-        sim_endpoint.Bind(Interactivity.PostExecute, self.__OnPostExecute)
-        sim_endpoint.Bind(Interactivity.SimFinished, self.__OnSimFinished)
-        sim_endpoint.RunSimulation(self.frame.sim_exe_path, test_path)
+        with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
+            init_regs = sim.GetRegisterValues()
+            sim.BreakOnPostExecute()
 
-    def __OnPostInit(self, obj):
-        print ('PostInit')
+            list_items = []
+            while sim.Continue() == 'post_execute':
+                inst = sim.GetCurrentInst()
+                if inst is None:
+                    continue
 
-    def __OnPreExecute(self, obj):
-        print ('PreExecute')
-
-    def __OnPreException(self, obj):
-        print ('PreException')
-
-    def __OnPostExecute(self, obj):
-        print ('PostExecute')
-
-    def __OnSimFinished(self, obj):
-        print ('SimFinished')
+                mnemonic = inst.mnemonic
+                dasm = inst.dasm
+                list_items.append((mnemonic, dasm))
