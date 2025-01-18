@@ -126,8 +126,11 @@ class AtlasInst:
         self.is_memory_inst = kwargs['is_memory_inst']
         self.immediate = kwargs.get('immediate', None)
         self.rs1 = kwargs.get('rs1', None)
+        self.rs1val = kwargs.get('rs1val', None)
         self.rs2 = kwargs.get('rs2', None)
+        self.rs2val = kwargs.get('rs2val', None)
         self.rd = kwargs.get('rd', None)
+        self.rdval = kwargs.get('rdval', None)
 
 class SimState:
     def __init__(self, **kwargs):

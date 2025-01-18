@@ -76,11 +76,47 @@ class RegInfo(wx.Panel):
         self.Layout()
 
     def LoadInst(self, pc, inst):
-        rs1 = inst.rs1
-        rs2 = inst.rs2
-        rd  = inst.rd
-        imm = inst.immediate
-        self.reg_info_text.SetLabel('TODO: RegInfo')
+        def right_justify_hex(hex_str, width=8):
+            # Remove the '0x' prefix and pad the hex string with leading zeros
+            hex_value = hex_str[2:]  # Strip the "0x" prefix
+            padded_hex = hex_value.zfill(width)  # Pad with zeros to the specified width
+            return '0x' + padded_hex  # Re-add the "0x" prefix
+
+        hex_width = 0
+
+        lines = []
+        if inst.rs1:
+            col0 = 'RS1({}):'.format(inst.rs1)
+            col1 = hex(inst.rs1val) if not isinstance(inst.rs1val, str) else inst.rs1val
+            hex_width = max(hex_width, len(col1))
+            lines.append([col0, col1])
+
+        if inst.rs2:
+            col0 = 'RS2({}):'.format(inst.rs2)
+            col1 = hex(inst.rs2val) if not isinstance(inst.rs2val, str) else inst.rs2val
+            hex_width = max(hex_width, len(col1))
+            lines.append([col0, col1])
+
+        if inst.rd:
+            col0 = 'RD({}):'.format(inst.rd)
+            col1 = hex(inst.rdval) if not isinstance(inst.rdval, str) else inst.rdval
+            hex_width = max(hex_width, len(col1))
+            lines.append([col0, col1])
+
+        if inst.immediate:
+            col0 = 'IMM:'
+            col1 = hex(inst.immediate) if not isinstance(inst.immediate, str) else inst.immediate
+            hex_width = max(hex_width, len(col1))
+            lines.append([col0, col1])
+
+        # Left justify the first column by the max length of the first column.
+        # And right-jusitfy the second column accoring to right_justify_hex where
+        # width is the smallest power of 2 that can contain the longest hex string.
+        text = []
+        for col0, col1 in lines:
+            text.append(col0.ljust(10) + right_justify_hex(col1))
+
+        self.reg_info_text.SetLabel('\n'.join(text))
 
 class ExampleImpl(wx.Panel):
     def __init__(self, parent):

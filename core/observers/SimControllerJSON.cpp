@@ -54,16 +54,19 @@ std::string getCurrentInstJson(AtlasState* state)
     if (insn->hasRs1())
     {
         document.AddMember("rs1", rapidjson::Value().SetString(insn->getRs1()->getName().c_str(), insn->getRs1()->getName().size(), document.GetAllocator()), document.GetAllocator());
+        document.AddMember("rs1val", rapidjson::Value().SetUint64(insn->getRs1()->dmiRead<uint64_t>()), document.GetAllocator());
     }
 
     if (insn->hasRs2())
     {
         document.AddMember("rs2", rapidjson::Value().SetString(insn->getRs2()->getName().c_str(), insn->getRs2()->getName().size(), document.GetAllocator()), document.GetAllocator());
+        document.AddMember("rs2val", rapidjson::Value().SetUint64(insn->getRs2()->dmiRead<uint64_t>()), document.GetAllocator());
     }
 
     if (insn->hasRd())
     {
         document.AddMember("rd", rapidjson::Value().SetString(insn->getRd()->getName().c_str(), insn->getRd()->getName().size(), document.GetAllocator()), document.GetAllocator());
+        document.AddMember("rdval", rapidjson::Value().SetUint64(insn->getRd()->dmiRead<uint64_t>()), document.GetAllocator());
     }
 
     rapidjson::StringBuffer buffer;
