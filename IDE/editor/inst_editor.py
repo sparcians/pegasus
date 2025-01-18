@@ -25,6 +25,7 @@ class InstEditor(wx.Panel):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(row1_panel, 1, wx.EXPAND)
+        sizer.Add(wx.StaticLine(self), 0, wx.EXPAND)
         sizer.Add(row2_panel, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
@@ -147,8 +148,100 @@ class ExampleImpl(wx.Panel):
 class InstImpl(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour('orange')
-        self.edited_mnemonics = {}
+
+        vsplitter = wx.SplitterWindow(self)
+
+        pyutils_panel = wx.Panel(vsplitter)
+        self.pyutils_checkbox = wx.CheckBox(pyutils_panel, label='Use Python')
+        self.pyutils_textctrl = wx.TextCtrl(pyutils_panel, style=wx.TE_MULTILINE)
+
+        pyutils_vsizer = wx.BoxSizer(wx.VERTICAL)
+        pyutils_vsizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
+        pyutils_vsizer.Add(self.pyutils_textctrl, 1, wx.EXPAND)
+        pyutils_panel.SetSizer(pyutils_vsizer)
+
+        cpp_viewer_panel = wx.Panel(vsplitter)
+        self.cpp_viewer_checkbox = wx.CheckBox(cpp_viewer_panel, label='Use C++')
+        self.cpp_viewer_text = wx.StaticText(cpp_viewer_panel)
+        self.cpp_viewer_checkbox.SetValue(True)
+
+        cpp_viewer_vsizer = wx.BoxSizer(wx.VERTICAL)
+        cpp_viewer_vsizer.Add(self.cpp_viewer_checkbox, 0, wx.EXPAND)
+        cpp_viewer_vsizer.Add(wx.StaticLine(cpp_viewer_panel), 0, wx.EXPAND)
+        cpp_viewer_vsizer.Add(self.cpp_viewer_text, 1, wx.EXPAND)
+        cpp_viewer_panel.SetSizer(cpp_viewer_vsizer)
+
+        vsplitter.SplitVertically(pyutils_panel, cpp_viewer_panel)
+        vsplitter.SetMinimumPaneSize(20)
+        vsplitter.SetSashPosition(500)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(vsplitter, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+        self.Layout()
+
+        self.pyutils_checkbox.Bind(wx.EVT_CHECKBOX, self.__SwitchToPythonImpl)
+        self.cpp_viewer_checkbox.Bind(wx.EVT_CHECKBOX, self.__SwitchToCppImpl)
+
+        mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
+        mono12 = wx.Font(12, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
+
+        self.pyutils_textctrl.SetFont(mono12)
+        self.cpp_viewer_text.SetFont(mono10)
 
     def LoadInst(self, pc, inst):
-        pass
+        atlas_cpp_code = self.__GetAtlasCppCode(inst.mnemonic)
+        self.cpp_viewer_text.SetLabel(atlas_cpp_code)
+        self.pyutils_textctrl.SetValue('')
+
+    def __SwitchToPythonImpl(self, event):
+        self.pyutils_textctrl.Enable(self.pyutils_checkbox.IsChecked())
+        self.cpp_viewer_checkbox.SetValue(not self.pyutils_checkbox.IsChecked())
+        self.cpp_viewer_text.Disable()
+
+    def __SwitchToCppImpl(self, event):
+        self.cpp_viewer_text.Enable(self.cpp_viewer_checkbox.IsChecked())
+        self.pyutils_checkbox.SetValue(not self.cpp_viewer_checkbox.IsChecked())
+        self.pyutils_textctrl.Disable()
+
+    def __GetAtlasCppCode(self, mnemonic, arch='rv64'):
+        assert arch == 'rv64', 'rv32 has not been coded / tested yet'
+
+        atlas_root = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+        inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers')
+        inst_handler_root = os.path.abspath(inst_handler_root)
+        lookfor = f"ActionGroup* {mnemonic}_64_handler(atlas::AtlasState* state);"
+
+        # find the .hpp file under isnt_handler_root that has this <lookfor> string
+        hpp_file = None
+        for root, dirs, files in os.walk(inst_handler_root):
+            for file in files:
+                if file.endswith('.hpp'):
+                    with open(os.path.join(root, file), 'r') as f:
+                        if lookfor in f.read():
+                            hpp_file = os.path.join(root, file)
+                            break
+
+        impl_file = hpp_file.replace('.hpp', '.cpp')
+
+        cpp_code = []
+        if os.path.exists(impl_file):
+            lookfor = f"::{mnemonic}_64_handler(atlas::AtlasState* state)"
+            other_mnemonic_lookfor = '_64_handler(atlas::AtlasState* state)'
+            copy_line = False
+            with open(impl_file, 'r') as f:
+                for line in f.readlines():
+                    # Stop copying lines when we get to the next function signature
+                    if line.find(other_mnemonic_lookfor) != -1 and copy_line:
+                        break
+
+                    # Start copying over the code when we get to our exact function signature for this mnemonic
+                    if line.find(lookfor) != -1:
+                        copy_line = True
+
+                    if copy_line:
+                        cpp_code.append(line)
+
+        # Remove 4 whitespaces from the front of each line
+        cpp_code = [line[4:] for line in cpp_code]
+        return ''.join(cpp_code)
