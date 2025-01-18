@@ -20,7 +20,7 @@ namespace atlas
 
 // These methods are in SimControllerJSON.cpp
 extern std::string getSimStatusJson(AtlasState::SimState* sim_state);
-extern std::string getInstJson(AtlasInst* insn);
+extern std::string getCurrentInstJson(AtlasState* state);
 extern std::string getRegisterSetJson(RegisterSet* rset);
 extern std::string getRegisterJson(sparta::Register* reg);
 extern std::string getBreakpointsJson();
@@ -514,8 +514,7 @@ private:
             return;
         }
 
-        const AtlasInstPtr insn = state->getCurrentInst();
-        const auto json = getInstJson(insn.get());
+        const auto json = getCurrentInstJson(state);
         sendJson_(json);
     }
 

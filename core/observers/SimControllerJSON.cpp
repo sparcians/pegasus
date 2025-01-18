@@ -27,8 +27,9 @@ std::string getSimStatusJson(AtlasState::SimState* sim_state)
     return buffer.GetString();
 }
 
-std::string getInstJson(AtlasInst* insn)
+std::string getCurrentInstJson(AtlasState* state)
 {
+    auto insn = state->getCurrentInst();
     if (!insn)
     {
         return "{}";
@@ -43,6 +44,7 @@ std::string getInstJson(AtlasInst* insn)
     document.AddMember("has_immediate", insn->hasImmediate(), document.GetAllocator());
     document.AddMember("is_memory_inst", insn->isMemoryInst(), document.GetAllocator());
     document.AddMember("opcode_size", rapidjson::Value().SetUint(insn->getOpcodeSize()), document.GetAllocator());
+    document.AddMember("priv", rapidjson::Value().SetUint((uint32_t)state->getPrivMode()), document.GetAllocator());
 
     if (insn->hasImmediate())
     {

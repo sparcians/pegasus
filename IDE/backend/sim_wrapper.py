@@ -122,6 +122,7 @@ class AtlasInst:
         self.dasm = kwargs['dasm_string']
         self.opcode = kwargs['opcode']
         self.opcode_size = kwargs['opcode_size']
+        self.priv = kwargs['priv']
         self.is_memory_inst = kwargs['is_memory_inst']
         self.immediate = kwargs.get('immediate', None)
         self.rs1 = kwargs.get('rs1', None)
