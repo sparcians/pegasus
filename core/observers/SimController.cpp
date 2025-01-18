@@ -343,6 +343,7 @@ public:
 private:
     enum class SimCommand
     {
+        PC,
         STATUS,
         INST,
         DUMP,
@@ -373,7 +374,9 @@ private:
             }
         }
 
-        if (command_str == "status") {
+        if (command_str == "pc") {
+            return SimCommand::PC;
+        } else if (command_str == "status") {
             return SimCommand::STATUS;
         } else if (command_str == "inst") {
             return SimCommand::INST;
@@ -439,6 +442,8 @@ private:
             std::vector<std::string> args;
 
             switch (getSimCommand_(request, args)) {
+                case SimCommand::PC:
+                    handlePcRequest_(state, args);
                 case SimCommand::STATUS:
                     handleStatusRequest_(state, args);
                     break;
@@ -476,6 +481,18 @@ private:
                     break;
             }
         }
+    }
+
+    void handlePcRequest_(AtlasState* state, const std::vector<std::string>& args)
+    {
+        if (!args.empty()) {
+            sendError_("'pc' request expects zero arguments");
+            return;
+        }
+
+        const auto pc = state->getPc();
+        const auto json = "{\"pc\": " + std::to_string(pc) + "}";
+        sendJson_(json);
     }
 
     void handleStatusRequest_(AtlasState* state, const std::vector<std::string>& args)

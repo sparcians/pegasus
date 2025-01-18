@@ -106,6 +106,9 @@ class SimWrapper:
 
         return SimState(**descriptor)
 
+    def GetPC(self):
+        return int(self.endpoint.request('pc', 'pc'))
+
     def Continue(self):
         sim_state = self.GetSimState()
         if sim_state.sim_stopped:
@@ -162,6 +165,9 @@ class SimEndpoint:
         response = None
         while response is None:
             recvd = self.__receive()
+            if recvd == '':
+                return ''
+
             if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
                 response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
                 if response_key is not None:
