@@ -192,6 +192,9 @@ namespace atlas
         // at the top of AtlasSim::run()
         void postInit();
 
+        // One-time cleanup phase after simulation end.
+        void cleanup();
+
       private:
         void onBindTreeEarly_() override;
 

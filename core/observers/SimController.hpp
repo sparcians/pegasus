@@ -19,6 +19,7 @@ public:
     ActionGroup* preExecute(AtlasState* state) override;
     ActionGroup* postExecute(AtlasState* state) override;
     ActionGroup* preException(AtlasState* state) override;
+    void onSimulationFinished(AtlasState* state);
 
 private:
     class SimEndpoint;

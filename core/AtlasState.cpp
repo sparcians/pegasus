@@ -571,4 +571,12 @@ namespace atlas
         }
     }
 
+    void AtlasState::cleanup()
+    {
+        if (sim_controller_)
+        {
+            sim_controller_->onSimulationFinished(this);
+        }
+    }
+
 } // namespace atlas

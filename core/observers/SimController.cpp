@@ -2,6 +2,7 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 #include "sparta/trigger/Comparator.hpp"
+#include "simdb/utils/uuids.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -35,30 +36,57 @@ public:
         breakpoints_[getNextBreakpointId_()] = std::make_unique<ExceptionBreakpoint>();
     }
 
-    bool breakOnPreExecute(AtlasState* state) const
+    void breakOnPreExecute()
     {
+        break_on_pre_execute_ = true;
+    }
+
+    void breakOnPostExecute()
+    {
+        break_on_post_execute_ = true;
+    }
+
+    void breakOnPreException()
+    {
+        break_on_pre_exception_ = true;
+    }
+
+    bool shouldBreakOnPreExecute(AtlasState* state) const
+    {
+        if (break_on_pre_execute_) {
+            return true;
+        }
+
         for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->breakOnPreExecute(state)) {
+            if (breakpoint->shouldBreakOnPreExecute(state)) {
                 return true;
             }
         }
         return false;
     }
 
-    bool breakOnPostExecute(AtlasState* state) const
+    bool shouldBreakOnPostExecute(AtlasState* state) const
     {
+        if (break_on_post_execute_) {
+            return true;
+        }
+
         for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->breakOnPostExecute(state)) {
+            if (breakpoint->shouldBreakOnPostExecute(state)) {
                 return true;
             }
         }
         return false;
     }
 
-    bool breakOnPreException(AtlasState* state) const
+    bool shouldBreakOnPreException(AtlasState* state) const
     {
+        if (break_on_pre_exception_) {
+            return true;
+        }
+
         for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->breakOnPreException(state)) {
+            if (breakpoint->shouldBreakOnPreException(state)) {
                 return true;
             }
         }
@@ -131,19 +159,19 @@ private:
         void enable() { enabled_ = true; }
         void disable() { enabled_ = false; }
 
-        bool breakOnPreExecute(AtlasState* state) const
+        bool shouldBreakOnPreExecute(AtlasState* state) const
         {
-            return enabled_ && breakOnPreExecute_(state);
+            return enabled_ && shouldBreakOnPreExecute_(state);
         }
 
-        bool breakOnPostExecute(AtlasState* state) const
+        bool shouldBreakOnPostExecute(AtlasState* state) const
         {
-            return enabled_ && breakOnPostExecute_(state);
+            return enabled_ && shouldBreakOnPostExecute_(state);
         }
 
-        bool breakOnPreException(AtlasState* state) const
+        bool shouldBreakOnPreException(AtlasState* state) const
         {
-            return enabled_ && breakOnPreException_(state);
+            return enabled_ && shouldBreakOnPreException_(state);
         }
 
     protected:
@@ -152,9 +180,9 @@ private:
         {}
 
     private:
-        virtual bool breakOnPreExecute_(AtlasState* state) const = 0;
-        virtual bool breakOnPostExecute_(AtlasState* state) const = 0;
-        virtual bool breakOnPreException_(AtlasState* state) const = 0;
+        virtual bool shouldBreakOnPreExecute_(AtlasState* state) const = 0;
+        virtual bool shouldBreakOnPostExecute_(AtlasState* state) const = 0;
+        virtual bool shouldBreakOnPreException_(AtlasState* state) const = 0;
 
         std::string info_;
         bool enabled_ = true;
@@ -168,17 +196,17 @@ private:
             , comparator_(sparta::trigger::createComparator<uint64_t>(comparison, pc))
         {}
 
-        bool breakOnPreExecute_(AtlasState* state) const override
+        bool shouldBreakOnPreExecute_(AtlasState* state) const override
         {
             return shouldBreakNow(state);
         }
 
-        bool breakOnPostExecute_(AtlasState* state) const override
+        bool shouldBreakOnPostExecute_(AtlasState* state) const override
         {
             return shouldBreakNow(state);
         }
 
-        bool breakOnPreException_(AtlasState* state) const override
+        bool shouldBreakOnPreException_(AtlasState* state) const override
         {
             return shouldBreakNow(state);
         }
@@ -200,17 +228,17 @@ private:
             , mnemonic_(mnemonic)
         {}
 
-        bool breakOnPreExecute_(AtlasState* state) const override
+        bool shouldBreakOnPreExecute_(AtlasState* state) const override
         {
             return shouldBreakNow(state);
         }
 
-        bool breakOnPostExecute_(AtlasState* state) const override
+        bool shouldBreakOnPostExecute_(AtlasState* state) const override
         {
             return shouldBreakNow(state);
         }
 
-        bool breakOnPreException_(AtlasState* state) const override
+        bool shouldBreakOnPreException_(AtlasState* state) const override
         {
             return false;
         }
@@ -231,23 +259,26 @@ private:
             : Breakpoint("Break on exceptions")
         {}
 
-        bool breakOnPreExecute_(AtlasState* state) const override
+        bool shouldBreakOnPreExecute_(AtlasState* state) const override
         {
             return false;
         }
 
-        bool breakOnPostExecute_(AtlasState* state) const override
+        bool shouldBreakOnPostExecute_(AtlasState* state) const override
         {
             return false;
         }
 
-        bool breakOnPreException_(AtlasState* state) const override
+        bool shouldBreakOnPreException_(AtlasState* state) const override
         {
             return true;
         }
     };
 
     std::map<size_t, std::unique_ptr<Breakpoint>> breakpoints_;
+    bool break_on_pre_execute_ = false;
+    bool break_on_post_execute_ = false;
+    bool break_on_pre_exception_ = false;
 };
 
 class SimController::SimEndpoint
@@ -308,7 +339,8 @@ public:
 
     ActionGroup* preExecute(AtlasState* state)
     {
-        if (breakpoint_mgr_.breakOnPreExecute(state)) {
+        if (breakpoint_mgr_.shouldBreakOnPreExecute(state)) {
+            sendResponse_("pre_execute");
             return enterLoop_(state);
         }
         return nullptr;
@@ -316,7 +348,8 @@ public:
 
     ActionGroup* postExecute(AtlasState* state)
     {
-        if (breakpoint_mgr_.breakOnPostExecute(state)) {
+        if (breakpoint_mgr_.shouldBreakOnPostExecute(state)) {
+            sendResponse_("post_execute");
             return enterLoop_(state);
         }
         return nullptr;
@@ -324,10 +357,18 @@ public:
 
     ActionGroup* preException(AtlasState* state)
     {
-        if (breakpoint_mgr_.breakOnPreException(state)) {
+        if (breakpoint_mgr_.shouldBreakOnPreException(state)) {
+            sendResponse_("pre_exception");
             return enterLoop_(state);
         }
         return nullptr;
+    }
+
+    void onSimulationFinished(AtlasState* state)
+    {
+        sendResponse_("sim_finished");
+        enterLoop_(state);
+        closeEndpoint();
     }
 
     void closeEndpoint()
@@ -509,7 +550,7 @@ private:
         json += "    \"opcode\": " + std::to_string(insn->getOpcode()) + ",\n";
         json += "    \"is_memory_inst\": ";
         json += insn->isMemoryInst() ? "true,\n" : "false,\n";
-        json += "    \"opcode_size\": " + std::to_string(insn->getOpcodeSize()) + "\n";
+        json += "    \"opcode_size\": " + std::to_string(insn->getOpcodeSize()) + ",\n";
 
         if (insn->hasRs1()) {
             json += "    \"rs1\": \"" + insn->getRs1()->getName() + "\",\n";
@@ -520,7 +561,7 @@ private:
         }
 
         if (insn->hasImmediate()) {
-            json += "    \"imm\": " + std::to_string(insn->getImmediate()) + "\n";
+            json += "    \"imm\": " + std::to_string(insn->getImmediate()) + ",\n";
             switch (insn->getMavisOpcodeInfo()->getImmediateType()) {
                 case mavis::ImmediateType::NONE:
                     json += "    \"imm_type\": \"NONE\"\n";
@@ -576,7 +617,17 @@ private:
             }
 
             json += "]\n";
-            sendResponse_(json);
+
+            // This JSON is too large to send back over the socket without
+            // requiring changes to the python code. As a workaround, we
+            // will just create a random file in the tmpdir and write the
+            // JSON there, and just return the path to the file.
+            const auto fname = "/tmp/" + simdb::generateUUID();
+            std::ofstream file(fname);
+            file << json;
+            file.close();
+
+            sendResponse_(fname);
         }
 
         // Invalid!
@@ -828,6 +879,22 @@ private:
                 }
             }
 
+            // "break action <action>"
+            else if (args[0] == "action") {
+                const auto& action = args[1];
+                if (action == "pre_execute") {
+                    breakpoint_mgr_.breakOnPreExecute();
+                } else if (action == "post_execute") {
+                    breakpoint_mgr_.breakOnPostExecute();
+                } else if (action == "pre_exception") {
+                    breakpoint_mgr_.breakOnPreException();
+                } else {
+                    sendResponse_("ERROR: invalid action '" + args[1] + "'");
+                }
+
+                sendResponse_("OK");
+            }
+
             // Invalid!
             else {
                 sendResponse_("ERROR: invoke command as 'break [info|delete [n]|exception|<inst>|pc <pc>|disable <n>|enable <n]'");
@@ -903,6 +970,11 @@ ActionGroup* SimController::postExecute(AtlasState* state)
 ActionGroup* SimController::preException(AtlasState* state)
 {
     return endpoint_->preException(state);
+}
+
+void SimController::onSimulationFinished(AtlasState* state)
+{
+    endpoint_->onSimulationFinished(state);
 }
 
 } // namespace atlas
