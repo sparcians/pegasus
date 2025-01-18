@@ -59,7 +59,7 @@ class InstInfo(wx.Panel):
         # Mnemonic: <mnemonic>
         # Opcode:   <opcode>
         # Priv:     <priv>
-        text = ['PC:'.ljust(10) + pc, 'Mnemonic:'.ljust(10) + mnemonic, 'Opcode:'.ljust(10) + opcode, 'Priv:'.ljust(10) + priv]
+        text = ['PC:'.ljust(10) + pc, 'Mnemonic:'.ljust(10) + mnemonic, 'Opcode:'.ljust(10) + right_justify_hex(opcode), 'Priv:'.ljust(10) + priv]
         self.inst_info_text.SetLabel('\n'.join(text))
         self.Layout()
 
@@ -77,12 +77,6 @@ class RegInfo(wx.Panel):
         self.Layout()
 
     def LoadInst(self, pc, inst):
-        def right_justify_hex(hex_str, width=8):
-            # Remove the '0x' prefix and pad the hex string with leading zeros
-            hex_value = hex_str[2:]  # Strip the "0x" prefix
-            padded_hex = hex_value.zfill(width)  # Pad with zeros to the specified width
-            return '0x' + padded_hex  # Re-add the "0x" prefix
-
         hex_width = 0
 
         lines = []
@@ -152,11 +146,18 @@ class InstImpl(wx.Panel):
         vsplitter = wx.SplitterWindow(self)
 
         pyutils_panel = wx.Panel(vsplitter)
-        self.pyutils_checkbox = wx.CheckBox(pyutils_panel, label='Use Python')
         self.pyutils_textctrl = wx.TextCtrl(pyutils_panel, style=wx.TE_MULTILINE)
+        self.pyutils_checkbox = wx.CheckBox(pyutils_panel, label='Use Python')
+        self.pycode_rev_mgr = PythonCodeRevisionMgr(pyutils_panel, self.pyutils_textctrl)
+        self.pyutils_textctrl.Disable()
+
+        pyutils_row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        pyutils_row1_sizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
+        pyutils_row1_sizer.AddStretchSpacer()
+        pyutils_row1_sizer.Add(self.pycode_rev_mgr, 1, wx.EXPAND)
 
         pyutils_vsizer = wx.BoxSizer(wx.VERTICAL)
-        pyutils_vsizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
+        pyutils_vsizer.Add(pyutils_row1_sizer, 0, wx.EXPAND)
         pyutils_vsizer.Add(self.pyutils_textctrl, 1, wx.EXPAND)
         pyutils_panel.SetSizer(pyutils_vsizer)
 
@@ -198,11 +199,13 @@ class InstImpl(wx.Panel):
         self.pyutils_textctrl.Enable(self.pyutils_checkbox.IsChecked())
         self.cpp_viewer_checkbox.SetValue(not self.pyutils_checkbox.IsChecked())
         self.cpp_viewer_text.Disable()
+        self.pycode_rev_mgr.Enable(self.pyutils_checkbox.IsChecked())
 
     def __SwitchToCppImpl(self, event):
         self.cpp_viewer_text.Enable(self.cpp_viewer_checkbox.IsChecked())
         self.pyutils_checkbox.SetValue(not self.cpp_viewer_checkbox.IsChecked())
         self.pyutils_textctrl.Disable()
+        self.pycode_rev_mgr.Enable(self.pyutils_checkbox.IsChecked())
 
     def __GetAtlasCppCode(self, mnemonic, arch='rv64'):
         assert arch == 'rv64', 'rv32 has not been coded / tested yet'
@@ -245,3 +248,50 @@ class InstImpl(wx.Panel):
         # Remove 4 whitespaces from the front of each line
         cpp_code = [line[4:] for line in cpp_code]
         return ''.join(cpp_code)
+
+class PythonCodeRevisionMgr(wx.Panel):
+    def __init__(self, parent, pyutils_textctrl):
+        wx.Panel.__init__(self, parent)
+
+        self.pyutils_textctrl = pyutils_textctrl
+        self.add_button = wx.BitmapButton(self, bitmap=wx.ArtProvider.GetBitmap(wx.ART_PLUS))
+        self.revisions_dropdown = wx.Choice(self, choices=['Revision 0'])
+        self.revisions_dropdown.SetSelection(0)
+        self.revision_code_by_name = {}
+
+        self.add_button.Bind(wx.EVT_BUTTON, self.__OnAddRevision)
+        self.revisions_dropdown.Bind(wx.EVT_CHOICE, self.__OnRevisionSelect)
+        self.pyutils_textctrl.Bind(wx.EVT_TEXT, self.__OnTextChange)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.add_button, 0, wx.EXPAND)
+        sizer.Add(self.revisions_dropdown, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+        self.Layout()
+
+    def __GetCurrentRevisionName(self):
+        return self.revisions_dropdown.GetString(self.revisions_dropdown.GetSelection())
+
+    def __OnTextChange(self, event):
+        self.revision_code_by_name[self.__GetCurrentRevisionName()] = self.pyutils_textctrl.GetValue()
+
+    def __OnAddRevision(self, event):
+        dlg = wx.TextEntryDialog(self, "Enter the revision name", "Revision Name")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.revisions_dropdown.Append(dlg.GetValue())
+            self.revisions_dropdown.SetSelection(self.revisions_dropdown.GetCount()-1)
+            self.pyutils_textctrl.SetValue('')
+            self.Layout()
+
+        dlg.Destroy()
+
+    def __OnRevisionSelect(self, event):
+        revision_name = self.__GetCurrentRevisionName()
+        revision_code = self.revision_code_by_name.get(revision_name, '')
+        self.pyutils_textctrl.SetValue(revision_code)
+
+def right_justify_hex(hex_str, width=8):
+    # Remove the '0x' prefix and pad the hex string with leading zeros
+    hex_value = hex_str[2:]  # Strip the "0x" prefix
+    padded_hex = hex_value.zfill(width)  # Pad with zeros to the specified width
+    return '0x' + padded_hex  # Re-add the "0x" prefix

@@ -12,7 +12,7 @@ class AtlasIDE(wx.Frame):
         self.test_tree = TestTreeCtrl(self.vsplitter, self)
         self.notebook = wx.Notebook(self.vsplitter)
         self.workspaces = [Workspace(self.notebook, self)]
-        self.notebook.AddPage(self.workspaces[0], "Baseline")
+        self.notebook.AddPage(self.workspaces[0], "Workspace 1")
 
         self.vsplitter.SplitVertically(self.test_tree, self.notebook)
         self.vsplitter.SetMinimumPaneSize(50)
