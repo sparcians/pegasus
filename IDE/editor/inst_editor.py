@@ -3,7 +3,6 @@ import wx, os
 class InstEditor(wx.Panel):
     def __init__(self, parent, frame):
         wx.Panel.__init__(self, parent)
-        self.SetBackgroundColour('blue')
         self.frame = frame
 
         row1_panel = wx.Panel(self)
@@ -25,7 +24,7 @@ class InstEditor(wx.Panel):
         row2_panel.SetSizer(row2_sizer)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(row1_panel, 0, wx.EXPAND)
+        sizer.Add(row1_panel, 1, wx.EXPAND)
         sizer.Add(row2_panel, 1, wx.EXPAND)
         self.SetSizer(sizer)
 
@@ -47,17 +46,26 @@ class InstInfo(wx.Panel):
 
         self.info.SetFont(mono12bold)
         self.inst_info_text.SetFont(mono10)
+
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.info, 1, wx.EXPAND)
+        sizer.Add(self.info, 0, wx.EXPAND)
         sizer.Add(self.inst_info_text, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
 
     def LoadInst(self, pc, inst):
+        pc = hex(pc) if not isinstance(pc, str) else pc
         mnemonic = inst.mnemonic
-        opcode = inst.opcode
-        priv = inst.priv
-        self.inst_info_text.SetLabel('TODO: InstInfo')
+        opcode = hex(inst.opcode) if not isinstance(inst.opcode, str) else inst.opcode
+        priv = {0: 'U(0)', 1: 'S(1)', 2: 'H(2)', 3: 'M(3)'}[inst.priv]
+
+        # PC:       <pc>
+        # Mnemonic: <mnemonic>
+        # Opcode:   <opcode>
+        # Priv:     <priv>
+        text = ['PC:'.ljust(10) + pc, 'Mnemonic:'.ljust(10) + mnemonic, 'Opcode:'.ljust(10) + opcode, 'Priv:'.ljust(10) + priv]
+        self.inst_info_text.SetLabel('\n'.join(text))
+        self.Layout()
 
 class RegInfo(wx.Panel):
     def __init__(self, parent):
