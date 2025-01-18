@@ -18,6 +18,14 @@
 namespace atlas
 {
 
+// These methods are in SimControllerJSON.cpp
+extern std::string getSimStatusJson(const AtlasState::SimState* sim_state);
+extern std::string getInstJson(const AtlasInst* insn);
+extern std::string getRegisterSetJson(const RegisterSet* rset);
+extern std::string getRegisterJson(const sparta::Register* reg);
+extern std::string getBreakpointsJson();
+// -----------------------------------------
+
 class BreakpointManager
 {
 public:
@@ -340,7 +348,9 @@ public:
     ActionGroup* preExecute(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPreExecute(state)) {
-            sendResponse_("pre_execute");
+            // { "action": "pre_execute" }
+            const auto json = "{\"action\": \"pre_execute\"}";
+            sendJson_(json);
             return enterLoop_(state);
         }
         return nullptr;
@@ -349,7 +359,9 @@ public:
     ActionGroup* postExecute(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPostExecute(state)) {
-            sendResponse_("post_execute");
+            // { "action": "post_execute" }
+            const auto json = "{\"action\": \"post_execute\"}";
+            sendJson_(json);
             return enterLoop_(state);
         }
         return nullptr;
@@ -358,7 +370,9 @@ public:
     ActionGroup* preException(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPreException(state)) {
-            sendResponse_("pre_exception");
+            // { "action": "pre_exception" }
+            const auto json = "{\"action\": \"pre_exception\"}";
+            sendJson_(json);
             return enterLoop_(state);
         }
         return nullptr;
@@ -366,7 +380,9 @@ public:
 
     void onSimulationFinished(AtlasState* state)
     {
-        sendResponse_("sim_finished");
+        // { "action": "sim_finished" }
+        const auto json = "{\"action\": \"sim_finished\"}";
+        sendJson_(json);
         enterLoop_(state);
         closeEndpoint();
     }
@@ -443,25 +459,58 @@ private:
         }
     }
 
-    void sendResponse_(const std::string& message)
+    std::string receiveRequest_()
     {
+        std::string response;
+
+        char buffer[1024] = {0};
+        int valread = read(new_socket_, buffer, sizeof(buffer));
+        while (valread > 0) {
+            response += std::string(buffer, valread);
+            valread = read(new_socket_, buffer, sizeof(buffer));
+        }
+
+        return response;
+    }
+
+    void sendJson_(const std::string& message)
+    {
+        std::cout << "<-- Sending response: " << message << std::endl;
         send(new_socket_, message.c_str(), message.length(), 0);
     }
 
-    std::string receiveMessage_()
+    // Note that the IDE doesn't really do anything with these
+    // general-purpose ACKs. The reason we return something is
+    // for overall consistency with the other message passing
+    // code in python/C++.
+    void sendAck_()
     {
-        char buffer[1024] = {0};
-        int valread = read(new_socket_, buffer, sizeof(buffer));
-        if (valread > 0) {
-            return std::string(buffer, valread);
+        sendJson_("{\"ack\": \"ok\"}");
+    }
+
+    void sendWarning_(const std::string& warn)
+    {
+        sendJson_("{\"warning\": \"" + warn + "\"}");
+    }
+
+    void sendError_(const std::string& err)
+    {
+        sendJson_("{\"error\": \"" + err + "\"}");
+    }
+
+    // For developer use only / debugging purposes.
+    void printIncomingRequest_(const std::string& request)
+    {
+        if (!request.empty()) {
+            std::cout << "--> Received request: " << request << std::endl;
         }
-        return "";
     }
 
     ActionGroup* enterLoop_(AtlasState* state)
     {
         while (true) {
-            const std::string request = receiveMessage_();
+            const std::string request = receiveRequest_();
+            printIncomingRequest_(request);
             std::vector<std::string> args;
 
             switch (getSimCommand_(request, args)) {
@@ -498,7 +547,7 @@ private:
                     handleExitRequest_(state, args);
                     return nullptr;
                 case SimCommand::NOP:
-                    sendResponse_("ERROR: '" + request + "' is not a valid command");
+                    sendError_("'" + request + "' is not a valid command");
                     break;
             }
         }
@@ -507,76 +556,25 @@ private:
     void handleStatusRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
         if (!args.empty()) {
-            sendResponse_("ERROR: 'status' request expects zero arguments");
+            sendError_("'status' request expects zero arguments");
             return;
         }
 
         const auto sim_state = state->getSimState();
-
-        std::string json;
-        json += "{\n";
-        json += "    \"inst_count\": " + std::to_string(sim_state->inst_count) + ",\n";
-        json += "    \"sim_stopped\": ";
-        if (sim_state->sim_stopped) {
-            json += "true,\n";
-            json += "    \"test_passed\": ";
-            json += sim_state->test_passed ? "true,\n" : "false,\n";
-            json += "    \"workload_exit_code\": " + std::to_string(sim_state->workload_exit_code) + "\n";
-        } else {
-            json += "false\n";
-        }
-        json += "}\n";
-
-        sendResponse_(json);
+        const auto json = getSimStatusJson(sim_state);
+        sendJson_(json);
     }
 
     void handleCurrentInstRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
         if (!args.empty()) {
-            sendResponse_("ERROR: 'inst' request expects zero arguments");
+            sendError_("'inst' request expects zero arguments");
             return;
         }
 
         const AtlasInstPtr insn = state->getCurrentInst();
-        if (!insn) {
-            sendResponse_("WARNING: no current instruction");
-            return;
-        }
-
-        std::string json;
-        json += "{\n";
-        json += "    \"mnemonic\": \"" + insn->getMnemonic() + "\",\n";
-        json += "    \"dasm\": \"" + insn->dasmString() + "\",\n";
-        json += "    \"opcode\": " + std::to_string(insn->getOpcode()) + ",\n";
-        json += "    \"is_memory_inst\": ";
-        json += insn->isMemoryInst() ? "true,\n" : "false,\n";
-        json += "    \"opcode_size\": " + std::to_string(insn->getOpcodeSize()) + ",\n";
-
-        if (insn->hasRs1()) {
-            json += "    \"rs1\": \"" + insn->getRs1()->getName() + "\",\n";
-        }
-
-        if (insn->hasRs2()) {
-            json += "    \"rs2\": \"" + insn->getRs2()->getName() + "\",\n";
-        }
-
-        if (insn->hasImmediate()) {
-            json += "    \"imm\": " + std::to_string(insn->getImmediate()) + ",\n";
-            switch (insn->getMavisOpcodeInfo()->getImmediateType()) {
-                case mavis::ImmediateType::NONE:
-                    json += "    \"imm_type\": \"NONE\"\n";
-                    break;
-                case mavis::ImmediateType::SIGNED:
-                    json += "    \"imm_type\": \"SIGNED\"\n";
-                    break;
-                case mavis::ImmediateType::UNSIGNED:
-                    json += "    \"imm_type\": \"UNSIGNED\"\n";
-                    break;
-            }
-        }
-
-        json += "}\n";
-        sendResponse_(json);
+        const auto json = getInstJson(insn.get());
+        sendJson_(json);
     }
 
     void handleRegisterDumpRequest_(AtlasState* state, const std::vector<std::string>& args)
@@ -600,23 +598,11 @@ private:
                     rset = state->getCsrRegisterSet();
                     break;
                 default:
-                    sendResponse_("ERROR: invalid group number " + std::string(args[0]));
+                    sendError_("invalid group number " + std::string(args[0]));
                     return;
             }
 
-            std::string json;
-            json += "[\n";
-            for (uint32_t reg_id = 0; reg_id < rset->getNumRegisters(); ++reg_id) {
-                if (const auto reg = rset->getRegister(reg_id)) {
-                    json += "    [\"" + reg->getName() + "\", " + std::to_string(reg_id) + ", " + std::to_string(reg->dmiRead<uint64_t>()) + "]";
-                    if (reg_id < rset->getNumRegisters() - 1) {
-                        json += ",";
-                    }
-                    json += "\n";
-                }
-            }
-
-            json += "]\n";
+            const auto rset_json = getRegisterSetJson(rset);
 
             // This JSON is too large to send back over the socket without
             // requiring changes to the python code. As a workaround, we
@@ -624,15 +610,17 @@ private:
             // JSON there, and just return the path to the file.
             const auto fname = "/tmp/" + simdb::generateUUID();
             std::ofstream file(fname);
-            file << json;
+            file << rset_json;
             file.close();
 
-            sendResponse_(fname);
+            // { "regfile": "/tmp/uuid" }
+            const auto response_json = "{\"regfile\": \"" + fname + "\"}";
+            sendJson_(response_json);
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'dump <group num>'");
+            sendError_("invoke command as 'dump <group num>'");
         }
     }
 
@@ -650,7 +638,7 @@ private:
                 } else if (args[1] == "false") {
                     editable = false;
                 } else {
-                    sendResponse_("ERROR: invoke command as 'edit <inst> <true|false>'");
+                    sendError_("invoke command as 'edit <inst> <true|false>'");
                     return;
                 }
             }
@@ -661,12 +649,12 @@ private:
                 insts_being_edited_.erase(inst);
             }
 
-            sendResponse_("OK");
+            sendAck_();
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'edit <inst> [true|false]'");
+            sendError_("invoke command as 'edit <inst> [true|false]'");
         }
     }
 
@@ -692,20 +680,21 @@ private:
                     rset = state->getCsrRegisterSet();
                     break;
                 default:
-                    sendResponse_("ERROR: invalid group number " + std::string(args[0]));
+                    sendError_("invalid group number " + std::string(args[0]));
                     return;
             }
 
             if (const auto reg = rset->getRegister(reg_id)) {
-                sendResponse_(std::to_string(reg->dmiRead<uint64_t>()));
+                const auto json = getRegisterJson(reg);
+                sendJson_(json);
             } else {
-                sendResponse_("ERROR: invalid register id " + std::string(args[1]));
+                sendError_("invalid register id " + std::string(args[1]));
             }
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'read <group num> <reg id>'");
+            sendError_("invoke command as 'read <group num> <reg id>'");
         }
     }
 
@@ -732,21 +721,22 @@ private:
                     rset = state->getCsrRegisterSet();
                     break;
                 default:
-                    sendResponse_("ERROR: invalid group number " + std::string(args[0]));
+                    sendError_("invalid group number " + std::string(args[0]));
                     return;
             }
 
             if (const auto reg = rset->getRegister(reg_id)) {
                 reg->write(value);
-                sendResponse_(std::to_string(reg->dmiRead<uint64_t>()));
+                const auto json = getRegisterJson(reg);
+                sendJson_(json);
             } else {
-                sendResponse_("ERROR: invalid register id " + std::string(args[1]));
+                sendError_("invalid register id " + std::string(args[1]));
             }
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'write <group num> <reg id> <value>'");
+            sendError_("invoke command as 'write <group num> <reg id> <value>'");
         }
     }
 
@@ -773,21 +763,22 @@ private:
                     rset = state->getCsrRegisterSet();
                     break;
                 default:
-                    sendResponse_("ERROR: invalid group number " + std::string(args[0]));
+                    sendError_("invalid group number " + std::string(args[0]));
                     return;
             }
 
             if (const auto reg = rset->getRegister(reg_id)) {
                 reg->dmiWrite(value);
-                sendResponse_(std::to_string(reg->dmiRead<uint64_t>()));
+                const auto json = getRegisterJson(reg);
+                sendJson_(json);
             } else {
-                sendResponse_("ERROR: invalid register id " + std::string(args[1]));
+                sendError_("invalid register id " + std::string(args[1]));
             }
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'write <group num> <reg id> <value>'");
+            sendError_("invoke command as 'write <group num> <reg id> <value>'");
         }
     }
 
@@ -796,49 +787,38 @@ private:
         if (args.size() == 1) {
             // "break info"
             if (args[0] == "info") {
-                auto breakpoints = breakpoint_mgr_.getBreakpoints();
-                std::string json;
-                json += "{\n";
-                for (const auto& [id, info] : breakpoints) {
-                    json += "    " + std::to_string(id) + ": \"" + info + "\"";
-                    if (id < breakpoints.size()) {
-                        json += ",";
-                    }
-                    json += "\n";
-                }
-
-                json += "}\n";
-                sendResponse_(json);
+                const auto json = getBreakpointsJson();
+                sendJson_(json);
             }
 
             // "break delete"
             else if (args[0] == "delete") {
                 breakpoint_mgr_.deleteAllBreakpoints();
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // "break exception"
             else if (args[0] == "exception") {
                 breakpoint_mgr_.breakException();
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // "break disable"
             else if (args[0] == "disable") {
                 breakpoint_mgr_.disableAllBreakpoints();
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // "break enable"
             else if (args[0] == "enable") {
                 breakpoint_mgr_.enableAllBreakpoints();
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // "break <inst>"
             else {
                 breakpoint_mgr_.breakInst(args[0]);
-                sendResponse_("OK");
+                sendAck_();
             }
         }
 
@@ -847,25 +827,25 @@ private:
             if (args[0] == "delete") {
                 const auto id = std::stoi(args[1]);
                 if (!breakpoint_mgr_.deleteBreakpoint(id)) {
-                    sendResponse_("ERROR: invalid breakpoint id " + std::string(args[1]));
+                    sendError_("invalid breakpoint id " + std::string(args[1]));
                 } else {
-                    sendResponse_("OK");
+                    sendAck_();
                 }
             }
 
             // "break pc [pc]"
             else if (args[0] == "pc") {
                 breakpoint_mgr_.breakPC(std::stoull(args[1]));
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // "break disable <n>"
             else if (args[0] == "disable") {
                 const auto id = std::stoi(args[1]);
                 if (!breakpoint_mgr_.disableBreakpoint(id)) {
-                    sendResponse_("ERROR: invalid breakpoint id " + std::string(args[1]));
+                    sendError_("invalid breakpoint id " + std::string(args[1]));
                 } else {
-                    sendResponse_("OK");
+                    sendAck_();
                 }
             }
 
@@ -873,9 +853,9 @@ private:
             else if (args[0] == "enable") {
                 const auto id = std::stoi(args[1]);
                 if (!breakpoint_mgr_.enableBreakpoint(id)) {
-                    sendResponse_("ERROR: invalid breakpoint id " + std::string(args[1]));
+                    sendError_("invalid breakpoint id " + std::string(args[1]));
                 } else {
-                    sendResponse_("OK");
+                    sendAck_();
                 }
             }
 
@@ -889,15 +869,15 @@ private:
                 } else if (action == "pre_exception") {
                     breakpoint_mgr_.breakOnPreException();
                 } else {
-                    sendResponse_("ERROR: invalid action '" + args[1] + "'");
+                    sendError_("invalid action '" + args[1] + "'");
                 }
 
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // Invalid!
             else {
-                sendResponse_("ERROR: invoke command as 'break [info|delete [n]|exception|<inst>|pc <pc>|disable <n>|enable <n]'");
+                sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc <pc>|disable <n>|enable <n]'");
             }
         }
 
@@ -906,22 +886,22 @@ private:
             if (args[0] == "pc") {
                 static const std::unordered_set<std::string> comparators = {"==", "!=", "<", ">", "<=", ">="};
                 if (comparators.find(args[1]) == comparators.end()) {
-                    sendResponse_("ERROR: invalid comparison operator '" + args[1] + "'");
+                    sendError_("invalid comparison operator '" + args[1] + "'");
                     return;
                 }
                 breakpoint_mgr_.breakPC(std::stoull(args[2]), args[1]);
-                sendResponse_("OK");
+                sendAck_();
             }
 
             // Invalid!
             else {
-                sendResponse_("ERROR: invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc]'");
+                sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc]'");
             }
         }
 
         // Invalid!
         else {
-            sendResponse_("ERROR: invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc>]'");
+            sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc>]'");
         }
     }
 

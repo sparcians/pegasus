@@ -168,10 +168,14 @@ class SimSocket:
         self._sock = None
 
     def send(self, message):
-        self.sock.send(message.encode())
+        message = message.encode().strip()
+        print ('-> Sending request: {}'.format(message))
+        self.sock.send(message)
 
     def receive(self):
-        return self.sock.recv(1024).decode()
+        response = self.sock.recv(1024).decode().strip()
+        print ('<- Received response: {}'.format(response))
+        return response
 
     def close(self):
         if self._sock:
