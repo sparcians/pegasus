@@ -2,14 +2,16 @@ import wx
 from backend.sim_wrapper import SimWrapper
 
 class InstViewer(wx.Panel):
-    def __init__(self, parent, frame):
+    def __init__(self, parent, frame, inst_editor):
         wx.Panel.__init__(self, parent)
         self.SetBackgroundColour('green')
         self.frame = frame
+        self.inst_editor = inst_editor
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
         self.inst_list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.inst_list_ctrl.SetFont(mono10)
+        self.insts_by_pc = {}
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.inst_list_ctrl, 1, wx.EXPAND)
@@ -20,6 +22,7 @@ class InstViewer(wx.Panel):
         self.inst_list_ctrl.ClearAll()
         self.inst_list_ctrl.InsertColumn(0, "PC")
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
+        self.insts_by_pc = {}
 
         with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
             # We could get the instruction disassembly from pre- or post-execute but the
@@ -27,7 +30,6 @@ class InstViewer(wx.Panel):
             # the next PC by the time we get to post-execute.
             sim.BreakOnPreExecute()
 
-            list_items = []
             while True:
                 last_response = sim.Continue()
                 assert isinstance(last_response, str)
@@ -39,13 +41,14 @@ class InstViewer(wx.Panel):
 
                     pc = sim.GetPC()
                     dasm = inst.dasm
-                    list_items.append((pc, dasm))
+
+                    i = self.inst_list_ctrl.GetItemCount()
+                    self.inst_list_ctrl.InsertItem(i, hex(pc))
+                    self.inst_list_ctrl.SetItem(i, 1, dasm)
+                    self.insts_by_pc[hex(pc)] = inst
+
                 elif last_response in ('no_response', 'sim_finished', ''):
                     break
-
-            for i, (pc, dasm) in enumerate(list_items):
-                self.inst_list_ctrl.InsertItem(i, hex(pc))
-                self.inst_list_ctrl.SetItem(i, 1, dasm)
 
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.inst_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE)
@@ -56,4 +59,18 @@ class InstViewer(wx.Panel):
         minwidth = colwidth0 + colwidth1 + 10
         self.inst_list_ctrl.SetSize((minwidth, wx.DisplaySize()[1]))
 
+        self.inst_list_ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.__OnItemSelected)
         self.Layout()
+
+        # Select the first item
+        self.inst_list_ctrl.SetItemState(0, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+
+    def __OnItemSelected(self, event):
+        row = event.GetIndex()
+        pc = self.inst_list_ctrl.GetItemText(row, 0)
+        if pc not in self.insts_by_pc:
+            return
+
+        inst = self.insts_by_pc[pc]
+        self.inst_editor.LoadInst(pc, inst)
+        self.inst_editor.SetFocus()

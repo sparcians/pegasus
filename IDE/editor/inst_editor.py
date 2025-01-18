@@ -6,5 +6,5 @@ class InstEditor(wx.Panel):
         self.SetBackgroundColour('blue')
         self.frame = frame
 
-    def LoadTest(self, test):
-        pass
+    def LoadInst(self, pc, inst):
+        print ('LoadInst at PC {} for mnemonic {}'.format(pc, inst.mnemonic))

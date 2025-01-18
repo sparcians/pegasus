@@ -21,7 +21,7 @@ class Workspace(wx.Panel):
 
         self.workspace_panel = wx.Panel(self)
         self.inst_editor = InstEditor(self.workspace_panel, frame)
-        self.inst_viewer = InstViewer(self.workspace_panel, frame)
+        self.inst_viewer = InstViewer(self.workspace_panel, frame, self.inst_editor)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.inst_editor, 1, wx.EXPAND)
         sizer.Add(self.inst_viewer, 0, wx.EXPAND)
@@ -36,7 +36,6 @@ class Workspace(wx.Panel):
     def LoadTest(self, test):
         self.landing_page_panel.Hide()
         self.workspace_panel.Show()
-        self.inst_editor.LoadTest(test)
         self.inst_viewer.LoadTest(test)
         self.GetSizer().Clear()
         self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)
