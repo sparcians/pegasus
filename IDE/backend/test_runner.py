@@ -1,8 +1,9 @@
 from backend.sim_wrapper import SimWrapper
+from editor.test_results import TestResult
 
 class TestHandler:
     def __init__(self, sim):
-        self.orig_csrs = sim.GetRegisterValues(3)
+        self.init_reg_state = sim.GetRegisterValues()
         self.inst_results = []
 
     def HandlePreExecute(self, sim):
@@ -16,11 +17,18 @@ class TestHandler:
         self.inst_results[-1].HandlePostExecute(sim)
 
     def ReportResults(self, sim_state, test_results):
-        #self.workload_exit_code = kwargs['workload_exit_code']
-        #self.test_passed = kwargs['test_passed']
-        #self.sim_stopped = kwargs['sim_stopped']
-        #self.inst_count = kwargs['inst_count']
-        pass
+        test_result = TestResult()
+        test_result.SetInitialRegisterState(self.init_reg_state)
+
+        # TODO cnyce: pycode
+        for inst in self.inst_results:
+            if inst.exception_cause is None:
+                test_result.AppendSuccessfulInst(inst.pc, inst.dasm, None)
+            else:
+                test_result.AppendExceptionInst(inst.pc, inst.dasm, None, inst.exception_cause, inst.pre_exception_csrs, inst.post_exception_csrs)
+
+        test_result.SetFinalSimState(sim_state)
+        test_result.AppendReport(test_results)
 
     class InstHandler:
         def __init__(self):
@@ -86,5 +94,4 @@ def RunRiscvTestsAndReportResults(riscv_tests_dir, sim_exe_path, tests, test_res
 
                 sim_state = sim.GetSimState()
 
-            import pdb; pdb.set_trace()
             test_handler.ReportResults(sim_state, test_results)
