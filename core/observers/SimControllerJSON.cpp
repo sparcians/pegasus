@@ -38,6 +38,7 @@ std::string getCurrentInstJson(AtlasState* state)
     rapidjson::Document document;
     document.SetObject();
 
+    document.AddMember("uid", rapidjson::Value().SetUint64(insn->getUid()), document.GetAllocator());
     document.AddMember("mnemonic", rapidjson::Value().SetString(insn->getMnemonic().c_str(), insn->getMnemonic().size(), document.GetAllocator()), document.GetAllocator());
     document.AddMember("dasm_string", rapidjson::Value().SetString(insn->dasmString().c_str(), insn->dasmString().size(), document.GetAllocator()), document.GetAllocator());
     document.AddMember("opcode", rapidjson::Value().SetUint(insn->getOpcode()), document.GetAllocator());

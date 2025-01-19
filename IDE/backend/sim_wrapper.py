@@ -1,42 +1,5 @@
 import os, subprocess, json
 
-# Use case 1: We want to run the simulation one instruction at a time,
-# and get the disassembly of all the instructions in the test. This
-# is used to create the wx.ListCtrl in the InstViewer.
-#
-#     with SimWrapper(riscv_tests_dir, sim_exe_path, test_name) as sim:
-#         init_regs = sim.GetRegisterValues(self, group_num=-1)
-#         sim.BreakOnPostExecute()
-#
-#         list_items = []
-#         while sim.Continue() == 'post_execute':
-#             inst = sim.GetCurrentInst()
-#             mnemonic = inst.mnemonic
-#             dasm = inst.dasm
-#             list_items.append((mnemonic, dasm))
-#
-#         # The simulation is finished and can take questions about
-#         # final register values etc.
-
-# Use case 2: We want to step through to a particular instruction,
-# then instruct the C++ simulator NOT to run that instruction.
-# Instead, we will write our inst handler in Python and reroute
-# the C++ simulator right to the Finish ActionGroup.
-#
-#     with SimWrapper(riscv_tests_dir, sim_exe_path, test_name) as sim:
-#         ... TODO cnyce ...
-
-# Use case 3: We want to run the workspace handler code against one/many
-# tests, and get the final pass/fail status of the test(s).
-#
-#     with SimWrapper(riscv_tests_dir, sim_exe_path, test_name) as sim:
-#         sim.Continue()
-#         sim_state = sim.GetSimState()
-#         #  - workload_exit_code
-#         #  - test_passed
-#         #  - sim_stopped
-#         #  - inst_count
-
 class SimWrapper:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
         self.riscv_tests_dir = riscv_tests_dir
@@ -108,6 +71,15 @@ class SimWrapper:
 
     def GetPC(self):
         return int(self.endpoint.request('pc', 'pc'))
+
+    def GetUnhandledException(self):
+        descriptor = self.endpoint.request('exception')
+        descriptor = json.loads(descriptor)
+
+        if descriptor['code'] == -1:
+            return None
+
+        return descriptor['code']
 
     def Continue(self):
         sim_state = self.GetSimState()

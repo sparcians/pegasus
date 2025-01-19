@@ -1,4 +1,4 @@
-import wx
+import wx, os
 from functools import partial
 
 SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
@@ -26,6 +26,7 @@ class TestConfig(wx.Dialog):
             checkbox = wx.CheckBox(self, label=loaded_test)
             checkbox.SetValue(True)
             vsizer.Add(checkbox)
+            self.test_selection_checkboxes.append(checkbox)
 
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
         for ext in SUPPORTED_EXTENSIONS:
@@ -59,6 +60,10 @@ class TestConfig(wx.Dialog):
         vsizer.Fit(self)
         self.SetSizer(vsizer)
         self.Layout()
+
+    def GetTests(self, risv_tests_dir):
+        # TODO cnyce: Fix logic here
+        return {self.frame.GetTitle()}
 
     def __EndModal(self, event, code):
         self.EndModal(code)

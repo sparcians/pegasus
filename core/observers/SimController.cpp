@@ -1,6 +1,7 @@
 #include "core/observers/SimController.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
+#include "core/Exception.hpp"
 #include "sparta/trigger/Comparator.hpp"
 #include "simdb/utils/uuids.hpp"
 
@@ -346,6 +347,7 @@ private:
         PC,
         STATUS,
         INST,
+        CAUSE,
         DUMP,
         EDIT,
         READ,
@@ -380,6 +382,8 @@ private:
             return SimCommand::STATUS;
         } else if (command_str == "inst") {
             return SimCommand::INST;
+        } else if (command_str == "exception") {
+            return SimCommand::CAUSE;
         } else if (command_str == "dump") {
             return SimCommand::DUMP;
         } else if (command_str == "edit") {
@@ -450,6 +454,9 @@ private:
                 case SimCommand::INST:
                     handleCurrentInstRequest_(state, args);
                     break;
+                case SimCommand::CAUSE:
+                    handleCauseRequest_(state, args);
+                    break;
                 case SimCommand::DUMP:
                     handleRegisterDumpRequest_(state, args);
                     break;
@@ -515,6 +522,20 @@ private:
         }
 
         const auto json = getCurrentInstJson(state);
+        sendJson_(json);
+    }
+
+    void handleCauseRequest_(AtlasState* state, const std::vector<std::string>& args)
+    {
+        if (!args.empty()) {
+            sendError_("'cause' request expects zero arguments");
+            return;
+        }
+
+        const auto exception_unit = state->getExceptionUnit();
+        const auto& cause = exception_unit->getUnhandledException();
+        const int cause_code = cause.isValid() ? (int)cause.getValue() : -1;
+        const auto json = "{\"code\": " + std::to_string(cause_code) + "}";
         sendJson_(json);
     }
 

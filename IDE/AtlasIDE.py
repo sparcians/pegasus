@@ -1,6 +1,8 @@
 import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
 from editor.test_config import TestConfig
+from editor.test_results import TestResults
+from backend.test_runner import RunRiscvTestsAndReportResults
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
@@ -8,6 +10,7 @@ class AtlasIDE(wx.Frame):
         wx.Frame.__init__(self, None, -1, "Atlas IDE", size=wx.DisplaySize())
         self.riscv_tests_dir = riscv_tests_dir
         self.sim_exe_path = sim_exe_path
+        self.test_results = TestResults(self)
 
         self.vsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
         self.test_tree = TestTreeCtrl(self.vsplitter, self)
@@ -53,9 +56,11 @@ class AtlasIDE(wx.Frame):
     def __LaunchTestConfig(self, event):
         test_cfg = TestConfig(self)
         if test_cfg.ShowModal() == wx.ID_OK:
-            self.test_runner.RunTest(test_cfg)
-
-        test_cfg.Destroy()
+            tests = test_cfg.GetTests(self.riscv_tests_dir)
+            test_cfg.Destroy()
+            RunRiscvTestsAndReportResults(self.riscv_tests_dir, self.sim_exe_path, tests, self.test_results)
+        else:
+            test_cfg.Destroy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')
