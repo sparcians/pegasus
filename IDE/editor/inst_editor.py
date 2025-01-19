@@ -1,33 +1,53 @@
 import wx, os
+import wx.py.shell
 
 class InstEditor(wx.Panel):
     def __init__(self, parent, frame):
         wx.Panel.__init__(self, parent)
         self.frame = frame
 
-        row1_panel = wx.Panel(self)
-        self.inst_info_panel = InstInfo(row1_panel)
-        self.reg_info_panel = RegInfo(row1_panel)
-        self.example_impl_panel = ExampleImpl(row1_panel)
+        editor_splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
+        top_panel = wx.Panel(editor_splitter)
+        bottom_panel = wx.Panel(editor_splitter)
 
-        row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row1_sizer.Add(self.inst_info_panel, 1, wx.EXPAND)
-        row1_sizer.Add(self.reg_info_panel, 1, wx.EXPAND)
-        row1_sizer.Add(self.example_impl_panel, 1, wx.EXPAND)
-        row1_panel.SetSizer(row1_sizer)
+        top_row1_panel = wx.Panel(top_panel)
+        top_row2_panel = wx.Panel(top_panel)
 
-        row2_panel = wx.Panel(self)
-        self.inst_impl_panel = InstImpl(row2_panel, frame)
+        self.inst_info_panel = InstInfo(top_row1_panel)
+        self.reg_info_panel = RegInfo(top_row1_panel)
+        self.example_impl_panel = ExampleImpl(top_row1_panel)
+        self.inst_impl_panel = InstImpl(top_row2_panel, frame)
+        self.shell = wx.py.shell.Shell(bottom_panel)
 
-        row2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        row2_sizer.Add(self.inst_impl_panel, 1, wx.EXPAND)
-        row2_panel.SetSizer(row2_sizer)
+        top_row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        top_row1_sizer.Add(self.inst_info_panel, 1, wx.EXPAND)
+        top_row1_sizer.AddStretchSpacer()
+        top_row1_sizer.Add(self.reg_info_panel, 1, wx.EXPAND)
+        top_row1_sizer.AddStretchSpacer()
+        top_row1_sizer.Add(self.example_impl_panel, 1, wx.EXPAND)
+        top_row1_panel.SetSizer(top_row1_sizer)
+
+        top_row2_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        top_row2_sizer.Add(self.inst_impl_panel, 1, wx.EXPAND)
+        top_row2_panel.SetSizer(top_row2_sizer)
+
+        top_panel_sizer = wx.BoxSizer(wx.VERTICAL)
+        top_panel_sizer.Add(top_row1_panel, 0, wx.EXPAND)
+        top_panel_sizer.Add(wx.StaticLine(top_panel), 0, wx.EXPAND)
+        top_panel_sizer.Add(top_row2_panel, 1, wx.EXPAND)
+        top_panel.SetSizer(top_panel_sizer)
+
+        bottom_sizer = wx.BoxSizer(wx.VERTICAL)
+        bottom_sizer.Add(self.shell, 1, wx.EXPAND)
+        bottom_panel.SetSizer(bottom_sizer)
+
+        editor_splitter.SplitHorizontally(top_panel, bottom_panel)
+        editor_splitter.SetSashGravity(0.8)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(row1_panel, 1, wx.EXPAND)
-        sizer.Add(wx.StaticLine(self), 0, wx.EXPAND)
-        sizer.Add(row2_panel, 1, wx.EXPAND)
+        sizer.Add(editor_splitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
+        self.Layout()
 
     def LoadInst(self, pc, inst):
         self.inst_info_panel.LoadInst(pc, inst)
