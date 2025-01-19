@@ -21,7 +21,7 @@ class Workspace(wx.Panel):
 
         self.workspace_panel = wx.Panel(self)
         self.inst_editor = InstEditor(self.workspace_panel, frame)
-        self.inst_viewer = InstViewer(self.workspace_panel, frame, self.inst_editor)
+        self.inst_viewer = InstViewer(self.workspace_panel, frame, self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.inst_editor, 1, wx.EXPAND)
         sizer.Add(self.inst_viewer, 0, wx.EXPAND)

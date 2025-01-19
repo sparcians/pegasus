@@ -2,11 +2,12 @@ import wx
 from backend.sim_wrapper import SimWrapper
 
 class InstViewer(wx.Panel):
-    def __init__(self, parent, frame, inst_editor):
+    def __init__(self, parent, frame, workspace):
         wx.Panel.__init__(self, parent)
         self.SetBackgroundColour('green')
         self.frame = frame
-        self.inst_editor = inst_editor
+        self.workspace = workspace
+        self.inst_editor = workspace.inst_editor
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
         self.inst_list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
@@ -73,3 +74,4 @@ class InstViewer(wx.Panel):
 
         inst = self.insts_by_pc[pc]
         self.inst_editor.LoadInst(pc, inst)
+        self.workspace.inst_editor.inst_impl_panel.runtime_code_mgr.LoadInst(pc, inst)
