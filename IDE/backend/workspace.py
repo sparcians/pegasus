@@ -36,6 +36,7 @@ class Workspace(wx.Panel):
     def LoadTest(self, test):
         self.landing_page_panel.Hide()
         self.workspace_panel.Show()
+        self.frame.SetTitle(test)
         self.inst_viewer.LoadTest(test)
         self.GetSizer().Clear()
         self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)

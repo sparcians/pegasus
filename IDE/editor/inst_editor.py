@@ -215,23 +215,11 @@ class InstImpl(wx.Panel):
         self.cpp_viewer_text.SetFont(mono10)
 
     def LoadInst(self, pc, inst):
-        atlas_cpp_code = self.__GetAtlasCppCode(inst.mnemonic)
+        atlas_cpp_code = self.GetAtlasCppCode(inst.mnemonic)
         self.cpp_viewer_text.SetLabel(atlas_cpp_code)
         self.pyutils_textctrl.SetValue('')
 
-    def __SwitchToPythonImpl(self, event):
-        self.pyutils_textctrl.Enable(self.pyutils_checkbox.IsChecked())
-        self.cpp_viewer_checkbox.SetValue(not self.pyutils_checkbox.IsChecked())
-        self.cpp_viewer_text.Disable()
-        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
-
-    def __SwitchToCppImpl(self, event):
-        self.cpp_viewer_text.Enable(self.cpp_viewer_checkbox.IsChecked())
-        self.pyutils_checkbox.SetValue(not self.cpp_viewer_checkbox.IsChecked())
-        self.pyutils_textctrl.Disable()
-        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
-
-    def __GetAtlasCppCode(self, mnemonic, arch='rv64'):
+    def GetAtlasCppCode(self, mnemonic, arch='rv64'):
         assert arch == 'rv64', 'rv32 has not been coded / tested yet'
 
         atlas_root = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
@@ -272,6 +260,18 @@ class InstImpl(wx.Panel):
         # Remove 4 whitespaces from the front of each line
         cpp_code = [line[4:] for line in cpp_code]
         return ''.join(cpp_code)
+
+    def __SwitchToPythonImpl(self, event):
+        self.pyutils_textctrl.Enable(self.pyutils_checkbox.IsChecked())
+        self.cpp_viewer_checkbox.SetValue(not self.pyutils_checkbox.IsChecked())
+        self.cpp_viewer_text.Disable()
+        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
+
+    def __SwitchToCppImpl(self, event):
+        self.cpp_viewer_text.Enable(self.cpp_viewer_checkbox.IsChecked())
+        self.pyutils_checkbox.SetValue(not self.cpp_viewer_checkbox.IsChecked())
+        self.pyutils_textctrl.Disable()
+        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
 
 class RuntimeCodeManager(wx.Panel):
     def __init__(self, parent, pyutils_textctrl, frame):

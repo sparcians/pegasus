@@ -1,5 +1,6 @@
 import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
+from editor.test_config import TestConfig
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
@@ -19,10 +20,19 @@ class AtlasIDE(wx.Frame):
         self.vsplitter.SetSashPosition(250)
 
         self.menu_bar = wx.MenuBar()
+
+        # Workspace -> New
         self.workspace_menu = wx.Menu()
         self.workspace_menu.Append(1, "&New\tCtrl+N", "Create a new workspace")
-        self.Bind(wx.EVT_MENU, self.__CreateWorkspace, id=1)
         self.menu_bar.Append(self.workspace_menu, "&Workspace")
+        self.Bind(wx.EVT_MENU, self.__CreateWorkspace, id=1)
+
+        # Tests -> Run
+        self.tests_menu = wx.Menu()
+        self.tests_menu.Append(2, "&Run\tF5", "Run the test manager")
+        self.menu_bar.Append(self.tests_menu, "&Tests")
+        self.Bind(wx.EVT_MENU, self.__LaunchTestConfig, id=2)
+
         self.SetMenuBar(self.menu_bar)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -39,6 +49,13 @@ class AtlasIDE(wx.Frame):
             self.Layout()
 
         dlg.Destroy()
+
+    def __LaunchTestConfig(self, event):
+        test_cfg = TestConfig(self)
+        if test_cfg.ShowModal() == wx.ID_OK:
+            self.test_runner.RunTest(test_cfg)
+
+        test_cfg.Destroy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')
