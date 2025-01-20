@@ -213,6 +213,7 @@ class InstImpl(wx.Panel):
     def GetAtlasCppCode(self, mnemonic, arch='rv64'):
         assert arch == 'rv64', 'rv32 has not been coded / tested yet'
 
+        mnemonic = mnemonic.replace('.', '_')
         atlas_root = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
         inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers')
         inst_handler_root = os.path.abspath(inst_handler_root)

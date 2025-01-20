@@ -349,6 +349,7 @@ private:
         DMIWRITE,
         REGPROP,
         BREAKPOINT,
+        FINISH_ACTION_GROUP,
         CONT,
         FINISH,
         EXIT,
@@ -393,6 +394,8 @@ private:
             return SimCommand::REGPROP;
         } else if (command_str == "break") {
             return SimCommand::BREAKPOINT;
+        } else if (command_str == "finish_action_group") {
+            return SimCommand::FINISH_ACTION_GROUP;
         } else if (command_str == "cont") {
             return SimCommand::CONT;
         } else if (command_str == "finish") {
@@ -500,6 +503,8 @@ private:
                 case SimCommand::BREAKPOINT:
                     handleBreakpointRequest_(state, args);
                     break;
+                case SimCommand::FINISH_ACTION_GROUP:
+                    return state->getFinishActionGroup();
                 case SimCommand::CONT:
                     return nullptr;
                 case SimCommand::FINISH:

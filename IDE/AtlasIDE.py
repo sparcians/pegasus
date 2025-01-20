@@ -85,13 +85,3 @@ if __name__ == "__main__":
     frame = AtlasIDE(riscv_tests_dir, sim_exe_path)
     frame.Show()
     app.MainLoop()
-
-# IDE/
-#   AtlasIDE.py
-#   backend/
-#     sim_endpoint.py
-#       class SocketResponse
-#       class SimSocket
-#     sim_stepper.py
-#       class SimStepper
-

@@ -61,9 +61,10 @@ class MiniDebugger:
         self.__pysim_debugger.Continue()
 
 class InstViewer(wx.Panel):
-    def __init__(self, parent, code_mgr):
+    def __init__(self, parent, code_mgr, pysim_debugger):
         wx.Panel.__init__(self, parent)
         self.code_mgr = code_mgr
+        self.pysim_debugger = pysim_debugger
 
         vsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
         left_panel = wx.Panel(vsplitter)
@@ -261,7 +262,29 @@ class InstViewer(wx.Panel):
         self.Layout()
 
     def ExecuteCode(self, language):
-        wx.MessageBox("TODO: Implement this feature")
+        if language.lower() in ('python', 'py'):
+            pycode = self.python_textctrl.GetValue()
+            if not pycode:
+                raise ValueError("No Python code to execute. Call SkipCode() instead.")
+
+            # We have to write python code to a file and give it to the shell.
+            # This is due to limitations in the run() method requiring a single
+            # line of code to execute.
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write(pycode)
+                f.flush()
+                self.pysim_debugger.pyshell.runfile(f.name)
+
+            pyshell = self.pysim_debugger.pyshell
+            pyshell.run(pycode)
+        elif language.lower() not in ('cpp', 'c++'):
+            raise ValueError("Invalid language: {}".format(language))
+
+        return self.pysim_debugger.PingAtlas('cont')
+
+    def SkipCode(self):
+        return self.pysim_debugger.PingAtlas('finish_action_group')
 
 class PySimDebugger(wx.Dialog):
     def __init__(self, workspace):
@@ -273,7 +296,7 @@ class PySimDebugger(wx.Dialog):
         self.test = workspace.frame.GetTitle()
         self.code_mgr = workspace.inst_editor.inst_impl_panel.runtime_code_mgr
         self.hsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
-        self.inst_viewer = InstViewer(self.hsplitter, self.code_mgr)
+        self.inst_viewer = InstViewer(self.hsplitter, self.code_mgr, self)
         self.pyshell = wx.py.shell.Shell(self.hsplitter, locals={'atlas': MiniDebugger(self)})
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -310,6 +333,9 @@ class PySimDebugger(wx.Dialog):
 
     def ShowCode(self, language):
         self.inst_viewer.ShowCode(language)
+
+    def ExecuteCode(self, language):
+        return self.inst_viewer.ExecuteCode(language)
 
     def PingAtlas(self, cmd):
         return self.sim_wrapper.PingAtlas(cmd)
