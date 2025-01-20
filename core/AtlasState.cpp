@@ -18,17 +18,18 @@
 
 namespace atlas
 {
-    mavis::FileNameListType getUArchFiles(const std::string & uarch_file_path)
+    mavis::FileNameListType getUArchFiles(const std::string & uarch_file_path, const uint64_t xlen)
     {
-        const std::string rv64_uarch_file_path = uarch_file_path + "/rv64";
+        const std::string xlen_str = std::to_string(xlen);
+        const std::string xlen_uarch_file_path = uarch_file_path + "/rv" + xlen_str;
         const mavis::FileNameListType uarch_files = {
-            rv64_uarch_file_path + "/atlas_uarch_rv64i.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64m.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64a.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64f.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64d.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64zicsr.json",
-            rv64_uarch_file_path + "/atlas_uarch_rv64zifencei.json"};
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "i.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "m.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
         return uarch_files;
     }
 
@@ -84,7 +85,7 @@ namespace atlas
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
-                getUArchFiles(uarch_file_path_),
+                getUArchFiles(uarch_file_path_, xlen_),
                 AtlasInstAllocatorWrapper<AtlasInstAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(

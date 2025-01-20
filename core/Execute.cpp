@@ -25,22 +25,43 @@ namespace atlas
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
 
-        // TODO: Get RV32 inst handlers
-        // Get instruction handlers
-        RviInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvmInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvaInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvfInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvdInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvzicsrInsts::getInstHandlers<RV64>(inst_handlers_);
-        RvzifenceiInsts::getInstHandlers<RV64>(inst_handlers_);
+        // Get RV64 instruction handlers
+        RviInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvmInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvaInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvfInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvdInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvzicsrInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
 
-        // Get instruction compute address handlers
-        RviInsts::getInstComputeAddressHandlers<RV64>(inst_compute_address_handlers_);
-        RvaInsts::getInstComputeAddressHandlers<RV64>(inst_compute_address_handlers_);
-        RvfInsts::getInstComputeAddressHandlers<RV64>(inst_compute_address_handlers_);
-        RvdInsts::getInstComputeAddressHandlers<RV64>(inst_compute_address_handlers_);
+        // Get RV32 instruction handlers
+        RviInsts::getInstHandlers<RV64>(rv32_inst_handlers_);
+        // RvmInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        // RvaInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        // RvfInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        // RvdInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        // RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        // RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+
+        // Get RV64 instruction compute address handlers
+        RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
+        RvaInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
+        RvfInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
+        RvdInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
+
+        // Get RV32 instruction compute address handlers
+        RviInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
+        // RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
+        // RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
+        // RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
     }
+
+    template const Execute::InstHandlersMap* Execute::getInstHandlersMap<RV64>() const;
+    template const Execute::InstHandlersMap* Execute::getInstHandlersMap<RV32>() const;
+    template const Execute::InstHandlersMap*
+    Execute::getInstComputeAddressHandlersMap<RV64>() const;
+    template const Execute::InstHandlersMap*
+    Execute::getInstComputeAddressHandlersMap<RV32>() const;
 
     ActionGroup* Execute::execute_(AtlasState* state)
     {
