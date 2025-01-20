@@ -26,19 +26,19 @@ namespace atlas
         ActionGroup* integer_reg_reg_handler(atlas::AtlasState* state);
 
         // integer reg-reg 32-bit operations
-        ActionGroup* addw_64_handler(atlas::AtlasState* state);
-        ActionGroup* subw_64_handler(atlas::AtlasState* state);
+        ActionGroup* addw_handler(atlas::AtlasState* state);
+        ActionGroup* subw_handler(atlas::AtlasState* state);
 
         // addi,slti,sltui,andi,ori,xori
         template <typename XLEN, typename OPERATOR>
         ActionGroup* integer_reg_imm_handler(atlas::AtlasState* state);
 
         // integer reg-imm 32-bit operations
-        ActionGroup* addiw_64_handler(atlas::AtlasState* state);
+        ActionGroup* addiw_handler(atlas::AtlasState* state);
 
         // move and nop pseudo insts
-        ActionGroup* mv_64_handler(atlas::AtlasState* state);
-        ActionGroup* nop_64_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* mv_handler(atlas::AtlasState* state);
+        ActionGroup* nop_handler(atlas::AtlasState* state);
 
         // compute address for loads and stores
         template <typename XLEN, typename SIZE>
@@ -57,37 +57,37 @@ namespace atlas
         ActionGroup* branch_handler(atlas::AtlasState* state);
 
         // jumps
-        ActionGroup* jal_64_handler(atlas::AtlasState* state);
-        ActionGroup* jalr_64_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* jal_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* jalr_handler(atlas::AtlasState* state);
 
         // load imm, load upper imm, add upper imm to pc
-        ActionGroup* li_64_handler(atlas::AtlasState* state);
-        ActionGroup* lui_64_handler(atlas::AtlasState* state);
-        ActionGroup* auipc_64_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* li_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* lui_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* auipc_handler(atlas::AtlasState* state);
 
         // shifts,
-        ActionGroup* sll_64_handler(atlas::AtlasState* state);
-        ActionGroup* slli_64_handler(atlas::AtlasState* state);
-        ActionGroup* slliw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sllw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sra_64_handler(atlas::AtlasState* state);
-        ActionGroup* srai_64_handler(atlas::AtlasState* state);
-        ActionGroup* sraiw_64_handler(atlas::AtlasState* state);
-        ActionGroup* sraw_64_handler(atlas::AtlasState* state);
-        ActionGroup* srl_64_handler(atlas::AtlasState* state);
-        ActionGroup* srli_64_handler(atlas::AtlasState* state);
-        ActionGroup* srliw_64_handler(atlas::AtlasState* state);
-        ActionGroup* srlw_64_handler(atlas::AtlasState* state);
+        ActionGroup* sll_handler(atlas::AtlasState* state);
+        ActionGroup* slli_handler(atlas::AtlasState* state);
+        ActionGroup* slliw_handler(atlas::AtlasState* state);
+        ActionGroup* sllw_handler(atlas::AtlasState* state);
+        ActionGroup* sra_handler(atlas::AtlasState* state);
+        ActionGroup* srai_handler(atlas::AtlasState* state);
+        ActionGroup* sraiw_handler(atlas::AtlasState* state);
+        ActionGroup* sraw_handler(atlas::AtlasState* state);
+        ActionGroup* srl_handler(atlas::AtlasState* state);
+        ActionGroup* srli_handler(atlas::AtlasState* state);
+        ActionGroup* srliw_handler(atlas::AtlasState* state);
+        ActionGroup* srlw_handler(atlas::AtlasState* state);
 
         // returns, environment calls, breakpoints, fences
         template <typename XLEN, PrivMode PRIV_MODE>
         ActionGroup* xret_handler(atlas::AtlasState* state);
-        ActionGroup* ecall_64_handler(atlas::AtlasState* state);
-        ActionGroup* ebreak_64_handler(atlas::AtlasState* state);
-        ActionGroup* fence_64_handler(atlas::AtlasState* state);
-        ActionGroup* sfence_vma_64_handler(atlas::AtlasState* state);
+        ActionGroup* ecall_handler(atlas::AtlasState* state);
+        ActionGroup* ebreak_handler(atlas::AtlasState* state);
+        ActionGroup* fence_handler(atlas::AtlasState* state);
+        ActionGroup* sfence_vma_handler(atlas::AtlasState* state);
 
         // wfi
-        ActionGroup* wfi_64_handler(atlas::AtlasState* state);
+        ActionGroup* wfi_handler(atlas::AtlasState* state);
     };
 } // namespace atlas

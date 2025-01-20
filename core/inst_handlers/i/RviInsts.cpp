@@ -121,11 +121,11 @@ namespace atlas
                 "addi", atlas::Action::createAction<
                             &RviInsts::integer_reg_imm_handler<RV64, std::plus<RV64>>, RviInsts>(
                             nullptr, "addi", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "addiw", atlas::Action::createAction<&RviInsts::addiw_64_handler, RviInsts>(
-                             nullptr, "addiw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("addiw",
+                                  atlas::Action::createAction<&RviInsts::addiw_handler, RviInsts>(
+                                      nullptr, "addiw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("addw",
-                                  atlas::Action::createAction<&RviInsts::addw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::addw_handler, RviInsts>(
                                       nullptr, "addw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "and", atlas::Action::createAction<
@@ -136,7 +136,7 @@ namespace atlas
                             &RviInsts::integer_reg_imm_handler<RV64, std::bit_and<RV64>>, RviInsts>(
                             nullptr, "andi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "auipc", atlas::Action::createAction<&RviInsts::auipc_64_handler, RviInsts>(
+                "auipc", atlas::Action::createAction<&RviInsts::auipc_handler<RV64>, RviInsts>(
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "beq",
@@ -163,21 +163,21 @@ namespace atlas
                 "bne", atlas::Action::createAction<
                            &RviInsts::branch_handler<RV64, std::not_equal_to<uint64_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("ebreak",
+                                  atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
+                                      nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("ecall",
+                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
+                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("fence",
+                                  atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
+                                      nullptr, "fence", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "ebreak", atlas::Action::createAction<&RviInsts::ebreak_64_handler, RviInsts>(
-                              nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+                "jal", atlas::Action::createAction<&RviInsts::jal_handler<RV64>, RviInsts>(
+                           nullptr, "jal", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "ecall", atlas::Action::createAction<&RviInsts::ecall_64_handler, RviInsts>(
-                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fence", atlas::Action::createAction<&RviInsts::fence_64_handler, RviInsts>(
-                             nullptr, "fence", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("jal",
-                                  atlas::Action::createAction<&RviInsts::jal_64_handler, RviInsts>(
-                                      nullptr, "jal", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("jalr",
-                                  atlas::Action::createAction<&RviInsts::jalr_64_handler, RviInsts>(
-                                      nullptr, "jalr", ActionTags::EXECUTE_TAG));
+                "jalr", atlas::Action::createAction<&RviInsts::jalr_handler<RV64>, RviInsts>(
+                            nullptr, "jalr", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lb",
                 atlas::Action::createAction<&RviInsts::load_handler<RV64, uint8_t, SIGN_EXTEND>,
@@ -198,12 +198,12 @@ namespace atlas
                 "lhu",
                 atlas::Action::createAction<&RviInsts::load_handler<RV64, uint16_t>, RviInsts>(
                     nullptr, "lhu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("li",
-                                  atlas::Action::createAction<&RviInsts::li_64_handler, RviInsts>(
-                                      nullptr, "li", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lui",
-                                  atlas::Action::createAction<&RviInsts::lui_64_handler, RviInsts>(
-                                      nullptr, "lui", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "li", atlas::Action::createAction<&RviInsts::li_handler<RV64>, RviInsts>(
+                          nullptr, "li", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "lui", atlas::Action::createAction<&RviInsts::lui_handler<RV64>, RviInsts>(
+                           nullptr, "lui", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lw",
                 atlas::Action::createAction<&RviInsts::load_handler<RV64, uint32_t, SIGN_EXTEND>,
@@ -216,11 +216,11 @@ namespace atlas
                 "mret",
                 atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::MACHINE>,
                                             RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("mv",
-                                  atlas::Action::createAction<&RviInsts::mv_64_handler, RviInsts>(
-                                      nullptr, "mv", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "mv", atlas::Action::createAction<&RviInsts::mv_handler<RV64>, RviInsts>(
+                          nullptr, "mv", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("nop",
-                                  atlas::Action::createAction<&RviInsts::nop_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::nop_handler, RviInsts>(
                                       nullptr, "nop", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "or", atlas::Action::createAction<
@@ -239,24 +239,23 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
                     nullptr, "sd", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma",
-                atlas::Action::createAction<&RviInsts::sfence_vma_64_handler, RviInsts>(
-                    nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
+                "sfence.vma", atlas::Action::createAction<&RviInsts::sfence_vma_handler, RviInsts>(
+                                  nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh",
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint16_t>, RviInsts>(
                     nullptr, "sh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sll",
-                                  atlas::Action::createAction<&RviInsts::sll_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sll_handler, RviInsts>(
                                       nullptr, "sll", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("slli",
-                                  atlas::Action::createAction<&RviInsts::slli_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::slli_handler, RviInsts>(
                                       nullptr, "slli", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "slliw", atlas::Action::createAction<&RviInsts::slliw_64_handler, RviInsts>(
-                             nullptr, "slliw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("slliw",
+                                  atlas::Action::createAction<&RviInsts::slliw_handler, RviInsts>(
+                                      nullptr, "slliw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sllw",
-                                  atlas::Action::createAction<&RviInsts::sllw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sllw_handler, RviInsts>(
                                       nullptr, "sllw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slt", atlas::Action::createAction<
@@ -275,46 +274,46 @@ namespace atlas
                             &RviInsts::integer_reg_reg_handler<RV64, std::less<RV64>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sra",
-                                  atlas::Action::createAction<&RviInsts::sra_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sra_handler, RviInsts>(
                                       nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srai",
-                                  atlas::Action::createAction<&RviInsts::srai_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srai_handler, RviInsts>(
                                       nullptr, "srai", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "sraiw", atlas::Action::createAction<&RviInsts::sraiw_64_handler, RviInsts>(
-                             nullptr, "sraiw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("sraiw",
+                                  atlas::Action::createAction<&RviInsts::sraiw_handler, RviInsts>(
+                                      nullptr, "sraiw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sraw",
-                                  atlas::Action::createAction<&RviInsts::sraw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sraw_handler, RviInsts>(
                                       nullptr, "sraw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sret",
                 atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::SUPERVISOR>,
                                             RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
-                                  atlas::Action::createAction<&RviInsts::srl_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srl_handler, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srli",
-                                  atlas::Action::createAction<&RviInsts::srli_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srli_handler, RviInsts>(
                                       nullptr, "srli", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "srliw", atlas::Action::createAction<&RviInsts::srliw_64_handler, RviInsts>(
-                             nullptr, "srliw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("srliw",
+                                  atlas::Action::createAction<&RviInsts::srliw_handler, RviInsts>(
+                                      nullptr, "srliw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srlw",
-                                  atlas::Action::createAction<&RviInsts::srlw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srlw_handler, RviInsts>(
                                       nullptr, "srlw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sub", atlas::Action::createAction<
                            &RviInsts::integer_reg_reg_handler<RV64, std::minus<RV64>>, RviInsts>(
                            nullptr, "sub", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("subw",
-                                  atlas::Action::createAction<&RviInsts::subw_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::subw_handler, RviInsts>(
                                       nullptr, "subw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sw",
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint32_t>, RviInsts>(
                     nullptr, "sw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
-                                  atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::wfi_handler, RviInsts>(
                                       nullptr, "wfi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "xor", atlas::Action::createAction<
@@ -344,7 +343,7 @@ namespace atlas
                             &RviInsts::integer_reg_imm_handler<RV32, std::bit_and<RV32>>, RviInsts>(
                             nullptr, "andi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "auipc", atlas::Action::createAction<&RviInsts::auipc_64_handler, RviInsts>(
+                "auipc", atlas::Action::createAction<&RviInsts::auipc_handler<RV32>, RviInsts>(
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "beq",
@@ -371,21 +370,21 @@ namespace atlas
                 "bne", atlas::Action::createAction<
                            &RviInsts::branch_handler<RV32, std::not_equal_to<uint64_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("ebreak",
+                                  atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
+                                      nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("ecall",
+                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
+                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("fence",
+                                  atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
+                                      nullptr, "fence", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "ebreak", atlas::Action::createAction<&RviInsts::ebreak_64_handler, RviInsts>(
-                              nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+                "jal", atlas::Action::createAction<&RviInsts::jal_handler<RV32>, RviInsts>(
+                           nullptr, "jal", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "ecall", atlas::Action::createAction<&RviInsts::ecall_64_handler, RviInsts>(
-                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fence", atlas::Action::createAction<&RviInsts::fence_64_handler, RviInsts>(
-                             nullptr, "fence", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("jal",
-                                  atlas::Action::createAction<&RviInsts::jal_64_handler, RviInsts>(
-                                      nullptr, "jal", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("jalr",
-                                  atlas::Action::createAction<&RviInsts::jalr_64_handler, RviInsts>(
-                                      nullptr, "jalr", ActionTags::EXECUTE_TAG));
+                "jalr", atlas::Action::createAction<&RviInsts::jalr_handler<RV32>, RviInsts>(
+                            nullptr, "jalr", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lb",
                 atlas::Action::createAction<&RviInsts::load_handler<RV32, uint8_t, SIGN_EXTEND>,
@@ -402,12 +401,12 @@ namespace atlas
                 "lhu",
                 atlas::Action::createAction<&RviInsts::load_handler<RV32, uint16_t>, RviInsts>(
                     nullptr, "lhu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("li",
-                                  atlas::Action::createAction<&RviInsts::li_64_handler, RviInsts>(
-                                      nullptr, "li", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lui",
-                                  atlas::Action::createAction<&RviInsts::lui_64_handler, RviInsts>(
-                                      nullptr, "lui", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "li", atlas::Action::createAction<&RviInsts::li_handler<RV32>, RviInsts>(
+                          nullptr, "li", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "lui", atlas::Action::createAction<&RviInsts::lui_handler<RV32>, RviInsts>(
+                           nullptr, "lui", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lw",
                 atlas::Action::createAction<&RviInsts::load_handler<RV32, uint32_t>, RviInsts>(
@@ -416,11 +415,11 @@ namespace atlas
                 "mret",
                 atlas::Action::createAction<&RviInsts::xret_handler<RV32, PrivMode::MACHINE>,
                                             RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("mv",
-                                  atlas::Action::createAction<&RviInsts::mv_64_handler, RviInsts>(
-                                      nullptr, "mv", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "mv", atlas::Action::createAction<&RviInsts::mv_handler<RV32>, RviInsts>(
+                          nullptr, "mv", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("nop",
-                                  atlas::Action::createAction<&RviInsts::nop_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::nop_handler, RviInsts>(
                                       nullptr, "nop", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "or", atlas::Action::createAction<
@@ -435,15 +434,14 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint8_t>, RviInsts>(
                     nullptr, "sb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma",
-                atlas::Action::createAction<&RviInsts::sfence_vma_64_handler, RviInsts>(
-                    nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
+                "sfence.vma", atlas::Action::createAction<&RviInsts::sfence_vma_handler, RviInsts>(
+                                  nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh",
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint16_t>, RviInsts>(
                     nullptr, "sh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sll",
-                                  atlas::Action::createAction<&RviInsts::sll_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sll_handler, RviInsts>(
                                       nullptr, "sll", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slt", atlas::Action::createAction<
@@ -462,14 +460,14 @@ namespace atlas
                             &RviInsts::integer_reg_reg_handler<RV32, std::less<RV32>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sra",
-                                  atlas::Action::createAction<&RviInsts::sra_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::sra_handler, RviInsts>(
                                       nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sret",
                 atlas::Action::createAction<&RviInsts::xret_handler<RV32, PrivMode::SUPERVISOR>,
                                             RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
-                                  atlas::Action::createAction<&RviInsts::srl_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srl_handler, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sub", atlas::Action::createAction<
@@ -480,7 +478,7 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint32_t>, RviInsts>(
                     nullptr, "sw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("wfi",
-                                  atlas::Action::createAction<&RviInsts::wfi_64_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::wfi_handler, RviInsts>(
                                       nullptr, "wfi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "xor", atlas::Action::createAction<
@@ -511,7 +509,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::addw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::addw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -524,7 +522,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::subw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::subw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -551,7 +549,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::addiw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::addiw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -565,17 +563,17 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::mv_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::mv_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        const uint64_t rs1_val = insn->getRs1()->dmiRead<XLEN>();
         insn->getRd()->dmiWrite(rs1_val);
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::nop_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::nop_handler(atlas::AtlasState* state)
     {
         (void)state;
         return nullptr;
@@ -638,76 +636,70 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::jal_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::jal_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // CHECK_RD();
-        int64_t rd_val = state->getPc() + insn->getOpcodeSize();
-        const uint64_t jump_target = state->getPc() + insn->getImmediate();
+        XLEN rd_val = state->getPc() + insn->getOpcodeSize();
+        const XLEN jump_target = state->getPc() + insn->getImmediate();
         state->setNextPc(jump_target);
         insn->getRd()->dmiWrite(rd_val);
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::jalr_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::jalr_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        // CHECK_RD();
-        uint64_t rd_val = state->getPc() + insn->getOpcodeSize();
-        const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        XLEN rd_val = state->getPc() + insn->getOpcodeSize();
+        const XLEN rs1_val = insn->getRs1()->dmiRead<XLEN>();
         constexpr uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        const uint64_t jump_target = (rs1_val + imm) & ~int64_t(1);
+        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN jump_target = (rs1_val + imm) & ~std::make_signed_t<XLEN>(1);
         state->setNextPc(jump_target);
         insn->getRd()->dmiWrite(rd_val);
-
-        // if (ZICFILP_xLPE(STATE.v, STATE.prv)) {
-        //     STATE.elp = ZICFILP_IS_LP_EXPECTED(insn.rs1());
-        //     serialize();
-        // }
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::li_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::li_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
         insn->getRd()->dmiWrite(imm);
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::lui_64_handler(atlas::AtlasState* state)
-    {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, 32>();
-        insn->getRd()->dmiWrite(imm);
-
-        return nullptr;
-    }
-
-    ActionGroup* RviInsts::auipc_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::lui_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const uint32_t IMM_SIZE = 32;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
-        const uint64_t pc = state->getPc();
-        const uint64_t rd_val =
-            ((int64_t)(imm + pc) << (64 - (state->getXlen()))) >> (64 - (state->getXlen()));
+        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        insn->getRd()->dmiWrite(imm);
+
+        return nullptr;
+    }
+
+    template <typename XLEN> ActionGroup* RviInsts::auipc_handler(atlas::AtlasState* state)
+    {
+        const AtlasInstPtr & insn = state->getCurrentInst();
+
+        const uint32_t IMM_SIZE = 32;
+        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN pc = state->getPc();
+        const XLEN rd_val = ((std::make_signed_t<XLEN>)(imm + pc) << (64 - (state->getXlen())))
+                            >> (64 - (state->getXlen()));
         insn->getRd()->dmiWrite(rd_val);
 
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srl_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::srl_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -719,7 +711,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srliw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::srliw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -732,7 +724,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sll_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sll_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -744,7 +736,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srai_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::srai_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -757,7 +749,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sraw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sraw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -770,7 +762,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srli_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::srli_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -783,7 +775,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sllw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sllw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -796,7 +788,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::slliw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::slliw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -809,7 +801,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sraiw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sraiw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -822,7 +814,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sra_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sra_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -834,7 +826,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::slli_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::slli_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -847,7 +839,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srlw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::srlw_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -927,7 +919,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::ecall_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -968,7 +960,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::ebreak_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::ebreak_handler(atlas::AtlasState* state)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
@@ -992,14 +984,14 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::fence_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::fence_handler(atlas::AtlasState* state)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sfence_vma_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::sfence_vma_handler(atlas::AtlasState* state)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
@@ -1023,7 +1015,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::wfi_64_handler(atlas::AtlasState* state)
+    ActionGroup* RviInsts::wfi_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
