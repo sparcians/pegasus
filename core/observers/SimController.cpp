@@ -303,8 +303,7 @@ public:
     ActionGroup* preExecute(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPreExecute(state)) {
-            // { "action": "pre_execute" }
-            const auto json = "{\"action\": \"pre_execute\"}";
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"pre_execute\", \"response_type\": \"str\"}";
             sendJson_(json);
             return enterLoop_(state);
         }
@@ -314,8 +313,7 @@ public:
     ActionGroup* postExecute(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPostExecute(state)) {
-            // { "action": "post_execute" }
-            const auto json = "{\"action\": \"post_execute\"}";
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"post_execute\", \"response_type\": \"str\"}";
             sendJson_(json);
             return enterLoop_(state);
         }
@@ -325,8 +323,7 @@ public:
     ActionGroup* preException(AtlasState* state)
     {
         if (breakpoint_mgr_.shouldBreakOnPreException(state)) {
-            // { "action": "pre_exception" }
-            const auto json = "{\"action\": \"pre_exception\"}";
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"pre_exception\", \"response_type\": \"str\"}";
             sendJson_(json);
             return enterLoop_(state);
         }
@@ -335,8 +332,7 @@ public:
 
     void onSimulationFinished(AtlasState* state)
     {
-        // { "action": "sim_finished" }
-        const auto json = "{\"action\": \"sim_finished\"}";
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"sim_finished\"}";
         sendJson_(json);
         enterLoop_(state);
     }
@@ -384,15 +380,15 @@ private:
             return SimCommand::INST;
         } else if (command_str == "exception") {
             return SimCommand::CAUSE;
-        } else if (command_str == "dump") {
+        } else if (command_str == "regdump") {
             return SimCommand::DUMP;
         } else if (command_str == "edit") {
             return SimCommand::EDIT;
-        } else if (command_str == "read") {
+        } else if (command_str == "regread") {
             return SimCommand::READ;
-        } else if (command_str == "write") {
+        } else if (command_str == "regwrite") {
             return SimCommand::WRITE;
-        } else if (command_str == "dmiwrite") {
+        } else if (command_str == "regdmiwrite") {
             return SimCommand::DMIWRITE;
         } else if (command_str == "break") {
             return SimCommand::BREAKPOINT;
@@ -426,17 +422,41 @@ private:
     // code in python/C++.
     void sendAck_()
     {
-        sendJson_("{\"ack\": \"ok\"}");
+        sendJson_("{\"response_code\": \"ok\"}");
     }
 
     void sendWarning_(const std::string& warn)
     {
-        sendJson_("{\"warning\": \"" + warn + "\"}");
+        const auto json = "{\"response_code\": \"warn\", \"response_payload\": \"" + warn + "\"}";
+        sendJson_(json);
     }
 
     void sendError_(const std::string& err)
     {
-        sendJson_("{\"error\": \"" + err + "\"}");
+        const auto json = "{\"response_code\": \"err\", \"response_payload\": \"" + err + "\"}";
+        sendJson_(json);
+    }
+
+    template <typename T>
+    void sendInt_(const T val)
+    {
+        static_assert(std::is_integral_v<T>);
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + std::to_string(val) + ", \"response_type\": \"int\"}";
+        sendJson_(json);
+    }
+
+    template <typename T>
+    void sendFloat_(const T val)
+    {
+        static_assert(std::is_floating_point_v<T>);
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + std::to_string(val) + ", \"response_type\": \"float\"}";
+        sendJson_(json);
+    }
+
+    void sendString_(const std::string& s)
+    {
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + s + "\", \"response_type\": \"str\"}";
+        sendJson_(json);
     }
 
     ActionGroup* enterLoop_(AtlasState* state)
@@ -448,6 +468,7 @@ private:
             switch (getSimCommand_(request, args)) {
                 case SimCommand::PC:
                     handlePcRequest_(state, args);
+                    break;
                 case SimCommand::STATUS:
                     handleStatusRequest_(state, args);
                     break;
@@ -497,9 +518,7 @@ private:
             return;
         }
 
-        const auto pc = state->getPc();
-        const auto json = "{\"pc\": " + std::to_string(pc) + "}";
-        sendJson_(json);
+        sendInt_(state->getPc());
     }
 
     void handleStatusRequest_(AtlasState* state, const std::vector<std::string>& args)
@@ -528,20 +547,20 @@ private:
     void handleCauseRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
         if (!args.empty()) {
-            sendError_("'cause' request expects zero arguments");
+            sendError_("'exception' request expects zero arguments");
             return;
         }
 
         const auto exception_unit = state->getExceptionUnit();
         const auto& cause = exception_unit->getUnhandledException();
         const int cause_code = cause.isValid() ? (int)cause.getValue() : -1;
-        const auto json = "{\"code\": " + std::to_string(cause_code) + "}";
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + std::to_string(cause_code) + ", \"response_type\": \"int\"}";
         sendJson_(json);
     }
 
     void handleRegisterDumpRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
-        // dump <group num>
+        // regdump <group num>
         if (args.size() == 1) {
             const auto group_num = std::stoi(args[0]);
 
@@ -575,9 +594,8 @@ private:
             file << rset_json;
             file.close();
 
-            // { "regfile": "/tmp/uuid" }
-            const auto response_json = "{\"regfile\": \"" + fname + "\"}";
-            sendJson_(response_json);
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + fname + "\", \"response_type\": \"regdumpfile\"}";
+            sendJson_(json);
         }
 
         // Invalid!
@@ -622,7 +640,7 @@ private:
 
     void handleRegisterReadRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
-        // read <group num> <reg id>
+        // regread <group num> <reg id>
         if (args.size() == 2) {
             const auto group_num = std::stoi(args[0]);
             const auto reg_id = std::stoi(args[1]);
@@ -647,7 +665,8 @@ private:
             }
 
             if (const auto reg = rset->getRegister(reg_id)) {
-                const auto json = getRegisterJson(reg);
+                const auto reg_json = getRegisterJson(reg);
+                const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + reg_json + "\", \"response_type\": \"regdump\"}";
                 sendJson_(json);
             } else {
                 sendError_("invalid register id " + std::string(args[1]));
@@ -662,7 +681,7 @@ private:
 
     void handleRegisterWriteRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
-        // write <group num> <reg id> <value>
+        // regwrite <group num> <reg id> <value>
         if (args.size() == 3) {
             const auto group_num = std::stoi(args[0]);
             const auto reg_id = std::stoi(args[1]);
@@ -689,8 +708,7 @@ private:
 
             if (const auto reg = rset->getRegister(reg_id)) {
                 reg->write(value);
-                const auto json = getRegisterJson(reg);
-                sendJson_(json);
+                sendAck_();
             } else {
                 sendError_("invalid register id " + std::string(args[1]));
             }
@@ -704,7 +722,7 @@ private:
 
     void handleRegisterDmiWriteRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
-        // dmiwrite <group num> <reg id> <value>
+        // regdmiwrite <group num> <reg id> <value>
         if (args.size() == 3) {
             const auto group_num = std::stoi(args[0]);
             const auto reg_id = std::stoi(args[1]);
@@ -731,8 +749,7 @@ private:
 
             if (const auto reg = rset->getRegister(reg_id)) {
                 reg->dmiWrite(value);
-                const auto json = getRegisterJson(reg);
-                sendJson_(json);
+                sendAck_();
             } else {
                 sendError_("invalid register id " + std::string(args[1]));
             }
@@ -749,7 +766,8 @@ private:
         if (args.size() == 1) {
             // "break info"
             if (args[0] == "info") {
-                const auto json = getBreakpointsJson();
+                const auto bp_json = getBreakpointsJson();
+                const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + bp_json + "\", \"response_type\": \"breakpoints\"}";
                 sendJson_(json);
             }
 

@@ -25,22 +25,23 @@ class InstViewer(wx.Panel):
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
         self.insts_by_pc = {}
 
+        import pdb; pdb.set_trace()
+
         with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
             # We could get the instruction disassembly from pre- or post-execute but the
             # PC value can only be obtained during pre-execute. It will have advance to
             # the next PC by the time we get to post-execute.
-            sim.BreakOnPreExecute()
+            sim.PingAtlas('break action pre_execute')
 
             while True:
-                last_response = sim.Continue()
-                assert isinstance(last_response, str)
+                break_method = sim.PingAtlas('cont')
 
-                if last_response == 'pre_execute':
-                    inst = sim.GetCurrentInst()
+                if break_method == 'pre_execute':
+                    inst = sim.PingAtlas('inst')
                     if inst is None:
                         continue
 
-                    pc = sim.GetPC()
+                    pc = sim.PingAtlas('pc')
                     dasm = inst.dasm
 
                     i = self.inst_list_ctrl.GetItemCount()
@@ -48,7 +49,7 @@ class InstViewer(wx.Panel):
                     self.inst_list_ctrl.SetItem(i, 1, dasm)
                     self.insts_by_pc[hex(pc)] = inst
 
-                elif last_response in ('no_response', 'sim_finished', ''):
+                elif break_method in ('no_response', 'sim_finished', ''):
                     break
 
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)

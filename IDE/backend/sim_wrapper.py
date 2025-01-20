@@ -1,5 +1,13 @@
-import os, subprocess, json
+import os, subprocess
+from backend.dtypes import JsonConverter
 
+# This class is to be used as follows:
+#
+#   with SimWrapper(riscv_tests_dir, sim_exe_path, test_name) as sim:
+#       ...
+#
+# The sim object will be used to interact with the simulator, and the
+# C++ simulation is running for as long as the 'with' block is active.
 class SimWrapper:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
         self.riscv_tests_dir = riscv_tests_dir
@@ -19,98 +27,39 @@ class SimWrapper:
             self.endpoint.close()
         os.chdir(self.return_dir)
 
-    def BreakOnPreExecute(self):
-        self.endpoint.request('break action pre_execute', 'ack')
+    # The following commands are supported:
+    #
+    # 'pc'                                      -> returns the current PC
+    # 'status'                                  -> returns the SimState
+    # 'inst'                                    -> returns the current AtlasInst
+    # 'exception'                               -> returns the cause (error code) of the last exception
+    # 'regdump <groupp num>'                    -> returns the register dump for the specified group
+    # 'regread <group num> <reg id>'            -> returns the specified register value (hex)
+    # 'regwrite <group num> <reg id> <val>'     -> writes the specified value to the specified register
+    # 'regdmiwrite <group num> <addr> <val>'    -> writes the specified value to the specified DMI address
+    # 'cont'                                    -> continue execution to next breakpoint or end of simulation
+    # 'break info'                              -> returns the list of breakpoints
+    # 'break delete'                            -> deletes all breakpoints
+    # 'break exception'                         -> breaks on the next exception
+    # 'break disable'                           -> disables all breakpoints
+    # 'break enable'                            -> enables all breakpoints
+    # 'break <inst>'                            -> breaks on the specified instruction
+    # 'break delete <n>'                        -> deletes the breakpoint with the specified number
+    # 'break disable <n>'                       -> disables the breakpoint with the specified number
+    # 'break enable <n>'                        -> enables the breakpoint with the specified number
+    # 'break pc <pc>'                           -> breaks on the specified PC
+    # 'break pre_execute'                       -> breaks at the start of preExecute() in C++
+    # 'break pre_exception'                     -> breaks at the start of preException() in C++
+    # 'break post_execute'                      -> breaks at the start of postExecute() in C++
+    # 'break pc <comparator> <pc>'              -> breaks on the specified PC with the specified comparator
+    #                                              -> break pc >= 1000
+    #                                              -> break pc == 5000
+    #                                              -> (==, !=, <, <=, >, >=)
+    def PingAtlas(self, command):
+        return self.endpoint.request(command)
 
-    def BreakOnPostExecute(self):
-        self.endpoint.request('break action post_execute', 'ack')
-
-    def BreakOnPreException(self):
-        self.endpoint.request('break action pre_exception', 'ack')
-
-    def GetRegisterValues(self, group_num=-1):
-        if group_num == -1:
-            regs = {
-                0: self.endpoint.request('dump 0', 'regfile'),
-                1: self.endpoint.request('dump 1', 'regfile'),
-                2: self.endpoint.request('dump 2', 'regfile'),
-                3: self.endpoint.request('dump 3', 'regfile'),
-            }
-        else:
-            regs = {
-                group_num: self.endpoint.request('dump {}'.format(group_num), 'regfile')
-            }
-
-        for group_num, reg_file in regs.items():
-            with open(reg_file.strip(), 'r') as fin:
-                regs[group_num] = json.load(fin)
-
-        return regs
-
-    def GetCurrentInst(self):
-        descriptor = self.endpoint.request('inst')
-        if descriptor == '{}':
-            return None
-
-        descriptor = json.loads(descriptor)
-        if len(descriptor) == 0:
-            return None
-
-        return AtlasInst(**descriptor)
-
-    def GetSimState(self):
-        descriptor = self.endpoint.request('status')
-        if descriptor == '{}':
-            return None
-
-        descriptor = json.loads(descriptor)
-        if len(descriptor) == 0:
-            return None
-
-        return SimState(**descriptor)
-
-    def GetPC(self):
-        return int(self.endpoint.request('pc', 'pc'))
-
-    def GetUnhandledException(self):
-        descriptor = self.endpoint.request('exception')
-        descriptor = json.loads(descriptor)
-
-        if descriptor['code'] == -1:
-            return None
-
-        return descriptor['code']
-
-    def Continue(self):
-        sim_state = self.GetSimState()
-        if sim_state.sim_stopped:
-            return 'sim_finished'
-
-        return self.endpoint.request('cont', 'action')
-
-class AtlasInst:
-    def __init__(self, **kwargs):
-        self.mnemonic = kwargs['mnemonic']
-        self.dasm = kwargs['dasm_string']
-        self.opcode = kwargs['opcode']
-        self.opcode_size = kwargs['opcode_size']
-        self.priv = kwargs['priv']
-        self.is_memory_inst = kwargs['is_memory_inst']
-        self.immediate = kwargs.get('immediate', None)
-        self.rs1 = kwargs.get('rs1', None)
-        self.rs1val = kwargs.get('rs1val', None)
-        self.rs2 = kwargs.get('rs2', None)
-        self.rs2val = kwargs.get('rs2val', None)
-        self.rd = kwargs.get('rd', None)
-        self.rdval = kwargs.get('rdval', None)
-
-class SimState:
-    def __init__(self, **kwargs):
-        self.workload_exit_code = kwargs['workload_exit_code']
-        self.test_passed = kwargs['test_passed']
-        self.sim_stopped = kwargs['sim_stopped']
-        self.inst_count = kwargs['inst_count']
-
+# This class runs an Atlas simulation in the background and provides basic
+# low-level communication with the simulator.
 class SimEndpoint:
     def __init__(self):
         self.process = None
@@ -133,9 +82,12 @@ class SimEndpoint:
         if not ide_ready:
             self.close()
 
+        if self.process:
+            print ('Started simulator with PID ' + str(self.process.pid))
+
         return self.process is not None
 
-    def request(self, request, response_key=None):
+    def request(self, request):
         self.__send(request)
 
         response = None
@@ -144,16 +96,15 @@ class SimEndpoint:
             if recvd == '':
                 return ''
 
+            # The ATLAS_IDE_RESPONSE keyword is used to distinguish between
+            # the actual response and other messages that the simulator may
+            # send to stdout. Since we are in a while loop, we can just take
+            # the last response we see with this keyword (we just called the
+            # 'send' method which always gets a response sent to stdout by C++).
             if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
                 response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
-                if response_key is not None:
-                    try:
-                        response_json = json.loads(response)
-                        response = response_json[response_key]
-                    except:
-                        response = None
 
-        return response
+        return JsonConverter.ConvertResponse(response)
 
     def close(self):
         if self.process:

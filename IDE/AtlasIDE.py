@@ -2,7 +2,6 @@ import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
 from editor.test_config import TestConfig
 from editor.test_results import TestResults
-from backend.test_runner import RunRiscvTestsAndReportResults
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
@@ -54,13 +53,7 @@ class AtlasIDE(wx.Frame):
         dlg.Destroy()
 
     def __LaunchTestConfig(self, event):
-        test_cfg = TestConfig(self)
-        if test_cfg.ShowModal() == wx.ID_OK:
-            tests = test_cfg.GetTests(self.riscv_tests_dir)
-            test_cfg.Destroy()
-            RunRiscvTestsAndReportResults(self.riscv_tests_dir, self.sim_exe_path, tests, self.test_results)
-        else:
-            test_cfg.Destroy()
+        wx.MessageBox("TODO: Launch test config")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')
