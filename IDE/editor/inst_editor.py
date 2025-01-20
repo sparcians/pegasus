@@ -16,9 +16,10 @@ class InstEditor(wx.Panel):
 
         self.inst_info_panel = InstInfo(top_row1_panel)
         self.reg_info_panel = RegInfo(top_row1_panel)
+        self.pyshell_bridge = PyShellBridge(self.inst_info_panel, self.reg_info_panel)
         self.example_impl_panel = ExampleImpl(top_row1_panel)
         self.inst_impl_panel = InstImpl(top_row2_panel, frame)
-        self.shell = wx.py.shell.Shell(bottom_panel)
+        self.shell = wx.py.shell.Shell(bottom_panel, locals={'info': self.pyshell_bridge})
 
         top_row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         top_row1_sizer.Add(self.inst_info_panel, 1, wx.EXPAND)
@@ -250,6 +251,47 @@ class InstImpl(wx.Panel):
         # Remove 4 whitespaces from the front of each line
         cpp_code = [line[4:] for line in cpp_code]
         return ''.join(cpp_code)
+
+class PyShellBridge:
+    def __init__(self, inst_info, reg_info):
+        self.__inst_info = inst_info
+        self.__reg_info = reg_info
+
+    @property
+    def pc(self):
+        return self.__inst_info.inst_info_text.GetLabel().split('\n')[0].split()[1]
+
+    @property
+    def opcode(self):
+        return self.__inst_info.inst_info_text.GetLabel().split('\n')[2].split()[1]
+
+    @property
+    def rs1(self):
+        lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
+        for line in lines:
+            if line.startswith('RS1'):
+                return line.split()[1].strip()
+
+    @property
+    def rs2(self):
+        lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
+        for line in lines:
+            if line.startswith('RS2'):
+                return line.split()[1].strip()
+
+    @property
+    def rd(self):
+        lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
+        for line in lines:
+            if line.startswith('RD'):
+                return line.split()[1].strip()
+
+    @property
+    def immediate(self):
+        lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
+        for line in lines:
+            if line.startswith('IMM'):
+                return line.split()[1].strip()
 
 def right_justify_hex(hex_str, width=8):
     # Remove the '0x' prefix and pad the hex string with leading zeros
