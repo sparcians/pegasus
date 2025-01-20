@@ -1,5 +1,6 @@
 import wx, os
 import wx.py.shell
+from editor.runtime_code_mgr import RuntimeCodeManager
 
 class InstEditor(wx.Panel):
     def __init__(self, parent, frame):
@@ -166,29 +167,21 @@ class InstImpl(wx.Panel):
         vsplitter = wx.SplitterWindow(self)
 
         pyutils_panel = wx.Panel(vsplitter)
-        self.pyutils_textctrl = wx.TextCtrl(pyutils_panel, style=wx.TE_MULTILINE)
         self.pyutils_checkbox = wx.CheckBox(pyutils_panel, label='Use Python')
-        self.runtime_code_mgr = RuntimeCodeManager(pyutils_panel, self.pyutils_textctrl, frame)
+        self.pyutils_textctrl = wx.TextCtrl(pyutils_panel, style=wx.TE_MULTILINE)
         self.pyutils_textctrl.Disable()
-
-        # TODO cnyce: Fix the bugs in the revision mgr
-        self.runtime_code_mgr.Disable()
-        self.runtime_code_mgr.SetToolTip('This feature is not yet implemented')
-
-        pyutils_row1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        pyutils_row1_sizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
-        pyutils_row1_sizer.AddStretchSpacer()
-        pyutils_row1_sizer.Add(self.runtime_code_mgr, 1, wx.EXPAND)
-
-        pyutils_vsizer = wx.BoxSizer(wx.VERTICAL)
-        pyutils_vsizer.Add(pyutils_row1_sizer, 0, wx.EXPAND)
-        pyutils_vsizer.Add(self.pyutils_textctrl, 1, wx.EXPAND)
-        pyutils_panel.SetSizer(pyutils_vsizer)
 
         cpp_viewer_panel = wx.Panel(vsplitter)
         self.cpp_viewer_checkbox = wx.CheckBox(cpp_viewer_panel, label='Use C++')
         self.cpp_viewer_text = wx.StaticText(cpp_viewer_panel)
         self.cpp_viewer_checkbox.SetValue(True)
+
+        self.runtime_code_mgr = RuntimeCodeManager(frame, self.pyutils_textctrl, self.pyutils_checkbox, self.cpp_viewer_checkbox)
+
+        pyutils_vsizer = wx.BoxSizer(wx.VERTICAL)
+        pyutils_vsizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
+        pyutils_vsizer.Add(self.pyutils_textctrl, 1, wx.EXPAND)
+        pyutils_panel.SetSizer(pyutils_vsizer)
 
         cpp_viewer_vsizer = wx.BoxSizer(wx.VERTICAL)
         cpp_viewer_vsizer.Add(self.cpp_viewer_checkbox, 0, wx.EXPAND)
@@ -204,9 +197,6 @@ class InstImpl(wx.Panel):
         sizer.Add(vsplitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
-
-        self.pyutils_checkbox.Bind(wx.EVT_CHECKBOX, self.__SwitchToPythonImpl)
-        self.cpp_viewer_checkbox.Bind(wx.EVT_CHECKBOX, self.__SwitchToCppImpl)
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
         mono12 = wx.Font(12, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
@@ -260,99 +250,6 @@ class InstImpl(wx.Panel):
         # Remove 4 whitespaces from the front of each line
         cpp_code = [line[4:] for line in cpp_code]
         return ''.join(cpp_code)
-
-    def __SwitchToPythonImpl(self, event):
-        self.pyutils_textctrl.Enable(self.pyutils_checkbox.IsChecked())
-        self.cpp_viewer_checkbox.SetValue(not self.pyutils_checkbox.IsChecked())
-        self.cpp_viewer_text.Disable()
-        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
-
-    def __SwitchToCppImpl(self, event):
-        self.cpp_viewer_text.Enable(self.cpp_viewer_checkbox.IsChecked())
-        self.pyutils_checkbox.SetValue(not self.cpp_viewer_checkbox.IsChecked())
-        self.pyutils_textctrl.Disable()
-        #self.runtime_code_mgr.Enable(self.pyutils_checkbox.IsChecked())
-
-class RuntimeCodeManager(wx.Panel):
-    def __init__(self, parent, pyutils_textctrl, frame):
-        wx.Panel.__init__(self, parent)
-        self.frame = frame
-
-        self.pyutils_textctrl = pyutils_textctrl
-        self.add_button = wx.BitmapButton(self, bitmap=wx.ArtProvider.GetBitmap(wx.ART_PLUS))
-        self.revisions_dropdown = wx.Choice(self, choices=['Revision 0'])
-        self.revisions_dropdown.SetSelection(0)
-
-        # Map from {mnemonic: [(rev_name, rev_code), ...]}
-        self.revision_code_dict = {}
-
-        self.add_button.Bind(wx.EVT_BUTTON, self.__OnAddRevision)
-        self.revisions_dropdown.Bind(wx.EVT_CHOICE, self.__OnRevisionSelect)
-        self.pyutils_textctrl.Bind(wx.EVT_TEXT, self.__OnTextChange)
-
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.add_button, 0, wx.EXPAND)
-        sizer.Add(self.revisions_dropdown, 1, wx.EXPAND)
-        self.SetSizer(sizer)
-        self.Layout()
-
-    def LoadInst(self, pc, inst):
-        # Find all revision names for this inst and repopulate the dropdown
-        inst_rev_names = []
-        for name, code in self.revision_code_dict.get(inst.mnemonic, []):
-            inst_rev_names.append(name)
-
-        self.revisions_dropdown.Clear()
-        self.revisions_dropdown.AppendItems(inst_rev_names)
-
-        if len(inst_rev_names) == 0:
-            self.revisions_dropdown.Append('Revision 0')
-
-        self.revisions_dropdown.SetSelection(0)
-
-    def __GetCurrentRevisionName(self):
-        return self.revisions_dropdown.GetString(self.revisions_dropdown.GetSelection())
-
-    def __GetCurrentInstMnemonic(self):
-        page_idx = self.frame.notebook.GetSelection()
-        page = self.frame.notebook.GetPage(page_idx)
-        row = page.inst_viewer.inst_list_ctrl.GetFirstSelected()
-        item = page.inst_viewer.inst_list_ctrl.GetItem(row, 1)
-
-        # Parse the mnemonic from the disassembly:
-        #    addi a0, a0, 1
-        #    ^^^^
-        return item.GetText().lstrip().split()[0]
-
-    def __OnTextChange(self, event):
-        rev_name = self.__GetCurrentRevisionName()
-        mnemonic = self.__GetCurrentInstMnemonic()
-        if mnemonic not in self.revision_code_dict:
-            self.revision_code_dict[mnemonic] = []
-
-        for i, (name, code) in enumerate(self.revision_code_dict[mnemonic]):
-            if name == rev_name:
-                self.revision_code_dict[mnemonic][i] = (name, self.pyutils_textctrl.GetValue())
-                return
-
-        self.revision_code_dict[mnemonic].append((rev_name, self.pyutils_textctrl.GetValue()))
-
-    def __OnAddRevision(self, event):
-        dlg = wx.TextEntryDialog(self, "Enter the revision name", "Revision Name")
-        if dlg.ShowModal() == wx.ID_OK:
-            self.revisions_dropdown.Append(dlg.GetValue())
-            self.revisions_dropdown.SetSelection(self.revisions_dropdown.GetCount()-1)
-            self.revision_code_dict[self.__GetCurrentInstMnemonic()].append((dlg.GetValue(), ''))
-            self.pyutils_textctrl.SetValue('')
-            self.Layout()
-
-        dlg.Destroy()
-
-    def __OnRevisionSelect(self, event):
-        #revision_key = self.__GetRevisionKey()
-        #revision_code = self.revision_code_dict.get(revision_key, '')
-        #self.pyutils_textctrl.SetValue(revision_code)
-        pass
 
 def right_justify_hex(hex_str, width=8):
     # Remove the '0x' prefix and pad the hex string with leading zeros

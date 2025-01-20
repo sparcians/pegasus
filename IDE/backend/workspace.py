@@ -37,7 +37,10 @@ class Workspace(wx.Panel):
         self.landing_page_panel.Hide()
         self.workspace_panel.Show()
         self.frame.SetTitle(test)
+
+        # TODO cnyce: Try to add a spinner / progress bar
         self.inst_viewer.LoadTest(test)
+
         self.GetSizer().Clear()
         self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)
         self.Layout()

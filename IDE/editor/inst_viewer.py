@@ -25,8 +25,6 @@ class InstViewer(wx.Panel):
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
         self.insts_by_pc = {}
 
-        import pdb; pdb.set_trace()
-
         with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
             # We could get the instruction disassembly from pre- or post-execute but the
             # PC value can only be obtained during pre-execute. It will have advance to
