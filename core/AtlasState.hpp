@@ -103,13 +103,18 @@ namespace atlas
 
         struct SimState
         {
+            uint64_t current_opcode = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
             bool sim_stopped = false;
             bool test_passed = true;
             uint64_t workload_exit_code = 0;
 
-            void reset() { current_inst.reset(); }
+            void reset()
+            {
+                current_opcode = 0;
+                current_inst.reset();
+            }
         };
 
         const SimState* getSimState() const { return &sim_state_; }
@@ -225,6 +230,12 @@ namespace atlas
         // ISA string
         const std::string isa_string_;
 
+        // XLEN (either 32 or 64 bit)
+        uint64_t xlen_ = 64;
+
+        // Supported ISA string
+        const std::string supported_isa_string_;
+
         // Path to Mavis
         const std::string isa_file_path_;
 
@@ -239,9 +250,6 @@ namespace atlas
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
-
-        // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
 
         //! Current pc
         Addr pc_ = 0x0;
