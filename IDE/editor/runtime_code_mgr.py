@@ -38,6 +38,13 @@ class RuntimeCodeManager:
             self.python_checkbox.SetValue(False)
             self.cpp_checkbox.SetValue(True)
 
+    def GetPythonCode(self, mnemonic):
+        if mnemonic in self.revision_code_dict:
+            pycode, use_python_code = self.revision_code_dict[mnemonic]
+            return pycode if use_python_code else ''
+        else:
+            return ''
+
     def __GetCurrentInstMnemonic(self):
         page_idx = self.frame.notebook.GetSelection()
         page = self.frame.notebook.GetPage(page_idx)

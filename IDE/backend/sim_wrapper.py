@@ -16,16 +16,22 @@ class SimWrapper:
         self.return_dir = os.getcwd()
         self.endpoint = SimEndpoint()
 
-    def __enter__(self):
+    def UnscopedEnter(self):
         os.chdir(os.path.dirname(self.sim_exe_path))
         program_path = "./atlas"
         program_args = ["--interactive", f"{self.riscv_tests_dir}/{self.test_name}"]
         return self if self.endpoint.start_server(program_path, *program_args) else None
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def UnscopedExit(self):
         if self.endpoint.process:
             self.endpoint.close()
         os.chdir(self.return_dir)
+
+    def __enter__(self):
+        return self.UnscopedEnter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.UnscopedExit()
 
     # The following commands are supported:
     #

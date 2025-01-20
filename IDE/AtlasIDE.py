@@ -2,11 +2,12 @@ import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
 from editor.test_config import TestConfig
 from editor.test_results import TestResults
+from editor.pysim_debugger import PySimDebugger
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
     def __init__(self, riscv_tests_dir, sim_exe_path):
-        wx.Frame.__init__(self, None, -1, "Atlas IDE", size=wx.DisplaySize())
+        wx.Frame.__init__(self, None, -1, "Atlas IDE")
         self.riscv_tests_dir = riscv_tests_dir
         self.sim_exe_path = sim_exe_path
         self.test_results = TestResults(self)
@@ -23,17 +24,17 @@ class AtlasIDE(wx.Frame):
 
         self.menu_bar = wx.MenuBar()
 
-        # Workspace -> New
+        # File -> New Workspace
         self.workspace_menu = wx.Menu()
-        self.workspace_menu.Append(1, "&New\tCtrl+N", "Create a new workspace")
-        self.menu_bar.Append(self.workspace_menu, "&Workspace")
+        self.workspace_menu.Append(1, "&New Workspace\tCtrl+N", "Create a new workspace")
+        self.menu_bar.Append(self.workspace_menu, "&File")
         self.Bind(wx.EVT_MENU, self.__CreateWorkspace, id=1)
 
-        # Tests -> Run
-        self.tests_menu = wx.Menu()
-        self.tests_menu.Append(2, "&Run\tF5", "Run the test manager")
-        self.menu_bar.Append(self.tests_menu, "&Tests")
-        self.Bind(wx.EVT_MENU, self.__LaunchTestConfig, id=2)
+        # Debug -> Debug Test
+        self.debug_menu = wx.Menu()
+        self.debug_menu.Append(2, "&Debug Test\tF5", "Run the test manager")
+        self.menu_bar.Append(self.debug_menu, "&Debug")
+        self.Bind(wx.EVT_MENU, self.__LaunchDebugger, id=2)
 
         self.SetMenuBar(self.menu_bar)
 
@@ -41,6 +42,7 @@ class AtlasIDE(wx.Frame):
         sizer.Add(self.vsplitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.Layout()
+        self.Maximize()
 
     def __CreateWorkspace(self, event):
         dlg = wx.TextEntryDialog(self, "Enter the workspace name", "Workspace Name")
@@ -52,8 +54,12 @@ class AtlasIDE(wx.Frame):
 
         dlg.Destroy()
 
-    def __LaunchTestConfig(self, event):
-        wx.MessageBox("TODO: Launch test config")
+    def __LaunchDebugger(self, event):
+        page_idx = self.notebook.GetSelection()
+        active_workspace = self.notebook.GetPage(page_idx)
+        dlg = PySimDebugger(active_workspace)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')
