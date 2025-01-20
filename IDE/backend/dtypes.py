@@ -57,18 +57,10 @@ class JsonConverter:
         if response_type == 'simstate':
             return SimState(**response_payload)
 
-        if response_type == 'jsonfile':
+        if response_type == 'regsdumpfile':
             with open(response_payload, 'r') as fin:
-                return json.load(fin)
-
-        if response_type == 'regdumpfile':
-            with open(response_payload, 'r') as fin:
-                regdump_args = json.load(fin)
-                return RegisterDump(**regdump_args)
-
-        if response_type == 'regdump':
-            regdump_args = json.loads(response_payload)
-            return RegisterDump(**regdump_args)
+                regs = json.load(fin)
+                return RegisterDump(*regs)
 
         if response_type == 'breakpoints':
             bp_args = json.loads(response_payload)
@@ -113,9 +105,45 @@ class SimState:
         self.sim_stopped = kwargs['sim_stopped']
         self.inst_count = kwargs['inst_count']
 
+class RegisterDefn:
+    def __init__(self, name, group_num, reg_id):
+        self.name = name
+        self.group_num = group_num
+        self.reg_id = reg_id
+
+class PySimRegister:
+    def __init__(self, pysim_debugger, name, group_num, reg_id):
+        self.__pysim_debugger = pysim_debugger
+        self.name = name
+        self.group_num = group_num
+        self.reg_id = reg_id
+
+    def read(self):
+        cmd = 'regread {} {}'.format(self.group_num, self.reg_id)
+        return self.__pysim_debugger.PingAtlas(cmd)
+
+    def write(self, value):
+        cmd = 'regwrite {} {} {}'.format(self.group_num, self.reg_id, value)
+        self.__pysim_debugger.PingAtlas(cmd)
+
+    def dmiWrite(self, value):
+        cmd = 'regdmiwrite {} {} {}'.format(self.group_num, self.reg_id, value)
+        self.__pysim_debugger.PingAtlas(cmd)
+
 class RegisterDump:
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, pysim_debugger, *args):
+        self.reg_defns = []
+        for reg_defn in args:
+            reg_name = reg_defn['reg_name']
+            group_num = reg_defn['group_num']
+            reg_id = reg_defn['reg_id']
+            reg = RegisterDefn(reg_name, group_num, reg_id)
+            self.reg_defns.append(reg)
+
+    def FindRegister(self, reg_name):
+        for reg_defn in self.reg_defns:
+            if reg_defn.name == reg_name:
+                return Register
 
 class ActiveBreakpoints:
     def __init__(self, **kwargs):

@@ -164,6 +164,50 @@ namespace atlas
             return csr_rset_->getRegister(reg_num);
         }
 
+        sparta::Register* findRegister(const std::string& reg_name) const
+        {
+            for (uint32_t i = 0; i < int_rset_->getNumRegisters(); ++i)
+            {
+                auto reg = int_rset_->getRegister(i);
+                if (reg->getName() == reg_name)
+                {
+                    return reg;
+                }
+            }
+
+            for (uint32_t i = 0; i < fp_rset_->getNumRegisters(); ++i)
+            {
+                auto reg = fp_rset_->getRegister(i);
+                if (reg->getName() == reg_name)
+                {
+                    return reg;
+                }
+            }
+
+            for (uint32_t i = 0; i < vec_rset_->getNumRegisters(); ++i)
+            {
+                auto reg = vec_rset_->getRegister(i);
+                if (reg->getName() == reg_name)
+                {
+                    return reg;
+                }
+            }
+
+            for (uint32_t i = 0; i < csr_rset_->getNumRegisters(); ++i)
+            {
+                auto reg = csr_rset_->getRegister(i);
+                if (!reg) {
+                    continue;
+                }
+                if (reg->getName() == reg_name)
+                {
+                    return reg;
+                }
+            }
+
+            return nullptr;
+        }
+
         template <typename MemoryType> MemoryType readMemory(const Addr paddr);
 
         template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);

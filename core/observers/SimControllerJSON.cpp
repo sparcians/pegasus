@@ -92,18 +92,6 @@ std::string getCurrentInstJson(AtlasState* state)
     return buffer.GetString();
 }
 
-std::string getRegisterSetJson(RegisterSet* rset)
-{
-    (void)rset;
-    return "{}";
-}
-
-std::string getRegisterJson(sparta::Register* reg)
-{
-    (void)reg;
-    return "{}";
-}
-
 std::string getBreakpointsJson()
 {
     return "{}";

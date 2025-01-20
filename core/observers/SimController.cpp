@@ -22,8 +22,6 @@ namespace atlas
 // These methods are in SimControllerJSON.cpp
 extern std::string getSimStatusJson(AtlasState::SimState* sim_state);
 extern std::string getCurrentInstJson(AtlasState* state);
-extern std::string getRegisterSetJson(RegisterSet* rset);
-extern std::string getRegisterJson(sparta::Register* reg);
 extern std::string getBreakpointsJson();
 // -----------------------------------------
 
@@ -343,12 +341,13 @@ private:
         PC,
         STATUS,
         INST,
+        INST_REG,
         CAUSE,
-        DUMP,
         EDIT,
         READ,
         WRITE,
         DMIWRITE,
+        REGPROP,
         BREAKPOINT,
         CONT,
         FINISH,
@@ -378,10 +377,10 @@ private:
             return SimCommand::STATUS;
         } else if (command_str == "inst") {
             return SimCommand::INST;
+        } else if (command_str == "inst_reg") {
+            return SimCommand::INST_REG;
         } else if (command_str == "exception") {
             return SimCommand::CAUSE;
-        } else if (command_str == "regdump") {
-            return SimCommand::DUMP;
         } else if (command_str == "edit") {
             return SimCommand::EDIT;
         } else if (command_str == "regread") {
@@ -390,6 +389,8 @@ private:
             return SimCommand::WRITE;
         } else if (command_str == "regdmiwrite") {
             return SimCommand::DMIWRITE;
+        } else if (command_str == "regprop") {
+            return SimCommand::REGPROP;
         } else if (command_str == "break") {
             return SimCommand::BREAKPOINT;
         } else if (command_str == "cont") {
@@ -475,11 +476,11 @@ private:
                 case SimCommand::INST:
                     handleCurrentInstRequest_(state, args);
                     break;
+                case SimCommand::INST_REG:
+                    handleCurrentInstRegNameRequest_(state, args);
+                    break;
                 case SimCommand::CAUSE:
                     handleCauseRequest_(state, args);
-                    break;
-                case SimCommand::DUMP:
-                    handleRegisterDumpRequest_(state, args);
                     break;
                 case SimCommand::EDIT:
                     handleEditInstRequest_(state, args);
@@ -492,6 +493,9 @@ private:
                     break;
                 case SimCommand::DMIWRITE:
                     handleRegisterDmiWriteRequest_(state, args);
+                    break;
+                case SimCommand::REGPROP:
+                    handleRegisterPropertyRequest_(state, args);
                     break;
                 case SimCommand::BREAKPOINT:
                     handleBreakpointRequest_(state, args);
@@ -544,6 +548,27 @@ private:
         sendJson_(json);
     }
 
+    void handleCurrentInstRegNameRequest_(AtlasState* state, const std::vector<std::string>& args)
+    {
+        if (args.size() != 1) {
+            sendError_("invoke command as 'inst_reg <rs1|rs2|rd>'");
+            return;
+        }
+
+        const auto& insn = state->getCurrentInst();
+        const auto& reg_alias = args[0];
+
+        if (reg_alias == "rs1" && insn->hasRs1()) {
+            sendString_(insn->getRs1()->getName());
+        } else if (reg_alias == "rs2" && insn->hasRs2()) {
+            sendString_(insn->getRs2()->getName());
+        } else if (reg_alias == "rd" && insn->hasRd()) {
+            sendString_(insn->getRd()->getName());
+        } else {
+            sendError_("invoke command as 'inst_reg <rs1|rs2|rd>'");
+        }
+    }
+
     void handleCauseRequest_(AtlasState* state, const std::vector<std::string>& args)
     {
         if (!args.empty()) {
@@ -556,52 +581,6 @@ private:
         const int cause_code = cause.isValid() ? (int)cause.getValue() : -1;
         const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + std::to_string(cause_code) + ", \"response_type\": \"int\"}";
         sendJson_(json);
-    }
-
-    void handleRegisterDumpRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        // regdump <group num>
-        if (args.size() == 1) {
-            const auto group_num = std::stoi(args[0]);
-
-            atlas::RegisterSet* rset = nullptr;
-            switch (group_num) {
-                case 0:
-                    rset = state->getIntRegisterSet();
-                    break;
-                case 1:
-                    rset = state->getFpRegisterSet();
-                    break;
-                case 2:
-                    rset = state->getVecRegisterSet();
-                    break;
-                case 3:
-                    rset = state->getCsrRegisterSet();
-                    break;
-                default:
-                    sendError_("invalid group number " + std::string(args[0]));
-                    return;
-            }
-
-            const auto rset_json = getRegisterSetJson(rset);
-
-            // This JSON is too large to send back over the socket without
-            // requiring changes to the python code. As a workaround, we
-            // will just create a random file in the tmpdir and write the
-            // JSON there, and just return the path to the file.
-            const auto fname = "/tmp/" + simdb::generateUUID();
-            std::ofstream file(fname);
-            file << rset_json;
-            file.close();
-
-            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + fname + "\", \"response_type\": \"regdumpfile\"}";
-            sendJson_(json);
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'dump <group num>'");
-        }
     }
 
     void handleEditInstRequest_(AtlasState*, const std::vector<std::string>& args)
@@ -665,9 +644,7 @@ private:
             }
 
             if (const auto reg = rset->getRegister(reg_id)) {
-                const auto reg_json = getRegisterJson(reg);
-                const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + reg_json + "\", \"response_type\": \"regdump\"}";
-                sendJson_(json);
+                sendInt_(reg->dmiRead<uint64_t>());
             } else {
                 sendError_("invalid register id " + std::string(args[1]));
             }
@@ -758,6 +735,30 @@ private:
         // Invalid!
         else {
             sendError_("invoke command as 'write <group num> <reg id> <value>'");
+        }
+    }
+
+    void handleRegisterPropertyRequest_(AtlasState* state, const std::vector<std::string>& args)
+    {
+        if (args.size() != 2) {
+            sendError_("invoke command as 'regprop <reg_name> <group_num|reg_id>'");
+            return;
+        }
+
+        const auto& reg_name = args[0];
+        auto reg = state->findRegister(reg_name);
+        if (!reg) {
+            sendError_("invalid register name '" + reg_name + "'");
+            return;
+        }
+
+        const auto& prop = args[1];
+        if (prop == "group_num") {
+            sendInt_(reg->getGroupNum());
+        } else if (prop == "reg_id") {
+            sendInt_(reg->getID());
+        } else {
+            sendError_("invalid property '" + prop + "'");
         }
     }
 
