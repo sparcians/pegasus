@@ -50,7 +50,8 @@ def main():
         testname = os.path.basename(test)
         logname = testname + ".log"
         instlogname = testname + ".instlog"
-        atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, test]
+        isa_string = "rv32g" if args.xlen == "rv32" else "rv64g"
+        atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, test]
         test_passed = False
         try:
             with open(logname, "w") as f:
