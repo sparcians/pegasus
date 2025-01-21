@@ -3,23 +3,6 @@
 #include <cinttypes>
 #include <string>
 
-#define ONE_BIT_MASK 0x1
-#define TWO_BIT_MASK 0x3
-#define TEN_BIT_MASK 0x3FF    // used for PPN0 for SV32
-#define TWELVE_BIT_MASK 0xFFF // used for PPN1 for SV32
-
-#define PTE_D_MASK 0x80
-#define PTE_A_MASK 0x40
-#define PTE_G_MASK 0x20
-#define PTE_U_MASK 0x10
-#define PTE_X_MASK 0x8
-#define PTE_W_MASK 0x4
-#define PTE_R_MASK 0x2
-#define PTE_V_MASK 0x1
-
-#define PT_ENTRIES_SV32 1024 // Sv32 has 1,024 entries in a page table
-#define PT_ENTRIES_SV39 512  // Sv39 has 512 entries in a page table
-
 namespace atlas
 {
     using Addr = uint64_t;

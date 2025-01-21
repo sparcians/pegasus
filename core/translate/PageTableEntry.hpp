@@ -1,7 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-#include "../include/AtlasTypes.hpp"
+#include "include/AtlasTypes.hpp"
+#include "include/PteDefns.hpp"
 
 namespace atlas
 {
@@ -35,7 +36,7 @@ namespace atlas
         bool isValid() const { return v_; }
 
       private:
-        const XLEN pte_val_;
+        XLEN pte_val_;
         XLEN ppn_;
         std::vector<XLEN> ppn_fields_;
 
@@ -54,21 +55,21 @@ namespace atlas
             if constexpr (Mode == MMUMode::SV32)
             {
                 ppn_fields_.resize(Sv32Pte::num_ppn_fields);
-                ppn_fields_[0] = (pte_val_ & Sv32Pte::ppn0::mask) >> Sv32Pte::ppn0::low_bit;
-                ppn_fields_[1] = (pte_val_ & Sv32Pte::ppn1::mask) >> Sv32Pte::ppn1::low_bit;
+                ppn_fields_[0] = (pte_val_ & Sv32Pte::ppn0::bitmask) >> Sv32Pte::ppn0::low_bit;
+                ppn_fields_[1] = (pte_val_ & Sv32Pte::ppn1::bitmask) >> Sv32Pte::ppn1::low_bit;
 
                 // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
                 ppn_ = (ppn_fields_[1] << 10) | ppn_fields_[0];
 
-                rsw_ = (pte_val_ & Sv32Pte::rsw::mask) >> Sv32Pte::rsw::low_bit;
-                d_ = pte_val_ & Sv32Pte::dirty::mask;
-                a_ = pte_val_ & Sv32Pte::accessed::mask;
-                g_ = pte_val_ & Sv32Pte::global::mask;
-                u_ = pte_val_ & Sv32Pte::user::mask;
-                x_ = pte_val_ & Sv32Pte::execute::mask;
-                w_ = pte_val_ & Sv32Pte::write::mask;
-                r_ = pte_val_ & Sv32Pte::read::mask;
-                v_ = pte_val_ & Sv32Pte::valid::mask;
+                rsw_ = (pte_val_ & Sv32Pte::rsw::bitmask) >> Sv32Pte::rsw::low_bit;
+                d_ = pte_val_ & Sv32Pte::dirty::bitmask;
+                a_ = pte_val_ & Sv32Pte::accessed::bitmask;
+                g_ = pte_val_ & Sv32Pte::global::bitmask;
+                u_ = pte_val_ & Sv32Pte::user::bitmask;
+                x_ = pte_val_ & Sv32Pte::execute::bitmask;
+                w_ = pte_val_ & Sv32Pte::write::bitmask;
+                r_ = pte_val_ & Sv32Pte::read::bitmask;
+                v_ = pte_val_ & Sv32Pte::valid::bitmask;
             }
         }
     };
