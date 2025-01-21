@@ -71,7 +71,7 @@ class SanityCheckObserver(Observer):
         self.fout.write('----> OnPostExecute...\n')
 
     def OnSimFinished(self, endpoint):
-        self.fout.write('END SIMULATION RESULTS\n')
+        self.fout.write('END SIMULATION RESULTS:\n')
         workload_exit_code = atlas_exit_code(endpoint)
         test_passed = atlas_test_passed(endpoint)
         inst_count = atlas_inst_count(endpoint)
@@ -87,6 +87,53 @@ class SanityCheckObserver(Observer):
     def __del__(self):
         if self.fout:
             self.fout.close()
+
+## Example observer that tries to implement an instruction in Python (even though
+## there is a C++ implementation, we will go around it and update register values
+## in Python).
+class PythonInstRewriter(Observer):
+    def __init__(self, mnemonic):
+        self.mnemonic = mnemonic
+
+    # We only want to reroute the "mul" instruction. This will be done in pre-execute only.
+    def BreakOnPreException(self):
+        return False
+
+    def BreakOnPostExecute(self):
+        return False
+
+    def OnPreExecute(self, endpoint):
+        insn = atlas_current_inst(endpoint)
+        if insn.getMnemonic() == self.mnemonic:
+            #ActionGroup* RvmInsts::mul_64_handler(atlas::AtlasState* state)
+            #{
+            #    const AtlasInstPtr & insn = state->getCurrentInst();
+            #
+            #    const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+            #    const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+            #    const uint64_t rd_val = rs1_val * rs2_val;
+            #    insn->getRd()->dmiWrite(rd_val);
+            #
+            #    return nullptr;
+            #}
+
+            rs1_val = insn.getRs1().read()
+            rs2_val = insn.getRs2().read()
+            rd_val = rs1_val * rs2_val
+            insn.getRd().dmiWrite(rd_val)
+
+            # Tell Atlas to skip the C++ inst implementation.
+            atlas_finish_execute(endpoint)
+
+    def OnSimFinished(self, endpoint):
+        workload_exit_code = atlas_exit_code(endpoint)
+        test_passed = atlas_test_passed(endpoint)
+        inst_count = atlas_inst_count(endpoint)
+
+        print ('END SIMULATION RESULTS:')
+        print ('--> workload_exit_code: {}'.format(workload_exit_code))
+        print ('--> test_passed: {}'.format(test_passed))
+        print ('--> inst_count: {}'.format(inst_count))
 
 ## Utility class which runs an observer on an Atlas simulation running in the background.
 class ObserverSim:
