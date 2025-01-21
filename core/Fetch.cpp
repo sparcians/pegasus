@@ -76,6 +76,8 @@ namespace atlas
             opcode_size = 2;
         }
 
+        state->getSimState()->current_opcode = opcode;
+
         // Decode instruction with Mavis
         AtlasInstPtr inst = nullptr;
         try
@@ -87,10 +89,7 @@ namespace atlas
         }
         catch (const mavis::UnknownOpcode & e)
         {
-            // End simulation since exceptions are not handled yet
-            state->getSimState()->workload_exit_code = 1;
-            state->getSimState()->test_passed = false;
-            return state->getStopSimActionGroup();
+            THROW_ILLEGAL_INSTRUCTION;
         }
 
         return nullptr;
