@@ -1,77 +1,67 @@
 import json
 
-# Command: "state.xlen"
-# Return:  xlen (int)
+class SimResponse:
+    def __init__(self, response=None):
+        self.response = response
+
+class AckResponse(SimResponse): pass
+class ErrorResponse(SimResponse): pass
+class WarningResponse(SimResponse): pass
+class BrokenPipeResponse(SimResponse): pass
+
+# Equiv C++:  AtlasState::getXlen()
 def atlas_xlen(endpoint):
     return endpoint.request('state.xlen')
 
-# Command: "state.pc"
-# Return:  pc (int)
+# Equiv C++:  AtlasState::getPc()
 def atlas_pc(endpoint):
     return endpoint.request('state.pc')
 
-# Command: "state.exit_code"
-# Return:  exit code (int)
+# Equiv C++:  AtlasState::getSimState()->workload_exit_code
 def atlas_exit_code(endpoint):
     return endpoint.request('state.exit_code')
 
-# Command: "state.test_passed"
-# Return:  success (bool)
+# Equiv C++:  AtlasState::getSimState()->test_passed
 def atlas_test_passed(endpoint):
     return endpoint.request('state.test_passed')
 
-# Command "state.sim_stopped"
-# Return:  stopped (bool)
+# Equiv C++:  AtlasState::getSimState()->sim_stopped
 def atlas_sim_stopped(endpoint):
     return endpoint.request('state.sim_stopped')
 
-# Command: "state.inst_count"
-# Return:  count (int)
+# Equiv C++:  AtlasState::getSimState()->inst_count
 def atlas_inst_count(endpoint):
     return endpoint.request('state.inst_count')
 
-# Command: "state.sim_stopped"
-# Return:  stopped (bool)
-def atlas_sim_stopped(endpoint):
-    return endpoint.request('state.sim_stopped')
-
-# Command: "inst.uid"
-# Return:  uid (int)
+# Equiv C++:  AtlasState::getCurrentInst()->getUid()
 def atlas_inst_uid(endpoint):
     return endpoint.request('inst.uid')
 
-# Command: "inst.mnemonic"
-# Return:  mnemonic (str)
+# Equiv C++:  AtlasState::getCurrentInst()->getMnemonic()
 def atlas_inst_mnemonic(endpoint):
     return endpoint.request('inst.mnemonic')
 
-# Command: "inst.dasm_string"
-# Return:  dasm (str)
+# Equiv C++:  AtlasState::getCurrentInst()->dasmString()
 def atlas_inst_dasm_string(endpoint):
     return endpoint.request('inst.dasm_string')
 
-# Command: "inst.opcode"
-# Return:  opcode (int)
+# Equiv C++:  AtlasState::getCurrentInst()->getOpcode()
 def atlas_inst_opcode(endpoint):
     return endpoint.request('inst.opcode')
 
-# Command: "inst.priv"
-# Return:  priv (int)
+# Equiv C++:  AtlasState::getCurrentInst()->getPrivMode()
 def atlas_inst_priv(endpoint):
     return endpoint.request('inst.priv')
 
-# Command: "inst.has_immediate"
-# Return:  flag (bool)
+# Equiv C++:  AtlasState::getCurrentInst()->hasImmediate()
 def atlas_inst_has_immediate(endpoint):
     return endpoint.request('inst.has_immediate')
 
-# Command: "inst.immediate"
-# Return:  imm value (int)
+# Equiv C++:  AtlasState::getCurrentInst()->getImmediate()
 def atlas_inst_immediate(endpoint):
     return endpoint.request('inst.immediate')
 
-# Command: "inst.rs1.name"
-# Return:  rs1 name (str, or empty string if no rs1)
+# Equiv C++:  AtlasState::getCurrentInst()->getRs1()->getName()
 def atlas_inst_rs1_name(endpoint):
     rs1_name = endpoint.request('inst.rs1.name')
     if isinstance(rs1_name, str) and rs1_name != '':
@@ -79,8 +69,7 @@ def atlas_inst_rs1_name(endpoint):
 
     return None
 
-# Command: "inst.rs2.name"
-# Return:  rs2 name (str, or empty string if no rs2)
+# Equiv C++:  AtlasState::getCurrentInst()->getRs2()->getName()
 def atlas_inst_rs2_name(endpoint):
     rs2_name = endpoint.request('inst.rs2.name')
     if isinstance(rs2_name, str) and rs2_name != '':
@@ -88,8 +77,7 @@ def atlas_inst_rs2_name(endpoint):
 
     return None
 
-# Command: "inst.rd.name"
-# Return:  rd name (str, or empty string if no rd)
+# Equiv C++:  AtlasState::getCurrentInst()->getRd()->getName()
 def atlas_inst_rd_name(endpoint):
     rd_name = endpoint.request('inst.rd.name')
     if isinstance(rd_name, str) and rd_name != '':
@@ -97,75 +85,76 @@ def atlas_inst_rd_name(endpoint):
 
     return None
 
-# Command: "inst.active_exception"
-# Return:  cause (int, or -1 for no exception)
+# Equiv C++:  AtlasState::getCurrentInst()->getExceptionUnit()->getUnhandledException()
 def atlas_inst_active_exception(endpoint):
     return endpoint.request('inst.active_exception')
 
-# Command: "state.num_regs_in_group"
-# Return:  count (int)
+# Equiv C++:  AtlasState::get[Int|Fp|Vec|Csr]RegisterSet()->getNumRegisters()
 def atlas_num_regs_in_group(endpoint, group_num):
     return endpoint.request('state.num_regs_in_group %d' % group_num)
 
-# Command: "csr.name"
-# Args:    csr number (int)
-# Return:  csr name (str|error)
+# Equiv C++:  AtlasState::getCsrRegisterSet()->getRegister(csr_num)->getName()
 def atlas_csr_name(endpoint, csr_num):
     return endpoint.request('csr.name %d' % csr_num)
 
-# Command: "reg.group_num"
-# Args:    reg name (str)
-# Return:  group number (int)
+# Equiv C++:  AtlasState::findRegister(reg_name)->getGroupNum()
 def atlas_reg_group_num(endpoint, reg_name):
     return endpoint.request('reg.group_num %s' % reg_name)
 
-# Command: "reg.reg_id"
-# Args:    reg name (str)
-# Return:  register id (int)
+# Equiv C++:  AtlasState::findRegister(reg_name)->getID()
 def atlas_reg_id(endpoint, reg_name):
     return endpoint.request('reg.reg_id %s' % reg_name)
 
-# Command: "reg.value"
-# Args:    reg name (str)
-# Return:  value (int)
+# Equiv C++:  AtlasState::findRegister(reg_name)->read()
 def atlas_reg_value(endpoint, reg_name):
     return endpoint.request('reg.value %s' % reg_name)
 
-# Command: "reg.write"
-# Args:    reg name (str), value (int)
-# Return:  ack
+# Equiv C++:  AtlasState::findRegister(reg_name)->write(value)
 def atlas_reg_write(endpoint, reg_name, value):
     return endpoint.request('reg.write %s %d' % (reg_name, value))
 
-# Command: "reg.dmiwrite"
-# Args:    reg name (str), value (int)
-# Return:  ack
+# Equiv C++:  AtlasState::findRegister(reg_name)->dmiWrite<uint64_t>(value)
 def atlas_reg_dmiwrite(endpoint, reg_name, value):
     return endpoint.request('reg.dmiwrite %s %d' % (reg_name, value))
 
-# Command: "break.action"
-# Args:    action (str; pre_execute, pre_exception, or post_execute)
-# Return:  ack
+# Set a breakpoint at the given execute phase (pre_execute, pre_exception, post_execute).
 def atlas_break_action(endpoint, action):
     return endpoint.request('break.action %s' % action)
 
-# Command: "state.finish_execute"
-# Return:  action (str; pre_execute, pre_exception, post_execute, or sim_finished)
+# Stop Atlas from executing C++ instruction handler code and jump right
+# to the finish ActionGroup (increment PC, post_execute). This is useful
+# for when Python code is to be injected into the simulation in place of
+# the C++ code.
+#
+# For example, you could write an observer which wants to try new instruction
+# implementations in Python for rapid prototyping:
+#
+#     class PythonInstRewriter(Observer):
+#         def OnPreExecute(self, endpoint):
+#             insn = atlas_current_inst(endpoint)
+#             insn.getRd().write(insn.getRs1().read() * insn.getRs2().read())
+#
+#             # Tell Atlas to skip the C++ inst implementation.
+#             atlas_finish_execute(endpoint)
+#
 def atlas_finish_execute(endpoint):
     return endpoint.request('state.finish_execute')
 
-# Command: "state.continue"
-# Return:  action (str; pre_execute, pre_exception, post_execute, or sim_finished)
+# Continue the running simulation until the next breakpoint is hit
+# or the simulation finishes.
+#
+# Returns the simulation/execution phase that the simulator is in
+# which is one of pre_execute, pre_exception, post_execute, or
+# sim_finished.
 def atlas_continue(endpoint):
     return endpoint.request('state.continue')
 
-# Command: "state.finish_sim"
-# Return:  ack
+# Finish the simulation now. The simulation will complete and the
+# simulator will exit. This invalidates further use of the endpoint.
 def atlas_finish_sim(endpoint):
     return endpoint.request('state.finish_sim')
 
-# Command: None (does not ping the simulator)
-# Return:  alive (bool)
+# Ping the Atlas C++ simulator to see if it is still alive.
 def atlas_sim_alive(endpoint):
     return not isinstance(atlas_pc(endpoint), BrokenPipeResponse)
 
@@ -220,19 +209,3 @@ class JsonConverter:
 
         if response_type == 'bool':
             return response_payload
-
-class AckResponse:
-    def __init__(self, ack):
-        self.ack = ack
-
-class ErrorResponse:
-    def __init__(self, err):
-        self.err = err
-
-class WarningResponse:
-    def __init__(self, warn):
-        self.warn = warn
-
-class BrokenPipeResponse:
-    def __init__(self):
-        pass
