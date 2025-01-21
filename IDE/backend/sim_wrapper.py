@@ -9,6 +9,7 @@ from backend.sim_api import BrokenPipeResponse
 #
 # The sim object will be used to interact with the simulator, and the
 # C++ simulation is running for as long as the 'with' block is active.
+# See IDE.backend.sim_api for the available Python <--> C++ APIs.
 class SimWrapper:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
         self.riscv_tests_dir = riscv_tests_dir
@@ -33,37 +34,6 @@ class SimWrapper:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.UnscopedExit()
-
-    # The following commands are supported:
-    #
-    # 'pc'                                      -> returns the current PC
-    # 'status'                                  -> returns the SimState
-    # 'inst'                                    -> returns the current AtlasInst
-    # 'exception'                               -> returns the cause (error code) of the last exception
-    # 'regdump <groupp num>'                    -> returns the register dump for the specified group
-    # 'regread <group num> <reg id>'            -> returns the specified register value (hex)
-    # 'regwrite <group num> <reg id> <val>'     -> writes the specified value to the specified register
-    # 'regdmiwrite <group num> <addr> <val>'    -> writes the specified value to the specified DMI address
-    # 'cont'                                    -> continue execution to next breakpoint or end of simulation
-    # 'break info'                              -> returns the list of breakpoints
-    # 'break delete'                            -> deletes all breakpoints
-    # 'break exception'                         -> breaks on the next exception
-    # 'break disable'                           -> disables all breakpoints
-    # 'break enable'                            -> enables all breakpoints
-    # 'break <inst>'                            -> breaks on the specified instruction
-    # 'break delete <n>'                        -> deletes the breakpoint with the specified number
-    # 'break disable <n>'                       -> disables the breakpoint with the specified number
-    # 'break enable <n>'                        -> enables the breakpoint with the specified number
-    # 'break pc <pc>'                           -> breaks on the specified PC
-    # 'break pre_execute'                       -> breaks at the start of preExecute() in C++
-    # 'break pre_exception'                     -> breaks at the start of preException() in C++
-    # 'break post_execute'                      -> breaks at the start of postExecute() in C++
-    # 'break pc <comparator> <pc>'              -> breaks on the specified PC with the specified comparator
-    #                                              -> break pc >= 1000
-    #                                              -> break pc == 5000
-    #                                              -> (==, !=, <, <=, >, >=)
-    def PingAtlas(self, command):
-        return self.endpoint.request(command)
 
 # This class runs an Atlas simulation in the background and provides basic
 # low-level communication with the simulator.
@@ -106,11 +76,24 @@ class SimEndpoint:
             if recvd == '':
                 return ''
 
-            # The ATLAS_IDE_RESPONSE keyword is used to distinguish between
-            # the actual response and other messages that the simulator may
-            # send to stdout. Since we are in a while loop, we can just take
-            # the last response we see with this keyword (we just called the
-            # 'send' method which always gets a response sent to stdout by C++).
+            # To parse the response to the request we just asked, get the last ATLAS_IDE_RESPONSE
+            # that we see from the C++ simulator's stdout.
+            #
+            #        Preparing to run...
+            #        Meta-Parameters:
+            #        architecture: NONE
+            #        is_final_config: false
+            #        Non-default model parameters: 1
+            #        Running...
+            #        Running Complete
+            #        Simulation Performance      : wall(0.0260), system(0.0000), user(0.0200)
+            #        Scheduler Tick Rate  (KTPS): 1976.45  (1k ticks per second)
+            #        Scheduler Event Rate (KEPS): 13608.8 KEPS (1k events per second)
+            #        Scheduler Events Fired: 272176
+            #        Run Successful!
+            #   |--> ATLAS_IDE_RESPONSE: {"response_code":"ok","response_payload":null}
+            #   |
+            #   |--- This is all we care about.
             if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
                 response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
 
