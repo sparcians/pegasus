@@ -119,15 +119,15 @@ def atlas_reg_dmiwrite(endpoint, reg_name, value):
 
 # Set a breakpoint at the given execute phase (pre_execute, pre_exception, post_execute).
 def atlas_break_action(endpoint, action):
-    return endpoint.request('break.action %s' % action)
+    return endpoint.request('sim.break %s' % action)
 
 # Stop Atlas from executing C++ instruction handler code and jump right
 # to the finish ActionGroup (increment PC, post_execute). This is useful
 # for when Python code is to be injected into the simulation in place of
 # the C++ code.
 #
-# For example, you could write an observer which wants to try new instruction
-# implementations in Python for rapid prototyping:
+# For example, you could write an observer to tryout a new instruction
+# implementation or to debug your simulator in Python for rapid prototyping:
 #
 #     class PythonInstRewriter(Observer):
 #         def OnPreExecute(self, endpoint):
@@ -138,7 +138,7 @@ def atlas_break_action(endpoint, action):
 #             atlas_finish_execute(endpoint)
 #
 def atlas_finish_execute(endpoint):
-    return endpoint.request('state.finish_execute')
+    return endpoint.request('sim.finish_execute')
 
 # Continue the running simulation until the next breakpoint is hit
 # or the simulation finishes.
@@ -147,12 +147,12 @@ def atlas_finish_execute(endpoint):
 # which is one of pre_execute, pre_exception, post_execute, or
 # sim_finished.
 def atlas_continue(endpoint):
-    return endpoint.request('state.continue')
+    return endpoint.request('sim.continue')
 
 # Finish the simulation now. The simulation will complete and the
 # simulator will exit. This invalidates further use of the endpoint.
 def atlas_finish_sim(endpoint):
-    return endpoint.request('state.finish_sim')
+    return endpoint.request('sim.finish')
 
 # Ping the Atlas C++ simulator to see if it is still alive.
 def atlas_sim_alive(endpoint):

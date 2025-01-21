@@ -117,7 +117,7 @@ private:
         REG_VALUE,
         REG_WRITE,
         REG_DMI_WRITE,
-        BREAK_ACTION,
+        BREAKPOINT,
         FINISH_EXECUTE,
         CONTINUE_SIM,
         FINISH_SIM,
@@ -141,92 +141,35 @@ private:
         }
 
         static const std::unordered_map<std::string, SimCommand> sim_commands = {
-            // Zero args, return <xlen>
             {"state.xlen", SimCommand::XLEN},
-
-            // Zero args, return <pc>
             {"state.pc", SimCommand::PC},
-
-            // Zero args, return <code>
             {"state.exit_code", SimCommand::EXIT_CODE},
-
-            // Zero args, return <bool>
             {"state.test_passed", SimCommand::TEST_PASSED},
-
-            // Zero args, return <bool>
             {"state.sim_stopped", SimCommand::SIM_STOPPED},
-
-            // Zero args, return <count>
             {"state.inst_count", SimCommand::INST_COUNT},
-
-            // Zero args, return <bool>
             {"state.sim_stopped", SimCommand::SIM_STOPPED},
-
-            // Zero args, return <uid|error>
             {"inst.uid", SimCommand::INST_UID},
-
-            // Zero args, return <mnemonic|error>
             {"inst.mnemonic", SimCommand::INST_MNEMONIC},
-
-            // Zero args, return <dasm|error>
             {"inst.dasm_string", SimCommand::INST_DASM_STRING},
-
-            // Zero args, return <opcode|error>
             {"inst.opcode", SimCommand::INST_OPCODE},
-
-            // Zero args, return <priv|error>
             {"inst.priv", SimCommand::INST_PRIV},
-
-            // Zero args, return <bool|error>
             {"inst.has_immediate", SimCommand::INST_HAS_IMM},
-
-            // Zero args, return <imm|error>
             {"inst.immediate", SimCommand::INST_IMMEDIATE},
-
-            // Zero args, return <rs1.name|error>
             {"inst.rs1.name", SimCommand::INST_RS1},
-
-            // Zero args, return <rs2.name|error>
             {"inst.rs2.name", SimCommand::INST_RS2},
-
-            // Zero args, return <rd.name|error>
             {"inst.rd.name", SimCommand::INST_RD},
-
-            // Zero args, return <cause|error>
             {"inst.active_exception", SimCommand::ACTIVE_EXCEPTION},
-
-            // Zero args, return <int>
             {"state.num_regs_in_group", SimCommand::NUM_REGS_IN_GROUP},
-
-            // Arg <csr.reg_id>, return <csr.name|error>
             {"csr.name", SimCommand::CSR_NAME},
-
-            // Arg <reg.name>, return <int|error>
             {"reg.group_num", SimCommand::REG_GROUP_NUM},
-
-            // Arg <reg.name>, return <int|error>
             {"reg.reg_id", SimCommand::REG_ID},
-
-            // Arg <reg.name>, return <int|error>
             {"reg.value", SimCommand::REG_VALUE},
-
-            // Args <reg.name> <value>, return <ack>
             {"reg.write", SimCommand::REG_WRITE},
-
-            // Args <reg.name> <value>, return <ack>
             {"reg.dmiwrite", SimCommand::REG_DMI_WRITE},
-
-            // Args <action>, return <ack>
-            {"break.action", SimCommand::BREAK_ACTION},
-
-            // Zero args, return <action>
-            {"state.finish_execute", SimCommand::FINISH_EXECUTE},
-
-            // Zero args, return <action>
-            {"state.continue", SimCommand::CONTINUE_SIM},
-
-            // Zero args, return <ack>
-            {"state.finish_sim", SimCommand::FINISH_SIM}
+            {"sim.break", SimCommand::BREAKPOINT},
+            {"sim.finish_execute", SimCommand::FINISH_EXECUTE},
+            {"sim.continue", SimCommand::CONTINUE_SIM},
+            {"sim.finish", SimCommand::FINISH_SIM}
         };
 
         if (const auto it = sim_commands.find(command_str); it != sim_commands.end()) {
@@ -493,7 +436,7 @@ private:
                 return true;
             }
 
-            case SimCommand::BREAK_ACTION:
+            case SimCommand::BREAKPOINT:
                 if (args.size() != 1) { sendError_("Invalid args"); break; }
                 if (args[0] == "pre_execute") {
                     break_on_pre_execute_ = true;
