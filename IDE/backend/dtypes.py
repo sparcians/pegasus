@@ -32,7 +32,7 @@ class AtlasState:
         return AtlasFpRegisterSet(self.endpoint)
     
     def getVectorRegisterSet(self):
-        return AtlasVectorRegisterSet(self.endpoint)
+        return AtlasVecRegisterSet(self.endpoint)
     
     def getCsrRegisterSet(self):
         return AtlasCsrRegisterSet(self.endpoint)
@@ -149,62 +149,59 @@ class AtlasInstDeepCopy:
 class SpartaRegister:
     def __init__(self, endpoint, reg_name):
         self.endpoint = endpoint
-        self._reg_name = reg_name
-
-    @property
-    def reg_name(self):
-        return self._reg_name
+        self.reg_name = reg_name
 
     def getName(self):
-        return self._reg_name
+        return self.reg_name
 
     def getGroupNum(self):
-        return atlas_reg_group_num(self.endpoint, self._reg_name)
+        return atlas_reg_group_num(self.endpoint, self.reg_name)
 
     def getID(self):
-        return atlas_reg_id(self.endpoint, self._reg_name)
+        return atlas_reg_id(self.endpoint, self.reg_name)
 
     def read(self):
-        return atlas_reg_value(self.endpoint, self._reg_name)
+        return atlas_reg_value(self.endpoint, self.reg_name)
 
     def write(self, value):
-        atlas_reg_write(self.endpoint, self._reg_name, value)
+        atlas_reg_write(self.endpoint, self.reg_name, value)
 
     def dmiWrite(self, value):
-        atlas_reg_dmiwrite(self.endpoint, self._reg_name, value)
+        atlas_reg_dmiwrite(self.endpoint, self.reg_name, value)
 
     def deepCopy(self):
         return SpartaRegisterDeepCopy(self)
 
-class DynamicSpartaRegister(SpartaRegister):
-    def __init__(self, endpoint, reg_name):
-        super().__init__(endpoint, reg_name)
+class AtlasRD(SpartaRegister):  pass
+class AtlasRS1(SpartaRegister): pass
+class AtlasRS2(SpartaRegister): pass
 
-    def ReBindRegister(self, reg_name):
-        self._reg_name = reg_name
-
-class AtlasRS1(DynamicSpartaRegister): pass
-class AtlasRS2(DynamicSpartaRegister): pass
-class AtlasRD(DynamicSpartaRegister): pass
-
+# Provide read-only register access after the simulation is
+# over. This may be useful to some python observers for post-
+# processing, and the simulation would be stopped at this point.
+#
+# Create from reg.deepCopy()
 class SpartaRegisterDeepCopy:
     def __init__(self, orig_reg):
-        self._reg_name = orig_reg.getName()
-        self._group_num = orig_reg.getGroupNum()
-        self._reg_id = orig_reg.getID()
-        self._value = orig_reg.read()
+        self.reg_name = orig_reg.getName()
+        self.group_num = orig_reg.getGroupNum()
+        self.reg_id = orig_reg.getID()
+        self.value = orig_reg.read()
 
     def getName(self):
-        return self._reg_name
+        return self.reg_name
 
     def getGroupNum(self):
-        return self._group_num
+        return self.group_num
 
     def getID(self):
-        return self._reg_id
+        return self.reg_id
 
     def read(self):
-        return '0x' + format(self._value, '08x')
+        return '0x{:08x}'.format(self.value)
+
+    def deepCopy(self):
+        return SpartaRegisterDeepCopy(self)
 
 class AtlasRegisterSet:
     def __init__(self, endpoint, group_num):
@@ -223,8 +220,8 @@ class AtlasRegisterSet:
         return atlas_num_regs_in_group(self.endpoint, self.group_num)
 
 class AtlasIntRegisterSet(AtlasRegisterSet): pass
-class AtlasFpRegisterSet(AtlasRegisterSet): pass
-class AtlasVectorRegisterSet(AtlasRegisterSet): pass
+class AtlasFpRegisterSet(AtlasRegisterSet):  pass
+class AtlasVecRegisterSet(AtlasRegisterSet): pass
 
 class AtlasCsrRegisterSet(AtlasRegisterSet):
     def __init__(self, endpoint):
