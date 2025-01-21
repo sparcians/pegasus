@@ -1,150 +1,214 @@
-import json
+from editor.sim_api import *
 
-# JSON conversion to help with the Atlas IDE (IPC using JSON messages)
-class JsonConverter:
-    @classmethod
-    def ConvertResponse(cls, response):
-        obj = json.loads(response)
-        response_code = obj['response_code']
-
-        if response_code == 'err':
-            return cls._ConvertError(obj)
-        elif response_code == 'warn':
-            return cls._ConvertWarning(obj)
-        elif response_code == 'ok':
-            return cls._ConvertResponse(obj)
-
-        return None
-
-    @classmethod
-    def _ConvertError(cls, obj):
-        assert 'response_type' not in obj or obj['response_type'] == 'str'
-        errmsg = obj['response_payload']
-        return ErrorResponse(errmsg)
-
-    @classmethod
-    def _ConvertWarning(cls, obj):
-        assert 'response_type' not in obj or obj['response_type'] == 'str'
-        errmsg = obj['response_payload']
-        return WarningResponse(errmsg)
-
-    @classmethod
-    def _ConvertResponse(cls, obj):
-        if 'response_payload' not in obj:
-            return AckResponse(None)
-
-        response_payload = obj['response_payload']
-        if 'response_type' not in obj:
-            return AckResponse(response_payload)
-
-        response_type = obj['response_type']
-
-        if response_type == 'int':
-            return int(response_payload)
-        
-        if response_type == 'float':
-            return float(response_payload)
-        
-        if response_type == 'str':
-            return response_payload
-        
-        if response_type == 'inst':
-            return AtlasInst(**response_payload)
-
-        if response_type == 'state':
-            return AtlasState(**response_payload)
-
-        if response_type == 'simstate':
-            return SimState(**response_payload)
-
-        if response_type == 'regsdumpfile':
-            with open(response_payload, 'r') as fin:
-                regs = json.load(fin)
-                return RegisterDump(*regs)
-
-        if response_type == 'breakpoints':
-            bp_args = json.loads(response_payload)
-            return ActiveBreakpoints(**bp_args)
-
-class AckResponse:
-    def __init__(self, ack):
-        self.ack = ack
-
-class ErrorResponse:
-    def __init__(self, err):
-        self.err = err
-
-class WarningResponse:
-    def __init__(self, warn):
-        self.warn = warn
-
-class AtlasInst:
-    def __init__(self, **kwargs):
-        self.mnemonic = kwargs['mnemonic']
-        self.dasm = kwargs['dasm_string']
-        self.opcode = kwargs['opcode']
-        self.opcode_size = kwargs['opcode_size']
-        self.priv = kwargs['priv']
-        self.is_memory_inst = kwargs['is_memory_inst']
-        self.immediate = kwargs.get('immediate', None)
-        self.rs1 = kwargs.get('rs1', None)
-        self.rs1val = kwargs.get('rs1val', None)
-        self.rs2 = kwargs.get('rs2', None)
-        self.rs2val = kwargs.get('rs2val', None)
-        self.rd = kwargs.get('rd', None)
-        self.rdval = kwargs.get('rdval', None)
+# These classes act as stateless wrappers around various C++ objects
+# in a running simulation.
 
 class AtlasState:
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
 
-class SimState:
-    def __init__(self, **kwargs):
-        self.workload_exit_code = kwargs['workload_exit_code']
-        self.test_passed = kwargs['test_passed']
-        self.sim_stopped = kwargs['sim_stopped']
-        self.inst_count = kwargs['inst_count']
+    def getXlen(self):
+        return 64
 
-class RegisterDefn:
-    def __init__(self, name, group_num, reg_id):
-        self.name = name
-        self.group_num = group_num
-        self.reg_id = reg_id
+    def getPc(self):
+        return atlas_pc(self.endpoint)
 
-class PySimRegister:
-    def __init__(self, pysim_debugger, name, group_num, reg_id):
-        self.__pysim_debugger = pysim_debugger
-        self.name = name
-        self.group_num = group_num
-        self.reg_id = reg_id
+    def getPrivMode(self):
+        return atlas_inst_priv(self.endpoint)
+
+    def getTrapCause(self):
+        return atlas_inst_active_exception(self.endpoint)
+
+    def getSimState(self):
+        return AtlasState.SimState(self.endpoint)
+
+    def getCurrentInst(self):
+        return AtlasState.AtlasInst(self.endpoint)
+
+    def getCSRs(self):
+        csrs = {}
+        for reg_id in range(atlas_num_csr_regs(self.endpoint)):
+            reg_name = atlas_csr_name(self.endpoint, reg_id)
+            if isinstance(reg_name, str):
+                csr_val = atlas_reg_value(self.endpoint, reg_name)
+                csrs[reg_name] = csr_val
+
+        return csrs
+
+    class SimState:
+        def __init__(self, endpoint):
+            self.endpoint = endpoint
+
+        @property
+        def inst_count(self):
+            return atlas_inst_count(self.endpoint)
+
+        @property
+        def sim_stopped(self):
+            return atlas_sim_stopped(self.endpoint)
+
+        @property
+        def test_passed(self):
+            return atlas_test_passed(self.endpoint)
+
+        @property
+        def workload_exit_code(self):
+            return atlas_exit_code(self.endpoint)
+
+class AtlasInst:
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
+
+    def getAtlasState(self):
+        return AtlasState(self.endpoint)
+
+    def getUid(self):
+        return atlas_inst_uid(self.endpoint)
+
+    def getMnemonic(self):
+        return atlas_inst_mnemonic(self.endpoint)
+
+    def dasmString(self):
+        return atlas_inst_dasm_string(self.endpoint)
+
+    def getOpcode(self):
+        return atlas_inst_opcode(self.endpoint)
+
+    def getPrivMode(self):
+        return atlas_inst_priv(self.endpoint)
+
+    def getRs1(self):
+        rs1_name = atlas_inst_rs1_name(self.endpoint)
+        return AtlasRS1(self.endpoint, rs1_name) if rs1_name else None
+
+    def getRs2(self):
+        rs2_name = atlas_inst_rs2_name(self.endpoint)
+        return AtlasRS2(self.endpoint, rs2_name) if rs2_name else None
+
+    def getRd(self):
+        rd_name = atlas_inst_rd_name(self.endpoint)
+        return AtlasRD(self.endpoint, rd_name) if rd_name else None
+
+    def getImmediate(self):
+        has_imm = atlas_inst_has_immediate(self.endpoint)
+        return atlas_inst_immediate(self.endpoint) if has_imm else None
+
+    def deepCopy(self):
+        return AtlasInstDeepCopy(self)
+
+class AtlasInstDeepCopy:
+    def __init__(self, orig_inst):
+        self.uid = orig_inst.getUid()
+        self.mnemonic = orig_inst.getMnemonic()
+        self.dasm = orig_inst.dasmString()
+        self.opcode = orig_inst.getOpcode()
+        self.priv = orig_inst.getPrivMode()
+
+        rs1 = orig_inst.getRs1()
+        rs2 = orig_inst.getRs2()
+        rd = orig_inst.getRd()
+        imm = orig_inst.getImmediate()
+
+        self.rs1 = rs1.deepCopy() if rs1 else None
+        self.rs2 = rs2.deepCopy() if rs2 else None
+        self.rd = rd.deepCopy() if rd else None
+        self.imm = imm
+
+    def getAtlasState(self):
+        return None
+
+    def getUid(self):
+        return self.uid
+
+    def getMnemonic(self):
+        return self.mnemonic
+    
+    def dasmString(self):
+        return self.dasm
+    
+    def getOpcode(self):
+        return self.opcode
+    
+    def getPrivMode(self):
+        return self.priv
+    
+    def getRs1(self):
+        return self.rs1
+    
+    def getRs2(self):
+        return self.rs2
+    
+    def getRd(self):
+        return self.rd
+    
+    def getImmediate(self):
+        return self.imm
+
+class SpartaRegister:
+    def __init__(self, endpoint, reg_name):
+        self.endpoint = endpoint
+        self._reg_name = reg_name
+
+    @property
+    def reg_name(self):
+        return self._reg_name
+
+    def getName(self):
+        return self._reg_name
+
+    def getGroupNum(self):
+        return atlas_reg_group_num(self.endpoint, self._reg_name)
+
+    def getID(self):
+        return atlas_reg_id(self.endpoint, self._reg_name)
 
     def read(self):
-        cmd = 'regread {} {}'.format(self.group_num, self.reg_id)
-        return self.__pysim_debugger.PingAtlas(cmd)
+        return atlas_reg_value(self.endpoint, self._reg_name)
 
     def write(self, value):
-        cmd = 'regwrite {} {} {}'.format(self.group_num, self.reg_id, value)
-        self.__pysim_debugger.PingAtlas(cmd)
+        atlas_reg_write(self.endpoint, self._reg_name, value)
 
     def dmiWrite(self, value):
-        cmd = 'regdmiwrite {} {} {}'.format(self.group_num, self.reg_id, value)
-        self.__pysim_debugger.PingAtlas(cmd)
+        atlas_reg_dmiwrite(self.endpoint, self._reg_name, value)
 
-class RegisterDump:
-    def __init__(self, pysim_debugger, *args):
-        self.reg_defns = []
-        for reg_defn in args:
-            reg_name = reg_defn['reg_name']
-            group_num = reg_defn['group_num']
-            reg_id = reg_defn['reg_id']
-            reg = RegisterDefn(reg_name, group_num, reg_id)
-            self.reg_defns.append(reg)
+    def deepCopy(self):
+        return SpartaRegisterDeepCopy(self)
 
-    def FindRegister(self, reg_name):
-        for reg_defn in self.reg_defns:
-            if reg_defn.name == reg_name:
-                return Register
+class DynamicSpartaRegister(SpartaRegister):
+    def __init__(self, endpoint, reg_name):
+        super().__init__(endpoint, reg_name)
 
-class ActiveBreakpoints:
-    def __init__(self, **kwargs):
-        pass
+    def ReBindRegister(self, reg_name):
+        self._reg_name = reg_name
+
+class AtlasRS1(DynamicSpartaRegister): pass
+class AtlasRS2(DynamicSpartaRegister): pass
+class AtlasRD(DynamicSpartaRegister): pass
+
+class SpartaRegisterDeepCopy:
+    def __init__(self, orig_reg):
+        self._reg_name = orig_reg.getName()
+        self._group_num = orig_reg.getGroupNum()
+        self._reg_id = orig_reg.getID()
+        self._value = orig_reg.read()
+
+    def getName(self):
+        return self._reg_name
+
+    def getGroupNum(self):
+        return self._group_num
+
+    def getID(self):
+        return self._reg_id
+
+    def read(self):
+        return '0x' + format(self._value, '08x')
+
+### ====================================================================
+### Direct sim object instantiation
+def atlas_state(endpoint):
+    return AtlasState(endpoint)
+
+def atlas_current_inst(endpoint):
+    inst = AtlasInst(endpoint)
+    return inst if isinstance(inst.getUid(), int) else None

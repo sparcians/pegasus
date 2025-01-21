@@ -1,5 +1,6 @@
-import os, subprocess
+import os, subprocess, sys
 from backend.dtypes import JsonConverter
+from editor.sim_api import BrokenPipeResponse
 
 # This class is to be used as follows:
 #
@@ -94,7 +95,10 @@ class SimEndpoint:
         return self.process is not None
 
     def request(self, request):
-        self.__send(request)
+        try:
+            self.__send(request)
+        except BrokenPipeError:
+            return BrokenPipeResponse()
 
         response = None
         while response is None:

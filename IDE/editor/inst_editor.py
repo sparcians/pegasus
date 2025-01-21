@@ -73,9 +73,9 @@ class InstInfo(wx.Panel):
 
     def LoadInst(self, pc, inst):
         pc = hex(pc) if not isinstance(pc, str) else pc
-        mnemonic = inst.mnemonic
-        opcode = hex(inst.opcode) if not isinstance(inst.opcode, str) else inst.opcode
-        priv = {0: 'U(0)', 1: 'S(1)', 2: 'H(2)', 3: 'M(3)'}[inst.priv]
+        mnemonic = inst.getMnemonic()
+        opcode = hex(inst.getOpcode()) if not isinstance(inst.getOpcode(), str) else inst.getOpcode()
+        priv = {0: 'U(0)', 1: 'S(1)', 2: 'H(2)', 3: 'M(3)'}[inst.getPrivMode()]
 
         # PC:       <pc>
         # Mnemonic: <mnemonic>
@@ -100,29 +100,33 @@ class RegInfo(wx.Panel):
 
     def LoadInst(self, pc, inst):
         hex_width = 0
+        rs1 = inst.getRs1()
+        rs2 = inst.getRs2()
+        rd = inst.getRd()
+        immediate = inst.getImmediate()
 
         lines = []
-        if inst.rs1:
-            col0 = 'RS1({}):'.format(inst.rs1)
-            col1 = hex(inst.rs1val) if not isinstance(inst.rs1val, str) else inst.rs1val
+        if rs1:
+            col0 = 'RS1({}):'.format(rs1.getName())
+            col1 = rs1.read()
             hex_width = max(hex_width, len(col1))
             lines.append([col0, col1])
 
-        if inst.rs2:
-            col0 = 'RS2({}):'.format(inst.rs2)
-            col1 = hex(inst.rs2val) if not isinstance(inst.rs2val, str) else inst.rs2val
+        if rs2:
+            col0 = 'RS2({}):'.format(rs2.getName())
+            col1 = rs2.read()
             hex_width = max(hex_width, len(col1))
             lines.append([col0, col1])
 
-        if inst.rd:
-            col0 = 'RD({}):'.format(inst.rd)
-            col1 = hex(inst.rdval) if not isinstance(inst.rdval, str) else inst.rdval
+        if rd:
+            col0 = 'RD({}):'.format(rd.getName())
+            col1 = rd.read()
             hex_width = max(hex_width, len(col1))
             lines.append([col0, col1])
 
-        if inst.immediate:
+        if immediate is not None:
             col0 = 'IMM:'
-            col1 = hex(inst.immediate) if not isinstance(inst.immediate, str) else inst.immediate
+            col1 = '0x' + format(immediate, '08x')
             hex_width = max(hex_width, len(col1))
             lines.append([col0, col1])
 
@@ -153,7 +157,7 @@ class ExampleImpl(wx.Panel):
         atlas_root = os.path.abspath(os.path.join(file_dir, os.pardir, os.pardir))
         spike_root = os.path.join(atlas_root, 'spike')
         insns_root = os.path.join(spike_root, 'riscv', 'insns')
-        impl_file = os.path.join(insns_root, inst.mnemonic + '.h')
+        impl_file = os.path.join(insns_root, inst.getMnemonic() + '.h')
 
         if os.path.isfile(impl_file):
             with open(impl_file, 'r') as fin:
@@ -206,7 +210,7 @@ class InstImpl(wx.Panel):
         self.cpp_viewer_text.SetFont(mono10)
 
     def LoadInst(self, pc, inst):
-        atlas_cpp_code = self.GetAtlasCppCode(inst.mnemonic)
+        atlas_cpp_code = self.GetAtlasCppCode(inst.getMnemonic())
         self.cpp_viewer_text.SetLabel(atlas_cpp_code)
         self.pyutils_textctrl.SetValue('')
 

@@ -1,8 +1,6 @@
 import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
-from editor.test_config import TestConfig
 from editor.test_results import TestResults
-from editor.pysim_debugger import PySimDebugger
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
@@ -55,11 +53,7 @@ class AtlasIDE(wx.Frame):
         dlg.Destroy()
 
     def __LaunchDebugger(self, event):
-        page_idx = self.notebook.GetSelection()
-        active_workspace = self.notebook.GetPage(page_idx)
-        dlg = PySimDebugger(active_workspace)
-        dlg.ShowModal()
-        dlg.Destroy()
+        wx.MessageBox('TODO: Implement debugger', 'Debugger', wx.OK | wx.ICON_INFORMATION)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')

@@ -1,5 +1,7 @@
 import wx
 from backend.sim_wrapper import SimWrapper
+from editor.sim_api import *
+from backend.dtypes import *
 
 class InstViewer(wx.Panel):
     def __init__(self, parent, frame, workspace):
@@ -29,26 +31,29 @@ class InstViewer(wx.Panel):
             # We could get the instruction disassembly from pre- or post-execute but the
             # PC value can only be obtained during pre-execute. It will have advance to
             # the next PC by the time we get to post-execute.
-            sim.PingAtlas('break action pre_execute')
+            atlas_break_action(sim.endpoint, 'pre_execute')
 
+            last_pc = -1
             while True:
-                break_method = sim.PingAtlas('cont')
+                break_method = atlas_continue(sim.endpoint)
+                if not atlas_sim_alive(sim.endpoint):
+                    break
+
+                pc = atlas_pc(sim.endpoint)
+                if pc == last_pc:
+                    break
+                else:
+                    last_pc = pc
 
                 if break_method == 'pre_execute':
-                    inst = sim.PingAtlas('inst')
+                    inst = atlas_current_inst(sim.endpoint)
                     if inst is None:
                         continue
 
-                    pc = sim.PingAtlas('pc')
-                    dasm = inst.dasm
-
                     i = self.inst_list_ctrl.GetItemCount()
                     self.inst_list_ctrl.InsertItem(i, hex(pc))
-                    self.inst_list_ctrl.SetItem(i, 1, dasm)
-                    self.insts_by_pc[hex(pc)] = inst
-
-                elif break_method in ('no_response', 'sim_finished', ''):
-                    break
+                    self.inst_list_ctrl.SetItem(i, 1, inst.dasmString())
+                    self.insts_by_pc[hex(pc)] = inst.deepCopy()
 
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.inst_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE)

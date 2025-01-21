@@ -19,270 +19,29 @@
 namespace atlas
 {
 
-// These methods are in SimControllerJSON.cpp
-extern std::string getSimStatusJson(AtlasState::SimState* sim_state);
-extern std::string getCurrentInstJson(AtlasState* state);
-extern std::string getBreakpointsJson();
-// -----------------------------------------
-
 class BreakpointManager
 {
 public:
-    void breakPC(uint64_t pc, const std::string& comparison = "==")
-    {
-        breakpoints_[getNextBreakpointId_()] = std::make_unique<PcBreakpoint>(pc, comparison);
-    }
+    void breakOnPreExecute() { break_on_pre_execute_ = true; }
 
-    void breakInst(const std::string& mnemonic)
-    {
-        breakpoints_[getNextBreakpointId_()] = std::make_unique<InstBreakpoint>(mnemonic);
-    }
+    void breakOnPreException() { break_on_pre_exception_ = true; }
 
-    void breakException()
-    {
-        breakpoints_[getNextBreakpointId_()] = std::make_unique<ExceptionBreakpoint>();
-    }
+    void breakOnPostExecute() { break_on_post_execute_ = true; }
 
-    void breakOnPreExecute()
-    {
-        break_on_pre_execute_ = true;
-    }
+    bool shouldBreakOnPreExecute(AtlasState*) const { return break_on_pre_execute_; }
 
-    void breakOnPostExecute()
-    {
-        break_on_post_execute_ = true;
-    }
+    bool shouldBreakOnPreException(AtlasState*) const { return break_on_pre_exception_; }
 
-    void breakOnPreException()
-    {
-        break_on_pre_exception_ = true;
-    }
-
-    bool shouldBreakOnPreExecute(AtlasState* state) const
-    {
-        if (break_on_pre_execute_) {
-            return true;
-        }
-
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->shouldBreakOnPreExecute(state)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool shouldBreakOnPostExecute(AtlasState* state) const
-    {
-        if (break_on_post_execute_) {
-            return true;
-        }
-
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->shouldBreakOnPostExecute(state)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool shouldBreakOnPreException(AtlasState* state) const
-    {
-        if (break_on_pre_exception_) {
-            return true;
-        }
-
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            if (breakpoint->shouldBreakOnPreException(state)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool deleteBreakpoint(const size_t id)
-    {
-        return breakpoints_.erase(id) == 1;
-    }
+    bool shouldBreakOnPostExecute(AtlasState*) const { return break_on_post_execute_; }
 
     void deleteAllBreakpoints()
     {
-        breakpoints_.clear();
-    }
-
-    bool disableBreakpoint(const size_t id)
-    {
-        if (const auto& breakpoint = breakpoints_.find(id); breakpoint != breakpoints_.end()) {
-            breakpoint->second->disable();
-            return true;
-        }
-        return false;
-    }
-
-    void disableAllBreakpoints()
-    {
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            breakpoint->disable();
-        }
-    }
-
-    bool enableBreakpoint(const size_t id)
-    {
-        if (const auto& breakpoint = breakpoints_.find(id); breakpoint != breakpoints_.end()) {
-            breakpoint->second->enable();
-            return true;
-        }
-        return false;
-    }
-
-    void enableAllBreakpoints()
-    {
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            breakpoint->enable();
-        }
-    }
-
-    std::vector<std::pair<size_t, std::string>> getBreakpoints() const
-    {
-        std::vector<std::pair<size_t, std::string>> result;
-        for (const auto& [id, breakpoint] : breakpoints_) {
-            result.emplace_back(id, breakpoint->getInfo());
-        }
-        return result;
+        break_on_pre_execute_ = false;
+        break_on_pre_exception_ = false;
+        break_on_post_execute_ = false;
     }
 
 private:
-    size_t getNextBreakpointId_()
-    {
-        static size_t id = 1;
-        return id++;
-    }
-
-    class Breakpoint
-    {
-    public:
-        virtual ~Breakpoint() = default;
-        const std::string& getInfo() const { return info_; }
-        void enable() { enabled_ = true; }
-        void disable() { enabled_ = false; }
-
-        bool shouldBreakOnPreExecute(AtlasState* state) const
-        {
-            return enabled_ && shouldBreakOnPreExecute_(state);
-        }
-
-        bool shouldBreakOnPostExecute(AtlasState* state) const
-        {
-            return enabled_ && shouldBreakOnPostExecute_(state);
-        }
-
-        bool shouldBreakOnPreException(AtlasState* state) const
-        {
-            return enabled_ && shouldBreakOnPreException_(state);
-        }
-
-    protected:
-        Breakpoint(const std::string& info)
-            : info_(info)
-        {}
-
-    private:
-        virtual bool shouldBreakOnPreExecute_(AtlasState* state) const = 0;
-        virtual bool shouldBreakOnPostExecute_(AtlasState* state) const = 0;
-        virtual bool shouldBreakOnPreException_(AtlasState* state) const = 0;
-
-        std::string info_;
-        bool enabled_ = true;
-    };
-
-    class PcBreakpoint : public Breakpoint
-    {
-    public:
-        PcBreakpoint(uint64_t pc, const std::string& comparison)
-            : Breakpoint("Break on PC " + comparison + " " + std::to_string(pc))
-            , comparator_(sparta::trigger::createComparator<uint64_t>(comparison, pc))
-        {}
-
-        bool shouldBreakOnPreExecute_(AtlasState* state) const override
-        {
-            return shouldBreakNow(state);
-        }
-
-        bool shouldBreakOnPostExecute_(AtlasState* state) const override
-        {
-            return shouldBreakNow(state);
-        }
-
-        bool shouldBreakOnPreException_(AtlasState* state) const override
-        {
-            return shouldBreakNow(state);
-        }
-
-        bool shouldBreakNow(AtlasState* state) const
-        {
-            return comparator_->eval(state->getPc());
-        }
-
-    private:
-        std::unique_ptr<sparta::trigger::ComparatorBase<uint64_t>> comparator_;
-    };
-
-    class InstBreakpoint : public Breakpoint
-    {
-    public:
-        InstBreakpoint(const std::string& mnemonic)
-            : Breakpoint("Break on instruction '" + mnemonic + "'")
-            , mnemonic_(mnemonic)
-        {}
-
-        bool shouldBreakOnPreExecute_(AtlasState* state) const override
-        {
-            return shouldBreakNow(state);
-        }
-
-        bool shouldBreakOnPostExecute_(AtlasState* state) const override
-        {
-            return shouldBreakNow(state);
-        }
-
-        bool shouldBreakOnPreException_(AtlasState* state) const override
-        {
-            return false;
-        }
-
-        bool shouldBreakNow(AtlasState* state) const
-        {
-            return state->getCurrentInst()->getMnemonic() == mnemonic_;
-        }
-
-    private:
-        std::string mnemonic_;
-    };
-
-    class ExceptionBreakpoint : public Breakpoint
-    {
-    public:
-        ExceptionBreakpoint()
-            : Breakpoint("Break on exceptions")
-        {}
-
-        bool shouldBreakOnPreExecute_(AtlasState* state) const override
-        {
-            return false;
-        }
-
-        bool shouldBreakOnPostExecute_(AtlasState* state) const override
-        {
-            return false;
-        }
-
-        bool shouldBreakOnPreException_(AtlasState* state) const override
-        {
-            return true;
-        }
-    };
-
-    std::map<size_t, std::unique_ptr<Breakpoint>> breakpoints_;
     bool break_on_pre_execute_ = false;
     bool break_on_post_execute_ = false;
     bool break_on_pre_exception_ = false;
@@ -300,19 +59,8 @@ public:
 
     ActionGroup* preExecute(AtlasState* state)
     {
-        if (breakpoint_mgr_.shouldBreakOnPreExecute(state)) {
-            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"pre_execute\", \"response_type\": \"str\"}";
-            sendJson_(json);
-            return enterLoop_(state);
-        }
-        return nullptr;
-    }
-
-    ActionGroup* postExecute(AtlasState* state)
-    {
-        if (breakpoint_mgr_.shouldBreakOnPostExecute(state)) {
-            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"post_execute\", \"response_type\": \"str\"}";
-            sendJson_(json);
+        if (break_on_pre_execute_) {
+            sendString_("pre_execute");
             return enterLoop_(state);
         }
         return nullptr;
@@ -320,9 +68,17 @@ public:
 
     ActionGroup* preException(AtlasState* state)
     {
-        if (breakpoint_mgr_.shouldBreakOnPreException(state)) {
-            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"pre_exception\", \"response_type\": \"str\"}";
-            sendJson_(json);
+        if (break_on_pre_exception_) {
+            sendString_("pre_exception");
+            return enterLoop_(state);
+        }
+        return nullptr;
+    }
+
+    ActionGroup* postExecute(AtlasState* state)
+    {
+        if (break_on_post_execute_) {
+            sendString_("post_execute");
             return enterLoop_(state);
         }
         return nullptr;
@@ -330,8 +86,7 @@ public:
 
     void onSimulationFinished(AtlasState* state)
     {
-        const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"sim_finished\"}";
-        sendJson_(json);
+        sendString_("sim_finished");
         enterLoop_(state);
     }
 
@@ -339,20 +94,35 @@ private:
     enum class SimCommand
     {
         PC,
-        STATUS,
-        INST,
-        INST_REG,
-        CAUSE,
-        EDIT,
-        READ,
-        WRITE,
-        DMIWRITE,
-        REGPROP,
-        BREAKPOINT,
-        FINISH_ACTION_GROUP,
-        CONT,
-        FINISH,
-        EXIT,
+        EXIT_CODE,
+        TEST_PASSED,
+        SIM_STOPPED,
+        INST_COUNT,
+        INST_UID,
+        INST_MNEMONIC,
+        INST_DASM_STRING,
+        INST_OPCODE,
+        INST_PRIV,
+        INST_HAS_IMM,
+        INST_IMMEDIATE,
+        INST_RS1,
+        INST_RS2,
+        INST_RD,
+        ACTIVE_EXCEPTION,
+        NUM_INT_REGS,
+        NUM_FP_REGS,
+        NUM_VEC_REGS,
+        NUM_CSR_REGS,
+        CSR_NAME,
+        REG_GROUP_NUM,
+        REG_ID,
+        REG_VALUE,
+        REG_WRITE,
+        REG_DMI_WRITE,
+        BREAK_ACTION,
+        FINISH_EXECUTE,
+        CONTINUE_SIM,
+        FINISH_SIM,
         NOP
     };
 
@@ -372,39 +142,106 @@ private:
             }
         }
 
-        if (command_str == "pc") {
-            return SimCommand::PC;
-        } else if (command_str == "status") {
-            return SimCommand::STATUS;
-        } else if (command_str == "inst") {
-            return SimCommand::INST;
-        } else if (command_str == "inst_reg") {
-            return SimCommand::INST_REG;
-        } else if (command_str == "exception") {
-            return SimCommand::CAUSE;
-        } else if (command_str == "edit") {
-            return SimCommand::EDIT;
-        } else if (command_str == "regread") {
-            return SimCommand::READ;
-        } else if (command_str == "regwrite") {
-            return SimCommand::WRITE;
-        } else if (command_str == "regdmiwrite") {
-            return SimCommand::DMIWRITE;
-        } else if (command_str == "regprop") {
-            return SimCommand::REGPROP;
-        } else if (command_str == "break") {
-            return SimCommand::BREAKPOINT;
-        } else if (command_str == "finish_action_group") {
-            return SimCommand::FINISH_ACTION_GROUP;
-        } else if (command_str == "cont") {
-            return SimCommand::CONT;
-        } else if (command_str == "finish") {
-            return SimCommand::FINISH;
-        } else if (command_str == "exit") {
-            return SimCommand::EXIT;
-        } else {
-            return SimCommand::NOP;
+        static const std::unordered_map<std::string, SimCommand> sim_commands = {
+            // Zero args, return <pc>
+            {"state.pc", SimCommand::PC},
+
+            // Zero args, return <code>
+            {"state.exit_code", SimCommand::EXIT_CODE},
+
+            // Zero args, return <bool>
+            {"state.test_passed", SimCommand::TEST_PASSED},
+
+            // Zero args, return <bool>
+            {"state.sim_stopped", SimCommand::SIM_STOPPED},
+
+            // Zero args, return <count>
+            {"state.inst_count", SimCommand::INST_COUNT},
+
+            // Zero args, return <bool>
+            {"state.sim_stopped", SimCommand::SIM_STOPPED},
+
+            // Zero args, return <uid|error>
+            {"inst.uid", SimCommand::INST_UID},
+
+            // Zero args, return <mnemonic|error>
+            {"inst.mnemonic", SimCommand::INST_MNEMONIC},
+
+            // Zero args, return <dasm|error>
+            {"inst.dasm_string", SimCommand::INST_DASM_STRING},
+
+            // Zero args, return <opcode|error>
+            {"inst.opcode", SimCommand::INST_OPCODE},
+
+            // Zero args, return <priv|error>
+            {"inst.priv", SimCommand::INST_PRIV},
+
+            // Zero args, return <bool|error>
+            {"inst.has_immediate", SimCommand::INST_HAS_IMM},
+
+            // Zero args, return <imm|error>
+            {"inst.immediate", SimCommand::INST_IMMEDIATE},
+
+            // Zero args, return <rs1.name|error>
+            {"inst.rs1.name", SimCommand::INST_RS1},
+
+            // Zero args, return <rs2.name|error>
+            {"inst.rs2.name", SimCommand::INST_RS2},
+
+            // Zero args, return <rd.name|error>
+            {"inst.rd.name", SimCommand::INST_RD},
+
+            // Zero args, return <cause|error>
+            {"inst.active_exception", SimCommand::ACTIVE_EXCEPTION},
+
+            // Zero args, return <int>
+            {"state.num_int_regs", SimCommand::NUM_INT_REGS},
+
+            // Zero args, return <int>
+            {"state.num_fp_regs", SimCommand::NUM_FP_REGS},
+
+            // Zero args, return <int>
+            {"state.num_vec_regs", SimCommand::NUM_VEC_REGS},
+
+            // Zero args, return <int>
+            {"state.num_csr_regs", SimCommand::NUM_CSR_REGS},
+
+            // Arg <csr.reg_id>, return <csr.name|error>
+            {"csr.name", SimCommand::CSR_NAME},
+
+            // Arg <reg.name>, return <int|error>
+            {"reg.group_num", SimCommand::REG_GROUP_NUM},
+
+            // Arg <reg.name>, return <int|error>
+            {"reg.reg_id", SimCommand::REG_ID},
+
+            // Arg <reg.name>, return <int|error>
+            {"reg.value", SimCommand::REG_VALUE},
+
+            // Args <reg.name> <value>, return <ack>
+            {"reg.write", SimCommand::REG_WRITE},
+
+            // Args <reg.name> <value>, return <ack>
+            {"reg.dmiwrite", SimCommand::REG_DMI_WRITE},
+
+            // Args <action>, return <ack>
+            {"break.action", SimCommand::BREAK_ACTION},
+
+            // Zero args, return <action>
+            {"state.finish_execute", SimCommand::FINISH_EXECUTE},
+
+            // Zero args, return <action>
+            {"state.continue", SimCommand::CONTINUE_SIM},
+
+            // Zero args, return <ack>
+            {"state.finish_sim", SimCommand::FINISH_SIM}
+        };
+
+        if (const auto it = sim_commands.find(command_str); it != sim_commands.end()) {
+            return it->second;
         }
+
+        return SimCommand::NOP;
     }
 
     std::string receiveRequest_()
@@ -457,6 +294,13 @@ private:
         sendJson_(json);
     }
 
+    void sendBool_(const bool b)
+    {
+        const std::string b_str = b ? "true" : "false";
+        const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + b_str + ", \"response_type\": \"bool\"}";
+        sendJson_(json);
+    }
+
     void sendString_(const std::string& s)
     {
         const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + s + "\", \"response_type\": \"str\"}";
@@ -466,450 +310,234 @@ private:
     ActionGroup* enterLoop_(AtlasState* state)
     {
         while (true) {
-            const std::string request = receiveRequest_();
             std::vector<std::string> args;
+            const std::string request = receiveRequest_();
+            const SimCommand sim_cmd = getSimCommand_(request, args);
 
-            switch (getSimCommand_(request, args)) {
-                case SimCommand::PC:
-                    handlePcRequest_(state, args);
-                    break;
-                case SimCommand::STATUS:
-                    handleStatusRequest_(state, args);
-                    break;
-                case SimCommand::INST:
-                    handleCurrentInstRequest_(state, args);
-                    break;
-                case SimCommand::INST_REG:
-                    handleCurrentInstRegNameRequest_(state, args);
-                    break;
-                case SimCommand::CAUSE:
-                    handleCauseRequest_(state, args);
-                    break;
-                case SimCommand::EDIT:
-                    handleEditInstRequest_(state, args);
-                    break;
-                case SimCommand::READ:
-                    handleRegisterReadRequest_(state, args);
-                    break;
-                case SimCommand::WRITE:
-                    handleRegisterWriteRequest_(state, args);
-                    break;
-                case SimCommand::DMIWRITE:
-                    handleRegisterDmiWriteRequest_(state, args);
-                    break;
-                case SimCommand::REGPROP:
-                    handleRegisterPropertyRequest_(state, args);
-                    break;
-                case SimCommand::BREAKPOINT:
-                    handleBreakpointRequest_(state, args);
-                    break;
-                case SimCommand::FINISH_ACTION_GROUP:
-                    return state->getFinishActionGroup();
-                case SimCommand::CONT:
-                    return nullptr;
-                case SimCommand::FINISH:
-                    handleFinishRequest_(state, args);
-                    return nullptr;
-                case SimCommand::EXIT:
-                    handleExitRequest_(state, args);
-                    return nullptr;
-                case SimCommand::NOP:
-                    sendError_("'" + request + "' is not a valid command");
-                    break;
+            atlas::ActionGroup* fail_action_group = nullptr;
+            if (!handleSimCommand_(state, sim_cmd, args, fail_action_group)) {
+                return fail_action_group;
             }
         }
     }
 
-    void handlePcRequest_(AtlasState* state, const std::vector<std::string>& args)
+    // Returns TRUE if we are supposed to remain in the loop. The caller
+    // should return fail_action_group to the simulator if we return false.
+    bool handleSimCommand_(AtlasState* state, SimCommand sim_cmd, const std::vector<std::string>& args, ActionGroup* fail_action_group)
     {
-        if (!args.empty()) {
-            sendError_("'pc' request expects zero arguments");
-            return;
-        }
+        switch (sim_cmd) {
+            case SimCommand::PC:
+                sendInt_(state->getPc());
+                return true;
 
-        sendInt_(state->getPc());
-    }
+            case SimCommand::EXIT_CODE:
+                sendInt_(state->getSimState()->workload_exit_code);
+                return true;
 
-    void handleStatusRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        if (!args.empty()) {
-            sendError_("'status' request expects zero arguments");
-            return;
-        }
+            case SimCommand::TEST_PASSED:
+                sendBool_(state->getSimState()->test_passed);
+                return true;
 
-        const auto sim_state = state->getSimState();
-        const auto json = getSimStatusJson(sim_state);
-        sendJson_(json);
-    }
+            case SimCommand::SIM_STOPPED:
+                sendBool_(state->getSimState()->sim_stopped);
+                return true;
 
-    void handleCurrentInstRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        if (!args.empty()) {
-            sendError_("'inst' request expects zero arguments");
-            return;
-        }
+            case SimCommand::INST_COUNT: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendInt_(state->getSimState()->inst_count);
+                return true;
+            }
 
-        const auto json = getCurrentInstJson(state);
-        sendJson_(json);
-    }
+            case SimCommand::INST_UID: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendInt_(inst->getUid());
+                return true;
+            }
 
-    void handleCurrentInstRegNameRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        if (args.size() != 1) {
-            sendError_("invoke command as 'inst_reg <rs1|rs2|rd>'");
-            return;
-        }
+            case SimCommand::INST_MNEMONIC: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendString_(inst->getMnemonic());
+                return true;
+            }
 
-        const auto& insn = state->getCurrentInst();
-        const auto& reg_alias = args[0];
+            case SimCommand::INST_DASM_STRING: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendString_(inst->dasmString());
+                return true;
+            }
 
-        if (reg_alias == "rs1" && insn->hasRs1()) {
-            sendString_(insn->getRs1()->getName());
-        } else if (reg_alias == "rs2" && insn->hasRs2()) {
-            sendString_(insn->getRs2()->getName());
-        } else if (reg_alias == "rd" && insn->hasRd()) {
-            sendString_(insn->getRd()->getName());
-        } else {
-            sendError_("invoke command as 'inst_reg <rs1|rs2|rd>'");
-        }
-    }
+            case SimCommand::INST_OPCODE: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendInt_(inst->getOpcode());
+                return true;
+            }
 
-    void handleCauseRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        if (!args.empty()) {
-            sendError_("'exception' request expects zero arguments");
-            return;
-        }
+            case SimCommand::INST_PRIV: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendInt_((uint32_t)state->getPrivMode());
+                return true;
+            }
 
-        const auto exception_unit = state->getExceptionUnit();
-        const auto& cause = exception_unit->getUnhandledException();
-        const int cause_code = cause.isValid() ? (int)cause.getValue() : -1;
-        const auto json = "{\"response_code\": \"ok\", \"response_payload\": " + std::to_string(cause_code) + ", \"response_type\": \"int\"}";
-        sendJson_(json);
-    }
+            case SimCommand::INST_HAS_IMM: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else sendBool_(inst->hasImmediate());
+                return true;
+            }
 
-    void handleEditInstRequest_(AtlasState*, const std::vector<std::string>& args)
-    {
-        // edit <inst> [true|false]
-        if (args.size() <= 2) {
-            const auto& inst = args[0];
-            bool editable;
-            if (args.size() == 1) {
-                editable = true;
-            } else {
-                if (args[1] == "true") {
-                    editable = true;
-                } else if (args[1] == "false") {
-                    editable = false;
+            case SimCommand::INST_IMMEDIATE: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else if (!inst->hasImmediate()) sendError_("No immediate");
+                else sendInt_(inst->getImmediate());
+                return true;
+            }
+
+            case SimCommand::INST_RS1: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else if (!inst->hasRs1()) sendError_("No rs1");
+                else sendString_(inst->getRs1()->getName());
+                return true;
+            }
+
+            case SimCommand::INST_RS2: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else if (!inst->hasRs2()) sendError_("No rs2");
+                else sendString_(inst->getRs2()->getName());
+                return true;
+            }
+
+            case SimCommand::INST_RD: {
+                auto inst = state->getCurrentInst();
+                if (!inst) sendError_("No instruction");
+                else if (!inst->hasRd()) sendError_("No rd");
+                else sendString_(inst->getRd()->getName());
+                return true;
+            }
+
+            case SimCommand::ACTIVE_EXCEPTION: {
+                const auto& exception = state->getExceptionUnit()->getUnhandledException();
+                sendInt_(exception.isValid() ? (int)exception.getValue() : -1);
+                return true;
+            }
+
+            case SimCommand::NUM_INT_REGS:
+                sendInt_(state->getIntRegisterSet()->getNumRegisters());
+                return true;
+
+            case SimCommand::NUM_FP_REGS:
+                sendInt_(state->getFpRegisterSet()->getNumRegisters());
+                return true;
+
+            case SimCommand::NUM_VEC_REGS:
+                sendInt_(state->getVecRegisterSet()->getNumRegisters());
+                return true;
+
+            case SimCommand::NUM_CSR_REGS:
+                sendInt_(state->getCsrRegisterSet()->getNumRegisters());
+                return true;
+
+            case SimCommand::CSR_NAME: {
+                if (args.size() != 1) sendError_("Invalid args"); break;
+                auto csr_num = std::strtoul(args[0].c_str(), nullptr, 0);
+                if (auto reg = state->getCsrRegister(csr_num)) {
+                    sendString_(reg->getName());
                 } else {
-                    sendError_("invoke command as 'edit <inst> <true|false>'");
-                    return;
+                    sendError_("Invalid CSR register");
                 }
+                return true;
             }
 
-            if (editable) {
-                insts_being_edited_.insert(inst);
-            } else {
-                insts_being_edited_.erase(inst);
+            case SimCommand::REG_GROUP_NUM: {
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
+                auto reg = state->findRegister(args[0]);
+                if (!reg) { sendError_("Invalid register"); break; }
+                sendInt_(reg->getGroupNum());
+                return true;
             }
 
-            sendAck_();
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'edit <inst> [true|false]'");
-        }
-    }
-
-    void handleRegisterReadRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        // regread <group num> <reg id>
-        if (args.size() == 2) {
-            const auto group_num = std::stoi(args[0]);
-            const auto reg_id = std::stoi(args[1]);
-
-            atlas::RegisterSet* rset = nullptr;
-            switch (group_num) {
-                case 0:
-                    rset = state->getIntRegisterSet();
-                    break;
-                case 1:
-                    rset = state->getFpRegisterSet();
-                    break;
-                case 2:
-                    rset = state->getVecRegisterSet();
-                    break;
-                case 3:
-                    rset = state->getCsrRegisterSet();
-                    break;
-                default:
-                    sendError_("invalid group number " + std::string(args[0]));
-                    return;
+            case SimCommand::REG_ID: {
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
+                auto reg = state->findRegister(args[0]);
+                if (!reg) { sendError_("Invalid register"); break; }
+                sendInt_(reg->getID());
+                return true;
             }
 
-            if (const auto reg = rset->getRegister(reg_id)) {
+            case SimCommand::REG_VALUE: {
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
+                auto reg = state->findRegister(args[0]);
+                if (!reg) { sendError_("Invalid register"); break; }
                 sendInt_(reg->dmiRead<uint64_t>());
-            } else {
-                sendError_("invalid register id " + std::string(args[1]));
-            }
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'read <group num> <reg id>'");
-        }
-    }
-
-    void handleRegisterWriteRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        // regwrite <group num> <reg id> <value>
-        if (args.size() == 3) {
-            const auto group_num = std::stoi(args[0]);
-            const auto reg_id = std::stoi(args[1]);
-            const auto value = std::stoull(args[2]);
-
-            atlas::RegisterSet* rset = nullptr;
-            switch (group_num) {
-                case 0:
-                    rset = state->getIntRegisterSet();
-                    break;
-                case 1:
-                    rset = state->getFpRegisterSet();
-                    break;
-                case 2:
-                    rset = state->getVecRegisterSet();
-                    break;
-                case 3:
-                    rset = state->getCsrRegisterSet();
-                    break;
-                default:
-                    sendError_("invalid group number " + std::string(args[0]));
-                    return;
+                return true;
             }
 
-            if (const auto reg = rset->getRegister(reg_id)) {
-                reg->write(value);
+            case SimCommand::REG_WRITE: {
+                if (args.size() != 2) { sendError_("Invalid args"); break; }
+                auto reg = state->findRegister(args[0]);
+                if (!reg) { sendError_("Invalid register"); break; }
+                reg->write(std::strtoull(args[1].c_str(), nullptr, 0));
                 sendAck_();
-            } else {
-                sendError_("invalid register id " + std::string(args[1]));
-            }
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'write <group num> <reg id> <value>'");
-        }
-    }
-
-    void handleRegisterDmiWriteRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        // regdmiwrite <group num> <reg id> <value>
-        if (args.size() == 3) {
-            const auto group_num = std::stoi(args[0]);
-            const auto reg_id = std::stoi(args[1]);
-            const auto value = std::stoull(args[2]);
-
-            atlas::RegisterSet* rset = nullptr;
-            switch (group_num) {
-                case 0:
-                    rset = state->getIntRegisterSet();
-                    break;
-                case 1:
-                    rset = state->getFpRegisterSet();
-                    break;
-                case 2:
-                    rset = state->getVecRegisterSet();
-                    break;
-                case 3:
-                    rset = state->getCsrRegisterSet();
-                    break;
-                default:
-                    sendError_("invalid group number " + std::string(args[0]));
-                    return;
+                return true;
             }
 
-            if (const auto reg = rset->getRegister(reg_id)) {
-                reg->dmiWrite(value);
+            case SimCommand::REG_DMI_WRITE: {
+                if (args.size() != 2) { sendError_("Invalid args"); break; }
+                auto reg = state->findRegister(args[0]);
+                if (!reg) { sendError_("Invalid register"); break; }
+                reg->dmiWrite(std::strtoull(args[1].c_str(), nullptr, 0));
                 sendAck_();
-            } else {
-                sendError_("invalid register id " + std::string(args[1]));
-            }
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'write <group num> <reg id> <value>'");
-        }
-    }
-
-    void handleRegisterPropertyRequest_(AtlasState* state, const std::vector<std::string>& args)
-    {
-        if (args.size() != 2) {
-            sendError_("invoke command as 'regprop <reg_name> <group_num|reg_id>'");
-            return;
-        }
-
-        const auto& reg_name = args[0];
-        auto reg = state->findRegister(reg_name);
-        if (!reg) {
-            sendError_("invalid register name '" + reg_name + "'");
-            return;
-        }
-
-        const auto& prop = args[1];
-        if (prop == "group_num") {
-            sendInt_(reg->getGroupNum());
-        } else if (prop == "reg_id") {
-            sendInt_(reg->getID());
-        } else {
-            sendError_("invalid property '" + prop + "'");
-        }
-    }
-
-    void handleBreakpointRequest_(AtlasState*, const std::vector<std::string>& args)
-    {
-        if (args.size() == 1) {
-            // "break info"
-            if (args[0] == "info") {
-                const auto bp_json = getBreakpointsJson();
-                const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + bp_json + "\", \"response_type\": \"breakpoints\"}";
-                sendJson_(json);
+                return true;
             }
 
-            // "break delete"
-            else if (args[0] == "delete") {
-                breakpoint_mgr_.deleteAllBreakpoints();
-                sendAck_();
-            }
-
-            // "break exception"
-            else if (args[0] == "exception") {
-                breakpoint_mgr_.breakException();
-                sendAck_();
-            }
-
-            // "break disable"
-            else if (args[0] == "disable") {
-                breakpoint_mgr_.disableAllBreakpoints();
-                sendAck_();
-            }
-
-            // "break enable"
-            else if (args[0] == "enable") {
-                breakpoint_mgr_.enableAllBreakpoints();
-                sendAck_();
-            }
-
-            // "break <inst>"
-            else {
-                breakpoint_mgr_.breakInst(args[0]);
-                sendAck_();
-            }
-        }
-
-        else if (args.size() == 2) {
-            // "break delete [n]"
-            if (args[0] == "delete") {
-                const auto id = std::stoi(args[1]);
-                if (!breakpoint_mgr_.deleteBreakpoint(id)) {
-                    sendError_("invalid breakpoint id " + std::string(args[1]));
-                } else {
+            case SimCommand::BREAK_ACTION:
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
+                if (args[0] == "pre_execute") {
+                    break_on_pre_execute_ = true;
                     sendAck_();
-                }
-            }
-
-            // "break pc [pc]"
-            else if (args[0] == "pc") {
-                breakpoint_mgr_.breakPC(std::stoull(args[1]));
-                sendAck_();
-            }
-
-            // "break disable <n>"
-            else if (args[0] == "disable") {
-                const auto id = std::stoi(args[1]);
-                if (!breakpoint_mgr_.disableBreakpoint(id)) {
-                    sendError_("invalid breakpoint id " + std::string(args[1]));
-                } else {
+                } else if (args[0] == "pre_exception") {
+                    break_on_pre_exception_ = true;
                     sendAck_();
-                }
-            }
-
-            // "break enable <n>"
-            else if (args[0] == "enable") {
-                const auto id = std::stoi(args[1]);
-                if (!breakpoint_mgr_.enableBreakpoint(id)) {
-                    sendError_("invalid breakpoint id " + std::string(args[1]));
-                } else {
+                } else if (args[0] == "post_execute") {
+                    break_on_post_execute_ = true;
                     sendAck_();
-                }
-            }
-
-            // "break action <action>"
-            else if (args[0] == "action") {
-                const auto& action = args[1];
-                if (action == "pre_execute") {
-                    breakpoint_mgr_.breakOnPreExecute();
-                } else if (action == "post_execute") {
-                    breakpoint_mgr_.breakOnPostExecute();
-                } else if (action == "pre_exception") {
-                    breakpoint_mgr_.breakOnPreException();
                 } else {
-                    sendError_("invalid action '" + args[1] + "'");
+                    sendError_("Invalid action");
                 }
+                return true;
 
-                sendAck_();
-            }
+            case SimCommand::FINISH_EXECUTE:
+                fail_action_group = state->getFinishActionGroup();
+                return false;
 
-            // Invalid!
-            else {
-                sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc <pc>|disable <n>|enable <n]'");
-            }
-        }
+            case SimCommand::CONTINUE_SIM:
+                fail_action_group = nullptr;
+                return false;
 
-        else if (args.size() == 3) {
-            // "break pc >= 12345"
-            if (args[0] == "pc") {
-                static const std::unordered_set<std::string> comparators = {"==", "!=", "<", ">", "<=", ">="};
-                if (comparators.find(args[1]) == comparators.end()) {
-                    sendError_("invalid comparison operator '" + args[1] + "'");
-                    return;
-                }
-                breakpoint_mgr_.breakPC(std::stoull(args[2]), args[1]);
-                sendAck_();
-            }
+            case SimCommand::FINISH_SIM:
+                break_on_pre_execute_ = false;
+                break_on_pre_exception_ = false;
+                break_on_post_execute_ = false;
+                fail_action_group = nullptr;
+                return false;
 
-            // Invalid!
-            else {
-                sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc]'");
-            }
-        }
-
-        // Invalid!
-        else {
-            sendError_("invoke command as 'break [info|delete [n]|exception|<inst>|pc [==,!=,<,>,<=,>=] <pc>]'");
+            case SimCommand::NOP:
+                sendError_("Invalid command");
+                return true;
         }
     }
 
-    void handleFinishRequest_(AtlasState*, const std::vector<std::string>&)
-    {
-        breakpoint_mgr_.disableAllBreakpoints();
-    }
-
-    void handleExitRequest_(AtlasState* state, const std::vector<std::string>&)
-    {
-        auto inst_action_group = state->getCurrentInst()->getActionGroup();
-        auto stop_action_group = state->getStopSimActionGroup();
-        inst_action_group->setNextActionGroup(stop_action_group);
-        breakpoint_mgr_.disableAllBreakpoints();
-    }
-
-    std::string host_;
-    int port_;
-    int server_fd_;
-    int new_socket_;
-    std::unordered_set<std::string> insts_being_edited_;
-    BreakpointManager breakpoint_mgr_;
+    bool break_on_pre_execute_ = false;
+    bool break_on_post_execute_ = false;
+    bool break_on_pre_exception_ = false;
 };
 
 SimController::SimController()
