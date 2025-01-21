@@ -93,6 +93,7 @@ public:
 private:
     enum class SimCommand
     {
+        XLEN,
         PC,
         EXIT_CODE,
         TEST_PASSED,
@@ -143,6 +144,9 @@ private:
         }
 
         static const std::unordered_map<std::string, SimCommand> sim_commands = {
+            // Zero args, return <xlen>
+            {"state.xlen", SimCommand::XLEN},
+
             // Zero args, return <pc>
             {"state.pc", SimCommand::PC},
 
@@ -326,6 +330,10 @@ private:
     bool handleSimCommand_(AtlasState* state, SimCommand sim_cmd, const std::vector<std::string>& args, ActionGroup* fail_action_group)
     {
         switch (sim_cmd) {
+            case SimCommand::XLEN:
+                sendInt_(state->getXlen());
+                return true;
+
             case SimCommand::PC:
                 sendInt_(state->getPc());
                 return true;

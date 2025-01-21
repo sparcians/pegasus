@@ -1,6 +1,5 @@
 import os, wx, argparse
 from editor.test_tree import TestTreeCtrl
-from editor.test_results import TestResults
 from backend.workspace import Workspace
 
 class AtlasIDE(wx.Frame):
@@ -8,7 +7,6 @@ class AtlasIDE(wx.Frame):
         wx.Frame.__init__(self, None, -1, "Atlas IDE")
         self.riscv_tests_dir = riscv_tests_dir
         self.sim_exe_path = sim_exe_path
-        self.test_results = TestResults(self)
 
         self.vsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
         self.test_tree = TestTreeCtrl(self.vsplitter, self)

@@ -50,6 +50,7 @@ class SanityCheckObserver(Observer):
     def __init__(self, logfile):
         self.fout = open(logfile, 'w')
         self.logfile = logfile
+        self.prev_rd_vals_by_inst_uid = {}
 
     def OnPreSimulation(self, endpoint):
         starting_pc = '0x{:08x}'.format(atlas_pc(endpoint))
@@ -59,34 +60,90 @@ class SanityCheckObserver(Observer):
         pc = '0x{:08x}'.format(atlas_pc(endpoint))
         inst = atlas_current_inst(endpoint)
         dasm = inst.dasmString()
-        self.fout.write('--> OnPreExecute (pc: {}, dasm: {})\n'.format(pc, dasm))
+        kvpairs = [('pc', pc), ('dasm', dasm)]
+
+        rs1 = inst.getRs1()
+        if rs1:
+            # rs1(x7):0xff
+            key = 'rs1({})'.format(rs1.getName())
+            val = '0x{:08x}'.format(rs1.read())
+            kvpairs.append((key, val))
+
+        rs2 = inst.getRs2()
+        if rs2:
+            # rs2(x7):0xff
+            key = 'rs2({})'.format(rs2.getName())
+            val = '0x{:08x}'.format(rs2.read())
+            kvpairs.append((key, val))
+
+        rd = inst.getRd()
+        if rd:
+            # rd(x7):0xff
+            key = 'rd({})'.format(rd.getName())
+            val = '0x{:08x}'.format(rd.read())
+            kvpairs.append((key, val))
+
+        imm = inst.getImmediate()
+        if imm is not None:
+            # imm:0xff
+            key = 'imm'
+            val = '0x{:08x}'.format(imm)
+            kvpairs.append((key, val))
+
+        # OnPreExecute (pc: 0xff, dasm: add x0, x0, x0, rs1(x0):0xff, rs2(x0):0xff, rd(x0):0xff)
+        kvpairs_str = ', '.join(['{}:{}'.format(k, v) for k, v in kvpairs])
+        self.fout.write('--> OnPreExecute ({})\n'.format(kvpairs_str))
 
     def OnPreException(self, endpoint):
         trap_cause = atlas_inst_active_exception(endpoint)
         assert trap_cause >= 0
         cause = TRAP_CAUSES[trap_cause]
-        self.fout.write('--> OnPreException (cause: {})\n'.format(cause))
+
+        # ----> OnPreException (cause: ILLEGAL_INSTRUCTION)
+        self.fout.write('----> OnPreException (cause: {})\n'.format(cause))
 
     def OnPostExecute(self, endpoint):
-        self.fout.write('----> OnPostExecute...\n')
+        inst = atlas_current_inst(endpoint)
+        uid = inst.getUid()
+
+        if uid in self.prev_rd_vals_by_inst_uid:
+            rd_before = self.prev_rd_vals_by_inst_uid[uid]
+            rd_after = inst.getRd().read()
+            rd_before_hex = '0x{:08x}'.format(rd_before)
+            rd_after_hex = '0x{:08x}'.format(rd_after)
+
+            # --------> OnPostExecute (rd: 0x000000ff -> 0x000001fe)
+            self.fout.write('--------> OnPostExecute (rd: {} -> {})\n\n'.format(rd_before_hex, rd_after_hex))
+            del self.prev_rd_vals_by_inst_uid[uid]
+        else:
+            # --------> OnPostExecute (no rd change)
+            self.fout.write('--------> OnPostExecute (no rd change)\n\n')
 
     def OnSimFinished(self, endpoint):
-        self.fout.write('END SIMULATION RESULTS:\n')
         workload_exit_code = atlas_exit_code(endpoint)
         test_passed = atlas_test_passed(endpoint)
         inst_count = atlas_inst_count(endpoint)
-        self.fout.write('--> workload_exit_code: {}\n'.format(workload_exit_code))
-        self.fout.write('--> test_passed: {}\n'.format(test_passed))
-        self.fout.write('--> inst_count: {}\n'.format(inst_count))
+
+        # END SIMULATION RESULTS:
+        # ----> workload_exit_code: 0
+        # ----> test_passed: True
+        # ----> inst_count: 100
+        self.fout.write('END SIMULATION RESULTS:\n')
+        self.fout.write('----> workload_exit_code: {}\n'.format(workload_exit_code))
+        self.fout.write('----> test_passed: {}\n'.format(test_passed))
+        self.fout.write('----> inst_count: {}\n'.format(inst_count))
 
     def CreateReport(self):
-        self.fout.close()
-        self.fout = None
+        self.close()
         return FileReport(self.logfile)
 
-    def __del__(self):
+    def close(self):
         if self.fout:
             self.fout.close()
+            self.fout = None
+
+    def __del__(self):
+        self.close()
 
 ## Example observer that tries to implement an instruction in Python (even though
 ## there is a C++ implementation, we will go around it and update register values
@@ -131,9 +188,9 @@ class PythonInstRewriter(Observer):
         inst_count = atlas_inst_count(endpoint)
 
         print ('END SIMULATION RESULTS:')
-        print ('--> workload_exit_code: {}'.format(workload_exit_code))
-        print ('--> test_passed: {}'.format(test_passed))
-        print ('--> inst_count: {}'.format(inst_count))
+        print ('----> workload_exit_code: {}'.format(workload_exit_code))
+        print ('----> test_passed: {}'.format(test_passed))
+        print ('----> inst_count: {}'.format(inst_count))
 
 ## Utility class which runs an observer on an Atlas simulation running in the background.
 class ObserverSim:

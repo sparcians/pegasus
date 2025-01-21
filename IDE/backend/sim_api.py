@@ -1,5 +1,10 @@
 import json
 
+# Command: "state.xlen"
+# Return:  xlen (int)
+def atlas_xlen(endpoint):
+    return endpoint.request('state.xlen')
+
 # Command: "state.pc"
 # Return:  pc (int)
 def atlas_pc(endpoint):

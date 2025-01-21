@@ -8,7 +8,7 @@ class AtlasState:
         self.endpoint = endpoint
 
     def getXlen(self):
-        return 64
+        return atlas_xlen(self.endpoint)
 
     def getPc(self):
         return atlas_pc(self.endpoint)
@@ -25,15 +25,17 @@ class AtlasState:
     def getCurrentInst(self):
         return AtlasState.AtlasInst(self.endpoint)
 
-    def getCSRs(self):
-        csrs = {}
-        for reg_id in range(atlas_num_csr_regs(self.endpoint)):
-            reg_name = atlas_csr_name(self.endpoint, reg_id)
-            if isinstance(reg_name, str):
-                csr_val = atlas_reg_value(self.endpoint, reg_name)
-                csrs[reg_name] = csr_val
+    def getIntRegisterSet(self):
+        return AtlasIntRegisterSet(self.endpoint)
 
-        return csrs
+    def getFpRegisterSet(self):
+        return AtlasFpRegisterSet(self.endpoint)
+    
+    def getVectorRegisterSet(self):
+        return AtlasVectorRegisterSet(self.endpoint)
+    
+    def getCsrRegisterSet(self):
+        return AtlasCsrRegisterSet(self.endpoint)
 
     class SimState:
         def __init__(self, endpoint):
@@ -203,6 +205,34 @@ class SpartaRegisterDeepCopy:
 
     def read(self):
         return '0x' + format(self._value, '08x')
+
+class AtlasRegisterSet:
+    def __init__(self, endpoint, group_num):
+        self.endpoint = endpoint
+        self.group_num = group_num
+
+    def getRegister(self, reg_id):
+        if reg_id >= atlas_num_int_regs(self.endpoint):
+            return None
+
+        prefix = ['x', 'f', 'v'][self.group_num]
+        reg_name = prefix + str(reg_id)
+        return SpartaRegister(self.endpoint, reg_name)
+
+class AtlasIntRegisterSet(AtlasRegisterSet): pass
+class AtlasFpRegisterSet(AtlasRegisterSet): pass
+class AtlasVectorRegisterSet(AtlasRegisterSet): pass
+
+class AtlasCsrRegisterSet(AtlasRegisterSet):
+    def __init__(self, endpoint):
+        AtlasRegisterSet.__init__(self, endpoint, 3)
+
+    def getRegister(self, reg_id):
+        csr_name = atlas_csr_name(self.endpoint, reg_id)
+        if isinstance(csr_name, str):
+            return SpartaRegister(self.endpoint, csr_name)
+
+        return None
 
 ### ====================================================================
 ### Direct sim object instantiation
