@@ -212,12 +212,15 @@ class AtlasRegisterSet:
         self.group_num = group_num
 
     def getRegister(self, reg_id):
-        if reg_id >= atlas_num_int_regs(self.endpoint):
+        if reg_id >= self.getNumRegisters():
             return None
 
         prefix = ['x', 'f', 'v'][self.group_num]
         reg_name = prefix + str(reg_id)
         return SpartaRegister(self.endpoint, reg_name)
+
+    def getNumRegisters(self):
+        return atlas_num_regs_in_group(self.endpoint, self.group_num)
 
 class AtlasIntRegisterSet(AtlasRegisterSet): pass
 class AtlasFpRegisterSet(AtlasRegisterSet): pass
@@ -229,19 +232,10 @@ class AtlasCsrRegisterSet(AtlasRegisterSet):
 
     def getRegister(self, reg_id):
         csr_name = atlas_csr_name(self.endpoint, reg_id)
-        if isinstance(csr_name, str):
+        if isinstance(csr_name, str) and csr_name != '':
             return SpartaRegister(self.endpoint, csr_name)
 
         return None
-
-### ====================================================================
-### Direct sim object instantiation
-def atlas_state(endpoint):
-    return AtlasState(endpoint)
-
-def atlas_current_inst(endpoint):
-    inst = AtlasInst(endpoint)
-    return inst if isinstance(inst.getUid(), int) else None
 
 TRAP_CAUSES = [
     'MISSALIGNED_FETCH',
@@ -267,3 +261,13 @@ TRAP_CAUSES = [
     'VIRTUAL_INSTRUCTION',
     'STORE_GUEST_PAGE_FAULT'
 ]
+
+# Create a wrapper around a running AtlasState C++ object.
+def atlas_state(endpoint):
+    return AtlasState(endpoint)
+
+# Create a wrapper around a running AtlasInst C++ object.
+# C++: "AtlasInstPtr AtlasState::getCurrentInst()"
+def atlas_current_inst(endpoint):
+    inst = AtlasInst(endpoint)
+    return inst if isinstance(inst.getUid(), int) else None

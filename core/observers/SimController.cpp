@@ -110,10 +110,7 @@ private:
         INST_RS2,
         INST_RD,
         ACTIVE_EXCEPTION,
-        NUM_INT_REGS,
-        NUM_FP_REGS,
-        NUM_VEC_REGS,
-        NUM_CSR_REGS,
+        NUM_REGS_IN_GROUP,
         CSR_NAME,
         REG_GROUP_NUM,
         REG_ID,
@@ -199,16 +196,7 @@ private:
             {"inst.active_exception", SimCommand::ACTIVE_EXCEPTION},
 
             // Zero args, return <int>
-            {"state.num_int_regs", SimCommand::NUM_INT_REGS},
-
-            // Zero args, return <int>
-            {"state.num_fp_regs", SimCommand::NUM_FP_REGS},
-
-            // Zero args, return <int>
-            {"state.num_vec_regs", SimCommand::NUM_VEC_REGS},
-
-            // Zero args, return <int>
-            {"state.num_csr_regs", SimCommand::NUM_CSR_REGS},
+            {"state.num_regs_in_group", SimCommand::NUM_REGS_IN_GROUP},
 
             // Arg <csr.reg_id>, return <csr.name|error>
             {"csr.name", SimCommand::CSR_NAME},
@@ -437,24 +425,23 @@ private:
                 return true;
             }
 
-            case SimCommand::NUM_INT_REGS:
-                sendInt_(state->getIntRegisterSet()->getNumRegisters());
+            case SimCommand::NUM_REGS_IN_GROUP: {
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
+                auto group_num = std::atoi(args[0].c_str());
+                atlas::RegisterSet* rset = nullptr;
+                switch (group_num) {
+                    case 0: rset = state->getIntRegisterSet();   break;
+                    case 1: rset = state->getFpRegisterSet();    break;
+                    case 2: rset = state->getVecRegisterSet();   break;
+                    case 3: rset = state->getCsrRegisterSet();   break;
+                    default: sendError_("Invalid group number"); break;
+                }
+                sendInt_(rset ? rset->getNumRegisters() : -1);
                 return true;
-
-            case SimCommand::NUM_FP_REGS:
-                sendInt_(state->getFpRegisterSet()->getNumRegisters());
-                return true;
-
-            case SimCommand::NUM_VEC_REGS:
-                sendInt_(state->getVecRegisterSet()->getNumRegisters());
-                return true;
-
-            case SimCommand::NUM_CSR_REGS:
-                sendInt_(state->getCsrRegisterSet()->getNumRegisters());
-                return true;
+            }
 
             case SimCommand::CSR_NAME: {
-                if (args.size() != 1) sendError_("Invalid args"); break;
+                if (args.size() != 1) { sendError_("Invalid args"); break; }
                 auto csr_num = std::strtoul(args[0].c_str(), nullptr, 0);
                 if (auto reg = state->getCsrRegister(csr_num)) {
                     sendString_(reg->getName());

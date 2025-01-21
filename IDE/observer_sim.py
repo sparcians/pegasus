@@ -51,6 +51,7 @@ class SanityCheckObserver(Observer):
         self.fout = open(logfile, 'w')
         self.logfile = logfile
         self.prev_rd_vals_by_inst_uid = {}
+        self.csrs_before_exception_handling = None
 
     def OnPreSimulation(self, endpoint):
         starting_pc = '0x{:08x}'.format(atlas_pc(endpoint))
@@ -93,6 +94,7 @@ class SanityCheckObserver(Observer):
         # OnPreExecute (pc: 0xff, dasm: add x0, x0, x0, rs1(x0):0xff, rs2(x0):0xff, rd(x0):0xff)
         kvpairs_str = ', '.join(['{}:{}'.format(k, v) for k, v in kvpairs])
         self.fout.write('--> OnPreExecute ({})\n'.format(kvpairs_str))
+        self.csrs_before_exception_handling = None
 
     def OnPreException(self, endpoint):
         trap_cause = atlas_inst_active_exception(endpoint)
@@ -102,22 +104,49 @@ class SanityCheckObserver(Observer):
         # ----> OnPreException (cause: ILLEGAL_INSTRUCTION)
         self.fout.write('----> OnPreException (cause: {})\n'.format(cause))
 
+        # Track CSR values before/after exception handling.
+        inst = atlas_current_inst(endpoint)
+        state = inst.getAtlasState()
+        csr_rset = state.getCsrRegisterSet()
+
+        self.csrs_before_exception_handling = {}
+        for reg_id in range(csr_rset.getNumRegisters()):
+            reg = csr_rset.getRegister(reg_id)
+            if reg:
+                reg_name = reg.getName()
+                reg_value = reg.read()
+                self.csrs_before_exception_handling[reg_name] = reg_value
+
     def OnPostExecute(self, endpoint):
         inst = atlas_current_inst(endpoint)
         uid = inst.getUid()
 
+        kvpairs = []
         if uid in self.prev_rd_vals_by_inst_uid:
             rd_before = self.prev_rd_vals_by_inst_uid[uid]
             rd_after = inst.getRd().read()
             rd_before_hex = '0x{:08x}'.format(rd_before)
             rd_after_hex = '0x{:08x}'.format(rd_after)
+            rd_name = inst.getRd().getName()
 
-            # --------> OnPostExecute (rd: 0x000000ff -> 0x000001fe)
-            self.fout.write('--------> OnPostExecute (rd: {} -> {})\n\n'.format(rd_before_hex, rd_after_hex))
-            del self.prev_rd_vals_by_inst_uid[uid]
-        else:
-            # --------> OnPostExecute (no rd change)
-            self.fout.write('--------> OnPostExecute (no rd change)\n\n')
+            # rd(x7):0xff -> 0x100
+            key = 'rd({})'.format(rd_name)
+            val = '{} -> {}'.format(rd_before_hex, rd_after_hex)
+            kvpairs.append((key, val))
+
+        if self.csrs_before_exception_handling is not None:
+            for csr_name, before_val in self.csrs_before_exception_handling.items():
+                after_val = atlas_reg_value(endpoint, csr_name)
+                if before_val != after_val:
+                    # mstatus:0x00000000 -> 0x00000008
+                    key = csr_name
+                    val = '0x{:08x} -> 0x{:08x}'.format(before_val, after_val)
+                    kvpairs.append((key, val))
+
+        # ----> OnPostExecute (rd(x7):0xff -> 0x100, mstatus:0x00000000 -> 0x00000008)
+        kvpairs_str = ', '.join(['{}:{}'.format(k, v) for k, v in kvpairs])
+        self.fout.write('----> OnPostExecute ({})\n'.format(kvpairs_str))
+        self.csrs_before_exception_handling = None
 
     def OnSimFinished(self, endpoint):
         workload_exit_code = atlas_exit_code(endpoint)

@@ -102,31 +102,16 @@ def atlas_inst_rd_name(endpoint):
 def atlas_inst_active_exception(endpoint):
     return endpoint.request('inst.active_exception')
 
-# Command: "state.num_int_regs"
+# Command: "state.num_regs_in_group"
 # Return:  count (int)
-def atlas_num_int_regs(endpoint):
-    return endpoint.request('state.num_int_regs')
+def atlas_num_regs_in_group(endpoint, group_num):
+    return endpoint.request('state.num_regs_in_group %d' % group_num)
 
-# Command: "state.num_fp_regs"
-# Return:  count (int)
-def atlas_num_fp_regs(endpoint):
-    return endpoint.request('state.num_fp_regs')
-
-# Command: "state.num_vec_regs"
-# Return:  count (int)
-def atlas_num_vec_regs(endpoint):
-    return endpoint.request('state.num_vec_regs')
-
-# Command: "state.num_csr_regs"
-# Return:  count (int)
-def atlas_num_csr_regs(endpoint):
-    return endpoint.request('state.num_csr_regs')
-
-# Command: "state.csr_name"
+# Command: "csr.name"
 # Args:    csr number (int)
 # Return:  csr name (str|error)
 def atlas_csr_name(endpoint, csr_num):
-    return endpoint.request('state.csr_name %d' % csr_num)
+    return endpoint.request('csr.name %d' % csr_num)
 
 # Command: "reg.group_num"
 # Args:    reg name (str)
