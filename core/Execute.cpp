@@ -1,7 +1,7 @@
 #include "core/Execute.hpp"
 #include "core/AtlasInst.hpp"
 #include "core/AtlasState.hpp"
-#include "core/Translate.hpp"
+#include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
 
 #include "sparta/utils/LogUtils.hpp"

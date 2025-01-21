@@ -2,9 +2,9 @@
 // Created by skhan on 11/20/24.
 //
 
-#include "../include/AtlasTypes.hpp"
-#include "PageTableWalker.hpp"
-#include "PageTableEntry.hpp"
+#include "include/AtlasTypes.hpp"
+#include "core/translate/PageTableWalker.hpp"
+#include "core/translate/PageTableEntry.hpp"
 
 namespace atlas
 {
@@ -35,7 +35,7 @@ namespace atlas
     uint32_t PageTableWalker::getPFN(const uint32_t entryValues, AtlasState* state)
     {
         const uint64_t pteValueFromMem = state->readMemory<uint64_t>(entryValues);
-        PageTableEntry<MMUMode::SV32> entry(pteValueFromMem);
+        PageTableEntry<RV64, MMUMode::SV32> entry(pteValueFromMem);
         // TODO:
         //  If accessing pte violates a PMA or PMP check, raise an access-fault exception
         //  corresponding to the original access type

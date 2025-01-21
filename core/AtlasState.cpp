@@ -2,7 +2,7 @@
 #include "core/AtlasInst.hpp"
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
-#include "core/Translate.hpp"
+#include "core/translate/Translate.hpp"
 #include "core/Exception.hpp"
 #include "include/ActionTags.hpp"
 #include "include/AtlasUtils.hpp"

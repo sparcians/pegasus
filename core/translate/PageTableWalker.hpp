@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "AtlasState.hpp"
+#include "core/AtlasState.hpp"
 
 namespace atlas
 {

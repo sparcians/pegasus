@@ -1,4 +1,4 @@
-#include "core/Translate.hpp"
+#include "core/translate/Translate.hpp"
 #include "core/AtlasInst.hpp"
 #include "core/AtlasState.hpp"
 #include "include/ActionTags.hpp"
