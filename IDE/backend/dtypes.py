@@ -1,4 +1,4 @@
-from editor.sim_api import *
+from backend.sim_api import *
 
 # These classes act as stateless wrappers around various C++ objects
 # in a running simulation.

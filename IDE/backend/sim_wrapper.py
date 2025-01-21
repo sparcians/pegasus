@@ -1,6 +1,6 @@
 import os, subprocess, sys
 from backend.dtypes import JsonConverter
-from editor.sim_api import BrokenPipeResponse
+from backend.sim_api import BrokenPipeResponse
 
 # This class is to be used as follows:
 #

@@ -1,5 +1,5 @@
 from backend.sim_wrapper import SimWrapper
-from editor.sim_api import *
+from backend.sim_api import *
 from backend.dtypes import *
 import os, argparse
 
