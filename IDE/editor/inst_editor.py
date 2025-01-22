@@ -1,5 +1,6 @@
 import wx, os
 import wx.py.shell
+from backend.c_dtypes import *
 
 class InstEditor(wx.Panel):
     def __init__(self, parent, frame):
@@ -212,47 +213,7 @@ class InstImpl(wx.Panel):
         self.pyutils_textctrl.SetValue('')
 
     def GetAtlasCppCode(self, mnemonic, arch='rv64'):
-        assert arch == 'rv64', 'rv32 has not been coded / tested yet'
-
-        mnemonic = mnemonic.replace('.', '_')
-        atlas_root = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
-        inst_handler_root = os.path.join(atlas_root, 'core', 'inst_handlers')
-        inst_handler_root = os.path.abspath(inst_handler_root)
-        lookfor = f"ActionGroup* {mnemonic}_64_handler(atlas::AtlasState* state);"
-
-        # find the .hpp file under isnt_handler_root that has this <lookfor> string
-        hpp_file = None
-        for root, dirs, files in os.walk(inst_handler_root):
-            for file in files:
-                if file.endswith('.hpp'):
-                    with open(os.path.join(root, file), 'r') as f:
-                        if lookfor in f.read():
-                            hpp_file = os.path.join(root, file)
-                            break
-
-        impl_file = hpp_file.replace('.hpp', '.cpp')
-
-        cpp_code = []
-        if os.path.exists(impl_file):
-            lookfor = f"::{mnemonic}_64_handler(atlas::AtlasState* state)"
-            other_mnemonic_lookfor = '_64_handler(atlas::AtlasState* state)'
-            copy_line = False
-            with open(impl_file, 'r') as f:
-                for line in f.readlines():
-                    # Stop copying lines when we get to the next function signature
-                    if line.find(other_mnemonic_lookfor) != -1 and copy_line:
-                        break
-
-                    # Start copying over the code when we get to our exact function signature for this mnemonic
-                    if line.find(lookfor) != -1:
-                        copy_line = True
-
-                    if copy_line:
-                        cpp_code.append(line)
-
-        # Remove 4 whitespaces from the front of each line
-        cpp_code = [line[4:] for line in cpp_code]
-        return ''.join(cpp_code)
+        return '(feature disabled)'
 
 class PyShellBridge:
     def __init__(self, inst_info, reg_info):
@@ -261,39 +222,45 @@ class PyShellBridge:
 
     @property
     def pc(self):
-        return self.__inst_info.inst_info_text.GetLabel().split('\n')[0].split()[1]
+        pc_hex = self.__inst_info.inst_info_text.GetLabel().split('\n')[0].split()[1]
+        return reg_t(int(pc_hex, 16))
 
     @property
     def opcode(self):
-        return self.__inst_info.inst_info_text.GetLabel().split('\n')[2].split()[1]
+        opcode_hex = self.__inst_info.inst_info_text.GetLabel().split('\n')[2].split()[1]
+        return reg_t(int(opcode_hex, 16))
 
     @property
     def rs1(self):
         lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
         for line in lines:
             if line.startswith('RS1'):
-                return line.split()[1].strip()
+                rs1_hex = line.split()[1].strip()
+                return reg_t(int(rs1_hex, 16))
 
     @property
     def rs2(self):
         lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
         for line in lines:
             if line.startswith('RS2'):
-                return line.split()[1].strip()
+                rs2_hex = line.split()[1].strip()
+                return reg_t(int(rs2_hex, 16))
 
     @property
     def rd(self):
         lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
         for line in lines:
             if line.startswith('RD'):
-                return line.split()[1].strip()
+                rd_hex = line.split()[1].strip()
+                return reg_t(int(rd_hex, 16))
 
     @property
     def immediate(self):
         lines = self.__reg_info.reg_info_text.GetLabel().split('\n')
         for line in lines:
             if line.startswith('IMM'):
-                return line.split()[1].strip()
+                imm_hex = line.split()[1].strip()
+                return reg_t(int(imm_hex, 16))
 
 def right_justify_hex(hex_str, width=8):
     # Remove the '0x' prefix and pad the hex string with leading zeros

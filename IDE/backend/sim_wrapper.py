@@ -1,5 +1,6 @@
 import os, subprocess, sys
 from backend.atlas_dtypes import JsonConverter
+from backend.sim_api import BrokenPipeResponse
 
 # This class is to be used as follows:
 #
@@ -100,6 +101,7 @@ class SimEndpoint:
 
     def close(self):
         if self.process:
+            print ('Closing simulator with PID ' + str(self.process.pid))
             self.process.terminate()
             self.process.wait()
             self.process = None

@@ -28,9 +28,10 @@ class InstViewer(wx.Panel):
         self.insts_by_pc = {}
 
         class InstSnooper(Observer):
-            def __init__(self):
+            def __init__(self, insts_by_pc):
                 Observer.__init__(self)
                 self.insts = []
+                self.insts_by_pc = insts_by_pc
                 self.infinite_loop_pc = None
 
             def OnPreExecute(self, endpoint):
@@ -38,6 +39,7 @@ class InstViewer(wx.Panel):
                 inst = atlas_current_inst(endpoint)
                 dasm = inst.dasmString()
                 self.insts.append((hex(pc), dasm))
+                self.insts_by_pc[hex(pc)] = inst.deepCopy()
 
             def OnSimulationStuck(self, endpoint):
                 self.infinite_loop_pc = atlas_pc(endpoint)
@@ -46,7 +48,7 @@ class InstViewer(wx.Panel):
         sim_exe_path = self.frame.sim_exe_path
         obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
 
-        obs = InstSnooper()
+        obs = InstSnooper(self.insts_by_pc)
         obs_sim.RunObserver(obs)
 
         for pc, dasm in obs.insts:
