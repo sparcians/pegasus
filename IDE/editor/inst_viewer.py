@@ -39,11 +39,8 @@ class InstViewer(wx.Panel):
                 dasm = inst.dasmString()
                 self.insts.append((hex(pc), dasm))
 
-            def AbortOnException(self, endpoint, exception):
-                if isinstance(exception, InfiniteLoopError):
-                    self.infinite_loop_pc = atlas_pc(endpoint)
-
-                return True
+            def OnInfiniteLoop(self, endpoint, pc):
+                self.infinite_loop_pc = pc
 
         riscv_tests_dir = self.frame.riscv_tests_dir
         sim_exe_path = self.frame.sim_exe_path
