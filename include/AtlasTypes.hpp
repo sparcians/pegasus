@@ -71,12 +71,17 @@ namespace atlas
         std::string reg_name;
     };
 
-    enum class MMUMode
+    enum class MMUMode : uint32_t
     {
+        BAREMETAL,
         SV32,
         SV39,
-        SV48
+        SV48,
+        SV57,
+        INVALID
     };
+
+    static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
 
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;

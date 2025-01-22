@@ -2,6 +2,8 @@
 
 #include "core/ActionGroup.hpp"
 
+#include "include/AtlasTypes.hpp"
+
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/TreeNode.hpp"
 #include "sparta/simulation/Unit.hpp"
@@ -32,10 +34,13 @@ namespace atlas
         ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
 
       private:
-        ActionGroup* translate_(atlas::AtlasState* state);
+        template <MMUMode Mode> ActionGroup* translate_(atlas::AtlasState* state);
 
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup data_translate_action_group_{"Data Translate"};
+
+        std::array<Action, N_MMU_MODES> inst_translation_actions_;
+        std::array<Action, N_MMU_MODES> data_translation_actions_;
 
         friend class ::AtlasTranslateTester;
     };
