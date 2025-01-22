@@ -30,9 +30,6 @@ class TestTreeCtrl(wx.TreeCtrl):
         test_py = os.path.abspath(test_py)
         assert os.path.isfile(test_py), 'Cannot find test script: ' + test_py
 
-        #self.__CaptureBaseline(test_py, 'rv32')
-        #self.__CaptureBaseline(test_py, 'rv64')
-
         os.chdir(orig_dir)
 
         self.Bind(wx.EVT_RIGHT_DOWN, self.__OnRightClick)

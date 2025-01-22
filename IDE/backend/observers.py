@@ -253,11 +253,11 @@ class ObserverSim:
                     break
 
                 try:
-                    if break_method == 'pre_execute' and obs.BreakOnPreExecute():
+                    if break_method == 'pre_execute':
                         obs.OnPreExecute(sim.endpoint)
-                    elif break_method == 'pre_exception' and obs.BreakOnPreException():
+                    elif break_method == 'pre_exception':
                         obs.OnPreException(sim.endpoint)
-                    elif break_method == 'post_execute' and obs.BreakOnPostExecute():
+                    elif break_method == 'post_execute':
                         obs.OnPostExecute(sim.endpoint)
                 except Exception as e:
                     if obs.AbortOnException(e):
