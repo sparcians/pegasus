@@ -111,6 +111,7 @@ namespace atlas
             FINISH_EXECUTE,
             CONTINUE_SIM,
             FINISH_SIM,
+            KILL_SIM,
             NOP
         };
 
@@ -164,7 +165,8 @@ namespace atlas
                 {"sim.break", SimCommand::BREAKPOINT},
                 {"sim.finish_execute", SimCommand::FINISH_EXECUTE},
                 {"sim.continue", SimCommand::CONTINUE_SIM},
-                {"sim.finish", SimCommand::FINISH_SIM}};
+                {"sim.finish", SimCommand::FINISH_SIM},
+                {"sim.kill", SimCommand::KILL_SIM}};
 
             if (const auto it = sim_commands.find(command_str); it != sim_commands.end())
             {
@@ -257,7 +259,7 @@ namespace atlas
         // should return fail_action_group to the simulator if we return false.
         bool handleSimCommand_(AtlasState* state, SimCommand sim_cmd,
                                const std::vector<std::string> & args,
-                               ActionGroup* fail_action_group)
+                               ActionGroup*& fail_action_group)
         {
             switch (sim_cmd)
             {
@@ -595,6 +597,23 @@ namespace atlas
                     break_on_pre_exception_ = false;
                     break_on_post_execute_ = false;
                     fail_action_group = nullptr;
+                    return false;
+
+                case SimCommand::KILL_SIM:
+                    if (args.size() == 1)
+                    {
+                        const auto exit_code = std::atoi(args[0].c_str());
+                        state->getSimState()->workload_exit_code = exit_code;
+                    }
+                    else if (!args.empty())
+                    {
+                        sendError_("Invalid args");
+                        break;
+                    }
+
+                    state->getSimState()->test_passed = false;
+                    state->getSimState()->sim_stopped = true;
+                    fail_action_group = state->getStopSimActionGroup();
                     return false;
 
                 case SimCommand::NOP:

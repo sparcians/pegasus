@@ -39,7 +39,7 @@ class InstViewer(wx.Panel):
                 dasm = inst.dasmString()
                 self.insts.append((hex(pc), dasm))
 
-            def OnInfiniteLoop(self, endpoint):
+            def OnSimulationStuck(self, endpoint):
                 self.infinite_loop_pc = atlas_pc(endpoint)
 
         riscv_tests_dir = self.frame.riscv_tests_dir

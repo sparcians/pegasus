@@ -41,7 +41,7 @@ class Observer:
     def OnPostExecute(self, endpoint):
         pass
 
-    def OnInfiniteLoop(self, endpoint):
+    def OnSimulationStuck(self, endpoint):
         pass
 
     def OnSimFinished(self, endpoint):
@@ -156,7 +156,7 @@ class SanityCheckObserver(Observer):
         self.fout.write('----> OnPostExecute ({})\n'.format(kvpairs_str))
         self.csrs_before_exception_handling = None
 
-    def OnInfiniteLoop(self, endpoint):
+    def OnSimulationStuck(self, endpoint):
         pc = atlas_pc(endpoint)
         self.fout.write('----> Infinite loop detected at pc: 0x{:08x}\n'.format(pc))
 
@@ -193,10 +193,10 @@ class SanityCheckObserver(Observer):
 ## there is a C++ implementation, we will go around it and update register values
 ## in Python).
 class PythonInstRewriter(Observer):
-    def __init__(self, mnemonic):
-        self.mnemonic = mnemonic
+    def __init__(self):
+        Observer.__init__(self)
 
-    # We only want to reroute the "mul" instruction. This will be done in pre_execute only.
+    # We only want to reroute the "remw" instruction. This will be done in pre_execute only.
     def BreakOnPreException(self):
         return False
 
@@ -205,26 +205,42 @@ class PythonInstRewriter(Observer):
 
     def OnPreExecute(self, endpoint):
         insn = atlas_current_inst(endpoint)
-        if insn.getMnemonic() == self.mnemonic:
-            #ActionGroup* RvmInsts::mul_64_handler(atlas::AtlasState* state)
-            #{
-            #    const AtlasInstPtr & insn = state->getCurrentInst();
-            #
-            #    const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-            #    const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-            #    const uint64_t rd_val = rs1_val * rs2_val;
-            #    insn->getRd()->dmiWrite(rd_val);
-            #
-            #    return nullptr;
-            #}
+        if insn.getMnemonic() != 'remw':
+            return
 
-            rs1_val = insn.getRs1().read()
-            rs2_val = insn.getRs2().read()
-            rd_val = rs1_val * rs2_val
-            insn.getRd().dmiWrite(rd_val)
+        # ActionGroup* RvmInsts::remw_64_handler(atlas::AtlasState* state)
+        # {
+        #     const AtlasInstPtr & insn = state->getCurrentInst();
+        #     const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
+        #     const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
+        # 
+        #     sreg_t lhs = sext32(rs1_val);
+        #     sreg_t rhs = sext32(rs2_val);
+        #     if (rhs == 0)
+        #     {
+        #         insn->getRd()->dmiWrite(lhs);
+        #     }
+        #     else
+        #     {
+        #         insn->getRd()->dmiWrite(sext32(lhs % rhs));
+        #     }
+        #
+        #     return nullptr;
+        # }
 
-            # Tell Atlas to skip the C++ inst implementation.
-            atlas_finish_execute(endpoint)
+        rs1_val = reg_t(insn.getRs1().read())
+        rs2_val = reg_t(insn.getRs2().read())
+
+        lhs = rs1_val.sext32()
+        rhs = rs2_val.sext32()
+
+        if rhs == 0:
+            insn.getRd().dmiWrite(lhs)
+        else:
+            insn.getRd().dmiWrite((lhs % rhs).sext32())
+
+        # Tell Atlas to skip the C++ inst implementation.
+        atlas_finish_execute(endpoint)
 
     def OnSimFinished(self, endpoint):
         workload_exit_code = atlas_exit_code(endpoint)
@@ -267,28 +283,41 @@ class ObserverSim:
             # an infinite loop).
             last_pre_execute_pc = -1
 
+            def NOP(endpoint):
+                pass
+
+            pre_execute_callback   = obs.OnPreExecute if obs.BreakOnPreExecute() else NOP
+            pre_exception_callback = obs.OnPreException if obs.BreakOnPreException() else NOP
+            post_execute_callback  = obs.OnPostExecute if obs.BreakOnPostExecute() else NOP
+            sim_finished_callback  = obs.OnSimFinished
+            sim_dead_callback      = obs.OnSimulationDead
+
+            callbacks = {
+                'pre_execute':   pre_execute_callback,
+                'pre_exception': pre_exception_callback,
+                'post_execute':  post_execute_callback,
+                'sim_finished':  sim_finished_callback,
+                'sim_dead':      sim_dead_callback
+            }
+
+            def GetCallback(action):
+                return callbacks.get(action, NOP)
+
+            def GetCallbackArg(action):
+                return last_pre_execute_pc if action == 'sim_dead' else sim.endpoint
+
             while True:
                 current_action = atlas_continue(sim.endpoint)
 
                 if current_action == 'pre_execute':
                     curr_pre_execute_pc = atlas_pc(sim.endpoint)
                     if curr_pre_execute_pc == last_pre_execute_pc:
-                        obs.OnInfiniteLoop(sim.endpoint)
-                        break
+                        obs.OnSimulationStuck(sim.endpoint)
+                        current_action = atlas_kill_sim(sim.endpoint, 555)
                     else:
                         last_pre_execute_pc = curr_pre_execute_pc
 
-                if current_action == 'pre_execute' and obs.BreakOnPreExecute():
-                    obs.OnPreExecute(sim.endpoint)
-                elif current_action == 'pre_exception' and obs.BreakOnPreException():
-                    obs.OnPreException(sim.endpoint)
-                elif current_action == 'post_execute' and obs.BreakOnPostExecute():
-                    obs.OnPostExecute(sim.endpoint)
-                elif current_action == 'sim_finished':
-                    obs.OnSimFinished(sim.endpoint)
-                elif current_action == 'sim_dead':
-                    obs.OnSimulationDead(curr_pre_execute_pc)
-
+                GetCallback(current_action)(GetCallbackArg(current_action))
                 if current_action in ('sim_dead', 'sim_finished'):
                     break
 

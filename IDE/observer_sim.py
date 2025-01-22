@@ -8,7 +8,8 @@ if __name__ == '__main__':
     parser.add_argument('--test-name', required=True, help='Name of the test to run')
     args = parser.parse_args()
 
-    obs = SanityCheckObserver('sanity_check.log')
+    #obs = SanityCheckObserver('sanity_check.log')
+    obs = PythonInstRewriter()
     obs_sim = ObserverSim(args.riscv_tests_dir, args.sim_exe_path, args.test_name)
     report = obs_sim.RunObserver(obs)
 

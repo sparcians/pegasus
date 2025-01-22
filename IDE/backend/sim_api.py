@@ -157,6 +157,16 @@ def atlas_continue(endpoint):
 def atlas_finish_sim(endpoint):
     return endpoint.request('sim.finish', 'sim_dead')
 
+# Terminate a simulation early for any reason with the given exit code.
+# This invalidates further use of the endpoint. The simulator's SimState
+# will reflect the following:
+#
+#   sim_state.workload_exit_code = exit_code
+#   sim_state.test_passed = false
+#   sim_state.sim_stopped = true
+def atlas_kill_sim(endpoint, exit_code):
+    return endpoint.request('sim.kill %d' % exit_code)
+
 ### ====================================================================
 ### JSON conversion (IPC using JSON messages)
 class JsonConverter:
