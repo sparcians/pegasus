@@ -333,7 +333,7 @@ namespace atlas
         return 0;
     }
 
-    sparta::Register* AtlasState::findRegister(const std::string& reg_name) const
+    sparta::Register* AtlasState::findRegister(const std::string & reg_name) const
     {
         for (uint32_t i = 0; i < int_rset_->getNumRegisters(); ++i)
         {
@@ -365,7 +365,8 @@ namespace atlas
         for (uint32_t i = 0; i < csr_rset_->getNumRegisters(); ++i)
         {
             auto reg = csr_rset_->getRegister(i);
-            if (!reg) {
+            if (!reg)
+            {
                 continue;
             }
             if (reg->getName() == reg_name)

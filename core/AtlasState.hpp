@@ -164,7 +164,7 @@ namespace atlas
             return csr_rset_->getRegister(reg_num);
         }
 
-        sparta::Register* findRegister(const std::string& reg_name) const;
+        sparta::Register* findRegister(const std::string & reg_name) const;
 
         template <typename MemoryType> MemoryType readMemory(const Addr paddr);
 
