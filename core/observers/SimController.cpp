@@ -520,7 +520,13 @@ namespace atlas
                             sendError_("Invalid register");
                             break;
                         }
-                        reg->write(std::strtoull(args[1].c_str(), nullptr, 0));
+
+                        std::stringstream ss;
+                        ss << args[1];
+                        uint64_t val;
+                        ss >> val;
+
+                        reg->write(val);
                         sendAck_();
                         return true;
                     }
@@ -538,7 +544,13 @@ namespace atlas
                             sendError_("Invalid register");
                             break;
                         }
-                        reg->dmiWrite(std::strtoull(args[1].c_str(), nullptr, 0));
+
+                        std::stringstream ss;
+                        ss << args[1];
+                        uint64_t val;
+                        ss >> val;
+
+                        reg->dmiWrite(val);
                         sendAck_();
                         return true;
                     }

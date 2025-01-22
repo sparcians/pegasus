@@ -1,4 +1,5 @@
 import json
+import backend.c_dtypes as c_dtypes
 
 class SimResponse:
     def __init__(self, response=None):
@@ -111,11 +112,13 @@ def atlas_reg_value(endpoint, reg_name):
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->write(value)
 def atlas_reg_write(endpoint, reg_name, value):
-    return endpoint.request('reg.write %s %d' % (reg_name, value))
+    value = c_dtypes.convert_to_hex(value)
+    return endpoint.request('reg.write %s %s' % (reg_name, value))
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->dmiWrite<uint64_t>(value)
 def atlas_reg_dmiwrite(endpoint, reg_name, value):
-    return endpoint.request('reg.dmiwrite %s %d' % (reg_name, value))
+    value = c_dtypes.convert_to_hex(value)
+    return endpoint.request('reg.dmiwrite %s %s' % (reg_name, value))
 
 # Set a breakpoint at the given execute phase (pre_execute, pre_exception, post_execute).
 def atlas_break_action(endpoint, action):

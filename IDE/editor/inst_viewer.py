@@ -1,6 +1,6 @@
 import wx
 from backend.sim_api import *
-from backend.dtypes import *
+from backend.atlas_dtypes import *
 from backend.observers import *
 
 class InstViewer(wx.Panel):

@@ -1,5 +1,5 @@
 import os, subprocess, sys
-from backend.dtypes import JsonConverter
+from backend.atlas_dtypes import JsonConverter
 
 # This class is to be used as follows:
 #

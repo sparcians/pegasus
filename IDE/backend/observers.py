@@ -1,7 +1,8 @@
 import os
 from backend.sim_wrapper import SimWrapper
 from backend.sim_api import *
-from backend.dtypes import *
+from backend.atlas_dtypes import *
+from backend.c_dtypes import *
 from backend.trap import *
 
 ## Base report class (show a report file, show a wx.Window, etc.)
