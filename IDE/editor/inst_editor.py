@@ -1,6 +1,5 @@
 import wx, os
 import wx.py.shell
-from editor.runtime_code_mgr import RuntimeCodeManager
 
 class InstEditor(wx.Panel):
     def __init__(self, parent, frame):
@@ -180,8 +179,6 @@ class InstImpl(wx.Panel):
         self.cpp_viewer_checkbox = wx.CheckBox(cpp_viewer_panel, label='Use C++')
         self.cpp_viewer_text = wx.StaticText(cpp_viewer_panel)
         self.cpp_viewer_checkbox.SetValue(True)
-
-        self.runtime_code_mgr = RuntimeCodeManager(frame, self.pyutils_textctrl, self.pyutils_checkbox, self.cpp_viewer_checkbox)
 
         pyutils_vsizer = wx.BoxSizer(wx.VERTICAL)
         pyutils_vsizer.Add(self.pyutils_checkbox, 0, wx.EXPAND)
