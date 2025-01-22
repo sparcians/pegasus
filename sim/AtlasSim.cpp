@@ -20,8 +20,8 @@
 
 namespace atlas
 {
-    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload,
-                       uint64_t ilimit, bool interactive) :
+    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
+                       bool interactive) :
         sparta::app::Simulation("AtlasSim", scheduler),
         workload_(workload),
         ilimit_(ilimit),
@@ -244,7 +244,8 @@ namespace atlas
             state->setAtlasSystem(system_);
             state->setPc(system_->getStartingPc());
 
-            if (interactive_) {
+            if (interactive_)
+            {
                 state->enableInteractiveMode();
             }
         }

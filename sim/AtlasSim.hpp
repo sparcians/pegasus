@@ -14,7 +14,8 @@ namespace atlas
     class AtlasSim : public sparta::app::Simulation
     {
       public:
-        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit, bool interactive = false);
+        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
+                 bool interactive = false);
         ~AtlasSim();
 
         // Run the simulator
