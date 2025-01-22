@@ -39,10 +39,13 @@ class Observer:
     def OnPostExecute(self, endpoint):
         pass
 
-    def OnInfiniteLoop(self, endpoint, pc):
+    def OnInfiniteLoop(self, endpoint):
         pass
 
     def OnSimFinished(self, endpoint):
+        pass
+
+    def OnSimulationDead(self, pc):
         pass
 
     def CreateReport(self):
@@ -55,7 +58,6 @@ class SanityCheckObserver(Observer):
         self.logfile = logfile
         self.prev_rd_vals_by_inst_uid = {}
         self.csrs_before_exception_handling = None
-        self.infinite_loop_pc = None
 
     def OnPreSimulation(self, endpoint):
         starting_pc = '0x{:08x}'.format(atlas_pc(endpoint))
@@ -152,8 +154,9 @@ class SanityCheckObserver(Observer):
         self.fout.write('----> OnPostExecute ({})\n'.format(kvpairs_str))
         self.csrs_before_exception_handling = None
 
-    def OnInfiniteLoop(self, endpoint, pc):
-        self.infinite_loop_pc = pc
+    def OnInfiniteLoop(self, endpoint):
+        pc = atlas_pc(endpoint)
+        self.fout.write('----> Infinite loop detected at pc: 0x{:08x}\n'.format(pc))
 
     def OnSimFinished(self, endpoint):
         workload_exit_code = atlas_exit_code(endpoint)
@@ -169,9 +172,8 @@ class SanityCheckObserver(Observer):
         self.fout.write('----> test_passed: {}\n'.format(test_passed))
         self.fout.write('----> inst_count: {}\n'.format(inst_count))
 
-        if self.infinite_loop_pc:
-            # Infinite loop detected at pc: 0xff
-            self.fout.write('----> Infinite loop detected at pc: 0x{:08x}\n'.format(self.infinite_loop_pc))
+    def OnSimulationDead(self, pc):
+        self.fout.write('----> Simulation dead at pc: 0x{:08x}\n'.format(pc))
 
     def CreateReport(self):
         self.close()
@@ -245,8 +247,8 @@ class ObserverSim:
         with SimWrapper(self.riscv_tests_dir, self.sim_exe_path, self.test_name) as sim:
             obs.OnPreSimulation(sim.endpoint)
 
-            # Put a pre_execute breakpoint even if the observer doesn't need it.
-            # We need it ourselves to break out of simulation if needed.
+            # Always put a pre_execute breakpoint so we can skip an instruction and
+            # go right to simulation finish in the event of an infinite loop.
             atlas_break_action(sim.endpoint, 'pre_execute')
 
             if obs.BreakOnPreException():
@@ -264,28 +266,28 @@ class ObserverSim:
             last_pre_execute_pc = -1
 
             while True:
-                break_method = atlas_continue(sim.endpoint)
-                if not atlas_sim_alive(sim.endpoint):
-                    break
+                current_action = atlas_continue(sim.endpoint)
 
-                if break_method == 'pre_execute':
+                if current_action == 'pre_execute':
                     curr_pre_execute_pc = atlas_pc(sim.endpoint)
                     if curr_pre_execute_pc == last_pre_execute_pc:
-                        obs.OnInfiniteLoop(sim.endpoint, curr_pre_execute_pc)
+                        obs.OnInfiniteLoop(sim.endpoint)
                         break
                     else:
                         last_pre_execute_pc = curr_pre_execute_pc
 
-                    if obs.BreakOnPreExecute():
-                        obs.OnPreExecute(sim.endpoint)
-
-                elif break_method == 'pre_exception':
+                if current_action == 'pre_execute' and obs.BreakOnPreExecute():
+                    obs.OnPreExecute(sim.endpoint)
+                elif current_action == 'pre_exception' and obs.BreakOnPreException():
                     obs.OnPreException(sim.endpoint)
-                elif break_method == 'post_execute':
+                elif current_action == 'post_execute' and obs.BreakOnPostExecute():
                     obs.OnPostExecute(sim.endpoint)
-                elif break_method == 'sim_finished':
-                    break
+                elif current_action == 'sim_finished':
+                    obs.OnSimFinished(sim.endpoint)
+                elif current_action == 'sim_dead':
+                    obs.OnSimulationDead(curr_pre_execute_pc)
 
-            obs.OnSimFinished(sim.endpoint)
+                if current_action in ('sim_dead', 'sim_finished'):
+                    break
 
         return obs.CreateReport()

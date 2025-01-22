@@ -7,7 +7,6 @@ class SimResponse:
 class AckResponse(SimResponse): pass
 class ErrorResponse(SimResponse): pass
 class WarningResponse(SimResponse): pass
-class BrokenPipeResponse(SimResponse): pass
 
 # Equiv C++:  AtlasState::getXlen()
 def atlas_xlen(endpoint):
@@ -153,10 +152,6 @@ def atlas_continue(endpoint):
 # simulator will exit. This invalidates further use of the endpoint.
 def atlas_finish_sim(endpoint):
     return endpoint.request('sim.finish')
-
-# Ping the Atlas C++ simulator to see if it is still alive.
-def atlas_sim_alive(endpoint):
-    return not isinstance(atlas_pc(endpoint), BrokenPipeResponse)
 
 ### ====================================================================
 ### JSON conversion (IPC using JSON messages)
