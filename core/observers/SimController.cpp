@@ -469,8 +469,10 @@ private:
 
             case SimCommand::NOP:
                 sendError_("Invalid command");
-                return true;
+                break;
         }
+
+        return true;
     }
 
     bool break_on_pre_execute_ = false;

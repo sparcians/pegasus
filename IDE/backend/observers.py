@@ -1,4 +1,5 @@
 import os
+from backend.sim_wrapper import SimWrapper
 from backend.sim_api import *
 from backend.dtypes import *
 
@@ -43,6 +44,10 @@ class Observer:
 
     def CreateReport(self):
         return None
+
+    def AbortOnException(self, e):
+        print ('Exception occurred: {}'.format(e))
+        return True
 
 ## Simple observer which does not overwrite any AtlasState / AtlasInst values.
 class SanityCheckObserver(Observer):
@@ -219,3 +224,45 @@ class PythonInstRewriter(Observer):
         print ('----> workload_exit_code: {}'.format(workload_exit_code))
         print ('----> test_passed: {}'.format(test_passed))
         print ('----> inst_count: {}'.format(inst_count))
+
+## Utility class which runs an observer on an Atlas simulation running in the background.
+class ObserverSim:
+    def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
+        self.riscv_tests_dir = riscv_tests_dir
+        self.sim_exe_path = sim_exe_path
+        self.test_name = test_name
+
+    def RunObserver(self, obs):
+        # You can ping the simulation as long as the SimWrapper is in scope.
+        # See all the available APIs in IDE.backend.sim_api
+        with SimWrapper(self.riscv_tests_dir, self.sim_exe_path, self.test_name) as sim:
+            obs.OnPreSimulation(sim.endpoint)
+            
+            if obs.BreakOnPreExecute():
+                atlas_break_action(sim.endpoint, 'pre_execute')
+
+            if obs.BreakOnPreException():
+                atlas_break_action(sim.endpoint, 'pre_exception')
+
+            if obs.BreakOnPostExecute():
+                atlas_break_action(sim.endpoint, 'post_execute')
+
+            while True:
+                break_method = atlas_continue(sim.endpoint)
+                if not atlas_sim_alive(sim.endpoint):
+                    break
+
+                try:
+                    if break_method == 'pre_execute' and obs.BreakOnPreExecute():
+                        obs.OnPreExecute(sim.endpoint)
+                    elif break_method == 'pre_exception' and obs.BreakOnPreException():
+                        obs.OnPreException(sim.endpoint)
+                    elif break_method == 'post_execute' and obs.BreakOnPostExecute():
+                        obs.OnPostExecute(sim.endpoint)
+                except Exception as e:
+                    if obs.AbortOnException(e):
+                        break
+
+            obs.OnSimFinished(sim.endpoint)
+
+        return obs.CreateReport()

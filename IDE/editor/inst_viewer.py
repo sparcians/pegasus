@@ -1,7 +1,7 @@
 import wx
-from backend.sim_wrapper import SimWrapper
 from backend.sim_api import *
 from backend.dtypes import *
+from backend.observers import *
 
 class InstViewer(wx.Panel):
     def __init__(self, parent, frame, workspace):
@@ -27,33 +27,28 @@ class InstViewer(wx.Panel):
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
         self.insts_by_pc = {}
 
-        with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
-            # We could get the instruction disassembly from pre- or post_execute but the
-            # PC value can only be obtained during pre_execute. It will have advanced to
-            # the next PC by the time we get to post_execute.
-            atlas_break_action(sim.endpoint, 'pre_execute')
+        class InstSnooper(Observer):
+            def __init__(self):
+                Observer.__init__(self)
+                self.insts = []
 
-            last_pc = -1
-            while True:
-                break_method = atlas_continue(sim.endpoint)
-                if not atlas_sim_alive(sim.endpoint):
-                    break
+            def OnPreExecute(self, endpoint):
+                pc = atlas_pc(endpoint)
+                inst = atlas_current_inst(endpoint)
+                dasm = inst.dasmString()
+                self.insts.append((hex(pc), dasm))
 
-                pc = atlas_pc(sim.endpoint)
-                if pc == last_pc:
-                    break
-                else:
-                    last_pc = pc
+        riscv_tests_dir = self.frame.riscv_tests_dir
+        sim_exe_path = self.frame.sim_exe_path
+        obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
 
-                if break_method == 'pre_execute':
-                    inst = atlas_current_inst(sim.endpoint)
-                    if inst is None:
-                        continue
+        obs = InstSnooper()
+        obs_sim.RunObserver(obs)
 
-                    i = self.inst_list_ctrl.GetItemCount()
-                    self.inst_list_ctrl.InsertItem(i, hex(pc))
-                    self.inst_list_ctrl.SetItem(i, 1, inst.dasmString())
-                    self.insts_by_pc[hex(pc)] = inst.deepCopy()
+        for pc, dasm in obs.insts:
+            i = self.inst_list_ctrl.GetItemCount()
+            self.inst_list_ctrl.InsertItem(i, pc)
+            self.inst_list_ctrl.SetItem(i, 1, dasm)
 
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.inst_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE)
