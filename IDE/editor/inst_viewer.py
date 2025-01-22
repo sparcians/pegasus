@@ -31,12 +31,19 @@ class InstViewer(wx.Panel):
             def __init__(self):
                 Observer.__init__(self)
                 self.insts = []
+                self.infinite_loop_pc = None
 
             def OnPreExecute(self, endpoint):
                 pc = atlas_pc(endpoint)
                 inst = atlas_current_inst(endpoint)
                 dasm = inst.dasmString()
                 self.insts.append((hex(pc), dasm))
+
+            def AbortOnException(self, endpoint, exception):
+                if isinstance(exception, InfiniteLoopError):
+                    self.infinite_loop_pc = atlas_pc(endpoint)
+
+                return True
 
         riscv_tests_dir = self.frame.riscv_tests_dir
         sim_exe_path = self.frame.sim_exe_path
@@ -49,6 +56,11 @@ class InstViewer(wx.Panel):
             i = self.inst_list_ctrl.GetItemCount()
             self.inst_list_ctrl.InsertItem(i, pc)
             self.inst_list_ctrl.SetItem(i, 1, dasm)
+
+        if obs.infinite_loop_pc:
+            i = self.inst_list_ctrl.GetItemCount()
+            self.inst_list_ctrl.InsertItem(i, hex(obs.infinite_loop_pc))
+            self.inst_list_ctrl.SetItem(i, 1, "Infinite loop detected")
 
         self.inst_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
         self.inst_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE)

@@ -45,8 +45,8 @@ class Observer:
     def CreateReport(self):
         return None
 
-    def AbortOnException(self, e):
-        print ('Exception occurred: {}'.format(e))
+    def AbortOnException(self, endpoint, exception):
+        print ('Exception occurred: {}'.format(exception))
         return True
 
 ## Simple observer which does not overwrite any AtlasState / AtlasInst values.
@@ -225,6 +225,10 @@ class PythonInstRewriter(Observer):
         print ('----> test_passed: {}'.format(test_passed))
         print ('----> inst_count: {}'.format(inst_count))
 
+class InfiniteLoopError(Exception):
+    def __init__(self, pc):
+        self.pc = pc
+
 ## Utility class which runs an observer on an Atlas simulation running in the background.
 class ObserverSim:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
@@ -237,15 +241,21 @@ class ObserverSim:
         # See all the available APIs in IDE.backend.sim_api
         with SimWrapper(self.riscv_tests_dir, self.sim_exe_path, self.test_name) as sim:
             obs.OnPreSimulation(sim.endpoint)
-            
-            if obs.BreakOnPreExecute():
-                atlas_break_action(sim.endpoint, 'pre_execute')
+
+            # Put a pre_execute breakpoint even if the observer doesn't need it.
+            # We need it ourselves to break out of simulation if needed.
+            atlas_break_action(sim.endpoint, 'pre_execute')
 
             if obs.BreakOnPreException():
                 atlas_break_action(sim.endpoint, 'pre_exception')
 
             if obs.BreakOnPostExecute():
                 atlas_break_action(sim.endpoint, 'post_execute')
+
+            # Look at the pre_execute PC and skip the instruction to terminate
+            # the simulation if the same PC is executing twice (about to go into
+            # an infinite loop).
+            last_pre_execute_pc = -1
 
             while True:
                 break_method = atlas_continue(sim.endpoint)
@@ -254,13 +264,21 @@ class ObserverSim:
 
                 try:
                     if break_method == 'pre_execute':
-                        obs.OnPreExecute(sim.endpoint)
+                        curr_pre_execute_pc = atlas_pc(sim.endpoint)
+                        if curr_pre_execute_pc == last_pre_execute_pc:
+                            raise InfiniteLoopError(curr_pre_execute_pc)
+                        else:
+                            last_pre_execute_pc = curr_pre_execute_pc
+
+                        if obs.BreakOnPreExecute():
+                            obs.OnPreExecute(sim.endpoint)
+
                     elif break_method == 'pre_exception':
                         obs.OnPreException(sim.endpoint)
                     elif break_method == 'post_execute':
                         obs.OnPostExecute(sim.endpoint)
                 except Exception as e:
-                    if obs.AbortOnException(e):
+                    if obs.AbortOnException(sim.endpoint, e):
                         break
 
             obs.OnSimFinished(sim.endpoint)
