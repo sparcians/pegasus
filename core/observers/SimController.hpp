@@ -6,24 +6,24 @@
 namespace atlas
 {
 
-class AtlasState;
+    class AtlasState;
 
-class SimController : public Observer
-{
-public:
-    using base_type = SimController;
+    class SimController : public Observer
+    {
+      public:
+        using base_type = SimController;
 
-    SimController();
+        SimController();
 
-    void postInit(AtlasState*);
-    ActionGroup* preExecute(AtlasState* state) override;
-    ActionGroup* postExecute(AtlasState* state) override;
-    ActionGroup* preException(AtlasState* state) override;
-    void onSimulationFinished(AtlasState* state);
+        void postInit(AtlasState*);
+        ActionGroup* preExecute(AtlasState* state) override;
+        ActionGroup* postExecute(AtlasState* state) override;
+        ActionGroup* preException(AtlasState* state) override;
+        void onSimulationFinished(AtlasState* state);
 
-private:
-    class SimEndpoint;
-    std::shared_ptr<SimEndpoint> endpoint_;
-};
+      private:
+        class SimEndpoint;
+        std::shared_ptr<SimEndpoint> endpoint_;
+    };
 
 } // namespace atlas
