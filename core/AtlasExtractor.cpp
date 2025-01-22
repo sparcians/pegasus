@@ -23,7 +23,8 @@ namespace atlas
         const Execute* execute_unit = state->getExecuteUnit();
 
         const Execute::InstHandlersMap* inst_compute_address_handlers =
-            execute_unit->getInstComputeAddressHandlersMap();
+            (state->getXlen() == 64) ? execute_unit->getInstComputeAddressHandlersMap<RV64>()
+                                     : execute_unit->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
             const Action & inst_compute_address_handler =
@@ -31,7 +32,9 @@ namespace atlas
             inst_action_group_.addAction(inst_compute_address_handler);
         }
 
-        const Execute::InstHandlersMap* inst_handlers = execute_unit->getInstHandlersMap();
+        const Execute::InstHandlersMap* inst_handlers =
+            (state->getXlen() == 64) ? execute_unit->getInstHandlersMap<RV64>()
+                                     : execute_unit->getInstHandlersMap<RV32>();
         try
         {
             const Action & inst_handler = inst_handlers->at(mnemonic_);

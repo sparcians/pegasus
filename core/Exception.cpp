@@ -77,7 +77,7 @@ namespace atlas
         const uint64_t cause = static_cast<uint64_t>(cause_.getValue());
         WRITE_CSR_REG(MCAUSE, cause);
 
-        const uint64_t mtval = state->getCurrentInst()->getOpcode();
+        const uint64_t mtval = state->getSimState()->current_opcode;
         WRITE_CSR_REG(MTVAL, mtval);
 
         const uint64_t mtval2 = 0;
