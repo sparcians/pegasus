@@ -63,11 +63,11 @@ class SimEndpoint:
 
         return self.process is not None
 
-    def request(self, request):
+    def request(self, request, broken_pipe_return=None):
         try:
             self.__send(request)
         except BrokenPipeError:
-            return 'sim_dead'
+            return BrokenPipeResponse() if broken_pipe_return is None else broken_pipe_return
 
         response = None
         while response is None:

@@ -7,6 +7,7 @@ class SimResponse:
 class AckResponse(SimResponse): pass
 class ErrorResponse(SimResponse): pass
 class WarningResponse(SimResponse): pass
+class BrokenPipeResponse(SimResponse): pass
 
 # Equiv C++:  AtlasState::getXlen()
 def atlas_xlen(endpoint):
@@ -137,7 +138,7 @@ def atlas_break_action(endpoint, action):
 #             atlas_finish_execute(endpoint)
 #
 def atlas_finish_execute(endpoint):
-    return endpoint.request('sim.finish_execute')
+    return endpoint.request('sim.finish_execute', 'sim_dead')
 
 # Continue the running simulation until the next breakpoint is hit
 # or the simulation finishes.
@@ -146,12 +147,12 @@ def atlas_finish_execute(endpoint):
 # which is one of pre_execute, pre_exception, post_execute, or
 # sim_finished.
 def atlas_continue(endpoint):
-    return endpoint.request('sim.continue')
+    return endpoint.request('sim.continue', 'sim_dead')
 
 # Finish the simulation now. The simulation will complete and the
 # simulator will exit. This invalidates further use of the endpoint.
 def atlas_finish_sim(endpoint):
-    return endpoint.request('sim.finish')
+    return endpoint.request('sim.finish', 'sim_dead')
 
 ### ====================================================================
 ### JSON conversion (IPC using JSON messages)
