@@ -333,6 +333,50 @@ namespace atlas
         return 0;
     }
 
+    sparta::Register* AtlasState::findRegister(const std::string& reg_name) const
+    {
+        for (uint32_t i = 0; i < int_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = int_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < fp_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = fp_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < vec_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = vec_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < csr_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = csr_rset_->getRegister(i);
+            if (!reg) {
+                continue;
+            }
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        return nullptr;
+    }
+
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
     {
         auto* memory = atlas_system_->getSystemMemory();
