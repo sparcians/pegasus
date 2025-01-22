@@ -28,9 +28,9 @@ class InstViewer(wx.Panel):
         self.insts_by_pc = {}
 
         with SimWrapper(self.frame.riscv_tests_dir, self.frame.sim_exe_path, test) as sim:
-            # We could get the instruction disassembly from pre- or post-execute but the
-            # PC value can only be obtained during pre-execute. It will have advance to
-            # the next PC by the time we get to post-execute.
+            # We could get the instruction disassembly from pre- or post_execute but the
+            # PC value can only be obtained during pre_execute. It will have advanced to
+            # the next PC by the time we get to post_execute.
             atlas_break_action(sim.endpoint, 'pre_execute')
 
             last_pc = -1
