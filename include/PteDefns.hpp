@@ -7,6 +7,7 @@ namespace atlas
     namespace Sv32Pte
     {
         static constexpr uint32_t num_ppn_fields = 2;
+        static const std::array<uint32_t, num_ppn_fields> ppn_field_sizes{12, 10};
 
         struct ppn1
         {
@@ -89,10 +90,11 @@ namespace atlas
     namespace Sv39Pte
     {
         static constexpr uint32_t num_ppn_fields = 3;
+        static const std::array<uint32_t, num_ppn_fields> ppn_field_sizes{26, 9, 9};
 
         struct ppn2
         {
-            static constexpr uint64_t bitmask = 0x003fffff10000000;
+            static constexpr uint64_t bitmask = 0x003ffffff0000000;
             static constexpr uint32_t high_bit = 53;
             static constexpr uint32_t low_bit = 28;
         };
@@ -178,6 +180,7 @@ namespace atlas
     namespace Sv48Pte
     {
         static constexpr uint32_t num_ppn_fields = 4;
+        static const std::array<uint32_t, num_ppn_fields> ppn_field_sizes{17, 9, 9, 9};
 
         struct ppn3
         {
@@ -274,6 +277,7 @@ namespace atlas
     namespace Sv57Pte
     {
         static constexpr uint32_t num_ppn_fields = 5;
+        static const std::array<uint32_t, num_ppn_fields> ppn_field_sizes{8, 9, 9, 9, 9};
 
         struct ppn4
         {
