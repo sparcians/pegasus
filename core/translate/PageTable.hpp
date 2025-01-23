@@ -26,11 +26,15 @@ namespace atlas
     template <typename XLEN, MMUMode Mode> class PageTable
     {
       public:
+        using PageTableType = std::map<uint32_t, PageTableEntry<XLEN, Mode>>;
+
         PageTable(uint32_t base_addr) :
             max_entries_(determineMaxNumPteEntries(Mode)),
             base_addr_(base_addr)
         {
         }
+
+        const PageTableType & getPageTable() const { return page_table_; }
 
         void addEntry(uint32_t idx, PageTableEntry<XLEN, Mode> entry)
         {
@@ -96,7 +100,7 @@ namespace atlas
         bool contains(uint32_t idx) const { return page_table_.find(idx) != page_table_.end(); }
 
       private:
-        std::map<uint32_t, PageTableEntry<XLEN, Mode>> page_table_;
+        PageTableType page_table_;
         const uint16_t max_entries_;
         const uint32_t base_addr_;
 
@@ -105,17 +109,16 @@ namespace atlas
             const uint32_t pte_size = (Mode == MMUMode::SV32) ? sizeof(RV32) : sizeof(RV64);
             return ((idx >= base_addr_) && (idx < ((max_entries_ * pte_size) + base_addr_)));
         }
-
-        friend std::ostream & operator<<(std::ostream & os, const PageTable<XLEN, Mode> & pt);
     };
 
     template <typename XLEN, MMUMode Mode>
     std::ostream & operator<<(std::ostream & os, const PageTable<XLEN, Mode> & pt)
     {
-        for (const auto & [idx, entry] : pt.page_table_)
+        for (const auto & [idx, entry] : pt.getPageTable())
         {
-            os << "Index: " << idx << " | PTE: 0x" << std::hex << entry.getPte() << std::endl;
+            os << "Index: " << idx << " | PTE: " << entry << std::endl;
         }
         return os;
     }
+
 } // namespace atlas
