@@ -250,6 +250,14 @@ namespace atlas
                 atlas::ActionGroup* fail_action_group = nullptr;
                 if (!handleSimCommand_(state, sim_cmd, args, fail_action_group))
                 {
+                    // sim.finish_execute:
+                    //    fail_action_group = state->getFinishActionGroup();
+                    //
+                    // sim.kill:
+                    //    fail_action_group = state->getStopSimActionGroup()
+                    //
+                    // sim.continue, sim.finish:
+                    //    fail_action_group = nullptr
                     return fail_action_group;
                 }
             }
