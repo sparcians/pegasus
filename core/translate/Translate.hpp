@@ -33,14 +33,23 @@ namespace atlas
 
         ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
 
+        void changeMmuMode(MMUMode mode);
+
       private:
-        template <MMUMode Mode> ActionGroup* translate_(atlas::AtlasState* state);
+        template <typename XLEN, MMUMode Mode> ActionGroup* translate_(atlas::AtlasState* state);
 
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup data_translate_action_group_{"Data Translate"};
 
         std::array<Action, N_MMU_MODES> inst_translation_actions_;
         std::array<Action, N_MMU_MODES> data_translation_actions_;
+
+        template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
+        {
+            return num_pagewalk_levels_.at(static_cast<uint32_t>(Mode));
+        }
+
+        const std::array<uint32_t, N_MMU_MODES> num_pagewalk_levels_{0, 2, 3, 4, 5};
 
         friend class ::AtlasTranslateTester;
     };

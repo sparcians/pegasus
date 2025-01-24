@@ -37,6 +37,8 @@ namespace atlas
 
         bool isValid() const { return v_; }
 
+        bool isLeaf() const { return canRead() || canExecute(); }
+
       private:
         XLEN pte_val_;
         XLEN ppn_;

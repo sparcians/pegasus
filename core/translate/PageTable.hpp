@@ -1,8 +1,10 @@
 #pragma once
 
+#include "include/AtlasTypes.hpp"
+#include "core/translate/PageTableEntry.hpp"
+
 #include <map>
 #include <iostream>
-#include "../include/AtlasTypes.hpp"
 
 namespace atlas
 {

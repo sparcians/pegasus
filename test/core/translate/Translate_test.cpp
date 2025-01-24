@@ -1,9 +1,11 @@
 #include "sim/AtlasSim.hpp"
+
 #include "core/AtlasState.hpp"
-#include "include/AtlasTypes.hpp"
-#include "core/translate/PageTableEntry.hpp"
 #include "core/translate/PageTable.hpp"
-#include "core/translate/PageTableWalker.hpp"
+
+#include "include/AtlasTypes.hpp"
+#include "include/CSRNums.hpp"
+
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
@@ -212,7 +214,8 @@ class AtlasTranslateTester
         translation_state->makeTranslationRequest(vaddr, access_size);
 
         // Execute translation
-        auto next_action_group = translate_unit_->translate_<atlas::MMUMode::BAREMETAL>(state_);
+        auto next_action_group =
+            translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL>(state_);
         EXPECT_EQUAL(next_action_group, nullptr);
 
         // Get translation result
@@ -230,35 +233,63 @@ class AtlasTranslateTester
     void testSv32Translation()
     {
         std::cout << "Testing sv32 translation\n" << std::endl;
-        atlas::PageTableWalker walker;
         const uint32_t PTE_SIZE = sizeof(atlas::RV32);
-        uint32_t vaddr = 0x143FFABC;           //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) ,
-                                               // offset-->0xABC-->d(2748)}
-        uint32_t satpBaseAddress = 0xFFFF0000; // base address of PD
+
+        // Virtual address to test
+        // {vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023), offset-->0xABC-->d(2748)}
+        uint32_t vaddr = 0x143FFABC;
+
+        // Physical address of root page table entry
+        uint32_t satpBaseAddress = 0xFFFF0000;
         uint32_t pdeAddress = satpBaseAddress + (80 * PTE_SIZE);
         uint32_t pdeVal = 0x7B1EEFF;
         uint32_t pageTableBaseAddr = (pdeVal >> 10) << 10; // 7B1EC00
         uint32_t pteAddress = pageTableBaseAddr + (1023 * PTE_SIZE);
         uint32_t pteVal = 0x7F03D4C3;
         const atlas::Addr phyMemoryBaseAddr = (pteVal >> 10) << 10; // 0x7F03D400
-        const atlas::Addr pa = (phyMemoryBaseAddr + (2748 * PTE_SIZE));
-        const uint64_t val = 0xABCD1234;
+
+        // Expected results of translation
+        const atlas::Addr expected_paddr = (phyMemoryBaseAddr + (2748 * PTE_SIZE));
+        const uint64_t expected_val = 0xABCD1234;
+        state_->writeMemory<uint64_t>(expected_paddr, expected_val);
 
         atlas::PageTable<atlas::RV32, atlas::MMUMode::SV32> pageDirectory(satpBaseAddress);
         atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> pageDirectoryEntry(pdeVal);
         pageDirectory.addEntry(pdeAddress, pageDirectoryEntry);
+
         atlas::PageTable<atlas::RV32, atlas::MMUMode::SV32> pageTable(pageTableBaseAddr);
+
         atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> PageTableEntry(pteVal);
         pageTable.addEntry(pteAddress, PageTableEntry);
 
-        state_->writeMemory<uint64_t>(pa, val);
+        // Write PTEs to memory
         state_->writeMemory<uint64_t>(pdeAddress, pdeVal);
         state_->writeMemory<uint64_t>(pteAddress, pteVal);
 
-        uint32_t transaltedPA = walker.sv32PageTableWalk(vaddr, satpBaseAddress, state_);
+        // Set SATP value
+        state_->getCsrRegister(atlas::CSR::SATP::reg_num)->dmiWrite<uint64_t>(satpBaseAddress);
 
-        EXPECT_EQUAL(pa, transaltedPA);
-        EXPECT_EQUAL(val, state_->readMemory<uint64_t>(transaltedPA));
+        // Make translation request
+        atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
+        const size_t access_size = 4;
+        translation_state->makeTranslationRequest(vaddr, access_size);
+        std::cout << "Translation request:" << std::endl;
+        std::cout << "    VA: 0x" << std::hex << vaddr;
+        std::cout << ", Access size: " << std::dec << access_size << std::endl;
+
+        // Translate!
+        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32>(state_);
+
+        // Get translation result
+        const atlas::AtlasTranslationState::TranslationResult result =
+            translation_state->getTranslationResult();
+        std::cout << "Translation result:" << std::endl;
+        std::cout << "    PA: 0x" << std::hex << result.physical_addr;
+        std::cout << ", Access size: " << std::dec << result.size << "\n\n";
+
+        // Test translation result
+        EXPECT_EQUAL(result.physical_addr, expected_paddr);
+        EXPECT_EQUAL(state_->readMemory<uint64_t>(result.physical_addr), expected_val);
     }
 
   private:
