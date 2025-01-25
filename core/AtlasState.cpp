@@ -9,6 +9,7 @@
 #include "arch/register_macros.hpp"
 #include "system/AtlasSystem.hpp"
 #include "core/Snapshotters.hpp"
+#include "core/observers/SimController.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
@@ -177,9 +178,14 @@ namespace atlas
         // AtlasState.hpp:
         //     std::unique_ptr<ObserverContainer> observer_container_;
 
+        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            observer->preExecute(state);
+            fail_action_group = observer->preExecute(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
         }
 
         return nullptr;
@@ -188,9 +194,14 @@ namespace atlas
     ActionGroup* AtlasState::postExecute_(AtlasState* state)
     {
         // TODO cnyce: See comments in preExecute_()
+        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            observer->postExecute(state);
+            fail_action_group = observer->postExecute(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
         }
 
         return nullptr;
@@ -199,9 +210,14 @@ namespace atlas
     ActionGroup* AtlasState::preException_(AtlasState* state)
     {
         // TODO cnyce: See comments in preExecute_()
+        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            observer->preException(state);
+            fail_action_group = observer->preException(state);
+            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            {
+                return fail_action_group;
+            }
         }
 
         return nullptr;
@@ -348,6 +364,51 @@ namespace atlas
             return rc;
         }
         return 0;
+    }
+
+    sparta::Register* AtlasState::findRegister(const std::string & reg_name) const
+    {
+        for (uint32_t i = 0; i < int_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = int_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < fp_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = fp_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < vec_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = vec_rset_->getRegister(i);
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        for (uint32_t i = 0; i < csr_rset_->getNumRegisters(); ++i)
+        {
+            auto reg = csr_rset_->getRegister(i);
+            if (!reg)
+            {
+                continue;
+            }
+            if (reg->getName() == reg_name)
+            {
+                return reg;
+            }
+        }
+
+        return nullptr;
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)
@@ -576,4 +637,24 @@ namespace atlas
         (void)xlen_val;
         return 42949672960;
     }
+
+    void AtlasState::postInit()
+    {
+        if (interactive_mode_)
+        {
+            auto observer = std::make_unique<SimController>();
+            sim_controller_ = observer.get();
+            addObserver(std::move(observer));
+            sim_controller_->postInit(this);
+        }
+    }
+
+    void AtlasState::cleanup()
+    {
+        if (sim_controller_)
+        {
+            sim_controller_->onSimulationFinished(this);
+        }
+    }
+
 } // namespace atlas
