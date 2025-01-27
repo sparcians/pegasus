@@ -64,20 +64,11 @@ class StateQuery:
 
         return StateSnapshot(pc, None, None, None, reg_vals)
 
-    def GetMnemonic(self, pc):
-        pc = int(pc, 16) if isinstance(pc, str) else pc
-        cmd = 'SELECT Dasm FROM Instructions WHERE PC = {}'.format(pc)
-        self.cursor.execute(cmd)
-        dasm = self.cursor.fetchone()[0]
-        return dasm.lstrip().split()[0]
-
     def __GetInitRegValues(self):
-        if self.init_reg_values is not None:
-            return self.init_reg_values.copy()
-
-        cmd = 'SELECT RegName, RegValue FROM InitRegValues'
-        self.cursor.execute(cmd)
-        self.init_reg_values = dict(self.cursor.fetchall())
+        if self.init_reg_values is None:
+            cmd = 'SELECT RegName, RegValue FROM InitRegValues'
+            self.cursor.execute(cmd)
+            self.init_reg_values = dict(self.cursor.fetchall())
 
         return self.init_reg_values.copy()
 

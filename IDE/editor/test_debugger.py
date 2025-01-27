@@ -235,14 +235,15 @@ class StateViewer(wx.Panel):
             return
         
         menu = wx.Menu()
-        menu.Append(wx.ID_COPY, 'Copy')
-        self.Bind(wx.EVT_MENU, self.__OnCopy, id=wx.ID_COPY)
+        menu.Append(1, 'Copy')
+        self.Bind(wx.EVT_MENU, self.__OnCopy, id=1)
         self.PopupMenu(menu)
         menu.Destroy()
 
     def __OnCopy(self, event):
         text = self.pc_label.GetLabel()
         val = text.split(':')[-1]
+        val = 'uint64_t({})'.format(text.split(':')[-1])
         wx.TheClipboard.Open()
         wx.TheClipboard.SetData(wx.TextDataObject(val))
         wx.TheClipboard.Close()
@@ -318,9 +319,15 @@ class RegisterGrid(wx.grid.Grid):
         row = event.GetRow()
         col = event.GetCol()
         if col == 1:
-            reg_val = self.GetCellValue(row, col)
-            copy_text = 'uint64_t({})'.format(reg_val)
+            def copy_text(event):
+                reg_val = self.GetCellValue(row, col)
+                copy_text = 'uint64_t({})'.format(reg_val)
 
-            wx.TheClipboard.Open()
-            wx.TheClipboard.SetData(wx.TextDataObject(copy_text))
-            wx.TheClipboard.Close()
+                wx.TheClipboard.Open()
+                wx.TheClipboard.SetData(wx.TextDataObject(copy_text))
+                wx.TheClipboard.Close()
+
+            menu = wx.Menu()
+            menu.Append(1, 'Copy')
+            self.Bind(wx.EVT_MENU, copy_text, id=1)
+            self.PopupMenu(menu)

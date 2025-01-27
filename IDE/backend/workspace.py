@@ -27,11 +27,6 @@ class Workspace(wx.Panel):
         vsplitter.SetMinimumPaneSize(50)
         vsplitter.SetSashPosition(1310)
 
-        def PrintSashPos(event):
-            print(vsplitter.GetSashPosition())
-
-        vsplitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, PrintSashPos)
-
         workspace_sizer = wx.BoxSizer(wx.HORIZONTAL)
         workspace_sizer.Add(vsplitter, 1, wx.EXPAND)
         self.workspace_panel.SetSizer(workspace_sizer)
