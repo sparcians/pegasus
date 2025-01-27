@@ -64,8 +64,10 @@ namespace atlas
                 registers_by_reg_num_[def->id] = dynamic_cast<sparta::Register*>(reg);
             }
 
-            for (uint32_t i = 0; i < getNumRegisters(); ++i) {
-                if (auto reg = getRegister(i)) {
+            for (uint32_t i = 0; i < getNumRegisters(); ++i)
+            {
+                if (auto reg = getRegister(i))
+                {
                     registers_by_name_[reg->getName()] = reg;
                 }
             }
@@ -98,7 +100,7 @@ namespace atlas
 
         uint32_t getNumRegisters() const { return registers_by_reg_num_.size(); }
 
-        const std::unordered_map<std::string, sparta::Register*>& getRegistersByName() const
+        const std::unordered_map<std::string, sparta::Register*> & getRegistersByName() const
         {
             return registers_by_name_;
         }
