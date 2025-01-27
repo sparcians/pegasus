@@ -77,6 +77,19 @@ namespace atlas
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
+        for (const auto& kvp : int_rset_->getRegistersByName()) {
+            registers_by_name_[kvp.first] = kvp.second;
+        }
+        for (const auto& kvp : fp_rset_->getRegistersByName()) {
+            registers_by_name_[kvp.first] = kvp.second;
+        }
+        for (const auto& kvp : vec_rset_->getRegistersByName()) {
+            registers_by_name_[kvp.first] = kvp.second;
+        }
+        for (const auto& kvp : csr_rset_->getRegistersByName()) {
+            registers_by_name_[kvp.first] = kvp.second;
+        }
+
         // Increment PC Action
         increment_pc_action_ =
             atlas::Action::createAction<&AtlasState::incrementPc_>(this, "increment pc");
@@ -366,49 +379,12 @@ namespace atlas
         return 0;
     }
 
-    sparta::Register* AtlasState::findRegister(const std::string & reg_name) const
+    sparta::Register* AtlasState::findRegister(const std::string & reg_name, bool must_exist) const
     {
-        for (uint32_t i = 0; i < int_rset_->getNumRegisters(); ++i)
-        {
-            auto reg = int_rset_->getRegister(i);
-            if (reg->getName() == reg_name)
-            {
-                return reg;
-            }
-        }
-
-        for (uint32_t i = 0; i < fp_rset_->getNumRegisters(); ++i)
-        {
-            auto reg = fp_rset_->getRegister(i);
-            if (reg->getName() == reg_name)
-            {
-                return reg;
-            }
-        }
-
-        for (uint32_t i = 0; i < vec_rset_->getNumRegisters(); ++i)
-        {
-            auto reg = vec_rset_->getRegister(i);
-            if (reg->getName() == reg_name)
-            {
-                return reg;
-            }
-        }
-
-        for (uint32_t i = 0; i < csr_rset_->getNumRegisters(); ++i)
-        {
-            auto reg = csr_rset_->getRegister(i);
-            if (!reg)
-            {
-                continue;
-            }
-            if (reg->getName() == reg_name)
-            {
-                return reg;
-            }
-        }
-
-        return nullptr;
+        auto iter = registers_by_name_.find(reg_name);
+        auto reg = (iter != registers_by_name_.end()) ? iter->second : nullptr;
+        sparta_assert(!must_exist || reg, "Failed to find register: " << reg_name);
+        return reg;
     }
 
     template <typename MemoryType> MemoryType AtlasState::readMemory(const Addr paddr)

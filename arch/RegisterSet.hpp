@@ -63,6 +63,12 @@ namespace atlas
 
                 registers_by_reg_num_[def->id] = dynamic_cast<sparta::Register*>(reg);
             }
+
+            for (uint32_t i = 0; i < getNumRegisters(); ++i) {
+                if (auto reg = getRegister(i)) {
+                    registers_by_name_[reg->getName()] = reg;
+                }
+            }
         }
 
         static std::unique_ptr<RegisterSet> create(sparta::TreeNode* parent,
@@ -91,6 +97,11 @@ namespace atlas
         }
 
         uint32_t getNumRegisters() const { return registers_by_reg_num_.size(); }
+
+        const std::unordered_map<std::string, sparta::Register*>& getRegistersByName() const
+        {
+            return registers_by_name_;
+        }
 
         // Bring in getRegister(const char* reg_name) from sparta::RegisterSet
         using sparta::RegisterSet::getRegister;
@@ -121,6 +132,11 @@ namespace atlas
          * JSON file(s).
          */
         std::vector<sparta::Register*> registers_by_reg_num_;
+
+        /*!
+         * \brief Map of register names to the registers in this set.
+         */
+        std::unordered_map<std::string, sparta::Register*> registers_by_name_;
     };
 
 } // namespace atlas

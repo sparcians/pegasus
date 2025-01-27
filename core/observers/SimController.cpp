@@ -523,7 +523,7 @@ namespace atlas
                             sendError_("Invalid args");
                             break;
                         }
-                        auto reg = state->findRegister(args[0]);
+                        auto reg = state->findRegister(args[0], false);
                         if (!reg)
                         {
                             sendError_("Invalid register");
@@ -540,7 +540,7 @@ namespace atlas
                             sendError_("Invalid args");
                             break;
                         }
-                        auto reg = state->findRegister(args[0]);
+                        auto reg = state->findRegister(args[0], false);
                         if (!reg)
                         {
                             sendError_("Invalid register");
@@ -557,7 +557,7 @@ namespace atlas
                             sendError_("Invalid args");
                             break;
                         }
-                        auto reg = state->findRegister(args[0]);
+                        auto reg = state->findRegister(args[0], false);
                         if (!reg)
                         {
                             sendError_("Invalid register");
@@ -574,7 +574,7 @@ namespace atlas
                             sendError_("Invalid args");
                             break;
                         }
-                        auto reg = state->findRegister(args[0]);
+                        auto reg = state->findRegister(args[0], false);
                         if (!reg)
                         {
                             sendError_("Invalid register");
@@ -598,7 +598,7 @@ namespace atlas
                             sendError_("Invalid args");
                             break;
                         }
-                        auto reg = state->findRegister(args[0]);
+                        auto reg = state->findRegister(args[0], false);
                         if (!reg)
                         {
                             sendError_("Invalid register");
