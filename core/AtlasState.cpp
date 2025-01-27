@@ -77,16 +77,20 @@ namespace atlas
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
-        for (const auto& kvp : int_rset_->getRegistersByName()) {
+        for (const auto & kvp : int_rset_->getRegistersByName())
+        {
             registers_by_name_[kvp.first] = kvp.second;
         }
-        for (const auto& kvp : fp_rset_->getRegistersByName()) {
+        for (const auto & kvp : fp_rset_->getRegistersByName())
+        {
             registers_by_name_[kvp.first] = kvp.second;
         }
-        for (const auto& kvp : vec_rset_->getRegistersByName()) {
+        for (const auto & kvp : vec_rset_->getRegistersByName())
+        {
             registers_by_name_[kvp.first] = kvp.second;
         }
-        for (const auto& kvp : csr_rset_->getRegistersByName()) {
+        for (const auto & kvp : csr_rset_->getRegistersByName())
+        {
             registers_by_name_[kvp.first] = kvp.second;
         }
 

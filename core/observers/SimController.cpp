@@ -412,27 +412,34 @@ namespace atlas
                 case SimCommand::INST_CSR:
                     {
                         auto inst = state->getCurrentInst();
-                        if (!inst) {
+                        if (!inst)
+                        {
                             sendError_("No instruction");
                             return true;
                         }
 
                         auto opcode_info = inst->getMavisOpcodeInfo();
-                        if (!opcode_info) {
+                        if (!opcode_info)
+                        {
                             sendError_("No opcode info");
                             return true;
                         }
 
                         uint64_t csr = 0;
-                        try {
-                            csr = opcode_info->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-                        } catch (...) {
+                        try
+                        {
+                            csr =
+                                opcode_info->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+                        }
+                        catch (...)
+                        {
                             sendError_("No opcode info");
                             return true;
                         }
 
-                        sparta::Register* reg =  state->getCsrRegister(csr);
-                        if (!reg) {
+                        sparta::Register* reg = state->getCsrRegister(csr);
+                        if (!reg)
+                        {
                             sendError_("No csr");
                             return true;
                         }
@@ -444,13 +451,15 @@ namespace atlas
                 case SimCommand::INST_TYPE:
                     {
                         auto inst = state->getCurrentInst();
-                        if (!inst) {
+                        if (!inst)
+                        {
                             sendError_("No instruction");
                             return true;
                         }
 
                         auto opcode_info = inst->getMavisOpcodeInfo();
-                        if (!opcode_info) {
+                        if (!opcode_info)
+                        {
                             sendError_("No opcode info");
                             return true;
                         }

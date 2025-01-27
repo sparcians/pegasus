@@ -31,7 +31,8 @@ namespace atlas
 
     AtlasSim::~AtlasSim()
     {
-        for (auto state : state_) {
+        for (auto state : state_)
+        {
             state->cleanup();
         }
 
