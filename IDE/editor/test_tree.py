@@ -19,7 +19,7 @@ class TestTreeCtrl(wx.TreeCtrl):
             for ext in SUPPORTED_EXTENSIONS:
                 ext_root = self.__GetOrAppendItem(arch_root, ext)
                 for test in tests:
-                    if test.startswith(arch) and ext+"-" in test:
+                    if test.startswith(arch) and ext+"-" in test and not test.endswith(".dump"):
                         leaf = self.__GetOrAppendItem(ext_root, os.path.basename(test))
                         self.SetItemData(leaf, os.path.basename(test))
 
