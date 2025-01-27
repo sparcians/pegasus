@@ -19,9 +19,10 @@ class SimWrapper:
         self.endpoint = SimEndpoint()
 
     def UnscopedEnter(self):
+        riscv_tests_dir = os.path.abspath(self.riscv_tests_dir)
         os.chdir(os.path.dirname(self.sim_exe_path))
         program_path = "./atlas"
-        program_args = ["--interactive", f"{self.riscv_tests_dir}/{self.test_name}"]
+        program_args = ["--interactive", f"{riscv_tests_dir}/{self.test_name}"]
         return self if self.endpoint.start_server(program_path, *program_args) else None
 
     def UnscopedExit(self):

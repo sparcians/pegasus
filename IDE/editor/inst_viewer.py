@@ -36,7 +36,7 @@ class InstViewer(wx.Panel):
         obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
         state_db = StateDB()
         obs = StateSerializer(state_db)
-        state_db.CallInTransaction(lambda: obs_sim.RunObserver(obs))
+        state_db.CallInTransaction(lambda: obs_sim.RunObserver(obs, timeout=10))
         state_query = StateQuery(state_db.db_file.name)
 
         for pc, _, dasm, inst_uid in state_query.GetInstructions():
