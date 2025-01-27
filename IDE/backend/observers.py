@@ -228,8 +228,8 @@ class PythonInstRewriter(Observer):
         #     return nullptr;
         # }
 
-        rs1_val = reg_t(insn.getRs1().read())
-        rs2_val = reg_t(insn.getRs2().read())
+        rs1_val = uint64_t(insn.getRs1().read())
+        rs2_val = uint64_t(insn.getRs2().read())
 
         lhs = rs1_val.sext32()
         rhs = rs2_val.sext32()

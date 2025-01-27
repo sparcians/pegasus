@@ -343,11 +343,7 @@ namespace atlas
 
                 case SimCommand::INST_PRIV:
                     {
-                        auto inst = state->getCurrentInst();
-                        if (!inst)
-                            sendError_("No instruction");
-                        else
-                            sendInt_((uint32_t)state->getPrivMode());
+                        sendInt_((uint32_t)state->getPrivMode());
                         return true;
                     }
 

@@ -52,13 +52,11 @@ class TestTreeCtrl(wx.TreeCtrl):
             return
 
         menu = wx.Menu()
-        menu.Append(1, "Load in workspace")
-        self.Bind(wx.EVT_MENU, self.__LoadTestInActiveWorkspace, id=1)
+        menu.Append(1, "Load test")
+        self.Bind(wx.EVT_MENU, self.__LoadTest, id=1)
         self.PopupMenu(menu)
 
-    def __LoadTestInActiveWorkspace(self, event):
+    def __LoadTest(self, event):
         item = self.GetSelection()
         test = self.GetItemData(item)
-        selected_tab = self.frame.notebook.GetSelection()
-        workspace = self.frame.workspaces[selected_tab]
-        workspace.LoadTest(test)
+        self.frame.workspace.LoadTest(test)

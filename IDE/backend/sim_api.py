@@ -5,10 +5,21 @@ class SimResponse:
     def __init__(self, response=None):
         self.response = response
 
-class AckResponse(SimResponse): pass
-class ErrorResponse(SimResponse): pass
-class WarningResponse(SimResponse): pass
-class BrokenPipeResponse(SimResponse): pass
+class AckResponse(SimResponse):
+    def __bool__(self):
+        return True
+
+class ErrorResponse(SimResponse):
+    def __bool__(self):
+        return False
+
+class WarningResponse(SimResponse):
+    def __bool__(self):
+        return False
+
+class BrokenPipeResponse(SimResponse):
+    def __bool__(self):
+        return False
 
 # Equiv C++:  AtlasState::getXlen()
 def atlas_xlen(endpoint):
@@ -120,9 +131,7 @@ def atlas_reg_dmiwrite(endpoint, reg_name, value):
     value = c_dtypes.convert_to_hex(value)
     return endpoint.request('reg.dmiwrite %s %s' % (reg_name, value))
 
-# Set a breakpoint at the given execute phase (pre_execute, pre_exception, post_execute).
-def atlas_break_action(endpoint, action):
-    return endpoint.request('sim.break %s' % action)
+
 
 # Stop Atlas from executing C++ instruction handler code and jump right
 # to the finish ActionGroup (increment PC, post_execute). This is useful
@@ -142,6 +151,11 @@ def atlas_break_action(endpoint, action):
 #
 def atlas_finish_execute(endpoint):
     return endpoint.request('sim.finish_execute', 'sim_dead')
+
+# Set a breakpoint at the given execute phase.
+# Must be one of pre_execute, pre_exception, or post_execute.
+def atlas_break_action(endpoint, action):
+    return endpoint.request('sim.break %s' % action)
 
 # Continue the running simulation until the next breakpoint is hit
 # or the simulation finishes.
