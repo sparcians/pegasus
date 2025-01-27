@@ -99,6 +99,8 @@ namespace atlas
             INST_RS1,
             INST_RS2,
             INST_RD,
+            INST_CSR,
+            INST_TYPE,
             ACTIVE_EXCEPTION,
             NUM_REGS_IN_GROUP,
             CSR_NAME,
@@ -154,6 +156,8 @@ namespace atlas
                 {"inst.rs1.name", SimCommand::INST_RS1},
                 {"inst.rs2.name", SimCommand::INST_RS2},
                 {"inst.rd.name", SimCommand::INST_RD},
+                {"inst.csr.name", SimCommand::INST_CSR},
+                {"inst.type", SimCommand::INST_TYPE},
                 {"inst.active_exception", SimCommand::ACTIVE_EXCEPTION},
                 {"state.num_regs_in_group", SimCommand::NUM_REGS_IN_GROUP},
                 {"csr.name", SimCommand::CSR_NAME},
@@ -402,6 +406,56 @@ namespace atlas
                             sendError_("No rd");
                         else
                             sendString_(inst->getRd()->getName());
+                        return true;
+                    }
+
+                case SimCommand::INST_CSR:
+                    {
+                        auto inst = state->getCurrentInst();
+                        if (!inst) {
+                            sendError_("No instruction");
+                            return true;
+                        }
+
+                        auto opcode_info = inst->getMavisOpcodeInfo();
+                        if (!opcode_info) {
+                            sendError_("No opcode info");
+                            return true;
+                        }
+
+                        uint64_t csr = 0;
+                        try {
+                            csr = opcode_info->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+                        } catch (...) {
+                            sendError_("No opcode info");
+                            return true;
+                        }
+
+                        sparta::Register* reg =  state->getCsrRegister(csr);
+                        if (!reg) {
+                            sendError_("No csr");
+                            return true;
+                        }
+
+                        sendString_(reg->getName());
+                        return true;
+                    }
+
+                case SimCommand::INST_TYPE:
+                    {
+                        auto inst = state->getCurrentInst();
+                        if (!inst) {
+                            sendError_("No instruction");
+                            return true;
+                        }
+
+                        auto opcode_info = inst->getMavisOpcodeInfo();
+                        if (!opcode_info) {
+                            sendError_("No opcode info");
+                            return true;
+                        }
+
+                        sendInt_((int)opcode_info->getInstType());
                         return true;
                     }
 

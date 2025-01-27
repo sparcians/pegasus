@@ -131,6 +131,17 @@ def atlas_reg_dmiwrite(endpoint, reg_name, value):
     value = c_dtypes.convert_to_hex(value)
     return endpoint.request('reg.dmiwrite %s %s' % (reg_name, value))
 
+# Equiv C++:  AtlasState->getCurrentInst()
+#                       ->getMavisOpcodeInfo()
+#                       ->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+def atlas_inst_csr(endpoint):
+    return endpoint.request('inst.csr.name')
+
+# Equiv C++:  AtlasState->getCurrentInst()
+#                       ->getMavisOpcodeInfo()
+#                       ->getInstType();
+def atlas_inst_type(endpoint):
+    return endpoint.request('inst.type')
 
 
 # Stop Atlas from executing C++ instruction handler code and jump right

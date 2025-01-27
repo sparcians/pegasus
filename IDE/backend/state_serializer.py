@@ -81,6 +81,26 @@ class StateSerializer(Observer):
         if mnemonic in ('ecall', 'ebreak', 'fence', 'fence.i', 'mret', 'sret') or mnemonic.startswith('csrr'):
             self.__AddCsrChangables(endpoint)
 
+        # Add fcsr, frm, and fflags to the list of tracked registers
+        # if the instruction is a floating-point instruction.
+        inst_type = atlas_inst_type(endpoint)
+        is_fp = isinstance(inst_type, int) and inst_type == 1 << 1
+        if is_fp:
+            inst.AddChangable(endpoint, 'fcsr')
+            inst.AddChangable(endpoint, 'frm')
+            inst.AddChangable(endpoint, 'fflags')
+
+        # Track any changes to this instruction's CSR ("special field").
+        # Equivalent C++ under the hood:
+        #
+        #     auto inst = state->getCurrentInst();
+        #     auto info = inst->getMavisOpcodeInfo()
+        #     auto csr = info->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+        #     auto csr_name = state->getCsrRegister(csr)->getName();
+        csr_name = atlas_inst_csr(endpoint)
+        if csr_name:
+            inst.AddChangable(endpoint, csr_name)
+
     def OnPreException(self, endpoint):
         self.__AddCsrChangables(endpoint)
 
