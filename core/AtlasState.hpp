@@ -169,7 +169,7 @@ namespace atlas
             return csr_rset_->getRegister(reg_num);
         }
 
-        sparta::Register* findRegister(const std::string & reg_name) const;
+        sparta::Register* findRegister(const std::string & reg_name, bool must_exist = true) const;
 
         template <typename MemoryType> MemoryType readMemory(const Addr paddr);
 
@@ -311,6 +311,9 @@ namespace atlas
         std::unique_ptr<RegisterSet> fp_rset_;
         std::unique_ptr<RegisterSet> vec_rset_;
         std::unique_ptr<RegisterSet> csr_rset_;
+
+        // Cached registers by name
+        std::unordered_map<std::string, sparta::Register*> registers_by_name_;
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;

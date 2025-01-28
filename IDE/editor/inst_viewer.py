@@ -2,14 +2,16 @@ import wx
 from backend.sim_api import *
 from backend.atlas_dtypes import *
 from backend.observers import *
+from backend.state_db import StateDB
+from backend.state_serializer import StateSerializer
+from backend.state_query import StateQuery
 
 class InstViewer(wx.Panel):
-    def __init__(self, parent, frame, workspace):
+    def __init__(self, parent, frame, test_debugger):
         wx.Panel.__init__(self, parent)
         self.SetBackgroundColour('green')
         self.frame = frame
-        self.workspace = workspace
-        self.inst_editor = workspace.inst_editor
+        self.test_debugger = test_debugger
 
         mono10 = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, 'Consolas')
         self.inst_list_ctrl = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
@@ -21,40 +23,28 @@ class InstViewer(wx.Panel):
         self.SetSizer(sizer)
         self.Layout()
 
+        self.inst_list_ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.__OnInstViewerItemSelected)
+
     def LoadTest(self, test):
         self.inst_list_ctrl.ClearAll()
         self.inst_list_ctrl.InsertColumn(0, "PC")
         self.inst_list_ctrl.InsertColumn(1, "Disasm")
-        self.insts_by_pc = {}
-
-        class InstSnooper(Observer):
-            def __init__(self, insts_by_pc):
-                Observer.__init__(self)
-                self.insts = []
-                self.insts_by_pc = insts_by_pc
-                self.infinite_loop_pc = None
-
-            def OnPreExecute(self, endpoint):
-                pc = atlas_pc(endpoint)
-                inst = atlas_current_inst(endpoint)
-                dasm = inst.dasmString()
-                self.insts.append((hex(pc), dasm))
-                self.insts_by_pc[hex(pc)] = inst.deepCopy()
-
-            def OnSimulationStuck(self, endpoint):
-                self.infinite_loop_pc = atlas_pc(endpoint)
+        self.inst_list_ctrl.InsertItem(0, "Initial State")
 
         riscv_tests_dir = self.frame.riscv_tests_dir
         sim_exe_path = self.frame.sim_exe_path
         obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
+        state_db = StateDB()
+        obs = StateSerializer(state_db)
+        state_db.CallInTransaction(lambda: obs_sim.RunObserver(obs, timeout=10))
+        state_query = StateQuery(state_db.db_file.name)
 
-        obs = InstSnooper(self.insts_by_pc)
-        obs_sim.RunObserver(obs)
-
-        for pc, dasm in obs.insts:
+        for pc, _, dasm, inst_uid in state_query.GetInstructions():
             i = self.inst_list_ctrl.GetItemCount()
+            pc = '0x{:x}'.format(pc)
             self.inst_list_ctrl.InsertItem(i, pc)
             self.inst_list_ctrl.SetItem(i, 1, dasm)
+            self.insts_by_pc[pc] = inst_uid
 
         if obs.infinite_loop_pc:
             i = self.inst_list_ctrl.GetItemCount()
@@ -69,18 +59,18 @@ class InstViewer(wx.Panel):
         colwidth1 = self.inst_list_ctrl.GetColumnWidth(1)
         minwidth = colwidth0 + colwidth1 + 10
         self.inst_list_ctrl.SetSize((minwidth, wx.DisplaySize()[1]))
+        self.inst_list_ctrl.Select(0)
 
-        self.inst_list_ctrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.__OnItemSelected)
         self.Layout()
 
-        # Select the first item
-        self.inst_list_ctrl.SetItemState(0, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+        return state_query
 
-    def __OnItemSelected(self, event):
-        row = event.GetIndex()
-        pc = self.inst_list_ctrl.GetItemText(row, 0)
-        if pc not in self.insts_by_pc:
-            return
-
-        inst = self.insts_by_pc[pc]
-        self.inst_editor.LoadInst(pc, inst)
+    def __OnInstViewerItemSelected(self, event):
+        selected_item = event.GetIndex()
+        text = self.inst_list_ctrl.GetItemText(selected_item)
+        if text == 'Initial State':
+            self.test_debugger.LoadInitialState()
+        else:
+            pc = text
+            inst = self.insts_by_pc[pc]
+            self.test_debugger.LoadInst(pc, inst)

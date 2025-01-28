@@ -1,5 +1,5 @@
 import wx
-from editor.inst_editor import InstEditor
+from editor.test_debugger import TestDebugger
 from editor.inst_viewer import InstViewer
 
 class Workspace(wx.Panel):
@@ -20,12 +20,16 @@ class Workspace(wx.Panel):
         self.landing_page_panel.SetSizer(sizer)
 
         self.workspace_panel = wx.Panel(self)
-        self.inst_editor = InstEditor(self.workspace_panel, frame)
-        self.inst_viewer = InstViewer(self.workspace_panel, frame, self)
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.inst_editor, 1, wx.EXPAND)
-        sizer.Add(self.inst_viewer, 0, wx.EXPAND)
-        self.workspace_panel.SetSizer(sizer)
+        vsplitter = wx.SplitterWindow(self.workspace_panel, style=wx.SP_LIVE_UPDATE)
+        self.test_debugger = TestDebugger(vsplitter, frame)
+        self.inst_viewer = InstViewer(vsplitter, frame, self.test_debugger)
+        vsplitter.SplitVertically(self.test_debugger, self.inst_viewer)
+        vsplitter.SetMinimumPaneSize(50)
+        vsplitter.SetSashPosition(1310)
+
+        workspace_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        workspace_sizer.Add(vsplitter, 1, wx.EXPAND)
+        self.workspace_panel.SetSizer(workspace_sizer)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.landing_page_panel, 1, wx.EXPAND)
@@ -38,8 +42,8 @@ class Workspace(wx.Panel):
         self.workspace_panel.Show()
         self.frame.SetTitle(test)
 
-        # TODO cnyce: Try to add a spinner / progress bar
-        self.inst_viewer.LoadTest(test)
+        state_query = self.inst_viewer.LoadTest(test)
+        self.test_debugger.SetStateQuery(state_query)
 
         self.GetSizer().Clear()
         self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)

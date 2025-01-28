@@ -1,4 +1,4 @@
-import os
+import os, time
 from backend.sim_wrapper import SimWrapper
 from backend.sim_api import *
 from backend.atlas_dtypes import *
@@ -114,6 +114,9 @@ class SanityCheckObserver(Observer):
 
         # Track CSR values before/after exception handling.
         inst = atlas_current_inst(endpoint)
+        if not inst:
+            return
+
         state = inst.getAtlasState()
         csr_rset = state.getCsrRegisterSet()
 
@@ -127,6 +130,9 @@ class SanityCheckObserver(Observer):
 
     def OnPostExecute(self, endpoint):
         inst = atlas_current_inst(endpoint)
+        if not inst:
+            return
+
         uid = inst.getUid()
 
         kvpairs = []
@@ -189,69 +195,6 @@ class SanityCheckObserver(Observer):
     def __del__(self):
         self.close()
 
-## Example observer that tries to implement an instruction in Python (even though
-## there is a C++ implementation, we will go around it and update register values
-## in Python).
-class PythonInstRewriter(Observer):
-    def __init__(self):
-        Observer.__init__(self)
-
-    # We only want to reroute the "remw" instruction. This will be done in pre_execute only.
-    def BreakOnPreException(self):
-        return False
-
-    def BreakOnPostExecute(self):
-        return False
-
-    def OnPreExecute(self, endpoint):
-        insn = atlas_current_inst(endpoint)
-        if insn.getMnemonic() != 'remw':
-            return
-
-        # ActionGroup* RvmInsts::remw_64_handler(atlas::AtlasState* state)
-        # {
-        #     const AtlasInstPtr & insn = state->getCurrentInst();
-        #     const uint64_t rs1_val = insn->getRs1()->dmiRead<uint64_t>();
-        #     const uint64_t rs2_val = insn->getRs2()->dmiRead<uint64_t>();
-        # 
-        #     sreg_t lhs = sext32(rs1_val);
-        #     sreg_t rhs = sext32(rs2_val);
-        #     if (rhs == 0)
-        #     {
-        #         insn->getRd()->dmiWrite(lhs);
-        #     }
-        #     else
-        #     {
-        #         insn->getRd()->dmiWrite(sext32(lhs % rhs));
-        #     }
-        #
-        #     return nullptr;
-        # }
-
-        rs1_val = reg_t(insn.getRs1().read())
-        rs2_val = reg_t(insn.getRs2().read())
-
-        lhs = rs1_val.sext32()
-        rhs = rs2_val.sext32()
-
-        if rhs == 0:
-            insn.getRd().dmiWrite(lhs)
-        else:
-            insn.getRd().dmiWrite((lhs % rhs).sext32())
-
-        # Tell Atlas to skip the C++ inst implementation.
-        atlas_finish_execute(endpoint)
-
-    def OnSimFinished(self, endpoint):
-        workload_exit_code = atlas_exit_code(endpoint)
-        test_passed = atlas_test_passed(endpoint)
-        inst_count = atlas_inst_count(endpoint)
-
-        print ('END SIMULATION RESULTS:')
-        print ('----> workload_exit_code: {}'.format(workload_exit_code))
-        print ('----> test_passed: {}'.format(test_passed))
-        print ('----> inst_count: {}'.format(inst_count))
-
 ## Utility class which runs an observer on an Atlas simulation running in the background.
 class ObserverSim:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
@@ -259,7 +202,7 @@ class ObserverSim:
         self.sim_exe_path = sim_exe_path
         self.test_name = test_name
 
-    def RunObserver(self, obs):
+    def RunObserver(self, obs, timeout=None):
         # You can ping the simulation as long as the SimWrapper is in scope.
         # See all the available APIs in IDE.backend.sim_api
         with SimWrapper(self.riscv_tests_dir, self.sim_exe_path, self.test_name) as sim:
@@ -306,6 +249,8 @@ class ObserverSim:
             def GetCallbackArg(action):
                 return last_pre_execute_pc if action == 'sim_dead' else sim.endpoint
 
+            start_time = time.time()
+
             while True:
                 current_action = atlas_continue(sim.endpoint)
 
@@ -319,6 +264,11 @@ class ObserverSim:
 
                 GetCallback(current_action)(GetCallbackArg(current_action))
                 if current_action in ('sim_dead', 'sim_finished'):
+                    break
+
+                if timeout and time.time() - start_time > timeout:
+                    obs.OnSimulationStuck(sim.endpoint)
+                    atlas_kill_sim(sim.endpoint, 555)
                     break
 
         return obs.CreateReport()

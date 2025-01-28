@@ -9,7 +9,7 @@ class c_style_int:
             self.value = value.value
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.value})"
+        return f"{self.__class__.__name__}({hex(self.value)})"
 
     # Arithmetic operations, with support for both int and IntBase instances
     def __add__(self, other):
@@ -150,12 +150,12 @@ class c_style_int:
             return self.__class__(self.value - (1 << xlen))
         return self.__class__(self.value)
 
-class reg_t(c_style_int):
+class uint64_t(c_style_int):
     def __init__(self, value):
         # Ensure value is unsigned 64-bit
         super().__init__(value & 0xFFFFFFFFFFFFFFFF)
 
-class sreg_t(c_style_int):
+class int64_t(c_style_int):
     def __init__(self, value):
         # Ensure value is signed 64-bit
         super().__init__(value & 0xFFFFFFFFFFFFFFFF)
