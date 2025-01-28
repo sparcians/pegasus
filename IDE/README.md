@@ -25,34 +25,25 @@ Now right-click any test to load into the IDE.
 ### Test Selector (tree on left side)
 Only one test can be opened in the IDE at a time. Tests must be loaded from the right-click menu.
 
-![alt text](images/image-1.png)
+![alt text](images/test_selector.png)
 
 ### Instruction Viewer (table on right side)
 
 View the disassembly and PC for every instruction executed. Clicking on any row will display the Atlas state at this PC after the instruction was executed.
 
-![alt text](images/image-3.png)
+![alt text](images/inst_viewer.png)
 
 ### State Viewer
-See all the INT/FP/CSR values, the privilege mode, and any changes to register values at this PC. Changed registers will be highlighted in yellow, while any non-zero register
-will be highlighted in blue.
+See all the INT/FP/CSR values, the privilege mode, and any changes to register values at this PC. Changed registers will be highlighted in yellow, while any non-zero register will be highlighted in blue.
 
-Note that in order to save screen space, the CSR table only shows non-zero CSRs.
+Note that in order to save screen space, the CSR table only shows non-zero CSRs. You may right-click on the register values to copy the value to the clipboard:
 
-![alt text](images/image-4.png)
-
-You may right-click on the register values to copy the value to the clipboard:
-
-![alt text](images/image-5.png)
-
-Then paste into the Python shell:
-
-![alt text](images/image-6.png)
+![alt text](images/register_tables.png)
 
 ### Python Shell
 The IDE provides a Python shell to make it easier to debug bit operations, field mask issues, and prototyping instruction handlers:
 
-![alt text](images/image-11.png)
+![alt text](images/python_shell.png)
 
 Note that for the methods below, if the bit position argument should be XLEN, there is an 'xlen' variable (32 or 64) put in the Python shell workspace automatically when a test is loaded.
 
@@ -74,4 +65,4 @@ Note that for the methods below, if the bit position argument should be XLEN, th
 ### Code Viewer
 View all instruction handlers and exception handler code.
 
-![alt text](images/image-13.png)
+![alt text](images/code_viewer.png)
