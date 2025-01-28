@@ -119,16 +119,23 @@ class StateViewer(wx.Panel):
 
         cpp_notebook = wx.Notebook(self)
 
-        def AddTab(notebook, handler_subdir):
-            atlas_root = os.path.join(os.path.dirname(__file__), '..', '..')
-            handler_dir = os.path.join(atlas_root, 'core', 'inst_handlers', handler_subdir)
+        def AddTab(notebook, tab_name, handler_subdir=None, handler_file=None):
+            if handler_subdir is None and handler_file is None:
+                handler_subdir = tab_name
 
-            cpp_code = None
-            for handler_file in os.listdir(handler_dir):
-                if handler_file.endswith('.cpp'):
-                    with open(os.path.join(handler_dir, handler_file), 'r') as fin:
-                        cpp_code = fin.read()
-                        break
+            if handler_subdir is not None:
+                atlas_root = os.path.join(os.path.dirname(__file__), '..', '..')
+                handler_dir = os.path.join(atlas_root, 'core', 'inst_handlers', handler_subdir)
+
+                cpp_code = None
+                for handler_file in os.listdir(handler_dir):
+                    if handler_file.endswith('.cpp'):
+                        with open(os.path.join(handler_dir, handler_file), 'r') as fin:
+                            cpp_code = fin.read()
+                            break
+            else:
+                with open(handler_file, 'r') as fin:
+                    cpp_code = fin.read()
 
             cpp_scrolled_panel = wx.lib.scrolledpanel.ScrolledPanel(notebook)
             cpp_scrolled_panel.SetupScrolling()
@@ -147,7 +154,7 @@ class StateViewer(wx.Panel):
             cpp_scrolled_panel_sizer.Add(search_bar, 0, wx.EXPAND)
             cpp_scrolled_panel.SetSizer(cpp_scrolled_panel_sizer)
 
-            notebook.AddPage(cpp_scrolled_panel, handler_subdir)
+            notebook.AddPage(cpp_scrolled_panel, tab_name)
 
         AddTab(cpp_notebook, 'a')
         AddTab(cpp_notebook, 'd')
@@ -156,6 +163,10 @@ class StateViewer(wx.Panel):
         AddTab(cpp_notebook, 'm')
         AddTab(cpp_notebook, 'zicsr')
         AddTab(cpp_notebook, 'zifencei')
+
+        atlas_root = os.path.join(os.path.dirname(__file__), '..', '..')
+        execute_cpp_file = os.path.join(atlas_root, 'core', 'Exception.cpp')
+        AddTab(cpp_notebook, 'trap', handler_file=execute_cpp_file)
 
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.Add(self.regval_grids['x'])
