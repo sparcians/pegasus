@@ -11,9 +11,19 @@ def dquote(s):
 class StateDB:
     def __init__(self):
         self.db_file = tempfile.NamedTemporaryFile(delete=False)
-        self.conn = sqlite3.connect(self.db_file.name)
-        self.cursor = self.conn.cursor()
-        self.__CreateSchema()
+        self.__conn = None
+
+    @property
+    def conn(self):
+        if not self.__conn:
+            self.__conn = sqlite3.connect(self.db_file.name)
+            self.__CreateSchema()
+
+        return self.__conn
+
+    @property
+    def cursor(self):
+        return self.conn.cursor()
 
     def SetInitRegValue(self, reg_name, reg_value):
         cmd = 'INSERT INTO InitRegValues (RegName, RegValue) VALUES (%s, %d)' % (dquote(reg_name), reg_value)
@@ -31,9 +41,9 @@ class StateDB:
         self.cursor.execute(cmd)
 
     def Close(self):
-        if self.conn:
-            self.conn.close()
-            self.conn = None
+        if self.__conn:
+            self.__conn.close()
+            self.__conn = None
 
         if self.db_file:
             self.db_file.close()

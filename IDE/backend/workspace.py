@@ -20,15 +20,15 @@ class Workspace(wx.Panel):
         self.landing_page_panel.SetSizer(sizer)
 
         self.workspace_panel = wx.Panel(self)
-        vsplitter = wx.SplitterWindow(self.workspace_panel, style=wx.SP_LIVE_UPDATE)
-        self.test_debugger = TestDebugger(vsplitter, frame)
-        self.inst_viewer = InstViewer(vsplitter, frame, self.test_debugger)
-        vsplitter.SplitVertically(self.test_debugger, self.inst_viewer)
-        vsplitter.SetMinimumPaneSize(50)
-        vsplitter.SetSashPosition(1310)
+        self.vsplitter = wx.SplitterWindow(self.workspace_panel, style=wx.SP_LIVE_UPDATE)
+        self.test_debugger = TestDebugger(self.vsplitter, frame)
+        self.inst_viewer = InstViewer(self.vsplitter, frame, self.test_debugger)
+        self.vsplitter.SplitVertically(self.test_debugger, self.inst_viewer)
+        self.vsplitter.SetMinimumPaneSize(50)
+        self.vsplitter.SetSashPosition(1310)
 
         workspace_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        workspace_sizer.Add(vsplitter, 1, wx.EXPAND)
+        workspace_sizer.Add(self.vsplitter, 1, wx.EXPAND)
         self.workspace_panel.SetSizer(workspace_sizer)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -40,11 +40,16 @@ class Workspace(wx.Panel):
     def LoadTest(self, test):
         self.landing_page_panel.Hide()
         self.workspace_panel.Show()
+
+        self.GetSizer().Clear()
+        self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)
         self.frame.SetTitle(test)
 
         state_query = self.inst_viewer.LoadTest(test)
         self.test_debugger.SetStateQuery(state_query)
 
-        self.GetSizer().Clear()
-        self.GetSizer().Add(self.workspace_panel, 1, wx.EXPAND)
-        self.Layout()
+        # Workaround to force the layout to occur
+        sash_pos = self.vsplitter.GetSashPosition()
+        self.vsplitter.SetSashPosition(sash_pos-1)
+        self.vsplitter.SetSashPosition(sash_pos)
+        self.vsplitter.UpdateSize()

@@ -3,9 +3,10 @@ from backend.sim_api import *
 from backend.atlas_dtypes import *
 
 class StateSerializer(Observer):
-    def __init__(self, state_db):
+    def __init__(self, state_db, msg_queue):
         Observer.__init__(self)
         self.state_db = state_db
+        self.msg_queue = msg_queue
         self.insts_by_uid = {}
         self.csr_names = None
         self.infinite_loop_pc = None
@@ -110,12 +111,22 @@ class StateSerializer(Observer):
             return
 
         uid = inst.getUid()
+        msg = 'Executed {} instructions...'.format(uid+1)
+        self.msg_queue.put(msg)
+
         inst = self.insts_by_uid[uid]
         inst.Finalize(endpoint, self.state_db)
         del self.insts_by_uid[uid]
 
     def OnSimulationStuck(self, endpoint):
         self.infinite_loop_pc = atlas_pc(endpoint)
+        self.msg_queue.put('SIM_STUCK:0x{:08x}'.format(self.infinite_loop_pc))
+
+    def OnSimFinished(self, endpoint):
+        self.msg_queue.put('SIM_FINISHED')
+
+    def OnSimulationDead(self, pc):
+        self.msg_queue.put('SIM_DEAD')
 
     def __AddCsrChangables(self, endpoint):
         inst = atlas_current_inst(endpoint)
