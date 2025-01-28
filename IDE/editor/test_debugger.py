@@ -112,8 +112,8 @@ class StateViewer(wx.Panel):
             csr_names = [reg['name'] for reg in json.load(fin)]
 
         self.regval_grids = {
-            'x':   RegisterGrid(self, int_names),
-            'f':   RegisterGrid(self, fp_names),
+            'x':   RegisterGrid(self, int_names, color_nonzero=True),
+            'f':   RegisterGrid(self, fp_names, color_nonzero=True),
             'csr': RegisterGrid(self, csr_names)
         }
 
@@ -249,9 +249,10 @@ class StateViewer(wx.Panel):
         wx.TheClipboard.Close()
 
 class RegisterGrid(wx.grid.Grid):
-    def __init__(self, parent, reg_names):
+    def __init__(self, parent, reg_names, color_nonzero=False):
         wx.grid.Grid.__init__(self, parent)
         self.reg_names = reg_names
+        self.color_nonzero = color_nonzero
 
         self.CreateGrid(0, 2)
         self.HideRowLabels()
@@ -300,6 +301,9 @@ class RegisterGrid(wx.grid.Grid):
             if changes is not None and reg_name in snapshot.getChanges():
                 self.SetCellBackgroundColour(row, 0, 'yellow')
                 self.SetCellBackgroundColour(row, 1, 'yellow')
+            elif int(reg_val, 16) and self.color_nonzero:
+                self.SetCellBackgroundColour(row, 0, 'cyan')
+                self.SetCellBackgroundColour(row, 1, 'cyan')
 
             self.ShowRow(row)
 
