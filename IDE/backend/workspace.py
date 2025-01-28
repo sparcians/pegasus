@@ -37,7 +37,7 @@ class Workspace(wx.Panel):
         self.SetSizer(sizer)
         self.Layout()
 
-    def LoadTest(self, test):
+    def LoadTest(self, test, arch):
         self.landing_page_panel.Hide()
         self.workspace_panel.Show()
 
@@ -47,6 +47,7 @@ class Workspace(wx.Panel):
 
         state_query = self.inst_viewer.LoadTest(test)
         self.test_debugger.SetStateQuery(state_query)
+        self.test_debugger.SetArch(arch)
 
         # Workaround to force the layout to occur
         sash_pos = self.vsplitter.GetSashPosition()

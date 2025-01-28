@@ -29,6 +29,11 @@ class TestDebugger(wx.Panel):
     def SetStateQuery(self, state_query):
         self.state_viewer.SetStateQuery(state_query)
 
+    def SetArch(self, arch):
+        assert arch in ['rv32', 'rv64']
+        xlen = 32 if arch == 'rv32' else 64
+        self.shell.push('xlen = {}'.format(xlen), silent=True)
+
     def LoadInst(self, pc, inst):
         self.state_viewer.LoadInst(pc, inst)
 
@@ -335,8 +340,9 @@ class RegisterGrid(wx.grid.Grid):
         col = event.GetCol()
         if col == 1:
             def copy_text(event):
+                reg_name = self.GetCellValue(row, 0)
                 reg_val = self.GetCellValue(row, col)
-                copy_text = 'uint64_t({})'.format(reg_val)
+                copy_text = '{} = uint64_t({})'.format(reg_name, reg_val)
 
                 wx.TheClipboard.Open()
                 wx.TheClipboard.SetData(wx.TextDataObject(copy_text))
