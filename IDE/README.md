@@ -41,9 +41,11 @@ Note that in order to save screen space, the CSR table only shows non-zero CSRs.
 ![alt text](images/register_tables.png)
 
 ### Python Shell
-The IDE provides a Python shell to make it easier to debug bit operations, field mask issues, and prototyping instruction handlers:
+The IDE provides a Python shell to make it easier to debug bit operations or field mask issues, prototyping instruction handlers, and viewing CSR field values:
 
 ![alt text](images/python_shell.png)
+![alt text](images/python_shell2.png)
+![alt text](images/python_shell3.png)
 
 Note that for the methods below, if the bit position argument should be XLEN, there is an 'xlen' variable (32 or 64) put in the Python shell workspace automatically when a test is loaded.
 
