@@ -83,6 +83,7 @@ void Exception::handleMModeException_(atlas::AtlasState* state)
     // Need MSTATUS initial value. See "compute_mstatus_initial_value".
 
     uint64_t mstatus = READ_CSR_REG(MSTATUS);
+    (void)mstatus;
     const auto mstatus_mie = READ_CSR_FIELD(MSTATUS, mie);
     WRITE_CSR_FIELD(MSTATUS, mpie, mstatus_mie);
 

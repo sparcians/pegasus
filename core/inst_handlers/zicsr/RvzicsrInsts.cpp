@@ -140,7 +140,7 @@ namespace atlas
         }
 
         const reg_t old = reg->dmiRead<uint64_t>();
-        reg->write(old | rs1_val); //dmiWrite?
+        reg->write(rs1_val); //dmiWrite?
 
         const auto rd_val = sext_xlen(old);
         insn->getRd()->write(rd_val); //dmiWrite?

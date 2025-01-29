@@ -400,7 +400,7 @@ namespace atlas
     uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)
     {
         // TODO cnyce
-        (void)state; (void)xlen;
+        (void)state; (void)xlen_val;
         return 42949672960;
     }
 } // namespace atlas
