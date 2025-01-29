@@ -1,5 +1,6 @@
 from backend.sim_api import *
-
+from backend.c_dtypes import uint64_t
+import os, json
 
 # Create a wrapper around a running AtlasState C++ object.
 def atlas_state(endpoint):
@@ -246,3 +247,63 @@ class AtlasCsrRegisterSet(AtlasRegisterSet):
             return SpartaRegister(self.endpoint, csr_name)
 
         return None
+
+class CSR:
+    def __init__(self, csr_name, csr_val, xlen):
+        if isinstance(csr_val, int):
+            self.csr_value = uint64_t(csr_val)
+
+        assert isinstance(self.csr_value, uint64_t), f"Invalid type for CSR value: {type(csr_val)}"
+
+        atlas_root = os.path.join(os.path.dirname(__file__), '..', '..')
+        csr_json = os.path.join(atlas_root, 'arch', 'rv'+str(xlen), 'reg_csr.json')
+
+        csr_defn = None
+        with open(csr_json, 'r') as fin:
+            csr_json = json.load(fin)
+            for defn in csr_json:
+                if defn['name'] == csr_name:
+                    csr_defn = defn
+                    break
+
+        assert csr_defn is not None
+        if 'fields' not in csr_defn:
+            return
+
+        self.fields = Fields(self.csr_value, **csr_defn['fields'])
+
+class Fields:
+    def __init__(self, csr_value, **fields):
+        for field_name, field_defn in fields.items():
+            high_bit = field_defn['high_bit']
+            low_bit = field_defn['low_bit']
+            readonly = field_defn['readonly']
+            desc = field_defn['desc']
+
+            field_val = ExtractFieldValue(csr_value, low_bit, high_bit)
+            setattr(self, field_name, Field(field_name, field_val, low_bit, high_bit, readonly, desc))
+
+class Field:
+    def __init__(self, field_name, field_val, low_bit, high_bit, readonly, desc):
+        self.name = field_name
+        self.value = field_val
+        self.bits = (low_bit, high_bit)
+        self.readonly = readonly
+        self.desc = desc
+
+    def __repr__(self):
+        repr  = self.name + '\n'
+        repr += '   value:    ' + str(self.value.as_int()) + '\n'
+        repr += '   bits:     ' + '{}-{}'.format(*self.bits) + '\n'
+        repr += '   readonly: ' + ('True' if self.readonly else 'False') + '\n'
+        repr += '   desc:     ' + self.desc
+        return repr
+
+def ExtractFieldValue(csr_value, low_bit, high_bit):
+    # Create a mask to isolate the field's bits
+    mask = (1 << (high_bit - low_bit + 1)) - 1
+    
+    # Shift the value to the right to align the field at the least significant bits
+    field_value = (csr_value >> low_bit) & mask
+    
+    return field_value

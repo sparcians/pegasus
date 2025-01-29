@@ -58,5 +58,8 @@ class TestTreeCtrl(wx.TreeCtrl):
 
     def __LoadTest(self, event):
         item = self.GetSelection()
+        parent = self.GetItemParent(item)
+        grandparent = self.GetItemParent(parent)
+        arch = self.GetItemText(grandparent)
         test = self.GetItemData(item)
-        self.frame.workspace.LoadTest(test)
+        self.frame.workspace.LoadTest(test, arch)
