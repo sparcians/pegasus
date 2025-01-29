@@ -12,7 +12,7 @@ class TestDebugger(wx.Panel):
         hsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
         self.state_viewer = StateViewer(hsplitter, frame)
 
-        locals = {'uint64_t': uint64_t, 'int64_t': int64_t}
+        locals = {'uint64_t': uint64_t, 'int64_t': int64_t, "clear": self.__ClearShell}
         self.shell = PyShell(hsplitter, locals=locals)
 
         hsplitter.SplitHorizontally(self.state_viewer, self.shell)
@@ -39,6 +39,9 @@ class TestDebugger(wx.Panel):
 
     def LoadInitialState(self):
         self.state_viewer.LoadInitialState()
+
+    def __ClearShell(self):
+        self.shell.clear()
 
 class PyShell(wx.py.shell.Shell):
     def __init__(self, *args, **kwargs):
