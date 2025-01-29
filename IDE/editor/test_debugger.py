@@ -3,6 +3,7 @@ import wx.grid
 import wx.py.shell
 import wx.lib.scrolledpanel
 from backend.c_dtypes import uint64_t, int64_t
+from backend.atlas_dtypes import CSR
 
 class TestDebugger(wx.Panel):
     def __init__(self, parent, frame):
@@ -12,7 +13,7 @@ class TestDebugger(wx.Panel):
         hsplitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
         self.state_viewer = StateViewer(hsplitter, frame)
 
-        locals = {'uint64_t': uint64_t, 'int64_t': int64_t, "clear": self.__ClearShell}
+        locals = {'uint64_t': uint64_t, 'int64_t': int64_t, 'CSR': CSR, 'clear': self.__ClearShell}
         self.shell = PyShell(hsplitter, locals=locals)
 
         hsplitter.SplitHorizontally(self.state_viewer, self.shell)
@@ -32,7 +33,8 @@ class TestDebugger(wx.Panel):
     def SetArch(self, arch):
         assert arch in ['rv32', 'rv64']
         xlen = 32 if arch == 'rv32' else 64
-        self.shell.push('xlen = {}'.format(xlen), silent=True)
+        self.state_viewer.SetXLEN(xlen)
+        self.shell.SetXLEN(xlen)
 
     def LoadInst(self, pc, inst):
         self.state_viewer.LoadInst(pc, inst)
@@ -49,6 +51,9 @@ class PyShell(wx.py.shell.Shell):
         self.Bind(wx.EVT_KEY_DOWN, self.__OnKeyPress)
         self.command_history = []
         self.command_history_cursor = None
+
+    def SetXLEN(self, xlen):
+        self.push('xlen = {}'.format(xlen), silent=True)
 
     def __OnKeyPress(self, event):
         if event.GetKeyCode() == wx.WXK_RETURN:
@@ -185,6 +190,10 @@ class StateViewer(wx.Panel):
         self.SetSizer(sizer)
         self.Layout()
 
+    def SetXLEN(self, xlen):
+        for _, grid in self.regval_grids.items():
+            grid.SetXLEN(xlen)
+
     def SetStateQuery(self, state_query):
         self.state_query = state_query
         self.LoadInitialState()
@@ -272,6 +281,7 @@ class RegisterGrid(wx.grid.Grid):
         wx.grid.Grid.__init__(self, parent)
         self.reg_names = reg_names
         self.color_nonzero = color_nonzero
+        self.xlen = None
 
         self.CreateGrid(0, 2)
         self.HideRowLabels()
@@ -283,6 +293,9 @@ class RegisterGrid(wx.grid.Grid):
         self.SetDefaultCellFont(mono9)
 
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.__OnCellRightClick)
+
+    def SetXLEN(self, xlen):
+        self.xlen = xlen
 
     def SetRegValues(self, snapshot):
         self.ClearGrid()
@@ -342,10 +355,14 @@ class RegisterGrid(wx.grid.Grid):
         row = event.GetRow()
         col = event.GetCol()
         if col == 1:
+            is_csr = not all([name.startswith('x') for name in self.reg_names]) and \
+                     not all([name.startswith('f') for name in self.reg_names])
+
             def copy_text(event):
                 reg_name = self.GetCellValue(row, 0)
                 reg_val = self.GetCellValue(row, col)
-                copy_text = '{} = uint64_t({})'.format(reg_name, reg_val)
+                reg_type = 'CSR' if is_csr else 'uint64_t'
+                copy_text = '{} = {}("{}", {}, {})'.format(reg_name, reg_type, reg_name, reg_val, self.xlen)
 
                 wx.TheClipboard.Open()
                 wx.TheClipboard.SetData(wx.TextDataObject(copy_text))

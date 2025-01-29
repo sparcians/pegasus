@@ -155,6 +155,7 @@ class int64_t(c_style_int):
         if self.__value >= 0x8000000000000000:  # If negative, extend sign
             self.__value -= 0x10000000000000000
 
+
 # Convert int-like types to hex.
 def convert_to_hex(value):
     if isinstance(value, c_style_int):
