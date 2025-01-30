@@ -121,8 +121,9 @@ namespace atlas
             {
                 // TODO: Check access permissions
                 const uint64_t paddr =
-                    (pte.getPpn() * PAGESIZE) + extractPageOffset_(request.virtual_addr);
+                    ((uint64_t)pte.getPpn() * PAGESIZE) + extractPageOffset_(request.virtual_addr);
                 translation_state->setTranslationResult(paddr, request.size);
+                ILOG("  Result: " << HEX16(paddr));
 
                 // Keep going
                 return nullptr;
@@ -130,7 +131,7 @@ namespace atlas
             // Read next level PTE
             else
             {
-                ppn = pte.getPpn();
+                ppn = pte.getPpn() * PAGESIZE;
             }
         }
 

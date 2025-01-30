@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include "include/AtlasTypes.hpp"
-#include "include/PteDefns.hpp"
+#include "core/translate/TranslateTypes.hpp"
 
 #include "sparta/utils/LogUtils.hpp"
 
@@ -106,8 +106,8 @@ namespace atlas
         }
     };
 
-    template <MMUMode Mode>
-    std::ostream & operator<<(std::ostream & os, const PageTableEntry<Mode> & pte)
+    template <typename XLEN, MMUMode Mode>
+    std::ostream & operator<<(std::ostream & os, const PageTableEntry<XLEN, Mode> & pte)
     {
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
