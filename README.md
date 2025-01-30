@@ -1,6 +1,11 @@
 # Atlas
 RISC-V Functional Model
 
+## Clone
+```
+git clone --recursive git@github.com:sparcians/atlas.git
+```
+
 ## Build and Regress
 
 Download and build the [Sparta](https://github.com/sparcians/map) framework. Follow the directions on the [Sparta README](https://github.com/sparcians/map#readme) to build _and install_ Sparta.
@@ -42,9 +47,6 @@ CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=FastDebug
 CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug
 ```
 
-## IDE Support
+## Python IDE
+See [Python IDE for Atlas](IDE/README.md)
 
-To produce `compile_commands.json`, add this parameter to the CMake command.
-```
--DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-```
