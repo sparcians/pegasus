@@ -9,7 +9,7 @@
 namespace atlas
 {
 
-    uint16_t determineMaxNumPteEntries(MMUMode mode)
+    uint32_t determineMaxNumPteEntries(MMUMode mode)
     {
         if (mode == MMUMode::SV32)
         {
@@ -38,64 +38,67 @@ namespace atlas
 
         const PageTableType & getPageTable() const { return page_table_; }
 
+        XLEN getBaseAddr() const { return base_addr_; }
+
+        XLEN getAddrOfIndex(const uint32_t idx) const
+        {
+            sparta_assert(isValidIndex_(idx), "Invalid index: " << idx);
+            return base_addr_ + idx * sizeof(XLEN);
+        }
+
+        uint32_t getIndexOfAddr(const XLEN addr) const
+        {
+            sparta_assert(addr % sizeof(XLEN) == 0, "Address is not aligned: 0x" << addr);
+            const uint32_t idx = (addr - base_addr_) / sizeof(XLEN);
+            sparta_assert(isValidIndex_(idx), "Invalid index: " << idx);
+            return idx;
+        }
+
         void addEntry(uint32_t idx, PageTableEntry<XLEN, Mode> entry)
         {
-            if (page_table_.size() <= max_entries_ && isValidIndex_(idx))
+            sparta_assert(isValidIndex_(idx), "Invalid index: " << idx);
+            auto it = page_table_.find(idx);
+            if (it != page_table_.end())
             {
-                auto it = page_table_.find(idx);
-                if (it != page_table_.end())
-                {
-                    it->second = entry; // Update the existing entry
-                }
-                else
-                {
-                    page_table_.insert({idx, entry}); // Insert the new entry
-                }
+                it->second = entry; // Update the existing entry
             }
             else
             {
-                throw std::runtime_error(
-                    "Page table has reached its maximum capacity or idx is out of bounds!");
+                page_table_.insert({idx, entry}); // Insert the new entry
             }
         }
 
         PageTableEntry<XLEN, Mode> getEntry(uint32_t idx)
         {
-            if (isValidIndex_(idx))
+            sparta_assert(isValidIndex_(idx), "Invalid index: " << idx);
+            auto it = page_table_.find(idx);
+            if (it != page_table_.end())
             {
-                auto it = page_table_.find(idx);
-                if (it != page_table_.end())
-                {
-                    return it->second;
-                }
-                else
-                {
-                    throw std::out_of_range("Index not found in the page table");
-                }
+                return it->second;
             }
             else
             {
-                throw std::out_of_range("Invalid idx");
+                sparta_assert(false, "Index not found in the page table");
             }
+        }
+
+        PageTableEntry<XLEN, Mode> getEntryAtAddr(XLEN addr)
+        {
+            const uint32_t idx = getIndexOfAddr(addr);
+            return getEntry(idx);
         }
 
         void removeEntry(uint32_t idx)
         {
-            if (isValidIndex_(idx))
+            sparta_assert(isValidIndex_(idx), "Invalid index: " << idx);
+            auto it = page_table_.find(idx);
+            if (it != page_table_.end())
             {
-                auto it = page_table_.find(idx);
-                if (it != page_table_.end())
-                {
-                    page_table_.erase(it);
-                }
-                else
-                {
-                    throw std::out_of_range("Index not found in the page table");
-                }
+                page_table_.erase(it);
             }
             else
             {
-                throw std::out_of_range("Invalid idx");
+                sparta_assert(false, "Index not found in the page table");
             }
         }
 
@@ -103,14 +106,10 @@ namespace atlas
 
       private:
         PageTableType page_table_;
-        const uint16_t max_entries_;
+        const uint32_t max_entries_;
         const uint32_t base_addr_;
 
-        bool isValidIndex_(uint32_t idx)
-        {
-            const uint32_t pte_size = (Mode == MMUMode::SV32) ? sizeof(RV32) : sizeof(RV64);
-            return ((idx >= base_addr_) && (idx < ((max_entries_ * pte_size) + base_addr_)));
-        }
+        bool isValidIndex_(uint32_t idx) const { return (idx >= 0) && (idx < max_entries_); }
     };
 
     template <typename XLEN, MMUMode Mode>

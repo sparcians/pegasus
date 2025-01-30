@@ -58,24 +58,34 @@ namespace atlas
         {
             if constexpr (Mode == MMUMode::SV32)
             {
-                ppn_fields_.resize(Sv32Pte::num_ppn_fields);
-                ppn_fields_[0] = (pte_val_ & Sv32Pte::ppn0::bitmask) >> Sv32Pte::ppn0::low_bit;
-                ppn_fields_[1] = (pte_val_ & Sv32Pte::ppn1::bitmask) >> Sv32Pte::ppn1::low_bit;
+                ppn_fields_.resize(translate_types::Sv32::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv32::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv32::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv32::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv32::PteFields::ppn1.lsb;
 
                 // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
-                ppn_ = (ppn_fields_[1] << Sv32Pte::ppn_field_sizes[0]) | ppn_fields_[0];
+                ppn_ = (pte_val_
+                        & (translate_types::Sv32::PteFields::ppn1.bitmask
+                           | translate_types::Sv32::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv32::PteFields::ppn0.lsb;
             }
             else if constexpr (Mode == MMUMode::SV39)
             {
-                ppn_fields_.resize(Sv39Pte::num_ppn_fields);
-                ppn_fields_[0] = (pte_val_ & Sv39Pte::ppn0::bitmask) >> Sv39Pte::ppn0::low_bit;
-                ppn_fields_[1] = (pte_val_ & Sv39Pte::ppn1::bitmask) >> Sv39Pte::ppn1::low_bit;
-                ppn_fields_[2] = (pte_val_ & Sv39Pte::ppn2::bitmask) >> Sv39Pte::ppn2::low_bit;
+                ppn_fields_.resize(translate_types::Sv39::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv39::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv39::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv39::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv39::PteFields::ppn1.lsb;
+                ppn_fields_[2] = (pte_val_ & translate_types::Sv39::PteFields::ppn2.bitmask)
+                                 >> translate_types::Sv39::PteFields::ppn2.lsb;
 
                 // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
-                ppn_ =
-                    (ppn_fields_[2] >> (Sv39Pte::ppn_field_sizes[1] + Sv39Pte::ppn_field_sizes[0]))
-                    | (ppn_fields_[1] << Sv39Pte::ppn_field_sizes[0]) | ppn_fields_[0];
+                ppn_ = (pte_val_
+                        & (translate_types::Sv39::PteFields::ppn2.bitmask
+                           | translate_types::Sv39::PteFields::ppn1.bitmask
+                           | translate_types::Sv39::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv39::PteFields::ppn0.lsb;
             }
             else
             {
@@ -83,20 +93,21 @@ namespace atlas
             }
 
             // Lower 10 bits are the same for all modes
-            rsw_ = (pte_val_ & Sv32Pte::rsw::bitmask) >> Sv32Pte::rsw::low_bit;
-            d_ = pte_val_ & Sv32Pte::dirty::bitmask;
-            a_ = pte_val_ & Sv32Pte::accessed::bitmask;
-            g_ = pte_val_ & Sv32Pte::global::bitmask;
-            u_ = pte_val_ & Sv32Pte::user::bitmask;
-            x_ = pte_val_ & Sv32Pte::execute::bitmask;
-            w_ = pte_val_ & Sv32Pte::write::bitmask;
-            r_ = pte_val_ & Sv32Pte::read::bitmask;
-            v_ = pte_val_ & Sv32Pte::valid::bitmask;
+            rsw_ = (pte_val_ & translate_types::Sv32::PteFields::rsw.bitmask)
+                   >> translate_types::Sv32::PteFields::rsw.lsb;
+            d_ = pte_val_ & translate_types::Sv32::PteFields::dirty.bitmask;
+            a_ = pte_val_ & translate_types::Sv32::PteFields::accessed.bitmask;
+            g_ = pte_val_ & translate_types::Sv32::PteFields::global.bitmask;
+            u_ = pte_val_ & translate_types::Sv32::PteFields::user.bitmask;
+            x_ = pte_val_ & translate_types::Sv32::PteFields::execute.bitmask;
+            w_ = pte_val_ & translate_types::Sv32::PteFields::write.bitmask;
+            r_ = pte_val_ & translate_types::Sv32::PteFields::read.bitmask;
+            v_ = pte_val_ & translate_types::Sv32::PteFields::valid.bitmask;
         }
     };
 
-    template <typename XLEN, MMUMode Mode>
-    std::ostream & operator<<(std::ostream & os, const PageTableEntry<XLEN, Mode> & pte)
+    template <MMUMode Mode>
+    std::ostream & operator<<(std::ostream & os, const PageTableEntry<Mode> & pte)
     {
         if constexpr (std::is_same_v<XLEN, RV64>)
         {

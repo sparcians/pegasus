@@ -83,26 +83,31 @@ namespace atlas
         AtlasTranslationState* translation_state = state->getTranslationState();
         const AtlasTranslationState::TranslationRequest request =
             translation_state->getTranslationRequest();
-
-        ILOG("Translating 0x" << std::hex << request.virtual_addr);
+        const XLEN vaddr = request.virtual_addr;
+        ILOG("Translating " << HEX16(vaddr));
 
         if constexpr (Mode == MMUMode::BAREMETAL)
         {
-            translation_state->setTranslationResult(request.virtual_addr, request.size);
+            translation_state->setTranslationResult(vaddr, request.size);
             // Keep going
             return nullptr;
         }
 
-        uint64_t ppn = READ_CSR_FIELD(SATP, ppn);
-        // FIXME: Constant for page shift value
-        XLEN pte_paddr = ppn << 12;
-        PageTableEntry<XLEN, Mode> pte = state->readMemory<XLEN>(pte_paddr);
-
-        for (uint32_t level = 0; level < getNumPageWalkLevels_<Mode>(); ++level)
+        // Page size is 4K for both RV32 and RV64
+        constexpr uint64_t PAGESIZE = 4096;
+        uint64_t ppn = READ_CSR_FIELD(SATP, ppn) * PAGESIZE;
+        for (uint32_t level = getNumPageWalkLevels_<Mode>() - 1; level >= 0; --level)
         {
-            std::cout << "Level " << std::to_string(level) << " PTE" << std::endl;
-            std::cout << "    Addr:  " << HEX16(pte_paddr) << std::endl;
-            std::cout << "    Value: " << pte << std::endl;
+            DLOG("Level " << std::to_string(level) << " Page Walk");
+
+            constexpr uint64_t PTESIZE = sizeof(XLEN);
+            const uint64_t vpn = extractVpn_<Mode>(level, vaddr);
+            const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
+            const PageTableEntry<XLEN, Mode> pte = state->readMemory<XLEN>(pte_paddr);
+
+            DLOG("    Addr: " << HEX16(pte_paddr));
+            DLOG("     PTE: " << pte);
+
             //  If accessing pte violates a PMA or PMP check, raise an access-fault exception
             //  corresponding to the original access type
             if (!pte.isValid() || ((!pte.canRead()) && pte.canWrite()))
@@ -115,20 +120,22 @@ namespace atlas
             if (pte.isLeaf())
             {
                 // TODO: Check access permissions
-                const XLEN paddr = (pte.getPpn() << 12) | (request.virtual_addr & 0xfff);
+                const uint64_t paddr =
+                    (pte.getPpn() * PAGESIZE) + extractPageOffset_(request.virtual_addr);
                 translation_state->setTranslationResult(paddr, request.size);
+
                 // Keep going
                 return nullptr;
             }
             // Read next level PTE
             else
             {
-                pte_paddr = pte.getPpn() << 12;
-                pte = PageTableEntry<XLEN, Mode>(state->readMemory<XLEN>(pte_paddr));
+                ppn = pte.getPpn();
             }
         }
 
-        // Keep going
-        return nullptr;
+        // If we made it here, it means we didn't find a leaf PTE so translation failed
+        // TODO: Add method to throw correct fault type
+        THROW_FETCH_PAGE_FAULT;
     }
 } // namespace atlas

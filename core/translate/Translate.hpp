@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-
+#include "core/translate/TranslateTypes.hpp"
 #include "include/AtlasTypes.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
@@ -49,7 +49,43 @@ namespace atlas
             return num_pagewalk_levels_.at(static_cast<uint32_t>(Mode));
         }
 
-        const std::array<uint32_t, N_MMU_MODES> num_pagewalk_levels_{0, 2, 3, 4, 5};
+        static constexpr std::array<uint32_t, N_MMU_MODES> num_pagewalk_levels_{0, 2, 3, 4, 5};
+
+        template <MMUMode Mode> uint64_t extractVpn_(const uint32_t level, const uint64_t vaddr)
+        {
+            auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef
+            {
+                if constexpr (Mode == MMUMode::SV32)
+                {
+                    return translate_types::Sv32::vpn_fields.at(level);
+                }
+                else if constexpr (Mode == MMUMode::SV39)
+                {
+                    return translate_types::Sv39::vpn_fields.at(level);
+                }
+                else if constexpr (Mode == MMUMode::SV48)
+                {
+                    return translate_types::Sv48::vpn_fields.at(level);
+                }
+                else if constexpr (Mode == MMUMode::SV57)
+                {
+                    return translate_types::Sv57::vpn_fields.at(level);
+                }
+                else
+                {
+                    sparta_assert(false, "Unsupported MMU Mode!");
+                }
+            };
+
+            const translate_types::FieldDef vpn_field = get_vpn_field(level);
+            return (vaddr & vpn_field.bitmask) >> vpn_field.lsb;
+        }
+
+        uint64_t extractPageOffset_(uint64_t vaddr)
+        {
+            // Page offset is the same for all MMU modes
+            return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
+        }
 
         friend class ::AtlasTranslateTester;
     };
