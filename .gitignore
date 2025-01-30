@@ -17,3 +17,5 @@ spike
 .vscode/**
 mavis_json
 riscv-tests
+IDE/backend/__pycache__/**
+IDE/editor/__pycache__/**

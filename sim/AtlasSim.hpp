@@ -14,7 +14,8 @@ namespace atlas
     class AtlasSim : public sparta::app::Simulation
     {
       public:
-        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit);
+        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
+                 bool interactive = false);
         ~AtlasSim();
 
         // Run the simulator
@@ -52,6 +53,7 @@ namespace atlas
 
         const std::string workload_;
         const uint64_t ilimit_;
+        bool interactive_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::shared_ptr<simdb::ObjectManager> cosim_db_;
 

@@ -44,9 +44,10 @@ def main():
     import multiprocessing
     passing_tests = multiprocessing.Queue()
     failing_tests = multiprocessing.Queue()
+    timeout_tests = multiprocessing.Queue()
 
     # Function to run a single test and append to the appropriate queue
-    def run_test(test, passing_tests, failing_tests):
+    def run_test(test, passing_tests, failing_tests, timeout_tests):
         testname = os.path.basename(test)
         logname = testname + ".log"
         instlogname = testname + ".instlog"
@@ -59,6 +60,7 @@ def main():
                 if result.returncode == 0:
                     test_passed = True
         except subprocess.TimeoutExpired:
+            timeout_tests.put(testname)
             return
 
         if test_passed:
@@ -70,13 +72,13 @@ def main():
             failing_tests.put(testname)
 
     # Function to run tests using processes
-    def run_tests_in_parallel(tests, passing_tests, failing_tests):
+    def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests):
         print("Running " + str(len(tests)) + " arch tests...")
         processes = []
 
         # Create a process for each test command
         for test in tests:
-            process = multiprocessing.Process(target=run_test, args=(test, passing_tests, failing_tests))
+            process = multiprocessing.Process(target=run_test, args=(test, passing_tests, failing_tests, timeout_tests))
             process.start()
             processes.append(process)
 
@@ -84,7 +86,7 @@ def main():
         for process in processes:
             process.join()
 
-    run_tests_in_parallel(tests, passing_tests, failing_tests)
+    run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests)
 
     num_passed = 0
     print("PASSED:")
@@ -96,6 +98,11 @@ def main():
     while not failing_tests.empty():
         print("\t" + failing_tests.get())
 
+    if not timeout_tests.empty():
+        print("TIMED OUT:")
+        while not timeout_tests.empty():
+            print("\t" + timeout_tests.get())
+        
     print("\nPASS RATE: " + str(num_passed) + "/" + str(len(tests)))
 
 

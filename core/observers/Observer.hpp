@@ -48,11 +48,11 @@ namespace atlas
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
 
-        virtual void preExecute(AtlasState*) {}
+        virtual ActionGroup* preExecute(AtlasState*) { return nullptr; }
 
-        virtual void postExecute(AtlasState*) {}
+        virtual ActionGroup* postExecute(AtlasState*) { return nullptr; }
 
-        virtual void preException(AtlasState*) {}
+        virtual ActionGroup* preException(AtlasState*) { return nullptr; }
 
         virtual void stopSim() {}
 
