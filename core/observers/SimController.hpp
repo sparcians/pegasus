@@ -1,23 +1,29 @@
 #pragma once
 
 #include "core/observers/Observer.hpp"
-
-#include "sparta/log/MessageSource.hpp"
+#include <memory>
 
 namespace atlas
 {
-    class InstructionLogger : public Observer
+
+    class AtlasState;
+
+    class SimController : public Observer
     {
       public:
-        using base_type = InstructionLogger;
+        using base_type = SimController;
 
-        InstructionLogger(sparta::log::MessageSource & inst_logger);
+        SimController();
 
+        void postInit(AtlasState*);
         ActionGroup* preExecute(AtlasState* state) override;
         ActionGroup* postExecute(AtlasState* state) override;
         ActionGroup* preException(AtlasState* state) override;
+        void onSimulationFinished(AtlasState* state);
 
       private:
-        sparta::log::MessageSource & inst_logger_;
+        class SimEndpoint;
+        std::shared_ptr<SimEndpoint> endpoint_;
     };
+
 } // namespace atlas

@@ -54,14 +54,12 @@ namespace atlas
 
     void Exception::handleUModeException_(atlas::AtlasState* state)
     {
-        // TODO cnyce
         (void)state;
         sparta_assert(false, "Not implemented");
     }
 
     void Exception::handleSModeException_(atlas::AtlasState* state)
     {
-        // TODO cnyce
         (void)state;
         sparta_assert(false, "Not implemented");
     }

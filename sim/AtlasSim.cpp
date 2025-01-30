@@ -20,16 +20,22 @@
 
 namespace atlas
 {
-    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload,
-                       uint64_t ilimit) :
+    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
+                       bool interactive) :
         sparta::app::Simulation("AtlasSim", scheduler),
         workload_(workload),
-        ilimit_(ilimit)
+        ilimit_(ilimit),
+        interactive_(interactive)
     {
     }
 
     AtlasSim::~AtlasSim()
     {
+        for (auto state : state_)
+        {
+            state->cleanup();
+        }
+
         getRoot()->enterTeardown();
 
         if (cosim_db_)
@@ -50,6 +56,7 @@ namespace atlas
         {
             const auto mstatus = state->getMStatusInitialValue();
             POKE_CSR_REG(MSTATUS, mstatus);
+            state->postInit();
         }
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
@@ -241,6 +248,11 @@ namespace atlas
             AtlasState* state = state_.back();
             state->setAtlasSystem(system_);
             state->setPc(system_->getStartingPc());
+
+            if (interactive_)
+            {
+                state->enableInteractiveMode();
+            }
         }
     }
 } // namespace atlas
