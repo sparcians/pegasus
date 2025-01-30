@@ -18,6 +18,7 @@ executed by Atlas, like decoding an opcode or writing to an instruction log. Bre
 engine into Actions allows the model to modularly modify itself to run more efficiently.
 
 Atlas's core engine is comprised of 7 Action Groups:
+
 - Fetch
 - Instruction Translation
 - Decode
