@@ -230,10 +230,6 @@ void testCsrRegs()
     EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMSTATUS, authenticated), 1);
     EXPECT_EQUAL(READ_CSR_REG(atlas::DMSTATUS), 0x2 << 6);
 
-    std::bitset<64> dstatus_reg_val_bits(READ_CSR_REG(atlas::DMSTATUS));
-    EXPECT_FALSE(dstatus_reg_val_bits.test(6));
-    EXPECT_TRUE(dstatus_reg_val_bits.test(7));
-
     // Case 6: Write a combination of read-only and writable fields,
     // where the fields are both multiple bits. We will do this for the
     // MVENDORID register focusing on these fields:
