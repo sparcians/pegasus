@@ -103,7 +103,7 @@ def gen_csr_helpers_header():
             permutations.append(field_name.upper())
             permutations.append(field_name.lower())
             if len(field_name) > 1:
-                permutations.append(field_name[0].upper() + field_name[1:])
+                permutations.append(field_name[0].upper() + field_name[1:].lower())
             return permutations
 
         for csr_num, csr_defn in CSR_DEFS.items():
