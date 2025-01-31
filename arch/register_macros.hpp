@@ -1,70 +1,78 @@
 #pragma once
 
 #include "core/inst_handlers/inst_helpers.hpp"
+#include "include/CSRNums.hpp"
+#include "include/CSRHelpers.hpp"
+#include <utility>
+#include <vector>
+#include <unordered_map>
+#include <string>
 
-#define READ_INT_REG(reg_name)                                                                     \
-    (atlas::INT::reg_name::reg_num == 0)                                                           \
+#define READ_INT_REG(reg_ident)                                                                    \
+    (reg_ident == 0)                                                                               \
         ? 0                                                                                        \
-        : state->getIntRegister(atlas::INT::reg_name::reg_num)->dmiRead<uint64_t>()
+        : state->getIntRegister(reg_ident)->dmiRead<uint64_t>()                                    \
 
-#define WRITE_INT_REG(reg_name, reg_value)                                                         \
-    if constexpr (atlas::INT::reg_name::reg_num != 0)                                              \
-        state->getIntRegister(atlas::INT::reg_name::reg_num)->dmiWrite<uint64_t>(reg_value);
+#define WRITE_INT_REG(reg_ident, reg_value)                                                        \
+    if (reg_ident != 0)                                                                            \
+        state->getIntRegister(reg_ident)->dmiWrite<uint64_t>(reg_value);                           \
 
-#define READ_FP_FIELD(reg_name, field_name)                                                        \
-    (atlas::FP::reg_name::reg_num == 1)                                                            \
-        ? state->getFpRegister(atlas::FP::reg_name::reg_num)->dmiRead<uint64_t>()                  \
-        : state->getFpRegister(atlas::FP::reg_name::reg_num)->dmiRead<uint64_t>()                  \
-              & 0x00000000ffffffff
+#define READ_FP_FIELD(reg_ident, field_name)                                                       \
+    (reg_ident == 1)                                                                               \
+        ? state->getFpRegister(reg_ident)->dmiRead<uint64_t>()                                     \
+        : state->getFpRegister(reg_ident)->dmiRead<uint64_t>()                                     \
+              & 0x00000000ffffffff                                                                 \
 
-#define WRITE_FP_FIELD(reg_name, field_name, field_value)                                          \
-    if constexpr (atlas::FP::reg_name::reg_num == 1)                                               \
+#define WRITE_FP_FIELD(reg_ident, field_name, field_value)                                         \
+    if (reg_ident == 1)                                                                            \
+        state->getFpRegister(reg_ident)->dmiWrite<uint64_t>(field_value);                          \
+    else                                                                                           \
+        state->getFpRegister(reg_ident)->dmiWrite<uint64_t>(field_value | 0xffffffff00000000);     \
+
+#define READ_VEC_REG(reg_ident)                                                                    \
+    state->getVecRegister(reg_ident)->dmiRead<uint64_t>()                                          \
+
+#define WRITE_VEC_REG(reg_ident, reg_value)                                                        \
+    state->getVecRegister(reg_ident)->dmiWrite(reg_value);                                         \
+
+#define READ_CSR_REG(reg_ident)                                                                    \
+    state->getCsrRegister(reg_ident)->dmiRead<uint64_t>()                                          \
+
+#define WRITE_CSR_REG(reg_ident, reg_value)                                                        \
+    if (atlas::getCsrBitMask(reg_ident) != 0xffffffffffffffff)                                     \
     {                                                                                              \
-        state->getFpRegister(atlas::FP::reg_name::reg_num)->dmiWrite<uint64_t>(field_value);       \
+        auto reg = state->getCsrRegister(reg_ident);                                               \
+        const auto old_value = reg->dmiRead<uint64_t>();                                           \
+        const auto mask = atlas::getCsrBitMask(reg_ident);                                         \
+        uint64_t write_val = reg_value;                                                            \
+        write_val = (old_value & ~mask) | (write_val & mask);                                      \
+        reg->dmiWrite(write_val);                                                                  \
     }                                                                                              \
     else                                                                                           \
+        state->getCsrRegister(reg_ident)->dmiWrite(reg_value);                                     \
+
+#define READ_CSR_FIELD(reg_ident, field_name)                                                      \
+    ((state->getCsrRegister(reg_ident)->dmiRead<uint64_t>() >>                                     \
+      atlas::getCsrBitRange(reg_ident, #field_name).first) &                                       \
+    ((1ULL << (atlas::getCsrBitRange(reg_ident, #field_name).second -                              \
+               atlas::getCsrBitRange(reg_ident, #field_name).first + 1)) - 1))                     \
+
+#define WRITE_CSR_FIELD(reg_ident, field_name, field_value)                                        \
     {                                                                                              \
-        state->getFpRegister(atlas::FP::reg_name::reg_num)                                         \
-            ->dmiWrite<uint64_t>(field_value | 0xffffffff00000000);                                \
-    }
-
-#define READ_VEC_REG(reg_name)                                                                     \
-    state->getVecRegister(atlas::VEC::reg_name::reg_num)->dmiRead<uint64_t>()
-
-#define WRITE_VEC_REG(reg_name, reg_value)                                                         \
-    state->getVecRegister(atlas::VEC::reg_name::reg_num)->dmiWrite(reg_value);
-
-#define READ_CSR_REG(reg_name)                                                                     \
-    state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiRead<uint64_t>()
-
-#define WRITE_CSR_REG(reg_name, reg_value)                                                         \
-    if constexpr (atlas::CSR::reg_name::writable_fields_bit_mask != 0xffffffffffffffff)            \
-    {                                                                                              \
-        const auto old_value =                                                                     \
-            state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiRead<uint64_t>();             \
-        state->getCsrRegister(atlas::CSR::reg_name::reg_num)                                       \
-            ->dmiWrite(                                                                            \
-                atlas::RegisterBitMask<atlas::CSR::reg_name::writable_fields_bit_mask>::mask(      \
-                    old_value, reg_value));                                                        \
+        auto csr_value = state->getCsrRegister(reg_ident)->dmiRead<uint64_t>();                    \
+                                                                                                   \
+        const auto low_bit = atlas::getCsrBitRange(reg_ident, #field_name).first;                  \
+        const auto high_bit = atlas::getCsrBitRange(reg_ident, #field_name).second;                \
+        const auto mask = ((1ULL << (high_bit - low_bit + 1)) - 1) << low_bit;                     \
+        csr_value &= ~mask;                                                                        \
+                                                                                                   \
+        uint64_t new_field_value = field_value;                                                    \
+        new_field_value <<= low_bit;                                                               \
+        csr_value |= new_field_value;                                                              \
+                                                                                                   \
+        state->getCsrRegister(reg_ident)->write(csr_value);                                        \
     }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiWrite(reg_value);                 \
-    }
 
-#define READ_CSR_FIELD(reg_name, field_name)                                                       \
-    atlas::CSRFields<atlas::CSR::reg_name::field_name>::readField(                                 \
-        state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiRead<uint64_t>())
+#define PEEK_CSR_REG(reg_ident) READ_CSR_REG(reg_ident)
 
-#define WRITE_CSR_FIELD(reg_name, field_name, field_value)                                         \
-    {                                                                                              \
-        const auto old_value =                                                                     \
-            state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiRead<uint64_t>();             \
-        WRITE_CSR_REG(reg_name,                                                                    \
-                      (old_value | (field_value << atlas::CSR::reg_name::field_name::low_bit)));   \
-    }
-
-#define PEEK_CSR_REG(reg_name) READ_CSR_REG(reg_name)
-
-#define POKE_CSR_REG(reg_name, reg_value)                                                          \
-    state->getCsrRegister(atlas::CSR::reg_name::reg_num)->dmiWrite(reg_value);
+#define POKE_CSR_REG(reg_ident, reg_value) state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
