@@ -42,21 +42,21 @@ void testIntRegs()
     atlas::AtlasState* state = tester.getAtlasState();
 
     // Verify the zero register is zero
-    auto x0_reg_val = READ_INT_REG(0);
+    auto x0_reg_val = READ_INT_REG(atlas::X0);
     EXPECT_EQUAL(x0_reg_val, 0);
 
     // Verify that writing to the zero register is ignored
-    WRITE_INT_REG(0, 1);
-    x0_reg_val = READ_INT_REG(0);
+    WRITE_INT_REG(atlas::X0, 1);
+    x0_reg_val = READ_INT_REG(atlas::X0);
     EXPECT_EQUAL(x0_reg_val, 0);
 
     // Verify that aliases are working
-    auto zero_reg_val = READ_INT_REG(0);
+    auto zero_reg_val = READ_INT_REG(atlas::X0);
     EXPECT_EQUAL(zero_reg_val, x0_reg_val);
 
     // Verify writable registers
-    WRITE_INT_REG(1, 0xdeadbeef);
-    auto x1_reg_val = READ_INT_REG(1);
+    WRITE_INT_REG(atlas::X1, 0xdeadbeef);
+    auto x1_reg_val = READ_INT_REG(atlas::X1);
     EXPECT_EQUAL(x1_reg_val, 0xdeadbeef);
 }
 
@@ -69,13 +69,13 @@ void testFpRegs()
     uint64_t rand_val = dis(gen);
 
     // Verify the sp field for the f0 register.
-    WRITE_FP_FIELD(0, sp, rand_val);
-    auto f0_sp_val = READ_FP_FIELD(0, sp);
+    WRITE_FP_FIELD(atlas::F0, sp, rand_val);
+    auto f0_sp_val = READ_FP_FIELD(atlas::F0, sp);
     EXPECT_EQUAL(f0_sp_val, rand_val & 0x00000000ffffffff);
 
     // Verify the dp field for the f1 register.
-    WRITE_FP_FIELD(1, dp, rand_val);
-    auto f1_dp_val = READ_FP_FIELD(1, dp);
+    WRITE_FP_FIELD(atlas::F1, dp, rand_val);
+    auto f1_dp_val = READ_FP_FIELD(atlas::F1, dp);
     EXPECT_EQUAL(f1_dp_val, rand_val);
 }
 
