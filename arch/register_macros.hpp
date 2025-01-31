@@ -4,6 +4,7 @@
 #include "include/CSRNums.hpp"
 #include "core/IntNums.hpp"
 #include "core/FpNums.hpp"
+#include "core/VecNums.hpp"
 #include "include/CSRHelpers.hpp"
 #include <utility>
 #include <vector>

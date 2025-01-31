@@ -88,8 +88,8 @@ void testVecRegs()
     uint64_t rand_val = dis(gen);
 
     // Verify the v0 register
-    WRITE_VEC_REG(0, rand_val);
-    auto v0_reg_val = READ_VEC_REG(0);
+    WRITE_VEC_REG(atlas::V0, rand_val);
+    auto v0_reg_val = READ_VEC_REG(atlas::V0);
     EXPECT_EQUAL(v0_reg_val, rand_val);
 }
 
