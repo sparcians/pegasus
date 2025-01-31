@@ -2,6 +2,8 @@
 
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/CSRNums.hpp"
+#include "core/IntNums.hpp"
+#include "core/FpNums.hpp"
 #include "include/CSRHelpers.hpp"
 #include <utility>
 #include <vector>
