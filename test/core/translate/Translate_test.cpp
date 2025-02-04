@@ -1,9 +1,11 @@
 #include "sim/AtlasSim.hpp"
+
 #include "core/AtlasState.hpp"
+#include "core/translate/PageTable.hpp"
+
 #include "include/AtlasTypes.hpp"
-#include "core/PageTableEntry.hpp"
-#include "core/PageTable.hpp"
-#include "core/PageTableWalker.hpp"
+#include "include/CSRNums.hpp"
+
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"
 
@@ -28,34 +30,194 @@ class AtlasTranslateTester
 
     void testAtlasTranslationState()
     {
-        const atlas::Addr va = 0x1000;
+        std::cout << "Testing AtlasTranslationState class" << std::endl;
+        std::cout << std::endl;
+        const atlas::Addr vaddr = 0x1000;
         const uint32_t access_size = 4;
         // TODO: Add test for AtlasTranslationState state machine
 
         atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
-        EXPECT_THROW(
-            translation_state
-                ->getTranslationRequest()); // request should be invalid hence expedct throw;
 
-        EXPECT_THROW(
-            translate_unit_->translate_(state_)); // this will call setTransaltionRequest which
-                                                  // should fail as transalationRequest is invalid
+        // Request should be invalid and throw an exception
+        EXPECT_THROW(translation_state->getTranslationRequest());
 
-        //    - Make a second request without resolving the first request
-        translation_state->makeTranslationRequest(va, access_size);                // 1st request
-        EXPECT_THROW(translation_state->makeTranslationRequest(va, access_size);); // 2nd request
+        // This will call setTransaltionRequest which should fail as transalationRequest is invalid
+        // FIXME: Sparta macro doesn't understand templated methods
+        // EXPECT_THROW(translate_unit_->translate_<atlas::RV64,
+        // atlas::MMUMode::BAREMETAL>(state_));
 
-        //    - Try to get a result before it is ready
-        EXPECT_THROW(translation_state->getTranslationResult()); // getting the result before it is
-                                                                 // ready, hence expect failure
+        // Make a second request without resolving the first request
+        translation_state->makeTranslationRequest(vaddr, access_size);
+        EXPECT_THROW(translation_state->makeTranslationRequest(vaddr, access_size););
 
-        //    - More?
-        //
+        // Try to get a result before it is ready will fail
+        EXPECT_THROW(translation_state->getTranslationResult());
+
+        // Clear current request so subsequent tests will pass
+        translation_state->setTranslationResult(vaddr, access_size);
+
         // TODO: Add tests for AtlasTranslationState request/result validation
         //    - Make a misaligned request (is it supported?)
         //    - Make a request with an invalid size (too large, too small, not power of 2, etc.)
         //    - Set the result with the wrong size
         //    - More?
+    }
+
+    void testPageTableEntry() // unit test for PageTableEntry.cpp
+    {
+        std::cout << "Testing PageTableEntry class" << std::endl;
+
+        // sv32
+        {
+            const bool v = true;
+            const bool r = true;
+            const bool w = true;
+            const bool x = true;
+            const bool u = true;
+            const bool g = true;
+            const bool a = true;
+            const bool d = true;
+            const uint32_t rsw = 2;
+            const uint32_t ppn0 = 123;
+            const uint32_t ppn1 = 456;
+            const uint32_t pte_val = (ppn1 << atlas::translate_types::Sv32::PteFields::ppn1.lsb)
+                                     | (ppn0 << atlas::translate_types::Sv32::PteFields::ppn0.lsb)
+                                     | (rsw << atlas::translate_types::Sv32::PteFields::rsw.lsb)
+                                     | (d << atlas::translate_types::Sv32::PteFields::dirty.lsb)
+                                     | (a << atlas::translate_types::Sv32::PteFields::accessed.lsb)
+                                     | (g << atlas::translate_types::Sv32::PteFields::global.lsb)
+                                     | (u << atlas::translate_types::Sv32::PteFields::user.lsb)
+                                     | (x << atlas::translate_types::Sv32::PteFields::execute.lsb)
+                                     | (w << atlas::translate_types::Sv32::PteFields::write.lsb)
+                                     | (r << atlas::translate_types::Sv32::PteFields::read.lsb)
+                                     | (v);
+
+            std::cout << "Creating sv32 PTE: " << HEX8(pte_val) << std::endl;
+            atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> sv32_pte(pte_val);
+
+            EXPECT_TRUE(sv32_pte.isValid());
+            EXPECT_TRUE(sv32_pte.canRead());
+            EXPECT_TRUE(sv32_pte.canWrite());
+            EXPECT_TRUE(sv32_pte.canExecute());
+            EXPECT_TRUE(sv32_pte.isUserMode());
+            EXPECT_TRUE(sv32_pte.isGlobal());
+            EXPECT_TRUE(sv32_pte.isAccessed());
+            EXPECT_TRUE(sv32_pte.isDirty());
+            EXPECT_EQUAL(sv32_pte.getRsw(), rsw);
+            EXPECT_EQUAL(sv32_pte.getPpnField(0), ppn0);
+            EXPECT_EQUAL(sv32_pte.getPpnField(1), ppn1);
+        }
+        // sv39
+        {
+            const bool v = true;
+            const bool r = true;
+            const bool w = false;
+            const bool x = false;
+            const bool u = true;
+            const bool g = true;
+            const bool a = true;
+            const bool d = true;
+            const uint32_t rsw = 2;
+            const uint64_t ppn0 = 123;
+            const uint64_t ppn1 = 456;
+            const uint64_t ppn2 = 789;
+            const uint64_t pte_val = (ppn2 << atlas::translate_types::Sv39::PteFields::ppn2.lsb)
+                                     | (ppn1 << atlas::translate_types::Sv39::PteFields::ppn1.lsb)
+                                     | (ppn0 << atlas::translate_types::Sv39::PteFields::ppn0.lsb)
+                                     | (rsw << atlas::translate_types::Sv39::PteFields::rsw.lsb)
+                                     | (d << atlas::translate_types::Sv39::PteFields::dirty.lsb)
+                                     | (a << atlas::translate_types::Sv39::PteFields::accessed.lsb)
+                                     | (g << atlas::translate_types::Sv39::PteFields::global.lsb)
+                                     | (u << atlas::translate_types::Sv39::PteFields::user.lsb)
+                                     | (x << atlas::translate_types::Sv39::PteFields::execute.lsb)
+                                     | (w << atlas::translate_types::Sv39::PteFields::write.lsb)
+                                     | (r << atlas::translate_types::Sv39::PteFields::read.lsb)
+                                     | (v);
+
+            std::cout << "Creating sv64 PTE: " << HEX16(pte_val) << std::endl;
+            atlas::PageTableEntry<atlas::RV64, atlas::MMUMode::SV39> sv39_pte(pte_val);
+
+            EXPECT_TRUE(sv39_pte.isValid());
+            EXPECT_TRUE(sv39_pte.canRead());
+            EXPECT_FALSE(sv39_pte.canWrite());
+            EXPECT_FALSE(sv39_pte.canExecute());
+            EXPECT_TRUE(sv39_pte.isUserMode());
+            EXPECT_TRUE(sv39_pte.isGlobal());
+            EXPECT_TRUE(sv39_pte.isAccessed());
+            EXPECT_TRUE(sv39_pte.isDirty());
+            EXPECT_EQUAL(sv39_pte.getRsw(), rsw);
+            EXPECT_EQUAL(sv39_pte.getPpnField(0), ppn0);
+            EXPECT_EQUAL(sv39_pte.getPpnField(1), ppn1);
+            EXPECT_EQUAL(sv39_pte.getPpnField(2), ppn2);
+        }
+    }
+
+    void testPageTable() // unit test for PageTable.cpp
+    {
+        std::cout << "\nTesting PageTable class" << std::endl;
+        constexpr uint32_t PTE_SIZE = sizeof(atlas::RV32);
+        const uint32_t base_addr = 0x1000;
+        atlas::PageTable<atlas::RV32, atlas::MMUMode::SV32> pt(base_addr);
+
+        // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> sv32_pte1(0x7B1EEFF);
+        // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> sv32_pte2(0xABC12FF);
+        // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> sv32_pte3(0x7F03D4C3);
+        // Valid,
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> sv32_pte4(0xABC12FF);
+
+        std::cout << "Creating page table with 4 PTEs:" << std::endl;
+        std::cout << "    PTE1: " << sv32_pte1 << std::endl;
+        std::cout << "    PTE2: " << sv32_pte2 << std::endl;
+        std::cout << "    PTE3: " << sv32_pte3 << std::endl;
+        std::cout << "    PTE4: " << sv32_pte4 << std::endl;
+        std::cout << std::endl;
+
+        // Add entries
+        pt.addEntry(0, sv32_pte1); // First entry
+        pt.addEntry(10, sv32_pte2);
+        pt.addEntry(100, sv32_pte3);
+        pt.addEntry(1023, sv32_pte4); // Last entry
+
+        // Cannot add an entry out of range
+        EXPECT_THROW(pt.addEntry(1024, sv32_pte4));
+
+        // Get entries by index
+        EXPECT_EQUAL(pt.getEntry(0).getPpn(), sv32_pte1.getPpn());
+        EXPECT_EQUAL(pt.getEntry(10).getPpn(), sv32_pte2.getPpn());
+        EXPECT_EQUAL(pt.getEntry(100).getPpn(), sv32_pte3.getPpn());
+        EXPECT_EQUAL(pt.getEntry(1023).getPpn(), sv32_pte4.getPpn());
+
+        // Invalid indexes are not allowed (out of range, not initialized)
+        EXPECT_THROW(pt.getEntry(10000));
+        EXPECT_THROW(pt.getEntry(11));
+
+        // Get entries by address
+        EXPECT_EQUAL(pt.getEntryAtAddr(base_addr).getPpn(), sv32_pte1.getPpn());
+        EXPECT_EQUAL(pt.getEntryAtAddr(base_addr + 10 * PTE_SIZE).getPpn(), sv32_pte2.getPpn());
+        EXPECT_EQUAL(pt.getEntryAtAddr(base_addr + 100 * PTE_SIZE).getPpn(), sv32_pte3.getPpn());
+        EXPECT_EQUAL(pt.getEntryAtAddr(base_addr + 1023 * PTE_SIZE).getPpn(), sv32_pte4.getPpn());
+
+        // Invalid address are not allowed (out of range, not initalized, misaligned addresses)
+        EXPECT_THROW(pt.getEntryAtAddr(0xFFFF))
+        EXPECT_THROW(pt.getEntryAtAddr(0x1004)); // idx 1
+        EXPECT_THROW(pt.getEntryAtAddr(0x1001)); // Middle of idx 0 PTE
+
+        // Get address of indexes
+        EXPECT_EQUAL(pt.getAddrOfIndex(0), base_addr);
+        EXPECT_EQUAL(pt.getAddrOfIndex(10), base_addr + 10 * PTE_SIZE);
+        EXPECT_EQUAL(pt.getAddrOfIndex(100), base_addr + 100 * PTE_SIZE);
+        EXPECT_EQUAL(pt.getAddrOfIndex(1023), base_addr + 1023 * PTE_SIZE);
+
+        // Remove entries
+        EXPECT_TRUE(pt.contains(1023));
+        pt.removeEntry(1023);
+        EXPECT_FALSE(pt.contains(1023));
+
+        // Cannot remove entry that is not initialized
+        EXPECT_THROW(pt.removeEntry(1022));
     }
 
     void testBaremetalTranslation()
@@ -64,15 +226,16 @@ class AtlasTranslateTester
 
         // Make translation request
         atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
-        const atlas::Addr va = 0x1000;
+        const atlas::Addr vaddr = 0x1000;
         const uint32_t access_size = 4;
         std::cout << "Translation request:" << std::endl;
-        std::cout << "    VA: 0x" << std::hex << va;
+        std::cout << "    VA: 0x" << std::hex << vaddr;
         std::cout << ", Access size: " << std::dec << access_size << std::endl;
-        translation_state->makeTranslationRequest(va, access_size);
+        translation_state->makeTranslationRequest(vaddr, access_size);
 
         // Execute translation
-        auto next_action_group = translate_unit_->translate_(state_);
+        auto next_action_group =
+            translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL>(state_);
         EXPECT_EQUAL(next_action_group, nullptr);
 
         // Get translation result
@@ -83,123 +246,69 @@ class AtlasTranslateTester
         std::cout << ", Access size: " << std::dec << result.size << "\n\n";
 
         // Test translation result
-        EXPECT_EQUAL(result.physical_addr, va);
+        EXPECT_EQUAL(result.physical_addr, vaddr);
         EXPECT_EQUAL(result.size, access_size);
-    }
-
-    void testPageTableEntryCreation() // unit test for PageTableEntry.cpp
-    {
-        const bool v = true;
-        const bool r = true;
-        const bool w = true;
-        const bool x = true;
-        const bool u = true;
-        const bool g = true;
-        const bool a = true;
-        const bool d = true;
-        uint8_t rsw = 2;
-        uint16_t ppn0 = 123;
-        uint16_t ppn1 = 123;
-        uint32_t examplePTEValue;
-        examplePTEValue = (ppn1 << 20) | (ppn0 << 10) | ((rsw & TWO_BIT_MASK) << 8) | (d << 7)
-                          | (a << 6) | (g << 5) | (u << 4) | (x << 3) | (w << 2) | (r << 1) | (v);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PageTableEntry(examplePTEValue);
-        EXPECT_TRUE(sv32PageTableEntry.isValid());
-        EXPECT_TRUE(sv32PageTableEntry.canRead());
-        EXPECT_TRUE(sv32PageTableEntry.canWrite());
-        EXPECT_TRUE(sv32PageTableEntry.canExecute());
-        EXPECT_TRUE(sv32PageTableEntry.isUserMode());
-        EXPECT_TRUE(sv32PageTableEntry.isGlobal());
-        EXPECT_TRUE(sv32PageTableEntry.isAccessed());
-        EXPECT_TRUE(sv32PageTableEntry.isDirty());
-        EXPECT_EQUAL(sv32PageTableEntry.getRSW(), rsw);
-        EXPECT_EQUAL(sv32PageTableEntry.getPPN0(), ppn0);
-        EXPECT_EQUAL(sv32PageTableEntry.getPPN1(), ppn1);
-    }
-
-    void testPageTable() // unit test for PageTable.cpp
-    {
-        uint32_t pa = 0x7B1EEFF;
-        uint32_t PTE_SIZE = sizeof(atlas::RV32); // since test is for SV32
-        uint32_t baseAddrOfPT = 0xFFFF0000;
-        atlas::PageTable<atlas::MMUMode::SV32> pt(baseAddrOfPT);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE1(
-            pa); // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111
-                 // 0000 1111)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE2(
-            0xABC12FF); // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010
-                        // 1111 0000 1111)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE3(
-            0x7F03D4C3); // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
-        atlas::PageTableEntry<atlas::MMUMode::SV32> sv32PTE4(0xABC12FF);
-
-        pt.addEntry(baseAddrOfPT + 1 * PTE_SIZE, sv32PTE1);
-        pt.addEntry(baseAddrOfPT + 10 * PTE_SIZE, sv32PTE2);
-        pt.addEntry(baseAddrOfPT + 100 * PTE_SIZE, sv32PTE3);
-        pt.addEntry(baseAddrOfPT + 1023 * PTE_SIZE, sv32PTE4);
-
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1 * PTE_SIZE).getPPN(), sv32PTE1.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 10 * PTE_SIZE).getPPN(), sv32PTE2.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 100 * PTE_SIZE).getPPN(), sv32PTE3.getPPN());
-        EXPECT_EQUAL(pt.getEntry(baseAddrOfPT + 1023 * PTE_SIZE).getPPN(), sv32PTE4.getPPN());
-
-        EXPECT_THROW(pt.addEntry(
-            baseAddrOfPT + 1024 * PTE_SIZE,
-            sv32PTE4)); // Page table has reached its maximum capacity/PageTable index out of bound!
-
-        EXPECT_THROW(pt.getEntry(baseAddrOfPT + 1022 * PTE_SIZE)
-                         .getPPN()); // entry not present at the provided index
-
-        EXPECT_THROW(pt.removeEntry(baseAddrOfPT + 1044 * PTE_SIZE)); // Index Invalid
-
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1023 * PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 1023 * PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1023 * PTE_SIZE));
-
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 100 * PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 100 * PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 100 * PTE_SIZE));
-
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 10 * PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 10 * PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 10 * PTE_SIZE));
-
-        EXPECT_TRUE(pt.contains(baseAddrOfPT + 1 * PTE_SIZE));
-        pt.removeEntry(baseAddrOfPT + 1 * PTE_SIZE);
-        EXPECT_FALSE(pt.contains(baseAddrOfPT + 1 * PTE_SIZE));
     }
 
     void testSv32Translation()
     {
-        atlas::PageTableWalker walker;
-        uint32_t PTE_SIZE = sizeof(atlas::RV32);
-        uint32_t va = 0x143FFABC;              //{vpn[1]-->0x50-->d(80) , vpn[1]-->0xFF-->d(1023) ,
-                                               // offset-->0xABC-->d(2748)}
-        uint32_t satpBaseAddress = 0xFFFF0000; // base address of PD
-        uint32_t pdeAddress = satpBaseAddress + (80 * PTE_SIZE);
-        uint32_t pdeVal = 0x7B1EEFF;
-        uint32_t pageTableBaseAddr = (pdeVal >> 10) << 10; // 7B1EC00
-        uint32_t pteAddress = pageTableBaseAddr + (1023 * PTE_SIZE);
-        uint32_t pteVal = 0x7F03D4C3;
-        const atlas::Addr phyMemoryBaseAddr = (pteVal >> 10) << 10; // 0x7F03D400
-        const atlas::Addr pa = (phyMemoryBaseAddr + (2748 * PTE_SIZE));
-        const uint64_t val = 0xABCD1234;
+        std::cout << "Testing sv32 translation\n" << std::endl;
 
-        atlas::PageTable<atlas::MMUMode::SV32> pageDirectory(satpBaseAddress);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> pageDirectoryEntry(pdeVal);
-        pageDirectory.addEntry(pdeAddress, pageDirectoryEntry);
-        atlas::PageTable<atlas::MMUMode::SV32> pageTable(pageTableBaseAddr);
-        atlas::PageTableEntry<atlas::MMUMode::SV32> PageTableEntry(pteVal);
-        pageTable.addEntry(pteAddress, PageTableEntry);
+        const uint32_t vaddr = 0x143FFABC;
+        const uint32_t page_offset = vaddr & 0xFFF;
+        const uint64_t expected_paddr = 0x200000000 + page_offset;
 
-        state_->writeMemory<uint64_t>(pa, val);
-        state_->writeMemory<uint64_t>(pdeAddress, pdeVal);
-        state_->writeMemory<uint64_t>(pteAddress, pteVal);
+        // First-level page table
+        uint32_t satp_ppn = 0x10;
+        const uint32_t lvl1_base_paddr = satp_ppn << 12; // 0x10000
+        atlas::PageTable<atlas::RV32, atlas::MMUMode::SV32> lvl1_pagetable(lvl1_base_paddr);
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> lvl1_pte{0x8031};
+        const uint32_t lvl1_index = (vaddr & 0xFFC00000) >> 22;
+        const uint32_t lvl1_paddr = lvl1_pagetable.getAddrOfIndex(lvl1_index);
+        std::cout << "Loading Level 1 PTE at address 0x" << std::hex << lvl1_paddr
+                  << " (idx: " << std::dec << lvl1_index << ")" << std::endl;
+        lvl1_pagetable.addEntry(lvl1_index, lvl1_pte);
+        std::cout << "    " << lvl1_pte << std::endl;
 
-        uint32_t transaltedPA = walker.sv32PageTableWalk(va, satpBaseAddress, state_);
+        // Second-level page table
+        const uint32_t lvl2_base_paddr = 0x20000;
+        atlas::PageTable<atlas::RV32, atlas::MMUMode::SV32> lvl2_pagetable(lvl2_base_paddr);
+        atlas::PageTableEntry<atlas::RV32, atlas::MMUMode::SV32> lvl2_pte{0x8000002f};
+        const uint32_t lvl2_index = (vaddr & 0x3FF000) >> 12;
+        const uint32_t lvl2_paddr = lvl2_pagetable.getAddrOfIndex(lvl2_index);
+        std::cout << "Loading Level 2 PTE at address 0x" << std::hex << lvl2_paddr
+                  << " (idx: " << std::dec << lvl2_index << ")" << std::endl;
+        lvl2_pagetable.addEntry(lvl2_index, lvl2_pte);
+        std::cout << "    " << lvl2_pte << std::endl;
+        std::cout << std::endl;
 
-        EXPECT_EQUAL(pa, transaltedPA);
-        EXPECT_EQUAL(val, state_->readMemory<uint64_t>(transaltedPA));
+        // Set SATP value
+        state_->getCsrRegister(atlas::CSR::SATP::reg_num)->dmiWrite<uint64_t>(satp_ppn);
+
+        // Write PTEs to memory
+        state_->writeMemory<uint32_t>(lvl1_paddr, lvl1_pte.getPte());
+        state_->writeMemory<uint32_t>(lvl2_paddr, lvl2_pte.getPte());
+
+        // Make translation request
+        atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
+        const size_t access_size = 4;
+        translation_state->makeTranslationRequest(vaddr, access_size);
+        std::cout << "Translation request:" << std::endl;
+        std::cout << "    VA: 0x" << std::hex << vaddr;
+        std::cout << ", Access size: " << std::dec << access_size << std::endl;
+
+        // Translate!
+        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32>(state_);
+
+        // Get translation result
+        const atlas::AtlasTranslationState::TranslationResult result =
+            translation_state->getTranslationResult();
+        std::cout << "Translation result:" << std::endl;
+        std::cout << "    PA: 0x" << std::hex << result.physical_addr;
+        std::cout << ", Access size: " << std::dec << result.size << "\n\n";
+
+        // Test translation result
+        EXPECT_EQUAL(result.physical_addr, expected_paddr);
     }
 
   private:
@@ -216,11 +325,13 @@ int main(int argc, char** argv)
     (void)argv;
 
     AtlasTranslateTester translate_tester;
-    translate_tester.testBaremetalTranslation();
-    translate_tester.testPageTableEntryCreation();
+
     translate_tester.testAtlasTranslationState();
-    translate_tester.testSv32Translation();
+    translate_tester.testPageTableEntry();
     translate_tester.testPageTable();
+
+    translate_tester.testBaremetalTranslation();
+    translate_tester.testSv32Translation();
 
     REPORT_ERROR;
     return (int)ERROR_CODE;

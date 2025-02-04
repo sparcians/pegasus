@@ -104,6 +104,13 @@ namespace atlas
                                                << " from the ActionGroup: " << this);
         }
 
+        //! Replace an Action with the specified Tag
+        void replaceAction(const ActionTagType tag, const Action & action)
+        {
+            auto action_it = findActionWithTag_(tag);
+            *action_it = action;
+        }
+
         void setNextActionGroup(ActionGroup* next_action_group)
         {
             next_action_group_ = next_action_group;
