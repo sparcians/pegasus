@@ -22,7 +22,7 @@ namespace atlas
             {
             }
 
-            FieldDef(const FieldDef & def) : bitmask(def.bitmask), msb(def.msb), lsb(def.lsb) {}
+            FieldDef(const FieldDef & def) = default;
         };
 
         namespace Sv32
