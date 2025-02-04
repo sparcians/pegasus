@@ -12,34 +12,27 @@
 #include <string>
 
 #define READ_INT_REG(reg_ident)                                                                    \
-    (reg_ident == 0)                                                                               \
-        ? 0                                                                                        \
-        : state->getIntRegister(reg_ident)->dmiRead<uint64_t>()                                    \
+    (reg_ident == 0) ? 0 : state->getIntRegister(reg_ident)->dmiRead<uint64_t>()
 
 #define WRITE_INT_REG(reg_ident, reg_value)                                                        \
     if (reg_ident != 0)                                                                            \
-        state->getIntRegister(reg_ident)->dmiWrite<uint64_t>(reg_value);                           \
+        state->getIntRegister(reg_ident)->dmiWrite<uint64_t>(reg_value);
 
 #define READ_FP_FIELD(reg_ident, field_name)                                                       \
-    (reg_ident == 1)                                                                               \
-        ? state->getFpRegister(reg_ident)->dmiRead<uint64_t>()                                     \
-        : state->getFpRegister(reg_ident)->dmiRead<uint64_t>()                                     \
-              & 0x00000000ffffffff                                                                 \
+    (reg_ident == 1) ? state->getFpRegister(reg_ident)->dmiRead<uint64_t>()                        \
+                     : state->getFpRegister(reg_ident)->dmiRead<uint64_t>() & 0x00000000ffffffff
 
 #define WRITE_FP_FIELD(reg_ident, field_name, field_value)                                         \
     if (reg_ident == 1)                                                                            \
         state->getFpRegister(reg_ident)->dmiWrite<uint64_t>(field_value);                          \
     else                                                                                           \
-        state->getFpRegister(reg_ident)->dmiWrite<uint64_t>(field_value | 0xffffffff00000000);     \
+        state->getFpRegister(reg_ident)->dmiWrite<uint64_t>(field_value | 0xffffffff00000000);
 
-#define READ_VEC_REG(reg_ident)                                                                    \
-    state->getVecRegister(reg_ident)->dmiRead<uint64_t>()                                          \
+#define READ_VEC_REG(reg_ident) state->getVecRegister(reg_ident)->dmiRead<uint64_t>()
 
-#define WRITE_VEC_REG(reg_ident, reg_value)                                                        \
-    state->getVecRegister(reg_ident)->dmiWrite(reg_value);                                         \
+#define WRITE_VEC_REG(reg_ident, reg_value) state->getVecRegister(reg_ident)->dmiWrite(reg_value);
 
-#define READ_CSR_REG(reg_ident)                                                                    \
-    state->getCsrRegister(reg_ident)->dmiRead<uint64_t>()                                          \
+#define READ_CSR_REG(reg_ident) state->getCsrRegister(reg_ident)->dmiRead<uint64_t>()
 
 #define WRITE_CSR_REG(reg_ident, reg_value)                                                        \
     if (atlas::getCsrBitMask(reg_ident) != 0xffffffffffffffff)                                     \
@@ -51,13 +44,14 @@
         reg->dmiWrite(write_val);                                                                  \
     }                                                                                              \
     else                                                                                           \
-        state->getCsrRegister(reg_ident)->dmiWrite(reg_value);                                     \
+        state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
 
 #define READ_CSR_FIELD(reg_ident, field_name)                                                      \
-    ((state->getCsrRegister(reg_ident)->dmiRead<uint64_t>() >>                                     \
-      atlas::getCsrBitRange(reg_ident, #field_name).first) &                                       \
-    ((1ULL << (atlas::getCsrBitRange(reg_ident, #field_name).second -                              \
-               atlas::getCsrBitRange(reg_ident, #field_name).first + 1)) - 1))                     \
+    ((state->getCsrRegister(reg_ident)->dmiRead<uint64_t>()                                        \
+      >> atlas::getCsrBitRange(reg_ident, #field_name).first)                                      \
+     & ((1ULL << (atlas::getCsrBitRange(reg_ident, #field_name).second                             \
+                  - atlas::getCsrBitRange(reg_ident, #field_name).first + 1))                      \
+        - 1))
 
 #define WRITE_CSR_FIELD(reg_ident, field_name, field_value)                                        \
     {                                                                                              \
@@ -73,7 +67,7 @@
         csr_value |= new_field_value;                                                              \
                                                                                                    \
         state->getCsrRegister(reg_ident)->write(csr_value);                                        \
-    }                                                                                              \
+    }
 
 #define PEEK_CSR_REG(reg_ident) READ_CSR_REG(reg_ident)
 
