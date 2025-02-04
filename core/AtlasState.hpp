@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/AtlasTranslationState.hpp"
+#include "core/translate/AtlasTranslationState.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "include/AtlasTypes.hpp"
