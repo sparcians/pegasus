@@ -36,4 +36,4 @@ namespace atlas
     static constexpr uint64_t F29 = 29;
     static constexpr uint64_t F30 = 30;
     static constexpr uint64_t F31 = 31;
-}
+} // namespace atlas
