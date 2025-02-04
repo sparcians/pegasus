@@ -58,6 +58,7 @@ namespace atlas
         supported_isa_string_(std::string("rv" + std::to_string(xlen_) + "g_zicsr_zifencei")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
+        csr_values_json_(p->csr_values),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
             isa_file_path_)),
@@ -149,6 +150,32 @@ namespace atlas
         if (inst_logger_.observed())
         {
             addObserver(std::make_unique<InstructionLogger>(inst_logger_));
+        }
+    }
+
+    void AtlasState::onBindTreeLate_()
+    {
+        // Write initial values to CSR registers
+        std::ifstream ifs(csr_values_json_);
+        nlohmann::json csr_values_json = nlohmann::json::parse(ifs);
+        for (const auto & [csr_name, hex_str] : csr_values_json.items())
+        {
+            sparta::Register* csr_reg = findRegister(csr_name);
+            if (csr_reg)
+            {
+                sparta_assert(csr_reg->getGroupNum()
+                                  == (sparta::RegisterBase::group_num_type)RegType::CSR,
+                              "Provided initial value for not-CSR register: " << csr_name);
+                const uint64_t csr_val = std::stoull(std::string(hex_str), nullptr, 16);
+                std::cout << csr_name << ": " << HEX16(csr_val) << std::endl;
+                csr_reg->dmiWrite(csr_val);
+            }
+            else
+            {
+                std::cout
+                    << "WARNING: Provided initial value for CSR register that does not exist! "
+                    << csr_name << std::endl;
+            }
         }
     }
 
@@ -608,14 +635,6 @@ namespace atlas
             task.reset(new CsrValuesSnapshotter(cosim_db_.get(), hart, pc, all_csr_vals));
             cosim_db_->getTaskQueue()->addWorkerTask(std::move(task));
         }
-    }
-
-    uint64_t AtlasState::getMStatusInitialValue(const AtlasState* state, const uint64_t xlen_val)
-    {
-        // TODO cnyce
-        (void)state;
-        (void)xlen_val;
-        return 42949672960;
     }
 
     void AtlasState::postInit()
