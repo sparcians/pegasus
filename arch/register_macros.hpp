@@ -47,8 +47,7 @@
         auto reg = state->getCsrRegister(reg_ident);                                               \
         const auto old_value = reg->dmiRead<uint64_t>();                                           \
         const auto mask = atlas::getCsrBitMask(reg_ident);                                         \
-        uint64_t write_val = reg_value;                                                            \
-        write_val = (old_value & ~mask) | (write_val & mask);                                      \
+        const auto write_val = (old_value & ~mask) | (reg_value & mask);                           \
         reg->dmiWrite(write_val);                                                                  \
     }                                                                                              \
     else                                                                                           \
