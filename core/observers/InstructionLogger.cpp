@@ -59,6 +59,9 @@ namespace atlas
 
     ActionGroup* InstructionLogger::preException(AtlasState* state)
     {
+        preExecute(state);
+
+        // Get value of source registers
         trap_cause_ = state->getExceptionUnit()->getUnhandledException();
         return nullptr;
     }
@@ -67,13 +70,17 @@ namespace atlas
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
-        sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
 
-        if (inst->hasRd())
+        if (trap_cause_.isValid() == false)
+        {
+            sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
+        }
+
+        if (inst && inst->hasRd())
         {
             sparta_assert(dst_regs_.size() == 1);
-            const auto & rd = inst->getRd();
-            const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
+            const auto & rd_reg = inst->getRdReg();
+            const std::vector<uint8_t> value = convertToByteVector(rd_reg->dmiRead<uint64_t>());
             dst_regs_[0].setValue(value);
         }
 
@@ -84,15 +91,23 @@ namespace atlas
             INSTLOG("<" << symbols.at(pc_) << ">");
         }
 
-        INSTLOG(HEX8(pc_) << ": " << inst->dasmString() << " (" << HEX8(opcode_)
-                          << ") uid:" << inst->getUid());
+        if (inst)
+        {
+            INSTLOG(HEX8(pc_) << ": " << inst->dasmString() << " (" << HEX8(opcode_)
+                              << ") uid:" << inst->getUid());
+        }
+        else
+        {
+            // TODO: Only display opcode for certain exception types
+            INSTLOG(HEX8(pc_) << ": ??? (" << HEX8(opcode_) << ") uid: ?");
+        }
 
         if (trap_cause_.isValid())
         {
             INSTLOG("trap cause: " << HEX16((uint64_t)trap_cause_.getValue()));
         }
 
-        if (inst->hasImmediate())
+        if (inst && inst->hasImmediate())
         {
             const int64_t imm_val = inst->getImmediate();
             INSTLOG("       imm: " << HEX16(imm_val));
