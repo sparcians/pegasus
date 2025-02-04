@@ -46,10 +46,27 @@ namespace atlas
 
         template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
         {
-            return num_pagewalk_levels_.at(static_cast<uint32_t>(Mode));
+            if constexpr (Mode == MMUMode::SV32)
+            {
+                return translate_types::Sv32::num_pagewalk_levels;
+            }
+            else if constexpr (Mode == MMUMode::SV39)
+            {
+                return translate_types::Sv39::num_pagewalk_levels;
+            }
+            else if constexpr (Mode == MMUMode::SV48)
+            {
+                return translate_types::Sv48::num_pagewalk_levels;
+            }
+            else if constexpr (Mode == MMUMode::SV57)
+            {
+                return translate_types::Sv57::num_pagewalk_levels;
+            }
+            else
+            {
+                sparta_assert(false, "Unsupported MMU Mode!");
+            }
         }
-
-        static constexpr std::array<uint32_t, N_MMU_MODES> num_pagewalk_levels_{0, 2, 3, 4, 5};
 
         template <MMUMode Mode> uint64_t extractVpn_(const uint32_t level, const uint64_t vaddr)
         {

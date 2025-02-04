@@ -19,23 +19,48 @@ namespace atlas
 
         XLEN getPpnField(const uint32_t idx) const { return ppn_fields_.at(idx); }
 
-        uint32_t getRsw() const { return rsw_; }
+        // 2-bit Reserved for Supervisor, same for all modes
+        uint32_t getRsw() const
+        {
+            return (pte_val_ & translate_types::Sv32::PteFields::rsw.bitmask)
+                   >> translate_types::Sv32::PteFields::rsw.lsb;
+        }
 
-        bool isDirty() const { return d_; }
+        // Dirty bit, same for all modes
+        bool isDirty() const { return pte_val_ & translate_types::Sv32::PteFields::dirty.bitmask; }
 
-        bool isAccessed() const { return a_; }
+        // Accessed bit, same for all modes
+        bool isAccessed() const
+        {
+            return pte_val_ & translate_types::Sv32::PteFields::accessed.bitmask;
+        }
 
-        bool isGlobal() const { return g_; }
+        // Global bit, same for all modes
+        bool isGlobal() const
+        {
+            return pte_val_ & translate_types::Sv32::PteFields::global.bitmask;
+        }
 
-        bool isUserMode() const { return u_; }
+        // User mode bit, same for all modes
+        bool isUserMode() const
+        {
+            return pte_val_ & translate_types::Sv32::PteFields::user.bitmask;
+        }
 
-        bool canExecute() const { return x_; }
+        // Execute bit, same for all modes
+        bool canExecute() const
+        {
+            return pte_val_ & translate_types::Sv32::PteFields::execute.bitmask;
+        }
 
-        bool canWrite() const { return w_; }
+        // Write bit, same for all modes
+        bool canWrite() const { return pte_val_ & translate_types::Sv32::PteFields::write.bitmask; }
 
-        bool canRead() const { return r_; }
+        // Read bit, same for all modes
+        bool canRead() const { return pte_val_ & translate_types::Sv32::PteFields::read.bitmask; }
 
-        bool isValid() const { return v_; }
+        // Valid bit, same fpr all modes
+        bool isValid() const { return pte_val_ & translate_types::Sv32::PteFields::valid.bitmask; }
 
         bool isLeaf() const { return canRead() || canExecute(); }
 
@@ -43,16 +68,6 @@ namespace atlas
         XLEN pte_val_;
         XLEN ppn_;
         std::vector<XLEN> ppn_fields_;
-
-        uint32_t rsw_; // 2-bit Reserved for Supervisor
-        bool d_;       // Dirty bit
-        bool a_;       // Accessed bit
-        bool g_;       // Global bit
-        bool u_;       // User-mode bit
-        bool x_;       // Execute bit
-        bool w_;       // Write bit
-        bool r_;       // Read bit
-        bool v_;       // Valid bit
 
         void decodePteFields_()
         {
@@ -91,18 +106,6 @@ namespace atlas
             {
                 sparta_assert(false, "MMU mode is not currently supported!");
             }
-
-            // Lower 10 bits are the same for all modes
-            rsw_ = (pte_val_ & translate_types::Sv32::PteFields::rsw.bitmask)
-                   >> translate_types::Sv32::PteFields::rsw.lsb;
-            d_ = pte_val_ & translate_types::Sv32::PteFields::dirty.bitmask;
-            a_ = pte_val_ & translate_types::Sv32::PteFields::accessed.bitmask;
-            g_ = pte_val_ & translate_types::Sv32::PteFields::global.bitmask;
-            u_ = pte_val_ & translate_types::Sv32::PteFields::user.bitmask;
-            x_ = pte_val_ & translate_types::Sv32::PteFields::execute.bitmask;
-            w_ = pte_val_ & translate_types::Sv32::PteFields::write.bitmask;
-            r_ = pte_val_ & translate_types::Sv32::PteFields::read.bitmask;
-            v_ = pte_val_ & translate_types::Sv32::PteFields::valid.bitmask;
         }
     };
 
