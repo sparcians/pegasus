@@ -525,11 +525,11 @@ namespace atlas
         const AtlasInstPtr & insn = getCurrentInst();
 
         int hart = getHartId();
-        std::string rs1_name = insn->hasRs1() ? insn->getRs1()->getName() : "";
-        uint64_t rs1_val = insn->hasRs1() ? insn->getRs1()->dmiRead<uint64_t>() : 0;
-        std::string rs2_name = insn->hasRs2() ? insn->getRs2()->getName() : "";
-        uint64_t rs2_val = insn->hasRs2() ? insn->getRs2()->dmiRead<uint64_t>() : 0;
-        std::string rd_name = insn->hasRd() ? insn->getRd()->getName() : "";
+        std::string rs1_name = insn->hasRs1() ? insn->getRs1Reg()->getName() : "";
+        uint64_t rs1_val = insn->hasRs1() ? insn->getRs1Reg()->dmiRead<uint64_t>() : 0;
+        std::string rs2_name = insn->hasRs2() ? insn->getRs2Reg()->getName() : "";
+        uint64_t rs2_val = insn->hasRs2() ? insn->getRs2Reg()->dmiRead<uint64_t>() : 0;
+        std::string rd_name = insn->hasRd() ? insn->getRdReg()->getName() : "";
 
         uint64_t rd_val_before = 0;
         uint64_t rd_val_after = 0;
@@ -540,23 +540,23 @@ namespace atlas
             Observer* obs = !observers_.empty() ? observers_.front().get() : nullptr;
             sparta_assert(obs, "No observers enabled, nothing to debug!");
 
-            auto rd = insn->getRd();
+            auto rd_reg = insn->getRdReg();
             rd_val_before = obs->getPrevRdValue();
-            rd_val_after = rd->dmiRead<uint64_t>();
+            rd_val_after = rd_reg->dmiRead<uint64_t>();
 
-            switch (rd->getGroupNum())
+            switch (rd_reg->getGroupNum())
             {
                 case 0:
                     // INT
-                    cosim_rd_val_after = cosim_query_->getIntRegValue(getHartId(), rd->getID());
+                    cosim_rd_val_after = cosim_query_->getIntRegValue(getHartId(), rd_reg->getID());
                     break;
                 case 1:
                     // FP
-                    cosim_rd_val_after = cosim_query_->getFpRegValue(getHartId(), rd->getID());
+                    cosim_rd_val_after = cosim_query_->getFpRegValue(getHartId(), rd_reg->getID());
                     break;
                 case 2:
                     // VEC
-                    cosim_rd_val_after = cosim_query_->getVecRegValue(getHartId(), rd->getID());
+                    cosim_rd_val_after = cosim_query_->getVecRegValue(getHartId(), rd_reg->getID());
                     break;
                 case 3:
                     // Let this go to the default case assert. CSRs should not be written to in RD.

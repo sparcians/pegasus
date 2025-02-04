@@ -24,29 +24,34 @@ namespace atlas
 
         pc_ = state->getPc();
         AtlasInstPtr inst = state->getCurrentInst();
-        opcode_ = inst->getOpcode();
-
-        // Get value of source registers
-        if (inst->hasRs1())
+        if (inst)
         {
-            const auto rs1 = inst->getRs1();
-            const std::vector<uint8_t> value = convertToByteVector(rs1->dmiRead<uint64_t>());
-            src_regs_.emplace_back(getRegId(rs1), value);
-        }
+            opcode_ = inst->getOpcode();
 
-        if (inst->hasRs2())
-        {
-            const auto rs2 = inst->getRs2();
-            const std::vector<uint8_t> value = convertToByteVector(rs2->dmiRead<uint64_t>());
-            src_regs_.emplace_back(getRegId(rs2), value);
-        }
+            // Get value of source registers
+            if (inst->hasRs1())
+            {
+                const auto rs1_reg = inst->getRs1Reg();
+                const std::vector<uint8_t> value =
+                    convertToByteVector(rs1_reg->dmiRead<uint64_t>());
+                src_regs_.emplace_back(getRegId(rs1_reg), value);
+            }
 
-        // Get initial value of destination registers
-        if (inst->hasRd())
-        {
-            const auto rd = inst->getRd();
-            const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
-            dst_regs_.emplace_back(getRegId(rd), value);
+            if (inst->hasRs2())
+            {
+                const auto rs2_reg = inst->getRs2Reg();
+                const std::vector<uint8_t> value =
+                    convertToByteVector(rs2_reg->dmiRead<uint64_t>());
+                src_regs_.emplace_back(getRegId(rs2_reg), value);
+            }
+
+            // Get initial value of destination registers
+            if (inst->hasRd())
+            {
+                const auto rd_reg = inst->getRdReg();
+                const std::vector<uint8_t> value = convertToByteVector(rd_reg->dmiRead<uint64_t>());
+                dst_regs_.emplace_back(getRegId(rd_reg), value);
+            }
         }
 
         return nullptr;

@@ -26,14 +26,14 @@ namespace atlas
 
         if (inst->hasRs1())
         {
-            const auto rs1 = inst->getRs1();
+            const auto rs1 = inst->getRs1Reg();
             const std::vector<uint8_t> value = convertToByteVector(rs1->dmiRead<uint64_t>());
             src_regs_.emplace_back(getRegId(rs1), value);
         }
 
         if (inst->hasRs2())
         {
-            const auto rs2 = inst->getRs2();
+            const auto rs2 = inst->getRs2Reg();
             const std::vector<uint8_t> value = convertToByteVector(rs2->dmiRead<uint64_t>());
             src_regs_.emplace_back(getRegId(rs2), value);
         }
@@ -41,7 +41,7 @@ namespace atlas
         // Get initial value of destination registers
         if (inst->hasRd())
         {
-            const auto rd = inst->getRd();
+            const auto rd = inst->getRdReg();
             const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
             dst_regs_.emplace_back(getRegId(rd), value);
         }
@@ -59,9 +59,9 @@ namespace atlas
         if (inst->hasRd())
         {
             sparta_assert(dst_regs_.size() == 1);
-            const auto & rd = inst->getRd();
+            const auto & rd_reg = inst->getRdReg();
             std::vector<uint8_t> value(sizeof(uint64_t));
-            const uint64_t rd_value = rd->dmiRead<uint64_t>();
+            const uint64_t rd_value = rd_reg->dmiRead<uint64_t>();
             std::memcpy(value.data(), &rd_value, sizeof(uint64_t));
             dst_regs_[0].setValue(value);
         }
