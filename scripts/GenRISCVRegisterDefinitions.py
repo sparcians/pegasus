@@ -9,6 +9,7 @@ from GenRegisterJSON import GenRegisterJSON
 from GenRegisterJSON import RegisterGroup
 
 from GenCSRHeaders import gen_csr_num_header
+from GenCSRHeaders import gen_csr_helpers_header
 from GenCSRHeaders import gen_csr_bitmask_header
 from GenCSRHeaders import gen_csr_field_idxs_header
 
@@ -79,6 +80,7 @@ def main():
     # Generate Atlas header files
     os.chdir("..")
     csr_num_hpp = gen_csr_num_header()
+    csr_helpers_hpp = gen_csr_helpers_header()
     csr_field_idxs32_hpp = gen_csr_field_idxs_header(4)
     csr_field_idxs64_hpp = gen_csr_field_idxs_header(8)
     csr_bitmasks32_hpp = gen_csr_bitmask_header(4)
@@ -86,6 +88,9 @@ def main():
 
     shutil.copyfile(csr_num_hpp, os.path.join(inc_root, csr_num_hpp))
     os.remove(csr_num_hpp)
+
+    shutil.copyfile(csr_helpers_hpp, os.path.join(inc_root, csr_helpers_hpp))
+    os.remove(csr_helpers_hpp)
 
     os.rename(csr_field_idxs32_hpp, os.path.join(inc_root, csr_field_idxs32_hpp))
     os.rename(csr_field_idxs64_hpp, os.path.join(inc_root, csr_field_idxs64_hpp))
