@@ -88,13 +88,13 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
-        const reg_t csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG(csr);
         // Don't wqrite CSR is rs1=x0
-        if (rd != 0)
+        if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to clear bits
             const auto rs1_val = READ_INT_REG(rs1);
-            WRITE_CSR_REG(csr, (~rs1_val | csr_val));
+            WRITE_CSR_REG(csr, (~rs1_val & csr_val));
         }
 
         WRITE_INT_REG(rd, csr_val);
@@ -117,10 +117,10 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
-        const reg_t csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG(csr);
         if (imm)
         {
-            WRITE_CSR_REG(csr, (~imm | csr_val));
+            WRITE_CSR_REG(csr, (~imm & csr_val));
         }
 
         WRITE_INT_REG(rd, csr_val);
@@ -143,7 +143,7 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
-        const reg_t csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG(csr);
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to set bits
@@ -171,7 +171,7 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
-        const reg_t csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG(csr);
         if (imm)
         {
             // imm value is treated as a bit mask
