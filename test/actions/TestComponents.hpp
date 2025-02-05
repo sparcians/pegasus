@@ -129,7 +129,11 @@ class Unit
 
     virtual ~Unit() = default
 
-    const std::string & getName() const { return name_; }
+                      const std::string
+                      & getName() const
+    {
+        return name_;
+    }
 
   private:
     const std::string name_;
