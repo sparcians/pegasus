@@ -18,3 +18,4 @@ target_link_libraries(atlasinsts
     rvzicsr
     rvzifencei
 )
+add_dependencies(atlasinsts AutogenArchFiles)
