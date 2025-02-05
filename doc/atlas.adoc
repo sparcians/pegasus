@@ -30,16 +30,16 @@ Atlas's core engine is comprised of 7 static Action Groups. An 8th Action Group 
 Execute Action Group to handle the execution of the current instruction.
 
 [options="header"]
-|==========================================================================================================
-| Action Group | Class | Function
-| Fetch | Fetch | Requests address translation for the current PC
+|===========================================================================================================================
+| Action Group            | Class       | Function
+| Fetch                   | Fetch       | Requests address translation for the current PC
 | Instruction Translation | Translation | Translates virtual addresses of instructions
-| Decode | Fetch | Reads opcodes from memory and decodes them using Mavis
-| Execute | Execute | Assembles the current instruction's Action Group
-| Data Translation | Translate | Translates virtual addresses of data for instructions that access memory
-| Exception | Exception | Handles exceptions
-| Finish | Atlas State | Updates the program and simulator state after an instruction is finished executing
-|==========================================================================================================
+| Decode                  | Fetch       | Reads opcodes from memory and decodes them using Mavis
+| Execute                 | Execute     | Assembles the current instruction's Action Group
+| Data Translation        | Translate   | Translates virtual addresses of data for instructions that access memory
+| Exception               | Exception   | Handles exceptions
+| Finish                  | Atlas State | Updates the program and simulator state after an instruction is finished executing
+|===========================================================================================================================
 
 image::atlas_core_action_groups.png[]
 

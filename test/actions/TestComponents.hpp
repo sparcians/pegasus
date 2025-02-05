@@ -127,7 +127,7 @@ class Unit
 
     Unit(const std::string name) : name_(name) {}
 
-    virtual ~Unit() {}
+    virtual ~Unit() = default
 
     const std::string & getName() const { return name_; }
 
