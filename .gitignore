@@ -9,6 +9,7 @@ include/CSRBitMasks64.hpp
 include/CSRNums.hpp
 include/CSRFieldIdxs32.hpp
 include/CSRFieldIdxs64.hpp
+include/CSRHelpers.hpp
 arch/CSRNums.hpp
 arch/CSRFieldIdxs32.hpp
 arch/rv32/**

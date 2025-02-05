@@ -15,6 +15,7 @@ CSR_BF_HEADER_FILE_NAME = "CSRBitMasks{reg_size}.hpp"
 CSR_FI_HEADER_FILE_NAME = "CSRFieldIdxs{reg_size}.hpp"
 
 CSR_HEADER_FILE_NAME = "CSRNums.hpp"
+CSR_HELPER_FILE_NAME = "CSRHelpers.hpp"
 
 def GetCsrNumFileHeader(reg_size):
     header = '#pragma once\n'
@@ -48,6 +49,111 @@ CSR_NUM_FILE_INTERNAL_REGS_COMMENT = """
 CSR_NUM_FILE_FOOTER = """
 }
 """
+
+def gen_csr_helpers_header():
+    """Generate the CSR helpers file
+    """
+
+    def GetBitMasksInitCode(CSR_DEFS):
+        lines = []
+        lines.append('    inline uint64_t getCsrBitMask(const uint32_t csr_num)')
+        lines.append('    {')
+        lines.append('        switch (csr_num)')
+        lines.append('        {')
+
+        for csr_num, csr_defn in CSR_DEFS.items():
+            csr_fields = csr_defn[2]
+            if not csr_fields:
+                bit_mask = (1 << 64) - 1
+            else:
+                bit_mask = 0
+                for _, field_defn in csr_fields.items():
+                    if not field_defn['readonly']:
+                        low_bit = field_defn['low_bit']
+                        high_bit = field_defn['high_bit']
+                        for i in range(low_bit, high_bit + 1):
+                            bit_mask |= (1 << i)
+
+            lines.append('            case 0x{:08x}: return 0x{:016x};'.format(csr_num, bit_mask))
+
+        lines.append('            default: sparta_assert(false, "Invalid CSR!"); return 0;')
+        lines.append('        }')
+        lines.append('    }')
+
+        return '\n'.join(lines)
+
+    def GetBitRangesInitCode(CSR_DEFS):
+        lines = []
+        lines.append('    inline const std::pair<uint64_t, uint64_t>& getCsrBitRange(')
+        lines.append('        const uint32_t csr_num,')
+        lines.append('        const char* field_name)')
+        lines.append('    {')
+        lines.append('        using RangeByField = std::unordered_map<std::string, std::pair<uint64_t, uint64_t>>;')
+        lines.append('        using RangeByCsrNum = std::vector<RangeByField>;')
+        lines.append('')
+        lines.append('        static RangeByCsrNum bit_ranges;')
+        lines.append('        if (bit_ranges.empty()) {')
+        lines.append('            bit_ranges.resize(CSR_LARGEST_VALUE + 1);')
+
+        # There are inconsistencies in how the register fields are labeled
+        # in the JSON files. Some are all caps, some all lowercase, and some
+        # are heads-up camel case. We need to handle all of these cases.
+        def PermuteFieldName(field_name):
+            permutations = []
+            permutations.append(field_name.upper())
+            permutations.append(field_name.lower())
+            if len(field_name) > 1:
+                permutations.append(field_name[0].upper() + field_name[1:].lower())
+            return permutations
+
+        for csr_num, csr_defn in CSR_DEFS.items():
+            csr_fields = csr_defn[2]
+            if not csr_fields:
+                continue
+
+            for field_name, field_defn in csr_fields.items():
+                low_bit = field_defn['low_bit']
+                high_bit = field_defn['high_bit']
+                key = '0x{:08x}'.format(csr_num)
+                value = 'std::make_pair({}, {})'.format(low_bit, high_bit)
+
+                for field_name in PermuteFieldName(field_name):
+                    lines.append('            bit_ranges[{}]["{}"] = {};'.format(key, field_name, value))
+
+        lines.append('        }')
+        lines.append('')
+        lines.append('        return bit_ranges.at(csr_num).at(field_name);')
+        lines.append('    }')
+
+        return '\n'.join(lines)
+
+    CSR_DEFS = CSR32_DEFS.copy()
+    CSR_DEFS.update(CSR64_DEFS)
+    bit_masks_init_code = GetBitMasksInitCode(CSR_DEFS)
+    bit_ranges_init_code = GetBitRangesInitCode(CSR_DEFS)
+
+    code = f"""#pragma once
+
+#include "sparta/utils/SpartaAssert.hpp"
+#include "include/CSRNums.hpp"
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace atlas
+{{
+{bit_masks_init_code}
+
+{bit_ranges_init_code}
+}} // namespace atlas
+
+"""
+
+    with open(CSR_HELPER_FILE_NAME, "w") as f:
+        f.write(code)
+
+    return CSR_HELPER_FILE_NAME
 
 def gen_csr_num_header():
     """Generate the CSR CPP header file

@@ -1,7 +1,7 @@
 #include "core/AtlasState.hpp"
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
-#include "core/Translate.hpp"
+#include "core/translate/Translate.hpp"
 #include "core/Exception.hpp"
 #include "mavis/Mavis.h"
 #include "sparta/simulation/RootTreeNode.hpp"

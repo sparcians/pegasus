@@ -2,7 +2,7 @@
 #include "core/AtlasAllocatorWrapper.hpp"
 #include "core/AtlasState.hpp"
 #include "core/Execute.hpp"
-#include "core/Translate.hpp"
+#include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
 
 #include "sparta/events/StartupEvent.hpp"

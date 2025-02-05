@@ -6,12 +6,11 @@ add_library(atlascore
     AtlasState.cpp
     ActionTags.cpp
     Fetch.cpp
-    Translate.cpp
     Execute.cpp
     Exception.cpp
     AtlasExtractor.cpp
     AtlasInst.cpp
-    PageTableWalker.cpp
+    translate/Translate.cpp
     observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp
