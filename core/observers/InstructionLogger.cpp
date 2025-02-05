@@ -52,6 +52,18 @@ namespace atlas
                 const std::vector<uint8_t> value = convertToByteVector(rd_reg->dmiRead<uint64_t>());
                 dst_regs_.emplace_back(getRegId(rd_reg), value);
             }
+
+            // For instructions that read/write CSRs
+            if (inst->hasCsr())
+            {
+                const auto csr_reg = state->getCsrRegister(inst->getCsr());
+                if (csr_reg)
+                {
+                    const std::vector<uint8_t> value =
+                        convertToByteVector(csr_reg->dmiRead<uint64_t>());
+                    dst_regs_.emplace_back(getRegId(csr_reg), value);
+                }
+            }
         }
 
         return nullptr;
@@ -76,12 +88,32 @@ namespace atlas
             sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
         }
 
-        if (inst && inst->hasRd())
+        if (inst)
         {
-            sparta_assert(dst_regs_.size() == 1);
-            const auto & rd_reg = inst->getRdReg();
-            const std::vector<uint8_t> value = convertToByteVector(rd_reg->dmiRead<uint64_t>());
-            dst_regs_[0].setValue(value);
+            for (auto & dst_reg : dst_regs_)
+            {
+                sparta::Register* reg = nullptr;
+                switch (dst_reg.reg_id.reg_type)
+                {
+                    case RegType::INTEGER:
+                        reg = state->getIntRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::FLOATING_POINT:
+                        reg = state->getFpRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::VECTOR:
+                        reg = state->getVecRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::CSR:
+                        reg = state->getCsrRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    default:
+                        sparta_assert(false, "Invalid register type!");
+                }
+                sparta_assert(reg != nullptr);
+                const std::vector<uint8_t> value = convertToByteVector(reg->dmiRead<uint64_t>());
+                dst_reg.setValue(value);
+            }
         }
 
         // Write to instruction logger

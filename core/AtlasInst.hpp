@@ -37,8 +37,19 @@ namespace atlas
 
         uint64_t getImmediate() const
         {
-            sparta_assert(opcode_info_->hasImmediate(), "Failed to get immediate value!");
+            sparta_assert(hasImmediate(), "Failed to get immediate value!");
             return opcode_info_->getImmediate();
+        }
+
+        bool hasCsr() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::CSR);
+        }
+
+        uint32_t getCsr() const
+        {
+            sparta_assert(hasCsr(), "Failed to get CSR!");
+            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
         }
 
         template <class T, uint32_t imm_size> T getSignExtendedImmediate() const
