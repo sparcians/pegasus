@@ -272,7 +272,7 @@ namespace atlas
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
         //! Next privilege mode
-        PrivMode next_priv_mode_ = PrivMode::INVALID;
+        PrivMode next_priv_mode_ = PrivMode::MACHINE;
 
         //! Unique instruction ID
         uint64_t uid_ = 0;
