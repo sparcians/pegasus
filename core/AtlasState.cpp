@@ -641,8 +641,20 @@ namespace atlas
         }
     }
 
-    void AtlasState::postInit()
+    void AtlasState::boot()
     {
+        {
+            AtlasState* state = this;
+
+            // TODO: Initiali MISA CSR with XLEN and enabled extensions
+            const uint64_t xlen_val = (xlen_ == 64) ? 2 : 1;
+            WRITE_CSR_FIELD(MISA, mxl, xlen_val);
+
+            // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
+            WRITE_CSR_FIELD(MSTATUS, uxl, xlen_val);
+            WRITE_CSR_FIELD(MSTATUS, sxl, xlen_val);
+        }
+
         if (interactive_mode_)
         {
             auto observer = std::make_unique<SimController>();

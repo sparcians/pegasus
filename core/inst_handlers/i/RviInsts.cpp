@@ -890,7 +890,8 @@ namespace atlas
             WRITE_CSR_FIELD(MSTATUS, mpie, (XLEN)1);
 
             // Reset MPP
-            WRITE_CSR_FIELD(MSTATUS, mpp, (XLEN)PrivMode::MACHINE);
+            // TODO: Check if User mode is available
+            WRITE_CSR_FIELD(MSTATUS, mpp, (XLEN)PrivMode::USER);
         }
         else
         {

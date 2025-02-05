@@ -192,7 +192,7 @@ namespace atlas
 
         // For standalone Atlas simulations, this method will be called
         // at the top of AtlasSim::run()
-        void postInit();
+        void boot();
 
         // One-time cleanup phase after simulation end.
         void cleanup();

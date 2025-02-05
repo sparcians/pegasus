@@ -54,7 +54,7 @@ namespace atlas
     {
         for (auto state : state_)
         {
-            state->postInit();
+            state->boot();
         }
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
