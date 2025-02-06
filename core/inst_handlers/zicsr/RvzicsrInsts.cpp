@@ -93,7 +93,7 @@ namespace atlas
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to clear bits
-            const auto rs1_val = READ_INT_REG(rs1);
+            const XLEN rs1_val = READ_INT_REG(rs1);
             WRITE_CSR_REG(csr, (~rs1_val & csr_val));
         }
 
@@ -147,7 +147,7 @@ namespace atlas
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to set bits
-            const auto rs1_val = READ_INT_REG(rs1);
+            const XLEN rs1_val = READ_INT_REG(rs1);
             WRITE_CSR_REG(csr, (rs1_val | csr_val));
         }
 
@@ -198,15 +198,15 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
+        const XLEN rs1_val = READ_INT_REG(rs1);
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            const auto csr_val = zext(READ_CSR_REG(csr), state->getXlen());
+            const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
             // TODO: Use macro to avoid writing to x0
             WRITE_INT_REG(rd, csr_val);
         }
 
-        const auto rs1_val = READ_INT_REG(rs1);
         WRITE_CSR_REG(csr, rs1_val);
 
         return nullptr;
@@ -230,7 +230,7 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            const auto csr_val = zext(READ_CSR_REG(csr), state->getXlen());
+            const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
             // TODO: Use macro to avoid writing to x0
             WRITE_INT_REG(rd, csr_val);
         }
