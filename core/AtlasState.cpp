@@ -643,16 +643,25 @@ namespace atlas
 
     void AtlasState::boot()
     {
+        std::cout << "Booting hartid " << std::dec << hart_id_ << std::endl;
         {
             AtlasState* state = this;
 
+            POKE_CSR_REG(MHARTID, hart_id_);
+
             // TODO: Initiali MISA CSR with XLEN and enabled extensions
             const uint64_t xlen_val = (xlen_ == 64) ? 2 : 1;
-            WRITE_CSR_FIELD(MISA, mxl, xlen_val);
+            POKE_CSR_FIELD(MISA, mxl, xlen_val);
 
             // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
-            WRITE_CSR_FIELD(MSTATUS, uxl, xlen_val);
-            WRITE_CSR_FIELD(MSTATUS, sxl, xlen_val);
+            POKE_CSR_FIELD(MSTATUS, uxl, xlen_val);
+            POKE_CSR_FIELD(MSTATUS, sxl, xlen_val);
+            POKE_CSR_FIELD(SSTATUS, uxl, xlen_val);
+
+            std::cout << state->getCsrRegister(MHARTID) << std::endl;
+            std::cout << state->getCsrRegister(MISA) << std::endl;
+            std::cout << state->getCsrRegister(MSTATUS) << std::endl;
+            std::cout << state->getCsrRegister(SSTATUS) << std::endl;
         }
 
         if (interactive_mode_)
