@@ -67,37 +67,37 @@ namespace atlas
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
-        uint32_t getRs1()
+        uint32_t getRs1() const
         {
             sparta_assert(rs1_, "Operand RS1 is a nullptr! " << *this);
             return rs1_->field_value;
         }
 
-        uint32_t getRs2()
+        uint32_t getRs2() const
         {
             sparta_assert(rs2_, "Operand RS2 is a nullptr! " << *this);
             return rs2_->field_value;
         }
 
-        uint32_t getRd()
+        uint32_t getRd() const
         {
             sparta_assert(rd_, "Operand RD is a nullptr! " << *this);
             return rd_->field_value;
         }
 
-        sparta::Register* getRs1Reg()
+        sparta::Register* getRs1Reg() const
         {
             sparta_assert(rs1_reg_, "Operand RS1 is a nullptr! " << *this);
             return rs1_reg_;
         }
 
-        sparta::Register* getRs2Reg()
+        sparta::Register* getRs2Reg() const
         {
             sparta_assert(rs2_reg_, "Operand RS2 is a nullptr! " << *this);
             return rs2_reg_;
         }
 
-        sparta::Register* getRdReg()
+        sparta::Register* getRdReg() const
         {
             sparta_assert(rd_reg_, "Operand RD is a nullptr! " << *this);
             return rd_reg_;

@@ -555,12 +555,11 @@ namespace atlas
 
         const AtlasInstPtr & insn = getCurrentInst();
 
-        int hart = getHartId();
-        std::string rs1_name = insn->hasRs1() ? insn->getRs1Reg()->getName() : "";
+        const std::string rs1_name = insn->hasRs1() ? insn->getRs1Reg()->getName() : "";
         uint64_t rs1_val = insn->hasRs1() ? insn->getRs1Reg()->dmiRead<uint64_t>() : 0;
-        std::string rs2_name = insn->hasRs2() ? insn->getRs2Reg()->getName() : "";
+        const std::string rs2_name = insn->hasRs2() ? insn->getRs2Reg()->getName() : "";
         uint64_t rs2_val = insn->hasRs2() ? insn->getRs2Reg()->dmiRead<uint64_t>() : 0;
-        std::string rd_name = insn->hasRd() ? insn->getRdReg()->getName() : "";
+        const std::string rd_name = insn->hasRd() ? insn->getRdReg()->getName() : "";
 
         uint64_t rd_val_before = 0;
         uint64_t rd_val_after = 0;
@@ -628,7 +627,7 @@ namespace atlas
         int result_code = compareWithCoSimAndSync_();
 
         std::unique_ptr<simdb::WorkerTask> task(
-            new InstSnapshotter(cosim_db_.get(), hart, rs1_name, rs1_val, rs2_name, rs2_val,
+            new InstSnapshotter(cosim_db_.get(), hart_id_, rs1_name, rs1_val, rs2_name, rs2_val,
                                 rd_name, rd_val_before, rd_val_after, cosim_rd_val_after, has_imm,
                                 imm, disasm, mnemonic, opcode, pc, priv, result_code));
 
@@ -636,7 +635,7 @@ namespace atlas
 
         if (!all_csr_vals.empty())
         {
-            task.reset(new CsrValuesSnapshotter(cosim_db_.get(), hart, pc, all_csr_vals));
+            task.reset(new CsrValuesSnapshotter(cosim_db_.get(), hart_id_, pc, all_csr_vals));
             cosim_db_->getTaskQueue()->addWorkerTask(std::move(task));
         }
     }
