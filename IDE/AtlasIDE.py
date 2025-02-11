@@ -19,8 +19,8 @@ class AtlasIDE(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.vsplitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
+        self.SetSize((1920, 1020))
         self.Layout()
-        self.Maximize()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Atlas IDE')
