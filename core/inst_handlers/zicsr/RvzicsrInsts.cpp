@@ -107,7 +107,7 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const XLEN imm = insn->getImmediate();
-        const auto & rd = insn->getRd();
+        const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
@@ -132,8 +132,8 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const auto & rs1 = insn->getRs1();
-        const auto & rd = insn->getRd();
+        const auto rs1 = insn->getRs1();
+        const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
@@ -161,7 +161,7 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const XLEN imm = insn->getImmediate();
-        const auto & rd = insn->getRd();
+        const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
@@ -187,8 +187,8 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const auto & rs1 = insn->getRs1();
-        const auto & rd = insn->getRd();
+        const auto rs1 = insn->getRs1();
+        const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
@@ -203,7 +203,6 @@ namespace atlas
         if (rd != 0)
         {
             const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
-            // TODO: Use macro to avoid writing to x0
             WRITE_INT_REG(rd, csr_val);
         }
 
@@ -217,7 +216,7 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const XLEN imm = insn->getImmediate();
-        const auto & rd = insn->getRd();
+        const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
@@ -231,7 +230,6 @@ namespace atlas
         if (rd != 0)
         {
             const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
-            // TODO: Use macro to avoid writing to x0
             WRITE_INT_REG(rd, csr_val);
         }
 

@@ -69,20 +69,20 @@ namespace atlas
 
         uint32_t getRs1() const
         {
-            sparta_assert(rs1_, "Operand RS1 is a nullptr! " << *this);
-            return rs1_->field_value;
+            sparta_assert(rs1_info_, "Operand RS1 is a nullptr! " << *this);
+            return rs1_info_->field_value;
         }
 
         uint32_t getRs2() const
         {
-            sparta_assert(rs2_, "Operand RS2 is a nullptr! " << *this);
-            return rs2_->field_value;
+            sparta_assert(rs2_info_, "Operand RS2 is a nullptr! " << *this);
+            return rs2_info_->field_value;
         }
 
         uint32_t getRd() const
         {
-            sparta_assert(rd_, "Operand RD is a nullptr! " << *this);
-            return rd_->field_value;
+            sparta_assert(rd_info_, "Operand RD is a nullptr! " << *this);
+            return rd_info_->field_value;
         }
 
         sparta::Register* getRs1Reg() const
@@ -103,11 +103,11 @@ namespace atlas
             return rd_reg_;
         }
 
-        bool hasRs1() const { return rs1_ != nullptr; }
+        bool hasRs1() const { return rs1_reg_ != nullptr; }
 
-        bool hasRs2() const { return rs2_ != nullptr; }
+        bool hasRs2() const { return rs2_reg_ != nullptr; }
 
-        bool hasRd() const { return rd_ != nullptr; }
+        bool hasRd() const { return rd_reg_ != nullptr; }
 
         ActionGroup* getActionGroup() { return &inst_action_group_; }
 
@@ -131,9 +131,9 @@ namespace atlas
         Addr next_pc_;
 
         // Registers
-        const mavis::OperandInfo::Element* rs1_;
-        const mavis::OperandInfo::Element* rs2_;
-        const mavis::OperandInfo::Element* rd_;
+        const mavis::OperandInfo::Element* rs1_info_;
+        const mavis::OperandInfo::Element* rs2_info_;
+        const mavis::OperandInfo::Element* rd_info_;
         sparta::Register* rs1_reg_;
         sparta::Register* rs2_reg_;
         sparta::Register* rd_reg_;

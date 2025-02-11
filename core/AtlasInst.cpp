@@ -51,14 +51,15 @@ namespace atlas
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
-        rs1_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
+        rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
-        rs2_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(
+        rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(
             opcode_info->getSourceOpInfoList())),
-        rd_(getOperand<mavis::InstMetaData::OperandFieldID::RD>(opcode_info->getDestOpInfoList())),
-        rs1_reg_(getSpartaReg(state, rs1_)),
-        rs2_reg_(getSpartaReg(state, rs2_)),
-        rd_reg_(getSpartaReg(state, rd_)),
+        rd_info_(
+            getOperand<mavis::InstMetaData::OperandFieldID::RD>(opcode_info->getDestOpInfoList())),
+        rs1_reg_(getSpartaReg(state, rs1_info_)),
+        rs2_reg_(getSpartaReg(state, rs2_info_)),
+        rd_reg_(getSpartaReg(state, rd_info_)),
         inst_action_group_(extractor_info_->inst_action_group_)
     {
     }
