@@ -996,8 +996,6 @@ namespace atlas
 
     ActionGroup* RviInsts::sfence_vma_handler(atlas::AtlasState* state)
     {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
 
@@ -1014,6 +1012,12 @@ namespace atlas
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
+
+        const uint32_t tvm = READ_CSR_FIELD(MSTATUS, tvm);
+        if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm)
+        {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
 
         return nullptr;
     }
@@ -1037,6 +1041,12 @@ namespace atlas
 
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
+
+        const uint32_t tw = READ_CSR_FIELD(MSTATUS, tw);
+        if (tw)
+        {
+            THROW_ILLEGAL_INSTRUCTION;
+        }
 
         if (state->getStopSimOnWfi())
         {
