@@ -82,12 +82,6 @@ namespace atlas
         const uint32_t csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
-
         const XLEN csr_val = READ_CSR_REG(csr);
         // Don't wqrite CSR is rs1=x0
         if (rs1 != 0)
@@ -111,12 +105,6 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
-
         const XLEN csr_val = READ_CSR_REG(csr);
         if (imm)
         {
@@ -136,12 +124,6 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
 
         const XLEN csr_val = READ_CSR_REG(csr);
         if (rs1 != 0)
@@ -165,12 +147,6 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
-
         const XLEN csr_val = READ_CSR_REG(csr);
         if (imm)
         {
@@ -191,12 +167,6 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
 
         const XLEN rs1_val = READ_INT_REG(rs1);
         // Only read CSR if rd!=x0
@@ -219,12 +189,6 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-
-        auto csr_reg = state->getCsrRegister(csr);
-        if (!csr_reg)
-        {
-            THROW_ILLEGAL_INSTRUCTION;
-        }
 
         // Only read CSR if rd!=x0
         if (rd != 0)

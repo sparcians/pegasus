@@ -92,6 +92,16 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
+        if (SPARTA_EXPECT_FALSE(inst->hasCsr()))
+        {
+            const uint32_t csr =
+                inst->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+            if (state->getCsrRegister(csr) == nullptr)
+            {
+                THROW_ILLEGAL_INSTRUCTION;
+            }
+        }
+
         return nullptr;
     }
 
