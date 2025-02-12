@@ -54,6 +54,10 @@ namespace atlas
         // RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
         // RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
         // RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
+
+        // Get CSR update handlers
+        RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);
+        // RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_handlers_);
     }
 
     template const Execute::InstHandlersMap* Execute::getInstHandlersMap<RV64>() const;
@@ -81,6 +85,19 @@ namespace atlas
             {
                 auto & action = *it;
                 inst_action_group->insertActionAfter(action, ActionTags::COMPUTE_ADDR_TAG);
+            }
+        }
+
+        if (inst->hasCsr())
+        {
+            const CsrUpdateActionsMap* csr_update_actions = (state->getXlen() == 64)
+                                                                ? getCsrUpdateActionsMap<RV64>()
+                                                                : getCsrUpdateActionsMap<RV32>();
+            auto action_it = csr_update_actions->find(inst->getCsr());
+            if (action_it != csr_update_actions->end())
+            {
+                auto & action = action_it->second;
+                inst_action_group->insertActionAfter(action, ActionTags::EXECUTE_TAG);
             }
         }
 
