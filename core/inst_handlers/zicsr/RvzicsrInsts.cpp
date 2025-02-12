@@ -83,7 +83,7 @@ namespace atlas
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
         const XLEN csr_val = READ_CSR_REG(csr);
-        // Don't wqrite CSR is rs1=x0
+        // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to clear bits

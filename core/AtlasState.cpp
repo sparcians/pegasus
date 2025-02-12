@@ -648,7 +648,7 @@ namespace atlas
 
             POKE_CSR_REG(MHARTID, hart_id_);
 
-            // TODO: Initiali MISA CSR with XLEN and enabled extensions
+            // TODO: Initialize MISA CSR with XLEN and enabled extensions
             const uint64_t xlen_val = (xlen_ == 64) ? 2 : 1;
             POKE_CSR_FIELD(MISA, mxl, xlen_val);
 
