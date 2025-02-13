@@ -37,8 +37,19 @@ namespace atlas
 
         uint64_t getImmediate() const
         {
-            sparta_assert(opcode_info_->hasImmediate(), "Failed to get immediate value!");
+            sparta_assert(hasImmediate(), "Failed to get immediate value!");
             return opcode_info_->getImmediate();
+        }
+
+        bool hasCsr() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::CSR);
+        }
+
+        uint32_t getCsr() const
+        {
+            sparta_assert(hasCsr(), "Failed to get CSR!");
+            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
         }
 
         template <class T, uint32_t imm_size> T getSignExtendedImmediate() const
@@ -56,29 +67,47 @@ namespace atlas
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
-        sparta::Register* getRs1()
+        uint32_t getRs1() const
         {
-            sparta_assert(rs1_, "Operand RS1 is a nullptr! " << *this);
-            return rs1_;
+            sparta_assert(rs1_info_, "Operand RS1 is a nullptr! " << *this);
+            return rs1_info_->field_value;
         }
 
-        sparta::Register* getRs2()
+        uint32_t getRs2() const
         {
-            sparta_assert(rs2_, "Operand RS2 is a nullptr! " << *this);
-            return rs2_;
+            sparta_assert(rs2_info_, "Operand RS2 is a nullptr! " << *this);
+            return rs2_info_->field_value;
         }
 
-        sparta::Register* getRd()
+        uint32_t getRd() const
         {
-            sparta_assert(rd_, "Operand RD is a nullptr! " << *this);
-            return rd_;
+            sparta_assert(rd_info_, "Operand RD is a nullptr! " << *this);
+            return rd_info_->field_value;
         }
 
-        bool hasRs1() const { return rs1_ != nullptr; }
+        sparta::Register* getRs1Reg() const
+        {
+            sparta_assert(rs1_reg_, "Operand RS1 is a nullptr! " << *this);
+            return rs1_reg_;
+        }
 
-        bool hasRs2() const { return rs2_ != nullptr; }
+        sparta::Register* getRs2Reg() const
+        {
+            sparta_assert(rs2_reg_, "Operand RS2 is a nullptr! " << *this);
+            return rs2_reg_;
+        }
 
-        bool hasRd() const { return rd_ != nullptr; }
+        sparta::Register* getRdReg() const
+        {
+            sparta_assert(rd_reg_, "Operand RD is a nullptr! " << *this);
+            return rd_reg_;
+        }
+
+        bool hasRs1() const { return rs1_reg_ != nullptr; }
+
+        bool hasRs2() const { return rs2_reg_ != nullptr; }
+
+        bool hasRd() const { return rd_reg_ != nullptr; }
 
         ActionGroup* getActionGroup() { return &inst_action_group_; }
 
@@ -102,9 +131,12 @@ namespace atlas
         Addr next_pc_;
 
         // Registers
-        sparta::Register* rs1_;
-        sparta::Register* rs2_;
-        sparta::Register* rd_;
+        const mavis::OperandInfo::Element* rs1_info_;
+        const mavis::OperandInfo::Element* rs2_info_;
+        const mavis::OperandInfo::Element* rd_info_;
+        sparta::Register* rs1_reg_;
+        sparta::Register* rs2_reg_;
+        sparta::Register* rd_reg_;
 
         ActionGroup inst_action_group_;
         bool unimplemented_ = false;
