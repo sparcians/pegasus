@@ -49,6 +49,7 @@ namespace atlas
         constexpr static sparta::memory::addr_t ATLAS_SYSTEM_BLOCK_SIZE = 0x1000; // 4K
         constexpr static sparta::memory::addr_t ATLAS_SYSTEM_TOTAL_MEMORY =
             0x8000000000000000; // 4G
+        constexpr static uint64_t ATLAS_MEMORY_FILL = 0x0;
 
       private:
         // Factories and tree nodes

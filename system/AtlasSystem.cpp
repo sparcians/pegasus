@@ -111,7 +111,7 @@ namespace atlas
     {
         // Just use one memory object for all of memory for now
         memory_objects_.emplace_back(new sparta::memory::MemoryObject(
-            sys_node, ATLAS_SYSTEM_BLOCK_SIZE, ATLAS_SYSTEM_TOTAL_MEMORY));
+            sys_node, ATLAS_SYSTEM_BLOCK_SIZE, ATLAS_SYSTEM_TOTAL_MEMORY, ATLAS_MEMORY_FILL));
 
         // Wrap the new MemoryObject with the BlockingMemoryIF API
         sparta::memory::MemoryObject & memory_object = *(memory_objects_.back().get());
