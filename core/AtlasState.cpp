@@ -69,7 +69,7 @@ namespace atlas
     {
         sparta_assert(xlen_ == extension_manager_.getXLEN());
 
-        auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
+        const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
         fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
@@ -120,6 +120,16 @@ namespace atlas
         exception_unit_ = core_tn->getChild("exception")->getResourceAs<Exception*>();
 
         // Initialize Mavis
+        DLOG("Initializing Mavis...");
+        DLOG(isa_string_);
+        const auto uarch_files = getUArchFiles(uarch_file_path_, xlen_);
+        for (auto uarch_file : uarch_files)
+        {
+            DLOG(uarch_file);
+        }
+
+        extension_manager_.setISA(isa_string_);
+
         mavis_ = std::make_unique<MavisType>(
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -131,7 +141,6 @@ namespace atlas
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        extension_manager_.setISA(isa_string_);
         std::vector<std::string> enabled_extensions;
         for (auto & ext : extension_manager_.getEnabledExtensions())
         {

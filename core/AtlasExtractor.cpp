@@ -42,7 +42,8 @@ namespace atlas
         }
         catch (const std::out_of_range & excp)
         {
-            sparta_assert(false, "Missing key in inst handler map: " << mnemonic_);
+            sparta_assert(false, "Missing key in rv" << std::to_string(state->getXlen())
+                                                     << " inst handler map: " << mnemonic_);
         }
     }
 } // namespace atlas

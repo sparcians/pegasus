@@ -26,38 +26,38 @@ namespace atlas
         execute_action_group_.addAction(execute_action);
 
         // Get RV64 instruction handlers
-        RviInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvmInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvaInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvfInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvdInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvzicsrInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
-        RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_handlers_);
+        RviInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvfInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvdInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzicsrInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
-        RviInsts::getInstHandlers<RV64>(rv32_inst_handlers_);
-        // RvmInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
-        // RvaInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
-        // RvfInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
-        // RvdInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
-        // RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
-        // RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_handlers_);
+        RviInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        // RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        // RvfInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        // RvdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
-        RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
-        RvaInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
-        RvfInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
-        RvdInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_handlers_);
+        RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvaInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvfInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvdInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
 
         // Get RV32 instruction compute address handlers
-        RviInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
-        // RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
-        // RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
-        // RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_handlers_);
+        RviInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        // RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        // RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        // RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 
         // Get CSR update handlers
         RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);
-        // RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_handlers_);
+        // RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_actions_);
     }
 
     template const Execute::InstHandlersMap* Execute::getInstHandlersMap<RV64>() const;

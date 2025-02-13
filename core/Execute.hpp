@@ -36,11 +36,11 @@ namespace atlas
             static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
             if constexpr (std::is_same_v<XLEN, RV64>)
             {
-                return &rv64_inst_handlers_;
+                return &rv64_inst_actions_;
             }
             else
             {
-                return &rv32_inst_handlers_;
+                return &rv32_inst_actions_;
             }
         }
 
@@ -49,11 +49,11 @@ namespace atlas
             static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
             if constexpr (std::is_same_v<XLEN, RV64>)
             {
-                return &rv64_inst_compute_address_handlers_;
+                return &rv64_inst_compute_address_actions_;
             }
             else
             {
-                return &rv32_inst_compute_address_handlers_;
+                return &rv32_inst_compute_address_actions_;
             }
         }
 
@@ -76,12 +76,12 @@ namespace atlas
         ActionGroup execute_action_group_{"Execute"};
 
         // Instruction handlers
-        InstHandlersMap rv64_inst_handlers_;
-        InstHandlersMap rv32_inst_handlers_;
+        InstHandlersMap rv64_inst_actions_;
+        InstHandlersMap rv32_inst_actions_;
 
         // Instruction handlers for computing the address of load/store instructions
-        InstHandlersMap rv64_inst_compute_address_handlers_;
-        InstHandlersMap rv32_inst_compute_address_handlers_;
+        InstHandlersMap rv64_inst_compute_address_actions_;
+        InstHandlersMap rv32_inst_compute_address_actions_;
 
         // CSR update Actions for executing write side effects
         CsrUpdateActionsMap rv64_csr_update_actions_;
