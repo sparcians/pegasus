@@ -57,7 +57,7 @@ namespace atlas
 
         // Get CSR update handlers
         RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);
-        // RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_actions_);
+        RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_actions_);
     }
 
     template const Execute::InstHandlersMap* Execute::getInstHandlersMap<RV64>() const;

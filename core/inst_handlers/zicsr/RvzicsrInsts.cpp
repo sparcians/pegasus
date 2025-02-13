@@ -264,8 +264,11 @@ namespace atlas
         const XLEN mxr_val = READ_CSR_FIELD(SSTATUS, mxr);
         WRITE_CSR_FIELD(MSTATUS, mxr, mxr_val);
 
-        const XLEN uxl_val = READ_CSR_FIELD(SSTATUS, uxl);
-        WRITE_CSR_FIELD(MSTATUS, uxl, uxl_val);
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
+            const XLEN uxl_val = READ_CSR_FIELD(SSTATUS, uxl);
+            WRITE_CSR_FIELD(MSTATUS, uxl, uxl_val);
+        }
 
         const XLEN sd_val = READ_CSR_FIELD(SSTATUS, sd);
         WRITE_CSR_FIELD(MSTATUS, sd, sd_val);
