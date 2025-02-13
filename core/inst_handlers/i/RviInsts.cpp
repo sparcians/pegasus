@@ -443,6 +443,9 @@ namespace atlas
             inst_handlers.emplace("sll",
                                   atlas::Action::createAction<&RviInsts::sll_handler, RviInsts>(
                                       nullptr, "sll", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("slli",
+                                  atlas::Action::createAction<&RviInsts::slli_handler, RviInsts>(
+                                      nullptr, "slli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slt", atlas::Action::createAction<
                            &RviInsts::integer_reg_reg_handler<RV32, std::less<int64_t>>, RviInsts>(
@@ -462,6 +465,9 @@ namespace atlas
             inst_handlers.emplace("sra",
                                   atlas::Action::createAction<&RviInsts::sra_handler, RviInsts>(
                                       nullptr, "sra", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("srai",
+                                  atlas::Action::createAction<&RviInsts::srai_handler, RviInsts>(
+                                      nullptr, "srai", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sret",
                 atlas::Action::createAction<&RviInsts::xret_handler<RV32, PrivMode::SUPERVISOR>,
@@ -469,6 +475,9 @@ namespace atlas
             inst_handlers.emplace("srl",
                                   atlas::Action::createAction<&RviInsts::srl_handler, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace("srli",
+                                  atlas::Action::createAction<&RviInsts::srli_handler, RviInsts>(
+                                      nullptr, "srli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sub", atlas::Action::createAction<
                            &RviInsts::integer_reg_reg_handler<RV32, std::minus<RV32>>, RviInsts>(
