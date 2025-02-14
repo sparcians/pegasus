@@ -3,6 +3,9 @@ project(Atlas_Tests)
 # Enable testing
 include(CTest)
 
+# Convenience macros and functions for tests
+include(${SIM_BASE}/test/AtlasTestingMacros.cmake)
+
 # Handy parallel processor library
 include(ProcessorCount)
 ProcessorCount(NUM_CORES)
