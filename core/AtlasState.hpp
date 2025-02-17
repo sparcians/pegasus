@@ -2,20 +2,24 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/translate/AtlasTranslationState.hpp"
+#include "core/AtlasAllocatorWrapper.hpp"
+#include "core/AtlasInst.hpp"
+
 #include "core/observers/InstructionLogger.hpp"
-#include "arch/RegisterSet.hpp"
-#include "include/AtlasTypes.hpp"
 #include "core/CoSimQuery.hpp"
 
-#include "core/AtlasAllocatorWrapper.hpp"
+#include "arch/RegisterSet.hpp"
+#include "include/AtlasTypes.hpp"
+#include "include/CSRBitMasks64.hpp"
+#include "include/CSRHelpers.hpp"
+
 #include "sim/AtlasAllocators.hpp"
+
 #include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
-#include "core/AtlasInst.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
-#include "include/CSRBitMasks64.hpp"
 
 #ifndef REG32_JSON_DIR
 #error "REG32_JSON_DIR must be defined"
@@ -333,4 +337,74 @@ namespace atlas
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
     };
+
+    template <typename XLEN> static inline XLEN READ_INT_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        return (reg_ident == 0) ? 0 : state->getIntRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_INT_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    {
+        if (reg_ident != 0)
+        {
+            state->getIntRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+        }
+    }
+
+    template <typename XLEN> static inline XLEN READ_FP_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        return state->getFpRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_FP_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    {
+        state->getFpRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+    }
+
+    template <typename XLEN> static inline XLEN READ_VEC_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        return state->getVecRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    {
+        state->getVecRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+    }
+
+    template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    {
+        if (atlas::getCsrBitMask(reg_ident) != 0xffffffffffffffff)
+        {
+            auto reg = state->getCsrRegister(reg_ident);
+            const auto old_value = reg->dmiRead<uint64_t>();
+            const auto mask = atlas::getCsrBitMask(reg_ident);
+            const auto write_val = (old_value & ~mask) | (reg_value & mask);
+            reg->dmiWrite(write_val);
+        }
+        else
+        {
+            state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
+        }
+    }
+
+    template <typename XLEN> static inline XLEN PEEK_CSR_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        READ_CSR_REG<XLEN>(state, reg_ident);
+    }
+
+    template <typename XLEN>
+    static inline void POKE_CSR_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    {
+        state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
+    }
+
 } // namespace atlas

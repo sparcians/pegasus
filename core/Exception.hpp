@@ -44,11 +44,11 @@ namespace atlas
 
         ActionGroup exception_action_group_{"Exception"};
 
-        void handleUModeException_(atlas::AtlasState* state);
+        template <typename XLEN> void handleUModeException_(atlas::AtlasState* state);
 
-        void handleSModeException_(atlas::AtlasState* state);
+        template <typename XLEN> void handleSModeException_(atlas::AtlasState* state);
 
-        void handleMModeException_(atlas::AtlasState* state);
+        template <typename XLEN> void handleMModeException_(atlas::AtlasState* state);
 
         sparta::utils::ValidValue<TrapCauses> cause_;
     };

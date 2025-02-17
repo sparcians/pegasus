@@ -646,7 +646,7 @@ namespace atlas
         {
             AtlasState* state = this;
 
-            POKE_CSR_REG(MHARTID, hart_id_);
+            POKE_CSR_REG(this, MHARTID, hart_id_);
 
             // TODO: Initialize MISA CSR with XLEN and enabled extensions
             const uint64_t xlen_val = (xlen_ == 64) ? 2 : 1;
