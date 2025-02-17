@@ -1,6 +1,5 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
-#include "arch/register_macros.hpp"
 #include "include/AtlasUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
@@ -874,7 +873,7 @@ namespace atlas
             state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC));
 
             // Get the previous privilege mode from the MPP field of MSTATUS
-            prev_priv_mode = (PrivMode)READ_CSR_FIELD(MSTATUS, mpp);
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
 
             // If the mret instruction changes the privilege mode to a mode less privileged
             // than Machine mode, the MPRV bit is reset to 0
@@ -882,16 +881,17 @@ namespace atlas
             {
                 // TODO: Will need to update the load/store translation mode when translation is
                 // supported
-                WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
             }
 
             // Set MIE = MPIE and reset MPIE
-            WRITE_CSR_FIELD(MSTATUS, mie, READ_CSR_FIELD(MSTATUS, mpie));
-            WRITE_CSR_FIELD(MSTATUS, mpie, (XLEN)1);
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie",
+                                  READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpie"));
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", (XLEN)1);
 
             // Reset MPP
             // TODO: Check if User mode is available
-            WRITE_CSR_FIELD(MSTATUS, mpp, (XLEN)PrivMode::USER);
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", (XLEN)PrivMode::USER);
         }
         else
         {
@@ -899,19 +899,20 @@ namespace atlas
             state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
 
             // Get the previous privilege mode from the MPP field of MSTATUS
-            prev_priv_mode = (PrivMode)READ_CSR_FIELD(SSTATUS, spp);
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
 
             // Reset the MPRV bit
             // TODO: Will need to update the load/store translation mode when translation is
             // supported
-            WRITE_CSR_FIELD(MSTATUS, mprv, (XLEN)0);
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
 
             // Set MIE = MPIE and reset MPIE
-            WRITE_CSR_FIELD(SSTATUS, sie, READ_CSR_FIELD(SSTATUS, spie));
-            WRITE_CSR_FIELD(SSTATUS, spie, (XLEN)1);
+            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
+                                  READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie"));
+            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);
 
             // Reset MPP
-            WRITE_CSR_FIELD(SSTATUS, spp, (XLEN)PrivMode::USER);
+            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spp", (XLEN)PrivMode::USER);
         }
 
         // TODO: Update MSTATUSH

@@ -6,7 +6,6 @@
 #include "core/Exception.hpp"
 #include "include/ActionTags.hpp"
 #include "include/AtlasUtils.hpp"
-#include "arch/register_macros.hpp"
 #include "system/AtlasSystem.hpp"
 #include "core/Snapshotters.hpp"
 #include "core/observers/SimController.hpp"
@@ -650,12 +649,12 @@ namespace atlas
 
             // TODO: Initialize MISA CSR with XLEN and enabled extensions
             const uint64_t xlen_val = (xlen_ == 64) ? 2 : 1;
-            POKE_CSR_FIELD(MISA, mxl, xlen_val);
+            POKE_CSR_FIELD(this, MISA, "mxl", xlen_val);
 
             // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
-            POKE_CSR_FIELD(MSTATUS, uxl, xlen_val);
-            POKE_CSR_FIELD(MSTATUS, sxl, xlen_val);
-            POKE_CSR_FIELD(SSTATUS, uxl, xlen_val);
+            POKE_CSR_FIELD(this, MSTATUS, "uxl", xlen_val);
+            POKE_CSR_FIELD(this, MSTATUS, "sxl", xlen_val);
+            POKE_CSR_FIELD(this, SSTATUS, "uxl", xlen_val);
 
             std::cout << state->getCsrRegister(MHARTID) << std::endl;
             std::cout << state->getCsrRegister(MISA) << std::endl;

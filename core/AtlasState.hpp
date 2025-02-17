@@ -407,4 +407,46 @@ namespace atlas
         state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
     }
 
+    template <typename XLEN>
+    static inline XLEN READ_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name)
+    {
+        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        return ((state->getCsrRegister(reg_ident)->dmiRead<uint64_t>() >> field_lsb)
+                & ((1ULL << (field_msb - field_lsb + 1)) - 1));
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_CSR_FIELD(AtlasState* state, uint32_t reg_ident,
+                                       const char* field_name, XLEN field_value)
+    {
+        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+
+        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+        csr_value &= ~mask;
+
+        const XLEN new_field_value = field_value << field_lsb;
+        csr_value |= new_field_value;
+
+        WRITE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+    }
+
+    template <typename XLEN>
+    static inline void POKE_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name,
+                                      XLEN field_value)
+    {
+        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+
+        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+        csr_value &= ~mask;
+
+        const XLEN new_field_value = field_value << field_lsb;
+        csr_value |= new_field_value;
+
+        POKE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+    }
 } // namespace atlas

@@ -6,7 +6,6 @@
 #include "sparta/utils/LogUtils.hpp"
 #include "include/CSRFieldIdxs64.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
-#include "arch/register_macros.hpp"
 
 namespace atlas
 {
@@ -86,20 +85,20 @@ namespace atlas
 
         // Need MSTATUS initial value. See "compute_mstatus_initial_value".
 
-        const auto mstatus_mie = READ_CSR_FIELD(MSTATUS, mie);
-        WRITE_CSR_FIELD(MSTATUS, mpie, mstatus_mie);
+        const auto mstatus_mie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "mie");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", mstatus_mie);
 
         const auto mpp = static_cast<uint64_t>(state->getPrivMode());
-        WRITE_CSR_FIELD(MSTATUS, mpp, mpp);
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", mpp);
 
         const uint64_t mie = 0;
-        WRITE_CSR_FIELD(MSTATUS, mie, mie);
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie);
 
         const uint64_t mpv = 0;
-        WRITE_CSR_FIELD(MSTATUS, mpv, mpv);
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv);
 
         const uint64_t gva = 0;
-        WRITE_CSR_FIELD(MSTATUS, gva, gva);
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva);
     }
 
 } // namespace atlas

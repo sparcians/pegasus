@@ -4,7 +4,6 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
-#include "arch/register_macros.hpp"
 
 namespace atlas
 {
