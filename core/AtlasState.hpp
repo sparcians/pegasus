@@ -344,7 +344,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    static inline void WRITE_INT_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    static inline void WRITE_INT_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         if (reg_ident != 0)
         {
@@ -358,7 +358,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    static inline void WRITE_FP_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    static inline void WRITE_FP_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         state->getFpRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
     }
@@ -369,7 +369,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         state->getVecRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
     }
@@ -380,7 +380,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         if (atlas::getCsrBitMask(reg_ident) != 0xffffffffffffffff)
         {
@@ -402,7 +402,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    static inline void POKE_CSR_REG(AtlasState* state, uint32_t reg_ident, XLEN reg_value)
+    static inline void POKE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         state->getCsrRegister(reg_ident)->dmiWrite(reg_value);
     }
@@ -412,13 +412,13 @@ namespace atlas
     {
         const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
         const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
-        return ((state->getCsrRegister(reg_ident)->dmiRead<uint64_t>() >> field_lsb)
+        return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
                 & ((1ULL << (field_msb - field_lsb + 1)) - 1));
     }
 
     template <typename XLEN>
     static inline void WRITE_CSR_FIELD(AtlasState* state, uint32_t reg_ident,
-                                       const char* field_name, XLEN field_value)
+                                       const char* field_name, uint64_t field_value)
     {
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
@@ -435,7 +435,7 @@ namespace atlas
 
     template <typename XLEN>
     static inline void POKE_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name,
-                                      XLEN field_value)
+                                      uint64_t field_value)
     {
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
