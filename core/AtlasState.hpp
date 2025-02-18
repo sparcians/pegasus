@@ -2,20 +2,24 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/translate/AtlasTranslationState.hpp"
+#include "core/AtlasAllocatorWrapper.hpp"
+#include "core/AtlasInst.hpp"
+
 #include "core/observers/InstructionLogger.hpp"
-#include "arch/RegisterSet.hpp"
-#include "include/AtlasTypes.hpp"
 #include "core/CoSimQuery.hpp"
 
-#include "core/AtlasAllocatorWrapper.hpp"
+#include "arch/RegisterSet.hpp"
+#include "include/AtlasTypes.hpp"
+#include "include/CSRBitMasks64.hpp"
+#include "include/CSRHelpers.hpp"
+
 #include "sim/AtlasAllocators.hpp"
+
 #include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
-#include "core/AtlasInst.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
-#include "include/CSRBitMasks64.hpp"
 
 #ifndef REG32_JSON_DIR
 #error "REG32_JSON_DIR must be defined"
@@ -333,4 +337,158 @@ namespace atlas
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
     };
+
+    template <typename XLEN> static inline XLEN READ_INT_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return (reg_ident == 0) ? 0 : state->getIntRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_INT_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        if (reg_ident != 0)
+        {
+            state->getIntRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+        }
+    }
+
+    template <typename XLEN> static inline XLEN READ_FP_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return state->getFpRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_FP_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        state->getFpRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+    }
+
+    template <typename XLEN> static inline XLEN READ_VEC_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return state->getVecRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        state->getVecRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+    }
+
+    template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        if (atlas::getCsrBitMask<XLEN>(reg_ident) != std::numeric_limits<XLEN>::max())
+        {
+            auto reg = state->getCsrRegister(reg_ident);
+            const auto old_value = reg->dmiRead<XLEN>();
+            const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
+            const auto write_val = (old_value & ~mask) | (reg_value & mask);
+            reg->dmiWrite<XLEN>(write_val);
+        }
+        else
+        {
+            state->getCsrRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+        }
+    }
+
+    template <typename XLEN> static inline XLEN PEEK_CSR_REG(AtlasState* state, uint32_t reg_ident)
+    {
+        return READ_CSR_REG<XLEN>(state, reg_ident);
+    }
+
+    template <typename XLEN>
+    static inline void POKE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        state->getCsrRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+    }
+
+    template <typename XLEN>
+    static inline XLEN READ_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const XLEN field_lsb = csr_bit_range.first;
+        const XLEN field_msb = csr_bit_range.second;
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+        }
+        else
+        {
+            return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
+                    & ((XLEN(1) << (field_msb - field_lsb + 1)) - 1));
+        }
+    }
+
+    template <typename XLEN>
+    static inline void WRITE_CSR_FIELD(AtlasState* state, uint32_t reg_ident,
+                                       const char* field_name, uint64_t field_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const XLEN field_lsb = csr_bit_range.first;
+        const XLEN field_msb = csr_bit_range.second;
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            WRITE_CSR_REG<XLEN>(state, reg_ident, field_value);
+        }
+        else
+        {
+            const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+            csr_value &= ~mask;
+
+            const XLEN new_field_value = field_value << field_lsb;
+            csr_value |= new_field_value;
+
+            WRITE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+        }
+    }
+
+    template <typename XLEN>
+    static inline void POKE_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name,
+                                      uint64_t field_value)
+    {
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const XLEN field_lsb = csr_bit_range.first;
+        const XLEN field_msb = csr_bit_range.second;
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            POKE_CSR_REG<XLEN>(state, reg_ident, field_value);
+        }
+        else
+        {
+            const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+            csr_value &= ~mask;
+
+            const XLEN new_field_value = field_value << field_lsb;
+            csr_value |= new_field_value;
+
+            POKE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+        }
+    }
 } // namespace atlas

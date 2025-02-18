@@ -1,5 +1,4 @@
 #include "core/inst_handlers/inst_helpers.hpp"
-#include "arch/register_macros.hpp"
 #include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
@@ -82,16 +81,16 @@ namespace atlas
         const uint32_t csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        const XLEN csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to clear bits
-            const XLEN rs1_val = READ_INT_REG(rs1);
-            WRITE_CSR_REG(csr, (~rs1_val & csr_val));
+            const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
+            WRITE_CSR_REG<XLEN>(state, csr, (~rs1_val & csr_val));
         }
 
-        WRITE_INT_REG(rd, csr_val);
+        WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
         return nullptr;
     }
@@ -105,13 +104,13 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        const XLEN csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            WRITE_CSR_REG(csr, (~imm & csr_val));
+            WRITE_CSR_REG<XLEN>(state, csr, (~imm & csr_val));
         }
 
-        WRITE_INT_REG(rd, csr_val);
+        WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
         return nullptr;
     }
@@ -125,15 +124,15 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        const XLEN csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
             // rs1 value is treated as a bit mask to set bits
-            const XLEN rs1_val = READ_INT_REG(rs1);
-            WRITE_CSR_REG(csr, (rs1_val | csr_val));
+            const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
+            WRITE_CSR_REG<XLEN>(state, csr, (rs1_val | csr_val));
         }
 
-        WRITE_INT_REG(rd, csr_val);
+        WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
         return nullptr;
     }
@@ -147,14 +146,14 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        const XLEN csr_val = READ_CSR_REG(csr);
+        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
             // imm value is treated as a bit mask
-            WRITE_CSR_REG(csr, (imm | csr_val));
+            WRITE_CSR_REG<XLEN>(state, csr, (imm | csr_val));
         }
 
-        WRITE_INT_REG(rd, csr_val);
+        WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
         return nullptr;
     }
@@ -168,15 +167,15 @@ namespace atlas
         const int csr =
             insn->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
 
-        const XLEN rs1_val = READ_INT_REG(rs1);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
-            WRITE_INT_REG(rd, csr_val);
+            const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
+            WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
 
-        WRITE_CSR_REG(csr, rs1_val);
+        WRITE_CSR_REG<XLEN>(state, csr, rs1_val);
 
         return nullptr;
     }
@@ -193,11 +192,11 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            const XLEN csr_val = zext(READ_CSR_REG(csr), state->getXlen());
-            WRITE_INT_REG(rd, csr_val);
+            const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
+            WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
 
-        WRITE_CSR_REG(csr, imm);
+        WRITE_CSR_REG<XLEN>(state, csr, imm);
 
         return nullptr;
     }

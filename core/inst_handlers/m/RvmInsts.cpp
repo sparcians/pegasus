@@ -4,7 +4,6 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
-#include "arch/register_macros.hpp"
 
 namespace atlas
 {
@@ -67,23 +66,23 @@ namespace atlas
     ActionGroup* RvmInsts::div_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         sreg_t lhs = sext(rs1_val, state->getXlen());
         sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), UINT64_MAX);
         }
         else if (lhs == INT64_MIN && rhs == -1)
         {
-            WRITE_INT_REG(insn->getRd(), lhs);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), lhs);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext((lhs / rhs), state->getXlen()));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext((lhs / rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -92,18 +91,18 @@ namespace atlas
     ActionGroup* RvmInsts::divu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         reg_t lhs = zext(rs1_val, state->getXlen());
         reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext((lhs / rhs), state->getXlen()));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext((lhs / rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -112,18 +111,18 @@ namespace atlas
     ActionGroup* RvmInsts::divuw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         reg_t lhs = zext32(rs1_val);
         reg_t rhs = zext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext32(lhs / rhs));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(lhs / rhs));
         }
 
         return nullptr;
@@ -132,18 +131,18 @@ namespace atlas
     ActionGroup* RvmInsts::divw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         sreg_t lhs = sext32(rs1_val);
         sreg_t rhs = sext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext32(lhs / rhs));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(lhs / rhs));
         }
 
         return nullptr;
@@ -153,10 +152,10 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
         const uint64_t rd_val = rs1_val * rs2_val;
-        WRITE_INT_REG(insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
 
         return nullptr;
     }
@@ -164,16 +163,17 @@ namespace atlas
     ActionGroup* RvmInsts::mulh_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         if (state->getXlen() == 64)
         {
-            WRITE_INT_REG(insn->getRd(), mulh(rs1_val, rs2_val));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), mulh(rs1_val, rs2_val));
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext32((sext32(rs1_val) * sext32(rs2_val)) >> 32));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(),
+                                    sext32((sext32(rs1_val) * sext32(rs2_val)) >> 32));
         }
 
         return nullptr;
@@ -182,17 +182,17 @@ namespace atlas
     ActionGroup* RvmInsts::mulhsu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         if (state->getXlen() == 64)
         {
-            WRITE_INT_REG(insn->getRd(), mulhsu(rs1_val, rs2_val));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), mulhsu(rs1_val, rs2_val));
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(),
-                          sext32((sext32(rs1_val) * reg_t((uint32_t)rs2_val)) >> 32));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(),
+                                    sext32((sext32(rs1_val) * reg_t((uint32_t)rs2_val)) >> 32));
         }
 
         return nullptr;
@@ -201,17 +201,17 @@ namespace atlas
     ActionGroup* RvmInsts::mulhu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         if (state->getXlen() == 64)
         {
-            WRITE_INT_REG(insn->getRd(), mulhu(rs1_val, rs2_val));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), mulhu(rs1_val, rs2_val));
         }
         else
         {
-            WRITE_INT_REG(
-                insn->getRd(),
+            WRITE_INT_REG<uint64_t>(
+                state, insn->getRd(),
                 sext32(((uint64_t)(uint32_t)rs1_val * (uint64_t)(uint32_t)rs2_val) >> 32));
         }
 
@@ -222,9 +222,9 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
-        WRITE_INT_REG(insn->getRd(), sext32(rs1_val * rs2_val));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(rs1_val * rs2_val));
 
         return nullptr;
     }
@@ -232,23 +232,23 @@ namespace atlas
     ActionGroup* RvmInsts::rem_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         sreg_t lhs = sext(rs1_val, state->getXlen());
         sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), lhs);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), lhs);
         }
         else if (lhs == INT64_MIN && rhs == -1)
         {
-            WRITE_INT_REG(insn->getRd(), 0);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), 0);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext((lhs % rhs), state->getXlen()));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext((lhs % rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -257,18 +257,18 @@ namespace atlas
     ActionGroup* RvmInsts::remu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         reg_t lhs = zext(rs1_val, state->getXlen());
         reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), sext(lhs, state->getXlen()));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext(lhs, state->getXlen()));
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext((lhs % rhs), state->getXlen()));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext((lhs % rhs), state->getXlen()));
         }
 
         return nullptr;
@@ -277,18 +277,18 @@ namespace atlas
     ActionGroup* RvmInsts::remuw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         reg_t lhs = zext32(rs1_val);
         reg_t rhs = zext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), sext32(lhs));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(lhs));
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext32(lhs % rhs));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(lhs % rhs));
         }
 
         return nullptr;
@@ -297,18 +297,18 @@ namespace atlas
     ActionGroup* RvmInsts::remw_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG(insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG(insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
 
         sreg_t lhs = sext32(rs1_val);
         sreg_t rhs = sext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG(insn->getRd(), lhs);
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), lhs);
         }
         else
         {
-            WRITE_INT_REG(insn->getRd(), sext32(lhs % rhs));
+            WRITE_INT_REG<uint64_t>(state, insn->getRd(), sext32(lhs % rhs));
         }
 
         return nullptr;
