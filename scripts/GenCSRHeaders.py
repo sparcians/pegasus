@@ -54,83 +54,119 @@ def gen_csr_helpers_header():
     """Generate the CSR helpers file
     """
 
-    def GetBitMasksInitCode(CSR_DEFS):
+    def GetBitMasksInitCode(RV32_CSR_DEFS, RV64_CSR_DEFS):
         lines = []
-        lines.append('    inline uint64_t getCsrBitMask(const uint32_t csr_num)')
-        lines.append('    {')
-        lines.append('        switch (csr_num)')
-        lines.append('        {')
+        lines.append('    template <typename XLEN>')
+        lines.append('    XLEN getCsrBitMask(const uint32_t csr_num);')
+        lines.append('')
 
-        for csr_num, csr_defn in CSR_DEFS.items():
-            csr_fields = csr_defn[2]
-            if not csr_fields:
-                bit_mask = (1 << 64) - 1
+        def WriteImpl(xlen, CSR_DEFS):
+            assert xlen in (4,8)
+            if xlen == 4:
+                xlen_t = 'uint32_t'
+                bit_mask_formatter = lambda bit_mask: '0x{:08x}'.format(bit_mask)
+                bit_shift_amt = 32
             else:
-                bit_mask = 0
-                for _, field_defn in csr_fields.items():
-                    if not field_defn['readonly']:
-                        low_bit = field_defn['low_bit']
-                        high_bit = field_defn['high_bit']
-                        for i in range(low_bit, high_bit + 1):
-                            bit_mask |= (1 << i)
+                xlen_t = 'uint64_t'
+                bit_mask_formatter = lambda bit_mask: '0x{:016x}'.format(bit_mask)
+                bit_shift_amt = 64
 
-            lines.append('            case 0x{:08x}: return 0x{:016x};'.format(csr_num, bit_mask))
+            lines.append('    template <>')
+            lines.append('    inline {} getCsrBitMask<{}>(const uint32_t csr_num)'.format(xlen_t, xlen_t))
+            lines.append('    {')
+            lines.append('        switch (csr_num)')
+            lines.append('        {')
 
-        lines.append('            default: sparta_assert(false, "Invalid CSR!"); return 0;')
-        lines.append('        }')
-        lines.append('    }')
+            for csr_num, csr_defn in CSR_DEFS.items():
+                csr_fields = csr_defn[2]
+                if not csr_fields:
+                    bit_mask = (1 << bit_shift_amt) - 1
+                else:
+                    bit_mask = 0
+                    for _, field_defn in csr_fields.items():
+                        if not field_defn['readonly']:
+                            low_bit = field_defn['low_bit']
+                            high_bit = field_defn['high_bit']
+                            for i in range(low_bit, high_bit + 1):
+                                bit_mask |= (1 << i)
+
+                lines.append('            case 0x{:08x}: return {};'.format(csr_num, bit_mask_formatter(bit_mask)))
+
+            lines.append('            default: sparta_assert(false, "Invalid CSR!"); return 0;')
+            lines.append('        }')
+            lines.append('    }')
+            lines.append('')
+
+        WriteImpl(4, RV32_CSR_DEFS)
+        WriteImpl(8, RV64_CSR_DEFS)
 
         return '\n'.join(lines)
 
-    def GetBitRangesInitCode(CSR_DEFS):
+    def GetBitRangesInitCode(RV32_CSR_DEFS, RV64_CSR_DEFS):
         lines = []
-        lines.append('    inline const std::pair<uint64_t, uint64_t>& getCsrBitRange(')
+        lines.append('    template <typename XLEN>')
+        lines.append('    const std::pair<XLEN, XLEN>& getCsrBitRange(')
         lines.append('        const uint32_t csr_num,')
-        lines.append('        const char* field_name)')
-        lines.append('    {')
-        lines.append('        using RangeByField = std::unordered_map<std::string, std::pair<uint64_t, uint64_t>>;')
-        lines.append('        using RangeByCsrNum = std::vector<RangeByField>;')
+        lines.append('        const char* field_name);')
         lines.append('')
-        lines.append('        static RangeByCsrNum bit_ranges;')
-        lines.append('        if (bit_ranges.empty()) {')
-        lines.append('            bit_ranges.resize(CSR_LARGEST_VALUE + 1);')
 
-        # There are inconsistencies in how the register fields are labeled
-        # in the JSON files. Some are all caps, some all lowercase, and some
-        # are heads-up camel case. We need to handle all of these cases.
-        def PermuteFieldName(field_name):
-            permutations = []
-            permutations.append(field_name.upper())
-            permutations.append(field_name.lower())
-            if len(field_name) > 1:
-                permutations.append(field_name[0].upper() + field_name[1:].lower())
-            return permutations
+        def WriteImpl(xlen, CSR_DEFS):
+            assert xlen in (4,8)
+            if xlen == 4:
+                xlen_t = 'uint32_t'
+            else:
+                xlen_t = 'uint64_t'
 
-        for csr_num, csr_defn in CSR_DEFS.items():
-            csr_fields = csr_defn[2]
-            if not csr_fields:
-                continue
+            lines.append('    template <>')
+            lines.append('    inline const std::pair<{}, {}>& getCsrBitRange<{}>('.format(xlen_t, xlen_t, xlen_t))
+            lines.append('        const uint32_t csr_num,')
+            lines.append('        const char* field_name)')
+            lines.append('    {')
+            lines.append('        using RangeByField = std::unordered_map<std::string, std::pair<{}, {}>>;'.format(xlen_t, xlen_t))
+            lines.append('        using RangeByCsrNum = std::vector<RangeByField>;')
+            lines.append('')
+            lines.append('        static RangeByCsrNum bit_ranges;')
+            lines.append('        if (bit_ranges.empty()) {')
+            lines.append('            bit_ranges.resize(CSR_LARGEST_VALUE + 1);')
 
-            for field_name, field_defn in csr_fields.items():
-                low_bit = field_defn['low_bit']
-                high_bit = field_defn['high_bit']
-                key = '0x{:08x}'.format(csr_num)
-                value = 'std::make_pair({}, {})'.format(low_bit, high_bit)
+            # There are inconsistencies in how the register fields are labeled
+            # in the JSON files. Some are all caps, some all lowercase, and some
+            # are heads-up camel case. We need to handle all of these cases.
+            def PermuteFieldName(field_name):
+                permutations = []
+                permutations.append(field_name.upper())
+                permutations.append(field_name.lower())
+                if len(field_name) > 1:
+                    permutations.append(field_name[0].upper() + field_name[1:].lower())
+                return permutations
 
-                for field_name in PermuteFieldName(field_name):
-                    lines.append('            bit_ranges[{}]["{}"] = {};'.format(key, field_name, value))
+            for csr_num, csr_defn in CSR_DEFS.items():
+                csr_fields = csr_defn[2]
+                if not csr_fields:
+                    continue
 
-        lines.append('        }')
-        lines.append('')
-        lines.append('        return bit_ranges.at(csr_num).at(field_name);')
-        lines.append('    }')
+                for field_name, field_defn in csr_fields.items():
+                    low_bit = field_defn['low_bit']
+                    high_bit = field_defn['high_bit']
+                    key = '0x{:08x}'.format(csr_num)
+                    value = 'std::make_pair({}, {})'.format(low_bit, high_bit)
+
+                    for field_name in PermuteFieldName(field_name):
+                        lines.append('            bit_ranges[{}]["{}"] = {};'.format(key, field_name, value))
+
+            lines.append('        }')
+            lines.append('')
+            lines.append('        return bit_ranges.at(csr_num).at(field_name);')
+            lines.append('    }')
+            lines.append('')
+
+        WriteImpl(4, RV32_CSR_DEFS)
+        WriteImpl(8, RV64_CSR_DEFS)
 
         return '\n'.join(lines)
 
-    CSR_DEFS = CSR32_DEFS.copy()
-    CSR_DEFS.update(CSR64_DEFS)
-    bit_masks_init_code = GetBitMasksInitCode(CSR_DEFS)
-    bit_ranges_init_code = GetBitRangesInitCode(CSR_DEFS)
+    bit_masks_init_code = GetBitMasksInitCode(CSR32_DEFS, CSR64_DEFS)
+    bit_ranges_init_code = GetBitRangesInitCode(CSR32_DEFS, CSR64_DEFS)
 
     code = f"""#pragma once
 
@@ -232,7 +268,7 @@ def gen_csr_field_idxs_header(reg_size):
         def GetWritableFieldsBitMask(reg_json):
             if 'fields' not in reg_json:
                 return 0xffffffffffffffff
-            
+
             if reg_type == 'FP':
                 return 0xffffffffffffffff
 
