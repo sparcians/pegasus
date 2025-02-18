@@ -382,11 +382,11 @@ namespace atlas
     template <typename XLEN>
     static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
-        if (atlas::getCsrBitMask(reg_ident) != 0xffffffffffffffff)
+        if (atlas::getCsrBitMask<XLEN>(reg_ident) != 0xffffffffffffffff)
         {
             auto reg = state->getCsrRegister(reg_ident);
             const auto old_value = reg->dmiRead<uint64_t>();
-            const auto mask = atlas::getCsrBitMask(reg_ident);
+            const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
             reg->dmiWrite(write_val);
         }
@@ -410,8 +410,8 @@ namespace atlas
     template <typename XLEN>
     static inline XLEN READ_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name)
     {
-        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
-        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        const XLEN field_lsb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).second;
         return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
                 & ((1ULL << (field_msb - field_lsb + 1)) - 1));
     }
@@ -422,8 +422,8 @@ namespace atlas
     {
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
-        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
-        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        const XLEN field_lsb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).second;
         const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
         csr_value &= ~mask;
 
@@ -439,8 +439,8 @@ namespace atlas
     {
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
-        const XLEN field_lsb = atlas::getCsrBitRange(reg_ident, field_name).first;
-        const XLEN field_msb = atlas::getCsrBitRange(reg_ident, field_name).second;
+        const XLEN field_lsb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).first;
+        const XLEN field_msb = atlas::getCsrBitRange<XLEN>(reg_ident, field_name).second;
         const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
         csr_value &= ~mask;
 
