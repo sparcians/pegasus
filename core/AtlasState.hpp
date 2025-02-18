@@ -420,11 +420,11 @@ namespace atlas
     static inline XLEN READ_CSR_FIELD(AtlasState* state, uint32_t reg_ident, const char* field_name)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        const auto csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
         return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
-                & ((1ULL << (field_msb - field_lsb + 1)) - 1));
+                & ((XLEN(1) << (field_msb - field_lsb + 1)) - 1));
     }
 
     template <typename XLEN>
@@ -434,10 +434,10 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
-        const auto csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
-        const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+        const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
         csr_value &= ~mask;
 
         const XLEN new_field_value = field_value << field_lsb;
@@ -453,10 +453,10 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
 
-        const auto csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
+        const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
-        const XLEN mask = ((1ULL << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+        const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
         csr_value &= ~mask;
 
         const XLEN new_field_value = field_value << field_lsb;
