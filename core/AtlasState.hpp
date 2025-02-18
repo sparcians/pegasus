@@ -423,8 +423,17 @@ namespace atlas
         const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
-        return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
-                & ((XLEN(1) << (field_msb - field_lsb + 1)) - 1));
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+        }
+        else
+        {
+            return ((state->getCsrRegister(reg_ident)->dmiRead<XLEN>() >> field_lsb)
+                    & ((XLEN(1) << (field_msb - field_lsb + 1)) - 1));
+        }
     }
 
     template <typename XLEN>
@@ -437,13 +446,22 @@ namespace atlas
         const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
-        const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
-        csr_value &= ~mask;
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            WRITE_CSR_REG<XLEN>(state, reg_ident, field_value);
+        }
+        else
+        {
+            const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+            csr_value &= ~mask;
 
-        const XLEN new_field_value = field_value << field_lsb;
-        csr_value |= new_field_value;
+            const XLEN new_field_value = field_value << field_lsb;
+            csr_value |= new_field_value;
 
-        WRITE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+            WRITE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+        }
     }
 
     template <typename XLEN>
@@ -456,12 +474,21 @@ namespace atlas
         const auto & csr_bit_range = atlas::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
-        const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
-        csr_value &= ~mask;
+        const XLEN max_msb = std::is_same_v<XLEN, RV64> ? 63 : 31;
+        // If field spans entire register, no mask/shift is needed
+        if ((field_lsb == 0) && (field_msb >= max_msb))
+        {
+            POKE_CSR_REG<XLEN>(state, reg_ident, field_value);
+        }
+        else
+        {
+            const XLEN mask = ((XLEN(1) << (field_msb - field_lsb + 1)) - 1) << field_lsb;
+            csr_value &= ~mask;
 
-        const XLEN new_field_value = field_value << field_lsb;
-        csr_value |= new_field_value;
+            const XLEN new_field_value = field_value << field_lsb;
+            csr_value |= new_field_value;
 
-        POKE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+            POKE_CSR_REG<XLEN>(state, reg_ident, csr_value);
+        }
     }
 } // namespace atlas
