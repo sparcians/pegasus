@@ -1,8 +1,12 @@
 #include "sim/AtlasSim.hpp"
 #include "core/AtlasState.hpp"
 #include "include/AtlasTypes.hpp"
+#include "include/CSRNums.hpp"
+#include "core/IntNums.hpp"
+#include "core/FpNums.hpp"
+#include "core/VecNums.hpp"
+
 #include "sparta/utils/SpartaTester.hpp"
-#include "arch/register_macros.hpp"
 #include <bitset>
 #include <random>
 
@@ -42,25 +46,29 @@ void testIntRegs()
     atlas::AtlasState* state = tester.getAtlasState();
 
     // Verify the zero register is zero
-    auto x0_reg_val = READ_INT_REG64(atlas::X0);
+    auto x0_reg_val = READ_INT_REG<atlas::RV64>(state, atlas::X0);
     EXPECT_EQUAL(x0_reg_val, 0);
 
     // Verify that writing to the zero register is ignored
-    WRITE_INT_REG64(atlas::X0, 1);
-    x0_reg_val = READ_INT_REG64(atlas::X0);
+    WRITE_INT_REG<atlas::RV64>(state, atlas::X0, 1);
+    x0_reg_val = READ_INT_REG<atlas::RV64>(state, atlas::X0);
     EXPECT_EQUAL(x0_reg_val, 0);
 
     // Verify that aliases are working
-    auto zero_reg_val = READ_INT_REG64(atlas::X0);
+    auto zero_reg_val = READ_INT_REG<atlas::RV64>(state, atlas::X0);
     EXPECT_EQUAL(zero_reg_val, x0_reg_val);
 
     // Verify writable registers
-    WRITE_INT_REG64(atlas::X1, 0xdeadbeef);
-    auto x1_reg_val = READ_INT_REG64(atlas::X1);
+    WRITE_INT_REG<atlas::RV64>(state, atlas::X1, 0xdeadbeef);
+    auto x1_reg_val = READ_INT_REG<atlas::RV64>(state, atlas::X1);
     EXPECT_EQUAL(x1_reg_val, 0xdeadbeef);
+
+    // Verify 32-bit writable registers
+    WRITE_INT_REG<atlas::RV32>(state, atlas::X2, 0xdeadbeef);
+    auto x2_reg_val = READ_INT_REG<atlas::RV32>(state, atlas::X2);
+    EXPECT_EQUAL(x2_reg_val, 0xdeadbeef);
 }
 
-/*
 void testFpRegs()
 {
     RegisterTester tester;
@@ -69,17 +77,11 @@ void testFpRegs()
     // Generate a random uint64_t
     uint64_t rand_val = dis(gen);
 
-    // Verify the sp field for the f0 register.
-    WRITE_FP_FIELD(atlas::F0, sp, rand_val);
-    auto f0_sp_val = READ_FP_FIELD(atlas::F0, sp);
-    EXPECT_EQUAL(f0_sp_val, rand_val & 0x00000000ffffffff);
-
-    // Verify the dp field for the f1 register.
-    WRITE_FP_FIELD(atlas::F1, dp, rand_val);
-    auto f1_dp_val = READ_FP_FIELD(atlas::F1, dp);
-    EXPECT_EQUAL(f1_dp_val, rand_val);
+    // Verify the f0 register.
+    WRITE_FP_REG<atlas::RV64>(state, atlas::F0, rand_val);
+    auto f0_reg_val = READ_FP_REG<atlas::RV64>(state, atlas::F0);
+    EXPECT_EQUAL(f0_reg_val, rand_val);
 }
-*/
 
 void testVecRegs()
 {
@@ -90,8 +92,8 @@ void testVecRegs()
     uint64_t rand_val = dis(gen);
 
     // Verify the v0 register
-    WRITE_VEC_REG(atlas::V0, rand_val);
-    auto v0_reg_val = READ_VEC_REG(atlas::V0);
+    WRITE_VEC_REG<atlas::RV64>(state, atlas::V0, rand_val);
+    auto v0_reg_val = READ_VEC_REG<atlas::RV64>(state, atlas::V0);
     EXPECT_EQUAL(v0_reg_val, rand_val);
 }
 
@@ -104,8 +106,8 @@ void testCsrRegs()
     uint64_t rand_val = dis(gen);
 
     // Verify the ustatus register (all fields writable)
-    POKE_CSR_REG(atlas::USTATUS, rand_val);
-    auto ustatus_reg_val = READ_CSR_REG(atlas::USTATUS);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::USTATUS, rand_val);
+    auto ustatus_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::USTATUS);
     EXPECT_EQUAL(ustatus_reg_val, rand_val);
 
     // Verify the dmcontrol register. The hasel field is read-only
@@ -114,18 +116,18 @@ void testCsrRegs()
     reg_val_bits.set(26);
     reg_val_bits.set(29);
 
-    POKE_CSR_REG(atlas::DMCONTROL, reg_val_bits.to_ullong());
-    auto dmcontrol_reg_val = READ_CSR_REG(atlas::DMCONTROL);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL, reg_val_bits.to_ullong());
+    auto dmcontrol_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL);
     EXPECT_EQUAL(dmcontrol_reg_val, reg_val_bits.to_ullong());
 
     // Try to overwrite both the read-only and writable fields
     reg_val_bits.reset(26);
     reg_val_bits.reset(29);
-    WRITE_CSR_REG(atlas::DMCONTROL, reg_val_bits.to_ullong());
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL, reg_val_bits.to_ullong());
 
     // We expect the read-only field to be unchanged (bit 26) and
     // the writable field to be changed (bit 29)
-    dmcontrol_reg_val = READ_CSR_REG(atlas::DMCONTROL);
+    dmcontrol_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL);
     std::bitset<64> new_dmcontrol_reg_val_bits(dmcontrol_reg_val);
     EXPECT_TRUE(new_dmcontrol_reg_val_bits.test(26));
     EXPECT_FALSE(new_dmcontrol_reg_val_bits.test(29));
@@ -142,14 +144,14 @@ void testCsrRegs()
         reg_val_bits.set(i);
     }
 
-    POKE_CSR_REG(atlas::DMCONTROL, reg_val_bits.to_ullong());
-    dmcontrol_reg_val = READ_CSR_REG(atlas::DMCONTROL);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL, reg_val_bits.to_ullong());
+    dmcontrol_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL);
     EXPECT_EQUAL(dmcontrol_reg_val, reg_val_bits.to_ullong());
 
     reg_val_bits.reset();
-    WRITE_CSR_REG(atlas::DMCONTROL, 0);
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL, 0);
 
-    dmcontrol_reg_val = READ_CSR_REG(atlas::DMCONTROL);
+    dmcontrol_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL);
     new_dmcontrol_reg_val_bits = std::bitset<64>(dmcontrol_reg_val);
     for (int i = 16; i <= 25; i++)
     {
@@ -165,14 +167,14 @@ void testCsrRegs()
         reg_val_bits.set(i);
     }
 
-    POKE_CSR_REG(atlas::DMSTATUS, reg_val_bits.to_ullong());
-    auto dmstatus_reg_val = READ_CSR_REG(atlas::DMSTATUS);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS, reg_val_bits.to_ullong());
+    auto dmstatus_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS);
     EXPECT_EQUAL(dmstatus_reg_val, reg_val_bits.to_ullong());
 
     reg_val_bits.reset();
-    WRITE_CSR_REG(atlas::DMSTATUS, 0);
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS, 0);
 
-    dmstatus_reg_val = READ_CSR_REG(atlas::DMSTATUS);
+    dmstatus_reg_val = READ_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS);
     new_dmcontrol_reg_val_bits = std::bitset<64>(dmstatus_reg_val);
     for (int i = 0; i <= 3; i++)
     {
@@ -181,34 +183,38 @@ void testCsrRegs()
 
     // Test the WRITE_CSR_FIELD and READ_CSR_FIELD macros.
     // Case 1: Writable single-bit field (DMCONTROL.hartreset)
-    POKE_CSR_REG(atlas::DMCONTROL, 0);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMCONTROL, hartreset), 0);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::DMCONTROL, 0);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::DMCONTROL, "hartreset"), 0);
 
-    WRITE_CSR_FIELD(atlas::DMCONTROL, hartreset, 1);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMCONTROL, hartreset), 1);
+    WRITE_CSR_FIELD<atlas::RV64>(state, atlas::DMCONTROL, "hartreset", 1);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::DMCONTROL, "hartreset"), 1);
 
     // Case 2: Read-only single-bit field (DMCONTROL.hasel)
-    WRITE_CSR_FIELD(atlas::DMCONTROL, hasel, 1);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMCONTROL, hasel), 0);
+    WRITE_CSR_FIELD<atlas::RV64>(state, atlas::DMCONTROL, "hasel", 1);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::DMCONTROL, "hasel"), 0);
 
     // Case 3: Writable multi-bit field (SSTATUS.XS, bits 15-16)
     reg_val_bits.reset();
     reg_val_bits.set(15);
     reg_val_bits.set(16);
-    POKE_CSR_REG(atlas::SSTATUS, reg_val_bits.to_ullong());
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::SSTATUS, XS), 3); // Two bits set, 0x11 = 3
+    POKE_CSR_REG<atlas::RV64>(state, atlas::SSTATUS, reg_val_bits.to_ullong());
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::SSTATUS, "XS"),
+                 3); // Two bits set, 0x11 = 3
 
     // Case 4: Read-only multi-bit field (SSTATUS.WPRI, bits 2-3)
     reg_val_bits.reset();
     reg_val_bits.set(2);
     reg_val_bits.set(3);
-    POKE_CSR_REG(atlas::SSTATUS, reg_val_bits.to_ullong());
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::SSTATUS, WPRI), 3); // Two bits set, 0x11 = 3
+    POKE_CSR_REG<atlas::RV64>(state, atlas::SSTATUS, reg_val_bits.to_ullong());
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::SSTATUS, "WPRI"),
+                 3); // Two bits set, 0x11 = 3
     reg_val_bits.reset();
-    WRITE_CSR_REG(atlas::SSTATUS, reg_val_bits.to_ullong());
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::SSTATUS, WPRI), 3); // Field is read-only, should not change
-    WRITE_CSR_FIELD(atlas::SSTATUS, WPRI, 2);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::SSTATUS, WPRI), 3); // Field is read-only, should not change
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::SSTATUS, reg_val_bits.to_ullong());
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::SSTATUS, "WPRI"),
+                 3); // Field is read-only, should not change
+    WRITE_CSR_FIELD<atlas::RV64>(state, atlas::SSTATUS, "WPRI", 2);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::SSTATUS, "WPRI"),
+                 3); // Field is read-only, should not change
 
     // Case 5: Write a combination of read-only and writable fields all at
     // once using the WRITE_CSR_REG macro. We will do this for the DMSTATUS
@@ -219,18 +225,18 @@ void testCsrRegs()
     reg_val_bits.reset();
     reg_val_bits.set(6);
     reg_val_bits.set(7);
-    POKE_CSR_REG(atlas::DMSTATUS, reg_val_bits.to_ullong());
+    POKE_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS, reg_val_bits.to_ullong());
 
     // We will try to overwrite both 1 bits to 0.
     reg_val_bits.reset();
-    WRITE_CSR_REG(atlas::DMSTATUS, reg_val_bits.to_ullong());
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS, reg_val_bits.to_ullong());
 
     // Verify that the write operation only changed the authbusy field
     // at bit position 6 and left the authenticated field at bit position 7
     // unchanged.
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMSTATUS, authbusy), 0);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::DMSTATUS, authenticated), 1);
-    EXPECT_EQUAL(READ_CSR_REG(atlas::DMSTATUS), 0x2 << 6);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::DMSTATUS, "authbusy"), 0);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::DMSTATUS, "authenticated"), 1);
+    EXPECT_EQUAL(READ_CSR_REG<atlas::RV64>(state, atlas::DMSTATUS), 0x2 << 6);
 
     // Case 6: Write a combination of read-only and writable fields,
     // where the fields are both multiple bits. We will do this for the
@@ -238,25 +244,25 @@ void testCsrRegs()
     //
     //     Bank (writable, bits 7-31)       --> start with 0xf
     //     Offset (read-only, bits 0-6)     --> start with 0xf
-    POKE_CSR_REG(atlas::MVENDORID, 0xf << 7 | 0xf);
+    POKE_CSR_REG<atlas::RV64>(state, atlas::MVENDORID, 0xf << 7 | 0xf);
 
     // To to overwrite both fields with 0xe
-    WRITE_CSR_REG(atlas::MVENDORID, 0xe << 7 | 0xe);
+    WRITE_CSR_REG<atlas::RV64>(state, atlas::MVENDORID, 0xe << 7 | 0xe);
 
     // Verify that only the Bank field was changed and the Offset field
     // was left unchanged.
     auto expected_mvendid_val = 0xe << 7 | 0xf;
-    auto mvendid_val = READ_CSR_REG(atlas::MVENDORID);
+    auto mvendid_val = READ_CSR_REG<atlas::RV64>(state, atlas::MVENDORID);
     EXPECT_EQUAL(mvendid_val, expected_mvendid_val);
 
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::MVENDORID, Bank), 0xe);
-    EXPECT_EQUAL(READ_CSR_FIELD(atlas::MVENDORID, Offset), 0xf);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::MVENDORID, "Bank"), 0xe);
+    EXPECT_EQUAL(READ_CSR_FIELD<atlas::RV64>(state, atlas::MVENDORID, "Offset"), 0xf);
 }
 
 int main()
 {
     testIntRegs();
-    // testFpRegs();
+    testFpRegs();
     testVecRegs();
     testCsrRegs();
 

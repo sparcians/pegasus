@@ -7,4 +7,4 @@ atlas_named_test(Register_test_run AtlasRegister_test)
 atlas_copy(AtlasRegister_test *.json)
 atlas_copy(AtlasRegister_test ../../arch/rv64/reg_*.json)
 
-#add_subdirectory(macros)
+add_subdirectory(macros)
