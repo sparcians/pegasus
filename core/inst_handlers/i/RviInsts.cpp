@@ -905,6 +905,14 @@ namespace atlas
         }
         else
         {
+            // When TSR=1, attempts to execute SRET in S-mode will raise an illegal instruction
+            // exception
+            const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
+            if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
+            {
+                THROW_ILLEGAL_INSTRUCTION;
+            }
+
             // Update the PC with SEPC value
             state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
 
