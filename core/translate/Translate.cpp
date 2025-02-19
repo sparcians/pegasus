@@ -5,8 +5,6 @@
 
 #include "include/ActionTags.hpp"
 
-#include "arch/register_macros.hpp"
-
 #include "sparta/utils/LogUtils.hpp"
 
 namespace atlas
@@ -95,7 +93,7 @@ namespace atlas
 
         // Page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESIZE = 4096;
-        uint64_t ppn = READ_CSR_FIELD(SATP, ppn) * PAGESIZE;
+        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") * PAGESIZE;
         for (uint32_t level = getNumPageWalkLevels_<Mode>() - 1; level >= 0; --level)
         {
             DLOG("Level " << std::to_string(level) << " Page Walk");
