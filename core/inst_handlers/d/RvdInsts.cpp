@@ -1,4 +1,5 @@
 #include "core/inst_handlers/d/RvdInsts.hpp"
+#include "core/inst_handlers/f/inst_helpers.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 
