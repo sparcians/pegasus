@@ -227,8 +227,8 @@ namespace atlas
     {
         // Non-shared fields of SSTATUS are read-only so writing the MSTATUS value to SSTATUS will
         // only write to the shared fields
-        const XLEN mstatus_val = READ_CSR_REG(MSTATUS);
-        WRITE_CSR_REG(SSTATUS, mstatus_val);
+        const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
+        WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
         return nullptr;
     }
 
@@ -236,41 +236,41 @@ namespace atlas
     ActionGroup* RvzicsrInsts::sstatus_update_handler(atlas::AtlasState* state)
     {
         // Update shared fields only
-        const XLEN sie_val = READ_CSR_FIELD(SSTATUS, sie);
-        WRITE_CSR_FIELD(MSTATUS, sie, sie_val);
+        const XLEN sie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sie");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", sie_val);
 
-        const XLEN spie_val = READ_CSR_FIELD(SSTATUS, spie);
-        WRITE_CSR_FIELD(MSTATUS, spie, spie_val);
+        const XLEN spie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", spie_val);
 
-        const XLEN ube_val = READ_CSR_FIELD(SSTATUS, ube);
-        WRITE_CSR_FIELD(MSTATUS, ube, ube_val);
+        const XLEN ube_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "ube");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "ube", ube_val);
 
-        const XLEN spp_val = READ_CSR_FIELD(SSTATUS, spp);
-        WRITE_CSR_FIELD(MSTATUS, spp, spp_val);
+        const XLEN spp_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
 
-        const XLEN vs_val = READ_CSR_FIELD(SSTATUS, vs);
-        WRITE_CSR_FIELD(MSTATUS, vs, vs_val);
+        const XLEN vs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "vs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "vs", vs_val);
 
-        const XLEN fs_val = READ_CSR_FIELD(SSTATUS, fs);
-        WRITE_CSR_FIELD(MSTATUS, fs, fs_val);
+        const XLEN fs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "fs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "fs", fs_val);
 
-        const XLEN xs_val = READ_CSR_FIELD(SSTATUS, xs);
-        WRITE_CSR_FIELD(MSTATUS, xs, xs_val);
+        const XLEN xs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "xs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "xs", xs_val);
 
-        const XLEN sum_val = READ_CSR_FIELD(SSTATUS, sum);
-        WRITE_CSR_FIELD(MSTATUS, sum, sum_val);
+        const XLEN sum_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sum");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sum", sum_val);
 
-        const XLEN mxr_val = READ_CSR_FIELD(SSTATUS, mxr);
-        WRITE_CSR_FIELD(MSTATUS, mxr, mxr_val);
+        const XLEN mxr_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "mxr");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mxr", mxr_val);
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
-            const XLEN uxl_val = READ_CSR_FIELD(SSTATUS, uxl);
-            WRITE_CSR_FIELD(MSTATUS, uxl, uxl_val);
+            const XLEN uxl_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "uxl");
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "uxl", uxl_val);
         }
 
-        const XLEN sd_val = READ_CSR_FIELD(SSTATUS, sd);
-        WRITE_CSR_FIELD(MSTATUS, sd, sd_val);
+        const XLEN sd_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sd");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", sd_val);
 
         return nullptr;
     }
