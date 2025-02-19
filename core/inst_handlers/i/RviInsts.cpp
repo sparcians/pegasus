@@ -238,8 +238,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
                     nullptr, "sd", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma", atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV64>, RviInsts>(
-                                  nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
+                "sfence.vma",
+                atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV64>, RviInsts>(
+                    nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh",
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint16_t>, RviInsts>(
@@ -311,9 +312,9 @@ namespace atlas
                 "sw",
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint32_t>, RviInsts>(
                     nullptr, "sw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("wfi",
-                                  atlas::Action::createAction<&RviInsts::wfi_handler<RV64>, RviInsts>(
-                                      nullptr, "wfi", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "wfi", atlas::Action::createAction<&RviInsts::wfi_handler<RV64>, RviInsts>(
+                           nullptr, "wfi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "xor", atlas::Action::createAction<
                            &RviInsts::integer_reg_reg_handler<RV64, std::bit_xor<RV64>>, RviInsts>(
@@ -433,8 +434,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint8_t>, RviInsts>(
                     nullptr, "sb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma", atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV32>, RviInsts>(
-                                  nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
+                "sfence.vma",
+                atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV32>, RviInsts>(
+                    nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh",
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint16_t>, RviInsts>(
@@ -485,9 +487,9 @@ namespace atlas
                 "sw",
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint32_t>, RviInsts>(
                     nullptr, "sw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("wfi",
-                                  atlas::Action::createAction<&RviInsts::wfi_handler<RV32>, RviInsts>(
-                                      nullptr, "wfi", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "wfi", atlas::Action::createAction<&RviInsts::wfi_handler<RV32>, RviInsts>(
+                           nullptr, "wfi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "xor", atlas::Action::createAction<
                            &RviInsts::integer_reg_reg_handler<RV32, std::bit_xor<RV32>>, RviInsts>(
@@ -874,7 +876,6 @@ namespace atlas
             THROW_ILLEGAL_INSTRUCTION;
         }
 
-        // FIXME: Register macros are currently hardcoded for RV64
         PrivMode prev_priv_mode = PrivMode::INVALID;
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
@@ -1004,8 +1005,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN>
-    ActionGroup* RviInsts::sfence_vma_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::sfence_vma_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1033,8 +1033,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN>
-    ActionGroup* RviInsts::wfi_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::wfi_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
