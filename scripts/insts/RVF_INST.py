@@ -25,16 +25,6 @@ RV32F_INST = [
     {'mnemonic': 'flt.s', 'handler': 'flt_s_32', 'cost': 1, 'tags': 'F_EXT_32', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
     {'mnemonic': 'fle.s', 'handler': 'fle_s_32', 'cost': 1, 'tags': 'F_EXT_32', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
     {'mnemonic': 'fclass.s', 'handler': 'fclass_s_32', 'cost': 1, 'tags': 'F_EXT_32', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.l.s', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.lu.s', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.s.l', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.s.lu', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fmv.x.d', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fmv.d.x', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.l.d', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.lu.d', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.d.l', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
-    {'mnemonic': 'fcvt.d.lu', 'handler': 'invalid', 'cost': 1, 'tags': 'F_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': True, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': False, 'crypto': False},
 ]
 
 RV64F_INST = [

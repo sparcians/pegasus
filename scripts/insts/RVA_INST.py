@@ -10,15 +10,6 @@ RV32A_INST = [
     {'mnemonic': 'amomax.w', 'handler': 'amomax_w_32', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
     {'mnemonic': 'amominu.w', 'handler': 'amominu_w_32', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
     {'mnemonic': 'amomaxu.w', 'handler': 'amomaxu_w_32', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amoswap.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amoadd.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amoxor.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amoand.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amoor.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amomin.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amomax.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amominu.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
-    {'mnemonic': 'amomaxu.d', 'handler': 'invalid', 'cost': 1, 'tags': 'A_EXT_64', 'memory': False, 'cof': False, 'vdeleg': False, 'vector': False, 'float': False, 'maskable': False, 'segment': False, 'indexed': False, 'atomic': True, 'crypto': False},
 ]
 
 RV64A_INST = [

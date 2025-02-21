@@ -321,7 +321,7 @@ CSR64_DEFS = {
     }],
     0x305: ["mtvec",      "Machine trap-handler base address.", {
         "BASE" : { "high_bit" : 63, "low_bit" : 2, "readonly" : False, "desc" : "Vector base address" },
-        "MODE" : { "high_bit" : 1, "low_bit" : 0, "readonly" : False, "desc" : "0 - Direct, 1 - Vectored" }
+        "MODE" : { "high_bit" : 1, "low_bit" : 0, "readonly" : True, "desc" : "0 - Direct, 1 - Vectored" }
     }],
     0x306: ["mcounteren", "Machine counter enable.", {
         "HPM31" : { "high_bit" : 31 , "low_bit" : 31, "readonly" : False, "desc" : "undocumented" },

@@ -40,17 +40,13 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
-        ActionGroup* handleException_(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* handleException_(atlas::AtlasState* state);
 
         ActionGroup exception_action_group_{"Exception"};
 
-        template <typename XLEN> void handleUModeException_(atlas::AtlasState* state);
-
-        template <typename XLEN> void handleSModeException_(atlas::AtlasState* state);
-
-        template <typename XLEN> void handleMModeException_(atlas::AtlasState* state);
-
         sparta::utils::ValidValue<TrapCauses> cause_;
+
+        uint64_t determineTrapValue_(const TrapCauses & trap_cause, AtlasState* state);
     };
 
 } // namespace atlas

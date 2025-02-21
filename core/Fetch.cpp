@@ -100,6 +100,16 @@ namespace atlas
             {
                 THROW_ILLEGAL_INSTRUCTION;
             }
+
+            // TODO: This is probably not the best place for this check...
+            if (csr == SATP)
+            {
+                const uint32_t tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
+                if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm_val)
+                {
+                    THROW_ILLEGAL_INSTRUCTION;
+                }
+            }
         }
 
         return nullptr;
