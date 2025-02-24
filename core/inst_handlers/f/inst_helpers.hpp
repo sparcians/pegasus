@@ -26,8 +26,50 @@ namespace atlas
         return static_rm;
     }
 
-    template <typename XLEN> inline void update_csr(AtlasState* state)
+    template <typename SIZE>
+    static void fmax_fmin_nan_zero_check(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
     {
+        static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+
+        constexpr uint8_t SGN_BIT = sizeof(SIZE) * 8 - 1;
+        constexpr uint8_t EXP_MSB = SGN_BIT - 1;
+        constexpr uint8_t EXP_LSB = std::is_same<SIZE, DP>::value ? 52 : 23;
+        constexpr uint8_t SIG_MSB = EXP_LSB - 1;
+
+        constexpr SIZE EXP_MASK = (((SIZE)1 << (EXP_MSB - EXP_LSB + 1)) - 1) << EXP_LSB;
+        constexpr SIZE SIG_MASK = ((SIZE)1 << (SIG_MSB + 1)) - 1;
+
+        constexpr SIZE CAN_NAN = EXP_MASK | (SIZE)1 << SIG_MSB;
+        constexpr SIZE NEG_ZERO = (SIZE)1 << SGN_BIT;
+        constexpr SIZE POS_ZERO = 0;
+
+        bool rs1_nan = ((rs1_val & EXP_MASK) == EXP_MASK) && (rs1_val & SIG_MASK);
+        bool rs2_nan = ((rs2_val & EXP_MASK) == EXP_MASK) && (rs2_val & SIG_MASK);
+        if (rs1_nan && rs2_nan)
+        {
+            rd_val = CAN_NAN;
+        }
+        else if (rs1_nan)
+        {
+            rd_val = rs2_val;
+        }
+        else if (rs2_nan)
+        {
+            rd_val = rs1_val;
+        }
+
+        if (((rs1_val == NEG_ZERO) && (rs2_val == POS_ZERO))
+            || ((rs2_val == NEG_ZERO) && (rs1_val == POS_ZERO)))
+        {
+            rd_val = max ? POS_ZERO : NEG_ZERO;
+        }
+    }
+
+    template <typename XLEN> static ActionGroup* update_csr(AtlasState* state)
+    {
+        // TODO: it would be nice to have field shift, then a single combined CSR write will
+        // suffice.
+
         // FFLAGS
         WRITE_CSR_FIELD<XLEN>(
             state, FFLAGS, "NX",
@@ -61,6 +103,8 @@ namespace atlas
         WRITE_CSR_FIELD<XLEN>(
             state, FCSR, "NV",
             static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_invalid) != 0));
+
+        return nullptr;
     }
 
     template <typename T> ActionGroup* compute_address_handler(AtlasState* state)
@@ -76,23 +120,23 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename RV, typename SIZE, bool LOAD>
+    template <typename XLEN, typename SIZE, bool LOAD>
     ActionGroup* float_ls_handler(atlas::AtlasState* state)
     {
-        static_assert(std::is_same<RV, RV64>::value || std::is_same<RV, RV32>::value);
+        static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
         static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
-        static_assert(sizeof(RV) >= sizeof(SIZE));
+        static_assert(sizeof(XLEN) >= sizeof(SIZE));
 
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const RV paddr = state->getTranslationState()->getTranslationResult().getPaddr();
+        const XLEN paddr = state->getTranslationState()->getTranslationResult().getPaddr();
 
         if constexpr (LOAD)
         {
-            inst->getRdReg()->dmiWrite(state->readMemory<SIZE>(paddr));
+            WRITE_FP_REG<XLEN>(state, inst->getRd(), state->readMemory<SIZE>(paddr));
         }
         else
         {
-            state->writeMemory<SIZE>(paddr, inst->getRs2Reg()->dmiRead<uint64_t>());
+            state->writeMemory<SIZE>(paddr, READ_FP_REG<XLEN>(state, inst->getRs2()));
         }
         return nullptr;
     }

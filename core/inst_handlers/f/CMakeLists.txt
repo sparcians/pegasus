@@ -5,5 +5,3 @@ add_library(rvf
     OBJECT
     ${SOURCES}
 )
-
-

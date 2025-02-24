@@ -177,7 +177,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint32_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f32_eq(float32_t{rs1_val}, float32_t{rs2_val}));
+        WRITE_INT_REG<RV64>(state, inst->getRd(), f32_eq(float32_t{rs1_val}, float32_t{rs2_val}));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -217,9 +217,9 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint32_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val
-                                                                                : rs2_val);
+        uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val : rs2_val;
+        fmax_fmin_nan_zero_check<SP>(rs1_val, rs2_val, rd_val, false);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), rd_val);
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -228,7 +228,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        constexpr uint64_t rv64_low32_mask = 0x0000FFFF;
+        constexpr uint64_t rv64_low32_mask = 0xFFFFFFFF;
         WRITE_FP_REG<RV64>(state, inst->getRd(), rs1_val & rv64_low32_mask);
         return nullptr;
     }
@@ -237,8 +237,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           f32_to_ui64(float32_t{rs1_val}, getRM<RV64>(inst, state), true));
+        WRITE_INT_REG<RV64>(state, inst->getRd(),
+                            f32_to_ui64(float32_t{rs1_val}, getRM<RV64>(inst, state), true));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -246,7 +246,7 @@ namespace atlas
     ActionGroup* RvfInsts::fcvt_s_w_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+        const uint32_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), i32_to_f32(rs1_val).v);
         update_csr<RV64>(state);
         return nullptr;
@@ -269,7 +269,7 @@ namespace atlas
     ActionGroup* RvfInsts::fcvt_s_l_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+        const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), i64_to_f32(rs1_val).v);
         update_csr<RV64>(state);
         return nullptr;
@@ -309,9 +309,9 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint32_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val
-                                                                                : rs1_val);
+        uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val : rs1_val;
+        fmax_fmin_nan_zero_check<SP>(rs1_val, rs2_val, rd_val, true);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), rd_val);
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -367,7 +367,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint32_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f32_lt(float32_t{rs1_val}, float32_t{rs2_val}));
+        WRITE_INT_REG<RV64>(state, inst->getRd(), f32_lt(float32_t{rs1_val}, float32_t{rs2_val}));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -376,9 +376,9 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           signExtend<int32_t, int64_t>(
-                               f32_to_i32(float32_t{rs1_val}, getRM<RV64>(inst, state), true)));
+        WRITE_INT_REG<RV64>(state, inst->getRd(),
+                            signExtend<uint32_t, uint64_t>(
+                                f32_to_i32(float32_t{rs1_val}, getRM<RV64>(inst, state), true)));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -387,8 +387,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           f32_to_i64(float32_t{rs1_val}, getRM<RV64>(inst, state), true));
+        WRITE_INT_REG<RV64>(state, inst->getRd(),
+                            f32_to_i64(float32_t{rs1_val}, getRM<RV64>(inst, state), true));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -407,7 +407,7 @@ namespace atlas
     ActionGroup* RvfInsts::fcvt_s_lu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+        const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), ui64_to_f32(rs1_val).v);
         update_csr<RV64>(state);
         return nullptr;
@@ -417,8 +417,9 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           f32_to_ui32(float32_t{rs1_val}, getRM<RV64>(inst, state), true));
+        WRITE_INT_REG<RV64>(state, inst->getRd(),
+                            signExtend<uint32_t, uint64_t>(
+                                f32_to_ui32(float32_t{rs1_val}, getRM<RV64>(inst, state), true)));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -447,7 +448,7 @@ namespace atlas
     ActionGroup* RvfInsts::fcvt_s_wu_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+        const uint32_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), ui32_to_f32(rs1_val).v);
         update_csr<RV64>(state);
         return nullptr;
@@ -458,7 +459,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint32_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f32_le(float32_t{rs1_val}, float32_t{rs2_val}));
+        WRITE_INT_REG<RV64>(state, inst->getRd(), f32_le(float32_t{rs1_val}, float32_t{rs2_val}));
         update_csr<RV64>(state);
         return nullptr;
     }
