@@ -1,4 +1,5 @@
 #include "system/AtlasSystem.hpp"
+#include "system/MagicMemory.hpp"
 
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/memory/MemoryObject.hpp"
@@ -12,6 +13,15 @@ namespace atlas
         const std::string workload = p->workload;
         loadWorkload_(workload);
 
+        if (p->enable_uart)
+        {
+            sparta::ResourceTreeNode* uart_rtn = nullptr;
+            tree_nodes_.emplace_back(uart_rtn = new sparta::ResourceTreeNode(
+                                         sys_node, "uart", "SimpleUART", &uart_fact_));
+            uart_rtn->finalize();
+            uart_ = uart_rtn->getResourceAs<SimpleUART>();
+        }
+
         // Initialize memory
         memory_map_.reset(new sparta::memory::SimpleMemoryMapNode(
             sys_node, "memory_map", sparta::TreeNode::GROUP_NAME_NONE,
@@ -24,7 +34,7 @@ namespace atlas
         // Initialize memory with ELF contents
         for (const auto & memory_section : memory_sections_)
         {
-            if (memory_section.data != nullptr)
+            if ((memory_section.data != nullptr) && (memory_section.name != "MAGIC_MEM"))
             {
                 std::cout << "  -- Loading section " << memory_section.name << " (" << std::dec
                           << memory_section.file_size << "B) "
@@ -109,18 +119,110 @@ namespace atlas
 
     void AtlasSystem::createMemoryMappings_(sparta::TreeNode* sys_node)
     {
-        // Just use one memory object for all of memory for now
-        memory_objects_.emplace_back(new sparta::memory::MemoryObject(
-            sys_node, ATLAS_SYSTEM_BLOCK_SIZE, ATLAS_SYSTEM_TOTAL_MEMORY));
+        using BMOIfNode = sparta::memory::BlockingMemoryObjectIFNode;
+        using BMIfNode = sparta::memory::BlockingMemoryIFNode;
+        using MemObj = sparta::memory::MemoryObject;
 
-        // Wrap the new MemoryObject with the BlockingMemoryIF API
-        sparta::memory::MemoryObject & memory_object = *(memory_objects_.back().get());
-        memory_object_nodes_.emplace_back(new sparta::memory::BlockingMemoryObjectIFNode(
-            sys_node, "mem", "memory", nullptr, memory_object));
+        BMIfNode* memory_if = nullptr;
+        MemObj* mem_obj = nullptr;
 
-        // Add a mapping to the MemoryMap for this MemoryObject
-        sparta::memory::BlockingMemoryObjectIFNode* memory_object_node_ptr =
-            memory_object_nodes_.back().get();
-        memory_map_->addMapping(0x0, ATLAS_SYSTEM_TOTAL_MEMORY, memory_object_node_ptr, 0);
+        // The allocated memory blocks (Magic Mem, UART, etc)
+        struct AllocatedMemoryBlock
+        {
+            AllocatedMemoryBlock(sparta::memory::addr_t _start_address,
+                                 sparta::memory::addr_t _size) :
+                start_address(_start_address),
+                size(_size)
+            {
+            }
+
+            sparta::memory::addr_t start_address = 0;
+            sparta::memory::addr_t size = 0;
+
+            bool operator<(const AllocatedMemoryBlock & rhs) const
+            {
+                return start_address < rhs.start_address;
+            }
+        };
+
+        std::set<AllocatedMemoryBlock> allocated_blocks;
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Magic Memory
+        /*if(magic_memory_section_.isValid())
+        {
+            const auto & magic_mem = magic_memory_section_.getValue();
+
+            // Add the magic memory block
+            sparta::TreeNode * mm_node = nullptr;
+            tree_nodes_.emplace_back(mm_node = new sparta::TreeNode(sys_node, "magic_memory", "Magic
+        memory node")); tree_nodes_.emplace_back(memory_if = new MagicMemory(mm_node,
+                                                                 magic_mem.start_address,
+                                                                 magic_mem.total_size_aligned));
+            memory_map_->addMapping(magic_mem.start_address,
+                                    magic_mem.start_address + magic_mem.total_size_aligned,
+                                    memory_if, 0x0);
+
+            allocated_blocks.emplace(magic_mem.start_address, magic_mem.total_size_aligned);
+        }
+        */
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // UART
+        if (nullptr != uart_)
+        {
+            memory_map_->addMapping(uart_->getBaseAddr(), uart_->getHighEnd(), uart_,
+                                    0x0 /* Additional offset -- not used */);
+            allocated_blocks.emplace(uart_->getBaseAddr(), uart_->getSize());
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Now fill in the memory "blanks"
+        sparta::memory::addr_t addr_block_start = 0;
+        const uint32_t illop = 0;
+        uint32_t block_num = 1;
+
+        while (false == allocated_blocks.empty())
+        {
+            const auto alloc_block = *(allocated_blocks.begin());
+
+            // Check for a blank space between addr_block_start and the
+            // next allocated block.
+            if (addr_block_start < alloc_block.start_address)
+            {
+                // Add a memory block up to the allocated block
+                const auto block_size = alloc_block.start_address - addr_block_start;
+                memory_objects_.emplace_back(mem_obj =
+                                                 new MemObj(sys_node, ATLAS_SYSTEM_BLOCK_SIZE,
+                                                            block_size, illop, sizeof(illop)));
+                tree_nodes_.emplace_back(memory_if = new BMOIfNode(
+                                             sys_node, "mb_" + std::to_string(block_num),
+                                             sparta::TreeNode::GROUP_NAME_NONE,
+                                             sparta::TreeNode::GROUP_IDX_NONE,
+                                             "mb_" + std::to_string(block_num), nullptr, *mem_obj));
+                memory_map_->addMapping(addr_block_start, addr_block_start + block_size, memory_if,
+                                        0x0 /* Additional offset */);
+            }
+            // Determine the next large block of memory
+            addr_block_start = (((alloc_block.start_address + alloc_block.size - 1)
+                                 & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1))
+                                + ATLAS_SYSTEM_BLOCK_SIZE);
+            allocated_blocks.erase(allocated_blocks.begin());
+            ++block_num;
+        }
+
+        // Add the rest of memory
+        memory_objects_.emplace_back(mem_obj =
+                                         new MemObj(sys_node, ATLAS_SYSTEM_BLOCK_SIZE,
+                                                    ATLAS_SYSTEM_TOTAL_MEMORY - addr_block_start,
+                                                    illop, sizeof(illop)));
+        tree_nodes_.emplace_back(
+            memory_if =
+                new BMOIfNode(sys_node, "mb_" + std::to_string(block_num),
+                              sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
+                              "mb_" + std::to_string(block_num), nullptr, *mem_obj));
+        memory_map_->addMapping(addr_block_start, ATLAS_SYSTEM_TOTAL_MEMORY, memory_if,
+                                0x0 /* Additional offset */);
+        memory_map_->dumpMappings(std::cout);
     }
 } // namespace atlas
