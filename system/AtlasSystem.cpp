@@ -33,7 +33,7 @@ namespace atlas
         // Initialize memory with ELF contents
         for (const auto & memory_section : memory_sections_)
         {
-            if ((memory_section.data != nullptr) && (memory_section.name != "MAGIC_MEM"))
+            if (memory_section.data != nullptr)
             {
                 std::cout << "  -- Loading section " << memory_section.name << " (" << std::dec
                           << memory_section.file_size << "B) "
@@ -114,8 +114,7 @@ namespace atlas
             std::cout << "Automatically constructing magic memory at 0x" << std::hex << base_addr
                       << std::endl;
 
-            MemorySection section = {"MAGIC_MEM", 0, size_aligned, base_addr, nullptr};
-            magic_memory_section_ = section;
+            magic_memory_section_ = MemorySection("MAGIC_MEM", 0, size_aligned, base_addr, nullptr);
         }
 
         for (const auto & segment : elf_reader_.segments)
