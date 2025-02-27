@@ -22,19 +22,29 @@ namespace atlas
     {
         const Execute* execute_unit = state->getExecuteUnit();
 
+        const auto xlen = state->getXlen();
         const Execute::InstHandlersMap* inst_compute_address_handlers =
-            (state->getXlen() == 64) ? execute_unit->getInstComputeAddressHandlersMap<RV64>()
-                                     : execute_unit->getInstComputeAddressHandlersMap<RV32>();
+            (xlen == 64) ? execute_unit->getInstComputeAddressHandlersMap<RV64>()
+                         : execute_unit->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
-            const Action & inst_compute_address_handler =
-                inst_compute_address_handlers->at(mnemonic_);
-            inst_action_group_.addAction(inst_compute_address_handler);
+            try
+            {
+                const Action & inst_compute_address_handler =
+                    inst_compute_address_handlers->at(mnemonic_);
+                inst_action_group_.addAction(inst_compute_address_handler);
+            }
+            catch (const std::out_of_range & excp)
+            {
+                sparta_assert(false, "Missing key in rv"
+                                         << std::to_string(xlen)
+                                         << " inst compute address handler map: " << mnemonic_);
+            }
         }
 
         const Execute::InstHandlersMap* inst_handlers =
-            (state->getXlen() == 64) ? execute_unit->getInstHandlersMap<RV64>()
-                                     : execute_unit->getInstHandlersMap<RV32>();
+            (xlen == 64) ? execute_unit->getInstHandlersMap<RV64>()
+                         : execute_unit->getInstHandlersMap<RV32>();
         try
         {
             const Action & inst_handler = inst_handlers->at(mnemonic_);
@@ -42,7 +52,8 @@ namespace atlas
         }
         catch (const std::out_of_range & excp)
         {
-            sparta_assert(false, "Missing key in inst handler map: " << mnemonic_);
+            sparta_assert(false, "Missing key in rv" << std::to_string(xlen)
+                                                     << " inst handler map: " << mnemonic_);
         }
     }
 } // namespace atlas

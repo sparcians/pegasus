@@ -85,9 +85,9 @@ namespace atlas
         ActionGroup* ecall_handler(atlas::AtlasState* state);
         ActionGroup* ebreak_handler(atlas::AtlasState* state);
         ActionGroup* fence_handler(atlas::AtlasState* state);
-        ActionGroup* sfence_vma_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* sfence_vma_handler(atlas::AtlasState* state);
 
         // wfi
-        ActionGroup* wfi_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* wfi_handler(atlas::AtlasState* state);
     };
 } // namespace atlas
