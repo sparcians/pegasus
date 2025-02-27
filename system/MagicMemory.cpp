@@ -4,13 +4,12 @@
 
 namespace atlas
 {
-    MagicMemory::MagicMemory(sparta::TreeNode* node, sparta::memory::addr_t base_addr,
-                             sparta::memory::addr_t size) :
+    MagicMemory::MagicMemory(sparta::TreeNode* node, const MagicMemoryParameters* params) :
         sparta::Unit(node),
         sparta::memory::BlockingMemoryIF("Magic Memory", AtlasSystem::ATLAS_SYSTEM_BLOCK_SIZE,
-                                         {0, size, "magic_memory"}, nullptr),
-        base_addr_(base_addr),
-        size_(size)
+                                         {0, params->size, "magic_memory"}, nullptr),
+        base_addr_(params->base_addr),
+        size_(params->size)
     {
     }
 
@@ -19,7 +18,7 @@ namespace atlas
     {
         (void)addr;
         (void)size;
-        *buf = 0x60;
+        // TODO: Implement magic memory reads
         return true;
     }
 
@@ -28,7 +27,7 @@ namespace atlas
     {
         (void)addr;
         (void)size;
-        std::cout << *buf;
+        // TODO: Implement magic memory writes
         return true;
     }
 
@@ -37,8 +36,8 @@ namespace atlas
     {
         (void)addr;
         (void)buf;
-        sparta_assert(false, "Simple UART peeks are not implemented");
-        return false;
+        // Peeks are allowed, but have no side effects
+        return true;
     }
 
     bool MagicMemory::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
@@ -46,7 +45,7 @@ namespace atlas
     {
         (void)addr;
         (void)buf;
-        sparta_assert(false, "Simple UART pokes are not implemented");
-        return false;
+        // Pokes are allowed, but have no side effects
+        return true;
     }
 } // namespace atlas

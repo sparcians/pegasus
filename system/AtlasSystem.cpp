@@ -1,5 +1,4 @@
 #include "system/AtlasSystem.hpp"
-#include "system/MagicMemory.hpp"
 
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/memory/MemoryObject.hpp"
@@ -58,6 +57,67 @@ namespace atlas
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
 
+        sparta::utils::ValidValue<Addr> tohost_addr;
+        sparta::utils::ValidValue<Addr> fromhost_addr;
+        for (const auto & section : elf_reader_.sections)
+        {
+            ELFIO::symbol_section_accessor symbols(elf_reader_, section.get());
+            for (uint32_t symbol_id = 0; symbol_id < symbols.get_symbols_num(); ++symbol_id)
+            {
+                std::string name;
+                // ELFIO::Elf64_Addr addr;
+                Addr addr;
+                ELFIO::Elf_Xword size;
+                unsigned char bind;
+                unsigned char type;
+                ELFIO::Elf_Half section;
+                unsigned char other;
+                symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
+
+                // Intentionally overwriting symbols with the same address
+                if (name.empty() == false)
+                {
+                    symbols_[addr] = name;
+
+                    if (name == "tohost")
+                    {
+                        tohost_addr = addr;
+                    }
+                    else if (name == "fromhost")
+                    {
+                        fromhost_addr = addr;
+                    }
+                }
+            }
+        }
+
+        // Magic Memory
+        if (tohost_addr.isValid() && fromhost_addr.isValid())
+        {
+            sparta::memory::addr_t base_addr =
+                std::min(tohost_addr.getValue(), fromhost_addr.getValue());
+            const sparta::memory::addr_t addr_delt =
+                std::max(tohost_addr.getValue() - base_addr, fromhost_addr.getValue() - base_addr);
+            const sparta::memory::addr_t size_minimum = addr_delt + 8;
+            const sparta::memory::addr_t size_aligned =
+                ((size_minimum - 1) & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1)) + ATLAS_SYSTEM_BLOCK_SIZE;
+
+            std::cout << "Found magic memory symbols in ELF" << std::endl;
+            std::cout << "    tohost:   0x" << std::hex << tohost_addr.getValue() << std::endl;
+            std::cout << "    fromhost: 0x" << std::hex << fromhost_addr.getValue() << std::endl;
+            if ((base_addr & (ATLAS_SYSTEM_BLOCK_SIZE - 1)) != 0)
+            {
+                base_addr = base_addr & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1);
+                std::cout << "Warning: tohost/fromhost address doesn't align with "
+                          << ATLAS_SYSTEM_BLOCK_SIZE << " bytes" << std::endl;
+            }
+            std::cout << "Automatically constructing magic memory at 0x" << std::hex << base_addr
+                      << std::endl;
+
+            MemorySection section = {"MAGIC_MEM", 0, size_aligned, base_addr, nullptr};
+            magic_memory_section_ = section;
+        }
+
         for (const auto & segment : elf_reader_.segments)
         {
             // Ignore empty segments
@@ -87,34 +147,11 @@ namespace atlas
                                      segment->get_physical_address(),
                                      reinterpret_cast<const uint8_t*>(segment->get_data())};
             memory_sections_.emplace_back(section);
-
-            // TODO: Magic memory support (tohost/fromhost)
         }
 
         // Get entrypoint
         starting_pc_ = elf_reader_.get_entry();
         std::cout << "Starting PC: 0x" << std::hex << starting_pc_ << std::endl;
-
-        // Get symbols for debugging
-        for (const auto & section : elf_reader_.sections)
-        {
-            ELFIO::symbol_section_accessor symbols(elf_reader_, section.get());
-            for (uint32_t symbol_id = 0; symbol_id < symbols.get_symbols_num(); ++symbol_id)
-            {
-                std::string name;
-                // ELFIO::Elf64_Addr addr;
-                Addr addr;
-                ELFIO::Elf_Xword size;
-                unsigned char bind;
-                unsigned char type;
-                ELFIO::Elf_Half section;
-                unsigned char other;
-                symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
-
-                // Intentionally overwriting symbols with the same address
-                symbols_[addr] = name;
-            }
-        }
     }
 
     void AtlasSystem::createMemoryMappings_(sparta::TreeNode* sys_node)
@@ -149,23 +186,30 @@ namespace atlas
 
         ////////////////////////////////////////////////////////////////////////////////
         // Magic Memory
-        /*if(magic_memory_section_.isValid())
+        if (magic_memory_section_.isValid())
         {
             const auto & magic_mem = magic_memory_section_.getValue();
 
             // Add the magic memory block
-            sparta::TreeNode * mm_node = nullptr;
-            tree_nodes_.emplace_back(mm_node = new sparta::TreeNode(sys_node, "magic_memory", "Magic
-        memory node")); tree_nodes_.emplace_back(memory_if = new MagicMemory(mm_node,
-                                                                 magic_mem.start_address,
-                                                                 magic_mem.total_size_aligned));
-            memory_map_->addMapping(magic_mem.start_address,
-                                    magic_mem.start_address + magic_mem.total_size_aligned,
-                                    memory_if, 0x0);
+            sparta::ResourceTreeNode* mm_rtn = nullptr;
+            tree_nodes_.emplace_back(mm_rtn = new sparta::ResourceTreeNode(sys_node, "magic_memory",
+                                                                           "Magic memory node",
+                                                                           &magic_mem_fact_));
 
-            allocated_blocks.emplace(magic_mem.start_address, magic_mem.total_size_aligned);
+            // Set base address and size params
+            auto base_addr_param =
+                getContainer()->getChildAs<sparta::ParameterBase>("magic_memory.params.base_addr");
+            auto size_param =
+                getContainer()->getChildAs<sparta::ParameterBase>("magic_memory.params.size");
+            base_addr_param->setValueFromString(std::to_string(magic_mem.start_address));
+            size_param->setValueFromString(std::to_string(magic_mem.total_size_aligned));
+
+            mm_rtn->finalize();
+            magic_mem_ = mm_rtn->getResourceAs<MagicMemory>();
+            memory_map_->addMapping(magic_mem_->getBaseAddr(), magic_mem_->getHighEnd(), magic_mem_,
+                                    0x0 /* Additional offset -- not used */);
+            allocated_blocks.emplace(magic_mem_->getBaseAddr(), magic_mem_->getSize());
         }
-        */
 
         ////////////////////////////////////////////////////////////////////////////////
         // UART

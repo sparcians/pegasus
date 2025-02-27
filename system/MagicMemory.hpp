@@ -14,8 +14,19 @@ namespace atlas
     class MagicMemory : public sparta::Unit, public sparta::memory::BlockingMemoryIF
     {
       public:
-        MagicMemory(sparta::TreeNode* node, sparta::memory::addr_t base_addr,
-                    sparta::memory::addr_t size);
+        //! \brief Name of this resource. Required by sparta::UnitFactory
+        static constexpr char name[] = "MagicMemory";
+
+        class MagicMemoryParameters : public sparta::ParameterSet
+        {
+          public:
+            explicit MagicMemoryParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+
+            HIDDEN_PARAMETER(uint64_t, base_addr, 0x0, "Base address")
+            HIDDEN_PARAMETER(uint64_t, size, 0, "Memory size")
+        };
+
+        MagicMemory(sparta::TreeNode* node, const MagicMemoryParameters* params);
 
         sparta::memory::addr_t getBaseAddr() const { return base_addr_; }
 

@@ -4,6 +4,7 @@
 
 #include "include/AtlasTypes.hpp"
 #include "system/SimpleUART.hpp"
+#include "system/MagicMemory.hpp"
 
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
@@ -60,9 +61,11 @@ namespace atlas
 
         // Device factories
         sparta::ResourceFactory<SimpleUART, SimpleUART::SimpleUARTParameters> uart_fact_;
+        sparta::ResourceFactory<MagicMemory, MagicMemory::MagicMemoryParameters> magic_mem_fact_;
 
         // Devices
         SimpleUART* uart_ = nullptr;
+        MagicMemory* magic_mem_ = nullptr;
 
         // Memory and memory maps
         std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
@@ -80,6 +83,7 @@ namespace atlas
         };
 
         std::vector<MemorySection> memory_sections_;
+        sparta::utils::ValidValue<MemorySection> magic_memory_section_;
 
         void createMemoryMappings_(sparta::TreeNode* sys_node);
 
