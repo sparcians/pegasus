@@ -304,11 +304,11 @@ namespace atlas
 
     template <typename XLEN> void set_softfloat_excpetionFlags(atlas::AtlasState* state)
     {
-        XLEN softflaot_exceptionFlags_mask = softfloat_flag_inexact | softfloat_flag_underflow
+        XLEN softfloat_exceptionFlags_mask = softfloat_flag_inexact | softfloat_flag_underflow
                                              | softfloat_flag_overflow | softfloat_flag_infinite
                                              | softfloat_flag_invalid;
         softfloat_exceptionFlags =
-            READ_CSR_REG<XLEN>(state, FFLAGS) & softflaot_exceptionFlags_mask;
+            READ_CSR_REG<XLEN>(state, FFLAGS) & softfloat_exceptionFlags_mask;
     }
 
     template <typename XLEN>

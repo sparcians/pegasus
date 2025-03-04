@@ -2,8 +2,7 @@
 
 #include <map>
 #include <string>
-
-#include "core/Execute.hpp"
+#include "core/inst_handlers/f/RvfInstsBase.hpp"
 
 namespace atlas
 {
@@ -11,7 +10,7 @@ namespace atlas
     class Action;
     class ActionGroup;
 
-    class RvdInsts
+    class RvdInsts : RvfInstsBase
     {
       public:
         using base_type = RvdInsts;
@@ -20,7 +19,6 @@ namespace atlas
         static void getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers);
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
-        template <typename XLEN> static void getCsrUpdateActions(Execute::CsrUpdateActionsMap &);
 
       private:
         ActionGroup* fadd_d_64_handler(atlas::AtlasState* state);

@@ -1,5 +1,4 @@
 #include "core/inst_handlers/d/RvdInsts.hpp"
-#include "core/inst_handlers/f/inst_helpers.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 
@@ -153,7 +152,7 @@ namespace atlas
     ActionGroup* RvdInsts::fsub_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_sub(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -175,7 +174,7 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
-                                f64_to_ui32(float64_t{rs1_val}, getRM<RV64>(inst, state), true)));
+                                f64_to_ui32(float64_t{rs1_val}, getRM<RV64>(state), true)));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -183,7 +182,7 @@ namespace atlas
     ActionGroup* RvdInsts::fnmsub_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -207,7 +206,7 @@ namespace atlas
     ActionGroup* RvdInsts::fmul_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_mul(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -218,7 +217,7 @@ namespace atlas
     ActionGroup* RvdInsts::fsqrt_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_sqrt(float64_t{rs1_val}).v);
         update_csr<RV64>(state);
@@ -228,7 +227,7 @@ namespace atlas
     ActionGroup* RvdInsts::fmadd_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -242,7 +241,7 @@ namespace atlas
     ActionGroup* RvdInsts::fnmadd_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -268,7 +267,7 @@ namespace atlas
     ActionGroup* RvdInsts::fdiv_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_div(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -291,7 +290,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        const uint64_t sign_mask = 1UL << 63;
+        static constexpr uint64_t sign_mask = 1UL << 63;
         WRITE_FP_REG<RV64>(state, inst->getRd(),
                            (rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask));
         return nullptr;
@@ -311,7 +310,7 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
-                                f64_to_i32(float64_t{rs1_val}, getRM<RV64>(inst, state), true)));
+                                f64_to_i32(float64_t{rs1_val}, getRM<RV64>(state), true)));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -321,7 +320,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<RV64>(state, inst->getRd(),
-                            f64_to_ui64(float64_t{rs1_val}, getRM<RV64>(inst, state), true));
+                            f64_to_ui64(float64_t{rs1_val}, getRM<RV64>(state), true));
         update_csr<RV64>(state);
         return nullptr;
     }
@@ -331,7 +330,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        const uint64_t sign_mask = 1UL << 63;
+        static constexpr uint64_t sign_mask = 1UL << 63;
         WRITE_FP_REG<RV64>(state, inst->getRd(),
                            (rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask));
         return nullptr;
@@ -356,7 +355,7 @@ namespace atlas
     ActionGroup* RvdInsts::fadd_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_add(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -367,7 +366,7 @@ namespace atlas
     ActionGroup* RvdInsts::fmsub_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(inst, state);
+        softfloat_roundingMode = getRM<RV64>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -480,7 +479,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<RV64>(state, inst->getRd(),
-                            f64_to_i64(float64_t{rs1_val}, getRM<RV64>(inst, state), true));
+                            f64_to_i64(float64_t{rs1_val}, getRM<RV64>(state), true));
         update_csr<RV64>(state);
         return nullptr;
     }
