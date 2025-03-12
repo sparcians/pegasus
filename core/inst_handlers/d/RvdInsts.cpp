@@ -412,7 +412,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f64_to_f32(float64_t{rs1_val}).v);
+        WRITE_FP_REG<RV64>(state, inst->getRd(),
+                           nan_boxing<RV64, SP>(f64_to_f32(float64_t{rs1_val}).v));
         update_csr<RV64>(state);
         return nullptr;
     }
