@@ -16,7 +16,7 @@ namespace atlas
     class RvfInstsBase
     {
 
-      public:
+      protected:
         using SP = uint32_t;
         using DP = uint64_t;
 
@@ -31,28 +31,24 @@ namespace atlas
             return static_rm;
         }
 
+        // From RISCV manual:
+        // the value −0.0 is considered to be less than the value +0.0. If both inputs are NaNs, the
+        // result is the canonical NaN. If only one operand is a NaN, the result is the non-NaN
+        // operand.
         template <typename SIZE>
         static void fmax_fmin_nan_zero_check(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
         {
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
 
-            constexpr uint8_t SGN_BIT = sizeof(SIZE) * 8 - 1;
-            constexpr uint8_t EXP_MSB = SGN_BIT - 1;
-            constexpr uint8_t EXP_LSB = std::is_same<SIZE, DP>::value ? 52 : 23;
-            constexpr uint8_t SIG_MSB = EXP_LSB - 1;
+            const Constants<SIZE> & cons = get_const<SIZE>();
 
-            constexpr SIZE EXP_MASK = (((SIZE)1 << (EXP_MSB - EXP_LSB + 1)) - 1) << EXP_LSB;
-            constexpr SIZE SIG_MASK = ((SIZE)1 << (SIG_MSB + 1)) - 1;
-
-            constexpr SIZE CAN_NAN = EXP_MASK | (SIZE)1 << SIG_MSB;
-            constexpr SIZE NEG_ZERO = (SIZE)1 << SGN_BIT;
-            constexpr SIZE POS_ZERO = 0;
-
-            bool rs1_nan = ((rs1_val & EXP_MASK) == EXP_MASK) && (rs1_val & SIG_MASK);
-            bool rs2_nan = ((rs2_val & EXP_MASK) == EXP_MASK) && (rs2_val & SIG_MASK);
+            bool rs1_nan =
+                ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);
+            bool rs2_nan =
+                ((rs2_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs2_val & cons.SIG_MASK);
             if (rs1_nan && rs2_nan)
             {
-                rd_val = CAN_NAN;
+                rd_val = cons.CAN_NAN;
             }
             else if (rs1_nan)
             {
@@ -63,10 +59,10 @@ namespace atlas
                 rd_val = rs1_val;
             }
 
-            if (((rs1_val == NEG_ZERO) && (rs2_val == POS_ZERO))
-                || ((rs2_val == NEG_ZERO) && (rs1_val == POS_ZERO)))
+            if (((rs1_val == cons.NEG_ZERO) && (rs2_val == cons.POS_ZERO))
+                || ((rs2_val == cons.NEG_ZERO) && (rs1_val == cons.POS_ZERO)))
             {
-                rd_val = max ? POS_ZERO : NEG_ZERO;
+                rd_val = max ? cons.POS_ZERO : cons.NEG_ZERO;
             }
         }
 
@@ -126,6 +122,30 @@ namespace atlas
             return nullptr;
         }
 
+        // Check and convert a narrower SIZE floating point value from wider floating point
+        // register.
+        template <typename XLEN, typename SIZE> SIZE check_nan_boxing(XLEN num)
+        {
+            static_assert(sizeof(XLEN) > sizeof(SIZE));
+
+            const Constants<SIZE> & cons = get_const<SIZE>();
+            constexpr XLEN mask = SIZE(-1);
+            SIZE value = cons.CAN_NAN;
+            if ((num & ~mask) == ~mask) // upper bits all 1's
+            {
+                value = num; // truncated
+            }
+            return value;
+        }
+
+        // NaN-boxing a narrower SIZE floating point value for wider floating point register.
+        template <typename XLEN, typename SIZE> inline XLEN nan_boxing(XLEN num)
+        {
+            static_assert(sizeof(XLEN) > sizeof(SIZE));
+            constexpr XLEN mask = SIZE(-1);
+            return ~mask | (num & mask);
+        }
+
         template <typename XLEN, typename SIZE, bool LOAD>
         ActionGroup* float_ls_handler(AtlasState* state)
         {
@@ -138,13 +158,52 @@ namespace atlas
 
             if constexpr (LOAD)
             {
-                WRITE_FP_REG<XLEN>(state, inst->getRd(), state->readMemory<SIZE>(paddr));
+                XLEN value = state->readMemory<XLEN>(paddr);
+                if constexpr (sizeof(XLEN) > sizeof(SIZE))
+                {
+                    value = nan_boxing<XLEN, SIZE>(value);
+                }
+                WRITE_FP_REG<XLEN>(state, inst->getRd(), value);
             }
             else
             {
                 state->writeMemory<SIZE>(paddr, READ_FP_REG<XLEN>(state, inst->getRs2()));
             }
             return nullptr;
+        }
+
+      private:
+        template <typename SIZE> struct Constants
+        {
+            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+
+            static constexpr uint8_t SGN_BIT = sizeof(SIZE) * 8 - 1;
+            static constexpr uint8_t EXP_MSB = SGN_BIT - 1;
+            static constexpr uint8_t EXP_LSB = std::is_same<SIZE, DP>::value ? 52 : 23;
+            static constexpr uint8_t SIG_MSB = EXP_LSB - 1;
+
+            static constexpr SIZE EXP_MASK = (((SIZE)1 << (EXP_MSB - EXP_LSB + 1)) - 1) << EXP_LSB;
+            static constexpr SIZE SIG_MASK = ((SIZE)1 << (SIG_MSB + 1)) - 1;
+
+            static constexpr SIZE CAN_NAN = EXP_MASK | (SIZE)1 << SIG_MSB;
+            static constexpr SIZE NEG_ZERO = (SIZE)1 << SGN_BIT;
+            static constexpr SIZE POS_ZERO = 0;
+        }; // struct Constants
+
+        static constexpr Constants<SP> const_sp{};
+        static constexpr Constants<DP> const_dp{};
+
+        template <typename SIZE> static constexpr Constants<SIZE> get_const()
+        {
+            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+            if constexpr (std::is_same<SIZE, SP>::value)
+            {
+                return const_sp;
+            }
+            else
+            {
+                return const_dp;
+            }
         }
 
     }; // class RvfInstsBase
