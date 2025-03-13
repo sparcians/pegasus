@@ -237,7 +237,8 @@ namespace atlas
             const auto & alloc_block = *(allocated_blocks.begin());
 
             // Check for a blank space between addr_block_start and the
-            // next allocated block.
+            // next allocated block. Sparta will check that mappings
+            // do not overlap.
             if (addr_block_start < alloc_block.start_address)
             {
                 // Add a memory block up to the allocated block
@@ -253,6 +254,7 @@ namespace atlas
                 memory_map_->addMapping(addr_block_start, addr_block_start + block_size, memory_if,
                                         0x0 /* Additional offset */);
             }
+
             // Determine the next large block of memory
             addr_block_start = (((alloc_block.start_address + alloc_block.size - 1)
                                  & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1))
