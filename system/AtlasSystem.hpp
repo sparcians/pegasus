@@ -81,6 +81,16 @@ namespace atlas
             sparta::memory::addr_t total_size_aligned = 0;
             sparta::memory::addr_t start_address = 0;
             const uint8_t* data = nullptr;
+
+            MemorySection() = default;
+
+            MemorySection(const std::string _name, const sparta::memory::addr_t _file_size, const sparta::memory::addr_t _total_size_aligned, const sparta::memory::addr_t _start_address, const uint8_t* _data) :
+                name(_name),
+                file_size(_file_size),
+                total_size_aligned(_total_size_aligned),
+                start_address(_start_address),
+                data(_data)
+            {}
         };
 
         std::vector<MemorySection> memory_sections_;

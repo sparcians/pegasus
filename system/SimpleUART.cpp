@@ -13,38 +13,26 @@ namespace atlas
     {
     }
 
-    bool SimpleUART::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                              uint8_t* buf, const void*, void*)
+    bool SimpleUART::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t* buf, const void*, void*)
     {
-        (void)addr;
-        (void)size;
         *buf = 0x60;
         return true;
     }
 
-    bool SimpleUART::tryWrite_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                               const uint8_t* buf, const void*, void*)
+    bool SimpleUART::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t* buf, const void*, void*)
     {
-        (void)addr;
-        (void)size;
         std::cout << *buf;
         return true;
     }
 
-    bool SimpleUART::tryPeek_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                              uint8_t* buf) const
+    bool SimpleUART::tryPeek_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*) const
     {
-        (void)addr;
-        (void)buf;
         sparta_assert(false, "Simple UART peeks are not implemented");
         return false;
     }
 
-    bool SimpleUART::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                              const uint8_t* buf)
+    bool SimpleUART::tryPoke_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*)
     {
-        (void)addr;
-        (void)buf;
         sparta_assert(false, "Simple UART pokes are not implemented");
         return false;
     }

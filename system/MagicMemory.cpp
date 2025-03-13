@@ -13,38 +13,26 @@ namespace atlas
     {
     }
 
-    bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                               uint8_t* buf, const void*, void*)
+    bool MagicMemory::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*, const void*, void*)
     {
-        (void)addr;
-        (void)size;
         // TODO: Implement magic memory reads
         return true;
     }
 
-    bool MagicMemory::tryWrite_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                                const uint8_t* buf, const void*, void*)
+    bool MagicMemory::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*, const void*, void*)
     {
-        (void)addr;
-        (void)size;
         // TODO: Implement magic memory writes
         return true;
     }
 
-    bool MagicMemory::tryPeek_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                               uint8_t* buf) const
+    bool MagicMemory::tryPeek_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*) const
     {
-        (void)addr;
-        (void)buf;
         // Peeks are allowed, but have no side effects
         return true;
     }
 
-    bool MagicMemory::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
-                               const uint8_t* buf)
+    bool MagicMemory::tryPoke_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*)
     {
-        (void)addr;
-        (void)buf;
         // Pokes are allowed, but have no side effects
         return true;
     }
