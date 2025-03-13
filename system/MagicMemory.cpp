@@ -13,13 +13,15 @@ namespace atlas
     {
     }
 
-    bool MagicMemory::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*, const void*, void*)
+    bool MagicMemory::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*,
+                               const void*, void*)
     {
         // TODO: Implement magic memory reads
         return true;
     }
 
-    bool MagicMemory::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*, const void*, void*)
+    bool MagicMemory::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*,
+                                const void*, void*)
     {
         // TODO: Implement magic memory writes
         return true;

@@ -165,10 +165,10 @@ namespace atlas
         // The allocated memory blocks (Magic Mem, UART, etc)
         struct AllocatedMemoryBlock
         {
-            AllocatedMemoryBlock(sparta::memory::addr_t _start_address,
-                                 sparta::memory::addr_t _size) :
-                start_address(_start_address),
-                size(_size)
+            AllocatedMemoryBlock(sparta::memory::addr_t start_address,
+                                 sparta::memory::addr_t size) :
+                start_address(start_address),
+                size(size)
             {
             }
 

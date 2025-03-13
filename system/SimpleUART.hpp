@@ -19,8 +19,8 @@ namespace atlas
           public:
             explicit SimpleUARTParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
-            PARAMETER(uint64_t, base_addr, 0x20000000, "Base address")
-            PARAMETER(uint64_t, size, 4096, "Memory size")
+            PARAMETER(sparta::memory::addr_t, base_addr, 0x20000000, "Base address")
+            PARAMETER(sparta::memory::addr_t, size, 4096, "Memory size")
         };
 
         SimpleUART(sparta::TreeNode* node, const SimpleUARTParameters* params);

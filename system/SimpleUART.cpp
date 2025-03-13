@@ -13,13 +13,15 @@ namespace atlas
     {
     }
 
-    bool SimpleUART::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t* buf, const void*, void*)
+    bool SimpleUART::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t* buf,
+                              const void*, void*)
     {
         *buf = 0x60;
         return true;
     }
 
-    bool SimpleUART::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t* buf, const void*, void*)
+    bool SimpleUART::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t* buf,
+                               const void*, void*)
     {
         std::cout << *buf;
         return true;

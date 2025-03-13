@@ -22,8 +22,8 @@ namespace atlas
           public:
             explicit MagicMemoryParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
-            HIDDEN_PARAMETER(uint64_t, base_addr, 0x0, "Base address")
-            HIDDEN_PARAMETER(uint64_t, size, 0, "Memory size")
+            HIDDEN_PARAMETER(sparta::memory::addr_t, base_addr, 0x0, "Base address")
+            HIDDEN_PARAMETER(sparta::memory::addr_t, size, 0, "Memory size")
         };
 
         MagicMemory(sparta::TreeNode* node, const MagicMemoryParameters* params);
