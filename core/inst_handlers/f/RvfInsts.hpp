@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include "core/inst_handlers/f/RvfInstsBase.hpp"
 
 namespace atlas
 {
@@ -9,7 +10,7 @@ namespace atlas
     class Action;
     class ActionGroup;
 
-    class RvfInsts
+    class RvfInsts : RvfInstsBase
     {
       public:
         using base_type = RvfInsts;
