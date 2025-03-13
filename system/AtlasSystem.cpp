@@ -74,17 +74,22 @@ namespace atlas
                 unsigned char other;
                 symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
 
-                // Intentionally overwriting symbols with the same address
+                // Intentionally overwriting symbols with the same address since an ELF may contain
+                // more than one label at the same address
                 if (name.empty() == false)
                 {
                     symbols_[addr] = name;
 
                     if (name == "tohost")
                     {
+                        sparta_assert(tohost_addr.isValid() == false,
+                                      "Found multiple tohost symbols in ELF!");
                         tohost_addr = addr;
                     }
                     else if (name == "fromhost")
                     {
+                        sparta_assert(fromhost_addr.isValid() == false,
+                                      "Found multiple fromhost symbols in ELF!");
                         fromhost_addr = addr;
                     }
                 }
@@ -94,25 +99,27 @@ namespace atlas
         // Magic Memory
         if (tohost_addr.isValid() && fromhost_addr.isValid())
         {
-            sparta::memory::addr_t base_addr =
-                std::min(tohost_addr.getValue(), fromhost_addr.getValue());
-            const sparta::memory::addr_t addr_delt =
-                std::max(tohost_addr.getValue() - base_addr, fromhost_addr.getValue() - base_addr);
-            const sparta::memory::addr_t size_minimum = addr_delt + 8;
-            const sparta::memory::addr_t size_aligned =
-                ((size_minimum - 1) & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1)) + ATLAS_SYSTEM_BLOCK_SIZE;
-
             std::cout << "Found magic memory symbols in ELF" << std::endl;
             std::cout << "    tohost:   0x" << std::hex << tohost_addr.getValue() << std::endl;
             std::cout << "    fromhost: 0x" << std::hex << fromhost_addr.getValue() << std::endl;
-            if ((base_addr & (ATLAS_SYSTEM_BLOCK_SIZE - 1)) != 0)
+
+            sparta::memory::addr_t base_addr =
+                std::min(tohost_addr.getValue(), fromhost_addr.getValue());
+            if (base_addr % ATLAS_SYSTEM_BLOCK_SIZE != 0)
             {
+                // Align base address of section to the block size
                 base_addr = base_addr & ~(ATLAS_SYSTEM_BLOCK_SIZE - 1);
                 std::cout << "Warning: tohost/fromhost address doesn't align with "
                           << ATLAS_SYSTEM_BLOCK_SIZE << " bytes" << std::endl;
             }
             std::cout << "Automatically constructing magic memory at 0x" << std::hex << base_addr
                       << std::endl;
+
+            // Determine how many blocks are needed to hold the section
+            const sparta::memory::addr_t addr_delt =
+                std::max(tohost_addr.getValue() - base_addr, fromhost_addr.getValue() - base_addr);
+            const sparta::memory::addr_t size_aligned =
+                ((addr_delt / ATLAS_SYSTEM_BLOCK_SIZE) + 1) * ATLAS_SYSTEM_BLOCK_SIZE;
 
             magic_memory_section_ = MemorySection("MAGIC_MEM", 0, size_aligned, base_addr, nullptr);
         }
@@ -227,7 +234,7 @@ namespace atlas
 
         while (false == allocated_blocks.empty())
         {
-            const auto alloc_block = *(allocated_blocks.begin());
+            const auto & alloc_block = *(allocated_blocks.begin());
 
             // Check for a blank space between addr_block_start and the
             // next allocated block.
