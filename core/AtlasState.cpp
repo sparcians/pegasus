@@ -673,11 +673,6 @@ namespace atlas
                 // TODO: Initialize MISA CSR with XLEN and enabled extensions
                 const uint32_t xlen_val = 1;
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
-
-                // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
-                POKE_CSR_FIELD<RV32>(this, MSTATUS, "uxl", xlen_val);
-                POKE_CSR_FIELD<RV32>(this, MSTATUS, "sxl", xlen_val);
-                POKE_CSR_FIELD<RV32>(this, SSTATUS, "uxl", xlen_val);
             }
 
             std::cout << state->getCsrRegister(MHARTID) << std::endl;
