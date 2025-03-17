@@ -347,28 +347,28 @@ namespace atlas
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "beq",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::equal_to<int64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::equal_to<int32_t>>,
                                             RviInsts>(nullptr, "beq", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bge", atlas::Action::createAction<
-                           &RviInsts::branch_handler<RV32, std::greater_equal<int64_t>>, RviInsts>(
+                           &RviInsts::branch_handler<RV32, std::greater_equal<int32_t>>, RviInsts>(
                            nullptr, "bge", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bgeu",
                 atlas::Action::createAction<
-                    &RviInsts::branch_handler<RV32, std::greater_equal<uint64_t>>, RviInsts>(
+                    &RviInsts::branch_handler<RV32, std::greater_equal<uint32_t>>, RviInsts>(
                     nullptr, "bgeu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "blt",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<int64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<int32_t>>,
                                             RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bltu",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<uint64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<uint32_t>>,
                                             RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bne", atlas::Action::createAction<
-                           &RviInsts::branch_handler<RV32, std::not_equal_to<uint64_t>>, RviInsts>(
+                           &RviInsts::branch_handler<RV32, std::not_equal_to<uint32_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
@@ -638,10 +638,10 @@ namespace atlas
 
         if (OPERATOR()(rs1_val, rs2_val))
         {
-            const uint64_t pc = state->getPc();
+            const XLEN pc = state->getPc();
             constexpr uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
+            const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+            const XLEN branch_target = pc + imm;
             state->setNextPc(branch_target);
         }
 

@@ -6,10 +6,11 @@
 
 namespace atlas
 {
+    template<typename XLEN>
     class InstructionLogger : public Observer
     {
       public:
-        using base_type = InstructionLogger;
+        using base_type = InstructionLogger<XLEN>;
 
         InstructionLogger(sparta::log::MessageSource & inst_logger);
 
