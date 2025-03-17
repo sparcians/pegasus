@@ -119,12 +119,11 @@ namespace atlas
         exception_unit_ = core_tn->getChild("exception")->getResourceAs<Exception*>();
 
         // Initialize Mavis
-        DLOG("Initializing Mavis...");
-        DLOG(isa_string_);
+        DLOG("Initializing Mavis with ISA string " << isa_string_);
         const auto uarch_files = getUArchFiles(uarch_file_path_, xlen_);
         for (auto uarch_file : uarch_files)
         {
-            DLOG(uarch_file);
+            DLOG("\t" << uarch_file);
         }
 
         extension_manager_.setISA(isa_string_);
