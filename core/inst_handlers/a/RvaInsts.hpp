@@ -24,8 +24,7 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename T>
-        ActionGroup* compute_address_handler(AtlasState* state);
+        template <typename T> ActionGroup* compute_address_handler(AtlasState* state);
 
         template <typename RV, typename SIZE, typename OP, bool U = true>
         ActionGroup* amo_handler(atlas::AtlasState* state);

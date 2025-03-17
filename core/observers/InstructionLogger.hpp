@@ -6,8 +6,7 @@
 
 namespace atlas
 {
-    template<typename XLEN>
-    class InstructionLogger : public Observer
+    template <typename XLEN> class InstructionLogger : public Observer
     {
       public:
         using base_type = InstructionLogger<XLEN>;

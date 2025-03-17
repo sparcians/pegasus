@@ -53,25 +53,29 @@ namespace atlas
                 atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::SV32>>(
                     this, "Inst Translate (Sv32)");
             rv32_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            rv32_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = rv32_inst_translate_action;
+            rv32_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv32_inst_translate_action;
 
             Action rv32_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::SV32>>(
                     this, "Data Translate (Sv32)");
             rv32_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            rv32_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = rv32_data_translate_action;
+            rv32_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv32_data_translate_action;
 
             Action rv64_inst_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV32>>(
                     this, "Inst Translate (Sv32)");
             rv64_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = rv64_inst_translate_action;
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv64_inst_translate_action;
 
             Action rv64_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV32>>(
                     this, "Data Translate (Sv32)");
             rv64_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = rv64_data_translate_action;
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv64_data_translate_action;
         }
         // Sv39
         {
@@ -79,13 +83,15 @@ namespace atlas
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV39>>(
                     this, "Inst Translate (Sv39)");
             rv64_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] = rv64_inst_translate_action;
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] =
+                rv64_inst_translate_action;
 
             Action rv64_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV39>>(
                     this, "Data Translate (Sv39)");
             rv64_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] = rv64_data_translate_action;
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] =
+                rv64_data_translate_action;
         }
 
         // Assume we are booting in RV64 Machine mode with translation disabled

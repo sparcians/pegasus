@@ -165,9 +165,9 @@ namespace atlas
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler<RV64>, RviInsts>(
-                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ecall", atlas::Action::createAction<&RviInsts::ecall_handler<RV64>, RviInsts>(
+                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -373,9 +373,9 @@ namespace atlas
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler<RV32>, RviInsts>(
-                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ecall", atlas::Action::createAction<&RviInsts::ecall_handler<RV32>, RviInsts>(
+                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -941,8 +941,7 @@ namespace atlas
         return nullptr;
     }
 
-    template<typename XLEN>
-    ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE

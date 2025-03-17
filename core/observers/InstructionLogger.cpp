@@ -13,7 +13,7 @@ namespace atlas
 #define INSTLOG(msg) SPARTA_LOG(inst_logger_, msg)
 #endif
 
-    template<typename XLEN>
+    template <typename XLEN>
     InstructionLogger<XLEN>::InstructionLogger(sparta::log::MessageSource & inst_logger) :
         inst_logger_(inst_logger)
     {
@@ -22,8 +22,7 @@ namespace atlas
     template class InstructionLogger<RV64>;
     template class InstructionLogger<RV32>;
 
-    template<typename XLEN>
-    ActionGroup* InstructionLogger<XLEN>::preExecute(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preExecute(AtlasState* state)
     {
         reset_();
 
@@ -37,16 +36,14 @@ namespace atlas
             if (inst->hasRs1())
             {
                 const auto rs1_reg = inst->getRs1Reg();
-                const std::vector<uint8_t> value =
-                    convertToByteVector(rs1_reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = convertToByteVector(rs1_reg->dmiRead<XLEN>());
                 src_regs_.emplace_back(getRegId(rs1_reg), value);
             }
 
             if (inst->hasRs2())
             {
                 const auto rs2_reg = inst->getRs2Reg();
-                const std::vector<uint8_t> value =
-                    convertToByteVector(rs2_reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = convertToByteVector(rs2_reg->dmiRead<XLEN>());
                 src_regs_.emplace_back(getRegId(rs2_reg), value);
             }
 
@@ -74,8 +71,7 @@ namespace atlas
         return nullptr;
     }
 
-    template<typename XLEN>
-    ActionGroup* InstructionLogger<XLEN>::preException(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preException(AtlasState* state)
     {
         preExecute(state);
 
@@ -84,8 +80,7 @@ namespace atlas
         return nullptr;
     }
 
-    template<typename XLEN>
-    ActionGroup* InstructionLogger<XLEN>::postExecute(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::postExecute(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
@@ -135,7 +130,7 @@ namespace atlas
         if (inst)
         {
             INSTLOG(HEX(pc_, width) << ": " << inst->dasmString() << " (" << HEX8(opcode_)
-                              << ") uid:" << inst->getUid());
+                                    << ") uid:" << inst->getUid());
         }
         else
         {
@@ -168,8 +163,8 @@ namespace atlas
             const XLEN reg_value = convertFromByteVector<XLEN>(dst_reg.reg_value);
             const XLEN reg_prev_value = convertFromByteVector<XLEN>(dst_reg.reg_prev_value);
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
-                              << ": " << HEX(reg_value, width) << " (prev: " << HEX(reg_prev_value, width)
-                              << ")");
+                              << ": " << HEX(reg_value, width)
+                              << " (prev: " << HEX(reg_prev_value, width) << ")");
         }
 
         INSTLOG("");

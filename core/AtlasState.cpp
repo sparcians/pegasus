@@ -156,7 +156,7 @@ namespace atlas
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
         if (inst_logger_.observed())
         {
-            if(xlen_ == 64)
+            if (xlen_ == 64)
             {
                 addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
             }
