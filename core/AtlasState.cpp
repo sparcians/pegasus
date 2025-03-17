@@ -191,6 +191,9 @@ namespace atlas
                     << csr_name << std::endl;
             }
         }
+
+        // Set up translation
+        translate_unit_->changeMmuMode(xlen_, translation_state_.getMode());
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
