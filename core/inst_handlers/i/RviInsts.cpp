@@ -166,7 +166,7 @@ namespace atlas
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::ecall_handler<RV64>, RviInsts>(
                                       nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
@@ -374,7 +374,7 @@ namespace atlas
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::ecall_handler<RV32>, RviInsts>(
                                       nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
@@ -941,6 +941,7 @@ namespace atlas
         return nullptr;
     }
 
+    template<typename XLEN>
     ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
@@ -962,13 +963,13 @@ namespace atlas
         ///////////////////////////////////////////////////////////////////////
 
         // Command
-        const uint64_t cmd = READ_INT_REG<uint64_t>(state, 17); // a7
+        const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
 
         // Only support exit for now so we can end simulation
         if (cmd == 93)
         {
             // Function arguments are a0-a6 (x10-x16)
-            const uint64_t exit_code = READ_INT_REG<uint64_t>(state, 10);
+            const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
 
             AtlasState::SimState* sim_state = state->getSimState();
             sim_state->workload_exit_code = exit_code;
