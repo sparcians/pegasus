@@ -85,6 +85,7 @@ namespace atlas
         {
             XLEN,
             PC,
+            PREV_PC,
             EXIT_CODE,
             TEST_PASSED,
             SIM_STOPPED,
@@ -141,6 +142,7 @@ namespace atlas
             static const std::unordered_map<std::string, SimCommand> sim_commands = {
                 {"state.xlen", SimCommand::XLEN},
                 {"state.pc", SimCommand::PC},
+                {"state.prev_pc", SimCommand::PREV_PC},
                 {"state.exit_code", SimCommand::EXIT_CODE},
                 {"state.test_passed", SimCommand::TEST_PASSED},
                 {"state.sim_stopped", SimCommand::SIM_STOPPED},
@@ -281,6 +283,10 @@ namespace atlas
 
                 case SimCommand::PC:
                     sendInt_(state->getPc());
+                    return true;
+
+                case SimCommand::PREV_PC:
+                    sendInt_(state->getPrevPc());
                     return true;
 
                 case SimCommand::EXIT_CODE:

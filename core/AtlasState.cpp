@@ -500,6 +500,7 @@ namespace atlas
     ActionGroup* AtlasState::incrementPc_(AtlasState*)
     {
         // Set PC
+        prev_pc_ = pc_;
         pc_ = next_pc_;
         DLOG("PC: 0x" << std::hex << pc_);
 

@@ -89,6 +89,8 @@ namespace atlas
 
         Addr getPc() const { return pc_; }
 
+        Addr getPrevPc() const { return prev_pc_; }
+
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
@@ -272,6 +274,9 @@ namespace atlas
 
         //! Next pc
         Addr next_pc_ = 0x0;
+
+        //! Previous pc
+        Addr prev_pc_ = 0x0;
 
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
