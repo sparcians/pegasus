@@ -984,8 +984,6 @@ namespace atlas
 
     ActionGroup* RviInsts::ebreak_handler(atlas::AtlasState* state)
     {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
 
@@ -1003,7 +1001,7 @@ namespace atlas
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
 
-        return nullptr;
+        THROW_BREAKPOINT;
     }
 
     ActionGroup* RviInsts::fence_handler(atlas::AtlasState* state)
