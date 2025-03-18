@@ -104,6 +104,7 @@ namespace atlas
         struct SimState
         {
             uint64_t current_opcode = 0;
+            uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
             bool sim_stopped = false;
@@ -125,7 +126,7 @@ namespace atlas
 
         void setCurrentInst(AtlasInstPtr inst)
         {
-            inst->setUid(uid_++);
+            inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
 
@@ -277,9 +278,6 @@ namespace atlas
 
         //! Next privilege mode
         PrivMode next_priv_mode_ = PrivMode::MACHINE;
-
-        //! Unique instruction ID
-        uint64_t uid_ = 0;
 
         //! Simulation state
         SimState sim_state_;

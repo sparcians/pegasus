@@ -53,6 +53,10 @@ class AtlasState:
             self.endpoint = endpoint
 
         @property
+        def current_uid(self):
+            return atlas_inst_uid(self.endpoint)
+
+        @property
         def inst_count(self):
             return atlas_inst_count(self.endpoint)
 
