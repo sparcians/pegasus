@@ -23,7 +23,7 @@ class StateSerializer(Observer):
             self.tracked_reg_values[reg_name] = atlas_reg_value(endpoint, reg_name)
 
         def Finalize(self, endpoint, state_db):
-            uid = atlas_state(endpoint).getSimState().current_uid
+            uid = atlas_current_uid(endpoint)
             state_db.AppendInstruction(self.pc, self.opcode, self.dasm, uid)
 
             for reg_name, prev_val in self.tracked_reg_values.items():
@@ -70,9 +70,7 @@ class StateSerializer(Observer):
         priv = inst.getPrivMode()
         dasm = inst.dasmString()
         rd = inst.getRd()
-
-        state = atlas_state(endpoint)
-        uid = state.getSimState().current_uid
+        uid = atlas_current_uid(endpoint)
 
         inst = self.Instruction(pc, opcode, priv, dasm)
         if rd:
@@ -116,7 +114,7 @@ class StateSerializer(Observer):
             # the PC, opcode, etc. right now. We will try to fill in that data
             # in OnPostExecute().
             inst = self.Instruction(None, None, None, None)
-            uid = atlas_state(endpoint).getSimState().current_uid
+            uid = atlas_current_uid(endpoint)
             self.insts_by_uid[uid] = inst
         else:
             uid = inst.getUid()
@@ -134,8 +132,7 @@ class StateSerializer(Observer):
         self.__AddCsrChangables(endpoint, inst)
 
     def OnPostExecute(self, endpoint):
-        state = atlas_state(endpoint)
-        uid = state.getSimState().current_uid
+        uid = atlas_current_uid(endpoint)
         if uid not in self.insts_by_uid:
             return
 
