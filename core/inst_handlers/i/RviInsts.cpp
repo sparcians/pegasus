@@ -5,6 +5,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
+#include "system/AtlasSystem.hpp"
 
 #include <functional>
 
@@ -653,7 +654,9 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         XLEN rd_val = state->getPc() + insn->getOpcodeSize();
-        const XLEN jump_target = state->getPc() + insn->getImmediate();
+        constexpr uint32_t IMM_SIZE = 21;
+        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN jump_target = state->getPc() + imm;
         state->setNextPc(jump_target);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
@@ -961,22 +964,44 @@ namespace atlas
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
 
-        // Command
-        const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
-
-        // Only support exit for now so we can end simulation
-        if (cmd == 93)
+        // TODO: System call emulation support will eventually be supported by AtlasSystem
+        if (state->getAtlasSystem()->isSystemCallEmulationEnabled())
         {
-            // Function arguments are a0-a6 (x10-x16)
-            const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
+            // Command
+            const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
 
-            AtlasState::SimState* sim_state = state->getSimState();
-            sim_state->workload_exit_code = exit_code;
-            sim_state->test_passed = (exit_code == 0) ? true : false;
-            sim_state->sim_stopped = true;
+            // Only support exit for now so we can end simulation
+            if (cmd == 93)
+            {
+                // Function arguments are a0-a6 (x10-x16)
+                const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
 
-            // Stop simulation
-            return state->getStopSimActionGroup();
+                AtlasState::SimState* sim_state = state->getSimState();
+                sim_state->workload_exit_code = exit_code;
+                sim_state->test_passed = (exit_code == 0) ? true : false;
+                sim_state->sim_stopped = true;
+
+                // Stop simulation
+                return state->getStopSimActionGroup();
+            }
+        }
+        else
+        {
+            switch (state->getPrivMode())
+            {
+                case PrivMode::USER:
+                    THROW_USER_ECALL;
+                    break;
+                case PrivMode::SUPERVISOR:
+                    THROW_SUPERVISOR_ECALL;
+                    break;
+                case PrivMode::MACHINE:
+                    THROW_MACHINE_ECALL;
+                    break;
+                default:
+                    sparta_assert(false, "Invalid privilege mode!");
+                    break;
+            }
         }
 
         return nullptr;

@@ -33,12 +33,17 @@ namespace atlas
           public:
             AtlasSystemParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
+            PARAMETER(bool, enable_syscall_emulation, false,
+                      "Enable emulation of system calls via the ecall instruction")
             PARAMETER(bool, enable_uart, false, "Enable a Uart")
             HIDDEN_PARAMETER(std::string, workload, "", "Workload to load into memory")
         };
 
         // Constructor
         AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p);
+
+        // Is syscall emulation enabled?
+        bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
         // Get pointer to system memory
         sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
@@ -63,6 +68,9 @@ namespace atlas
         // Device factories
         sparta::ResourceFactory<SimpleUART, SimpleUART::SimpleUARTParameters> uart_fact_;
         sparta::ResourceFactory<MagicMemory, MagicMemory::MagicMemoryParameters> magic_mem_fact_;
+
+        // System call emulation
+        const bool syscall_emulation_enabled_;
 
         // Devices
         SimpleUART* uart_ = nullptr;
