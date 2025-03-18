@@ -54,15 +54,14 @@ class InstViewer(wx.Panel):
 
         self.loading_msg.SetLabel('Loading test...')
         self.infinite_loop_pc = None
-        RunObserver()
-        #self.process = multiprocessing.Process(target=RunObserver)
-        #self.process.start()
+        self.process = multiprocessing.Process(target=RunObserver)
+        self.process.start()
 
         while self.timer is not None:
             wx.Yield()
 
-        #self.process.join()
-        #self.process = None
+        self.process.join()
+        self.process = None
         self.loading_msg.SetLabel('')
 
         self.inst_list_ctrl.InsertColumn(0, "PC")
