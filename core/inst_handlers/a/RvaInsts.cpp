@@ -197,14 +197,14 @@ namespace atlas
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomax.d",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MaxFunctor<D>, false>,
-                                            RvaInsts>(nullptr, "amomax_d",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV64, D, MaxFunctor<std::make_signed_t<D>>, false>,
+                    RvaInsts>(nullptr, "amomax_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomax.w",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, MaxFunctor<W>, false>,
-                                            RvaInsts>(nullptr, "amomax_w",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV64, W, MaxFunctor<std::make_signed_t<W>>, false>,
+                    RvaInsts>(nullptr, "amomax_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomaxu.d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MaxFunctor<D>>,
@@ -217,14 +217,14 @@ namespace atlas
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomin.d",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MinFunctor<D>, false>,
-                                            RvaInsts>(nullptr, "amomin_d",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV64, D, MinFunctor<std::make_signed_t<D>>, false>,
+                    RvaInsts>(nullptr, "amomin_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomin.w",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, MinFunctor<W>, false>,
-                                            RvaInsts>(nullptr, "amomin_w",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV64, W, MinFunctor<std::make_signed_t<W>>, false>,
+                    RvaInsts>(nullptr, "amomin_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amominu.d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MinFunctor<D>>,
@@ -290,9 +290,9 @@ namespace atlas
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomax.w",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MaxFunctor<W>, false>,
-                                            RvaInsts>(nullptr, "amomax_w",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV32, W, MaxFunctor<std::make_signed_t<W>>, false>,
+                    RvaInsts>(nullptr, "amomax_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomaxu.w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MaxFunctor<W>>,
@@ -300,9 +300,9 @@ namespace atlas
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomin.w",
-                atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MinFunctor<W>, false>,
-                                            RvaInsts>(nullptr, "amomin_w",
-                                                      ActionTags::EXECUTE_TAG));
+                atlas::Action::createAction<
+                    &RvaInsts::amo_handler<RV32, W, MinFunctor<std::make_signed_t<W>>, false>,
+                    RvaInsts>(nullptr, "amomin_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amominu.w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MinFunctor<W>>,
