@@ -29,6 +29,10 @@ def atlas_xlen(endpoint):
 def atlas_pc(endpoint):
     return endpoint.request('state.pc')
 
+# Equiv C++:  AtlasState::getPrevPc()
+def atlas_prev_pc(endpoint):
+    return endpoint.request('state.prev_pc')
+
 # Equiv C++:  AtlasState::getSimState()->workload_exit_code
 def atlas_exit_code(endpoint):
     return endpoint.request('state.exit_code')

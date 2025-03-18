@@ -251,6 +251,7 @@ class ObserverSim:
 
             start_time = time.time()
 
+            import pdb; pdb.set_trace()
             while True:
                 current_action = atlas_continue(sim.endpoint)
 
