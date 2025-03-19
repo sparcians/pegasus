@@ -5,6 +5,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
+#include "system/AtlasSystem.hpp"
 
 #include <functional>
 
@@ -165,9 +166,9 @@ namespace atlas
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
-                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ecall", atlas::Action::createAction<&RviInsts::ecall_handler<RV64>, RviInsts>(
+                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -347,35 +348,35 @@ namespace atlas
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "beq",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::equal_to<int64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::equal_to<int32_t>>,
                                             RviInsts>(nullptr, "beq", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bge", atlas::Action::createAction<
-                           &RviInsts::branch_handler<RV32, std::greater_equal<int64_t>>, RviInsts>(
+                           &RviInsts::branch_handler<RV32, std::greater_equal<int32_t>>, RviInsts>(
                            nullptr, "bge", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bgeu",
                 atlas::Action::createAction<
-                    &RviInsts::branch_handler<RV32, std::greater_equal<uint64_t>>, RviInsts>(
+                    &RviInsts::branch_handler<RV32, std::greater_equal<uint32_t>>, RviInsts>(
                     nullptr, "bgeu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "blt",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<int64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<int32_t>>,
                                             RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bltu",
-                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<uint64_t>>,
+                atlas::Action::createAction<&RviInsts::branch_handler<RV32, std::less<uint32_t>>,
                                             RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bne", atlas::Action::createAction<
-                           &RviInsts::branch_handler<RV32, std::not_equal_to<uint64_t>>, RviInsts>(
+                           &RviInsts::branch_handler<RV32, std::not_equal_to<uint32_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreak_handler, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ecall",
-                                  atlas::Action::createAction<&RviInsts::ecall_handler, RviInsts>(
-                                      nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ecall", atlas::Action::createAction<&RviInsts::ecall_handler<RV32>, RviInsts>(
+                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fence_handler, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -638,10 +639,10 @@ namespace atlas
 
         if (OPERATOR()(rs1_val, rs2_val))
         {
-            const uint64_t pc = state->getPc();
+            const XLEN pc = state->getPc();
             constexpr uint32_t IMM_SIZE = 13;
-            const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
-            const uint64_t branch_target = pc + imm;
+            const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+            const XLEN branch_target = pc + imm;
             state->setNextPc(branch_target);
         }
 
@@ -653,7 +654,9 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         XLEN rd_val = state->getPc() + insn->getOpcodeSize();
-        const XLEN jump_target = state->getPc() + insn->getImmediate();
+        constexpr uint32_t IMM_SIZE = 21;
+        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN jump_target = state->getPc() + imm;
         state->setNextPc(jump_target);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
@@ -941,7 +944,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::ecall_handler(atlas::AtlasState* state)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -961,22 +964,44 @@ namespace atlas
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
 
-        // Command
-        const uint64_t cmd = READ_INT_REG<uint64_t>(state, 17); // a7
-
-        // Only support exit for now so we can end simulation
-        if (cmd == 93)
+        // TODO: System call emulation support will eventually be supported by AtlasSystem
+        if (state->getAtlasSystem()->isSystemCallEmulationEnabled())
         {
-            // Function arguments are a0-a6 (x10-x16)
-            const uint64_t exit_code = READ_INT_REG<uint64_t>(state, 10);
+            // Command
+            const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
 
-            AtlasState::SimState* sim_state = state->getSimState();
-            sim_state->workload_exit_code = exit_code;
-            sim_state->test_passed = (exit_code == 0) ? true : false;
-            sim_state->sim_stopped = true;
+            // Only support exit for now so we can end simulation
+            if (cmd == 93)
+            {
+                // Function arguments are a0-a6 (x10-x16)
+                const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
 
-            // Stop simulation
-            return state->getStopSimActionGroup();
+                AtlasState::SimState* sim_state = state->getSimState();
+                sim_state->workload_exit_code = exit_code;
+                sim_state->test_passed = (exit_code == 0) ? true : false;
+                sim_state->sim_stopped = true;
+
+                // Stop simulation
+                return state->getStopSimActionGroup();
+            }
+        }
+        else
+        {
+            switch (state->getPrivMode())
+            {
+                case PrivMode::USER:
+                    THROW_USER_ECALL;
+                    break;
+                case PrivMode::SUPERVISOR:
+                    THROW_SUPERVISOR_ECALL;
+                    break;
+                case PrivMode::MACHINE:
+                    THROW_MACHINE_ECALL;
+                    break;
+                default:
+                    sparta_assert(false, "Invalid privilege mode!");
+                    break;
+            }
         }
 
         return nullptr;
@@ -984,8 +1009,6 @@ namespace atlas
 
     ActionGroup* RviInsts::ebreak_handler(atlas::AtlasState* state)
     {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
 
@@ -1003,7 +1026,7 @@ namespace atlas
         // END OF SPIKE CODE
         ///////////////////////////////////////////////////////////////////////
 
-        return nullptr;
+        THROW_BREAKPOINT;
     }
 
     ActionGroup* RviInsts::fence_handler(atlas::AtlasState* state)

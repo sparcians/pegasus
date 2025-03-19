@@ -69,11 +69,18 @@ namespace atlas
             return result_;
         }
 
+        void changeMode(const MMUMode mode) { mode_ = mode; }
+
+        MMUMode getMode() const { return mode_; }
+
       private:
         // Translation request
         TranslationRequest request_;
 
         // Translation result
         TranslationResult result_;
+
+        // Current translation mode
+        MMUMode mode_ = MMUMode::BAREMETAL;
     };
 } // namespace atlas

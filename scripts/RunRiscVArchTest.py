@@ -4,6 +4,7 @@ import os
 import re
 import argparse
 import subprocess
+import multiprocessing
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -15,6 +16,47 @@ def get_tests(directory):
                 tests.append(os.path.abspath(os.path.join(root, file)))
     tests.sort()
     return tests
+
+# Function to run a single test and append to the appropriate queue
+def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
+    testname = os.path.basename(test)
+    logname = testname + ".log"
+    instlogname = testname + ".instlog"
+    isa_string = "rv32g" if xlen == "rv32" else "rv64g"
+    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, "-p", "top.system.params.enable_syscall_emulation", "true", test]
+    test_passed = False
+    try:
+        with open(logname, "w") as f:
+            result = subprocess.run(atlas_cmd, stdout=f, stderr=f, timeout=10)
+            if result.returncode == 0:
+                test_passed = True
+    except subprocess.TimeoutExpired:
+        timeout_tests.put(testname)
+        return
+
+    if test_passed:
+        passing_tests.put(testname)
+        # Remove log files if test passed
+        os.remove(logname)
+        os.remove(instlogname)
+    else:
+        failing_tests.put(testname)
+
+# Function to run tests using processes
+def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tests):
+    print("Running " + str(len(tests)) + " arch tests...")
+    processes = []
+
+    # Create a process for each test command
+    for test in tests:
+        process = multiprocessing.Process(target=run_test, args=(test, xlen, passing_tests, failing_tests, timeout_tests))
+        process.start()
+        processes.append(process)
+
+    # Wait for all processes to finish
+    for process in processes:
+        process.join()
+
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")
@@ -46,47 +88,7 @@ def main():
     failing_tests = multiprocessing.Queue()
     timeout_tests = multiprocessing.Queue()
 
-    # Function to run a single test and append to the appropriate queue
-    def run_test(test, passing_tests, failing_tests, timeout_tests):
-        testname = os.path.basename(test)
-        logname = testname + ".log"
-        instlogname = testname + ".instlog"
-        isa_string = "rv32g" if args.xlen == "rv32" else "rv64g"
-        atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, test]
-        test_passed = False
-        try:
-            with open(logname, "w") as f:
-                result = subprocess.run(atlas_cmd, stdout=f, stderr=f, timeout=10)
-                if result.returncode == 0:
-                    test_passed = True
-        except subprocess.TimeoutExpired:
-            timeout_tests.put(testname)
-            return
-
-        if test_passed:
-            passing_tests.put(testname)
-            # Remove log files if test passed
-            os.remove(logname)
-            os.remove(instlogname)
-        else:
-            failing_tests.put(testname)
-
-    # Function to run tests using processes
-    def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests):
-        print("Running " + str(len(tests)) + " arch tests...")
-        processes = []
-
-        # Create a process for each test command
-        for test in tests:
-            process = multiprocessing.Process(target=run_test, args=(test, passing_tests, failing_tests, timeout_tests))
-            process.start()
-            processes.append(process)
-
-        # Wait for all processes to finish
-        for process in processes:
-            process.join()
-
-    run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests)
+    run_tests_in_parallel(tests, args.xlen, passing_tests, failing_tests, timeout_tests)
 
     num_passed = 0
     print("PASSED:")

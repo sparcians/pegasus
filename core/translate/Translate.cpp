@@ -16,64 +16,111 @@ namespace atlas
 
         // Baremetal (translation disabled)
         {
-            Action inst_translate_action =
+            // RV32
+            Action rv32_inst_translate_action =
+                atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::BAREMETAL>>(
+                    this, "Inst Translate (Baremetal)");
+            rv32_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
+            rv32_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
+                rv32_inst_translate_action;
+
+            Action rv32_data_translate_action =
+                atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::BAREMETAL>>(
+                    this, "Data Translate (Baremetal)");
+            rv32_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
+            rv32_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
+                rv32_data_translate_action;
+
+            // RV64
+            Action rv64_inst_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::BAREMETAL>>(
                     this, "Inst Translate (Baremetal)");
-            inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
-                inst_translate_action;
+            rv64_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
+                rv64_inst_translate_action;
 
-            Action data_translate_action =
+            Action rv64_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::BAREMETAL>>(
                     this, "Data Translate (Baremetal)");
-            data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
-                data_translate_action;
+            rv64_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)] =
+                rv64_data_translate_action;
         }
+
         // Sv32
         {
-            Action inst_translate_action =
+            Action rv32_inst_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::SV32>>(
                     this, "Inst Translate (Sv32)");
-            inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = inst_translate_action;
+            rv32_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
+            rv32_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv32_inst_translate_action;
 
-            Action data_translate_action =
+            Action rv32_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV32, MMUMode::SV32>>(
                     this, "Data Translate (Sv32)");
-            data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] = data_translate_action;
+            rv32_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
+            rv32_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv32_data_translate_action;
+
+            Action rv64_inst_translate_action =
+                atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV32>>(
+                    this, "Inst Translate (Sv32)");
+            rv64_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv64_inst_translate_action;
+
+            Action rv64_data_translate_action =
+                atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV32>>(
+                    this, "Data Translate (Sv32)");
+            rv64_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV32)] =
+                rv64_data_translate_action;
         }
         // Sv39
         {
-            Action inst_translate_action =
+            Action rv64_inst_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV39>>(
                     this, "Inst Translate (Sv39)");
-            inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
-            inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] = inst_translate_action;
+            rv64_inst_translate_action.addTag(ActionTags::INST_TRANSLATE_TAG);
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] =
+                rv64_inst_translate_action;
 
-            Action data_translate_action =
+            Action rv64_data_translate_action =
                 atlas::Action::createAction<&Translate::translate_<RV64, MMUMode::SV39>>(
                     this, "Data Translate (Sv39)");
-            data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
-            data_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] = data_translate_action;
+            rv64_data_translate_action.addTag(ActionTags::DATA_TRANSLATE_TAG);
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::SV39)] =
+                rv64_data_translate_action;
         }
 
-        // Assume we are booting in Machine mode with translation disabled
+        // Assume we are booting in RV64 Machine mode with translation disabled
         inst_translate_action_group_.addAction(
-            inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
         data_translate_action_group_.addAction(
-            data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
     }
 
-    void Translate::changeMmuMode(MMUMode mode)
+    void Translate::changeMmuMode(const uint64_t xlen, const MMUMode mode)
     {
-        inst_translate_action_group_.replaceAction(
-            ActionTags::INST_TRANSLATE_TAG,
-            inst_translation_actions_.at(static_cast<uint32_t>(mode)));
-        data_translate_action_group_.replaceAction(
-            ActionTags::DATA_TRANSLATE_TAG,
-            data_translation_actions_.at(static_cast<uint32_t>(mode)));
+        if (xlen == 64)
+        {
+            inst_translate_action_group_.replaceAction(
+                ActionTags::INST_TRANSLATE_TAG,
+                rv64_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
+            data_translate_action_group_.replaceAction(
+                ActionTags::DATA_TRANSLATE_TAG,
+                rv64_data_translation_actions_.at(static_cast<uint32_t>(mode)));
+        }
+        else
+        {
+            inst_translate_action_group_.replaceAction(
+                ActionTags::INST_TRANSLATE_TAG,
+                rv32_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
+            data_translate_action_group_.replaceAction(
+                ActionTags::DATA_TRANSLATE_TAG,
+                rv32_data_translation_actions_.at(static_cast<uint32_t>(mode)));
+        }
     }
 
     template <typename XLEN, MMUMode Mode> ActionGroup* Translate::translate_(AtlasState* state)
@@ -82,7 +129,8 @@ namespace atlas
         const AtlasTranslationState::TranslationRequest request =
             translation_state->getTranslationRequest();
         const XLEN vaddr = request.virtual_addr;
-        ILOG("Translating " << HEX16(vaddr));
+        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        ILOG("Translating " << HEX(vaddr, width));
 
         if constexpr (Mode == MMUMode::BAREMETAL)
         {
@@ -103,7 +151,7 @@ namespace atlas
             const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
             const PageTableEntry<XLEN, Mode> pte = state->readMemory<XLEN>(pte_paddr);
 
-            DLOG("    Addr: " << HEX16(pte_paddr));
+            DLOG("    Addr: " << HEX(pte_paddr, width));
             DLOG("     PTE: " << pte);
 
             //  If accessing pte violates a PMA or PMP check, raise an access-fault exception
@@ -121,7 +169,7 @@ namespace atlas
                 const uint64_t paddr =
                     ((uint64_t)pte.getPpn() * PAGESIZE) + extractPageOffset_(request.virtual_addr);
                 translation_state->setTranslationResult(paddr, request.size);
-                ILOG("  Result: " << HEX16(paddr));
+                ILOG("  Result: " << HEX(paddr, width));
 
                 // Keep going
                 return nullptr;
