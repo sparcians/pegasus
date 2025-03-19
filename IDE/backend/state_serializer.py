@@ -23,8 +23,7 @@ class StateSerializer(Observer):
             self.tracked_reg_values[reg_name] = atlas_reg_value(endpoint, reg_name)
 
         def Finalize(self, endpoint, state_db):
-            inst = atlas_current_inst(endpoint)
-            uid = inst.getUid()
+            uid = atlas_current_uid(endpoint)
             state_db.AppendInstruction(self.pc, self.opcode, self.dasm, uid)
 
             for reg_name, prev_val in self.tracked_reg_values.items():
@@ -59,9 +58,11 @@ class StateSerializer(Observer):
         self.state_db.SetInitRegValue('resv_priv', init_priv)
 
     def OnPreExecute(self, endpoint):
+        # Note that there are cases where the current instruction is None,
+        # due to hitting exceptions during fetch/translate/decode. In those
+        # cases, we will enter OnPreException() first.
         inst = atlas_current_inst(endpoint)
-        if not inst:
-            return
+        assert inst is not None
 
         pc = atlas_pc(endpoint)
         mnemonic = inst.getMnemonic()
@@ -69,7 +70,7 @@ class StateSerializer(Observer):
         priv = inst.getPrivMode()
         dasm = inst.dasmString()
         rd = inst.getRd()
-        uid = inst.getUid()
+        uid = atlas_current_uid(endpoint)
 
         inst = self.Instruction(pc, opcode, priv, dasm)
         if rd:
@@ -80,7 +81,7 @@ class StateSerializer(Observer):
         # We not only snapshot CSR values on exceptions, but also on
         # select instructions that can change them too.
         if mnemonic in ('ecall', 'ebreak', 'fence', 'fence.i', 'mret', 'sret') or mnemonic.startswith('csrr'):
-            self.__AddCsrChangables(endpoint)
+            self.__AddCsrChangables(endpoint, inst)
 
         # Add fcsr, frm, and fflags to the list of tracked registers
         # if the instruction is a floating-point instruction.
@@ -103,18 +104,48 @@ class StateSerializer(Observer):
             inst.AddChangable(endpoint, csr_name)
 
     def OnPreException(self, endpoint):
-        self.__AddCsrChangables(endpoint)
+        inst = atlas_current_inst(endpoint)
+        if inst is None:
+            # This can occur when mavis::UnknownOpcode is thrown during
+            # fetch/translate/decode. We don't have a current instruction.
+            # We need to create a new instruction object in order to track any
+            # CSR changes that may have occurred during the exception. Note that
+            # if we don't have a current instruction, we cannot reliably ask for
+            # the PC, opcode, etc. right now. We will try to fill in that data
+            # in OnPostExecute().
+            inst = self.Instruction(None, None, None, None)
+            uid = atlas_current_uid(endpoint)
+            self.insts_by_uid[uid] = inst
+        else:
+            uid = inst.getUid()
+            if uid not in self.insts_by_uid:
+                # A bad CSR was encountered during decode. Just like the
+                # scenario above where we don't have a current instruction,
+                # we need to create a new instruction object to track any
+                # CSR changes that may have occurred during the exception.
+                inst = self.Instruction(None, None, None, None)
+                self.insts_by_uid[uid] = inst
+            else:
+                # An exception occurred during instruction execution.
+                inst = self.insts_by_uid[uid]
+
+        self.__AddCsrChangables(endpoint, inst)
 
     def OnPostExecute(self, endpoint):
-        inst = atlas_current_inst(endpoint)
-        if not inst:
+        uid = atlas_current_uid(endpoint)
+        if uid not in self.insts_by_uid:
             return
 
-        uid = inst.getUid()
         msg = 'Executed {} instructions...'.format(uid+1)
         self.msg_queue.put(msg)
 
         inst = self.insts_by_uid[uid]
+        if inst.pc is None:
+            # The reason we have to take the previous PC and not the current PC
+            # is due to the fact that incrementPc_() is called before the observers'
+            # postExecute_() method is called.
+            inst.pc = atlas_prev_pc(endpoint)
+
         inst.Finalize(endpoint, self.state_db)
         del self.insts_by_uid[uid]
 
@@ -128,14 +159,7 @@ class StateSerializer(Observer):
     def OnSimulationDead(self, pc):
         self.msg_queue.put('SIM_DEAD')
 
-    def __AddCsrChangables(self, endpoint):
-        inst = atlas_current_inst(endpoint)
-        if not inst:
-            return
-
-        uid = inst.getUid()
-        inst = self.insts_by_uid[uid]
-
+    def __AddCsrChangables(self, endpoint, inst):
         csr_names = self.__GetCsrNames(endpoint)
         for csr_name in csr_names:
             inst.AddChangable(endpoint, csr_name)
