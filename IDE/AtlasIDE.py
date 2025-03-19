@@ -19,7 +19,12 @@ class AtlasIDE(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.vsplitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
-        self.SetSize((1920, 1020))
+
+        if wx.DisplaySize()[0] > 1920:
+            self.SetSize((1920, 1080))
+        else:
+            self.Maximize()
+
         self.Layout()
 
 if __name__ == "__main__":

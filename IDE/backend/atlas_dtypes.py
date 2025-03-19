@@ -23,6 +23,9 @@ class AtlasState:
     def getPc(self):
         return atlas_pc(self.endpoint)
 
+    def getPrevPc(self):
+        return atlas_prev_pc(self.endpoint)
+
     def getPrivMode(self):
         return atlas_inst_priv(self.endpoint)
 
@@ -51,6 +54,10 @@ class AtlasState:
     class SimState:
         def __init__(self, endpoint):
             self.endpoint = endpoint
+
+        @property
+        def current_uid(self):
+            return atlas_inst_uid(self.endpoint)
 
         @property
         def inst_count(self):

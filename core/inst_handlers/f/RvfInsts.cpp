@@ -140,11 +140,10 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>(f32_sqrt(float32_t{rs1_val}).v));
-        update_csr<RV64>(state);
+                           nanBoxing<RV64, SP>(f32_sqrt(float32_t{rs1_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -152,13 +151,11 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>(f32_sub(float32_t{rs1_val}, float32_t{rs2_val}).v));
-        update_csr<RV64>(state);
+                           nanBoxing<RV64, SP>(f32_sub(float32_t{rs1_val}, float32_t{rs2_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -166,29 +163,24 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>(f32_add(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
-        update_csr<RV64>(state);
+            nanBoxing<RV64, SP>(f32_add(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::feq_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<RV64>(state, inst->getRd(), f32_eq(float32_t{rs1_val}, float32_t{rs2_val}));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -212,31 +204,26 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>(
+            nanBoxing<RV64, SP>(
                 f32_sub(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}), float32_t{rs3_val}).v));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fmin_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val : rs2_val;
-        fmax_fmin_nan_zero_check<SP>(rs1_val, rs2_val, rd_val, false);
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(rd_val));
-        update_csr<RV64>(state);
+        fmaxFminNanZeroCheck<SP>(rs1_val, rs2_val, rd_val, false);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rd_val));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -244,18 +231,17 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(rs1_val));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rs1_val));
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fcvt_lu_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             f32_to_ui64(float32_t{rs1_val}, getRM<RV64>(state), true));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -263,8 +249,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(i32_to_f32(rs1_val).v));
-        update_csr<RV64>(state);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(i32_to_f32(rs1_val).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -272,17 +258,14 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>(f32_sub(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
-        update_csr<RV64>(state);
+            nanBoxing<RV64, SP>(f32_sub(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -290,8 +273,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(i64_to_f32(rs1_val).v));
-        update_csr<RV64>(state);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(i64_to_f32(rs1_val).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -299,24 +282,22 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>(f32_add(float32_t{rs1_val}, float32_t{rs2_val}).v));
-        update_csr<RV64>(state);
+                           nanBoxing<RV64, SP>(f32_add(float32_t{rs1_val}, float32_t{rs2_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fsw_64_compute_address_handler(atlas::AtlasState* state)
     {
-        return compute_address_handler<RV64>(state);
+        return computeAddressHandler<RV64>(state);
     }
 
     ActionGroup* RvfInsts::fsw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, SP, false>(state);
+        return floatLsHandler<RV64, SP, false>(state);
     }
 
     ActionGroup* RvfInsts::fmv_x_w_64_handler(atlas::AtlasState* state)
@@ -330,56 +311,49 @@ namespace atlas
     ActionGroup* RvfInsts::fmax_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val : rs1_val;
-        fmax_fmin_nan_zero_check<SP>(rs1_val, rs2_val, rd_val, true);
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(rd_val));
-        update_csr<RV64>(state);
+        fmaxFminNanZeroCheck<SP>(rs1_val, rs2_val, rd_val, true);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rd_val));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fsgnjx_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         constexpr uint32_t sign_mask = 1 << 31;
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask)));
+            nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask)));
         return nullptr;
     }
 
     ActionGroup* RvfInsts::flw_64_compute_address_handler(atlas::AtlasState* state)
     {
-        return compute_address_handler<RV64>(state);
+        return computeAddressHandler<RV64>(state);
     }
 
     ActionGroup* RvfInsts::flw_64_handler(atlas::AtlasState* state)
     {
-        return float_ls_handler<RV64, SP, true>(state);
+        return floatLsHandler<RV64, SP, true>(state);
     }
 
     ActionGroup* RvfInsts::fmadd_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>(
+            nanBoxing<RV64, SP>(
                 f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -387,62 +361,54 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v));
-        update_csr<RV64>(state);
+                           nanBoxing<RV64, SP>(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::flt_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<RV64>(state, inst->getRd(), f32_lt(float32_t{rs1_val}, float32_t{rs2_val}));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fcvt_w_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
                                 f32_to_i32(float32_t{rs1_val}, getRM<RV64>(state), true)));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fcvt_l_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             f32_to_i64(float32_t{rs1_val}, getRM<RV64>(state), true));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fsgnjn_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t sign_mask = 1 << 31;
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nan_boxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask)));
+            nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask)));
         return nullptr;
     }
 
@@ -450,20 +416,19 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(ui64_to_f32(rs1_val).v));
-        update_csr<RV64>(state);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(ui64_to_f32(rs1_val).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fcvt_wu_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<RV64>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
                                 f32_to_ui32(float32_t{rs1_val}, getRM<RV64>(state), true)));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
@@ -471,26 +436,22 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>(f32_div(float32_t{rs1_val}, float32_t{rs2_val}).v));
-        update_csr<RV64>(state);
+                           nanBoxing<RV64, SP>(f32_div(float32_t{rs1_val}, float32_t{rs2_val}).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fsgnj_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t sign_mask = 1 << 31;
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nan_boxing<RV64, SP>((rs1_val & ~sign_mask) | (rs2_val & sign_mask)));
+                           nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | (rs2_val & sign_mask)));
         return nullptr;
     }
 
@@ -498,20 +459,18 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_INT_REG<RV64>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nan_boxing<RV64, SP>(ui32_to_f32(rs1_val).v));
-        update_csr<RV64>(state);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(ui32_to_f32(rs1_val).v));
+        updateCsr<RV64>(state);
         return nullptr;
     }
 
     ActionGroup* RvfInsts::fle_s_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val =
-            check_nan_boxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<RV64>(state, inst->getRd(), f32_le(float32_t{rs1_val}, float32_t{rs2_val}));
-        update_csr<RV64>(state);
+        updateCsr<RV64>(state);
         return nullptr;
     }
 

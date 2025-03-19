@@ -36,11 +36,11 @@ namespace atlas
         // result is the canonical NaN. If only one operand is a NaN, the result is the non-NaN
         // operand.
         template <typename SIZE>
-        static void fmax_fmin_nan_zero_check(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
+        static void fmaxFminNanZeroCheck(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
         {
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
 
-            const Constants<SIZE> & cons = get_const<SIZE>();
+            const Constants<SIZE> & cons = getConst<SIZE>();
 
             bool rs1_nan =
                 ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);
@@ -66,7 +66,7 @@ namespace atlas
             }
         }
 
-        template <typename XLEN> static ActionGroup* update_csr(AtlasState* state)
+        template <typename XLEN> static ActionGroup* updateCsr(AtlasState* state)
         {
             // TODO: it would be nice to have field shift, then a single combined CSR write will
             // suffice.
@@ -108,7 +108,7 @@ namespace atlas
             return nullptr;
         }
 
-        template <typename XLEN> ActionGroup* compute_address_handler(AtlasState* state)
+        template <typename XLEN> ActionGroup* computeAddressHandler(AtlasState* state)
         {
             static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
@@ -124,11 +124,11 @@ namespace atlas
 
         // Check and convert a narrower SIZE floating point value from wider floating point
         // register.
-        template <typename XLEN, typename SIZE> SIZE check_nan_boxing(XLEN num)
+        template <typename XLEN, typename SIZE> SIZE checkNanBoxing(XLEN num)
         {
             static_assert(sizeof(XLEN) > sizeof(SIZE));
 
-            const Constants<SIZE> & cons = get_const<SIZE>();
+            const Constants<SIZE> & cons = getConst<SIZE>();
             constexpr XLEN mask = SIZE(-1);
             SIZE value = cons.CAN_NAN;
             if ((num & ~mask) == ~mask) // upper bits all 1's
@@ -139,7 +139,7 @@ namespace atlas
         }
 
         // NaN-boxing a narrower SIZE floating point value for wider floating point register.
-        template <typename XLEN, typename SIZE> inline XLEN nan_boxing(XLEN num)
+        template <typename XLEN, typename SIZE> inline XLEN nanBoxing(XLEN num)
         {
             static_assert(sizeof(XLEN) > sizeof(SIZE));
             constexpr XLEN mask = SIZE(-1);
@@ -147,7 +147,7 @@ namespace atlas
         }
 
         template <typename XLEN, typename SIZE, bool LOAD>
-        ActionGroup* float_ls_handler(AtlasState* state)
+        ActionGroup* floatLsHandler(AtlasState* state)
         {
             static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
@@ -161,7 +161,7 @@ namespace atlas
                 XLEN value = state->readMemory<XLEN>(paddr);
                 if constexpr (sizeof(XLEN) > sizeof(SIZE))
                 {
-                    value = nan_boxing<XLEN, SIZE>(value);
+                    value = nanBoxing<XLEN, SIZE>(value);
                 }
                 WRITE_FP_REG<XLEN>(state, inst->getRd(), value);
             }
@@ -193,7 +193,7 @@ namespace atlas
         static constexpr Constants<SP> const_sp{};
         static constexpr Constants<DP> const_dp{};
 
-        template <typename SIZE> static constexpr Constants<SIZE> get_const()
+        template <typename SIZE> static constexpr Constants<SIZE> getConst()
         {
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
             if constexpr (std::is_same<SIZE, SP>::value)

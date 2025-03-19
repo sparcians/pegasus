@@ -89,6 +89,8 @@ namespace atlas
 
         Addr getPc() const { return pc_; }
 
+        Addr getPrevPc() const { return prev_pc_; }
+
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
@@ -104,6 +106,7 @@ namespace atlas
         struct SimState
         {
             uint64_t current_opcode = 0;
+            uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
             bool sim_stopped = false;
@@ -125,7 +128,7 @@ namespace atlas
 
         void setCurrentInst(AtlasInstPtr inst)
         {
-            inst->setUid(uid_++);
+            inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
 
@@ -272,14 +275,14 @@ namespace atlas
         //! Next pc
         Addr next_pc_ = 0x0;
 
+        //! Previous pc
+        Addr prev_pc_ = 0x0;
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
         //! Next privilege mode
         PrivMode next_priv_mode_ = PrivMode::MACHINE;
-
-        //! Unique instruction ID
-        uint64_t uid_ = 0;
 
         //! Simulation state
         SimState sim_state_;

@@ -30,6 +30,15 @@ class StateDB:
         self.cursor.execute(cmd)
 
     def AppendInstruction(self, pc, opcode, dasm, inst_uid):
+        assert pc is not None
+        assert inst_uid is not None
+
+        if opcode is None:
+            opcode = 0
+
+        if dasm is None:
+            dasm = ''
+
         dasm = dasm.replace('\t', '    ')
         cmd = 'INSERT INTO Instructions (PC, Opcode, Dasm, InstUID) VALUES ({}, {}, {}, {})'
         cmd = cmd.format(pc, opcode, quote(dasm), inst_uid)

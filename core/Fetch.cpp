@@ -77,12 +77,14 @@ namespace atlas
         }
 
         state->getSimState()->current_opcode = opcode;
+        ++(state->getSimState()->current_uid);
 
         // Decode instruction with Mavis
         AtlasInstPtr inst = nullptr;
         try
         {
             inst = state->getMavis()->makeInst(opcode, state);
+            assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);
