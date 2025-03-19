@@ -30,7 +30,7 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-   	inst_handlers.emplace(
+        inst_handlers.emplace(
             "amoadd.w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoadd_w", ActionTags::COMPUTE_ADDR_TAG));
@@ -67,15 +67,13 @@ namespace atlas
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoxor_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "lr.w",
-            atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
-                nullptr, "lr_w", ActionTags::COMPUTE_ADDR_TAG));
+            "lr.w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
+                        nullptr, "lr_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "sc.w",
-            atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
-                nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
+            "sc.w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
+                        nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
 
-	if constexpr (std::is_same_v<XLEN, RV64>)
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "amoadd.d",
