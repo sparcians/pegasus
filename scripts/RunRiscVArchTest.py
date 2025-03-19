@@ -23,7 +23,7 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
     logname = testname + ".log"
     instlogname = testname + ".instlog"
     isa_string = "rv32g" if xlen == "rv32" else "rv64g"
-    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, test]
+    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, "-p", "top.system.params.enable_syscall_emulation", "true", test]
     test_passed = False
     try:
         with open(logname, "w") as f:
