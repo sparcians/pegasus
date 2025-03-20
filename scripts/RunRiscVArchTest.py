@@ -22,7 +22,7 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
     testname = os.path.basename(test)
     logname = testname + ".log"
     instlogname = testname + ".instlog"
-    isa_string = "rv32g" if xlen == "rv32" else "rv64g"
+    isa_string = "rv32g_zicsr_zifencei" if xlen == "rv32" else "rv64g_zicsr_zifencei"
     atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, "-p", "top.system.params.enable_syscall_emulation", "true", test]
     test_passed = False
     try:
@@ -82,6 +82,14 @@ def main():
     # TODO: Atlas does not support zba, zbb, zbc, zbs or zfh extensions
     print("WARNING: Skipping all non-G extension tests")
     tests = [test for test in tests if any(ext+"-" in test for ext in SUPPORTED_EXTENSIONS)]
+
+    # Ignore some tests that are incorrect
+    bad_tests = [
+        "rv64mi-p-access" # Has check for max paddr size restriction which has been lifted
+    ]
+    for bad_test in bad_tests:
+        print("Skipping", bad_test)
+        tests = [test for test in tests if bad_test not in test]
 
     import multiprocessing
     passing_tests = multiprocessing.Queue()
