@@ -7,6 +7,8 @@
 
 namespace atlas
 {
+    class AtlasState;
+
     /*!
      * \class MagicMemory
      * \brief This class handles commands from applications that write to the MAGIC_MEM address space
@@ -57,15 +59,15 @@ namespace atlas
         sparta::memory::addr_t getHighEnd() const { return base_addr_ + size_; }
 
       private:
-        // Loggers
-        sparta::log::MessageSource info_logger_;
-        sparta::log::MessageSource debug_logger_;
+        void onBindTreeEarly_() override;
 
         const sparta::memory::addr_t base_addr_;
         const sparta::memory::addr_t size_;
 
         // Backend memory
         sparta::memory::MemoryObject memory_;
+
+        AtlasState* state_ = nullptr;
 
         bool tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size, uint8_t* buf,
                       const void* in_supplement, void* out_supplement) override final;
