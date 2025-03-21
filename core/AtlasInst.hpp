@@ -148,7 +148,7 @@ namespace atlas
 
         // Translation information.  Specifically, this is for data
         // accesses
-        AtlasTranslationState * getTranslationState() { return &translation_state_; }
+        AtlasTranslationState* getTranslationState() { return &translation_state_; }
 
       private:
         // Unique ID

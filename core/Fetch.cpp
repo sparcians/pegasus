@@ -50,7 +50,7 @@ namespace atlas
         AtlasState::SimState* sim_state = state->getSimState();
         sim_state->reset();
 
-        AtlasTranslationState * translation_state = state->getFetchTranslationState();
+        AtlasTranslationState* translation_state = state->getFetchTranslationState();
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going

@@ -97,17 +97,18 @@ namespace atlas
     ActionGroup* Translate::translate_(AtlasState* state)
     {
         AtlasTranslationState* translation_state = nullptr;
-        if constexpr (INST_TRANSLATION) {
+        if constexpr (INST_TRANSLATION)
+        {
             // Translation reqest is from fetch
             translation_state = state->getFetchTranslationState();
         }
-        else {
+        else
+        {
             const auto & inst = state->getCurrentInst();
             translation_state = inst->getTranslationState();
         }
 
-        const AtlasTranslationState::TranslationRequest request =
-            translation_state->getRequest();
+        const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVaddr();
 
         if constexpr (MODE == MMUMode::BAREMETAL)
@@ -130,11 +131,9 @@ namespace atlas
             const uint64_t vpn = extractVpn_<MODE>(indexed_level, vaddr);
             const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
             const PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
-            DLOG_CODE_BLOCK(
-                DLOG_OUTPUT("Level " << std::to_string(indexed_level) << " Page Walk");
-                DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
-                DLOG_OUTPUT("     PTE: " << pte);
-                );
+            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << std::to_string(indexed_level) << " Page Walk");
+                            DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
+                            DLOG_OUTPUT("     PTE: " << pte););
 
             //  If accessing pte violates a PMA or PMP check, raise an
             //  access-fault exception corresponding to the original

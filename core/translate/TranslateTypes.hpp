@@ -162,5 +162,5 @@ namespace atlas
             static const std::array<FieldDef, num_vpn_fields> vpn_fields;
             static constexpr uint32_t num_pagewalk_levels = 5;
         } // namespace Sv57
-    }     // namespace translate_types
+    } // namespace translate_types
 } // namespace atlas

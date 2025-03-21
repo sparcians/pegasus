@@ -47,7 +47,8 @@ namespace atlas
         std::array<Action, N_MMU_MODES> rv64_data_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_data_translation_actions_;
 
-        template <typename XLEN, MMUMode Mode, bool> ActionGroup* translate_(atlas::AtlasState* state);
+        template <typename XLEN, MMUMode Mode, bool>
+        ActionGroup* translate_(atlas::AtlasState* state);
 
         template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
         {
@@ -110,12 +111,12 @@ namespace atlas
         }
 
         template <typename XLEN, MMUMode MODE, bool INST_TRANSLATION>
-        void registerAction_(const char * desc, const ActionTagType tags,
+        void registerAction_(const char* desc, const ActionTagType tags,
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {
             Action action =
-                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, INST_TRANSLATION>>(this,
-                                                                                                  desc);
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, INST_TRANSLATION>>(
+                    this, desc);
             action.addTag(tags);
             xlation_actions[static_cast<uint32_t>(MODE)] = action;
         }

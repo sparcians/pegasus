@@ -86,8 +86,7 @@ namespace atlas
             case TrapCauses::STORE_ACCESS:
             case TrapCauses::LOAD_PAGE_FAULT:
             case TrapCauses::STORE_PAGE_FAULT:
-                return state->getCurrentInst()->
-                    getTranslationState()->getRequest().getVaddr();
+                return state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
                 break;
             case TrapCauses::ILLEGAL_INSTRUCTION:
                 return state->getSimState()->current_opcode;

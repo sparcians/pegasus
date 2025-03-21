@@ -131,7 +131,7 @@ namespace atlas
             sim_state_.current_inst = inst;
         }
 
-        AtlasTranslationState * getFetchTranslationState() { return &fetch_translation_state_; }
+        AtlasTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
         AtlasSystem* getAtlasSystem() const { return atlas_system_; }
 

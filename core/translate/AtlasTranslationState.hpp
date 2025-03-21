@@ -11,16 +11,14 @@ namespace atlas
       public:
         struct TranslationRequest
         {
-        private:
+          private:
             Addr virtual_addr_ = 0x0;
             size_t size_ = 0;
 
-        public:
+          public:
             TranslationRequest() = default;
 
-            TranslationRequest(Addr vaddr, size_t sz) :
-                virtual_addr_(vaddr), size_(sz)
-            {}
+            TranslationRequest(Addr vaddr, size_t sz) : virtual_addr_(vaddr), size_(sz) {}
 
             Addr getVaddr() const { return virtual_addr_; }
 
@@ -31,17 +29,14 @@ namespace atlas
 
         struct TranslationResult
         {
-        private:
+          private:
             Addr physical_addr_ = 0x0;
             size_t size_ = 0;
 
-        public:
-
+          public:
             TranslationResult() = default;
 
-            TranslationResult(Addr paddr, size_t sz) :
-                physical_addr_(paddr), size_(sz)
-            {}
+            TranslationResult(Addr paddr, size_t sz) : physical_addr_(paddr), size_(sz) {}
 
             Addr getPaddr() const { return physical_addr_; }
 
