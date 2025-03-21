@@ -187,7 +187,7 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const bool exit_code)
+        void stopSim(const uint64_t exit_code)
         {
             sim_state_.workload_exit_code = exit_code;
             sim_state_.test_passed = (exit_code == 0) ? true : false;

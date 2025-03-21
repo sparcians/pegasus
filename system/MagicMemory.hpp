@@ -26,7 +26,7 @@ namespace atlas
      *     bit 0 of the command indicates sub-command behavior:
      *          0 value -> bits 47:1 represent an address to struct describing the syscall
      *          1 value -> bits 47:1 represent an exit code: zero is success
-     * - If BCD devide:
+     * - If BCD device:
      *     Command 0 reads a character
      *     Command 1 write a character from the 8 LSBs of the data
      *
