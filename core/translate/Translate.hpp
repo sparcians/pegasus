@@ -33,12 +33,9 @@ namespace atlas
 
         ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
 
-        void changeMmuMode(const uint64_t xlen, MMUMode mode);
-
-        MMUMode getMode() const { return mode_; }
+        void changeMMUMode(const uint64_t xlen, MMUMode mode);
 
       private:
-        MMUMode mode_ = MMUMode::BAREMETAL;
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup data_translate_action_group_{"Data Translate"};
 

@@ -70,9 +70,8 @@ namespace atlas
             rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
     }
 
-    void Translate::changeMmuMode(const uint64_t xlen, const MMUMode mode)
+    void Translate::changeMMUMode(const uint64_t xlen, const MMUMode mode)
     {
-        mode_ = mode;
         if (xlen == 64)
         {
             inst_translate_action_group_.replaceAction(
