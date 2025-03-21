@@ -21,7 +21,7 @@ namespace atlas
       private:
         sparta::log::MessageSource & inst_logger_;
 
-        const std::vector<uint8_t> getRegByteVector_(const sparta::Register* reg)
+        const std::vector<uint8_t> getRegByteVector_(const sparta::Register* reg) const
         {
             const auto size = reg->getNumBits();
             if (size == 64)
@@ -38,7 +38,7 @@ namespace atlas
             }
         }
 
-        uint64_t getRegValue_(const std::vector<uint8_t> reg)
+        uint64_t getRegValue_(const std::vector<uint8_t> reg) const
         {
             const auto size = reg.size() * 8;
             if (size == 64)

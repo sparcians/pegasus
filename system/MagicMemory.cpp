@@ -1,6 +1,7 @@
 #include "system/MagicMemory.hpp"
 #include "system/AtlasSystem.hpp"
 #include "core/AtlasState.hpp"
+#include "sparta/utils/LogUtils.hpp"
 
 namespace atlas
 {
@@ -23,11 +24,7 @@ namespace atlas
     bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                uint8_t* buf, const void*, void*)
     {
-        if (SPARTA_EXPECT_FALSE(debug_logger_))
-        {
-            debug_logger_ << std::hex << __func__ << " addr: 0x" << addr << " sz: " << std::dec
-                          << size;
-        }
+        DLOG("addr: 0x" << std::hex << addr << " sz: " << std::dec << size);
         memory_.read(addr, size, buf);
         return true;
     }
@@ -37,11 +34,7 @@ namespace atlas
     {
         if (addr != 0)
         {
-            if (SPARTA_EXPECT_FALSE(debug_logger_))
-            {
-                debug_logger_ << std::hex << __func__ << " addr: 0x" << addr << " sz: " << std::dec
-                              << size;
-            }
+            DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
             memory_.write(addr, size, buf);
             return true;
         }
@@ -49,12 +42,8 @@ namespace atlas
         MagicMemCommand mm_command;
         ::memcpy(mm_command.mm_buffer, buf, size);
 
-        if (SPARTA_EXPECT_FALSE(info_logger_))
-        {
-            info_logger_ << __func__ << ": device: " << mm_command.cmd.device
-                         << " command: " << mm_command.cmd.command
-                         << " payload: " << mm_command.cmd.payload;
-        }
+        ILOG("device: " << mm_command.cmd.device << " command: " << mm_command.cmd.command
+                        << " payload: " << mm_command.cmd.payload);
 
         if (mm_command.cmd.payload == 0)
         {
@@ -88,11 +77,7 @@ namespace atlas
     bool MagicMemory::tryPeek_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                uint8_t* buf) const
     {
-        if (SPARTA_EXPECT_FALSE(debug_logger_))
-        {
-            debug_logger_ << std::hex << __func__ << " addr: 0x" << addr << " sz: " << std::dec
-                          << size;
-        }
+        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
         memory_.read(addr, size, buf);
         return true;
     }
@@ -100,11 +85,7 @@ namespace atlas
     bool MagicMemory::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                const uint8_t* buf)
     {
-        if (SPARTA_EXPECT_FALSE(debug_logger_))
-        {
-            debug_logger_ << std::hex << __func__ << " addr: 0x" << addr << " sz: " << std::dec
-                          << size;
-        }
+        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
         memory_.write(addr, size, buf);
         return true;
     }
