@@ -975,14 +975,7 @@ namespace atlas
             {
                 // Function arguments are a0-a6 (x10-x16)
                 const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
-
-                AtlasState::SimState* sim_state = state->getSimState();
-                sim_state->workload_exit_code = exit_code;
-                sim_state->test_passed = (exit_code == 0) ? true : false;
-                sim_state->sim_stopped = true;
-
-                // Stop simulation
-                return state->getStopSimActionGroup();
+                state->stopSim(exit_code);
             }
         }
         else

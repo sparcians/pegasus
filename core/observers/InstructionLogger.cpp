@@ -36,14 +36,14 @@ namespace atlas
             if (inst->hasRs1())
             {
                 const auto rs1_reg = inst->getRs1Reg();
-                const std::vector<uint8_t> value = convertToByteVector(rs1_reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = getRegByteVector_(rs1_reg);
                 src_regs_.emplace_back(getRegId(rs1_reg), value);
             }
 
             if (inst->hasRs2())
             {
                 const auto rs2_reg = inst->getRs2Reg();
-                const std::vector<uint8_t> value = convertToByteVector(rs2_reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = getRegByteVector_(rs2_reg);
                 src_regs_.emplace_back(getRegId(rs2_reg), value);
             }
 
@@ -51,7 +51,7 @@ namespace atlas
             if (inst->hasRd())
             {
                 const auto rd_reg = inst->getRdReg();
-                const std::vector<uint8_t> value = convertToByteVector(rd_reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = getRegByteVector_(rd_reg);
                 dst_regs_.emplace_back(getRegId(rd_reg), value);
             }
 
@@ -61,8 +61,7 @@ namespace atlas
                 const auto csr_reg = state->getCsrRegister(inst->getCsr());
                 if (csr_reg)
                 {
-                    const std::vector<uint8_t> value =
-                        convertToByteVector(csr_reg->dmiRead<XLEN>());
+                    const std::vector<uint8_t> value = getRegByteVector_(csr_reg);
                     dst_regs_.emplace_back(getRegId(csr_reg), value);
                 }
             }
@@ -113,7 +112,7 @@ namespace atlas
                         sparta_assert(false, "Invalid register type!");
                 }
                 sparta_assert(reg != nullptr);
-                const std::vector<uint8_t> value = convertToByteVector(reg->dmiRead<XLEN>());
+                const std::vector<uint8_t> value = getRegByteVector_(reg);
                 dst_reg.setValue(value);
             }
         }
@@ -153,18 +152,20 @@ namespace atlas
         // TODO: Support for different register sizes (RV32, vector)
         for (const auto & src_reg : src_regs_)
         {
-            const XLEN reg_value = convertFromByteVector<XLEN>(src_reg.reg_value);
+            const uint32_t reg_width = src_reg.reg_value.size() * 2;
+            const uint64_t reg_value = getRegValue_(src_reg.reg_value);
             INSTLOG("   src " << std::setfill(' ') << std::setw(3) << src_reg.reg_id.reg_name
-                              << ": " << HEX(reg_value, width));
+                              << ": " << HEX(reg_value, reg_width));
         }
 
         for (const auto & dst_reg : dst_regs_)
         {
-            const XLEN reg_value = convertFromByteVector<XLEN>(dst_reg.reg_value);
-            const XLEN reg_prev_value = convertFromByteVector<XLEN>(dst_reg.reg_prev_value);
+            const uint32_t reg_width = dst_reg.reg_value.size() * 2;
+            const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
+            const uint64_t reg_prev_value = getRegValue_(dst_reg.reg_prev_value);
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
-                              << ": " << HEX(reg_value, width)
-                              << " (prev: " << HEX(reg_prev_value, width) << ")");
+                              << ": " << HEX(reg_value, reg_width)
+                              << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
         }
 
         INSTLOG("");
