@@ -36,10 +36,10 @@ class AtlasTranslateTester
         const uint32_t access_size = 4;
         // TODO: Add test for AtlasTranslationState state machine
 
-        atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
+        atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
 
         // Request should be invalid and throw an exception
-        EXPECT_THROW(translation_state->getTranslationRequest());
+        EXPECT_THROW(translation_state->getRequest());
 
         // This will call setTransaltionRequest which should fail as transalationRequest is invalid
         // FIXME: Sparta macro doesn't understand templated methods
@@ -47,14 +47,14 @@ class AtlasTranslateTester
         // atlas::MMUMode::BAREMETAL>(state_));
 
         // Make a second request without resolving the first request
-        translation_state->makeTranslationRequest(vaddr, access_size);
-        EXPECT_THROW(translation_state->makeTranslationRequest(vaddr, access_size););
+        translation_state->makeRequest(vaddr, access_size);
+        EXPECT_THROW(translation_state->makeRequest(vaddr, access_size););
 
         // Try to get a result before it is ready will fail
-        EXPECT_THROW(translation_state->getTranslationResult());
+        EXPECT_THROW(translation_state->getResult());
 
         // Clear current request so subsequent tests will pass
-        translation_state->setTranslationResult(vaddr, access_size);
+        translation_state->setResult(vaddr, access_size);
 
         // TODO: Add tests for AtlasTranslationState request/result validation
         //    - Make a misaligned request (is it supported?)
@@ -225,29 +225,29 @@ class AtlasTranslateTester
         std::cout << "Testing baremetal translation\n" << std::endl;
 
         // Make translation request
-        atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
+        atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
         const atlas::Addr vaddr = 0x1000;
         const uint32_t access_size = 4;
         std::cout << "Translation request:" << std::endl;
         std::cout << "    VA: 0x" << std::hex << vaddr;
         std::cout << ", Access size: " << std::dec << access_size << std::endl;
-        translation_state->makeTranslationRequest(vaddr, access_size);
+        translation_state->makeRequest(vaddr, access_size);
 
         // Execute translation
         auto next_action_group =
-            translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL>(state_);
+            translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL, true>(state_);
         EXPECT_EQUAL(next_action_group, nullptr);
 
         // Get translation result
         const atlas::AtlasTranslationState::TranslationResult result =
-            translation_state->getTranslationResult();
+            translation_state->getResult();
         std::cout << "Translation result:" << std::endl;
-        std::cout << "    PA: 0x" << std::hex << result.physical_addr;
-        std::cout << ", Access size: " << std::dec << result.size << "\n\n";
+        std::cout << "    PA: 0x" << std::hex << result.getPaddr();
+        std::cout << ", Access size: " << std::dec << result.getSize() << "\n\n";
 
         // Test translation result
-        EXPECT_EQUAL(result.physical_addr, vaddr);
-        EXPECT_EQUAL(result.size, access_size);
+        EXPECT_EQUAL(result.getPaddr(), vaddr);
+        EXPECT_EQUAL(result.getSize(), access_size);
     }
 
     void testSv32Translation()
@@ -290,25 +290,25 @@ class AtlasTranslateTester
         state_->writeMemory<uint32_t>(lvl2_paddr, lvl2_pte.getPte());
 
         // Make translation request
-        atlas::AtlasTranslationState* translation_state = state_->getTranslationState();
+        atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
         const size_t access_size = 4;
-        translation_state->makeTranslationRequest(vaddr, access_size);
+        translation_state->makeRequest(vaddr, access_size);
         std::cout << "Translation request:" << std::endl;
         std::cout << "    VA: 0x" << std::hex << vaddr;
         std::cout << ", Access size: " << std::dec << access_size << std::endl;
 
         // Translate!
-        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32>(state_);
+        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32, true>(state_);
 
         // Get translation result
         const atlas::AtlasTranslationState::TranslationResult result =
-            translation_state->getTranslationResult();
+            translation_state->getResult();
         std::cout << "Translation result:" << std::endl;
-        std::cout << "    PA: 0x" << std::hex << result.physical_addr;
-        std::cout << ", Access size: " << std::dec << result.size << "\n\n";
+        std::cout << "    PA: 0x" << std::hex << result.getPaddr();
+        std::cout << ", Access size: " << std::dec << result.getSize() << "\n\n";
 
         // Test translation result
-        EXPECT_EQUAL(result.physical_addr, expected_paddr);
+        EXPECT_EQUAL(result.getPaddr(), expected_paddr);
     }
 
   private:

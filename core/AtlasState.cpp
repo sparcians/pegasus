@@ -192,8 +192,8 @@ namespace atlas
             }
         }
 
-        // Set up translation
-        translate_unit_->changeMmuMode(xlen_, translation_state_.getMode());
+        // Set up translation; baremetal for now
+        translate_unit_->changeMMUMode(xlen_, mode_);
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
