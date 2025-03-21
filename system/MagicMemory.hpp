@@ -11,7 +11,8 @@ namespace atlas
 
     /*!
      * \class MagicMemory
-     * \brief This class handles commands from applications that write to the MAGIC_MEM address space
+     * \brief This class handles commands from applications that write to the MAGIC_MEM address
+     * space
      *
      * Data written to address "zero" of this block of memory are
      * interpreted as a command.  The first double word contains that command:
@@ -78,17 +79,21 @@ namespace atlas
         bool tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                       const uint8_t* buf) override final;
 
-        enum class SupportedDevices {
-            SYSCALL    = 0, // System Calls
-            BLOCK_CHAR = 1  // Block character device or BCD
+        enum class SupportedDevices
+        {
+            SYSCALL = 0,   // System Calls
+            BLOCK_CHAR = 1 // Block character device or BCD
         };
 
-        union MagicMemCommand {
-            struct {
-                uint64_t  payload : 48;
-                uint64_t  command :  8;
-                uint64_t  device  :  8;
+        union MagicMemCommand
+        {
+            struct
+            {
+                uint64_t payload : 48;
+                uint64_t command : 8;
+                uint64_t device : 8;
             } cmd;
+
             uint8_t mm_buffer[8] = {0};
             uint64_t tohost_data;
         };
