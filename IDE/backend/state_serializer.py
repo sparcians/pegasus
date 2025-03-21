@@ -12,11 +12,12 @@ class StateSerializer(Observer):
         self.infinite_loop_pc = None
 
     class Instruction:
-        def __init__(self, pc, opcode, priv, dasm):
+        def __init__(self, pc, opcode, priv, dasm, reg_info_query):
             self.pc = pc
             self.opcode = opcode
             self.priv = priv
             self.dasm = dasm
+            self.reg_info_query = reg_info_query
             self.tracked_reg_values = {'resv_priv': priv}
 
         def AddChangable(self, endpoint, reg_name):
@@ -26,6 +27,13 @@ class StateSerializer(Observer):
             uid = atlas_current_uid(endpoint)
             state_db.AppendInstruction(self.pc, self.opcode, self.dasm, uid)
 
+            # {'pc': 0xPC', 'priv': 3, 'reg_changes': [RegChange, RegChange, ...]}
+            reg_info = self.reg_info_query.GetRegisterInfoAtPC(self.pc)
+            expected_priv = reg_info['priv']
+            expected_reg_changes = {}
+            for reg_change in reg_info['reg_changes']:
+                expected_reg_changes[reg_change.regname] = reg_change.regvalue
+
             for reg_name, prev_val in self.tracked_reg_values.items():
                 if reg_name == 'resv_priv':
                     cur_val = atlas_inst_priv(endpoint)
@@ -33,7 +41,13 @@ class StateSerializer(Observer):
                     cur_val = atlas_reg_value(endpoint, reg_name)
 
                 if cur_val != prev_val:
-                    state_db.AppendRegChange(uid, reg_name, cur_val)
+                    expected_val = None
+                    if reg_name == 'resv_priv':
+                        expected_val = expected_priv
+                    elif reg_name in expected_reg_changes:
+                        expected_val = expected_reg_changes[reg_name]
+
+                    state_db.AppendRegChange(uid, reg_name, cur_val, expected_val)
 
     def OnPreSimulation(self, endpoint):
         for reg_id in range(atlas_num_regs_in_group(endpoint, 0)):
@@ -72,7 +86,7 @@ class StateSerializer(Observer):
         rd = inst.getRd()
         uid = atlas_current_uid(endpoint)
 
-        inst = self.Instruction(pc, opcode, priv, dasm)
+        inst = self.Instruction(pc, opcode, priv, dasm, self.reg_info_query)
         if rd:
             inst.AddChangable(endpoint, rd.getName())
 
@@ -113,7 +127,7 @@ class StateSerializer(Observer):
             # if we don't have a current instruction, we cannot reliably ask for
             # the PC, opcode, etc. right now. We will try to fill in that data
             # in OnPostExecute().
-            inst = self.Instruction(None, None, None, None)
+            inst = self.Instruction(None, None, None, None, self.reg_info_query)
             uid = atlas_current_uid(endpoint)
             self.insts_by_uid[uid] = inst
         else:
@@ -123,7 +137,7 @@ class StateSerializer(Observer):
                 # scenario above where we don't have a current instruction,
                 # we need to create a new instruction object to track any
                 # CSR changes that may have occurred during the exception.
-                inst = self.Instruction(None, None, None, None)
+                inst = self.Instruction(None, None, None, None, self.reg_info_query)
                 self.insts_by_uid[uid] = inst
             else:
                 # An exception occurred during instruction execution.

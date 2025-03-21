@@ -1,4 +1,5 @@
 import sqlite3, tempfile, os
+from backend.observers import FormatHex
 
 def quote(s):
     s = s.strip("'").strip('"')
@@ -26,7 +27,9 @@ class StateDB:
         return self.conn.cursor()
 
     def SetInitRegValue(self, reg_name, reg_value):
-        cmd = 'INSERT INTO InitRegValues (RegName, RegValue) VALUES (%s, %d)' % (dquote(reg_name), reg_value)
+        reg_value = FormatHex(reg_value)
+        cmd = 'INSERT INTO InitRegValues (RegName, RegValue) VALUES ({}, {})'
+        cmd = cmd.format(dquote(reg_name), dquote(reg_value))
         self.cursor.execute(cmd)
 
     def AppendInstruction(self, pc, opcode, dasm, inst_uid):
@@ -39,14 +42,18 @@ class StateDB:
         if dasm is None:
             dasm = ''
 
+        pc = FormatHex(pc)
+        opcode = FormatHex(opcode)
         dasm = dasm.replace('\t', '    ')
         cmd = 'INSERT INTO Instructions (PC, Opcode, Dasm, InstUID) VALUES ({}, {}, {}, {})'
-        cmd = cmd.format(pc, opcode, quote(dasm), inst_uid)
+        cmd = cmd.format(dquote(pc), dquote(opcode), dquote(dasm), inst_uid)
         self.cursor.execute(cmd)
 
-    def AppendRegChange(self, inst_uid, elem_name, elem_val):
-        cmd = 'INSERT INTO InstChanges (InstUID, ElemName, ElemVal) VALUES ({}, {}, {})'
-        cmd = cmd.format(inst_uid, dquote(elem_name), elem_val)
+    def AppendRegChange(self, inst_uid, elem_name, elem_val, expected_elem_val):
+        elem_val = FormatHex(elem_val)
+        expected_elem_val = FormatHex(expected_elem_val)
+        cmd = 'INSERT INTO InstChanges (InstUID, ElemName, ElemVal, ExpectedElemVal) VALUES ({}, {}, {}, {})'
+        cmd = cmd.format(inst_uid, dquote(elem_name), dquote(elem_val), dquote(expected_elem_val))
         self.cursor.execute(cmd)
 
     def Close(self):
@@ -76,15 +83,15 @@ class StateDB:
             CREATE TABLE IF NOT EXISTS InitRegValues (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 RegName TEXT,
-                RegValue INTEGER
+                RegValue TEXT
             )
         ''')
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS Instructions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                PC INTEGER,
-                Opcode INTEGER,
+                PC TEXT,
+                Opcode TEXT,
                 Dasm TEXT,
                 InstUID INTEGER
             )
@@ -95,6 +102,7 @@ class StateDB:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 InstUID INTEGER,
                 ElemName TEXT,
-                ElemVal INTEGER
+                ElemVal TEXT,
+                ExpectedElemVal TEXT
             )
         ''')
