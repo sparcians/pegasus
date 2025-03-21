@@ -123,7 +123,7 @@ namespace atlas
         const auto & symbols = state->getAtlasSystem()->getSymbols();
         if (symbols.find(pc_) != symbols.end())
         {
-            INSTLOG("<" << symbols.at(pc_) << ">");
+            INSTLOG("Call <" << symbols.at(pc_) << ">");
         }
 
         if (inst)
@@ -139,7 +139,8 @@ namespace atlas
 
         if (trap_cause_.isValid())
         {
-            INSTLOG("trap cause: " << HEX((uint32_t)trap_cause_.getValue(), width));
+            INSTLOG("trap cause: " << trap_cause_.getValue() << " ("
+                    << HEX8(static_cast<uint32_t>(trap_cause_.getValue())) << ')');
         }
 
         if (inst && inst->hasImmediate())

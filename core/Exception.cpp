@@ -97,10 +97,66 @@ namespace atlas
             case TrapCauses::MACHINE_ECALL:
             case TrapCauses::SOFTWARE_CHECK_FAULT:
             case TrapCauses::HARDWARE_ERROR_FAULT:
-            default:
                 return 0;
                 break;
         }
+        return 0;
+    }
+
+    std::ostream & operator<<(std::ostream & os, const TrapCauses & trap_cause)
+    {
+        switch (trap_cause)
+        {
+            case TrapCauses::MISALIGNED_FETCH:
+                os << "MISALIGNED_FETCH";
+                break;
+            case TrapCauses::FETCH_ACCESS:
+                os << "FETCH_ACCESS";
+                break;
+            case TrapCauses::FETCH_PAGE_FAULT:
+                os << "FETCH_PAGE_FAULT";
+                break;
+            case TrapCauses::MISALIGNED_LOAD:
+                os << "MISALIGNED_LOAD";
+                break;
+            case TrapCauses::MISALIGNED_STORE:
+                os << "MISALIGNED_STORE";
+                break;
+            case TrapCauses::LOAD_ACCESS:
+                os << "LOAD_ACCESS";
+                break;
+            case TrapCauses::STORE_ACCESS:
+                os << "STORE_ACCESS";
+                break;
+            case TrapCauses::LOAD_PAGE_FAULT:
+                os << "LOAD_PAGE_FAULT";
+                break;
+            case TrapCauses::STORE_PAGE_FAULT:
+                os << "STORE_PAGE_FAULT";
+                break;
+            case TrapCauses::ILLEGAL_INSTRUCTION:
+                os << "ILLEGAL_INSTRUCTION";
+                break;
+            case TrapCauses::BREAKPOINT:
+                os << "BREAKPOINT";
+                break;
+            case TrapCauses::USER_ECALL:
+                os << "USER_ECALL";
+                break;
+            case TrapCauses::SUPERVISOR_ECALL:
+                os << "SUPERVISOR_ECALL";
+                break;
+            case TrapCauses::MACHINE_ECALL:
+                os << "MACHINE_ECALL";
+                break;
+            case TrapCauses::SOFTWARE_CHECK_FAULT:
+                os << "SOFTWARE_CHECK_FAULT";
+                break;
+            case TrapCauses::HARDWARE_ERROR_FAULT:
+                os << "HARDWARE_ERROR_FAULT";
+                break;
+        }
+        return os;
     }
 
 } // namespace atlas
