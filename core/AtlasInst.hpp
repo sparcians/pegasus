@@ -4,6 +4,8 @@
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
+#include "core/translate/AtlasTranslationState.hpp"
+
 namespace sparta
 {
     class Register;
@@ -144,6 +146,10 @@ namespace atlas
 
         bool unimplemented() const { return unimplemented_; }
 
+        // Translation information.  Specifically, this is for data
+        // accesses
+        AtlasTranslationState * getTranslationState() { return &translation_state_; }
+
       private:
         // Unique ID
         uint64_t uid_;
@@ -166,6 +172,9 @@ namespace atlas
         sparta::Register* rs2_reg_;
         sparta::Register* rs3_reg_;
         sparta::Register* rd_reg_;
+
+        // Translation state for load/store instructions
+        AtlasTranslationState translation_state_;
 
         ActionGroup inst_action_group_;
         bool unimplemented_ = false;

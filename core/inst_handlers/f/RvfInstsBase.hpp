@@ -118,7 +118,7 @@ namespace atlas
             const XLEN imm =
                 inst->hasImmediate() ? inst->getSignExtendedImmediate<XLEN, IMM_SIZE>() : 0;
             const XLEN vaddr = rs1_val + imm;
-            state->getTranslationState()->makeTranslationRequest(vaddr, sizeof(XLEN));
+            inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
             return nullptr;
         }
 
@@ -154,7 +154,7 @@ namespace atlas
             static_assert(sizeof(XLEN) >= sizeof(SIZE));
 
             const AtlasInstPtr & inst = state->getCurrentInst();
-            const XLEN paddr = state->getTranslationState()->getTranslationResult().getPaddr();
+            const XLEN paddr = inst->getTranslationState()->getResult().getPaddr();
 
             if constexpr (LOAD)
             {

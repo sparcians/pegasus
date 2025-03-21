@@ -35,9 +35,10 @@ namespace atlas
 
         void changeMmuMode(const uint64_t xlen, MMUMode mode);
 
-      private:
-        template <typename XLEN, MMUMode Mode> ActionGroup* translate_(atlas::AtlasState* state);
+        MMUMode getMode() const { return mode_; }
 
+      private:
+        MMUMode mode_ = MMUMode::BAREMETAL;
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup data_translate_action_group_{"Data Translate"};
 
@@ -45,6 +46,8 @@ namespace atlas
         std::array<Action, N_MMU_MODES> rv32_inst_translation_actions_;
         std::array<Action, N_MMU_MODES> rv64_data_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_data_translation_actions_;
+
+        template <typename XLEN, MMUMode Mode, bool> ActionGroup* translate_(atlas::AtlasState* state);
 
         template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
         {
@@ -104,6 +107,17 @@ namespace atlas
         {
             // Page offset is the same for all MMU modes
             return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
+        }
+
+        template <typename XLEN, MMUMode MODE, bool INST_TRANSLATION>
+        void registerAction_(const char * desc, const ActionTagType tags,
+                             std::array<Action, N_MMU_MODES> & xlation_actions)
+        {
+            Action action =
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, INST_TRANSLATION>>(this,
+                                                                                                  desc);
+            action.addTag(tags);
+            xlation_actions[static_cast<uint32_t>(MODE)] = action;
         }
 
         friend class ::AtlasTranslateTester;
