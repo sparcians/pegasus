@@ -187,6 +187,15 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
+        void stopSim(const uint64_t exit_code)
+        {
+            sim_state_.workload_exit_code = exit_code;
+            sim_state_.test_passed = (exit_code == 0) ? true : false;
+            sim_state_.sim_stopped = true;
+
+            finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
+        }
+
         // tuple: reg name, group num, reg id, initial expected val, initial actual val
         using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
 

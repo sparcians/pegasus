@@ -1,6 +1,7 @@
-
 #include "system/MagicMemory.hpp"
 #include "system/AtlasSystem.hpp"
+#include "core/AtlasState.hpp"
+#include "sparta/utils/LogUtils.hpp"
 
 namespace atlas
 {
@@ -9,33 +10,83 @@ namespace atlas
         sparta::memory::BlockingMemoryIF("Magic Memory", AtlasSystem::ATLAS_SYSTEM_BLOCK_SIZE,
                                          {0, params->size, "magic_memory"}, nullptr),
         base_addr_(params->base_addr),
-        size_(params->size)
+        size_(params->size),
+        memory_(node, AtlasSystem::ATLAS_SYSTEM_BLOCK_SIZE, size_, 0)
     {
     }
 
-    bool MagicMemory::tryRead_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*,
-                               const void*, void*)
+    void MagicMemory::onBindTreeEarly_()
     {
-        // TODO: Implement magic memory reads
+        auto core_tn = getContainer()->getRoot()->getChildAs<sparta::ResourceTreeNode>("core0");
+        state_ = core_tn->getResourceAs<AtlasState>();
+    }
+
+    bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
+                               uint8_t* buf, const void*, void*)
+    {
+        DLOG("addr: 0x" << std::hex << addr << " sz: " << std::dec << size);
+        memory_.read(addr, size, buf);
         return true;
     }
 
-    bool MagicMemory::tryWrite_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*,
-                                const void*, void*)
+    bool MagicMemory::tryWrite_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
+                                const uint8_t* buf, const void*, void*)
     {
-        // TODO: Implement magic memory writes
+        if (addr != 0)
+        {
+            DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
+            memory_.write(addr, size, buf);
+            return true;
+        }
+
+        MagicMemCommand mm_command;
+        ::memcpy(mm_command.mm_buffer, buf, size);
+
+        ILOG("device: " << mm_command.cmd.device << " command: " << mm_command.cmd.command
+                        << " payload: " << mm_command.cmd.payload);
+
+        if (mm_command.cmd.payload == 0)
+        {
+            return true;
+        }
+
+        switch (static_cast<SupportedDevices>(mm_command.cmd.device))
+        {
+            case SupportedDevices::SYSCALL:
+                {
+                    if (mm_command.cmd.payload & 0x1)
+                    {
+                        const auto exit_code = mm_command.cmd.payload >> 1;
+                        state_->stopSim(exit_code);
+                    }
+                    else
+                    {
+                        sparta_assert(false, "Magic memory command not supported: "
+                                                 << std::dec << mm_command.cmd.command);
+                    }
+                }
+                break;
+            case SupportedDevices::BLOCK_CHAR:
+                sparta_assert(false, "TODO: Block char is unsupported");
+                break;
+        }
+
         return true;
     }
 
-    bool MagicMemory::tryPeek_(sparta::memory::addr_t, sparta::memory::addr_t, uint8_t*) const
+    bool MagicMemory::tryPeek_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
+                               uint8_t* buf) const
     {
-        // Peeks are allowed, but have no side effects
+        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
+        memory_.read(addr, size, buf);
         return true;
     }
 
-    bool MagicMemory::tryPoke_(sparta::memory::addr_t, sparta::memory::addr_t, const uint8_t*)
+    bool MagicMemory::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
+                               const uint8_t* buf)
     {
-        // Pokes are allowed, but have no side effects
+        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
+        memory_.write(addr, size, buf);
         return true;
     }
 } // namespace atlas
