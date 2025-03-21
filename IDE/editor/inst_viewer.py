@@ -39,6 +39,11 @@ class InstViewer(wx.Panel):
         riscv_tests_dir = self.frame.riscv_tests_dir
         sim_exe_path = self.frame.sim_exe_path
         obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
+        if obs_sim.reg_info_query is None:
+            msg = 'Test will load without "truth" values for comparison. '
+            msg += 'Please follow the steps in <atlas>/spike/README.md to build Spike to enable this feature.'
+            wx.MessageBox(msg, 'Warning', wx.OK | wx.ICON_WARNING)
+
         state_db = StateDB()
 
         self.msg_queue = multiprocessing.Queue()

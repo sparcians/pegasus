@@ -28,11 +28,14 @@ class StateSerializer(Observer):
             state_db.AppendInstruction(self.pc, self.opcode, self.dasm, uid)
 
             # {'pc': 0xPC', 'priv': 3, 'reg_changes': [RegChange, RegChange, ...]}
-            reg_info = self.reg_info_query.GetRegisterInfoAtPC(self.pc)
-            expected_priv = reg_info['priv']
+            expected_priv = None
             expected_reg_changes = {}
-            for reg_change in reg_info['reg_changes']:
-                expected_reg_changes[reg_change.regname] = reg_change.regvalue
+
+            if self.reg_info_query:
+                reg_info = self.reg_info_query.GetRegisterInfoAtPC(self.pc)
+                expected_priv = reg_info['priv']
+                for reg_change in reg_info['reg_changes']:
+                    expected_reg_changes[reg_change.regname] = reg_change.regvalue
 
             for reg_name, prev_val in self.tracked_reg_values.items():
                 if reg_name == 'resv_priv':
