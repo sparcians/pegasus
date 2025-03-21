@@ -4,6 +4,38 @@ from backend.sim_api import *
 from backend.atlas_dtypes import *
 from backend.c_dtypes import *
 from backend.trap import *
+from pathlib import Path
+import subprocess, sqlite3, tempfile, re
+
+def FormatHex(val):
+    if val is None:
+        return 'NULL'
+
+    if isinstance(val, int):
+        return FormatHex(hex(val))
+
+    assert isinstance(val, str)
+
+    if val.startswith('-0x'):
+        val = val.lstrip('-0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '-0x0'
+        else:
+            return '-0x' + val
+
+    if val.startswith('0x'):
+        val = val.lstrip('0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '0x0'
+        else:
+            return '0x' + val
+
+    if val == 'NULL':
+        return 'NULL'
+
+    return hex(int(val))
 
 ## Base report class (show a report file, show a wx.Window, etc.)
 class Report:
@@ -20,6 +52,9 @@ class FileReport(Report):
 
 ## Base observer class.
 class Observer:
+    def __init__(self):
+        self.reg_info_query = None
+
     def BreakOnPreExecute(self):
         return True
 
@@ -202,7 +237,29 @@ class ObserverSim:
         self.sim_exe_path = sim_exe_path
         self.test_name = test_name
 
+        self.reg_info_query = None
+        spike_program_path = Path(__file__).parent.parent.parent / 'spike' / 'build' / 'spike'
+        spike_commit_log = '.spike_commit_log'
+
+        if os.path.isfile(spike_program_path):
+            if os.path.isfile(spike_commit_log):
+                os.remove(spike_commit_log)
+
+            with open(spike_commit_log, 'w') as f:
+                process = subprocess.Popen(
+                    [spike_program_path, '--log-commits', os.path.join(riscv_tests_dir, test_name)],
+                    stdout=subprocess.PIPE,
+                    stderr=f,
+                    text=True
+                )
+
+                process.communicate()
+                if os.path.isfile(spike_commit_log):
+                    self.reg_info_query = RegInfoQuery(spike_commit_log)
+
     def RunObserver(self, obs, timeout=None):
+        obs.reg_info_query = self.reg_info_query
+
         # You can ping the simulation as long as the SimWrapper is in scope.
         # See all the available APIs in IDE.backend.sim_api
         with SimWrapper(self.riscv_tests_dir, self.sim_exe_path, self.test_name) as sim:
@@ -272,3 +329,120 @@ class ObserverSim:
                     break
 
         return obs.CreateReport()
+
+class RegInfoQuery:
+    def __init__(self, commit_log):
+        # Open a sqlite3 database in the tempdir
+        self.db_path = tempfile.mktemp()
+        self.conn = sqlite3.connect(self.db_path)
+        self.cursor = self.conn.cursor()
+
+        class Transaction:
+            def __init__(self, cursor):
+                self.cursor = cursor
+
+            def __enter__(self):
+                self.cursor.execute('BEGIN TRANSACTION')
+
+            def __exit__(self, type, value, traceback):
+                if type is None:
+                    self.cursor.execute('COMMIT')
+                else:
+                    self.cursor.execute('ROLLBACK')
+
+        self.cursor.execute('''
+            CREATE TABLE RegisterChanges (
+                Hart INT,
+                Priv INT,
+                PC TEXT,
+                RegName TEXT,
+                RegVal TEXT
+            )
+        ''')
+
+        # Create index on the (PC,RegName) columns for faster lookups
+        self.cursor.execute('CREATE INDEX idx_pc_regname ON RegisterChanges (PC, RegName)')
+
+        # Log file format:
+        #
+        # core   0: 1 0x0000000080000288 (0x140525f3) x11 0x000000000bad0000 c320_sscratch 0x000000000badbeef
+        #        |  | |                   |           |   |                  |             |
+        #        |  | |                   |           |   |                  |             +--------> regvalue
+        #        |  | |                   |           |   |                  +----------------------> regname
+        #        |  | |                   |           |   +-----------------------------------------> regvalue
+        #        |  | |                   |           +---------------------------------------------> regname
+        #        |  | |                   +---------------------------------------------------------> (opcode, ignored)
+        #        |  | +-----------------------------------------------------------------------------> PC
+        #        |  +-------------------------------------------------------------------------------> Priv
+        #        +----------------------------------------------------------------------------------> Hart
+        #
+        # We want to extract the hart (0), priv (1), PC (0x0000000080000288)
+        # We also can ignore the opcode (0x140525f3)
+        # We want to extract the remaining <regname> <regval> pairs if they exist.
+        self.pattern = re.compile(r'core\s+(\d+):\s+(\d+)\s+(0x[0-9a-fA-F]+)\s+\(0x[0-9a-fA-F]+\)\s+(.*)')
+
+        # Since there is no telling how many instructions are in the log, we will
+        # have to loop over one by one and insert the values into the sqlite3 database.
+        with Transaction(self.cursor):
+            with open(commit_log, 'r') as f:
+                for line in f.readlines():
+                    self.__ParseCommitLogLine(line)
+
+    def __ParseCommitLogLine(self, line):
+        match = self.pattern.match(line)
+        if not match:
+            return
+
+        hart, priv, pc, regvals = match.groups()
+        pc = FormatHex(pc)
+
+        if not regvals:
+            cmd = 'INSERT INTO RegisterChanges (Hart, Priv, PC) VALUES ({}, {}, "{}")'
+            cmd = cmd.format(hart, priv, pc)
+            self.cursor.execute(cmd)
+            return
+
+        hart = int(hart)
+        priv = int(priv)
+
+        # regvals is of the form:
+        # x11 0x000000000bad0000 c320_sscratch 0x000000000badbeef
+        #
+        # We want to extract the register name and value pairs.
+        regvals = regvals.split()
+        for i in range(0, len(regvals)-1, 2):
+            regname = regvals[i]
+            regval = regvals[i+1]
+            regval = FormatHex(regval)
+
+            if regname.startswith('c'):
+                # Extract 'sscratch' from 'c320_sscratch' etc.
+                regname = regname.split('_')[1]
+            else:
+                # Assert it is an INT/FP/VEC register, or a memory write
+                assert regname[0] in ('x', 'f', 'v') or regname == 'mem'
+
+            cmd = 'INSERT INTO RegisterChanges VALUES ({}, {}, "{}", "{}", "{}")'
+            cmd = cmd.format(hart, priv, pc, regname, regval)
+            self.cursor.execute(cmd)
+
+    class RegChange:
+        def __init__(self, regname, regvalue):
+            self.regname = regname
+            self.regvalue = FormatHex(regvalue)
+
+    # {'pc': 0xPC', 'priv': 3, 'reg_changes': [RegChange, RegChange, ...]}
+    def GetRegisterInfoAtPC(self, pc, hart=0):
+        pc = FormatHex(pc)
+        cmd = 'SELECT RegName,RegVal FROM RegisterChanges WHERE PC="{}" AND Hart={}'.format(pc, hart)
+        self.cursor.execute(cmd)
+
+        rows = self.cursor.fetchall()
+        if len(rows) == 0:
+            return {'pc': pc, 'priv': None, 'reg_changes': []}
+
+        reg_changes = []
+        for regname, regval in rows:
+            reg_changes.append(self.RegChange(regname, regval))
+
+        return {'pc': pc, 'priv': rows[0][1], 'reg_changes': reg_changes}

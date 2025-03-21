@@ -77,7 +77,6 @@ class InstViewer(wx.Panel):
 
         for pc, _, dasm, inst_uid in state_query.GetInstructions():
             i = self.inst_list_ctrl.GetItemCount()
-            pc = '0x{:x}'.format(pc)
             self.inst_list_ctrl.InsertItem(i, pc)
             self.inst_list_ctrl.SetItem(i, 1, dasm)
             self.insts_by_pc[pc] = inst_uid

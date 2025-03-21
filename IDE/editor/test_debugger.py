@@ -4,6 +4,7 @@ import wx.py.shell
 import wx.lib.scrolledpanel
 from backend.c_dtypes import uint64_t, int64_t
 from backend.atlas_dtypes import CSR
+from backend.observers import FormatHex
 
 class TestDebugger(wx.Panel):
     def __init__(self, parent, frame):
@@ -202,20 +203,22 @@ class StateViewer(wx.Panel):
         snapshot = self.state_query.GetSnapshot(pc)
         changes = snapshot.getChanges()
 
-        self.pc_label.SetLabel('pc:'+pc)
+        self.pc_label.SetLabel('pc:'+FormatHex(pc))
 
         changes_list = []
         for reg_name, (prev_val, curr_val) in changes.items():
-            prev_val = hex(int(prev_val))
-            curr_val = hex(int(curr_val))
+            prev_val = FormatHex(prev_val)
+            curr_val = FormatHex(curr_val)
             changes_list.append('{}({})'.format(reg_name, '{}->{}'.format(prev_val, curr_val)))
 
         if not changes_list:
             changes_list.append('none')
 
         self.changes_label.SetLabel('changes: ' + ', '.join(changes_list))
-        for _, grid in self.regval_grids.items():
+        for grid in self.regval_grids.values():
             grid.SetRegValues(snapshot)
+
+        self.Layout()
 
     def LoadInitialState(self):
         if not self.state_query:
@@ -223,13 +226,15 @@ class StateViewer(wx.Panel):
 
         snapshot = self.state_query.GetInitialState()
         pc = snapshot.getPC()
-        priv = ['U', 'S', 'H', 'M'][int(snapshot.getRegValue('resv_priv'))]
-        self.pc_label.SetLabel('pc:0x{:08x}'.format(pc))
+        priv = ['U', 'S', 'H', 'M'][int(snapshot.getRegValue('resv_priv'), 16)]
+        self.pc_label.SetLabel('pc:{}'.format(FormatHex(pc)))
         self.priv_label.SetLabel('priv:'+priv)
         self.changes_label.SetLabel('changes: ----')
 
         for _, grid in self.regval_grids.items():
             grid.SetRegValues(snapshot)
+
+        self.Layout()
 
     def __OnCppSearch(self, event):
         search_bar = event.GetEventObject()
@@ -282,6 +287,8 @@ class RegisterGrid(wx.grid.Grid):
         self.reg_names = reg_names
         self.color_nonzero = color_nonzero
         self.xlen = None
+        self.expected_vals_by_row = {}
+        self.GetGridWindow().Bind(wx.EVT_MOTION, self.__OnMouseMove)
 
         self.CreateGrid(0, 2)
         self.HideRowLabels()
@@ -299,9 +306,17 @@ class RegisterGrid(wx.grid.Grid):
 
     def SetRegValues(self, snapshot):
         self.ClearGrid()
+        self.expected_vals_by_row = {}
+
         for row in range(self.GetNumberRows()):
             self.SetCellBackgroundColour(row, 0, 'white')
             self.SetCellBackgroundColour(row, 1, 'white')
+
+            # Reset the font weight to normal
+            cell_font = self.GetCellFont(row, 0)
+            cell_font.SetWeight(wx.FONTWEIGHT_NORMAL)
+            self.SetCellFont(row, 0, cell_font)
+            self.SetCellFont(row, 1, cell_font)
 
         # Note that screen space becomes a problem when we try to display
         # every CSR value. We should only display the ones that are non-zero.
@@ -312,7 +327,12 @@ class RegisterGrid(wx.grid.Grid):
 
         for reg_name in self.reg_names:
             reg_val = snapshot.getRegValue(reg_name)
-            if reg_val > 0 or re.match(xpattern, reg_name) or re.match(fpattern, reg_name):
+            take = False
+            if reg_val not in (None, 'NULL', '0x0'):
+                take = int(reg_val, 16) > 0
+
+            take = take or re.match(xpattern, reg_name) or re.match(fpattern, reg_name)
+            if take:
                 nvpairs.append((reg_name, reg_val))
 
         num_rows_have = self.GetNumberRows()
@@ -321,21 +341,32 @@ class RegisterGrid(wx.grid.Grid):
             self.AppendRows(num_rows_need - num_rows_have)
 
         for row, (reg_name, reg_val) in enumerate(nvpairs):
-            reg_val = hex(int(reg_val)).lstrip('0x')
-            reg_val = reg_val.zfill(16)
-            reg_val = '0x' + reg_val
-            nvpairs[row] = (reg_name, reg_val)
-
             self.SetCellValue(row, 0, reg_name)
             self.SetCellValue(row, 1, reg_val)
 
             changes = snapshot.getChanges()
             if changes is not None and reg_name in snapshot.getChanges():
-                self.SetCellBackgroundColour(row, 0, 'yellow')
-                self.SetCellBackgroundColour(row, 1, 'yellow')
+                # This background color is used merely for UX purposes to quickly see
+                # which registers just changed at this PC.
+                self.SetCellBackgroundColour(row, 0, (255, 255, 153))
+                self.SetCellBackgroundColour(row, 1, (255, 255, 153))
             elif int(reg_val, 16) and self.color_nonzero:
-                self.SetCellBackgroundColour(row, 0, 'cyan')
-                self.SetCellBackgroundColour(row, 1, 'cyan')
+                # This background color is used merely for UX purposes to quickly see
+                # which registers are non-zero.
+                self.SetCellBackgroundColour(row, 0, (255, 191, 128))
+                self.SetCellBackgroundColour(row, 1, (255, 191, 128))
+
+            # Add a tooltip showing the expected value (Spike) if different than the actual value (Atlas).
+            expected_val = snapshot.getExpectedValue(reg_name)
+            if expected_val not in (None, 'NULL'):
+                if FormatHex(reg_val) != FormatHex(expected_val):
+                    self.SetCellBackgroundColour(row, 0, (255, 51, 0))
+                    self.SetCellBackgroundColour(row, 1, (255, 51, 0))
+                    cell_font = self.GetCellFont(row, 0)
+                    cell_font.SetWeight(wx.FONTWEIGHT_BOLD)
+                    self.SetCellFont(row, 0, cell_font)
+                    self.SetCellFont(row, 1, cell_font)
+                    self.expected_vals_by_row[row] = FormatHex(expected_val)
 
             self.ShowRow(row)
 
@@ -348,6 +379,12 @@ class RegisterGrid(wx.grid.Grid):
             reg_val_label = reg_val_label.zfill(max_reg_val_len)
             reg_val_label = '0x' + reg_val_label
             self.SetCellValue(row, 1, reg_val_label)
+
+        for row in self.expected_vals_by_row:
+            expected_val = self.expected_vals_by_row[row].lstrip('0x')
+            expected_val = expected_val.zfill(max_reg_val_len)
+            expected_val = '0x' + expected_val
+            self.expected_vals_by_row[row] = expected_val
 
         self.AutoSize()
 
@@ -372,3 +409,17 @@ class RegisterGrid(wx.grid.Grid):
             menu.Append(1, 'Copy')
             self.Bind(wx.EVT_MENU, copy_text, id=1)
             self.PopupMenu(menu)
+
+    def __OnMouseMove(self, event):
+        if len(self.expected_vals_by_row) == 0:
+            event.Skip()
+            return
+
+        _, y = event.GetPosition()
+        row = self.YToRow(y)
+
+        if row in self.expected_vals_by_row:
+            tooltip = 'Expected: {}'.format(self.expected_vals_by_row[row])
+            self.SetToolTip(wx.ToolTip(tooltip))
+        else:
+            self.UnsetToolTip()
