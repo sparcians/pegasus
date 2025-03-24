@@ -1,15 +1,24 @@
-from backend.observers import Observer, FormatHex
+from backend.observers import Observer
 from backend.sim_api import *
 from backend.atlas_dtypes import *
+import json, re
 
 class StateSerializer(Observer):
-    def __init__(self, state_db, msg_queue):
+    def __init__(self, state_db, msg_queue, rv):
         Observer.__init__(self)
         self.state_db = state_db
         self.msg_queue = msg_queue
         self.insts_by_uid = {}
         self.csr_names = None
         self.infinite_loop_pc = None
+
+        arch_json = os.path.join(os.path.dirname(__file__), '..', '..', 'arch', rv, 'reg_csr.json')
+        with open(arch_json) as fin:
+            self.csr_num_to_name = {}
+            for info in json.load(fin):
+                csr_name = info['name']
+                csr_num = info['num']
+                self.csr_num_to_name[csr_num] = csr_name
 
     class Instruction:
         def __init__(self, pc, opcode, priv, dasm, reg_info_query):
@@ -89,6 +98,13 @@ class StateSerializer(Observer):
         dasm = inst.dasmString()
         rd = inst.getRd()
         uid = atlas_current_uid(endpoint)
+
+        # Use regex to look for "CSR=<csr_hex>" in the dasm
+        csr_match = re.search(r'CSR=0x([0-9a-fA-F]+)', dasm)
+        if csr_match:
+            csr_hex = csr_match.group(1)
+            csr_name = self.csr_num_to_name.get(int(csr_hex, 16))
+            dasm = re.sub(r'CSR=0x[0-9a-fA-F]+', 'CSR=' + csr_name, dasm)
 
         inst = self.Instruction(pc, opcode, priv, dasm, self.reg_info_query)
         if rd:
