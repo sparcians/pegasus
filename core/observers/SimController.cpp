@@ -247,8 +247,7 @@ namespace atlas
             sendJson_(json);
         }
 
-        template <typename T>
-        void sendHex_(const T val)
+        template <typename T> void sendHex_(const T val)
         {
             static_assert(std::is_integral_v<T>);
             std::stringstream ss;
