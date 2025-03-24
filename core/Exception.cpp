@@ -30,73 +30,98 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* Exception::handleException_(atlas::AtlasState* state)
     {
-        sparta_assert(cause_.isValid(), "Exception cause is not valid!");
+        sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(), "Exception cause is not valid!");
 
-        const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(reg_t)1);
+        const bool is_interrupt = interrupt_cause_.isValid();
+        const uint64_t cause_val = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue()) : static_cast<uint64_t>(fault_cause_.getValue());
+
+        // Determine which privilege mode to handle the trap in
+        const uint32_t trap_deleg_csr = is_interrupt ? MEDELEG : MIDELEG;
+        const XLEN trap_deleg = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
+        const PrivMode priv_mode = ((1(XLEN) << (cause_val)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
+        state->setNextPrivMode(priv_mode);
+
+        // Set next PC
+        const uint64_t tvec_csr = (priv_mode == PrivMode::SUPERVISOR) ? STVEC : MTVEC;
+        const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, tvec_csr) & ~(reg_t)1);
         state->setNextPc(trap_handler_address);
 
         // Get PC that caused the exception
         const reg_t epc_val = state->getPc();
-        WRITE_CSR_REG<XLEN>(state, MEPC, epc_val);
+        const uint32_t epc_csr =  (priv_mode == PrivMode::SUPERVISOR) ? SEPC : MEPC;
+        WRITE_CSR_REG<XLEN>(state, epc_csr, epc_val);
 
         // Get the exception code
-        const uint64_t cause_val = static_cast<uint64_t>(cause_.getValue());
-        WRITE_CSR_REG<XLEN>(state, MCAUSE, cause_val);
+        const uint32_t cause_csr = (priv_mode == PrivMode::SUPERVISOR) ? SCAUSE : MCAUSE;
+        WRITE_CSR_REG<XLEN>(state, cause_csr, cause_val);
 
         // Depending on the exception type, get the
-        const uint64_t trap_val = determineTrapValue_(cause_.getValue(), state);
-        WRITE_CSR_REG<XLEN>(state, MTVAL, trap_val);
+        const uint32_t tval_csr = (priv_mode == PrivMode::SUPERVISOR) ? STVAL : MTVAL;
+        const uint64_t trap_val = is_interrupt ? determineTrapValue_(interrupt_cause_.getValue(), state) : determineTrapValue_(fault_cause_.getValue(), state);
+        WRITE_CSR_REG<XLEN>(state, tval_csr, trap_val);
 
-        // TODO: For hypervisor, also write tval2 and tinst
+        // Update MSTATUS
+        if (priv_mode == PrivMode::SUPERVISOR)
+        {
+            const auto mstatus_sie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sie");
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", mstatus_sie);
 
-        const auto mstatus_mie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "mie");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", mstatus_mie);
+            const auto spp_val = static_cast<uint64_t>(state->getPrivMode());
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", mpp_val);
 
-        const auto mpp_val = static_cast<uint64_t>(state->getPrivMode());
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", mpp_val);
+            const uint64_t sie_val = 0;
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", mie_val);
 
-        const uint64_t mie_val = 0;
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
+        }
+        else 
+        {
+            const auto mstatus_mie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "mie");
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", mstatus_mie);
 
-        const uint64_t mpv_val = 0;
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
+            const auto mpp_val = static_cast<uint64_t>(state->getPrivMode());
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", mpp_val);
 
-        const uint64_t gva_val = 0;
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+            const uint64_t mie_val = 0;
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
 
-        state->setNextPrivMode(PrivMode::MACHINE);
+            const uint64_t mpv_val = 0;
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
+
+            const uint64_t gva_val = 0;
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+        }
 
         state->snapshotAndSyncWithCoSim();
         cause_.clearValid();
         return nullptr;
     }
 
-    uint64_t Exception::determineTrapValue_(const TrapCauses & trap_cause, AtlasState* state)
+    uint64_t Exception::determineTrapValue_(const FaultCause & trap_cause, AtlasState* state)
     {
         switch (trap_cause)
         {
-            case TrapCauses::MISALIGNED_FETCH:
-            case TrapCauses::FETCH_ACCESS:
-            case TrapCauses::FETCH_PAGE_FAULT:
+            case FaultCause::MISALIGNED_FETCH:
+            case FaultCause::FETCH_ACCESS:
+            case FaultCause::FETCH_PAGE_FAULT:
                 return state->getPc();
                 break;
-            case TrapCauses::MISALIGNED_LOAD:
-            case TrapCauses::MISALIGNED_STORE:
-            case TrapCauses::LOAD_ACCESS:
-            case TrapCauses::STORE_ACCESS:
-            case TrapCauses::LOAD_PAGE_FAULT:
-            case TrapCauses::STORE_PAGE_FAULT:
+            case FaultCause::MISALIGNED_LOAD:
+            case FaultCause::MISALIGNED_STORE:
+            case FaultCause::LOAD_ACCESS:
+            case FaultCause::STORE_ACCESS:
+            case FaultCause::LOAD_PAGE_FAULT:
+            case FaultCause::STORE_PAGE_FAULT:
                 return state->getTranslationState()->getTranslationRequest().getVaddr();
                 break;
-            case TrapCauses::ILLEGAL_INSTRUCTION:
+            case FaultCause::ILLEGAL_INSTRUCTION:
                 return state->getSimState()->current_opcode;
                 break;
-            case TrapCauses::BREAKPOINT:
-            case TrapCauses::USER_ECALL:
-            case TrapCauses::SUPERVISOR_ECALL:
-            case TrapCauses::MACHINE_ECALL:
-            case TrapCauses::SOFTWARE_CHECK_FAULT:
-            case TrapCauses::HARDWARE_ERROR_FAULT:
+            case FaultCause::BREAKPOINT:
+            case FaultCause::USER_ECALL:
+            case FaultCause::SUPERVISOR_ECALL:
+            case FaultCause::MACHINE_ECALL:
+            case FaultCause::SOFTWARE_CHECK_FAULT:
+            case FaultCause::HARDWARE_ERROR_FAULT:
             default:
                 return 0;
                 break;

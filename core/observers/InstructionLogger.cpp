@@ -75,7 +75,8 @@ namespace atlas
         preExecute(state);
 
         // Get value of source registers
-        trap_cause_ = state->getExceptionUnit()->getUnhandledException();
+        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
+        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
         return nullptr;
     }
 
@@ -84,7 +85,7 @@ namespace atlas
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
 
-        if (trap_cause_.isValid() == false)
+        if (fault_cause_.isValid() == false)
         {
             sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
         }
@@ -137,9 +138,9 @@ namespace atlas
             INSTLOG(HEX(pc_, width) << ": ??? (" << HEX8(opcode_) << ") uid: ?");
         }
 
-        if (trap_cause_.isValid())
+        if (fault_cause_.isValid())
         {
-            INSTLOG("trap cause: " << HEX((uint32_t)trap_cause_.getValue(), width));
+            INSTLOG("trap cause: " << HEX((uint32_t)fault_cause_.getValue(), width));
         }
 
         if (inst && inst->hasImmediate())

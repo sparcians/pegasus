@@ -876,7 +876,7 @@ namespace atlas
         // sret can be executee in Supervisor or Machine mode
         if (state->getPrivMode() < PRIV_MODE)
         {
-            THROW_ILLEGAL_INSTRUCTION;
+            THROW_ILLEGAL_INST;
         }
 
         PrivMode prev_priv_mode = PrivMode::INVALID;
@@ -913,7 +913,7 @@ namespace atlas
             const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
             if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
             {
-                THROW_ILLEGAL_INSTRUCTION;
+                THROW_ILLEGAL_INST;
             }
 
             // Update the PC with SEPC value
@@ -1051,7 +1051,7 @@ namespace atlas
         const uint32_t tvm_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tvm");
         if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm_val)
         {
-            THROW_ILLEGAL_INSTRUCTION;
+            THROW_ILLEGAL_INST;
         }
 
         return nullptr;
@@ -1080,7 +1080,7 @@ namespace atlas
         const uint32_t tw_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tw");
         if (tw_val)
         {
-            THROW_ILLEGAL_INSTRUCTION;
+            THROW_ILLEGAL_INST;
         }
 
         if (state->getStopSimOnWfi())

@@ -67,7 +67,8 @@ namespace atlas
         std::vector<DestReg> dst_regs_;
 
         // Exception cause
-        sparta::utils::ValidValue<TrapCauses> trap_cause_;
+        sparta::utils::ValidValue<FaultCause> fault_cause_;
+        sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
         virtual void reset_()
         {
@@ -75,7 +76,8 @@ namespace atlas
             opcode_ = std::numeric_limits<uint64_t>::max();
             src_regs_.clear();
             dst_regs_.clear();
-            trap_cause_.clearValid();
+            fault_cause_.clearValid();
+            interrupt_cause_.clearValid();
         }
     };
 } // namespace atlas

@@ -28,11 +28,18 @@ namespace atlas
 
         Exception(sparta::TreeNode* exception_node, const ExceptionParameters* p);
 
-        void setUnhandledException(const TrapCauses cause) { cause_ = cause; }
+        void setUnhandledException(const FaultCause cause) { fault_cause_ = cause;}
 
-        const sparta::utils::ValidValue<TrapCauses> & getUnhandledException() const
+        void setUnhandledException(const InterruptCause cause) { interrupt_cause_ = cause; }
+
+        const sparta::utils::ValidValue<FaultCause> & getUnhandledFault() const
         {
-            return cause_;
+            return fault_cause_;
+        }
+
+        const sparta::utils::ValidValue<InterruptCause> & getUnhandledInterrupt() const
+        {
+            return interrupt_cause_;
         }
 
         ActionGroup* getActionGroup() { return &exception_action_group_; }
@@ -44,9 +51,11 @@ namespace atlas
 
         ActionGroup exception_action_group_{"Exception"};
 
-        sparta::utils::ValidValue<TrapCauses> cause_;
+        sparta::utils::ValidValue<FaultCause> fault_cause_;
+        sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
-        uint64_t determineTrapValue_(const TrapCauses & trap_cause, AtlasState* state);
+        uint64_t determineTrapValue_(const FaultCause & trap_cause, AtlasState* state);
+        uint64_t determineTrapValue_(const InterruptCause & trap_cause, AtlasState* state);
     };
 
 } // namespace atlas
