@@ -36,9 +36,9 @@ namespace atlas
         const uint64_t cause_val = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue()) : static_cast<uint64_t>(fault_cause_.getValue());
 
         // Determine which privilege mode to handle the trap in
-        const uint32_t trap_deleg_csr = is_interrupt ? MEDELEG : MIDELEG;
-        const XLEN trap_deleg = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
-        const PrivMode priv_mode = ((1(XLEN) << (cause_val)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
+        const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
+        const XLEN trap_deleg_val = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
+        const PrivMode priv_mode = ((1ull << (cause_val)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
         state->setNextPrivMode(priv_mode);
 
         // Set next PC
@@ -67,10 +67,10 @@ namespace atlas
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", mstatus_sie);
 
             const auto spp_val = static_cast<uint64_t>(state->getPrivMode());
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", mpp_val);
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
 
             const uint64_t sie_val = 0;
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", mie_val);
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", sie_val);
 
         }
         else 
@@ -92,40 +92,57 @@ namespace atlas
         }
 
         state->snapshotAndSyncWithCoSim();
-        cause_.clearValid();
+        fault_cause_.clearValid();
+        interrupt_cause_.clearValid();
         return nullptr;
     }
 
-    uint64_t Exception::determineTrapValue_(const FaultCause & trap_cause, AtlasState* state)
+    uint64_t Exception::determineTrapValue_(const FaultCause & cause, AtlasState* state)
     {
-        switch (trap_cause)
+        switch (cause)
         {
-            case FaultCause::MISALIGNED_FETCH:
-            case FaultCause::FETCH_ACCESS:
-            case FaultCause::FETCH_PAGE_FAULT:
+            case FaultCause::INST_ADDR_MISALIGNED:
+            case FaultCause::INST_ACCESS:
+            case FaultCause::INST_PAGE_FAULT:
                 return state->getPc();
                 break;
-            case FaultCause::MISALIGNED_LOAD:
-            case FaultCause::MISALIGNED_STORE:
+            case FaultCause::LOAD_ADDR_MISALIGNED:
             case FaultCause::LOAD_ACCESS:
-            case FaultCause::STORE_ACCESS:
+            case FaultCause::STORE_AMO_ADDR_MISALIGNED:
+            case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
-            case FaultCause::STORE_PAGE_FAULT:
+            case FaultCause::STORE_AMO_PAGE_FAULT:
                 return state->getTranslationState()->getTranslationRequest().getVaddr();
                 break;
-            case FaultCause::ILLEGAL_INSTRUCTION:
+            case FaultCause::ILLEGAL_INST:
                 return state->getSimState()->current_opcode;
                 break;
             case FaultCause::BREAKPOINT:
             case FaultCause::USER_ECALL:
             case FaultCause::SUPERVISOR_ECALL:
             case FaultCause::MACHINE_ECALL:
-            case FaultCause::SOFTWARE_CHECK_FAULT:
-            case FaultCause::HARDWARE_ERROR_FAULT:
+            case FaultCause::SOFTWARE_CHECK:
+            case FaultCause::HARDWARE_ERROR:
             default:
                 return 0;
                 break;
         }
     }
 
+    uint64_t Exception::determineTrapValue_(const InterruptCause & cause, AtlasState*)
+    {
+        switch (cause)
+        {
+            case InterruptCause::SUPERVISOR_SOFTWARE:
+            case InterruptCause::MACHINE_SOFTWARE:
+            case InterruptCause::SUPERVISOR_TIMER:
+            case InterruptCause::MACHINE_TIMER:
+            case InterruptCause::SUPERVISOR_EXTERNAL:
+            case InterruptCause::MACHINE_EXTERNAL:
+            case InterruptCause::COUNTER_OVERFLOW:
+            default:
+                return 0;
+                break;
+        }
+    }
 } // namespace atlas
