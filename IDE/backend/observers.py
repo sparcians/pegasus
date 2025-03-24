@@ -7,36 +7,6 @@ from backend.trap import *
 from pathlib import Path
 import subprocess, sqlite3, tempfile, re
 
-def FormatHex(val):
-    if val is None:
-        return 'NULL'
-
-    if isinstance(val, int):
-        return FormatHex(hex(val))
-
-    assert isinstance(val, str)
-
-    if val.startswith('-0x'):
-        val = val.lstrip('-0x')
-        val = val.lstrip('0')
-        if val == '':
-            return '-0x0'
-        else:
-            return '-0x' + val
-
-    if val.startswith('0x'):
-        val = val.lstrip('0x')
-        val = val.lstrip('0')
-        if val == '':
-            return '0x0'
-        else:
-            return '0x' + val
-
-    if val == 'NULL':
-        return 'NULL'
-
-    return hex(int(val))
-
 ## Base report class (show a report file, show a wx.Window, etc.)
 class Report:
     def Show(self):
@@ -97,11 +67,11 @@ class SanityCheckObserver(Observer):
         self.csrs_before_exception_handling = None
 
     def OnPreSimulation(self, endpoint):
-        starting_pc = '0x{:08x}'.format(atlas_pc(endpoint))
+        starting_pc = atlas_pc(endpoint)
         self.fout.write('BEGIN SIMULATION (starting pc: {})\n'.format(starting_pc))
 
     def OnPreExecute(self, endpoint):
-        pc = '0x{:08x}'.format(atlas_pc(endpoint))
+        pc = atlas_pc(endpoint)
         inst = atlas_current_inst(endpoint)
         dasm = inst.dasmString()
         kvpairs = [('pc', pc), ('dasm', dasm)]
@@ -110,28 +80,28 @@ class SanityCheckObserver(Observer):
         if rs1:
             # rs1(x7):0xff
             key = 'rs1({})'.format(rs1.getName())
-            val = '0x{:08x}'.format(rs1.read())
+            val = rs1.read()
             kvpairs.append((key, val))
 
         rs2 = inst.getRs2()
         if rs2:
             # rs2(x7):0xff
             key = 'rs2({})'.format(rs2.getName())
-            val = '0x{:08x}'.format(rs2.read())
+            val = rs2.read()
             kvpairs.append((key, val))
 
         rd = inst.getRd()
         if rd:
             # rd(x7):0xff
             key = 'rd({})'.format(rd.getName())
-            val = '0x{:08x}'.format(rd.read())
+            val = rd.read()
             kvpairs.append((key, val))
 
         imm = inst.getImmediate()
         if imm is not None:
             # imm:0xff
             key = 'imm'
-            val = '0x{:08x}'.format(imm)
+            val = imm
             kvpairs.append((key, val))
 
         # OnPreExecute (pc: 0xff, dasm: add x0, x0, x0, rs1(x0):0xff, rs2(x0):0xff, rd(x0):0xff)
@@ -161,7 +131,7 @@ class SanityCheckObserver(Observer):
             if reg:
                 reg_name = reg.getName()
                 reg_value = reg.read()
-                self.csrs_before_exception_handling[reg_name] = reg_value
+                self.csrs_before_exception_handling[reg_name] = FormatHex(reg_value)
 
     def OnPostExecute(self, endpoint):
         inst = atlas_current_inst(endpoint)
@@ -187,19 +157,19 @@ class SanityCheckObserver(Observer):
             for csr_name, before_val in self.csrs_before_exception_handling.items():
                 after_val = atlas_reg_value(endpoint, csr_name)
                 if before_val != after_val:
-                    # mstatus:0x00000000 -> 0x00000008
+                    # mstatus:0x0 -> 0x8
                     key = csr_name
-                    val = '0x{:08x} -> 0x{:08x}'.format(before_val, after_val)
+                    val = '{} -> {}'.format(before_val, after_val)
                     kvpairs.append((key, val))
 
-        # ----> OnPostExecute (rd(x7):0xff -> 0x100, mstatus:0x00000000 -> 0x00000008)
+        # ----> OnPostExecute (rd(x7):0xff -> 0x100, mstatus:0x0 -> 0x8)
         kvpairs_str = ', '.join(['{}:{}'.format(k, v) for k, v in kvpairs])
         self.fout.write('----> OnPostExecute ({})\n'.format(kvpairs_str))
         self.csrs_before_exception_handling = None
 
     def OnSimulationStuck(self, endpoint):
         pc = atlas_pc(endpoint)
-        self.fout.write('----> Infinite loop detected at pc: 0x{:08x}\n'.format(pc))
+        self.fout.write('----> Infinite loop detected at pc: {}\n'.format(pc))
 
     def OnSimFinished(self, endpoint):
         workload_exit_code = atlas_exit_code(endpoint)

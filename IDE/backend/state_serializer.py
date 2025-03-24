@@ -1,4 +1,4 @@
-from backend.observers import Observer
+from backend.observers import Observer, FormatHex
 from backend.sim_api import *
 from backend.atlas_dtypes import *
 
@@ -56,20 +56,21 @@ class StateSerializer(Observer):
         for reg_id in range(atlas_num_regs_in_group(endpoint, 0)):
             reg_name = 'x' + str(reg_id)
             reg_val = atlas_reg_value(endpoint, reg_name)
-            if isinstance(reg_val, int):
+            if isinstance(reg_val, str):
                 self.state_db.SetInitRegValue(reg_name, reg_val)
 
         for reg_id in range(atlas_num_regs_in_group(endpoint, 1)):
             reg_name = 'f' + str(reg_id)
             reg_val = atlas_reg_value(endpoint, reg_name)
-            if isinstance(reg_val, int):
+            if isinstance(reg_val, str):
                 self.state_db.SetInitRegValue(reg_name, reg_val)
 
         for reg_id in range(atlas_num_regs_in_group(endpoint, 3)):
             reg_name = atlas_csr_name(endpoint, reg_id)
             if reg_name:
                 reg_val = atlas_reg_value(endpoint, reg_name)
-                self.state_db.SetInitRegValue(reg_name, reg_val)
+                if isinstance(reg_val, str):
+                    self.state_db.SetInitRegValue(reg_name, reg_val)
 
         init_priv = atlas_inst_priv(endpoint)
         self.state_db.SetInitRegValue('resv_priv', init_priv)
@@ -168,7 +169,7 @@ class StateSerializer(Observer):
 
     def OnSimulationStuck(self, endpoint):
         self.infinite_loop_pc = atlas_pc(endpoint)
-        self.msg_queue.put('SIM_STUCK:0x{:08x}'.format(self.infinite_loop_pc))
+        self.msg_queue.put('SIM_STUCK:{}'.format(self.infinite_loop_pc))
 
     def OnSimFinished(self, endpoint):
         self.msg_queue.put('SIM_FINISHED')
