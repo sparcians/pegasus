@@ -168,6 +168,19 @@ namespace atlas
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
         }
 
+        if (auto read = getMemoryRead_())
+        {
+            INSTLOG("   mem read:  addr: " << HEX(read->addr, width) << ", size: " << read->size
+                                           << ", value: " << HEX(read->value, width));
+        }
+
+        if (auto write = getMemoryWrite_())
+        {
+            INSTLOG("   mem write: addr: " << HEX(write->addr, width) << ", size: " << write->size
+                                           << ", prior: " << HEX(write->prior_value, width)
+                                           << ", value: " << HEX(write->value, width));
+        }
+
         INSTLOG("");
         return nullptr;
     }
