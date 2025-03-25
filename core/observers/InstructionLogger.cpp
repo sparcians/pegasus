@@ -168,17 +168,19 @@ namespace atlas
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
         }
 
-        if (auto read = getMemoryRead_())
+        for (const auto & mem_read : mem_reads_)
         {
-            INSTLOG("   mem read:  addr: " << HEX(read->addr, width) << ", size: " << read->size
-                                           << ", value: " << HEX(read->value, width));
+            INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
+                                           << ", size: " << mem_read.size
+                                           << ", value: " << HEX(mem_read.value, width));
         }
 
-        if (auto write = getMemoryWrite_())
+        for (const auto & mem_write : mem_writes_)
         {
-            INSTLOG("   mem write: addr: " << HEX(write->addr, width) << ", size: " << write->size
-                                           << ", prior: " << HEX(write->prior_value, width)
-                                           << ", value: " << HEX(write->value, width));
+            INSTLOG("   mem write: addr: "
+                    << HEX(mem_write.addr, width) << ", size: " << mem_write.size
+                    << ", value: " << HEX(mem_write.value, width)
+                    << " (prev: " << HEX(mem_write.prior_value, width) << ")");
         }
 
         INSTLOG("");

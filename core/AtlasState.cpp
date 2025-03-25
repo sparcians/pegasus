@@ -201,17 +201,6 @@ namespace atlas
         }
     }
 
-    ActionGroup* AtlasState::stopSim_(AtlasState*)
-    {
-        for (auto & obs : observers_)
-        {
-            obs->deregisterFor(atlas_system_->getSystemMemory());
-            obs->stopSim();
-        }
-
-        return nullptr;
-    }
-
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.

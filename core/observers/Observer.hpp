@@ -90,16 +90,8 @@ namespace atlas
 
         std::vector<SrcReg> src_regs_;
         std::vector<DestReg> dst_regs_;
-
-        const MemRead* getMemoryRead_() const
-        {
-            return mem_read_.isValid() ? &mem_read_.getValue() : nullptr;
-        }
-
-        const MemWrite* getMemoryWrite_() const
-        {
-            return mem_write_.isValid() ? &mem_write_.getValue() : nullptr;
-        }
+        std::vector<MemRead> mem_reads_;
+        std::vector<MemWrite> mem_writes_;
 
         // Exception cause
         sparta::utils::ValidValue<TrapCauses> trap_cause_;
@@ -110,9 +102,9 @@ namespace atlas
             opcode_ = std::numeric_limits<uint64_t>::max();
             src_regs_.clear();
             dst_regs_.clear();
+            mem_reads_.clear();
+            mem_writes_.clear();
             trap_cause_.clearValid();
-            mem_read_.clearValid();
-            mem_write_.clearValid();
         }
 
       private:
@@ -141,7 +133,7 @@ namespace atlas
             mem_write.size = data.size;
             mem_write.value = final_val;
             mem_write.prior_value = prior_val;
-            mem_write_ = mem_write;
+            mem_writes_.push_back(mem_write);
         }
 
         void postRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
@@ -156,11 +148,8 @@ namespace atlas
             mem_read.addr = data.addr;
             mem_read.size = data.size;
             mem_read.value = val;
-            mem_read_ = mem_read;
+            mem_reads_.push_back(mem_read);
         }
-
-        sparta::utils::ValidValue<MemRead> mem_read_;
-        sparta::utils::ValidValue<MemWrite> mem_write_;
     };
 
 } // namespace atlas

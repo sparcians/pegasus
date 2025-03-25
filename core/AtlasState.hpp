@@ -224,7 +224,15 @@ namespace atlas
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        ActionGroup* stopSim_(AtlasState*);
+        ActionGroup* stopSim_(AtlasState*)
+        {
+            for (auto & obs : observers_)
+            {
+                obs->stopSim();
+            }
+
+            return nullptr;
+        }
 
         // Check all PC/reg/csr values against our cosim comparator,
         // and return the result code as follows:
