@@ -13,7 +13,7 @@ namespace atlas
 
     class Observer
     {
-    public:
+      public:
         Observer() { reset_(); }
 
         virtual ~Observer() = default;
@@ -81,7 +81,7 @@ namespace atlas
             m->getReadNotificationSource().DEREGISTER_FOR_THIS(postRead_);
         }
 
-    protected:
+      protected:
         uint64_t pc_;
         uint64_t opcode_;
 
@@ -115,7 +115,7 @@ namespace atlas
             mem_write_.clearValid();
         }
 
-    private:
+      private:
         void postWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
         {
             uint64_t prior_val = 0;
