@@ -1,6 +1,36 @@
 import json
 import backend.c_dtypes as c_dtypes
 
+def FormatHex(val):
+    if val is None:
+        return 'NULL'
+
+    if isinstance(val, int):
+        return FormatHex(hex(val))
+
+    assert isinstance(val, str)
+
+    if val.startswith('-0x'):
+        val = val.lstrip('-0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '-0x0'
+        else:
+            return '-0x' + val
+
+    if val.startswith('0x'):
+        val = val.lstrip('0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '0x0'
+        else:
+            return '0x' + val
+
+    if val == 'NULL':
+        return 'NULL'
+
+    return hex(int(val))
+
 class SimResponse:
     def __init__(self, response=None):
         self.response = response
@@ -27,11 +57,19 @@ def atlas_xlen(endpoint):
 
 # Equiv C++:  AtlasState::getPc()
 def atlas_pc(endpoint):
-    return endpoint.request('state.pc')
+    pc = endpoint.request('state.pc')
+    if type(pc) in (int, str):
+        pc = FormatHex(pc)
+
+    return pc
 
 # Equiv C++:  AtlasState::getPrevPc()
 def atlas_prev_pc(endpoint):
-    return endpoint.request('state.prev_pc')
+    pc = endpoint.request('state.prev_pc')
+    if type(pc) in (int, str):
+        pc = FormatHex(pc)
+
+    return pc
 
 # Equiv C++:  AtlasState::getSimState()->current_uid
 def atlas_current_uid(endpoint):
@@ -67,7 +105,11 @@ def atlas_inst_dasm_string(endpoint):
 
 # Equiv C++:  AtlasState::getCurrentInst()->getOpcode()
 def atlas_inst_opcode(endpoint):
-    return endpoint.request('inst.opcode')
+    opcode = endpoint.request('inst.opcode')
+    if type(opcode) in (int, str):
+        opcode = FormatHex(opcode)
+
+    return opcode
 
 # Equiv C++:  AtlasState::getCurrentInst()->getPrivMode()
 def atlas_inst_priv(endpoint):
@@ -79,7 +121,11 @@ def atlas_inst_has_immediate(endpoint):
 
 # Equiv C++:  AtlasState::getCurrentInst()->getImmediate()
 def atlas_inst_immediate(endpoint):
-    return endpoint.request('inst.immediate')
+    imm = endpoint.request('inst.immediate')
+    if type(imm) in (int, str):
+        imm = FormatHex(imm)
+
+    return imm
 
 # Equiv C++:  AtlasState::getCurrentInst()->getRs1()->getName()
 def atlas_inst_rs1_name(endpoint):
@@ -127,7 +173,11 @@ def atlas_reg_id(endpoint, reg_name):
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->read()
 def atlas_reg_value(endpoint, reg_name):
-    return endpoint.request('reg.value %s' % reg_name)
+    reg_value = endpoint.request('reg.value %s' % reg_name)
+    if type(reg_value) in (int, str):
+        reg_value = FormatHex(reg_value)
+
+    return reg_value
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->write(value)
 def atlas_reg_write(endpoint, reg_name, value):

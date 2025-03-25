@@ -75,7 +75,8 @@ namespace atlas
         preExecute(state);
 
         // Get value of source registers
-        trap_cause_ = state->getExceptionUnit()->getUnhandledException();
+        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
+        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
         return nullptr;
     }
 
@@ -84,7 +85,7 @@ namespace atlas
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
 
-        if (trap_cause_.isValid() == false)
+        if (fault_cause_.isValid() == false)
         {
             sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
         }
@@ -137,9 +138,9 @@ namespace atlas
             INSTLOG(HEX(pc_, width) << ": ??? (" << HEX8(opcode_) << ") uid: ?");
         }
 
-        if (trap_cause_.isValid())
+        if (fault_cause_.isValid())
         {
-            INSTLOG("trap cause: " << HEX((uint32_t)trap_cause_.getValue(), width));
+            INSTLOG("trap cause: " << HEX((uint32_t)fault_cause_.getValue(), width));
         }
 
         if (inst && inst->hasImmediate())
@@ -166,6 +167,21 @@ namespace atlas
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width)
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
+        }
+
+        for (const auto & mem_read : mem_reads_)
+        {
+            INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
+                                           << ", size: " << mem_read.size
+                                           << ", value: " << HEX(mem_read.value, width));
+        }
+
+        for (const auto & mem_write : mem_writes_)
+        {
+            INSTLOG("   mem write: addr: "
+                    << HEX(mem_write.addr, width) << ", size: " << mem_write.size
+                    << ", value: " << HEX(mem_write.value, width)
+                    << " (prev: " << HEX(mem_write.prior_value, width) << ")");
         }
 
         INSTLOG("");

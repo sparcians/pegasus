@@ -283,26 +283,8 @@ CSR64_DEFS = {
         "Y" : { 'high_bit' : 24, 'low_bit' : 24,  'readonly' : True,  "desc" : "Reserved" },
         "Z" : { 'high_bit' : 25, 'low_bit' : 25,  'readonly' : True,  "desc" : "Reserved" },
     }],
-    0x302: ["medeleg",    "Machine exception delegation register.", {
-       "WPRI"   : { "high_bit" : 63,  "low_bit" : 24, "readonly" : True, "desc" : "reserved" },
-       "MECALL" : { "high_bit" : 11,  "low_bit" : 11, "readonly" : True, "desc" : "Machine-mode environment call" },
-    }],
-    0x303: ["mideleg",    "Machine interrupt delegation register.", {
-       "WPRI"  : { "high_bit" : 63, "low_bit" : 13, "readonly" : True,  "desc" : "reserved" },
-       "SGEI"  : { "high_bit" : 12, "low_bit" : 12, "readonly" : False, "desc" : "Supervisor guest external interrupts" },
-        "MEI"  : { "high_bit" : 11, "low_bit" : 11, "readonly" : True,  "desc" : "Machine-mode external interrupts" },
-       "VSEI"  : { "high_bit" : 10, "low_bit" : 10, "readonly" : False, "desc" : "Virtuall supervisor-mode external interrupts" },
-        "SEI"  : { "high_bit" : 9,  "low_bit"  : 9, "readonly" : False, "desc" : "Supervisor-mode external interrupts" },
-        "UEI"  : { "high_bit" : 8,  "low_bit"  : 8, "readonly" : True,  "desc" : "User-mode external interrupts" },
-        "MTI"  : { "high_bit" : 7,  "low_bit"  : 7, "readonly" : True,  "desc" : "Machine-mode timer interrupts" },
-       "VSTI"  : { "high_bit" : 6,  "low_bit"  : 6, "readonly" : False, "desc" : "Virtuall supervisor-mode timer interrupts" },
-        "STI"  : { "high_bit" : 5,  "low_bit"  : 5, "readonly" : False, "desc" : "Supervisor-mode timer interrupts" },
-        "UTI"  : { "high_bit" : 4,  "low_bit"  : 4, "readonly" : True,  "desc" : "User-mode timer interrupts" },
-        "MSI"  : { "high_bit" : 3,  "low_bit"  : 3, "readonly" : True,  "desc" : "Machine-mode software interrupts" },
-       "VSSI"  : { "high_bit" : 2,  "low_bit"  : 2, "readonly" : False, "desc" : "Virtual supervisor-mode software interrupts" },
-        "SSI"  : { "high_bit" : 1,  "low_bit"  : 1, "readonly" : False, "desc" : "Supervisor-mode software interrupts" },
-        "USI"  : { "high_bit" : 0,  "low_bit"  : 0, "readonly" : True,  "desc" : "User-mode software interrupts" }
-    }],
+    0x302: ["medeleg", "Machine exception delegation register.", {}],
+    0x303: ["mideleg", "Machine interrupt delegation register.", {}],
     0x304: ["mie",        "Machine interrupt-enable register.", {
         "WPRI"  : { "high_bit" : 63, "low_bit" : 13, "readonly" : True,  "desc" : "reserved" },
        "SGEIE"  : { "high_bit" : 12, "low_bit" : 12, "readonly" : False, "desc" : "Enable supervisor guest external interrupts" },

@@ -1,15 +1,24 @@
 from backend.observers import Observer
 from backend.sim_api import *
 from backend.atlas_dtypes import *
+import json, re
 
 class StateSerializer(Observer):
-    def __init__(self, state_db, msg_queue):
+    def __init__(self, state_db, msg_queue, rv):
         Observer.__init__(self)
         self.state_db = state_db
         self.msg_queue = msg_queue
         self.insts_by_uid = {}
         self.csr_names = None
         self.infinite_loop_pc = None
+
+        arch_json = os.path.join(os.path.dirname(__file__), '..', '..', 'arch', rv, 'reg_csr.json')
+        with open(arch_json) as fin:
+            self.csr_num_to_name = {}
+            for info in json.load(fin):
+                csr_name = info['name']
+                csr_num = info['num']
+                self.csr_num_to_name[csr_num] = csr_name
 
     class Instruction:
         def __init__(self, pc, opcode, priv, dasm, reg_info_query):
@@ -56,20 +65,21 @@ class StateSerializer(Observer):
         for reg_id in range(atlas_num_regs_in_group(endpoint, 0)):
             reg_name = 'x' + str(reg_id)
             reg_val = atlas_reg_value(endpoint, reg_name)
-            if isinstance(reg_val, int):
+            if isinstance(reg_val, str):
                 self.state_db.SetInitRegValue(reg_name, reg_val)
 
         for reg_id in range(atlas_num_regs_in_group(endpoint, 1)):
             reg_name = 'f' + str(reg_id)
             reg_val = atlas_reg_value(endpoint, reg_name)
-            if isinstance(reg_val, int):
+            if isinstance(reg_val, str):
                 self.state_db.SetInitRegValue(reg_name, reg_val)
 
         for reg_id in range(atlas_num_regs_in_group(endpoint, 3)):
             reg_name = atlas_csr_name(endpoint, reg_id)
             if reg_name:
                 reg_val = atlas_reg_value(endpoint, reg_name)
-                self.state_db.SetInitRegValue(reg_name, reg_val)
+                if isinstance(reg_val, str):
+                    self.state_db.SetInitRegValue(reg_name, reg_val)
 
         init_priv = atlas_inst_priv(endpoint)
         self.state_db.SetInitRegValue('resv_priv', init_priv)
@@ -88,6 +98,13 @@ class StateSerializer(Observer):
         dasm = inst.dasmString()
         rd = inst.getRd()
         uid = atlas_current_uid(endpoint)
+
+        # Use regex to look for "CSR=<csr_hex>" in the dasm
+        csr_match = re.search(r'CSR=0x([0-9a-fA-F]+)', dasm)
+        if csr_match:
+            csr_hex = csr_match.group(1)
+            csr_name = self.csr_num_to_name.get(int(csr_hex, 16))
+            dasm = re.sub(r'CSR=0x[0-9a-fA-F]+', 'CSR=' + csr_name, dasm)
 
         inst = self.Instruction(pc, opcode, priv, dasm, self.reg_info_query)
         if rd:
@@ -168,7 +185,7 @@ class StateSerializer(Observer):
 
     def OnSimulationStuck(self, endpoint):
         self.infinite_loop_pc = atlas_pc(endpoint)
-        self.msg_queue.put('SIM_STUCK:0x{:08x}'.format(self.infinite_loop_pc))
+        self.msg_queue.put('SIM_STUCK:{}'.format(self.infinite_loop_pc))
 
     def OnSimFinished(self, endpoint):
         self.msg_queue.put('SIM_FINISHED')
