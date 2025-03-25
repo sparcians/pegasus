@@ -1,5 +1,5 @@
 import sqlite3
-from backend.observers import FormatHex
+from backend.sim_api import FormatHex
 
 class StateQuery:
     def __init__(self, db_file):

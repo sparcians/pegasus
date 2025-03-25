@@ -686,10 +686,17 @@ namespace atlas
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
             }
 
-            std::cout << state->getCsrRegister(MHARTID) << std::endl;
-            std::cout << state->getCsrRegister(MISA) << std::endl;
-            std::cout << state->getCsrRegister(MSTATUS) << std::endl;
-            std::cout << state->getCsrRegister(SSTATUS) << std::endl;
+            std::cout << "AtlasState::boot()\n";
+            std::cout << std::hex;
+            std::cout << "\tMHARTID: 0x" << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tMISA:    0x" << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tMSTATUS: 0x" << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tSSTATUS: 0x" << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << std::dec;
         }
 
         if (interactive_mode_)

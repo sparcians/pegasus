@@ -4,7 +4,7 @@ import wx.py.shell
 import wx.lib.scrolledpanel
 from backend.c_dtypes import uint64_t, int64_t
 from backend.atlas_dtypes import CSR
-from backend.observers import FormatHex
+from backend.sim_api import FormatHex
 
 class TestDebugger(wx.Panel):
     def __init__(self, parent, frame):
@@ -87,7 +87,7 @@ class StateViewer(wx.Panel):
         self.SetBackgroundColour('white')
 
         meta_panel = wx.Panel(self)
-        self.pc_label = wx.StaticText(meta_panel, label="pc:0x00000000")
+        self.pc_label = wx.StaticText(meta_panel, label="pc:0x0")
         self.priv_label = wx.StaticText(meta_panel, label="priv:")
         self.changes_label = wx.StaticText(meta_panel, label="changes:")
 

@@ -247,6 +247,16 @@ namespace atlas
             sendJson_(json);
         }
 
+        template <typename T> void sendHex_(const T val)
+        {
+            static_assert(std::is_integral_v<T>);
+            std::stringstream ss;
+            ss << "0x" << std::hex << val;
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + ss.str()
+                              + "\", \"response_type\": \"str\"}";
+            sendJson_(json);
+        }
+
         ActionGroup* enterLoop_(AtlasState* state)
         {
             while (true)
@@ -284,11 +294,11 @@ namespace atlas
                     return true;
 
                 case SimCommand::PC:
-                    sendInt_(state->getPc());
+                    sendHex_(state->getPc());
                     return true;
 
                 case SimCommand::PREV_PC:
-                    sendInt_(state->getPrevPc());
+                    sendHex_(state->getPrevPc());
                     return true;
 
                 case SimCommand::CURRENT_UID:
@@ -353,7 +363,7 @@ namespace atlas
                         if (!inst)
                             sendError_("No instruction");
                         else
-                            sendInt_(inst->getOpcode());
+                            sendHex_(inst->getOpcode());
                         return true;
                     }
 
@@ -381,7 +391,7 @@ namespace atlas
                         else if (!inst->hasImmediate())
                             sendError_("No immediate");
                         else
-                            sendInt_(inst->getImmediate());
+                            sendHex_(inst->getImmediate());
                         return true;
                     }
 
@@ -584,7 +594,7 @@ namespace atlas
                             sendError_("Invalid register");
                             break;
                         }
-                        sendInt_(reg->dmiRead<uint64_t>());
+                        sendHex_(reg->dmiRead<uint64_t>());
                         return true;
                     }
 
