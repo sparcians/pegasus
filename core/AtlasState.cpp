@@ -197,7 +197,7 @@ namespace atlas
 
         for (auto & obs : observers_)
         {
-            obs->registerFor(atlas_system_->getSystemMemory());
+            obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
         }
     }
 

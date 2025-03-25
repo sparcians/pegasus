@@ -69,16 +69,10 @@ namespace atlas
             uint64_t prior_value;
         };
 
-        void registerFor(sparta::memory::BlockingMemoryIFNode* m)
+        void registerReadWriteCallbacks(sparta::memory::BlockingMemoryIFNode* m)
         {
             m->getPostWriteNotificationSource().REGISTER_FOR_THIS(postWrite_);
             m->getReadNotificationSource().REGISTER_FOR_THIS(postRead_);
-        }
-
-        void deregisterFor(sparta::memory::BlockingMemoryIFNode* m)
-        {
-            m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(postWrite_);
-            m->getReadNotificationSource().DEREGISTER_FOR_THIS(postRead_);
         }
 
       protected:
