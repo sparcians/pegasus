@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/translate/AtlasTranslationState.hpp"
 #include "core/AtlasAllocatorWrapper.hpp"
 #include "core/AtlasInst.hpp"
 
@@ -132,7 +131,7 @@ namespace atlas
             sim_state_.current_inst = inst;
         }
 
-        AtlasTranslationState* getTranslationState() { return &translation_state_; }
+        AtlasTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
         AtlasSystem* getAtlasSystem() const { return atlas_system_; }
 
@@ -300,8 +299,9 @@ namespace atlas
         ActionGroup* incrementPc_(AtlasState* state);
         atlas::Action increment_pc_action_;
 
-        // Translation state
-        AtlasTranslationState translation_state_;
+        // Translation/MMU state
+        const MMUMode mode_ = MMUMode::BAREMETAL;
+        AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory
         AtlasSystem* atlas_system_;

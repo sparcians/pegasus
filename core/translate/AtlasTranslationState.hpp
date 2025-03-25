@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "include/AtlasTypes.hpp"
 
 namespace atlas
@@ -9,69 +11,73 @@ namespace atlas
       public:
         struct TranslationRequest
         {
-            Addr virtual_addr = 0x0;
-            size_t size = 0;
+          private:
+            Addr virtual_addr_ = 0x0;
+            size_t size_ = 0;
 
-            Addr getVaddr() const { return virtual_addr; }
+          public:
+            TranslationRequest() = default;
 
-            bool isValid() const { return size != 0; }
+            TranslationRequest(Addr vaddr, size_t sz) : virtual_addr_(vaddr), size_(sz) {}
+
+            Addr getVaddr() const { return virtual_addr_; }
+
+            size_t getSize() const { return size_; }
+
+            bool isValid() const { return size_ != 0; }
         };
 
         struct TranslationResult
         {
-            Addr physical_addr = 0x0;
-            size_t size = 0;
+          private:
+            Addr physical_addr_ = 0x0;
+            size_t size_ = 0;
 
-            Addr getPaddr() const { return physical_addr; }
+          public:
+            TranslationResult() = default;
 
-            bool isValid() const { return size != 0; }
+            TranslationResult(Addr paddr, size_t sz) : physical_addr_(paddr), size_(sz) {}
+
+            Addr getPaddr() const { return physical_addr_; }
+
+            size_t getSize() const { return size_; }
+
+            bool isValid() const { return size_ != 0; }
         };
 
-        void makeTranslationRequest(const Addr virtual_addr, const size_t size)
+        void makeRequest(const Addr virtual_addr, const size_t size)
         {
-            sparta_assert(request_.isValid() == false,
-                          "Cannot make another translation request because the current "
-                          "request has not beeen unresolved!");
+            sparta_assert(request_.isValid() == false);
 
-            request_.virtual_addr = virtual_addr;
-            request_.size = size;
+            request_ = TranslationRequest(virtual_addr, size);
 
             // Invalidate previous result
-            result_.size = 0;
+            result_ = TranslationResult();
         }
 
-        const TranslationRequest & getTranslationRequest() const
+        const TranslationRequest & getRequest() const
         {
-            sparta_assert(request_.isValid(),
-                          "Cannot get the current translation request because it is not valid!");
+            sparta_assert(request_.isValid());
 
             return request_;
         }
 
-        void setTranslationResult(const Addr physical_addr, const size_t size)
+        void setResult(const Addr physical_addr, const size_t size)
         {
-            sparta_assert(request_.isValid(),
-                          "Cannot set the translation result because the current "
-                          "translation request is not valid!");
+            sparta_assert(request_.isValid());
 
-            result_.physical_addr = physical_addr;
-            result_.size = size;
+            result_ = TranslationResult(physical_addr, size);
 
             // Invalidate request
-            request_.size = 0;
+            request_ = TranslationRequest();
         }
 
-        const TranslationResult & getTranslationResult() const
+        const TranslationResult & getResult() const
         {
-            sparta_assert(result_.isValid(),
-                          "Cannot get the current translation result because it is not valid!");
+            sparta_assert(result_.isValid());
 
             return result_;
         }
-
-        void changeMode(const MMUMode mode) { mode_ = mode; }
-
-        MMUMode getMode() const { return mode_; }
 
       private:
         // Translation request
@@ -79,8 +85,5 @@ namespace atlas
 
         // Translation result
         TranslationResult result_;
-
-        // Current translation mode
-        MMUMode mode_ = MMUMode::BAREMETAL;
     };
 } // namespace atlas

@@ -598,7 +598,7 @@ namespace atlas
         constexpr uint64_t IMM_SIZE = 12;
         const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
         const uint64_t vaddr = rs1_val + imm;
-        state->getTranslationState()->makeTranslationRequest(vaddr, sizeof(SIZE));
+        insn->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
         return nullptr;
     }
 
@@ -606,7 +606,7 @@ namespace atlas
     ActionGroup* RviInsts::load_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
+        const uint64_t paddr = insn->getTranslationState()->getResult().getPaddr();
         if constexpr (SIGN_EXTEND)
         {
             const XLEN rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(paddr));
@@ -625,7 +625,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const uint64_t rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
-        const uint64_t paddr = state->getTranslationState()->getTranslationResult().getPaddr();
+        const uint64_t paddr = insn->getTranslationState()->getResult().getPaddr();
         state->writeMemory<SIZE>(paddr, rs2_val);
         return nullptr;
     }

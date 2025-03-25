@@ -127,7 +127,7 @@ namespace atlas
             case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
-                return state->getTranslationState()->getTranslationRequest().getVaddr();
+                return state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
                 break;
             case FaultCause::ILLEGAL_INST:
                 return state->getSimState()->current_opcode;
