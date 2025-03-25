@@ -310,7 +310,7 @@ namespace atlas
             rc = 0x4 << 16;
         }
 
-        const auto & exc = exception_unit_->getUnhandledException();
+        const auto & exc = exception_unit_->getUnhandledFault();
         if (!rc.isValid() && exc.isValid())
         {
             rc = (1 << 16) | static_cast<int>(exc.getValue());
@@ -629,7 +629,7 @@ namespace atlas
 
         // Capture the CSR values from both simulators after processing an exception.
         std::vector<std::tuple<std::string, uint64_t, uint64_t>> all_csr_vals;
-        if (exception_unit_->getUnhandledException().isValid())
+        if (exception_unit_->getUnhandledFault().isValid())
         {
             for (uint32_t reg_idx = 0; reg_idx < csr_rset_->getNumRegisters(); ++reg_idx)
             {
