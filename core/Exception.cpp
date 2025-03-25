@@ -32,6 +32,8 @@ namespace atlas
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");
+        sparta_assert(fault_cause_.isValid() != interrupt_cause_.isValid(),
+                      "Fault and interrupt cause cannot both be valid!");
 
         const bool is_interrupt = interrupt_cause_.isValid();
         const uint64_t excp_code = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue())
@@ -127,7 +129,6 @@ namespace atlas
             case FaultCause::INST_ACCESS:
             case FaultCause::INST_PAGE_FAULT:
                 return state->getPc();
-                break;
             case FaultCause::LOAD_ADDR_MISALIGNED:
             case FaultCause::LOAD_ACCESS:
             case FaultCause::STORE_AMO_ADDR_MISALIGNED:
@@ -135,10 +136,8 @@ namespace atlas
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
                 return state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
-                break;
             case FaultCause::ILLEGAL_INST:
                 return state->getSimState()->current_opcode;
-                break;
             case FaultCause::BREAKPOINT:
             case FaultCause::USER_ECALL:
             case FaultCause::SUPERVISOR_ECALL:
@@ -146,7 +145,6 @@ namespace atlas
             case FaultCause::SOFTWARE_CHECK:
             case FaultCause::HARDWARE_ERROR:
                 return 0;
-                break;
         }
     }
 
@@ -162,7 +160,6 @@ namespace atlas
             case InterruptCause::MACHINE_EXTERNAL:
             case InterruptCause::COUNTER_OVERFLOW:
                 return 0;
-                break;
         }
     }
 } // namespace atlas
