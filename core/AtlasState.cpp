@@ -194,6 +194,11 @@ namespace atlas
 
         // Set up translation; baremetal for now
         translate_unit_->changeMMUMode(xlen_, mode_);
+
+        for (auto & obs : observers_)
+        {
+            obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
+        }
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)

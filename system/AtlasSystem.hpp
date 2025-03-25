@@ -51,9 +51,6 @@ namespace atlas
         // Get starting PC from ELF
         Addr getStartingPc() const { return starting_pc_; }
 
-        //
-        void initializeMemory(const std::string & name, sparta::memory::BlockingMemoryIF* memory);
-
         const std::unordered_map<Addr, std::string> & getSymbols() const { return symbols_; }
 
         constexpr static sparta::memory::addr_t ATLAS_SYSTEM_BLOCK_SIZE = 0x1000; // 4K
@@ -79,8 +76,6 @@ namespace atlas
         // Memory and memory maps
         std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
-        std::vector<std::unique_ptr<sparta::memory::BlockingMemoryObjectIFNode>>
-            memory_object_nodes_;
 
         struct MemorySection
         {

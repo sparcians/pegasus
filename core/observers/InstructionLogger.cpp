@@ -169,6 +169,21 @@ namespace atlas
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
         }
 
+        for (const auto & mem_read : mem_reads_)
+        {
+            INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
+                                           << ", size: " << mem_read.size
+                                           << ", value: " << HEX(mem_read.value, width));
+        }
+
+        for (const auto & mem_write : mem_writes_)
+        {
+            INSTLOG("   mem write: addr: "
+                    << HEX(mem_write.addr, width) << ", size: " << mem_write.size
+                    << ", value: " << HEX(mem_write.value, width)
+                    << " (prev: " << HEX(mem_write.prior_value, width) << ")");
+        }
+
         INSTLOG("");
         return nullptr;
     }
