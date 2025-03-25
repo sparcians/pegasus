@@ -30,15 +30,18 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* Exception::handleException_(atlas::AtlasState* state)
     {
-        sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(), "Exception cause is not valid!");
+        sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
+                      "Exception cause is not valid!");
 
         const bool is_interrupt = interrupt_cause_.isValid();
-        const uint64_t excp_code = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue()) : static_cast<uint64_t>(fault_cause_.getValue());
+        const uint64_t excp_code = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue())
+                                                : static_cast<uint64_t>(fault_cause_.getValue());
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
         const XLEN trap_deleg_val = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
-        const PrivMode priv_mode = ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
+        const PrivMode priv_mode =
+            ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
         state->setNextPrivMode(priv_mode);
 
         if (priv_mode == PrivMode::SUPERVISOR)
@@ -57,7 +60,9 @@ namespace atlas
             WRITE_CSR_REG<XLEN>(state, SCAUSE, cause_val);
 
             // Depending on the exception type, get the trap value
-            const uint64_t trap_val = is_interrupt ? determineTrapValue_(interrupt_cause_.getValue(), state) : determineTrapValue_(fault_cause_.getValue(), state);
+            const uint64_t trap_val = is_interrupt
+                                          ? determineTrapValue_(interrupt_cause_.getValue(), state)
+                                          : determineTrapValue_(fault_cause_.getValue(), state);
             WRITE_CSR_REG<XLEN>(state, STVAL, trap_val);
 
             // Update MSTATUS
@@ -86,7 +91,9 @@ namespace atlas
             WRITE_CSR_REG<XLEN>(state, MCAUSE, cause_val);
 
             // Depending on the exception type, get the trap value
-            const uint64_t trap_val = is_interrupt ? determineTrapValue_(interrupt_cause_.getValue(), state) : determineTrapValue_(fault_cause_.getValue(), state);
+            const uint64_t trap_val = is_interrupt
+                                          ? determineTrapValue_(interrupt_cause_.getValue(), state)
+                                          : determineTrapValue_(fault_cause_.getValue(), state);
             WRITE_CSR_REG<XLEN>(state, MTVAL, trap_val);
 
             // Update MSTATUS

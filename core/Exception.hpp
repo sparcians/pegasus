@@ -28,7 +28,7 @@ namespace atlas
 
         Exception(sparta::TreeNode* exception_node, const ExceptionParameters* p);
 
-        void setUnhandledException(const FaultCause cause) { fault_cause_ = cause;}
+        void setUnhandledException(const FaultCause cause) { fault_cause_ = cause; }
 
         void setUnhandledException(const InterruptCause cause) { interrupt_cause_ = cause; }
 
