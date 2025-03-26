@@ -98,7 +98,8 @@ namespace atlas
         std::vector<MemWrite> mem_writes_;
 
         // Exception cause
-        sparta::utils::ValidValue<TrapCauses> trap_cause_;
+        sparta::utils::ValidValue<FaultCause> fault_cause_;
+        sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
         void reset_()
         {
@@ -106,9 +107,10 @@ namespace atlas
             opcode_ = std::numeric_limits<uint64_t>::max();
             src_regs_.clear();
             dst_regs_.clear();
+            fault_cause_.clearValid();
+            interrupt_cause_.clearValid();
             mem_reads_.clear();
             mem_writes_.clear();
-            trap_cause_.clearValid();
         }
 
       private:

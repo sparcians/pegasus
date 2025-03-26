@@ -58,7 +58,8 @@ namespace atlas
         preExecute(state);
 
         // Get value of source registers
-        trap_cause_ = state->getExceptionUnit()->getUnhandledException();
+        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
+        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
         return nullptr;
     }
 

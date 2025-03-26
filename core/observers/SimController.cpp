@@ -492,7 +492,7 @@ namespace atlas
 
                 case SimCommand::ACTIVE_EXCEPTION:
                     {
-                        const auto & exception = state->getExceptionUnit()->getUnhandledException();
+                        const auto & exception = state->getExceptionUnit()->getUnhandledFault();
                         sendInt_(exception.isValid() ? (int)exception.getValue() : -1);
                         return true;
                     }
