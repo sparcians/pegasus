@@ -55,15 +55,9 @@ namespace atlas
             return preExecute_(state);
         }
 
-        ActionGroup* postExecute(AtlasState* state)
-        {
-            return postExecute_(state);
-        }
+        ActionGroup* postExecute(AtlasState* state) { return postExecute_(state); }
 
-        ActionGroup* preException(AtlasState* state)
-        {
-            return preException_(state);
-        }
+        ActionGroup* preException(AtlasState* state) { return preException_(state); }
 
         virtual ActionGroup* preExecute_(AtlasState*) { return nullptr; }
 
