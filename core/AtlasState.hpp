@@ -94,13 +94,14 @@ namespace atlas
 
         Addr getNextPc() const { return next_pc_; }
 
-        void setPrivMode(PrivMode priv_mode) { priv_mode_ = priv_mode; }
-
         PrivMode getPrivMode() const { return priv_mode_; }
 
-        void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
+        bool getVirtualMode() const { return virtual_mode_; }
 
-        PrivMode getNextPrivMode() const { return next_priv_mode_; }
+        void setPrivMode(PrivMode priv_mode, bool virt_mode) {
+            virtual_mode_ = virt_mode && (priv_mode_ != PrivMode::MACHINE);
+            priv_mode_ = priv_mode;
+        }
 
         struct SimState
         {
@@ -289,8 +290,8 @@ namespace atlas
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
-        //! Next privilege mode
-        PrivMode next_priv_mode_ = PrivMode::MACHINE;
+        //! Current virtual translation mode
+        bool virtual_mode_ = false;
 
         //! Simulation state
         SimState sim_state_;
@@ -300,7 +301,7 @@ namespace atlas
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
-        const MMUMode mode_ = MMUMode::BAREMETAL;
+        const MMUMode mode_ = MMUMode::SV48;
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory

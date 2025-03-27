@@ -513,10 +513,6 @@ namespace atlas
         pc_ = next_pc_;
         DLOG("PC: 0x" << std::hex << pc_);
 
-        // Set Privilege Mode
-        priv_mode_ = next_priv_mode_;
-        DLOG("Privilege Mode: " << (uint32_t)priv_mode_);
-
         // Increment instruction count
         ++sim_state_.inst_count;
 
