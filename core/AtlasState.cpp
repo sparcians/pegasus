@@ -194,6 +194,11 @@ namespace atlas
 
         // Set up translation; baremetal for now
         translate_unit_->changeMMUMode(xlen_, mode_);
+
+        for (auto & obs : observers_)
+        {
+            obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
+        }
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
@@ -305,7 +310,7 @@ namespace atlas
             rc = 0x4 << 16;
         }
 
-        const auto & exc = exception_unit_->getUnhandledException();
+        const auto & exc = exception_unit_->getUnhandledFault();
         if (!rc.isValid() && exc.isValid())
         {
             rc = (1 << 16) | static_cast<int>(exc.getValue());
@@ -620,7 +625,7 @@ namespace atlas
 
         // Capture the CSR values from both simulators after processing an exception.
         std::vector<std::tuple<std::string, uint64_t, uint64_t>> all_csr_vals;
-        if (exception_unit_->getUnhandledException().isValid())
+        if (exception_unit_->getUnhandledFault().isValid())
         {
             for (uint32_t reg_idx = 0; reg_idx < csr_rset_->getNumRegisters(); ++reg_idx)
             {
@@ -682,10 +687,17 @@ namespace atlas
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
             }
 
-            std::cout << state->getCsrRegister(MHARTID) << std::endl;
-            std::cout << state->getCsrRegister(MISA) << std::endl;
-            std::cout << state->getCsrRegister(MSTATUS) << std::endl;
-            std::cout << state->getCsrRegister(SSTATUS) << std::endl;
+            std::cout << "AtlasState::boot()\n";
+            std::cout << std::hex;
+            std::cout << "\tMHARTID: 0x" << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tMISA:    0x" << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tMSTATUS: 0x" << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << "\tSSTATUS: 0x" << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
+                      << std::endl;
+            std::cout << std::dec;
         }
 
         if (interactive_mode_)

@@ -254,7 +254,7 @@ class AtlasTranslateTester
     {
         std::cout << "Testing sv32 translation\n" << std::endl;
 
-        state_->setPrivMode(atlas::PrivMode::SUPERVISOR);
+        state_->setPrivMode(atlas::PrivMode::SUPERVISOR, true);
 
         const uint32_t vaddr = 0x143FFABC;
         const uint32_t page_offset = vaddr & 0xFFF;

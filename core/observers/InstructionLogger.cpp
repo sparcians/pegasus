@@ -22,10 +22,8 @@ namespace atlas
     template class InstructionLogger<RV64>;
     template class InstructionLogger<RV32>;
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preExecute(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preExecute_(AtlasState* state)
     {
-        reset_();
-
         pc_ = state->getPc();
         AtlasInstPtr inst = state->getCurrentInst();
         if (inst)
@@ -70,21 +68,22 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preException(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preException_(AtlasState* state)
     {
         preExecute(state);
 
         // Get value of source registers
-        trap_cause_ = state->getExceptionUnit()->getUnhandledException();
+        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
+        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::postExecute(AtlasState* state)
+    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::postExecute_(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
 
-        if (trap_cause_.isValid() == false)
+        if (fault_cause_.isValid() == false)
         {
             sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
         }
@@ -137,10 +136,10 @@ namespace atlas
             INSTLOG(HEX(pc_, width) << ": ??? (" << HEX8(opcode_) << ") uid: ?");
         }
 
-        if (trap_cause_.isValid())
+        if (fault_cause_.isValid())
         {
-            INSTLOG("trap cause: " << trap_cause_.getValue() << " ("
-                    << HEX8(static_cast<uint32_t>(trap_cause_.getValue())) << ')');
+            INSTLOG("trap cause: " << fault_cause_.getValue() << " ("
+                    << HEX8(static_cast<uint32_t>(fault_cause_.getValue())) << ')');
         }
 
         if (inst && inst->hasImmediate())
@@ -167,6 +166,21 @@ namespace atlas
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width)
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
+        }
+
+        for (const auto & mem_read : mem_reads_)
+        {
+            INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
+                                           << ", size: " << mem_read.size
+                                           << ", value: " << HEX(mem_read.value, width));
+        }
+
+        for (const auto & mem_write : mem_writes_)
+        {
+            INSTLOG("   mem write: addr: "
+                    << HEX(mem_write.addr, width) << ", size: " << mem_write.size
+                    << ", value: " << HEX(mem_write.value, width)
+                    << " (prev: " << HEX(mem_write.prior_value, width) << ")");
         }
 
         INSTLOG("");

@@ -51,7 +51,8 @@ class InstViewer(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.__UpdateLoadingMsg, self.timer)
         self.timer.Start(100)
 
-        obs = StateSerializer(state_db, self.msg_queue)
+        rv = test[:4]
+        obs = StateSerializer(state_db, self.msg_queue, rv)
 
         # Get ready to call the transaction on a separate thread
         def RunObserver():

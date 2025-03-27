@@ -1,5 +1,5 @@
 import sqlite3, tempfile, os
-from backend.observers import FormatHex
+from backend.sim_api import FormatHex
 
 def quote(s):
     s = s.strip("'").strip('"')
@@ -27,9 +27,12 @@ class StateDB:
         return self.conn.cursor()
 
     def SetInitRegValue(self, reg_name, reg_value):
-        reg_value = FormatHex(reg_value)
+        if reg_name != 'resv_priv':
+            reg_value = FormatHex(reg_value)
+            reg_value = dquote(reg_value)
+
         cmd = 'INSERT INTO InitRegValues (RegName, RegValue) VALUES ({}, {})'
-        cmd = cmd.format(dquote(reg_name), dquote(reg_value))
+        cmd = cmd.format(dquote(reg_name), reg_value)
         self.cursor.execute(cmd)
 
     def AppendInstruction(self, pc, opcode, dasm, inst_uid):
