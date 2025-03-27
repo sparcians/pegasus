@@ -14,11 +14,11 @@ namespace atlas
 
         InstructionLogger(sparta::log::MessageSource & inst_logger);
 
-        ActionGroup* preExecute(AtlasState* state) override;
-        ActionGroup* postExecute(AtlasState* state) override;
-        ActionGroup* preException(AtlasState* state) override;
-
       private:
+        ActionGroup* preExecute_(AtlasState* state) override;
+        ActionGroup* postExecute_(AtlasState* state) override;
+        ActionGroup* preException_(AtlasState* state) override;
+
         sparta::log::MessageSource & inst_logger_;
 
         std::vector<uint8_t> getRegByteVector_(const sparta::Register* reg) const

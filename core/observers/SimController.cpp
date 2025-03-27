@@ -722,17 +722,17 @@ namespace atlas
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 
-    ActionGroup* SimController::preExecute(AtlasState* state)
+    ActionGroup* SimController::preExecute_(AtlasState* state)
     {
         return endpoint_->preExecute(state);
     }
 
-    ActionGroup* SimController::postExecute(AtlasState* state)
+    ActionGroup* SimController::postExecute_(AtlasState* state)
     {
         return endpoint_->postExecute(state);
     }
 
-    ActionGroup* SimController::preException(AtlasState* state)
+    ActionGroup* SimController::preException_(AtlasState* state)
     {
         return endpoint_->preException(state);
     }
