@@ -295,6 +295,9 @@ namespace atlas
                                const std::vector<std::string> & args,
                                ActionGroup*& fail_action_group)
         {
+            // TODO cnyce: Consider replacing all use of stringstream here to
+            // only send hex values as uint64_t and format in Python.
+
             switch (sim_cmd)
             {
                 case SimCommand::XLEN:
