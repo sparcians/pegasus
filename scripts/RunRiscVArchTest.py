@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
-import os
+import os, sys
 import re
 import argparse
 import subprocess
 import multiprocessing
+
+# Passing and total
+PASSING_STATUS = ["118", "130"]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -18,12 +21,15 @@ def get_tests(directory):
     return tests
 
 # Function to run a single test and append to the appropriate queue
-def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
+def run_test(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir):
     testname = os.path.basename(test)
-    logname = testname + ".log"
-    instlogname = testname + ".instlog"
+    logname = output_dir + testname + ".log"
+    instlogname = output_dir + testname + ".instlog"
+    error_dump = output_dir + testname + ".error"
     isa_string = "rv32g_zicsr_zifencei" if xlen == "rv32" else "rv64g_zicsr_zifencei"
-    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, test]
+    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname,
+                 "--debug-dump-filename", error_dump,
+                 "-p", "top.core0.params.isa_string", isa_string, test]
     test_passed = False
     try:
         with open(logname, "w") as f:
@@ -43,13 +49,13 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
         failing_tests.put(testname)
 
 # Function to run tests using processes
-def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tests):
+def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tests, output_dir):
     print("Running " + str(len(tests)) + " arch tests...")
     processes = []
 
     # Create a process for each test command
     for test in tests:
-        process = multiprocessing.Process(target=run_test, args=(test, xlen, passing_tests, failing_tests, timeout_tests))
+        process = multiprocessing.Process(target=run_test, args=(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir))
         process.start()
         processes.append(process)
 
@@ -63,12 +69,23 @@ def main():
     parser.add_argument("xlen", type=str, choices=['rv32', 'rv64'], help="The XLEN value (rv32 or rv64)")
     parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
+    parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
     args = parser.parse_args()
 
     SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
+
+    output_dir = "./"
+    if args.output:
+        output_dir = args.output[0]
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            output_dir += '/'
+        except Exception as e:
+            print("ERROR: Could not make output directory", output_dir, e)
+            sys.exit(1)
 
     tests = get_tests(args.directory)
     if args.xlen == "rv32":
@@ -96,7 +113,7 @@ def main():
     failing_tests = multiprocessing.Queue()
     timeout_tests = multiprocessing.Queue()
 
-    run_tests_in_parallel(tests, args.xlen, passing_tests, failing_tests, timeout_tests)
+    run_tests_in_parallel(tests, args.xlen, passing_tests, failing_tests, timeout_tests, output_dir)
 
     num_passed = 0
     print("PASSED:")
@@ -112,9 +129,12 @@ def main():
         print("TIMED OUT:")
         while not timeout_tests.empty():
             print("\t" + timeout_tests.get())
-        
-    print("\nPASS RATE: " + str(num_passed) + "/" + str(len(tests)))
 
+    print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
+    print("EXPECTED RATE: " + PASSING_STATUS[0] + "/" + PASSING_STATUS[1])
+
+    if (str(num_passed) != PASSING_STATUS[0]):
+        print("ERROR: failed!")
 
 if __name__ == "__main__":
     main()
