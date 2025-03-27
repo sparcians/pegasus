@@ -63,7 +63,7 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64g_zicsr_zifencei", "ISA string")
+            PARAMETER(std::string, isa_string, "rv64gc_zicsr_zifencei", "ISA string")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",

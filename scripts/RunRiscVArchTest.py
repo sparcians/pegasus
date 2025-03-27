@@ -65,7 +65,7 @@ def main():
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     args = parser.parse_args()
 
-    SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
+    SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud", "uc"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
