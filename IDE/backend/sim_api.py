@@ -189,6 +189,72 @@ def atlas_reg_dmiwrite(endpoint, reg_name, value):
     value = c_dtypes.convert_to_hex(value)
     return endpoint.request('reg.dmiwrite %s %s' % (reg_name, value))
 
+# Equiv C++:  This goes through the AtlasState's SimController observer,
+#             whose Observer base class holds a vector of these structs:
+#
+#                 struct MemRead
+#                 {
+#                     Addr addr;
+#                     size_t size;
+#                     uint64_t value;
+#                 };
+#
+# This is intended to be called during postExecute() where the memory reads/writes
+# have occurred during the inst handler method.
+#
+# Returns a list of c_dtypes.MemRead objects.
+#
+def atlas_mem_reads(endpoint):
+    reads = []
+    ans = endpoint.request('mem.reads')
+    if not isinstance(ans, str):
+        return reads
+
+    for pair in ans.split(','):
+        if not pair:
+            continue
+
+        addr, value = pair.split()
+        addr = FormatHex(addr.strip())
+        value = FormatHex(value.strip())
+        reads.append(c_dtypes.MemRead(addr, value))
+
+    return reads
+
+# Equiv C++:  This goes through the AtlasState's SimController observer,
+#             whose Observer base class holds a vector of these structs:
+#
+#                 struct MemWrite
+#                 {
+#                     Addr addr;
+#                     size_t size;
+#                     uint64_t value;
+#                     uint64_t prior_value;
+#                 };
+#
+# This is intended to be called during postExecute() where the memory reads/writes
+# have occurred during the inst handler method.
+#
+# Returns a list of c_dtypes.MemWrite objects.
+#
+def atlas_mem_writes(endpoint):
+    writes = []
+    ans = endpoint.request('mem.writes')
+    if not isinstance(ans, str):
+        return writes
+
+    for trip in ans.split(','):
+        if not trip:
+            continue
+
+        addr, prior, new = trip.split()
+        addr = FormatHex(addr.strip())
+        prior = FormatHex(prior.strip())
+        new = FormatHex(new.strip())
+        writes.append(c_dtypes.MemWrite(addr, prior, new))
+
+    return writes
+
 # Equiv C++:  AtlasState->getCurrentInst()
 #                       ->getMavisOpcodeInfo()
 #                       ->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);

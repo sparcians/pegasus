@@ -195,6 +195,13 @@ namespace atlas
         // Set up translation; baremetal for now
         translate_unit_->changeMMUMode(xlen_, mode_);
 
+        if (interactive_mode_)
+        {
+            auto observer = std::make_unique<SimController>();
+            sim_controller_ = observer.get();
+            addObserver(std::move(observer));
+        }
+
         for (auto & obs : observers_)
         {
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
@@ -704,11 +711,8 @@ namespace atlas
             std::cout << std::dec;
         }
 
-        if (interactive_mode_)
+        if (sim_controller_)
         {
-            auto observer = std::make_unique<SimController>();
-            sim_controller_ = observer.get();
-            addObserver(std::move(observer));
             sim_controller_->postInit(this);
         }
     }
