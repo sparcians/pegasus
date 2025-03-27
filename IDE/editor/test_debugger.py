@@ -211,6 +211,19 @@ class StateViewer(wx.Panel):
             curr_val = FormatHex(curr_val)
             changes_list.append('{}({})'.format(reg_name, '{}->{}'.format(prev_val, curr_val)))
 
+        for mem_read in snapshot.getMemReads():
+            addr = FormatHex(mem_read.addr)
+            value = FormatHex(mem_read.value)
+            change = 'memread.{}({})'.format(addr, value)
+            changes_list.append(change)
+
+        for mem_write in snapshot.getMemWrites():
+            addr = FormatHex(mem_write.addr)
+            value = FormatHex(mem_write.value)
+            prior = FormatHex(mem_write.prior)
+            change = 'memwrite.{}({}->{})'.format(addr, prior, value)
+            changes_list.append(change)
+
         if not changes_list:
             changes_list.append('none')
 
