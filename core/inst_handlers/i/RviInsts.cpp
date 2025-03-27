@@ -880,6 +880,7 @@ namespace atlas
         }
 
         PrivMode prev_priv_mode = PrivMode::INVALID;
+        bool prev_virt_mode = false;
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
@@ -887,6 +888,9 @@ namespace atlas
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
+
+            // Get the previous virtual mode from the MPV field of MSTATUS
+            prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
 
             // If the mret instruction changes the privilege mode to a mode less privileged
             // than Machine mode, the MPRV bit is reset to 0
@@ -905,6 +909,9 @@ namespace atlas
             // Reset MPP
             // TODO: Check if User mode is available
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", (XLEN)PrivMode::USER);
+
+            // Reset MPV
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", 0);
         }
         else
         {
@@ -939,7 +946,7 @@ namespace atlas
         // TODO: Update MSTATUSH
 
         // Update the privilege mode to the previous privilege mode
-        state->setNextPrivMode(prev_priv_mode);
+        state->setPrivMode(prev_priv_mode, prev_virt_mode);
 
         return nullptr;
     }

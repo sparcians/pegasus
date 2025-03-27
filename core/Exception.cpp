@@ -64,7 +64,7 @@ namespace atlas
         const uint64_t gva_val = 0;
         WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
 
-        state->setNextPrivMode(PrivMode::MACHINE);
+        state->setPrivMode(PrivMode::MACHINE, false);
 
         state->snapshotAndSyncWithCoSim();
         cause_.clearValid();
