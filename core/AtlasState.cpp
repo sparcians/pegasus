@@ -62,6 +62,7 @@ namespace atlas
             supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        hypervisor_enabled_(extension_manager_.isEnabled("h")),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")

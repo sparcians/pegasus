@@ -99,7 +99,7 @@ namespace atlas
         bool getVirtualMode() const { return virtual_mode_; }
 
         void setPrivMode(PrivMode priv_mode, bool virt_mode) {
-            virtual_mode_ = virt_mode && (priv_mode_ != PrivMode::MACHINE);
+            virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
             priv_mode_ = priv_mode;
         }
 
@@ -131,6 +131,9 @@ namespace atlas
             inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
+
+        // Is the "H" extension enabled?
+        bool hasHypervisor() const { return hypervisor_enabled_; }
 
         AtlasTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
@@ -277,6 +280,9 @@ namespace atlas
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Do we have hypervisor?
+        const bool hypervisor_enabled_;
 
         //! Current pc
         Addr pc_ = 0x0;

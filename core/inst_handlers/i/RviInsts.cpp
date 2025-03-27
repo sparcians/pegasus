@@ -880,7 +880,7 @@ namespace atlas
         }
 
         PrivMode prev_priv_mode = PrivMode::INVALID;
-        bool prev_virt_mode = false;
+        bool prev_virt_mode = true;
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
@@ -926,8 +926,14 @@ namespace atlas
             // Update the PC with SEPC value
             state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
 
-            // Get the previous privilege mode from the MPP field of MSTATUS
-            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
+            // Get the previous privilege mode from the SPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
+
+            if (state->hasHypervisor())
+            {
+                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
+                WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
+            }
 
             // Reset the MPRV bit
             // TODO: Will need to update the load/store translation mode when translation is
