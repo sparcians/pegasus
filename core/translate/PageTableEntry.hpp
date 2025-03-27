@@ -102,6 +102,49 @@ namespace atlas
                            | translate_types::Sv39::PteFields::ppn0.bitmask))
                        >> translate_types::Sv39::PteFields::ppn0.lsb;
             }
+            else if constexpr (Mode == MMUMode::SV48)
+            {
+                ppn_fields_.resize(translate_types::Sv48::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv48::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv48::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn1.lsb;
+                ppn_fields_[2] = (pte_val_ & translate_types::Sv48::PteFields::ppn2.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn2.lsb;
+                ppn_fields_[3] = (pte_val_ & translate_types::Sv48::PteFields::ppn3.bitmask)
+                    >> translate_types::Sv48::PteFields::ppn3.lsb;
+
+                // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
+                ppn_ = (pte_val_
+                        & (  translate_types::Sv48::PteFields::ppn3.bitmask
+                           | translate_types::Sv48::PteFields::ppn2.bitmask
+                           | translate_types::Sv48::PteFields::ppn1.bitmask
+                           | translate_types::Sv48::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv48::PteFields::ppn0.lsb;
+            }
+            else if constexpr (Mode == MMUMode::SV57)
+            {
+                ppn_fields_.resize(translate_types::Sv57::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv57::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv57::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn1.lsb;
+                ppn_fields_[2] = (pte_val_ & translate_types::Sv57::PteFields::ppn2.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn2.lsb;
+                ppn_fields_[3] = (pte_val_ & translate_types::Sv57::PteFields::ppn3.bitmask)
+                    >> translate_types::Sv57::PteFields::ppn3.lsb;
+                ppn_fields_[4] = (pte_val_ & translate_types::Sv57::PteFields::ppn4.bitmask)
+                    >> translate_types::Sv57::PteFields::ppn4.lsb;
+
+                // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
+                ppn_ = (pte_val_
+                        & (translate_types::Sv57::PteFields::ppn4.bitmask
+                           | translate_types::Sv57::PteFields::ppn3.bitmask
+                           | translate_types::Sv57::PteFields::ppn2.bitmask
+                           | translate_types::Sv57::PteFields::ppn1.bitmask
+                           | translate_types::Sv57::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv57::PteFields::ppn0.lsb;
+            }
             else
             {
                 sparta_assert(false, "MMU mode is not currently supported!");

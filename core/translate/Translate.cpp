@@ -62,6 +62,24 @@ namespace atlas
                                                                    ActionTags::DATA_TRANSLATE_TAG,
                                                                    rv64_data_translation_actions_);
         }
+        // Sv48
+        {
+            registerAction_<RV64, MMUMode::SV48, INST_TRANSLATION>("Inst Translate (Sv48)",
+                                                                   ActionTags::INST_TRANSLATE_TAG,
+                                                                   rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV48, DATA_TRANSLATION>("Data Translate (Sv48)",
+                                                                   ActionTags::DATA_TRANSLATE_TAG,
+                                                                   rv64_data_translation_actions_);
+        }
+        // Sv57
+        {
+            registerAction_<RV64, MMUMode::SV57, INST_TRANSLATION>("Inst Translate (Sv57)",
+                                                                   ActionTags::INST_TRANSLATE_TAG,
+                                                                   rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV57, DATA_TRANSLATION>("Data Translate (Sv57)",
+                                                                   ActionTags::DATA_TRANSLATE_TAG,
+                                                                   rv64_data_translation_actions_);
+        }
 
         // Assume we are booting in RV64 Machine mode with translation disabled
         inst_translate_action_group_.addAction(
@@ -110,8 +128,8 @@ namespace atlas
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVaddr();
 
-        if constexpr (MODE == MMUMode::BAREMETAL)
-        {
+        // See if xlation is disabled
+        if (false == state->getVirtualMode() || MODE == MMUMode::BAREMETAL) {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
             return nullptr;
@@ -162,8 +180,12 @@ namespace atlas
             }
         }
 
-        // If we made it here, it means we didn't find a leaf PTE so translation failed
-        // TODO: Add method to throw correct fault type
+        // Request failed.  Will need to try again
+        translation_state->clearRequest();
+
+        // If we made it here, it means we didn't find a leaf PTE so
+        // translation failed TODO: Add method to throw correct fault
+        // type
         THROW_FETCH_PAGE_FAULT;
     }
 
