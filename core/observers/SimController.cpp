@@ -686,7 +686,8 @@ namespace atlas
                         {
                             const auto & mem_write = mem_writes_[idx];
                             std::stringstream ss;
-                            ss << "0x" << std::hex << mem_write.addr << " 0x" << mem_write.prior_value << " 0x" << mem_write.value;
+                            ss << "0x" << std::hex << mem_write.addr << " 0x"
+                               << mem_write.prior_value << " 0x" << mem_write.value;
                             json += ss.str();
                             if (idx < mem_writes_.size() - 1)
                             {
