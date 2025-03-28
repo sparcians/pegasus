@@ -70,6 +70,7 @@ def main():
     parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
+    parser.add_argument("--no-skip-virt", action='store_true', help="Do not skip virtual tests")
     args = parser.parse_args()
 
     SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
@@ -94,8 +95,9 @@ def main():
         tests = [test for test in tests if "rv64" in test]
 
     # TODO: Atlas does not support translation yet
-    print("WARNING: Skipping translation tests")
-    tests = [test for test in tests if "-p-" in test]
+    if not args.no_skip_virt:
+        print("WARNING: Skipping translation tests")
+        tests = [test for test in tests if "-p-" in test]
     # TODO: Atlas does not support zba, zbb, zbc, zbs or zfh extensions
     print("WARNING: Skipping all non-G extension tests")
     tests = [test for test in tests if any(ext+"-" in test for ext in SUPPORTED_EXTENSIONS)]
