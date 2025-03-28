@@ -71,7 +71,7 @@ namespace atlas
             }
         }
 
-        template <MMUMode Mode> uint64_t extractVpn_(const uint32_t level, const uint64_t vaddr)
+        template <MMUMode Mode> uint64_t extractVpn_(const uint32_t level, const uint64_t vaddr) const
         {
             auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
             {
@@ -101,7 +101,7 @@ namespace atlas
             return (vaddr & vpn_field.bitmask) >> vpn_field.lsb;
         }
 
-        uint64_t extractPageOffset_(uint64_t vaddr)
+        uint64_t extractPageOffset_(uint64_t vaddr) const
         {
             // Page offset is the same for all MMU modes
             return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
