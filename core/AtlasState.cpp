@@ -432,6 +432,25 @@ namespace atlas
         return 0;
     }
 
+    template<typename XLEN>
+    uint32_t AtlasState::getMisaExtFieldValue_()
+    {
+        uint32_t ext_val = 0;
+        for(auto& ext : extension_manager_.getEnabledExtensions())
+        {
+            if (ext.first.size() == 1)
+            {
+                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, &ext.first[0]).first;
+            }
+        }
+
+        // FIXME: Assume both User and Supervisor mode are supported
+        ext_val |= 1 << CSR::MISA::u::high_bit;
+        ext_val |= 1 << CSR::MISA::s::high_bit;
+
+        return ext_val;
+    }
+
     sparta::Register* AtlasState::findRegister(const std::string & reg_name, bool must_exist) const
     {
         auto iter = registers_by_name_.find(reg_name);
@@ -673,9 +692,11 @@ namespace atlas
             {
                 POKE_CSR_REG<RV64>(this, MHARTID, hart_id_);
 
-                // TODO: Initialize MISA CSR with XLEN and enabled extensions
                 const uint64_t xlen_val = 2;
                 POKE_CSR_FIELD<RV64>(this, MISA, "mxl", xlen_val);
+
+                const uint32_t ext_val = getMisaExtFieldValue_<RV64>();
+                POKE_CSR_FIELD<RV64>(this, MISA, "extensions", ext_val);
 
                 // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
                 POKE_CSR_FIELD<RV64>(this, MSTATUS, "uxl", xlen_val);
@@ -686,9 +707,11 @@ namespace atlas
             {
                 POKE_CSR_REG<RV32>(this, MHARTID, hart_id_);
 
-                // TODO: Initialize MISA CSR with XLEN and enabled extensions
                 const uint32_t xlen_val = 1;
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
+
+                const uint32_t ext_val = getMisaExtFieldValue_<RV32>();
+                POKE_CSR_FIELD<RV32>(this, MISA, "extensions", ext_val);
             }
 
             std::cout << "AtlasState::boot()\n";
