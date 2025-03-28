@@ -45,6 +45,8 @@ namespace atlas
         const PrivMode priv_mode =
             ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
 
+        const bool prev_virt_mode = state->getVirtualMode();
+
         if (priv_mode == PrivMode::SUPERVISOR)
         {
             // Set next PC
@@ -113,7 +115,7 @@ namespace atlas
             const uint64_t gva_val = 0;
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
         }
-        state->setPrivMode(priv_mode, false);
+        state->setPrivMode(priv_mode, prev_virt_mode);
 
         state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();
