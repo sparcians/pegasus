@@ -307,7 +307,7 @@ namespace atlas
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
-        const MMUMode mode_ = MMUMode::SV48;
+        MMUMode mode_ = MMUMode::SV39;
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory
