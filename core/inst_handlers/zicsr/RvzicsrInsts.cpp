@@ -232,6 +232,31 @@ namespace atlas
     }
 
     template <typename XLEN>
+    ActionGroup* RvzicsrInsts::misa_update_handler(atlas::AtlasState* state)
+    {
+        const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
+        auto& ext_manager = state->getExtensionManager();
+
+	// FIXME: Extension manager should maintain inclusions
+	auto& inclusions = state->getMavisInclusions();
+	for(char ext = 'a'; ext <= 'z'; ++ext)
+        {
+            if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext))
+            {
+	        inclusions.emplace(std::string(1, ext));	
+            }
+            else
+            {
+	        inclusions.erase(std::string(1, ext));	
+            }
+        }
+
+	state->updateMavisContext();
+
+        return nullptr;
+    }
+
+    template <typename XLEN>
     ActionGroup* RvzicsrInsts::mstatus_update_handler(atlas::AtlasState* state)
     {
         // Non-shared fields of SSTATUS are read-only so writing the MSTATUS value to SSTATUS will

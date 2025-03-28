@@ -80,7 +80,18 @@ namespace atlas
 
         uint64_t getXlen() const { return xlen_; }
 
+        mavis::extension_manager::riscv::RISCVExtensionManager& getExtensionManager() { return extension_manager_; }
+
         MavisType* getMavis() { return mavis_.get(); }
+
+        std::set<std::string>& getMavisInclusions() { return inclusions_; }
+
+        void updateMavisContext()
+        {
+            const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
+            mavis_->makeContext("test", extension_manager_.getJSONs(), getUArchFiles_(), {}, {}, inclusions, {});
+            mavis_->switchContext("test");
+        }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -279,6 +290,7 @@ namespace atlas
 
         // Mavis
         std::unique_ptr<MavisType> mavis_;
+        std::set<std::string> inclusions_;
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;

@@ -118,6 +118,7 @@ namespace atlas
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
+	// FIXME: Extension manager should maintain inclusions
         for (auto & ext : extension_manager_.getEnabledExtensions())
         {
             inclusions_.emplace(ext.first);
