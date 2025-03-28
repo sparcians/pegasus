@@ -81,46 +81,28 @@ namespace atlas
     void RvzicsrInsts::getCsrUpdateActions(Execute::CsrUpdateActionsMap & csr_update_actions)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            csr_update_actions.emplace(
-                MSTATUS, atlas::Action::createAction<&RvzicsrInsts::mstatus_update_handler<RV64>,
-                                                     RvzicsrInsts>(nullptr, "mstatus_update"));
-            csr_update_actions.emplace(
-                SSTATUS, atlas::Action::createAction<&RvzicsrInsts::sstatus_update_handler<RV64>,
-                                                     RvzicsrInsts>(nullptr, "sstatus_update"));
-            csr_update_actions.emplace(
-                FCSR,
-                atlas::Action::createAction<&RvzicsrInsts::fcsr_update_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "fcsr_update"));
-            csr_update_actions.emplace(
-                FFLAGS, atlas::Action::createAction<&RvzicsrInsts::fflags_update_handler<RV64>,
-                                                    RvzicsrInsts>(nullptr, "fflags_update"));
-            csr_update_actions.emplace(
-                FRM,
-                atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "frm_update"));
-        }
-        else if constexpr (std::is_same_v<XLEN, RV32>)
-        {
-            csr_update_actions.emplace(
-                MSTATUS, atlas::Action::createAction<&RvzicsrInsts::mstatus_update_handler<RV32>,
-                                                     RvzicsrInsts>(nullptr, "mstatus_update"));
-            csr_update_actions.emplace(
-                SSTATUS, atlas::Action::createAction<&RvzicsrInsts::sstatus_update_handler<RV32>,
-                                                     RvzicsrInsts>(nullptr, "sstatus_update"));
-            csr_update_actions.emplace(
-                FCSR,
-                atlas::Action::createAction<&RvzicsrInsts::fcsr_update_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "fcsr_update"));
-            csr_update_actions.emplace(
-                FFLAGS, atlas::Action::createAction<&RvzicsrInsts::fflags_update_handler<RV32>,
-                                                    RvzicsrInsts>(nullptr, "fflags_update"));
-            csr_update_actions.emplace(
-                FRM,
-                atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "frm_update"));
-        }
+
+        csr_update_actions.emplace(
+            FCSR,
+            atlas::Action::createAction<&RvzicsrInsts::fcsr_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "fcsr_update"));
+        csr_update_actions.emplace(
+            FFLAGS, atlas::Action::createAction<&RvzicsrInsts::fflags_update_handler<XLEN>,
+                                                RvzicsrInsts>(nullptr, "fflags_update"));
+        csr_update_actions.emplace(
+            FRM,
+            atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "frm_update"));
+        csr_update_actions.emplace(
+            MISA,
+            atlas::Action::createAction<&RvzicsrInsts::misa_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "misa_update"));
+        csr_update_actions.emplace(
+            MSTATUS, atlas::Action::createAction<&RvzicsrInsts::mstatus_update_handler<XLEN>,
+                                                 RvzicsrInsts>(nullptr, "mstatus_update"));
+        csr_update_actions.emplace(
+            SSTATUS, atlas::Action::createAction<&RvzicsrInsts::sstatus_update_handler<XLEN>,
+                                                 RvzicsrInsts>(nullptr, "sstatus_update"));
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
