@@ -157,6 +157,7 @@ namespace atlas
             //  access type
             if (!pte.isValid() || ((!pte.canRead()) && pte.canWrite()))
             {
+                translation_state->clearRequest();
                 // TODO: Add method to throw correct fault type
                 THROW_FETCH_PAGE_FAULT;
             }
@@ -179,8 +180,6 @@ namespace atlas
                 ppn = pte.getPpn() * PAGESIZE;
             }
         }
-
-        // Request failed.  Will need to try again
         translation_state->clearRequest();
 
         // If we made it here, it means we didn't find a leaf PTE so
