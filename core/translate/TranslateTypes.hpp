@@ -83,9 +83,13 @@ namespace atlas::translate_types
         } // namespace VAddrFields
 
         static constexpr uint32_t num_ppn_fields = 3;
-        static const std::array<FieldDef, num_ppn_fields> ppn_fields;
+        static const std::array<FieldDef, num_ppn_fields> ppn_fields{PteFields::ppn0,
+                                                                     PteFields::ppn1,
+                                                                     PteFields::ppn2};
         static constexpr uint32_t num_vpn_fields = 3;
-        static const std::array<FieldDef, num_vpn_fields> vpn_fields;
+        static const std::array<FieldDef, num_vpn_fields> vpn_fields{VAddrFields::vpn0,
+                                                                     VAddrFields::vpn1,
+                                                                     VAddrFields::vpn2};
         static constexpr uint32_t num_pagewalk_levels = 3;
     } // namespace Sv39
 
@@ -118,9 +122,15 @@ namespace atlas::translate_types
         } // namespace VAddrFields
 
         static constexpr uint32_t num_ppn_fields = 4;
-        static const std::array<FieldDef, num_ppn_fields> ppn_fields;
+        static const std::array<FieldDef, num_ppn_fields> ppn_fields{PteFields::ppn0,
+                                                                     PteFields::ppn1,
+                                                                     PteFields::ppn2,
+                                                                     PteFields::ppn3};
         static constexpr uint32_t num_vpn_fields = 4;
-        static const std::array<FieldDef, num_vpn_fields> vpn_fields;
+        static const std::array<FieldDef, num_vpn_fields> vpn_fields{VAddrFields::vpn0,
+                                                                     VAddrFields::vpn1,
+                                                                     VAddrFields::vpn2,
+                                                                     VAddrFields::vpn2};
         static constexpr uint32_t num_pagewalk_levels = 4;
     } // namespace Sv48
 
@@ -155,9 +165,17 @@ namespace atlas::translate_types
         } // namespace VAddrFields
 
         static constexpr uint32_t num_ppn_fields = 5;
-        static const std::array<FieldDef, num_ppn_fields> ppn_fields;
+        static const std::array<FieldDef, num_ppn_fields> ppn_fields{PteFields::ppn0,
+                                                                     PteFields::ppn1,
+                                                                     PteFields::ppn2,
+                                                                     PteFields::ppn3,
+                                                                     PteFields::ppn4};
         static constexpr uint32_t num_vpn_fields = 5;
-        static const std::array<FieldDef, num_vpn_fields> vpn_fields;
+        static const std::array<FieldDef, num_vpn_fields> vpn_fields{VAddrFields::vpn0,
+                                                                     VAddrFields::vpn1,
+                                                                     VAddrFields::vpn2,
+                                                                     VAddrFields::vpn3,
+                                                                     VAddrFields::vpn4};
         static constexpr uint32_t num_pagewalk_levels = 5;
     } // namespace Sv57
 } // namespace atlas::translate_types
