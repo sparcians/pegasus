@@ -61,6 +61,11 @@ class StateSerializer(Observer):
 
                     state_db.AppendRegChange(uid, reg_name, cur_val, expected_val)
 
+            mem_reads = atlas_mem_reads(endpoint)
+            mem_writes = atlas_mem_writes(endpoint)
+            if mem_reads or mem_writes:
+                state_db.AppendMemAccesses(uid, mem_reads, mem_writes)
+
     def OnPreSimulation(self, endpoint):
         for reg_id in range(atlas_num_regs_in_group(endpoint, 0)):
             reg_name = 'x' + str(reg_id)

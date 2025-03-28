@@ -59,12 +59,6 @@ namespace atlas
 
         ActionGroup* preException(AtlasState* state) { return preException_(state); }
 
-        virtual ActionGroup* preExecute_(AtlasState*) { return nullptr; }
-
-        virtual ActionGroup* postExecute_(AtlasState*) { return nullptr; }
-
-        virtual ActionGroup* preException_(AtlasState*) { return nullptr; }
-
         virtual void stopSim() {}
 
         struct MemRead
@@ -101,6 +95,13 @@ namespace atlas
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
+      private:
+        virtual ActionGroup* preExecute_(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* postExecute_(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* preException_(AtlasState*) { return nullptr; }
+
         void reset_()
         {
             pc_ = 0;
@@ -113,7 +114,6 @@ namespace atlas
             mem_writes_.clear();
         }
 
-      private:
         void postWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
         {
             uint64_t prior_val = 0;
