@@ -880,7 +880,7 @@ namespace atlas
         }
 
         PrivMode prev_priv_mode = PrivMode::INVALID;
-        bool prev_virt_mode = true;
+        bool prev_virt_mode = state->getVirtualMode();
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
