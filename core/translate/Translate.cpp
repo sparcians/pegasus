@@ -139,8 +139,8 @@ namespace atlas
         ILOG("Translating " << HEX(vaddr, width));
 
         // Page size is 4K for both RV32 and RV64
-        constexpr uint64_t PAGESIZE = 4096;
-        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") * PAGESIZE;
+        constexpr uint64_t PAGESHIFT = 12; // 4096
+        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
         for (uint32_t level = getNumPageWalkLevels_<MODE>(); level > 0; --level)
         {
             constexpr uint64_t PTESIZE = sizeof(XLEN);
@@ -148,7 +148,7 @@ namespace atlas
             const uint64_t vpn = extractVpn_<MODE>(indexed_level, vaddr);
             const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
             const PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
-            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << std::to_string(indexed_level) << " Page Walk");
+            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << indexed_level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
 
@@ -165,9 +165,14 @@ namespace atlas
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
+                const Addr vaddr_shifted = vaddr >> PAGESHIFT;
+
                 // TODO: Check access permissions
-                const uint64_t paddr =
-                    ((uint64_t)pte.getPpn() * PAGESIZE) + extractPageOffset_(request.getVaddr());
+                Addr paddr =
+                    ((pte.getPpn()) | (vaddr_shifted & ((0b1 << 9) - 1))) << PAGESHIFT;
+
+                paddr |= extractPageOffset_(vaddr); // Add the page offset
+
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
 
@@ -177,7 +182,7 @@ namespace atlas
             // Read next level PTE
             else
             {
-                ppn = pte.getPpn() * PAGESIZE;
+                ppn = pte.getPpn() << PAGESHIFT;
             }
         }
         translation_state->clearRequest();
