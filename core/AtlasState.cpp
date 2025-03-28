@@ -34,21 +34,6 @@ namespace atlas
         }
     }
 
-    mavis::FileNameListType getUArchFiles(const std::string & uarch_file_path, const uint64_t xlen)
-    {
-        const std::string xlen_str = std::to_string(xlen);
-        const std::string xlen_uarch_file_path = uarch_file_path + "/rv" + xlen_str;
-        const mavis::FileNameListType uarch_files = {
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "i.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "m.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
-        return uarch_files;
-    }
-
     AtlasState::AtlasState(sparta::TreeNode* core_tn, const AtlasStateParameters* p) :
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
@@ -67,6 +52,7 @@ namespace atlas
         stop_sim_action_group_("stop_sim")
     {
         sparta_assert(xlen_ == extension_manager_.getXLEN());
+        extension_manager_.setISA(isa_string_);
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
@@ -120,35 +106,22 @@ namespace atlas
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
-        const auto uarch_files = getUArchFiles(uarch_file_path_, xlen_);
-        for (auto uarch_file : uarch_files)
-        {
-            DLOG("\t" << uarch_file);
-        }
-
-        extension_manager_.setISA(isa_string_);
 
         mavis_ = std::make_unique<MavisType>(
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
-                getUArchFiles(uarch_file_path_, xlen_),
+                getUArchFiles_(),
                 AtlasInstAllocatorWrapper<AtlasInstAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        std::vector<std::string> enabled_extensions;
         for (auto & ext : extension_manager_.getEnabledExtensions())
         {
-            enabled_extensions.emplace_back(ext.first);
+            inclusions_.emplace(ext.first);
         }
-
-        const mavis::MatchSet<mavis::Pattern> inclusions{enabled_extensions};
-        mavis_->makeContext("boot", extension_manager_.getJSONs(),
-                            getUArchFiles(uarch_file_path_, xlen_), {}, {}, inclusions, {});
-        mavis_->switchContext("boot");
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
@@ -199,6 +172,21 @@ namespace atlas
         {
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
         }
+    }
+
+    mavis::FileNameListType AtlasState::getUArchFiles_()
+    {
+        const std::string xlen_str = std::to_string(xlen_);
+        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str;
+        const mavis::FileNameListType uarch_files = {
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "i.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "m.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
+        return uarch_files;
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
