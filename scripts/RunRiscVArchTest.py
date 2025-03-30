@@ -7,7 +7,7 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS = ["120", "129"]
+PASSING_STATUS = ["121", "129"]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -135,7 +135,7 @@ def main():
     print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
     print("EXPECTED RATE: " + PASSING_STATUS[0] + "/" + PASSING_STATUS[1])
 
-    if (str(num_passed) != PASSING_STATUS[0]):
+    if (str(num_passed) <= PASSING_STATUS[0]):
         print("ERROR: failed!")
 
 if __name__ == "__main__":

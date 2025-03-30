@@ -129,7 +129,10 @@ namespace atlas
         const XLEN vaddr = request.getVaddr();
 
         // See if xlation is disabled
-        if (false == state->getVirtualMode() || MODE == MMUMode::BAREMETAL) {
+        if (MODE == MMUMode::BAREMETAL ||
+            state->getPrivMode() == PrivMode::MACHINE ||
+            (false == state->getVirtualMode()))
+        {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
             return nullptr;
@@ -163,11 +166,11 @@ namespace atlas
             }
 
             // If PTE is a leaf, perform address translation
+            // TODO: Check access permissions
             if (pte.isLeaf())
             {
                 const Addr vaddr_shifted = vaddr >> PAGESHIFT;
 
-                // TODO: Check access permissions
                 Addr paddr =
                     ((pte.getPpn()) | (vaddr_shifted & ((0b1 << 9) - 1))) << PAGESHIFT;
 

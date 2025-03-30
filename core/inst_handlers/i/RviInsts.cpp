@@ -915,8 +915,8 @@ namespace atlas
         }
         else
         {
-            // When TSR=1, attempts to execute SRET in S-mode will raise an illegal instruction
-            // exception
+            // When TSR=1, attempts to execute SRET in S-mode will
+            // raise an illegal instruction exception
             const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
             if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
             {
@@ -940,9 +940,9 @@ namespace atlas
             // supported
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
 
-            // Set MIE = MPIE and reset MPIE
+            // Set SIE = MSTATUS[SPIE] and reset SPIE
             WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
-                                  READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie"));
+                                  READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
             WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);
 
             // Reset MPP
