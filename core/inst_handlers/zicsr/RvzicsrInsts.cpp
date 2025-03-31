@@ -19,25 +19,22 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "csrrc",
-            atlas::Action::createAction<&RvzicsrInsts::csrrc_handler<XLEN>, RvzicsrInsts>(
-                nullptr, "csrrc", ActionTags::EXECUTE_TAG));
+            "csrrc", atlas::Action::createAction<&RvzicsrInsts::csrrc_handler<XLEN>, RvzicsrInsts>(
+                         nullptr, "csrrc", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrci",
             atlas::Action::createAction<&RvzicsrInsts::csrrci_handler<XLEN>, RvzicsrInsts>(
                 nullptr, "csrrci", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "csrrs",
-            atlas::Action::createAction<&RvzicsrInsts::csrrs_handler<XLEN>, RvzicsrInsts>(
-                nullptr, "csrrs", ActionTags::EXECUTE_TAG));
+            "csrrs", atlas::Action::createAction<&RvzicsrInsts::csrrs_handler<XLEN>, RvzicsrInsts>(
+                         nullptr, "csrrs", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrsi",
             atlas::Action::createAction<&RvzicsrInsts::csrrsi_handler<XLEN>, RvzicsrInsts>(
                 nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "csrrw",
-            atlas::Action::createAction<&RvzicsrInsts::csrrw_handler<XLEN>, RvzicsrInsts>(
-                nullptr, "csrrw", ActionTags::EXECUTE_TAG));
+            "csrrw", atlas::Action::createAction<&RvzicsrInsts::csrrw_handler<XLEN>, RvzicsrInsts>(
+                         nullptr, "csrrw", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrwi",
             atlas::Action::createAction<&RvzicsrInsts::csrrwi_handler<XLEN>, RvzicsrInsts>(
@@ -62,7 +59,7 @@ namespace atlas
                 nullptr, "fflags_update"));
         csr_update_actions.emplace(
             FRM, atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<XLEN>, RvzicsrInsts>(
-                nullptr, "frm_update"));
+                     nullptr, "frm_update"));
         csr_update_actions.emplace(
             MISA,
             atlas::Action::createAction<&RvzicsrInsts::misa_update_handler<XLEN>, RvzicsrInsts>(
@@ -80,7 +77,7 @@ namespace atlas
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
     template void RvzicsrInsts::getCsrUpdateActions<RV64>(Execute::CsrUpdateActionsMap &);
 
-    template<bool WRITE>
+    template <bool WRITE>
     bool RvzicsrInsts::isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode)
     {
         // From RISC-V spec:
