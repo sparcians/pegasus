@@ -279,13 +279,14 @@ namespace atlas
         auto & inclusions = state->getMavisInclusions();
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
-            if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext))
+            const std::string ext_str = std::string(1, ext);
+            if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext_str))
             {
-                inclusions.emplace(std::string(1, ext));
+                inclusions.emplace(ext_str);
             }
             else
             {
-                inclusions.erase(std::string(1, ext));
+                inclusions.erase(ext_str);
             }
         }
 

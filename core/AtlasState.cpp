@@ -185,7 +185,7 @@ namespace atlas
         }
     }
 
-    mavis::FileNameListType AtlasState::getUArchFiles_()
+    mavis::FileNameListType AtlasState::getUArchFiles_() const
     {
         const std::string xlen_str = std::to_string(xlen_);
         const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str;
@@ -431,7 +431,7 @@ namespace atlas
         return 0;
     }
 
-    template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_()
+    template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_() const
     {
         uint32_t ext_val = 0;
         for (auto & ext : extension_manager_.getEnabledExtensions())

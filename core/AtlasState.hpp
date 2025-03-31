@@ -285,7 +285,7 @@ namespace atlas
         // Supported ISA string
         const std::string supported_isa_string_;
 
-        template <typename XLEN> uint32_t getMisaExtFieldValue_();
+        template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
 
         // Path to Mavis
         const std::string isa_file_path_;
@@ -294,7 +294,7 @@ namespace atlas
         const std::string uarch_file_path_;
 
         // Get Atlas arch JSONs for Mavis
-        mavis::FileNameListType getUArchFiles_();
+        mavis::FileNameListType getUArchFiles_() const;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
