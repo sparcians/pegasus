@@ -64,10 +64,14 @@ namespace atlas
             return nullptr;
         }
 
-        ActionGroup* postExecute(AtlasState* state)
+        ActionGroup* postExecute(AtlasState* state,
+                                 const std::vector<Observer::MemRead> & mem_reads,
+                                 const std::vector<Observer::MemWrite> & mem_writes)
         {
             if (break_on_post_execute_)
             {
+                mem_reads_ = mem_reads;
+                mem_writes_ = mem_writes;
                 sendString_("post_execute");
                 return enterLoop_(state);
             }
@@ -111,6 +115,8 @@ namespace atlas
             REG_VALUE,
             REG_WRITE,
             REG_DMI_WRITE,
+            MEM_READS,
+            MEM_WRITES,
             BREAKPOINT,
             FINISH_EXECUTE,
             CONTINUE_SIM,
@@ -170,6 +176,8 @@ namespace atlas
                 {"reg.value", SimCommand::REG_VALUE},
                 {"reg.write", SimCommand::REG_WRITE},
                 {"reg.dmiwrite", SimCommand::REG_DMI_WRITE},
+                {"mem.reads", SimCommand::MEM_READS},
+                {"mem.writes", SimCommand::MEM_WRITES},
                 {"sim.break", SimCommand::BREAKPOINT},
                 {"sim.finish_execute", SimCommand::FINISH_EXECUTE},
                 {"sim.continue", SimCommand::CONTINUE_SIM},
@@ -287,6 +295,9 @@ namespace atlas
                                const std::vector<std::string> & args,
                                ActionGroup*& fail_action_group)
         {
+            // TODO cnyce: Consider replacing all use of stringstream here to
+            // only send hex values as uint64_t and format in Python.
+
             switch (sim_cmd)
             {
                 case SimCommand::XLEN:
@@ -646,6 +657,57 @@ namespace atlas
                         return true;
                     }
 
+                case SimCommand::MEM_READS:
+                    {
+                        std::string json;
+                        for (size_t idx = 0; idx < mem_reads_.size(); ++idx)
+                        {
+                            const auto & mem_read = mem_reads_[idx];
+                            std::stringstream ss;
+                            ss << "0x" << std::hex << mem_read.addr << " 0x" << mem_read.value;
+                            json += ss.str();
+                            if (idx < mem_reads_.size() - 1)
+                            {
+                                json += ", ";
+                            }
+                        }
+
+                        if (json.empty())
+                        {
+                            sendError_("No memory reads");
+                            break;
+                        }
+
+                        sendString_(json);
+                        return true;
+                    }
+
+                case SimCommand::MEM_WRITES:
+                    {
+                        std::string json;
+                        for (size_t idx = 0; idx < mem_writes_.size(); ++idx)
+                        {
+                            const auto & mem_write = mem_writes_[idx];
+                            std::stringstream ss;
+                            ss << "0x" << std::hex << mem_write.addr << " 0x"
+                               << mem_write.prior_value << " 0x" << mem_write.value;
+                            json += ss.str();
+                            if (idx < mem_writes_.size() - 1)
+                            {
+                                json += ", ";
+                            }
+                        }
+
+                        if (json.empty())
+                        {
+                            sendError_("No memory writes");
+                            break;
+                        }
+
+                        sendString_(json);
+                        return true;
+                    }
+
                 case SimCommand::BREAKPOINT:
                     if (args.size() != 1)
                     {
@@ -716,23 +778,26 @@ namespace atlas
         bool break_on_pre_execute_ = false;
         bool break_on_post_execute_ = false;
         bool break_on_pre_exception_ = false;
+
+        std::vector<Observer::MemRead> mem_reads_;
+        std::vector<Observer::MemWrite> mem_writes_;
     };
 
     SimController::SimController() : endpoint_(std::make_shared<SimEndpoint>()) {}
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 
-    ActionGroup* SimController::preExecute(AtlasState* state)
+    ActionGroup* SimController::preExecute_(AtlasState* state)
     {
         return endpoint_->preExecute(state);
     }
 
-    ActionGroup* SimController::postExecute(AtlasState* state)
+    ActionGroup* SimController::postExecute_(AtlasState* state)
     {
-        return endpoint_->postExecute(state);
+        return endpoint_->postExecute(state, mem_reads_, mem_writes_);
     }
 
-    ActionGroup* SimController::preException(AtlasState* state)
+    ActionGroup* SimController::preException_(AtlasState* state)
     {
         return endpoint_->preException(state);
     }

@@ -59,6 +59,22 @@ class StateDB:
         cmd = cmd.format(inst_uid, dquote(elem_name), dquote(elem_val), dquote(expected_elem_val))
         self.cursor.execute(cmd)
 
+    def AppendMemAccesses(self, inst_uid, mem_reads, mem_writes):
+        for read in mem_reads:
+            mem_addr = read.addr
+            mem_value = read.value
+            cmd = 'INSERT INTO MemoryAccesses (InstUID, Addr, Value) VALUES ({}, {}, {})'
+            cmd = cmd.format(inst_uid, dquote(mem_addr), dquote(mem_value))
+            self.cursor.execute(cmd)
+
+        for write in mem_writes:
+            mem_addr = write.addr
+            mem_prior = write.prior
+            mem_value = write.value
+            cmd = 'INSERT INTO MemoryAccesses (InstUID, Addr, Value, Prior) VALUES ({}, {}, {}, {})'
+            cmd = cmd.format(inst_uid, dquote(mem_addr), dquote(mem_prior), dquote(mem_value))
+            self.cursor.execute(cmd)
+
     def Close(self):
         if self.__conn:
             self.__conn.close()
@@ -108,4 +124,22 @@ class StateDB:
                 ElemVal TEXT,
                 ExpectedElemVal TEXT
             )
+        ''')
+
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS MemoryAccesses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                InstUID INTEGER,
+                Addr TEXT,
+                Value TEXT,
+                Prior TEXT DEFAULT 'N/A'
+            )
+        ''')
+
+        self.cursor.execute('''
+            CREATE INDEX IF NOT EXISTS MemoryAccesses_InstUID ON MemoryAccesses (InstUID)
+        ''')
+
+        self.cursor.execute('''
+            CREATE INDEX IF NOT EXISTS Instructions_PC ON Instructions (PC)
         ''')

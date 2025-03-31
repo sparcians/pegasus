@@ -1,5 +1,6 @@
 import sqlite3
 from backend.sim_api import FormatHex
+from backend.c_dtypes import MemRead, MemWrite
 
 class StateQuery:
     def __init__(self, db_file):
@@ -68,7 +69,25 @@ class StateQuery:
 
             expected_vals[reg_name] = FormatHex(reg_val)
 
-        return StateSnapshot(pc, opcode, dasm, changes, reg_vals, expected_vals)
+        cmd = 'SELECT Addr, Value, Prior FROM MemoryAccesses WHERE InstUID = "{}"'.format(inst_uid)
+        self.cursor.execute(cmd)
+
+        mem_reads = []
+        mem_writes = []
+        for addr, value, prior in self.cursor.fetchall():
+            addr = FormatHex(addr)
+            value = FormatHex(value)
+            is_read = prior == 'N/A'
+
+            if is_read:
+                read = MemRead(addr, value)
+                mem_reads.append(read)
+            else:
+                prior = FormatHex(prior)
+                write = MemWrite(addr, value, prior)
+                mem_writes.append(write)
+
+        return StateSnapshot(pc, opcode, dasm, changes, reg_vals, expected_vals, mem_reads, mem_writes)
 
     def GetInitialState(self):
         cmd = 'SELECT PC FROM Instructions ORDER BY Id ASC LIMIT 1'
@@ -76,7 +95,7 @@ class StateQuery:
         pc = FormatHex(self.cursor.fetchone()[0])
         reg_vals = self.__GetInitRegValues()
 
-        return StateSnapshot(pc, None, None, None, reg_vals, {})
+        return StateSnapshot(pc, None, None, None, reg_vals, {}, [], [])
 
     def __GetInitRegValues(self):
         if self.init_reg_values is None:
@@ -87,13 +106,15 @@ class StateQuery:
         return self.init_reg_values.copy()
 
 class StateSnapshot:
-    def __init__(self, pc, opcode, dasm, changes, reg_vals, expected_vals):
+    def __init__(self, pc, opcode, dasm, changes, reg_vals, expected_vals, mem_reads, mem_writes):
         self.pc = pc
         self.opcode = opcode
         self.dasm = dasm
         self.changes = changes
         self.reg_vals = reg_vals
         self.expected_vals = expected_vals
+        self.mem_reads = mem_reads
+        self.mem_writes = mem_writes
 
     def getPC(self):
         return self.pc
@@ -112,3 +133,9 @@ class StateSnapshot:
 
     def getExpectedValue(self, reg_name):
         return self.expected_vals.get(reg_name)
+
+    def getMemReads(self):
+        return self.mem_reads
+
+    def getMemWrites(self):
+        return self.mem_writes

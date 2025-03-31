@@ -49,11 +49,15 @@ namespace atlas
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
 
-        virtual ActionGroup* preExecute(AtlasState*) { return nullptr; }
+        ActionGroup* preExecute(AtlasState* state)
+        {
+            reset_();
+            return preExecute_(state);
+        }
 
-        virtual ActionGroup* postExecute(AtlasState*) { return nullptr; }
+        ActionGroup* postExecute(AtlasState* state) { return postExecute_(state); }
 
-        virtual ActionGroup* preException(AtlasState*) { return nullptr; }
+        ActionGroup* preException(AtlasState* state) { return preException_(state); }
 
         virtual void stopSim() {}
 
@@ -91,7 +95,14 @@ namespace atlas
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
-        virtual void reset_()
+      private:
+        virtual ActionGroup* preExecute_(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* postExecute_(AtlasState*) { return nullptr; }
+
+        virtual ActionGroup* preException_(AtlasState*) { return nullptr; }
+
+        void reset_()
         {
             pc_ = 0;
             opcode_ = std::numeric_limits<uint64_t>::max();
@@ -103,7 +114,6 @@ namespace atlas
             mem_writes_.clear();
         }
 
-      private:
         void postWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
         {
             uint64_t prior_val = 0;
