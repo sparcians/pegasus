@@ -237,21 +237,21 @@ namespace atlas
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
         auto& ext_manager = state->getExtensionManager();
 
-	// FIXME: Extension manager should maintain inclusions
-	auto& inclusions = state->getMavisInclusions();
-	for(char ext = 'a'; ext <= 'z'; ++ext)
+        // FIXME: Extension manager should maintain inclusions
+        auto& inclusions = state->getMavisInclusions();
+        for(char ext = 'a'; ext <= 'z'; ++ext)
         {
             if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext))
             {
-	        inclusions.emplace(std::string(1, ext));	
+                inclusions.emplace(std::string(1, ext));
             }
             else
             {
-	        inclusions.erase(std::string(1, ext));	
+                inclusions.erase(std::string(1, ext));
             }
         }
 
-	state->updateMavisContext();
+        state->updateMavisContext();
 
         return nullptr;
     }
@@ -263,6 +263,31 @@ namespace atlas
         // only write to the shared fields
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
+
+        // If FS is set to 0 (off), all floating point extensions are disabled
+        const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
+        auto& inclusions = state->getMavisInclusions();
+        if (fs_val == 0)
+        {
+            inclusions.erase("f");
+            inclusions.erase("d");
+        }
+        else
+        {
+            const bool f_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1;
+            const bool d_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1;
+            if (f_ext_enabled)
+            {
+                inclusions.emplace("f");
+            }
+            if (d_ext_enabled)
+            {
+                inclusions.emplace("d");
+            }
+        }
+
+        state->updateMavisContext();
+
         return nullptr;
     }
 
