@@ -33,7 +33,7 @@ namespace atlas
 
         ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
 
-        void changeMMUMode(const uint64_t xlen, MMUMode mode);
+        void changeMMUMode(uint64_t xlen, uint32_t satp_mode);
 
       private:
         ActionGroup inst_translate_action_group_{"Inst Translate"};
@@ -49,6 +49,10 @@ namespace atlas
 
         template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
         {
+            if constexpr (Mode == MMUMode::BAREMETAL)
+            {
+                return 0;
+            }
             if constexpr (Mode == MMUMode::SV32)
             {
                 return translate_types::Sv32::num_pagewalk_levels;

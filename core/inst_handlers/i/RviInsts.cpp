@@ -954,6 +954,9 @@ namespace atlas
         // Update the privilege mode to the previous privilege mode
         state->setPrivMode(prev_priv_mode, prev_virt_mode);
 
+        // Update the MMU Mode from SATP
+        state->changeMMUMode(READ_CSR_FIELD<XLEN>(state, SATP, "mode"));
+
         return nullptr;
     }
 

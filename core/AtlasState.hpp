@@ -103,6 +103,8 @@ namespace atlas
             priv_mode_ = priv_mode;
         }
 
+        void changeMMUMode(uint32_t satp_mode);
+
         struct SimState
         {
             uint64_t current_opcode = 0;
@@ -307,7 +309,6 @@ namespace atlas
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
-        MMUMode mode_ = MMUMode::SV39;
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory

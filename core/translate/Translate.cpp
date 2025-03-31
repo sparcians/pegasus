@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "core/translate/Translate.hpp"
 #include "core/translate/PageTableEntry.hpp"
 #include "core/AtlasInst.hpp"
@@ -88,8 +91,28 @@ namespace atlas
             rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
     }
 
-    void Translate::changeMMUMode(const uint64_t xlen, const MMUMode mode)
+    void Translate::changeMMUMode(uint64_t xlen, uint32_t satp_mode)
     {
+        static const std::vector<MMUMode> satp_mmu_mode_map =
+            {
+                MMUMode::BAREMETAL, // mode == 0
+                MMUMode::SV32,      // mode == 1 xlen==32
+                MMUMode::INVALID,   // mode == 2 - 7 -> reserved
+                MMUMode::INVALID,
+                MMUMode::INVALID,
+                MMUMode::INVALID,
+                MMUMode::INVALID,
+                MMUMode::INVALID,   // mode ==  7
+                MMUMode::SV39,      // mode ==  8, xlen==64
+                MMUMode::SV48,      // mode ==  9, xlen==64
+                MMUMode::SV57       // mode == 10, xlen==64
+            };
+
+        sparta_assert(satp_mode < satp_mmu_mode_map.size());
+
+        const MMUMode mode = satp_mmu_mode_map[satp_mode];
+        sparta_assert(mode != MMUMode::INVALID);
+
         if (xlen == 64)
         {
             inst_translate_action_group_.replaceAction(
@@ -128,10 +151,10 @@ namespace atlas
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVaddr();
 
-        // See if xlation is disabled
-        if (MODE == MMUMode::BAREMETAL ||
-            state->getPrivMode() == PrivMode::MACHINE ||
-            (false == state->getVirtualMode()))
+        uint32_t level = getNumPageWalkLevels_<MODE>();
+
+        // See if xlation is disable -- no level walks
+        if (level == 0)
         {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
@@ -144,7 +167,7 @@ namespace atlas
         // Page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
         uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
-        for (uint32_t level = getNumPageWalkLevels_<MODE>(); level > 0; --level)
+        while (level > 0)
         {
             constexpr uint64_t PTESIZE = sizeof(XLEN);
             const auto indexed_level = level - 1;
@@ -185,6 +208,7 @@ namespace atlas
             {
                 ppn = pte.getPpn() << PAGESHIFT;
             }
+            --level;
         }
         translation_state->clearRequest();
 

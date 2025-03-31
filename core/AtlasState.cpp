@@ -193,8 +193,8 @@ namespace atlas
             }
         }
 
-        // Set up translation; baremetal for now
-        translate_unit_->changeMMUMode(xlen_, mode_);
+        // Set up translation; baremetal (value 0) for now
+        changeMMUMode(0);
 
         if (interactive_mode_)
         {
@@ -208,6 +208,12 @@ namespace atlas
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
         }
     }
+
+    void AtlasState::changeMMUMode(uint32_t satp_mode)
+    {
+        translate_unit_->changeMMUMode(xlen_, satp_mode);
+    }
+
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
     {
