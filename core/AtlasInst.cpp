@@ -67,6 +67,34 @@ namespace atlas
     {
     }
 
+    bool AtlasInst::writesCsr() const
+    {
+        if (SPARTA_EXPECT_FALSE(hasCsr()))
+        {
+            const auto mavis_uid = getMavisUid();
+            // csrrw/csrrwi always writes
+            // csrrs/csrrc write if rs1 != 0
+            // csrrsi/csrrci writes if imm != 0
+            if((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRW) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRWI))
+            {
+                return true;
+            }
+            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRS) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRC))
+            {
+                return rs1_info_ && (rs1_info_->field_value != 0);
+            }
+            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRSI) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRCI))
+            {
+                return getImmediate() != 0;
+            }
+            else
+            {
+                sparta_assert(false, "Unknown instruction with CSR: " << *this);
+            }
+        }
+        return false;
+    }
+
     std::ostream & operator<<(std::ostream & os, const AtlasInst & inst)
     {
         os << "uid: " << std::dec << inst.uid_ << " " << inst.dasmString() << " "

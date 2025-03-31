@@ -84,6 +84,16 @@ namespace atlas
 
         MavisType* getMavis() { return mavis_.get(); }
 
+        enum MavisUIDs : mavis::InstructionUniqueID
+        {
+            MAVIS_UID_CSRRW = 1,
+            MAVIS_UID_CSRRS,
+            MAVIS_UID_CSRRC,
+            MAVIS_UID_CSRRWI,
+            MAVIS_UID_CSRRSI,
+            MAVIS_UID_CSRRCI
+        };
+
         std::set<std::string>& getMavisInclusions() { return inclusions_; }
 
         void updateMavisContext()
@@ -290,7 +300,17 @@ namespace atlas
 
         // Mavis
         std::unique_ptr<MavisType> mavis_;
+
+        static inline mavis::InstUIDList mavis_uid_list_{{"csrrw",  MAVIS_UID_CSRRW},
+                                                         {"csrrs",  MAVIS_UID_CSRRS},
+                                                         {"csrrc",  MAVIS_UID_CSRRC},
+                                                         {"csrrwi", MAVIS_UID_CSRRWI},
+                                                         {"csrrsi", MAVIS_UID_CSRRSI},
+                                                         {"csrrci", MAVIS_UID_CSRRCI}};
+
+        // Mavis list of included extension tags
         std::set<std::string> inclusions_;
+
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;

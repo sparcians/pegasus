@@ -112,13 +112,17 @@ namespace atlas
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
                 getUArchFiles_(),
+                mavis_uid_list_,
+                {}, // annotation overrides
+                {}, // inclusions
+                {}, // exclusions
                 AtlasInstAllocatorWrapper<AtlasInstAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-	// FIXME: Extension manager should maintain inclusions
+        // FIXME: Extension manager should maintain inclusions
         for (auto & ext : extension_manager_.getEnabledExtensions())
         {
             inclusions_.emplace(ext.first);
