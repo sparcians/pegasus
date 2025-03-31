@@ -18,60 +18,30 @@ namespace atlas
     void RvzicsrInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            inst_handlers.emplace(
-                "csrrc",
-                atlas::Action::createAction<&RvzicsrInsts::csrrc_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrc", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrci",
-                atlas::Action::createAction<&RvzicsrInsts::csrrci_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrci", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrs",
-                atlas::Action::createAction<&RvzicsrInsts::csrrs_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrs", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrsi",
-                atlas::Action::createAction<&RvzicsrInsts::csrrsi_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrw",
-                atlas::Action::createAction<&RvzicsrInsts::csrrw_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrwi",
-                atlas::Action::createAction<&RvzicsrInsts::csrrwi_handler<RV64>, RvzicsrInsts>(
-                    nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
-        }
-        else if constexpr (std::is_same_v<XLEN, RV32>)
-        {
-            inst_handlers.emplace(
-                "csrrc",
-                atlas::Action::createAction<&RvzicsrInsts::csrrc_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrc", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrci",
-                atlas::Action::createAction<&RvzicsrInsts::csrrci_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrci", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrs",
-                atlas::Action::createAction<&RvzicsrInsts::csrrs_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrs", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrsi",
-                atlas::Action::createAction<&RvzicsrInsts::csrrsi_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrw",
-                atlas::Action::createAction<&RvzicsrInsts::csrrw_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "csrrwi",
-                atlas::Action::createAction<&RvzicsrInsts::csrrwi_handler<RV32>, RvzicsrInsts>(
-                    nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
-        }
+        inst_handlers.emplace(
+            "csrrc",
+            atlas::Action::createAction<&RvzicsrInsts::csrrc_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrc", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "csrrci",
+            atlas::Action::createAction<&RvzicsrInsts::csrrci_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrci", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "csrrs",
+            atlas::Action::createAction<&RvzicsrInsts::csrrs_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrs", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "csrrsi",
+            atlas::Action::createAction<&RvzicsrInsts::csrrsi_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "csrrw",
+            atlas::Action::createAction<&RvzicsrInsts::csrrw_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrw", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "csrrwi",
+            atlas::Action::createAction<&RvzicsrInsts::csrrwi_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
     }
 
     template void RvzicsrInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
@@ -92,7 +62,7 @@ namespace atlas
                 nullptr, "fflags_update"));
         csr_update_actions.emplace(
             FRM, atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<XLEN>, RvzicsrInsts>(
-                     nullptr, "frm_update"));
+                nullptr, "frm_update"));
         csr_update_actions.emplace(
             MISA,
             atlas::Action::createAction<&RvzicsrInsts::misa_update_handler<XLEN>, RvzicsrInsts>(
@@ -110,6 +80,33 @@ namespace atlas
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
     template void RvzicsrInsts::getCsrUpdateActions<RV64>(Execute::CsrUpdateActionsMap &);
 
+    bool RvzicsrInsts::isReadLegal_(uint32_t csr_num, const PrivMode priv_mode)
+    {
+        // Machine CSRs can only be read on machine mode
+        if ((csr_num >= MSTATUS) && (csr_num <= MSECCFG))
+        {
+            return priv_mode >= PrivMode::MACHINE;
+        }
+
+        //  Supervisor CSRs can only be read in supervisor or machine mode
+        if ((csr_num >= SSTATUS) && (csr_num <= SATP))
+        {
+            return priv_mode >= PrivMode::SUPERVISOR;
+        }
+
+        return true;
+    }
+
+    bool RvzicsrInsts::isWriteLegal_(uint32_t csr_num)
+    {
+        // Unprivileged counters and times are read only
+        if ((csr_num >= CYCLE) && (csr_num <= HPMCOUNTER31))
+        {
+            return false;
+        }
+        return true;
+    }
+
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrc_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -118,10 +115,19 @@ namespace atlas
         auto rd = insn->getRd();
         const uint32_t csr = insn->getCsr();
 
+        if (!isReadLegal_(csr, state->getPrivMode()))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
+            if (!isWriteLegal_(csr))
+            {
+                THROW_ILLEGAL_INST;
+            }
             // rs1 value is treated as a bit mask to clear bits
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
             WRITE_CSR_REG<XLEN>(state, csr, (~rs1_val & csr_val));
@@ -140,9 +146,18 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
+        if (!isReadLegal_(csr, state->getPrivMode()))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
+            if (!isWriteLegal_(csr))
+            {
+                THROW_ILLEGAL_INST;
+            }
             WRITE_CSR_REG<XLEN>(state, csr, (~imm & csr_val));
         }
 
@@ -159,9 +174,18 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
+        if (!isReadLegal_(csr, state->getPrivMode()))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
+            if (!isWriteLegal_(csr))
+            {
+                THROW_ILLEGAL_INST;
+            }
             // rs1 value is treated as a bit mask to set bits
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
             WRITE_CSR_REG<XLEN>(state, csr, (rs1_val | csr_val));
@@ -180,9 +204,18 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
+        if (!isReadLegal_(csr, state->getPrivMode()))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
+            if (!isWriteLegal_(csr))
+            {
+                THROW_ILLEGAL_INST;
+            }
             // imm value is treated as a bit mask
             WRITE_CSR_REG<XLEN>(state, csr, (imm | csr_val));
         }
@@ -201,9 +234,20 @@ namespace atlas
         const int csr = insn->getCsr();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
+
+        if (!isWriteLegal_(csr))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
+            if (!isReadLegal_(csr, state->getPrivMode()))
+            {
+                THROW_ILLEGAL_INST;
+            }
+
             const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
@@ -221,9 +265,19 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
+        if (!isWriteLegal_(csr))
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
+            if (!isReadLegal_(csr, state->getPrivMode()))
+            {
+                THROW_ILLEGAL_INST;
+            }
+
             const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
