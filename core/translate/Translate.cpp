@@ -169,12 +169,10 @@ namespace atlas
             // TODO: Check access permissions
             if (pte.isLeaf())
             {
-                const Addr vaddr_shifted = vaddr >> PAGESHIFT;
-
-                Addr paddr =
-                    ((pte.getPpn()) | (vaddr_shifted & ((0b1 << 9) - 1))) << PAGESHIFT;
-
-                paddr |= extractPageOffset_(vaddr); // Add the page offset
+                const Addr paddr =
+                    ((pte.getPpn() << PAGESHIFT) |
+                     vpn |
+                     extractPageOffset_(vaddr)); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
