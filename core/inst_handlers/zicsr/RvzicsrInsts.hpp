@@ -18,8 +18,8 @@ namespace atlas
         template <typename XLEN> static void getCsrUpdateActions(Execute::CsrUpdateActionsMap &);
 
       private:
-        bool isReadLegal_(const uint32_t csr_num, const PrivMode priv_mode);
-        bool isWriteLegal_(const uint32_t csr_num);
+        template<bool WRITE = false>
+        bool isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode);
 
         template <typename XLEN> ActionGroup* csrrc_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* csrrci_handler(atlas::AtlasState* state);

@@ -80,31 +80,18 @@ namespace atlas
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
     template void RvzicsrInsts::getCsrUpdateActions<RV64>(Execute::CsrUpdateActionsMap &);
 
-    bool RvzicsrInsts::isReadLegal_(uint32_t csr_num, const PrivMode priv_mode)
+    template<bool WRITE>
+    bool RvzicsrInsts::isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode)
     {
-        // Machine CSRs can only be read on machine mode
-        if ((csr_num >= MSTATUS) && (csr_num <= MSECCFG))
-        {
-            return priv_mode >= PrivMode::MACHINE;
-        }
+        // From RISC-V spec:
+        // The upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write
+        // accessibility of the CSRs according to privilege level. The top two bits (csr[11:10])
+        // indicate whether the register is read/write (00,01, or 10) or read-only (11). The next
+        // two bits (csr[9:8]) encode the lowest privilege level that can access the CSR.
+        const bool is_writable = (csr_num & 0xc00) != 0xc00;
+        const PrivMode lowest_priv_level = (PrivMode)((csr_num & 0x300) >> 8);
 
-        //  Supervisor CSRs can only be read in supervisor or machine mode
-        if ((csr_num >= SSTATUS) && (csr_num <= SATP))
-        {
-            return priv_mode >= PrivMode::SUPERVISOR;
-        }
-
-        return true;
-    }
-
-    bool RvzicsrInsts::isWriteLegal_(uint32_t csr_num)
-    {
-        // Unprivileged counters and times are read only
-        if ((csr_num >= CYCLE) && (csr_num <= HPMCOUNTER31))
-        {
-            return false;
-        }
-        return true;
+        return (!WRITE || (WRITE && is_writable)) && (priv_mode >= lowest_priv_level);
     }
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrc_handler(atlas::AtlasState* state)
@@ -115,7 +102,7 @@ namespace atlas
         auto rd = insn->getRd();
         const uint32_t csr = insn->getCsr();
 
-        if (!isReadLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -124,7 +111,7 @@ namespace atlas
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
-            if (!isWriteLegal_(csr))
+            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -146,7 +133,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isReadLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -154,7 +141,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isWriteLegal_(csr))
+            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -174,7 +161,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isReadLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -182,7 +169,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
-            if (!isWriteLegal_(csr))
+            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -204,7 +191,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isReadLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -212,7 +199,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isWriteLegal_(csr))
+            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -235,7 +222,7 @@ namespace atlas
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
-        if (!isWriteLegal_(csr))
+        if (!isAccessLegal_<true>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -243,11 +230,10 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isReadLegal_(csr, state->getPrivMode()))
+            if (!isAccessLegal_(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
-
             const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
@@ -265,7 +251,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isWriteLegal_(csr))
+        if (!isAccessLegal_<true>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -273,11 +259,10 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isReadLegal_(csr, state->getPrivMode()))
+            if (!isAccessLegal_(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
-
             const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
