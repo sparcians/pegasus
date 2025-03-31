@@ -87,22 +87,24 @@ namespace atlas
             atlas::Action::createAction<&RvzicsrInsts::fcsr_update_handler<XLEN>, RvzicsrInsts>(
                 nullptr, "fcsr_update"));
         csr_update_actions.emplace(
-            FFLAGS, atlas::Action::createAction<&RvzicsrInsts::fflags_update_handler<XLEN>,
-                                                RvzicsrInsts>(nullptr, "fflags_update"));
+            FFLAGS,
+            atlas::Action::createAction<&RvzicsrInsts::fflags_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "fflags_update"));
         csr_update_actions.emplace(
-            FRM,
-            atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<XLEN>, RvzicsrInsts>(
-                nullptr, "frm_update"));
+            FRM, atlas::Action::createAction<&RvzicsrInsts::frm_update_handler<XLEN>, RvzicsrInsts>(
+                     nullptr, "frm_update"));
         csr_update_actions.emplace(
             MISA,
             atlas::Action::createAction<&RvzicsrInsts::misa_update_handler<XLEN>, RvzicsrInsts>(
                 nullptr, "misa_update"));
         csr_update_actions.emplace(
-            MSTATUS, atlas::Action::createAction<&RvzicsrInsts::mstatus_update_handler<XLEN>,
-                                                 RvzicsrInsts>(nullptr, "mstatus_update"));
+            MSTATUS,
+            atlas::Action::createAction<&RvzicsrInsts::mstatus_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "mstatus_update"));
         csr_update_actions.emplace(
-            SSTATUS, atlas::Action::createAction<&RvzicsrInsts::sstatus_update_handler<XLEN>,
-                                                 RvzicsrInsts>(nullptr, "sstatus_update"));
+            SSTATUS,
+            atlas::Action::createAction<&RvzicsrInsts::sstatus_update_handler<XLEN>, RvzicsrInsts>(
+                nullptr, "sstatus_update"));
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
@@ -235,11 +237,11 @@ namespace atlas
     ActionGroup* RvzicsrInsts::misa_update_handler(atlas::AtlasState* state)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        auto& ext_manager = state->getExtensionManager();
+        auto & ext_manager = state->getExtensionManager();
 
         // FIXME: Extension manager should maintain inclusions
-        auto& inclusions = state->getMavisInclusions();
-        for(char ext = 'a'; ext <= 'z'; ++ext)
+        auto & inclusions = state->getMavisInclusions();
+        for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext))
             {
@@ -266,7 +268,7 @@ namespace atlas
 
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
-        auto& inclusions = state->getMavisInclusions();
+        auto & inclusions = state->getMavisInclusions();
         if (fs_val == 0)
         {
             inclusions.erase("f");

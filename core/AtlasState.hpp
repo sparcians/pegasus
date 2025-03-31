@@ -80,7 +80,10 @@ namespace atlas
 
         uint64_t getXlen() const { return xlen_; }
 
-        mavis::extension_manager::riscv::RISCVExtensionManager& getExtensionManager() { return extension_manager_; }
+        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
+        {
+            return extension_manager_;
+        }
 
         MavisType* getMavis() { return mavis_.get(); }
 
@@ -94,13 +97,14 @@ namespace atlas
             MAVIS_UID_CSRRCI
         };
 
-        std::set<std::string>& getMavisInclusions() { return inclusions_; }
+        std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
         void updateMavisContext()
         {
             const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            //FIXME: Use ISA string for context name and check if it already exists
-            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(), getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
+            // FIXME: Use ISA string for context name and check if it already exists
+            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(),
+                                getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
             mavis_->switchContext(std::to_string(pc_));
         }
 
@@ -281,8 +285,7 @@ namespace atlas
         // Supported ISA string
         const std::string supported_isa_string_;
 
-        template<typename XLEN>
-        uint32_t getMisaExtFieldValue_();
+        template <typename XLEN> uint32_t getMisaExtFieldValue_();
 
         // Path to Mavis
         const std::string isa_file_path_;
@@ -302,16 +305,13 @@ namespace atlas
         // Mavis
         std::unique_ptr<MavisType> mavis_;
 
-        static inline mavis::InstUIDList mavis_uid_list_{{"csrrw",  MAVIS_UID_CSRRW},
-                                                         {"csrrs",  MAVIS_UID_CSRRS},
-                                                         {"csrrc",  MAVIS_UID_CSRRC},
-                                                         {"csrrwi", MAVIS_UID_CSRRWI},
-                                                         {"csrrsi", MAVIS_UID_CSRRSI},
-                                                         {"csrrci", MAVIS_UID_CSRRCI}};
+        static inline mavis::InstUIDList mavis_uid_list_{
+            {"csrrw", MAVIS_UID_CSRRW},   {"csrrs", MAVIS_UID_CSRRS},
+            {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
+            {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
 
         // Mavis list of included extension tags
         std::set<std::string> inclusions_;
-
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;

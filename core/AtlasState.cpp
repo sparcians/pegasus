@@ -111,11 +111,9 @@ namespace atlas
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
-                getUArchFiles_(),
-                mavis_uid_list_,
-                {}, // annotation overrides
-                {}, // inclusions
-                {}, // exclusions
+                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
+                {},                                    // inclusions
+                {},                                    // exclusions
                 AtlasInstAllocatorWrapper<AtlasInstAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
@@ -426,11 +424,10 @@ namespace atlas
         return 0;
     }
 
-    template<typename XLEN>
-    uint32_t AtlasState::getMisaExtFieldValue_()
+    template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_()
     {
         uint32_t ext_val = 0;
-        for(auto& ext : extension_manager_.getEnabledExtensions())
+        for (auto & ext : extension_manager_.getEnabledExtensions())
         {
             if (ext.first.size() == 1)
             {

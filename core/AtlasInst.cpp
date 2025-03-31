@@ -75,15 +75,18 @@ namespace atlas
             // csrrw/csrrwi always writes
             // csrrs/csrrc write if rs1 != 0
             // csrrsi/csrrci writes if imm != 0
-            if((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRW) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRWI))
+            if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRW)
+                || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRWI))
             {
                 return true;
             }
-            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRS) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRC))
+            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRS)
+                     || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRC))
             {
                 return rs1_info_ && (rs1_info_->field_value != 0);
             }
-            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRSI) || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRCI))
+            else if ((mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRSI)
+                     || (mavis_uid == AtlasState::MavisUIDs::MAVIS_UID_CSRRCI))
             {
                 return getImmediate() != 0;
             }
