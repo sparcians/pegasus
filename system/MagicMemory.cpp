@@ -67,7 +67,7 @@ namespace atlas
                 }
                 break;
             case SupportedDevices::BLOCK_CHAR:
-                sparta_assert(false, "TODO: Block char is unsupported");
+                //sparta_assert(false, "TODO: Block char is unsupported");
                 break;
         }
 

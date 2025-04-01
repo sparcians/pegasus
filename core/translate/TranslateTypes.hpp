@@ -21,6 +21,11 @@ namespace atlas::translate_types
         }
 
         FieldDef(const FieldDef & def) = default;
+
+        constexpr Addr calcPTEOffset(Addr vaddr) const {
+            return (vaddr & bitmask) >> lsb;
+        }
+
     };
 
     namespace Sv32

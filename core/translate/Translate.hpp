@@ -75,7 +75,7 @@ namespace atlas
             }
         }
 
-        template <MMUMode Mode> uint64_t extractVpn_(const uint32_t level, const uint64_t vaddr) const
+        template <MMUMode Mode> auto extractVpnField_(const uint32_t level) const
         {
             auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
             {
@@ -101,8 +101,7 @@ namespace atlas
                 }
             };
 
-            const translate_types::FieldDef & vpn_field = get_vpn_field(level);
-            return (vaddr & vpn_field.bitmask) >> vpn_field.lsb;
+            return get_vpn_field(level);
         }
 
         uint64_t extractPageOffset_(uint64_t vaddr) const

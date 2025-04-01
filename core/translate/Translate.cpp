@@ -169,18 +169,17 @@ namespace atlas
         uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
         while (level > 0)
         {
-            constexpr uint64_t PTESIZE = sizeof(XLEN);
             const auto indexed_level = level - 1;
-            const uint64_t vpn = extractVpn_<MODE>(indexed_level, vaddr);
-            const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
+            const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
+            const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
             const PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
             DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << indexed_level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
 
-            //  If accessing pte violates a PMA or PMP check, raise an
-            //  access-fault exception corresponding to the original
-            //  access type
+            // If accessing pte violates a PMA or PMP check, raise an
+            // access-fault exception corresponding to the original
+            // access type
             if (!pte.isValid() || ((!pte.canRead()) && pte.canWrite()))
             {
                 translation_state->clearRequest();
@@ -192,10 +191,11 @@ namespace atlas
             // TODO: Check access permissions
             if (pte.isLeaf())
             {
-                const Addr paddr =
-                    ((pte.getPpn() << PAGESHIFT) |
-                     vpn |
-                     extractPageOffset_(vaddr)); // Add the page offset
+                const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
+                const auto virt_base = vaddr >> PAGESHIFT;
+                Addr paddr =
+                    (pte.getPpn() | (virt_base & ((0b1 << index_bits) - 1))) << PAGESHIFT;
+                paddr |= extractPageOffset_(vaddr); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
