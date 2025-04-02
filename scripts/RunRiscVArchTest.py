@@ -7,7 +7,8 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS = ["121", "129"]
+PASSING_STATUS_NON_VIRT= ["122", "129"]
+PASSING_STATUS_VIRT=     ["122", "236"]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -133,10 +134,15 @@ def main():
             print("\t" + timeout_tests.get())
 
     print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
-    print("EXPECTED RATE: " + PASSING_STATUS[0] + "/" + PASSING_STATUS[1])
 
-    if (str(num_passed) < PASSING_STATUS[0]):
-        print("ERROR: failed!")
+    if args.no_skip_virt:
+        print("EXPECTED RATE: " + PASSING_STATUS_VIRT[0] + "/" + PASSING_STATUS_VIRT[1])
+        if (str(num_passed) < PASSING_STATUS_VIRT[0]):
+            print("ERROR: failed!")
+    else:
+        print("EXPECTED RATE: " + PASSING_STATUS_NON_VIRT[0] + "/" + PASSING_STATUS_NON_VIRT[1])
+        if (str(num_passed) < PASSING_STATUS_NON_VIRT[0]):
+            print("ERROR: failed!")
 
 if __name__ == "__main__":
     main()
