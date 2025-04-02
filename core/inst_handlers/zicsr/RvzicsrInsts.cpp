@@ -280,7 +280,7 @@ namespace atlas
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if ((misa_val & (1 << ext)) && ext_manager.isEnabled(ext_str))
+            if ((misa_val & (1 << (ext - 'a'))) && ext_manager.isEnabled(ext_str))
             {
                 inclusions.emplace(ext_str);
             }
