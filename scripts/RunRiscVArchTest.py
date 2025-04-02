@@ -135,7 +135,7 @@ def main():
     print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
     print("EXPECTED RATE: " + PASSING_STATUS[0] + "/" + PASSING_STATUS[1])
 
-    if (str(num_passed) <= PASSING_STATUS[0]):
+    if (str(num_passed) < PASSING_STATUS[0]):
         print("ERROR: failed!")
 
 if __name__ == "__main__":
