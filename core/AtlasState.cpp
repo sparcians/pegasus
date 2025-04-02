@@ -52,6 +52,7 @@ namespace atlas
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
+        sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
         extension_manager_.setISA(isa_string_);
 

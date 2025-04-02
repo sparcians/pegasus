@@ -102,4 +102,12 @@ namespace atlas
         memory_.write(addr, size, buf);
         return true;
     }
+
+    void MagicMemory::onStartingTeardown_() {
+        const std::string msg = block_char_msg_.str();
+        if (false == msg.empty()) {
+            std::cout << "MAGICMEM: " << msg;
+        }
+    }
+
 } // namespace atlas

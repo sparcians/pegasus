@@ -63,6 +63,7 @@ namespace atlas
 
       private:
         void onBindTreeEarly_() override;
+        void onStartingTeardown_() override;
 
         const sparta::memory::addr_t base_addr_;
         const sparta::memory::addr_t size_;
