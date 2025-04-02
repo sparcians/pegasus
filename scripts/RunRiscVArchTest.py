@@ -86,8 +86,11 @@ def main():
     # Ignore some tests that are unsupported or bad tests
     skip_tests = [
         "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
-        "rv64ud-p-fclass",     # Atlas does not support the fclass instruction
+        "rv32uf-p-fclass",
+        "rv64ud-p-fclass",
+        "rv32ud-p-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
+        "rv32mi-p-breakpoint",
         "rv64mi-p-access",     # BAD TEST: Has check for max paddr size restriction which has been lifted
     ]
     for skip_test in skip_tests:
