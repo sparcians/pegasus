@@ -23,6 +23,7 @@ namespace atlas
             WRITE,
             READ
         };
+
         template <AccessType TYPE>
         bool isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode);
 
