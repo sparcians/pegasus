@@ -18,9 +18,6 @@ namespace atlas
     {
         (void)p;
 
-        constexpr bool INST_TRANSLATION = true;
-        constexpr bool DATA_TRANSLATION = false;
-
         // Baremetal (translation disabled)
         {
             registerAction_<RV32, MMUMode::BAREMETAL, INST_TRANSLATION>(
@@ -133,11 +130,11 @@ namespace atlas
         }
     }
 
-    template <typename XLEN, MMUMode MODE, bool INST_TRANSLATION>
+    template <typename XLEN, MMUMode MODE, bool TRANSLATION>
     ActionGroup* Translate::translate_(AtlasState* state)
     {
         AtlasTranslationState* translation_state = nullptr;
-        if constexpr (INST_TRANSLATION)
+        if constexpr (TRANSLATION == INST_TRANSLATION)
         {
             // Translation reqest is from fetch
             translation_state = state->getFetchTranslationState();
@@ -161,6 +158,10 @@ namespace atlas
             return nullptr;
         }
 
+        // TODO: TRANSLATION should be an enum for inst, load or store
+        const bool is_store = (TRANSLATION == DATA_TRANSLATION) &&
+            state->getCurrentInst()->isStoreType();
+
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
 
@@ -180,11 +181,19 @@ namespace atlas
             // If accessing pte violates a PMA or PMP check, raise an
             // access-fault exception corresponding to the original
             // access type
-            if (!pte.isValid() || ((!pte.canRead()) && pte.canWrite()))
-            {
-                translation_state->clearRequest();
-                // TODO: Add method to throw correct fault type
-                THROW_FETCH_PAGE_FAULT;
+            if constexpr(TRANSLATION == INST_TRANSLATION) {
+                if (false == pte.isValid()) {
+                    THROW_FETCH_PAGE_FAULT;
+                }
+            }
+            else {
+                if (is_store && ((false == pte.isValid()) || (false == pte.canWrite())))
+                {
+                    THROW_STORE_AMO_PAGE_FAULT;
+                }
+                else if (false == pte.canRead()) {
+                    THROW_LOAD_PAGE_FAULT;
+                }
             }
 
             // If PTE is a leaf, perform address translation

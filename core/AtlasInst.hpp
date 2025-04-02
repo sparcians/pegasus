@@ -69,6 +69,8 @@ namespace atlas
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
+        uint32_t isStoreType() const { return is_store_type_; }
+
         uint32_t getRs1() const
         {
             sparta_assert(rs1_info_, "Operand RS1 is a nullptr! " << *this);
@@ -159,6 +161,9 @@ namespace atlas
 
         // Opcode size in bytes, either 4 or 2 (compressed)
         const uint32_t opcode_size_;
+
+        // Is this a store-type instruction
+        const bool is_store_type_;
 
         // Next PC
         Addr next_pc_;

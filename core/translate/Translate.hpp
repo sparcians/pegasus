@@ -35,6 +35,9 @@ namespace atlas
 
         void changeMMUMode(uint64_t xlen, uint32_t satp_mode);
 
+        static constexpr bool INST_TRANSLATION = true;
+        static constexpr bool DATA_TRANSLATION = false;
+
       private:
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup data_translate_action_group_{"Data Translate"};
@@ -110,12 +113,12 @@ namespace atlas
             return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
         }
 
-        template <typename XLEN, MMUMode MODE, bool INST_TRANSLATION>
+        template <typename XLEN, MMUMode MODE, bool TRANSLATION>
         void registerAction_(const char* desc, const ActionTagType tags,
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {
             Action action =
-                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, INST_TRANSLATION>>(
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TRANSLATION>>(
                     this, desc);
             action.addTag(tags);
             xlation_actions[static_cast<uint32_t>(MODE)] = action;
