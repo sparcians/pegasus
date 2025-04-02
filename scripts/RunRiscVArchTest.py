@@ -7,8 +7,8 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS_NON_VIRT= ["122", "129"]
-PASSING_STATUS_VIRT=     ["122", "236"]
+PASSING_STATUS_NON_VIRT= ["122", "127"]
+PASSING_STATUS_VIRT=     ["122", "235"]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
