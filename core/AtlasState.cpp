@@ -434,11 +434,12 @@ namespace atlas
     template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_() const
     {
         uint32_t ext_val = 0;
-        for (auto & ext : extension_manager_.getEnabledExtensions())
+        for (char ext = 'a'; ext <= 'z'; ++ext)
         {
-            if (ext.first.size() == 1)
+            const std::string ext_str = std::string(1, ext);
+            if (inclusions_.contains(ext_str))
             {
-                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, &ext.first[0]).first;
+                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
             }
         }
 

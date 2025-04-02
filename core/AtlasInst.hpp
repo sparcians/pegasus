@@ -36,7 +36,7 @@ namespace atlas
 
         const std::string & getMnemonic() const { return opcode_info_->getMnemonic(); }
 
-        const std::string dasmString() const { return opcode_info_->dasmString(); }
+        std::string dasmString() const { return opcode_info_->dasmString(); }
 
         mavis::Opcode getOpcode() const { return opcode_info_->getOpcode(); }
 

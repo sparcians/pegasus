@@ -77,7 +77,7 @@ namespace atlas
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
     template void RvzicsrInsts::getCsrUpdateActions<RV64>(Execute::CsrUpdateActionsMap &);
 
-    template <bool WRITE>
+    template <RvzicsrInsts::AccessType TYPE>
     bool RvzicsrInsts::isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode)
     {
         // From RISC-V spec:
@@ -88,7 +88,7 @@ namespace atlas
         const bool is_writable = (csr_num & 0xc00) != 0xc00;
         const PrivMode lowest_priv_level = (PrivMode)((csr_num & 0x300) >> 8);
 
-        return (!WRITE || (WRITE && is_writable)) && (priv_mode >= lowest_priv_level);
+        return ((TYPE == AccessType::READ) || is_writable) && (priv_mode >= lowest_priv_level);
     }
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrc_handler(atlas::AtlasState* state)
@@ -99,7 +99,7 @@ namespace atlas
         auto rd = insn->getRd();
         const uint32_t csr = insn->getCsr();
 
-        if (!isAccessLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -108,7 +108,7 @@ namespace atlas
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
-            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -130,7 +130,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isAccessLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -138,7 +138,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -158,7 +158,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isAccessLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -166,7 +166,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
-            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -188,7 +188,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isAccessLegal_(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -196,7 +196,7 @@ namespace atlas
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -219,7 +219,7 @@ namespace atlas
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
-        if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -227,7 +227,7 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isAccessLegal_(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -248,7 +248,7 @@ namespace atlas
         const auto rd = insn->getRd();
         const int csr = insn->getCsr();
 
-        if (!isAccessLegal_<true>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
         {
             THROW_ILLEGAL_INST;
         }
@@ -256,7 +256,7 @@ namespace atlas
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isAccessLegal_(csr, state->getPrivMode()))
+            if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -273,7 +273,7 @@ namespace atlas
     ActionGroup* RvzicsrInsts::misa_update_handler(atlas::AtlasState* state)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        auto & ext_manager = state->getExtensionManager();
+        const auto & ext_manager = state->getExtensionManager();
 
         // FIXME: Extension manager should maintain inclusions
         auto & inclusions = state->getMavisInclusions();
