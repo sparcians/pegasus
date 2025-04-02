@@ -214,7 +214,7 @@ namespace atlas
                 const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
                 const auto virt_base = vaddr >> PAGESHIFT;
                 Addr paddr =
-                    (pte.getPpn() | (virt_base & ((0b1 << index_bits) - 1))) << PAGESHIFT;
+                    (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1))) << PAGESHIFT;
                 paddr |= extractPageOffset_(vaddr); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
