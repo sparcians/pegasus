@@ -57,16 +57,27 @@ set(AUTOGEN_INST_FILES
   ${AUTOGEN_RV64_INST_JSON_FILES}
 )
 
+set(DEPENDS_INST_JSON_FILES
+    ${SIM_BASE}/scripts/GenInstructionJSON.py
+    ${SIM_BASE}/scripts/insts/RVI_INST.py
+    ${SIM_BASE}/scripts/insts/RVM_INST.py
+    ${SIM_BASE}/scripts/insts/RVA_INST.py
+    ${SIM_BASE}/scripts/insts/RVF_INST.py
+    ${SIM_BASE}/scripts/insts/RVD_INST.py
+    ${SIM_BASE}/scripts/insts/RVZICSR_INST.py
+    ${SIM_BASE}/scripts/insts/RVZIFENCEI_INST.py
+)
+
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
   COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafd_Zicsr_Zifencei
-  DEPENDS ${SIM_BASE}/scripts/GenInstructionJSON.py
+  DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
   COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafd_Zicsr_Zifencei
-  DEPENDS ${SIM_BASE}/scripts/GenInstructionJSON.py
+  DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_target(AutogenArchFiles ALL DEPENDS ${AUTOGEN_REGISTER_FILES} ${AUTOGEN_INST_FILES})
