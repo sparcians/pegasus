@@ -137,12 +137,12 @@ namespace atlas
             case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
-            {
-                const auto vaddr_val =
-                    state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
-                state->getCurrentInst()->getTranslationState()->clearRequest();
-                return vaddr_val;
-            }
+                {
+                    const auto vaddr_val =
+                        state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
+                    state->getCurrentInst()->getTranslationState()->clearRequest();
+                    return vaddr_val;
+                }
             case FaultCause::ILLEGAL_INST:
                 return state->getSimState()->current_opcode;
             case FaultCause::BREAKPOINT:

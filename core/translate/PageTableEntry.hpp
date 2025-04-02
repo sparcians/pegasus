@@ -112,11 +112,11 @@ namespace atlas
                 ppn_fields_[2] = (pte_val_ & translate_types::Sv48::PteFields::ppn2.bitmask)
                                  >> translate_types::Sv48::PteFields::ppn2.lsb;
                 ppn_fields_[3] = (pte_val_ & translate_types::Sv48::PteFields::ppn3.bitmask)
-                    >> translate_types::Sv48::PteFields::ppn3.lsb;
+                                 >> translate_types::Sv48::PteFields::ppn3.lsb;
 
                 // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
                 ppn_ = (pte_val_
-                        & (  translate_types::Sv48::PteFields::ppn3.bitmask
+                        & (translate_types::Sv48::PteFields::ppn3.bitmask
                            | translate_types::Sv48::PteFields::ppn2.bitmask
                            | translate_types::Sv48::PteFields::ppn1.bitmask
                            | translate_types::Sv48::PteFields::ppn0.bitmask))
@@ -132,9 +132,9 @@ namespace atlas
                 ppn_fields_[2] = (pte_val_ & translate_types::Sv57::PteFields::ppn2.bitmask)
                                  >> translate_types::Sv57::PteFields::ppn2.lsb;
                 ppn_fields_[3] = (pte_val_ & translate_types::Sv57::PteFields::ppn3.bitmask)
-                    >> translate_types::Sv57::PteFields::ppn3.lsb;
+                                 >> translate_types::Sv57::PteFields::ppn3.lsb;
                 ppn_fields_[4] = (pte_val_ & translate_types::Sv57::PteFields::ppn4.bitmask)
-                    >> translate_types::Sv57::PteFields::ppn4.lsb;
+                                 >> translate_types::Sv57::PteFields::ppn4.lsb;
 
                 // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
                 ppn_ = (pte_val_

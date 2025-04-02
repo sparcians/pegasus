@@ -118,8 +118,8 @@ namespace atlas
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {
             Action action =
-                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TRANSLATION>>(
-                    this, desc);
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TRANSLATION>>(this,
+                                                                                             desc);
             action.addTag(tags);
             xlation_actions[static_cast<uint32_t>(MODE)] = action;
         }

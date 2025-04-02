@@ -98,7 +98,8 @@ namespace atlas
 
         bool getVirtualMode() const { return virtual_mode_; }
 
-        void setPrivMode(PrivMode priv_mode, bool virt_mode) {
+        void setPrivMode(PrivMode priv_mode, bool virt_mode)
+        {
             virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
             priv_mode_ = priv_mode;
         }

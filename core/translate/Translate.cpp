@@ -90,20 +90,16 @@ namespace atlas
 
     void Translate::changeMMUMode(uint64_t xlen, uint32_t satp_mode)
     {
-        static const std::vector<MMUMode> satp_mmu_mode_map =
-            {
-                MMUMode::BAREMETAL, // mode == 0
-                MMUMode::SV32,      // mode == 1 xlen==32
-                MMUMode::INVALID,   // mode == 2 - 7 -> reserved
-                MMUMode::INVALID,
-                MMUMode::INVALID,
-                MMUMode::INVALID,
-                MMUMode::INVALID,
-                MMUMode::INVALID,   // mode ==  7
-                MMUMode::SV39,      // mode ==  8, xlen==64
-                MMUMode::SV48,      // mode ==  9, xlen==64
-                MMUMode::SV57       // mode == 10, xlen==64
-            };
+        static const std::vector<MMUMode> satp_mmu_mode_map = {
+            MMUMode::BAREMETAL, // mode == 0
+            MMUMode::SV32,      // mode == 1 xlen==32
+            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
+            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
+            MMUMode::INVALID, // mode ==  7
+            MMUMode::SV39,    // mode ==  8, xlen==64
+            MMUMode::SV48,    // mode ==  9, xlen==64
+            MMUMode::SV57     // mode == 10, xlen==64
+        };
 
         sparta_assert(satp_mode < satp_mmu_mode_map.size());
 
@@ -159,8 +155,8 @@ namespace atlas
         }
 
         // TODO: TRANSLATION should be an enum for inst, load or store
-        const bool is_store = (TRANSLATION == DATA_TRANSLATION) &&
-            state->getCurrentInst()->isStoreType();
+        const bool is_store =
+            (TRANSLATION == DATA_TRANSLATION) && state->getCurrentInst()->isStoreType();
 
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
@@ -181,9 +177,11 @@ namespace atlas
             // If accessing pte violates a PMA or PMP check, raise an
             // access-fault exception corresponding to the original
             // access type
-            if (false == pte.isValid()) {
+            if (false == pte.isValid())
+            {
 
-                if constexpr(TRANSLATION == INST_TRANSLATION) {
+                if constexpr (TRANSLATION == INST_TRANSLATION)
+                {
                     translation_state->clearRequest();
                     THROW_FETCH_PAGE_FAULT;
                 }
@@ -191,7 +189,8 @@ namespace atlas
                 {
                     THROW_STORE_AMO_PAGE_FAULT;
                 }
-                else {
+                else
+                {
                     THROW_LOAD_PAGE_FAULT;
                 }
             }
@@ -202,19 +201,20 @@ namespace atlas
                 // TODO: Check access permissions more better...
                 if (TRANSLATION == DATA_TRANSLATION)
                 {
-                    if(is_store && (false == pte.canWrite()))
+                    if (is_store && (false == pte.canWrite()))
                     {
                         THROW_STORE_AMO_PAGE_FAULT;
                     }
-                    else if (false == pte.canRead()) {
+                    else if (false == pte.canRead())
+                    {
                         THROW_LOAD_PAGE_FAULT;
                     }
                 }
 
                 const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
                 const auto virt_base = vaddr >> PAGESHIFT;
-                Addr paddr =
-                    (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1))) << PAGESHIFT;
+                Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
+                             << PAGESHIFT;
                 paddr |= extractPageOffset_(vaddr); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
@@ -231,7 +231,7 @@ namespace atlas
             --level;
         }
 
-        if constexpr(TRANSLATION == INST_TRANSLATION)
+        if constexpr (TRANSLATION == INST_TRANSLATION)
         {
             translation_state->clearRequest();
             THROW_FETCH_PAGE_FAULT;
@@ -240,10 +240,10 @@ namespace atlas
         {
             THROW_STORE_AMO_PAGE_FAULT;
         }
-        else {
+        else
+        {
             THROW_LOAD_PAGE_FAULT;
         }
-
     }
 
     // Being pedantic

@@ -139,7 +139,7 @@ namespace atlas
         if (fault_cause_.isValid())
         {
             INSTLOG("trap cause: " << fault_cause_.getValue() << " ("
-                    << HEX8(static_cast<uint32_t>(fault_cause_.getValue())) << ')');
+                                   << HEX8(static_cast<uint32_t>(fault_cause_.getValue())) << ')');
         }
 
         if (inst && inst->hasImmediate())

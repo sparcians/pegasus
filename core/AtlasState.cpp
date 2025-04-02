@@ -214,7 +214,6 @@ namespace atlas
         translate_unit_->changeMMUMode(xlen_, satp_mode);
     }
 
-
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.

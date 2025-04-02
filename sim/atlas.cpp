@@ -69,10 +69,12 @@ int main(int argc, char** argv)
             // Get workload exit code
             const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
             exit_code = sim_state->workload_exit_code;
-            if (exit_code) {
+            if (exit_code)
+            {
                 std::cout << "FAILED: ";
             }
-            else {
+            else
+            {
                 std::cout << "PASS: ";
             }
             std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
