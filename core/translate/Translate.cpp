@@ -151,7 +151,7 @@ namespace atlas
         uint32_t level = getNumPageWalkLevels_<MODE>();
 
         // See if xlation is disable -- no level walks
-        if (level == 0)
+        if (level == 0 || (state->getPrivMode() == PrivMode::MACHINE))
         {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
@@ -181,25 +181,36 @@ namespace atlas
             // If accessing pte violates a PMA or PMP check, raise an
             // access-fault exception corresponding to the original
             // access type
-            if constexpr(TRANSLATION == INST_TRANSLATION) {
-                if (false == pte.isValid()) {
+            if (false == pte.isValid()) {
+
+                if constexpr(TRANSLATION == INST_TRANSLATION) {
+                    translation_state->clearRequest();
                     THROW_FETCH_PAGE_FAULT;
                 }
-            }
-            else {
-                if (is_store && ((false == pte.isValid()) || (false == pte.canWrite())))
+                else if (is_store)
                 {
                     THROW_STORE_AMO_PAGE_FAULT;
                 }
-                else if (false == pte.canRead()) {
+                else {
                     THROW_LOAD_PAGE_FAULT;
                 }
             }
 
             // If PTE is a leaf, perform address translation
-            // TODO: Check access permissions
             if (pte.isLeaf())
             {
+                // TODO: Check access permissions more better...
+                if (TRANSLATION == DATA_TRANSLATION)
+                {
+                    if(is_store && (false == pte.canWrite()))
+                    {
+                        THROW_STORE_AMO_PAGE_FAULT;
+                    }
+                    else if (false == pte.canRead()) {
+                        THROW_LOAD_PAGE_FAULT;
+                    }
+                }
+
                 const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
                 const auto virt_base = vaddr >> PAGESHIFT;
                 Addr paddr =
@@ -219,12 +230,20 @@ namespace atlas
             }
             --level;
         }
-        translation_state->clearRequest();
 
-        // If we made it here, it means we didn't find a leaf PTE so
-        // translation failed TODO: Add method to throw correct fault
-        // type
-        THROW_FETCH_PAGE_FAULT;
+        if constexpr(TRANSLATION == INST_TRANSLATION)
+        {
+            translation_state->clearRequest();
+            THROW_FETCH_PAGE_FAULT;
+        }
+        else if (is_store)
+        {
+            THROW_STORE_AMO_PAGE_FAULT;
+        }
+        else {
+            THROW_LOAD_PAGE_FAULT;
+        }
+
     }
 
     // Being pedantic
