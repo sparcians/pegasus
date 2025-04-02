@@ -873,7 +873,7 @@ namespace atlas
         static_assert(PRIV_MODE == PrivMode::MACHINE || PRIV_MODE == PrivMode::SUPERVISOR);
 
         // mret can only be executed in Machine mode
-        // sret can be executee in Supervisor or Machine mode
+        // sret can be executed in Supervisor or Machine mode
         if (state->getPrivMode() < PRIV_MODE)
         {
             THROW_ILLEGAL_INST;

@@ -18,6 +18,15 @@ namespace atlas
         template <typename XLEN> static void getCsrUpdateActions(Execute::CsrUpdateActionsMap &);
 
       private:
+        enum AccessType
+        {
+            WRITE,
+            READ
+        };
+
+        template <AccessType TYPE>
+        bool isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode);
+
         template <typename XLEN> ActionGroup* csrrc_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* csrrci_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* csrrs_handler(atlas::AtlasState* state);
@@ -26,10 +35,11 @@ namespace atlas
         template <typename XLEN> ActionGroup* csrrwi_handler(atlas::AtlasState* state);
 
         // CSR update Actions for executing write side effects
-        template <typename XLEN> ActionGroup* mstatus_update_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* sstatus_update_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* fcsr_update_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* fflags_update_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* frm_update_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* misa_update_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* sstatus_update_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* mstatus_update_handler(atlas::AtlasState* state);
     };
 } // namespace atlas

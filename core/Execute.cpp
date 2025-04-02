@@ -88,7 +88,7 @@ namespace atlas
             }
         }
 
-        if (inst->hasCsr())
+        if (inst->writesCsr())
         {
             const CsrUpdateActionsMap* csr_update_actions = (state->getXlen() == 64)
                                                                 ? getCsrUpdateActionsMap<RV64>()
