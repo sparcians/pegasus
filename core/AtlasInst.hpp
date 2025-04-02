@@ -29,9 +29,14 @@ namespace atlas
 
         mavis::OpcodeInfo::PtrType getMavisOpcodeInfo() { return opcode_info_; }
 
+        mavis::InstructionUniqueID getMavisUid() const
+        {
+            return opcode_info_->getInstructionUniqueID();
+        }
+
         const std::string & getMnemonic() const { return opcode_info_->getMnemonic(); }
 
-        const std::string dasmString() const { return opcode_info_->dasmString(); }
+        std::string dasmString() const { return opcode_info_->dasmString(); }
 
         mavis::Opcode getOpcode() const { return opcode_info_->getOpcode(); }
 
@@ -66,6 +71,8 @@ namespace atlas
         }
 
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
+
+        bool writesCsr() const;
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 

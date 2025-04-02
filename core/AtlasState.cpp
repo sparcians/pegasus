@@ -34,27 +34,12 @@ namespace atlas
         }
     }
 
-    mavis::FileNameListType getUArchFiles(const std::string & uarch_file_path, const uint64_t xlen)
-    {
-        const std::string xlen_str = std::to_string(xlen);
-        const std::string xlen_uarch_file_path = uarch_file_path + "/rv" + xlen_str;
-        const mavis::FileNameListType uarch_files = {
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "i.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "m.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
-        return uarch_files;
-    }
-
     AtlasState::AtlasState(sparta::TreeNode* core_tn, const AtlasStateParameters* p) :
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
         isa_string_(p->isa_string),
         xlen_(getXlenFromIsaString_(isa_string_)),
-        supported_isa_string_(std::string("rv" + std::to_string(xlen_) + "g_zicsr_zifencei")),
+        supported_isa_string_(std::string("rv" + std::to_string(xlen_) + "gc_zicsr_zifencei")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -67,6 +52,7 @@ namespace atlas
         stop_sim_action_group_("stop_sim")
     {
         sparta_assert(xlen_ == extension_manager_.getXLEN());
+        extension_manager_.setISA(isa_string_);
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
@@ -120,35 +106,26 @@ namespace atlas
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
-        const auto uarch_files = getUArchFiles(uarch_file_path_, xlen_);
-        for (auto uarch_file : uarch_files)
-        {
-            DLOG("\t" << uarch_file);
-        }
-
-        extension_manager_.setISA(isa_string_);
 
         mavis_ = std::make_unique<MavisType>(
             extension_manager_.constructMavis<
                 AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>>(
-                getUArchFiles(uarch_file_path_, xlen_),
+                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
+                {},                                    // inclusions
+                {},                                    // exclusions
                 AtlasInstAllocatorWrapper<AtlasInstAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->inst_allocator),
                 AtlasExtractorAllocatorWrapper<AtlasExtractorAllocator>(
                     sparta::notNull(AtlasAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        std::vector<std::string> enabled_extensions;
+        // FIXME: Extension manager should maintain inclusions
         for (auto & ext : extension_manager_.getEnabledExtensions())
         {
-            enabled_extensions.emplace_back(ext.first);
+            inclusions_.emplace(ext.first);
         }
-
-        const mavis::MatchSet<mavis::Pattern> inclusions{enabled_extensions};
-        mavis_->makeContext("boot", extension_manager_.getJSONs(),
-                            getUArchFiles(uarch_file_path_, xlen_), {}, {}, inclusions, {});
-        mavis_->switchContext("boot");
+        inclusions_.erase("g");
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
@@ -206,6 +183,21 @@ namespace atlas
         {
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
         }
+    }
+
+    mavis::FileNameListType AtlasState::getUArchFiles_() const
+    {
+        const std::string xlen_str = std::to_string(xlen_);
+        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str;
+        const mavis::FileNameListType uarch_files = {
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "i.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "m.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
+        return uarch_files;
     }
 
     ActionGroup* AtlasState::preExecute_(AtlasState* state)
@@ -437,6 +429,25 @@ namespace atlas
             return rc;
         }
         return 0;
+    }
+
+    template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_() const
+    {
+        uint32_t ext_val = 0;
+        for (char ext = 'a'; ext <= 'z'; ++ext)
+        {
+            const std::string ext_str = std::string(1, ext);
+            if (inclusions_.contains(ext_str))
+            {
+                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
+            }
+        }
+
+        // FIXME: Assume both User and Supervisor mode are supported
+        ext_val |= 1 << CSR::MISA::u::high_bit;
+        ext_val |= 1 << CSR::MISA::s::high_bit;
+
+        return ext_val;
     }
 
     sparta::Register* AtlasState::findRegister(const std::string & reg_name, bool must_exist) const
@@ -680,9 +691,11 @@ namespace atlas
             {
                 POKE_CSR_REG<RV64>(this, MHARTID, hart_id_);
 
-                // TODO: Initialize MISA CSR with XLEN and enabled extensions
                 const uint64_t xlen_val = 2;
                 POKE_CSR_FIELD<RV64>(this, MISA, "mxl", xlen_val);
+
+                const uint32_t ext_val = getMisaExtFieldValue_<RV64>();
+                POKE_CSR_FIELD<RV64>(this, MISA, "extensions", ext_val);
 
                 // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
                 POKE_CSR_FIELD<RV64>(this, MSTATUS, "uxl", xlen_val);
@@ -693,9 +706,11 @@ namespace atlas
             {
                 POKE_CSR_REG<RV32>(this, MHARTID, hart_id_);
 
-                // TODO: Initialize MISA CSR with XLEN and enabled extensions
                 const uint32_t xlen_val = 1;
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
+
+                const uint32_t ext_val = getMisaExtFieldValue_<RV32>();
+                POKE_CSR_FIELD<RV32>(this, MISA, "extensions", ext_val);
             }
 
             std::cout << "AtlasState::boot()\n";

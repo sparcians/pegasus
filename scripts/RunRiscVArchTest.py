@@ -65,7 +65,7 @@ def main():
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     args = parser.parse_args()
 
-    SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud"]
+    SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud", "uc"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
@@ -83,13 +83,19 @@ def main():
     print("WARNING: Skipping all non-G extension tests")
     tests = [test for test in tests if any(ext+"-" in test for ext in SUPPORTED_EXTENSIONS)]
 
-    # Ignore some tests that are incorrect
-    bad_tests = [
-        "rv64mi-p-access" # Has check for max paddr size restriction which has been lifted
+    # Ignore some tests that are unsupported or bad tests
+    skip_tests = [
+        "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
+        "rv32uf-p-fclass",
+        "rv64ud-p-fclass",
+        "rv32ud-p-fclass",
+        "rv64mi-p-breakpoint", # Atlas does not support external debug support
+        "rv32mi-p-breakpoint",
+        "rv64mi-p-access",     # BAD TEST: Has check for max paddr size restriction which has been lifted
     ]
-    for bad_test in bad_tests:
-        print("Skipping", bad_test)
-        tests = [test for test in tests if bad_test not in test]
+    for skip_test in skip_tests:
+        print("Skipping", skip_test)
+        tests = [test for test in tests if skip_test not in test]
 
     import multiprocessing
     passing_tests = multiprocessing.Queue()
@@ -112,7 +118,7 @@ def main():
         print("TIMED OUT:")
         while not timeout_tests.empty():
             print("\t" + timeout_tests.get())
-        
+
     print("\nPASS RATE: " + str(num_passed) + "/" + str(len(tests)))
 
 
