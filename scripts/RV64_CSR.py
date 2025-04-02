@@ -258,7 +258,7 @@ CSR64_DEFS = {
         "Extensions" : { 'high_bit' : 25, 'low_bit' : 0,  'readonly' : False, "desc" : "Encodes the native base integer ISA" },
         "A" : { 'high_bit' : 0 , 'low_bit' : 0 ,  'readonly' : False, "desc" : "Atomic extension" },
         "B" : { 'high_bit' : 1 , 'low_bit' : 1 ,  'readonly' : False, "desc" : "Bit Manipulation extension" },
-        "C" : { 'high_bit' : 2 , 'low_bit' : 2 ,  'readonly' : False, "dtesc" : "Compressed extension" },
+        "C" : { 'high_bit' : 2 , 'low_bit' : 2 ,  'readonly' : False, "desc" : "Compressed extension" },
         "D" : { 'high_bit' : 3 , 'low_bit' : 3 ,  'readonly' : False, "desc" : "Double-precision extension" },
         "E" : { 'high_bit' : 4 , 'low_bit' : 4 ,  'readonly' : True,  "desc" : "RV32E extension" },
         "F" : { 'high_bit' : 5 , 'low_bit' : 5 ,  'readonly' : False, "desc" : "Single-precision extension" },
