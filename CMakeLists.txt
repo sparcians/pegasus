@@ -147,7 +147,7 @@ execute_process (
      CLANGFORMAT_VERSION_OUTPUT
 )
 
-set(REQUIRED_CLANGFORMAT_VERSION "15")
+set(REQUIRED_CLANGFORMAT_VERSION "14")
 
 # Extract the version number from the output
 string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})
