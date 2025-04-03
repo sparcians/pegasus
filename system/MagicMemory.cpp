@@ -103,9 +103,11 @@ namespace atlas
         return true;
     }
 
-    void MagicMemory::onStartingTeardown_() {
+    void MagicMemory::onStartingTeardown_()
+    {
         const std::string msg = block_char_msg_.str();
-        if (false == msg.empty()) {
+        if (false == msg.empty())
+        {
             std::cout << "MAGICMEM: " << msg;
         }
     }
