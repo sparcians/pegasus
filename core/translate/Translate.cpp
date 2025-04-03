@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "core/translate/Translate.hpp"
 #include "core/translate/PageTableEntry.hpp"
 #include "core/AtlasInst.hpp"
@@ -14,9 +17,6 @@ namespace atlas
         sparta::Unit(translate_node)
     {
         (void)p;
-
-        constexpr bool INST_TRANSLATION = true;
-        constexpr bool DATA_TRANSLATION = false;
 
         // Baremetal (translation disabled)
         {
@@ -62,6 +62,24 @@ namespace atlas
                                                                    ActionTags::DATA_TRANSLATE_TAG,
                                                                    rv64_data_translation_actions_);
         }
+        // Sv48
+        {
+            registerAction_<RV64, MMUMode::SV48, INST_TRANSLATION>("Inst Translate (Sv48)",
+                                                                   ActionTags::INST_TRANSLATE_TAG,
+                                                                   rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV48, DATA_TRANSLATION>("Data Translate (Sv48)",
+                                                                   ActionTags::DATA_TRANSLATE_TAG,
+                                                                   rv64_data_translation_actions_);
+        }
+        // Sv57
+        {
+            registerAction_<RV64, MMUMode::SV57, INST_TRANSLATION>("Inst Translate (Sv57)",
+                                                                   ActionTags::INST_TRANSLATE_TAG,
+                                                                   rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV57, DATA_TRANSLATION>("Data Translate (Sv57)",
+                                                                   ActionTags::DATA_TRANSLATE_TAG,
+                                                                   rv64_data_translation_actions_);
+        }
 
         // Assume we are booting in RV64 Machine mode with translation disabled
         inst_translate_action_group_.addAction(
@@ -70,8 +88,24 @@ namespace atlas
             rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
     }
 
-    void Translate::changeMMUMode(const uint64_t xlen, const MMUMode mode)
+    void Translate::changeMMUMode(uint64_t xlen, uint32_t satp_mode)
     {
+        static const std::vector<MMUMode> satp_mmu_mode_map = {
+            MMUMode::BAREMETAL, // mode == 0
+            MMUMode::SV32,      // mode == 1 xlen==32
+            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
+            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
+            MMUMode::INVALID, // mode ==  7
+            MMUMode::SV39,    // mode ==  8, xlen==64
+            MMUMode::SV48,    // mode ==  9, xlen==64
+            MMUMode::SV57     // mode == 10, xlen==64
+        };
+
+        sparta_assert(satp_mode < satp_mmu_mode_map.size());
+
+        const MMUMode mode = satp_mmu_mode_map[satp_mode];
+        sparta_assert(mode != MMUMode::INVALID);
+
         if (xlen == 64)
         {
             inst_translate_action_group_.replaceAction(
@@ -92,11 +126,11 @@ namespace atlas
         }
     }
 
-    template <typename XLEN, MMUMode MODE, bool INST_TRANSLATION>
+    template <typename XLEN, MMUMode MODE, bool TRANSLATION>
     ActionGroup* Translate::translate_(AtlasState* state)
     {
         AtlasTranslationState* translation_state = nullptr;
-        if constexpr (INST_TRANSLATION)
+        if constexpr (TRANSLATION == INST_TRANSLATION)
         {
             // Translation reqest is from fetch
             translation_state = state->getFetchTranslationState();
@@ -110,45 +144,79 @@ namespace atlas
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVaddr();
 
-        if constexpr (MODE == MMUMode::BAREMETAL)
+        uint32_t level = getNumPageWalkLevels_<MODE>();
+
+        // See if xlation is disable -- no level walks
+        if (level == 0 || (state->getPrivMode() == PrivMode::MACHINE))
         {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
             return nullptr;
         }
 
+        // TODO: TRANSLATION should be an enum for inst, load or store
+        const bool is_store =
+            (TRANSLATION == DATA_TRANSLATION) && state->getCurrentInst()->isStoreType();
+
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
 
         // Page size is 4K for both RV32 and RV64
-        constexpr uint64_t PAGESIZE = 4096;
-        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") * PAGESIZE;
-        for (uint32_t level = getNumPageWalkLevels_<MODE>(); level > 0; --level)
+        constexpr uint64_t PAGESHIFT = 12; // 4096
+        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
+        while (level > 0)
         {
-            constexpr uint64_t PTESIZE = sizeof(XLEN);
             const auto indexed_level = level - 1;
-            const uint64_t vpn = extractVpn_<MODE>(indexed_level, vaddr);
-            const uint64_t pte_paddr = ppn + (vpn * PTESIZE);
+            const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
+            const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
             const PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
-            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << std::to_string(indexed_level) << " Page Walk");
+            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << indexed_level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
 
-            //  If accessing pte violates a PMA or PMP check, raise an
-            //  access-fault exception corresponding to the original
-            //  access type
-            if (!pte.isValid() || ((!pte.canRead()) && pte.canWrite()))
+            // If accessing pte violates a PMA or PMP check, raise an
+            // access-fault exception corresponding to the original
+            // access type
+            if (false == pte.isValid())
             {
-                // TODO: Add method to throw correct fault type
-                THROW_FETCH_PAGE_FAULT;
+
+                if constexpr (TRANSLATION == INST_TRANSLATION)
+                {
+                    translation_state->clearRequest();
+                    THROW_FETCH_PAGE_FAULT;
+                }
+                else if (is_store)
+                {
+                    THROW_STORE_AMO_PAGE_FAULT;
+                }
+                else
+                {
+                    THROW_LOAD_PAGE_FAULT;
+                }
             }
 
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                // TODO: Check access permissions
-                const uint64_t paddr =
-                    ((uint64_t)pte.getPpn() * PAGESIZE) + extractPageOffset_(request.getVaddr());
+                // TODO: Check access permissions more better...
+                if (TRANSLATION == DATA_TRANSLATION)
+                {
+                    if (is_store && (false == pte.canWrite()))
+                    {
+                        THROW_STORE_AMO_PAGE_FAULT;
+                    }
+                    else if (false == pte.canRead())
+                    {
+                        THROW_LOAD_PAGE_FAULT;
+                    }
+                }
+
+                const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
+                const auto virt_base = vaddr >> PAGESHIFT;
+                Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
+                             << PAGESHIFT;
+                paddr |= extractPageOffset_(vaddr); // Add the page offset
+
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
 
@@ -158,13 +226,24 @@ namespace atlas
             // Read next level PTE
             else
             {
-                ppn = pte.getPpn() * PAGESIZE;
+                ppn = pte.getPpn() << PAGESHIFT;
             }
+            --level;
         }
 
-        // If we made it here, it means we didn't find a leaf PTE so translation failed
-        // TODO: Add method to throw correct fault type
-        THROW_FETCH_PAGE_FAULT;
+        if constexpr (TRANSLATION == INST_TRANSLATION)
+        {
+            translation_state->clearRequest();
+            THROW_FETCH_PAGE_FAULT;
+        }
+        else if (is_store)
+        {
+            THROW_STORE_AMO_PAGE_FAULT;
+        }
+        else
+        {
+            THROW_LOAD_PAGE_FAULT;
+        }
     }
 
     // Being pedantic

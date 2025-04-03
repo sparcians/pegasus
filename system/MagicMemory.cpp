@@ -67,7 +67,20 @@ namespace atlas
                 }
                 break;
             case SupportedDevices::BLOCK_CHAR:
-                sparta_assert(false, "TODO: Block char is unsupported");
+                if (mm_command.cmd.command == 0)
+                {
+                    sparta_assert(false, "TODO: Block char read is unsupported");
+                }
+                else
+                {
+                    const char letter = char(mm_command.tohost_data);
+                    block_char_msg_ << letter;
+                    if (letter == '\n')
+                    {
+                        std::cout << "MAGICMEM: " << block_char_msg_.str();
+                        block_char_msg_.str("");
+                    }
+                }
                 break;
         }
 
@@ -89,4 +102,14 @@ namespace atlas
         memory_.write(addr, size, buf);
         return true;
     }
+
+    void MagicMemory::onStartingTeardown_()
+    {
+        const std::string msg = block_char_msg_.str();
+        if (false == msg.empty())
+        {
+            std::cout << "MAGICMEM: " << msg;
+        }
+    }
+
 } // namespace atlas

@@ -47,10 +47,12 @@ namespace atlas
             supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        hypervisor_enabled_(extension_manager_.isEnabled("h")),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
+        sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
         extension_manager_.setISA(isa_string_);
 
@@ -169,8 +171,8 @@ namespace atlas
             }
         }
 
-        // Set up translation; baremetal for now
-        translate_unit_->changeMMUMode(xlen_, mode_);
+        // Set up translation; baremetal (value 0) for now
+        changeMMUMode(0);
 
         if (interactive_mode_)
         {
@@ -183,6 +185,11 @@ namespace atlas
         {
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
         }
+    }
+
+    void AtlasState::changeMMUMode(uint32_t satp_mode)
+    {
+        translate_unit_->changeMMUMode(xlen_, satp_mode);
     }
 
     mavis::FileNameListType AtlasState::getUArchFiles_() const
@@ -535,10 +542,6 @@ namespace atlas
         prev_pc_ = pc_;
         pc_ = next_pc_;
         DLOG("PC: 0x" << std::hex << pc_);
-
-        // Set Privilege Mode
-        priv_mode_ = next_priv_mode_;
-        DLOG("Privilege Mode: " << (uint32_t)priv_mode_);
 
         // Increment instruction count
         ++sim_state_.inst_count;
