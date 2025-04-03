@@ -22,7 +22,7 @@ echo "Building Sparta Infra"
 cd ${GITHUB_WORKSPACE}/map/sparta
 mkdir -p release
 cd release
-CC=$COMPILER CXX=$CXX_COMPILER  cmake .. -DCMAKE_BUILD_TYPE=Release -DGEN_DEBUG_INFO=OFF -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
+CC=$COMPILER CXX=$CXX_COMPILER  cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
 if [ $? -ne 0 ]; then
     echo "ERROR: CMake for Sparta framework failed"
     exit 0
@@ -39,7 +39,7 @@ rm install.log
 cd ${GITHUB_WORKSPACE}
 mkdir $ATLAS_BUILD_TYPE
 cd $ATLAS_BUILD_TYPE
-cmake ..  -DCMAKE_C_COMPILER=$COMPILER -DCMAKE_CXX_COMPILER=$CXX_COMPILER -DCMAKE_BUILD_TYPE=$ATLAS_BUILD_TYPE -DGEN_DEBUG_INFO=OFF
+cmake ..  -DCMAKE_C_COMPILER=$COMPILER -DCMAKE_CXX_COMPILER=$CXX_COMPILER -DCMAKE_BUILD_TYPE=$ATLAS_BUILD_TYPE
 if [ $? -ne 0 ]; then
     echo "ERROR: CMake for atlas failed"
     exit 1
