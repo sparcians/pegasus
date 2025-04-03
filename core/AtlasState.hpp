@@ -120,13 +120,17 @@ namespace atlas
 
         Addr getNextPc() const { return next_pc_; }
 
-        void setPrivMode(PrivMode priv_mode) { priv_mode_ = priv_mode; }
-
         PrivMode getPrivMode() const { return priv_mode_; }
 
-        void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
+        bool getVirtualMode() const { return virtual_mode_; }
 
-        PrivMode getNextPrivMode() const { return next_priv_mode_; }
+        void setPrivMode(PrivMode priv_mode, bool virt_mode)
+        {
+            virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
+            priv_mode_ = priv_mode;
+        }
+
+        void changeMMUMode(uint32_t satp_mode);
 
         struct SimState
         {
@@ -156,6 +160,9 @@ namespace atlas
             inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
+
+        // Is the "H" extension enabled?
+        bool hasHypervisor() const { return hypervisor_enabled_; }
 
         AtlasTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
@@ -316,6 +323,9 @@ namespace atlas
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
 
+        //! Do we have hypervisor?
+        const bool hypervisor_enabled_;
+
         //! Current pc
         Addr pc_ = 0x0;
 
@@ -328,8 +338,8 @@ namespace atlas
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
-        //! Next privilege mode
-        PrivMode next_priv_mode_ = PrivMode::MACHINE;
+        //! Current virtual translation mode
+        bool virtual_mode_ = false;
 
         //! Simulation state
         SimState sim_state_;
@@ -339,7 +349,6 @@ namespace atlas
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
-        const MMUMode mode_ = MMUMode::BAREMETAL;
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory

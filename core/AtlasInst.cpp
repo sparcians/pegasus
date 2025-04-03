@@ -51,6 +51,7 @@ namespace atlas
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
+        is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
         rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(

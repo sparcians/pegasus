@@ -880,6 +880,7 @@ namespace atlas
         }
 
         PrivMode prev_priv_mode = PrivMode::INVALID;
+        bool prev_virt_mode = state->getVirtualMode();
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
@@ -887,6 +888,9 @@ namespace atlas
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
+
+            // Get the previous virtual mode from the MPV field of MSTATUS
+            prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
 
             // If the mret instruction changes the privilege mode to a mode less privileged
             // than Machine mode, the MPRV bit is reset to 0
@@ -905,11 +909,14 @@ namespace atlas
             // Reset MPP
             // TODO: Check if User mode is available
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", (XLEN)PrivMode::USER);
+
+            // Reset MPV
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", 0);
         }
         else
         {
-            // When TSR=1, attempts to execute SRET in S-mode will raise an illegal instruction
-            // exception
+            // When TSR=1, attempts to execute SRET in S-mode will
+            // raise an illegal instruction exception
             const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
             if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
             {
@@ -919,17 +926,23 @@ namespace atlas
             // Update the PC with SEPC value
             state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
 
-            // Get the previous privilege mode from the MPP field of MSTATUS
-            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
+            // Get the previous privilege mode from the SPP field of MSTATUS
+            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
+
+            if (state->hasHypervisor())
+            {
+                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
+                WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
+            }
 
             // Reset the MPRV bit
             // TODO: Will need to update the load/store translation mode when translation is
             // supported
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
 
-            // Set MIE = MPIE and reset MPIE
+            // Set SIE = MSTATUS[SPIE] and reset SPIE
             WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
-                                  READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie"));
+                                  READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
             WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);
 
             // Reset MPP
@@ -939,7 +952,10 @@ namespace atlas
         // TODO: Update MSTATUSH
 
         // Update the privilege mode to the previous privilege mode
-        state->setNextPrivMode(prev_priv_mode);
+        state->setPrivMode(prev_priv_mode, prev_virt_mode);
+
+        // Update the MMU Mode from SATP
+        state->changeMMUMode(READ_CSR_FIELD<XLEN>(state, SATP, "mode"));
 
         return nullptr;
     }

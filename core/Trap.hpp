@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 
 namespace atlas
 {
@@ -58,4 +59,7 @@ namespace atlas
 #define THROW_STORE_AMO_PAGE_FAULT TRAP_IMPL(FaultCause::STORE_AMO_PAGE_FAULT)
 #define THROW_SOFTWARE_CHECK_FAULT TRAP_IMPL(FaultCause::SOFTWARE_CHECK)
 #define THROW_HARDWARE_ERROR_FAULT TRAP_IMPL(FaultCause::HARDWARE_ERROR)
+
+    // Defined in Exception.cpp
+    std::ostream & operator<<(std::ostream & os, const FaultCause & cause);
 } // namespace atlas

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/memory/BlockingMemoryIFNode.hpp"
@@ -61,6 +63,7 @@ namespace atlas
 
       private:
         void onBindTreeEarly_() override;
+        void onStartingTeardown_() override;
 
         const sparta::memory::addr_t base_addr_;
         const sparta::memory::addr_t size_;
@@ -97,5 +100,7 @@ namespace atlas
             uint8_t mm_buffer[8] = {0};
             uint64_t tohost_data;
         };
+
+        std::stringstream block_char_msg_;
     };
 } // namespace atlas
