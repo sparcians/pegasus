@@ -185,20 +185,19 @@ namespace atlas
                 {
                     translation_state->clearRequest();
                 }
+
                 break;
             }
-            else
+
+            // If PTE is a leaf, perform address translation
+            if (pte.isLeaf())
             {
                 if ((false == pte.isUserMode()) && (priv_mode != PrivMode::SUPERVISOR))
                 {
                     // Must throw
                     break;
                 }
-            }
 
-            // If PTE is a leaf, perform address translation
-            if (pte.isLeaf())
-            {
                 // TODO: Check access permissions more better...
                 if (TRANSLATION == DATA_TRANSLATION)
                 {
@@ -212,6 +211,24 @@ namespace atlas
                     }
                 }
 
+                if (false == pte.isAccessable(is_store))
+                {
+                    // See if we're required to update access bits in the PTE
+                    if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
+                    {
+                        if (is_store)
+                        {
+                            pte.setDirty();
+                        }
+                        pte.setAccessed();
+                        state->writeMemory<XLEN>(pte_paddr, pte.getPte());
+                    }
+                    else
+                    {
+                        // Take exception -- no access allowed or not dirty
+                        break;
+                    }
+                }
                 const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
                 const auto virt_base = vaddr >> PAGESHIFT;
                 Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
@@ -220,17 +237,6 @@ namespace atlas
 
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
-
-                // See if we're required to update access bits in the PTE
-                if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
-                {
-                    if (is_store)
-                    {
-                        pte.setDirty();
-                    }
-                    pte.setAccessed();
-                    state->writeMemory<XLEN>(pte_paddr, pte.getPte());
-                }
 
                 // Keep going
                 return nullptr;
@@ -256,6 +262,7 @@ namespace atlas
         {
             THROW_LOAD_PAGE_FAULT;
         }
+        return nullptr;
     }
 
     // Being pedantic
