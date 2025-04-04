@@ -146,8 +146,10 @@ namespace atlas
 
         uint32_t level = getNumPageWalkLevels_<MODE>();
 
+        const auto priv_mode = state->getPrivMode();
+
         // See if xlation is disable -- no level walks
-        if (level == 0 || (state->getPrivMode() == PrivMode::MACHINE))
+        if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
@@ -169,7 +171,7 @@ namespace atlas
             const auto indexed_level = level - 1;
             const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
             const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
-            const PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
+            PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
             DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << indexed_level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
@@ -179,19 +181,18 @@ namespace atlas
             // access type
             if (false == pte.isValid())
             {
-
                 if constexpr (TRANSLATION == INST_TRANSLATION)
                 {
                     translation_state->clearRequest();
-                    THROW_FETCH_PAGE_FAULT;
                 }
-                else if (is_store)
+                break;
+            }
+            else
+            {
+                if ((false == pte.isUserMode()) && (priv_mode != PrivMode::SUPERVISOR))
                 {
-                    THROW_STORE_AMO_PAGE_FAULT;
-                }
-                else
-                {
-                    THROW_LOAD_PAGE_FAULT;
+                    // Must throw
+                    break;
                 }
             }
 
@@ -219,6 +220,17 @@ namespace atlas
 
                 translation_state->setResult(paddr, request.getSize());
                 ILOG("  Result: " << HEX(paddr, width));
+
+                // See if we're required to update access bits in the PTE
+                if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
+                {
+                    if (is_store)
+                    {
+                        pte.setDirty();
+                    }
+                    pte.setAccessed();
+                    state->writeMemory<XLEN>(pte_paddr, pte.getPte());
+                }
 
                 // Keep going
                 return nullptr;
