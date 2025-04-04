@@ -29,11 +29,17 @@ namespace atlas
         // Dirty bit, same for all modes
         bool isDirty() const { return pte_val_ & translate_types::Sv32::PteFields::dirty.bitmask; }
 
+        // Set the page dirty
+        void setDirty() { pte_val_ |= translate_types::Sv32::PteFields::dirty.bitmask; }
+
         // Accessed bit, same for all modes
         bool isAccessed() const
         {
             return pte_val_ & translate_types::Sv32::PteFields::accessed.bitmask;
         }
+
+        // Set accessed
+        void setAccessed() { pte_val_ |= translate_types::Sv32::PteFields::accessed.bitmask; }
 
         // Global bit, same for all modes
         bool isGlobal() const
