@@ -59,7 +59,6 @@ namespace atlas
         constexpr static uint64_t ATLAS_MEMORY_FILL = 0x0;
 
       private:
-
         // Device factories
         sparta::ResourceFactory<SimpleUART, SimpleUART::SimpleUARTParameters> uart_fact_;
         sparta::ResourceFactory<MagicMemory, MagicMemory::MagicMemoryParameters> magic_mem_fact_;
