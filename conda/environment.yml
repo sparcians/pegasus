@@ -1,4 +1,4 @@
-name: riscv_perf_model
+name: riscv_func_model
 channels:
   - conda-forge
 dependencies:

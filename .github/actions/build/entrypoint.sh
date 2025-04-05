@@ -3,7 +3,13 @@
 set -x
 
 source "/usr/share/miniconda/etc/profile.d/conda.sh"
+
 conda activate riscv_func_model
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: Could not activate the conda environment"
+    exit 1
+fi
 
 echo "Starting Build Entry"
 echo "HOME:" $HOME
@@ -25,7 +31,7 @@ cd release
 CC=$COMPILER CXX=$CXX_COMPILER  cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
 if [ $? -ne 0 ]; then
     echo "ERROR: CMake for Sparta framework failed"
-    exit 0
+    exit 1
 fi
 make -j$(nproc --all) install > install.log
 BUILD_SPARTA=$?
