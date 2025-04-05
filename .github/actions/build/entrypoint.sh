@@ -19,6 +19,7 @@ echo "CONDA_PREFIX:" $CONDA_PREFIX
 echo "PWD:" `pwd`
 
 CXX_COMPILER=${COMPILER/clang/clang++}
+CXX_COMPILER=${CXX_COMPILER/gcc/g++}
 
 #
 # Compile Sparta Infra (always build with release)

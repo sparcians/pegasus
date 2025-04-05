@@ -24,6 +24,7 @@ dependencies:
   - gcc>=10.4.0=hb92f740_13
   - gcc_impl_linux-64>=10.4.0=h5231bdf_19
   - gcc_linux-64>=10.4.0=h9215b83_11
+  - gxx>=10
   - gxx_impl_linux-64>=10.4.0=h5231bdf_19
   - gxx_linux-64>=10.4.0=h6e491c6_11
   - hdf5>=1.10.6=nompi_h6a2412b_1114
