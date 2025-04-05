@@ -14,6 +14,8 @@ echo "PWD:" `pwd`
 
 CXX_COMPILER=${COMPILER/clang/clang++}
 
+ls /lib64/libpthread*
+
 #
 # Compile Sparta Infra (always build with release)
 #   Have other build types point to release
