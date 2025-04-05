@@ -136,9 +136,7 @@ FetchContent_MakeAvailable(spike)
 
 ################################################################################
 
-if(NOT CLANGFORMAT_EXECUTABLE)
-  set(CLANGFORMAT_EXECUTABLE clang-format)
-endif()
+find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-14 clang-format)
 
 execute_process (
   COMMAND

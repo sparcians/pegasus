@@ -82,3 +82,5 @@ dependencies:
   - yaml-cpp>=0.7.0=h27087fc_2
   - zlib>=1.2.13=h166bdaf_4
   - zstd>=1.5.2=h6239696_4
+  - clang-format=14.0.6=default_h7634d5b_1
+  - clang-format-14=14.0.6=default_h7634d5b_1
