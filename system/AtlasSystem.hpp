@@ -59,12 +59,13 @@ namespace atlas
         constexpr static uint64_t ATLAS_MEMORY_FILL = 0x0;
 
       private:
-        // Tree nodes
-        std::vector<std::unique_ptr<sparta::TreeNode>> tree_nodes_;
 
         // Device factories
         sparta::ResourceFactory<SimpleUART, SimpleUART::SimpleUARTParameters> uart_fact_;
         sparta::ResourceFactory<MagicMemory, MagicMemory::MagicMemoryParameters> magic_mem_fact_;
+
+        // Tree nodes
+        std::vector<std::unique_ptr<sparta::TreeNode>> tree_nodes_;
 
         // System call emulation
         const bool syscall_emulation_enabled_;
