@@ -20,8 +20,6 @@ message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 project(Atlas CXX)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
 
-find_package(Threads)
-
 # Profile build flags
 set(CMAKE_CXX_FLAGS_FASTDEBUG "-O3 -g -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG     "-U_FORTIFY_SOURCE -UNDEBUG -O0 -g")
