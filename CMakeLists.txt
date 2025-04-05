@@ -14,13 +14,13 @@ endif()
 # HDF5 and PThreads do not have static libraries
 #set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
-find_package(Threads)
-
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
 project(Atlas CXX)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
+
+find_package(Threads)
 
 # Profile build flags
 set(CMAKE_CXX_FLAGS_FASTDEBUG "-O3 -g -DNDEBUG")
