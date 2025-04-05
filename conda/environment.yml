@@ -15,7 +15,7 @@ dependencies:
   - clang>=14.0.6=ha770c72_1
   - clang-14>=14.0.6=default_h7634d5b_1
   - clangxx>=14.0.6=default_h1e1816b_1
-  - cmake>=3.27
+  - cmake>=3.25.2=h077f3f9_0
   - cppcheck>=2.7.5=py310h94ea96f_1
   - curl>=7.87.0=h6312ad2_0
   - doxygen>=1.8.20=had0d8f1_0
