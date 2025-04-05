@@ -14,6 +14,8 @@ endif()
 # HDF5 and PThreads do not have static libraries
 #set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
+find_package(Threads)
+
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
