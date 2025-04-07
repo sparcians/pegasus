@@ -2,20 +2,22 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 #include "include/AtlasUtils.hpp"
-
 #include "system/AtlasSystem.hpp"
-
 #include "sparta/utils/LogUtils.hpp"
 
 namespace atlas
 {
 #ifndef INSTLOG
-#define INSTLOG(msg) /* TODO cnyce */
+#define INSTLOG(msg) if (inst_logger_.enabled()) { inst_logger_ << msg; }
 #endif
 
-    InstructionLogger::InstructionLogger(const size_t xlen)
+    InstructionLogger::InstructionLogger(const size_t xlen,
+                                         const std::string& filename,
+                                         const InstLogFormat format)
         : xlen_(xlen)
+        , format_(format)
     {
+        inst_logger_.open(filename);
     }
 
     ActionGroup* InstructionLogger::preExecute_(AtlasState* state)
@@ -76,6 +78,21 @@ namespace atlas
 
     ActionGroup* InstructionLogger::postExecute_(AtlasState* state)
     {
+        switch (format_)
+        {
+            case InstLogFormat::ATLAS:
+                atlasPostExecute_(state);
+            case InstLogFormat::SPIKE:
+                spikePostExecute_(state);
+            default:
+                sparta_assert(false, "Invalid instruction log format!");
+        }
+
+        return nullptr;
+    }
+
+    void InstructionLogger::atlasPostExecute_(AtlasState* state)
+    {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
 
@@ -112,8 +129,7 @@ namespace atlas
             }
         }
 
-        //TODO cnyce
-        //const uint32_t width = xlen_ == 64 ? 16 : 8;
+        const uint32_t width = xlen_ == 64 ? 16 : 8;
 
         // Write to instruction logger
         const auto & symbols = state->getAtlasSystem()->getSymbols();
@@ -144,15 +160,11 @@ namespace atlas
             if (xlen_ == 64)
             {
                 const auto imm_val = static_cast<int64_t>(imm);
-                //TODO cnyce
-                (void)imm_val;
                 INSTLOG("       imm: " << HEX(imm_val, width));
             }
             else
             {
                 const auto imm_val = static_cast<int32_t>(imm);
-                //TODO cnyce
-                (void)imm_val;
                 INSTLOG("       imm: " << HEX(imm_val, width));
             }
         }
@@ -162,9 +174,6 @@ namespace atlas
         {
             const uint32_t reg_width = src_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(src_reg.reg_value);
-            //TODO cnyce
-            (void)reg_width;
-            (void)reg_value;
             INSTLOG("   src " << std::setfill(' ') << std::setw(3) << src_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width));
         }
@@ -174,10 +183,6 @@ namespace atlas
             const uint32_t reg_width = dst_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
             const uint64_t reg_prev_value = getRegValue_(dst_reg.reg_prev_value);
-            //TODO cnyce
-            (void)reg_width;
-            (void)reg_value;
-            (void)reg_prev_value;
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width)
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
@@ -185,8 +190,6 @@ namespace atlas
 
         for (const auto & mem_read : mem_reads_)
         {
-            //TODO cnyce
-            (void)mem_read;
             INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
                                            << ", size: " << mem_read.size
                                            << ", value: " << HEX(mem_read.value, width));
@@ -194,8 +197,6 @@ namespace atlas
 
         for (const auto & mem_write : mem_writes_)
         {
-            //TODO cnyce
-            (void)mem_write;
             INSTLOG("   mem write: addr: "
                     << HEX(mem_write.addr, width) << ", size: " << mem_write.size
                     << ", value: " << HEX(mem_write.value, width)
@@ -203,6 +204,12 @@ namespace atlas
         }
 
         INSTLOG("");
-        return nullptr;
     }
+
+    void InstructionLogger::spikePostExecute_(AtlasState* state)
+    {
+        //TODO cnyce
+        (void)state;
+    }
+
 } // namespace atlas
