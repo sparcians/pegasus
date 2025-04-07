@@ -82,10 +82,13 @@ namespace atlas
         {
             case InstLogFormat::ATLAS:
                 atlasPostExecute_(state);
+                break;
             case InstLogFormat::SPIKE:
                 spikePostExecute_(state);
+                break;
             default:
                 sparta_assert(false, "Invalid instruction log format!");
+                break;
         }
 
         return nullptr;

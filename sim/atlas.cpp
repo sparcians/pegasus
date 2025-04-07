@@ -49,6 +49,14 @@ int main(int argc, char** argv)
             return err_code; // Any errors already printed to cerr
         }
 
+        if (workload.empty())
+        {
+            std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
+                      << std::endl;
+            std::cout << USAGE;
+            return 1;
+        }
+
         const auto & vm = cls.getVariablesMap();
         const bool interactive = vm.count("interactive") > 0;
 
@@ -77,24 +85,14 @@ int main(int argc, char** argv)
             sim.enableInstLogger(inst_log_filename, inst_log_format);
         }
 
-        if (workload.empty() == false)
-        {
-            cls.runSimulator(&sim);
+        cls.runSimulator(&sim);
 
-            cls.postProcess(&sim);
+        cls.postProcess(&sim);
 
-            // Get workload exit code
-            const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
-            exit_code = sim_state->workload_exit_code;
-            std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
-        }
-        else
-        {
-            std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
-                      << std::endl;
-            std::cout << USAGE;
-            return 0;
-        }
+        // Get workload exit code
+        const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
+        exit_code = sim_state->workload_exit_code;
+        std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
     }
     catch (...)
     {

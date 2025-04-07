@@ -188,14 +188,26 @@ namespace atlas
         // If we have just one state (hart) then use the filename exactly.
         if (state_.size() == 1)
         {
-
+            const auto xlen = state_.at(0)->getXlen();
+            auto obs = std::make_unique<InstructionLogger>(xlen, filename, format);
+            state_.at(0)->addObserver(std::move(obs));
         }
 
         // If we have more than one state (hart), then strip the file suffix, add
         // the hart ID, then append the suffix again.
         else if (state_.size() > 1)
         {
+            auto dot = filename.find_last_of('.');
+            auto suffix = filename.substr(dot);
+            auto prefix = filename.substr(0, dot);
 
+            for (uint32_t hart_id = 0; hart_id < state_.size(); ++hart_id)
+            {
+                const std::string hart_filename = prefix + std::to_string(hart_id) + suffix;
+                const auto xlen = state_.at(hart_id)->getXlen();
+                auto obs = std::make_unique<InstructionLogger>(xlen, hart_filename, format);
+                state_.at(hart_id)->addObserver(std::move(obs));
+            }
         }
 
         // Throw an error if the simulator has not been built/configured yet.
@@ -203,12 +215,6 @@ namespace atlas
         {
             throw sparta::SpartaException("Build and configure the AtlasSim before setting up inst loggers!");
         }
-
-        // TODO cnyce
-        (void)filename;
-        (void)format;
-
-        // state->addObserver(std::make_unique<InstructionLogger>(xlen_, filename, format));
     }
 
     void AtlasSim::buildTree_()
