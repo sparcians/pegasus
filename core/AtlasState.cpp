@@ -153,10 +153,9 @@ namespace atlas
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
 
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        // TODO cnyce
-        if (false /*command line arg*/)
+        if (false /*TODO cnyce: command line arg*/)
         {
-            //addObserver(std::make_unique<InstructionLogger>(xlen_));
+            addObserver(std::make_unique<InstructionLogger>(xlen_));
         }
     }
 

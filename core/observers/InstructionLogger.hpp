@@ -7,19 +7,20 @@
 
 namespace atlas
 {
-    template <typename XLEN> class InstructionLogger : public Observer
+    class InstructionLogger : public Observer
     {
       public:
-        using base_type = InstructionLogger<XLEN>;
+        using base_type = InstructionLogger;
 
-        InstructionLogger(sparta::log::MessageSource & inst_logger);
+        InstructionLogger(const size_t xlen = 64);
 
       private:
         ActionGroup* preExecute_(AtlasState* state) override;
         ActionGroup* postExecute_(AtlasState* state) override;
         ActionGroup* preException_(AtlasState* state) override;
 
-        sparta::log::MessageSource & inst_logger_;
+        //! XLEN: 64 or 32 bit
+        const size_t xlen_;
 
         std::vector<uint8_t> getRegByteVector_(const sparta::Register* reg) const
         {

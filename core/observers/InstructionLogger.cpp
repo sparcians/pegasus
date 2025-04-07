@@ -10,19 +10,15 @@
 namespace atlas
 {
 #ifndef INSTLOG
-#define INSTLOG(msg) SPARTA_LOG(inst_logger_, msg)
+#define INSTLOG(msg) /* TODO cnyce */
 #endif
 
-    template <typename XLEN>
-    InstructionLogger<XLEN>::InstructionLogger(sparta::log::MessageSource & inst_logger) :
-        inst_logger_(inst_logger)
+    InstructionLogger::InstructionLogger(const size_t xlen)
+        : xlen_(xlen)
     {
     }
 
-    template class InstructionLogger<RV64>;
-    template class InstructionLogger<RV32>;
-
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preExecute_(AtlasState* state)
+    ActionGroup* InstructionLogger::preExecute_(AtlasState* state)
     {
         pc_ = state->getPc();
         AtlasInstPtr inst = state->getCurrentInst();
@@ -68,7 +64,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preException_(AtlasState* state)
+    ActionGroup* InstructionLogger::preException_(AtlasState* state)
     {
         preExecute(state);
 
@@ -78,7 +74,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::postExecute_(AtlasState* state)
+    ActionGroup* InstructionLogger::postExecute_(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
@@ -116,7 +112,8 @@ namespace atlas
             }
         }
 
-        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        //TODO cnyce
+        //const uint32_t width = xlen_ == 64 ? 16 : 8;
 
         // Write to instruction logger
         const auto & symbols = state->getAtlasSystem()->getSymbols();
@@ -143,9 +140,21 @@ namespace atlas
 
         if (inst && inst->hasImmediate())
         {
-            using SXLEN = typename std::make_signed<XLEN>::type;
-            const SXLEN imm_val = inst->getImmediate();
-            INSTLOG("       imm: " << HEX(imm_val, width));
+            const uint64_t imm = inst->getImmediate();
+            if (xlen_ == 64)
+            {
+                const auto imm_val = static_cast<int64_t>(imm);
+                //TODO cnyce
+                (void)imm_val;
+                INSTLOG("       imm: " << HEX(imm_val, width));
+            }
+            else
+            {
+                const auto imm_val = static_cast<int32_t>(imm);
+                //TODO cnyce
+                (void)imm_val;
+                INSTLOG("       imm: " << HEX(imm_val, width));
+            }
         }
 
         // TODO: Support for different register sizes (RV32, vector)
@@ -153,6 +162,9 @@ namespace atlas
         {
             const uint32_t reg_width = src_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(src_reg.reg_value);
+            //TODO cnyce
+            (void)reg_width;
+            (void)reg_value;
             INSTLOG("   src " << std::setfill(' ') << std::setw(3) << src_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width));
         }
@@ -162,6 +174,10 @@ namespace atlas
             const uint32_t reg_width = dst_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
             const uint64_t reg_prev_value = getRegValue_(dst_reg.reg_prev_value);
+            //TODO cnyce
+            (void)reg_width;
+            (void)reg_value;
+            (void)reg_prev_value;
             INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
                               << ": " << HEX(reg_value, reg_width)
                               << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
@@ -169,6 +185,8 @@ namespace atlas
 
         for (const auto & mem_read : mem_reads_)
         {
+            //TODO cnyce
+            (void)mem_read;
             INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
                                            << ", size: " << mem_read.size
                                            << ", value: " << HEX(mem_read.value, width));
@@ -176,6 +194,8 @@ namespace atlas
 
         for (const auto & mem_write : mem_writes_)
         {
+            //TODO cnyce
+            (void)mem_write;
             INSTLOG("   mem write: addr: "
                     << HEX(mem_write.addr, width) << ", size: " << mem_write.size
                     << ", value: " << HEX(mem_write.value, width)
