@@ -1,6 +1,6 @@
 #include "sim/AtlasSim.hpp"
-
 #include "sparta/app/CommandLineSimulator.hpp"
+#include "core/observers/InstructionLogger.hpp"
 
 const char USAGE[] = "Usage:\n"
                      "./atlas [-i inst limit] <workload>"
@@ -9,8 +9,9 @@ const char USAGE[] = "Usage:\n"
 int main(int argc, char** argv)
 {
     uint64_t ilimit = 0;
+    std::string inst_log_filename;
+    std::string inst_log_format_string;
     std::string workload;
-    const char* WORKLOAD = "workload";
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
@@ -31,18 +32,15 @@ int main(int argc, char** argv)
         // classs can be done manually if desired. Use the source for the
         // CommandLineSimulator class as a starting point
         sparta::app::CommandLineSimulator cls(USAGE, DEFAULTS);
-        auto & app_opts = cls.getApplicationOptions();
-        app_opts.add_options()(
-            "inst-limit,i",
-            sparta::app::named_value<uint64_t>("LIMIT", &ilimit)->default_value(ilimit),
-            "Stop simulation after the instruction limit has been reached")(
-            "interactive", "Enable interactive mode")(
-            WORKLOAD, sparta::app::named_value<std::string>(WORKLOAD, &workload),
-            "Worklad to run (ELF or JSON)");
+        namespace po = boost::program_options;
 
-        // Add any positional command-line options
-        po::positional_options_description & pos_opts = cls.getPositionalOptions();
-        pos_opts.add(WORKLOAD, -1);
+        auto & app_opts = cls.getApplicationOptions();
+        app_opts.add_options()
+            ("inst-limit,i", po::value<uint64_t>(&ilimit), "Stop simulation after the instruction limit has been reached")
+            ("interactive", "Enable interactive mode (IDE)")
+            ("inst-log-filename", po::value<std::string>(&inst_log_filename), "Instruction logger filename")
+            ("inst-log-format", po::value<std::string>(&inst_log_format_string), "Instruction logger format (atlas|spike)")
+            ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
 
         // Parse command line options and configure simulator
         int err_code = 0;
@@ -59,6 +57,25 @@ int main(int argc, char** argv)
         atlas::AtlasSim sim(&scheduler, workload, ilimit, interactive);
 
         cls.populateSimulation(&sim);
+
+        if (!inst_log_filename.empty() || !inst_log_format_string.empty())
+        {
+            if (inst_log_filename.empty()) inst_log_filename = "inst.log";
+            if (inst_log_format_string.empty()) inst_log_format_string = "atlas";
+            if (inst_log_format_string != "atlas" && inst_log_format_string != "spike")
+            {
+                std::cerr << "Allowed inst logger formats include  'atlas' or 'spike'.\n";
+                return 1;
+            }
+
+            atlas::InstLogFormat inst_log_format = atlas::InstLogFormat::ATLAS;
+            if (inst_log_format_string == "spike")
+            {
+                inst_log_format = atlas::InstLogFormat::SPIKE;
+            }
+
+            sim.enableInstLogger(inst_log_filename, inst_log_format);
+        }
 
         if (workload.empty() == false)
         {

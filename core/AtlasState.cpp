@@ -151,14 +151,6 @@ namespace atlas
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
-
-        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        if (false /*TODO cnyce: command line arg*/)
-        {
-            const std::string filename = "atlas.out";
-            const InstLogFormat format = InstLogFormat::ATLAS;
-            addObserver(std::make_unique<InstructionLogger>(xlen_, filename, format));
-        }
     }
 
     void AtlasState::onBindTreeLate_()

@@ -23,7 +23,7 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests):
     logname = testname + ".log"
     instlogname = testname + ".instlog"
     isa_string = "rv32g_zicsr_zifencei" if xlen == "rv32" else "rv64g_zicsr_zifencei"
-    atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname, "-p", "top.core0.params.isa_string", isa_string, test]
+    atlas_cmd = ["./atlas", "--inst-log-filename", instlogname, "-p", "top.core0.params.isa_string", isa_string, "-w", test]
     test_passed = False
     try:
         with open(logname, "w") as f:
@@ -56,7 +56,6 @@ def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tes
     # Wait for all processes to finish
     for process in processes:
         process.join()
-
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")

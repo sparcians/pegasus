@@ -183,6 +183,34 @@ namespace atlas
             });
     }
 
+    void AtlasSim::enableInstLogger(const std::string& filename, InstLogFormat format)
+    {
+        // If we have just one state (hart) then use the filename exactly.
+        if (state_.size() == 1)
+        {
+
+        }
+
+        // If we have more than one state (hart), then strip the file suffix, add
+        // the hart ID, then append the suffix again.
+        else if (state_.size() > 1)
+        {
+
+        }
+
+        // Throw an error if the simulator has not been built/configured yet.
+        else
+        {
+            throw sparta::SpartaException("Build and configure the AtlasSim before setting up inst loggers!");
+        }
+
+        // TODO cnyce
+        (void)filename;
+        (void)format;
+
+        // state->addObserver(std::make_unique<InstructionLogger>(xlen_, filename, format));
+    }
+
     void AtlasSim::buildTree_()
     {
         auto root_tn = getRoot();

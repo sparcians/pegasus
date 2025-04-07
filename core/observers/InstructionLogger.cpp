@@ -210,6 +210,7 @@ namespace atlas
     {
         //TODO cnyce
         (void)state;
+        throw sparta::SpartaException("Spike instruction logging not implemented");
     }
 
 } // namespace atlas
