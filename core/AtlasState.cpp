@@ -62,7 +62,6 @@ namespace atlas
             supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
-        inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -154,16 +153,10 @@ namespace atlas
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
 
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        if (inst_logger_.observed())
+        // TODO cnyce
+        if (false /*command line arg*/)
         {
-            if (xlen_ == 64)
-            {
-                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
-            }
-            else
-            {
-                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
-            }
+            //addObserver(std::make_unique<InstructionLogger>(xlen_));
         }
     }
 
