@@ -27,7 +27,7 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32g_zicsr_zifencei" if xlen == "rv32" else "rv64g_zicsr_zifencei"
+    isa_string = "rv32gc_zicsr_zifencei" if xlen == "rv32" else "rv64gc_zicsr_zifencei"
     atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, test]
@@ -106,12 +106,19 @@ def main():
     # Ignore some tests that are unsupported or bad tests
     skip_tests = [
         "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
+        "rv64uf-v-fclass",
         "rv32uf-p-fclass",
+        "rv32uf-v-fclass",
         "rv64ud-p-fclass",
+        "rv64ud-v-fclass",
         "rv32ud-p-fclass",
+        "rv32ud-v-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
+        "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",
+        "rv32mi-v-breakpoint",
         "rv64mi-p-access",     # BAD TEST: Has check for max paddr size restriction which has been lifted
+        "rv64mi-v-access",
     ]
     for skip_test in skip_tests:
         print("Skipping", skip_test)
