@@ -5,3 +5,4 @@ add_library(rvf
     OBJECT
     ${SOURCES}
 )
+add_dependencies(rvf AutogenArchFiles)

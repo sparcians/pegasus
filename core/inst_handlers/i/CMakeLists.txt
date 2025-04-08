@@ -5,3 +5,4 @@ add_library(rvi
     OBJECT
     ${SOURCES}
 )
+add_dependencies(rvi AutogenArchFiles)

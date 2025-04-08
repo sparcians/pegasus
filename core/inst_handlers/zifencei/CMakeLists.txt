@@ -5,3 +5,4 @@ add_library(rvzifencei
     OBJECT
     ${SOURCES}
 )
+add_dependencies(rvzifencei AutogenArchFiles)
