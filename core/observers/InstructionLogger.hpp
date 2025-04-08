@@ -6,12 +6,6 @@
 
 namespace atlas
 {
-    // TODO cnyce
-    enum class InstLogFormat
-    {
-        ATLAS, SPIKE
-    };
-
     class InstructionLogger : public Observer
     {
       public:

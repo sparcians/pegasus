@@ -86,4 +86,10 @@ namespace atlas
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;
     constexpr uint64_t NOP_OPCODE = 0x00000013;
+
+    enum class InstLogFormat
+    {
+        ATLAS, SPIKE
+    };
+
 } // namespace atlas
