@@ -258,7 +258,18 @@ namespace atlas
             const uint32_t reg_width = dst_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
             const std::string& reg_name = dst_reg.reg_id.reg_name;
-            oss << " " << reg_name << " " << HEX(reg_value, reg_width);
+
+            if (dst_reg.reg_id.reg_type != RegType::CSR)
+            {
+                // x10 0xdeadbeef
+                oss << " " << std::setw(4) << std::left << reg_name << HEX(reg_value, reg_width);
+            }
+            else
+            {
+                // c773_mtvec 0x8000011c
+                oss << " c" << dst_reg.reg_id.reg_num << "_" << dst_reg.reg_id.reg_name
+                    << " " << HEX(reg_value, width);
+            }
         }
 
         for (const auto & mem_read : mem_reads_)
