@@ -5,3 +5,4 @@ add_library(rva
     OBJECT
     ${SOURCES}
 )
+add_dependencies(rva AutogenArchFiles)
