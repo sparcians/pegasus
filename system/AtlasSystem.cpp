@@ -53,7 +53,7 @@ namespace atlas
     {
         if (elf_reader_.load(workload) == false)
         {
-            // fail
+            sparta_assert(false, "Could not load '" << workload << "' does it exist?");
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
