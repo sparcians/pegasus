@@ -47,6 +47,6 @@ fi
 make clangformat-check
 BUILD_ATLAS=$?
 if [ ${BUILD_ATLAS} -ne 0 ]; then
-    echo "ERROR: build/regress of Atlas FAILED!!!"
+    echo "ERROR: clangformat check of Atlas FAILED!!!"
     exit 1
 fi

@@ -51,11 +51,9 @@ if [ $? -ne 0 ]; then
     echo "ERROR: CMake for atlas failed"
     exit 1
 fi
-make -j$(nproc --all) atlas_regress > regress.log
+make -j$(nproc --all) atlas_regress
 BUILD_ATLAS=$?
 if [ ${BUILD_ATLAS} -ne 0 ]; then
     echo "ERROR: build/regress of Atlas FAILED!!!"
-    echo "$(<regress.log)"
     exit 1
 fi
-rm regress.log
