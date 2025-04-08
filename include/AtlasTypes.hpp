@@ -89,7 +89,8 @@ namespace atlas
 
     enum class InstLogFormat
     {
-        ATLAS, SPIKE
+        ATLAS,
+        SPIKE
     };
 
 } // namespace atlas

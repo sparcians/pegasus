@@ -11,8 +11,7 @@ namespace atlas
       public:
         using base_type = InstructionLogger;
 
-        InstructionLogger(const size_t xlen = 64,
-                          const std::string& filename = "inst_log.out",
+        InstructionLogger(const size_t xlen = 64, const std::string & filename = "inst_log.out",
                           const InstLogFormat format = InstLogFormat::ATLAS);
 
       private:

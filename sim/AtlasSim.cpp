@@ -183,7 +183,7 @@ namespace atlas
             });
     }
 
-    void AtlasSim::enableInstLogger(const std::string& filename, InstLogFormat format)
+    void AtlasSim::enableInstLogger(const std::string & filename, InstLogFormat format)
     {
         // If we have just one state (hart) then use the filename exactly.
         if (state_.size() == 1)
@@ -213,7 +213,8 @@ namespace atlas
         // Throw an error if the simulator has not been built/configured yet.
         else
         {
-            throw sparta::SpartaException("Build and configure the AtlasSim before setting up inst loggers!");
+            throw sparta::SpartaException(
+                "Build and configure the AtlasSim before setting up inst loggers!");
         }
     }
 

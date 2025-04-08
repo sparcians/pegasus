@@ -35,12 +35,14 @@ int main(int argc, char** argv)
         namespace po = boost::program_options;
 
         auto & app_opts = cls.getApplicationOptions();
-        app_opts.add_options()
-            ("inst-limit,i", po::value<uint64_t>(&ilimit), "Stop simulation after the instruction limit has been reached")
-            ("interactive", "Enable interactive mode (IDE)")
-            ("inst-log-filename", po::value<std::string>(&inst_log_filename), "Instruction logger filename")
-            ("inst-log-format", po::value<std::string>(&inst_log_format_string), "Instruction logger format (atlas|spike)")
-            ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
+        app_opts.add_options()("inst-limit,i", po::value<uint64_t>(&ilimit),
+                               "Stop simulation after the instruction limit has been reached")(
+            "interactive", "Enable interactive mode (IDE)")(
+            "inst-log-filename", po::value<std::string>(&inst_log_filename),
+            "Instruction logger filename")("inst-log-format",
+                                           po::value<std::string>(&inst_log_format_string),
+                                           "Instruction logger format (atlas|spike)")(
+            "workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
 
         // Parse command line options and configure simulator
         int err_code = 0;
@@ -68,8 +70,10 @@ int main(int argc, char** argv)
 
         if (!inst_log_filename.empty() || !inst_log_format_string.empty())
         {
-            if (inst_log_filename.empty()) inst_log_filename = "inst.log";
-            if (inst_log_format_string.empty()) inst_log_format_string = "atlas";
+            if (inst_log_filename.empty())
+                inst_log_filename = "inst.log";
+            if (inst_log_format_string.empty())
+                inst_log_format_string = "atlas";
             if (inst_log_format_string != "atlas" && inst_log_format_string != "spike")
             {
                 std::cerr << "Allowed inst logger formats include  'atlas' or 'spike'.\n";

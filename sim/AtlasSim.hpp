@@ -28,7 +28,7 @@ namespace atlas
         void enableCoSimDebugger(std::unique_ptr<CoSimQuery> query);
 
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        void enableInstLogger(const std::string& filename, InstLogFormat format);
+        void enableInstLogger(const std::string & filename, InstLogFormat format);
 
       private:
         void buildTree_() override;
