@@ -249,6 +249,8 @@ namespace atlas
             --level;
         }
 
+        // If we got here, then Atlas could not translate the address
+        // at any level.  We throw at this point.
         if constexpr (TRANSLATION == INST_TRANSLATION)
         {
             translation_state->clearRequest();
