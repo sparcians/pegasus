@@ -24,7 +24,7 @@ if [ $? -ne 0 ]; then
     echo "ERROR: CMake for Sparta framework failed"
     exit 1
 fi
-make -j$(nproc --all) install > install.log
+sudo make -j$(nproc --all) install
 BUILD_SPARTA=$?
 if [ ${BUILD_SPARTA} -ne 0 ]; then
     echo "ERROR: build sparta FAILED!!!"
