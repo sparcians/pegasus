@@ -8,7 +8,7 @@
 namespace atlas
 {
 #ifndef INSTLOG
-#define INSTLOG(msg) if (inst_logger_.enabled()) { inst_logger_ << msg; }
+#define INSTLOG(msg) if (inst_logger_.enabled()) { inst_logger_ << msg << "\n"; }
 #endif
 
     InstructionLogger::InstructionLogger(const size_t xlen,
@@ -211,9 +211,67 @@ namespace atlas
 
     void InstructionLogger::spikePostExecute_(AtlasState* state)
     {
-        //TODO cnyce
-        (void)state;
-        throw sparta::SpartaException("Spike instruction logging not implemented");
+        // Get final value of destination registers
+        AtlasInstPtr inst = state->getCurrentInst();
+
+        if (fault_cause_.isValid() == false)
+        {
+            sparta_assert(inst != nullptr, "Instruction is not valid for logging!");
+        }
+
+        if (inst)
+        {
+            for (auto & dst_reg : dst_regs_)
+            {
+                sparta::Register* reg = nullptr;
+                switch (dst_reg.reg_id.reg_type)
+                {
+                    case RegType::INTEGER:
+                        reg = state->getIntRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::FLOATING_POINT:
+                        reg = state->getFpRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::VECTOR:
+                        reg = state->getVecRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    case RegType::CSR:
+                        reg = state->getCsrRegister(dst_reg.reg_id.reg_num);
+                        break;
+                    default:
+                        sparta_assert(false, "Invalid register type!");
+                }
+                sparta_assert(reg != nullptr);
+                const std::vector<uint8_t> value = getRegByteVector_(reg);
+                dst_reg.setValue(value);
+            }
+        }
+
+        const uint32_t width = xlen_ == 64 ? 16 : 8;
+
+        // Write to instruction logger. Put everything into a stringstream since the INSTLOG macro appends a newline with each use.
+        std::ostringstream oss;
+        oss << "core   " << state->getHartId() << ": " << (int)state->getPrivMode() << " " << HEX(pc_, width) << " (" << HEX8(opcode_) << ")";
+
+        for (const auto & dst_reg : dst_regs_)
+        {
+            const uint32_t reg_width = dst_reg.reg_value.size() * 2;
+            const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
+            const std::string& reg_name = dst_reg.reg_id.reg_name;
+            oss << " " << reg_name << " " << HEX(reg_value, reg_width);
+        }
+
+        for (const auto & mem_read : mem_reads_)
+        {
+            oss << " mem " << HEX(mem_read.addr, width);
+        }
+
+        for (const auto & mem_write : mem_writes_)
+        {
+            oss << " mem " << HEX(mem_write.addr, width) << " " << HEX8(mem_write.value);
+        }
+
+        INSTLOG(oss.str());
     }
 
 } // namespace atlas
