@@ -993,6 +993,10 @@ namespace atlas
                 const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
                 state->stopSim(exit_code);
             }
+            else
+            {
+                sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
+            }
         }
         else
         {
