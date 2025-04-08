@@ -65,7 +65,7 @@ jobs:
       - name: Install packages needed for sparta/atlas
         run: |
           sudo apt-get update --fix-missing
-          sudo apt-get libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev
 
       #- name: Setup Conda Environment
       #  run: |
