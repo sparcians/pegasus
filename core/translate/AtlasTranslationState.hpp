@@ -62,6 +62,8 @@ namespace atlas
             return request_;
         }
 
+        void clearRequest() { request_ = TranslationRequest(); }
+
         void setResult(const Addr physical_addr, const size_t size)
         {
             sparta_assert(request_.isValid());

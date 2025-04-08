@@ -44,7 +44,8 @@ namespace atlas
         const XLEN trap_deleg_val = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
         const PrivMode priv_mode =
             ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
-        state->setNextPrivMode(priv_mode);
+
+        const bool prev_virt_mode = state->getVirtualMode();
 
         if (priv_mode == PrivMode::SUPERVISOR)
         {
@@ -114,6 +115,7 @@ namespace atlas
             const uint64_t gva_val = 0;
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
         }
+        state->setPrivMode(priv_mode, prev_virt_mode);
 
         state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();
@@ -135,7 +137,12 @@ namespace atlas
             case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
-                return state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
+                {
+                    const auto vaddr_val =
+                        state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
+                    state->getCurrentInst()->getTranslationState()->clearRequest();
+                    return vaddr_val;
+                }
             case FaultCause::ILLEGAL_INST:
                 return state->getSimState()->current_opcode;
             case FaultCause::BREAKPOINT:
@@ -146,6 +153,63 @@ namespace atlas
             case FaultCause::HARDWARE_ERROR:
                 return 0;
         }
+        return 0;
+    }
+
+    std::ostream & operator<<(std::ostream & os, const FaultCause & cause)
+    {
+        switch (cause)
+        {
+            case FaultCause::INST_ADDR_MISALIGNED:
+                os << "INST_ADDR_MISALIGNED";
+                break;
+            case FaultCause::INST_ACCESS:
+                os << "INST_ACCESS";
+                break;
+            case FaultCause::INST_PAGE_FAULT:
+                os << "INST_PAGE_FAULT";
+                break;
+            case FaultCause::LOAD_ADDR_MISALIGNED:
+                os << "LOAD_ADDR_MISALIGNED";
+                break;
+            case FaultCause::LOAD_ACCESS:
+                os << "LOAD_ACCESS";
+                break;
+            case FaultCause::STORE_AMO_ADDR_MISALIGNED:
+                os << "STORE_AMO_ADDR_MISALIGNED";
+                break;
+            case FaultCause::STORE_AMO_ACCESS:
+                os << "STORE_AMO_ACCESS";
+                break;
+            case FaultCause::LOAD_PAGE_FAULT:
+                os << "LOAD_PAGE_FAULT";
+                break;
+            case FaultCause::STORE_AMO_PAGE_FAULT:
+                os << "STORE_AMO_PAGE_FAULT";
+                break;
+            case FaultCause::ILLEGAL_INST:
+                os << "ILLEGAL_INST";
+                break;
+            case FaultCause::BREAKPOINT:
+                os << "BREAKPOINT";
+                break;
+            case FaultCause::USER_ECALL:
+                os << "USER_ECALL";
+                break;
+            case FaultCause::SUPERVISOR_ECALL:
+                os << "SUPERVISOR_ECALL";
+                break;
+            case FaultCause::MACHINE_ECALL:
+                os << "MACHINE_ECALL";
+                break;
+            case FaultCause::SOFTWARE_CHECK:
+                os << "SOFTWARE_CHECK";
+                break;
+            case FaultCause::HARDWARE_ERROR:
+                os << "HARDWARE_ERROR";
+                break;
+        }
+        return os;
     }
 
     uint64_t Exception::determineTrapValue_(const InterruptCause & cause, AtlasState*)
@@ -161,5 +225,6 @@ namespace atlas
             case InterruptCause::COUNTER_OVERFLOW:
                 return 0;
         }
+        return 0;
     }
 } // namespace atlas
