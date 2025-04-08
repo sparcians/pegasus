@@ -8,7 +8,7 @@ import multiprocessing
 
 # Passing and total
 PASSING_STATUS_NON_VIRT= ["122", "127"]
-PASSING_STATUS_VIRT=     ["122", "235"]
+PASSING_STATUS_VIRT=     ["199", "235"]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -71,7 +71,7 @@ def main():
     parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
-    parser.add_argument("--no-skip-virt", action='store_true', help="Do not skip virtual tests")
+    parser.add_argument("--skip-virt", action='store_true', help="Do not skip virtual tests")
     args = parser.parse_args()
 
     SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud", "uc"]
@@ -96,7 +96,7 @@ def main():
         tests = [test for test in tests if "rv64" in test]
 
     # TODO: Atlas does not support translation yet
-    if not args.no_skip_virt:
+    if args.skip_virt:
         print("WARNING: Skipping translation tests")
         tests = [test for test in tests if "-p-" in test]
     # TODO: Atlas does not support zba, zbb, zbc, zbs or zfh extensions
@@ -141,7 +141,7 @@ def main():
 
     print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
 
-    if args.no_skip_virt:
+    if not args.skip_virt:
         print("EXPECTED RATE: " + PASSING_STATUS_VIRT[0] + "/" + PASSING_STATUS_VIRT[1])
         if (str(num_passed) < PASSING_STATUS_VIRT[0]):
             print("ERROR: failed!")
