@@ -39,19 +39,6 @@ jobs:
           path: map
           ref: 05ba8532be5d90fcebf28e7a7a7aa799a7b4d29e
 
-      # Setup Conda and build environment
-      - name: Grab Python v3.8
-        uses: actions/setup-python@v3
-        with:
-          python-version: 3.8
-
-      # Cache the conda dependencies to
-      - name: Cache conda deps
-        uses: actions/cache@v3
-        with:
-          key: ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-conda-${{ hashFiles('conda/environment.yml') }}
-          path: /usr/share/miniconda/envs/riscv_func_model # Default path for conda
-
       # Setup CCache to cache builds
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -60,13 +47,6 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache-main
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache
-
-      - name: Setup Conda Environment
-        run: |
-          # $CONDA is an environment variable pointing to the root of the miniconda directory
-          $CONDA/bin/conda config --set channel_priority strict
-          $CONDA/bin/conda env update --file  ${{ github.workspace }}/conda/environment.yml
-          $CONDA/bin/conda init bash
 
       # Build
       - name: Run Clangformat Check
@@ -79,8 +59,3 @@ jobs:
         with:
           name: ErrorLogs-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}
           path: ${{matrix.BUILD_TYPE}}/test/
-
-      #- name: CTest
-      #  # Run CTests without Valgrind tests otherwise the runtime will be TOO long
-      #  if: ${{ env.DABBLE_BUILD_TYPE == 'release' }} && ${{ env.VALGRIND == 'false' }}
-      #  uses: ./.github/actions/ctest  # Uses an action.yml in directory
