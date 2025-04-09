@@ -6,6 +6,7 @@
 #include "system/AtlasSystem.hpp"
 
 #include "sparta/utils/LogUtils.hpp"
+#include "sparta/log/MessageSource.hpp"
 
 namespace atlas
 {
@@ -13,10 +14,202 @@ namespace atlas
 #define INSTLOG(msg) SPARTA_LOG(inst_logger_, msg)
 #endif
 
+    class InstLogWriterBase
+    {
+      public:
+        InstLogWriterBase(sparta::log::MessageSource & inst_logger) : inst_logger_(inst_logger) {}
+
+        virtual ~InstLogWriterBase() = default;
+
+        virtual void beginInst(AtlasState* state, const AtlasInst* inst, uint64_t opcode)
+        {
+            (void)state;
+            (void)inst;
+            (void)opcode;
+        }
+
+        virtual void writeSymbols(const std::string & symbols) { (void)symbols; }
+
+        virtual void writeInstHeader(const AtlasInst* inst, uint64_t pc, uint64_t opcode)
+        {
+            (void)inst;
+            (void)pc;
+            (void)opcode;
+        }
+
+        virtual void writeFaultCause(const FaultCause cause) { (void)cause; }
+
+        virtual void writeImmediate(const uint64_t imm) { (void)imm; }
+
+        virtual void writeSrcRegister(const std::string & reg_name, const uint64_t reg_value,
+                                      const uint32_t reg_width)
+        {
+            (void)reg_name;
+            (void)reg_value;
+            (void)reg_width;
+        }
+
+        virtual void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
+                                      const uint64_t reg_prev_value, const uint32_t reg_width)
+        {
+            (void)reg_name;
+            (void)reg_value;
+            (void)reg_prev_value;
+            (void)reg_width;
+        }
+
+        virtual void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
+                                 const uint64_t reg_value, const uint64_t reg_prev_value,
+                                 const uint32_t reg_width)
+        {
+            (void)reg_num;
+            writeDstRegister(reg_name, reg_value, reg_prev_value, reg_width);
+        }
+
+        virtual void writeMemRead(const Observer::MemRead & mem_read) { (void)mem_read; }
+
+        virtual void writeMemWrite(const Observer::MemWrite & mem_write) { (void)mem_write; }
+
+        virtual void finishInst() {}
+
+      protected:
+        sparta::log::MessageSource & inst_logger_;
+    };
+
+    template <typename XLEN> class AtlasInstLogWriter : public InstLogWriterBase
+    {
+      public:
+        static constexpr uint32_t WIDTH = std::is_same_v<XLEN, RV64> ? 16 : 8;
+
+        AtlasInstLogWriter(sparta::log::MessageSource & inst_logger) :
+            InstLogWriterBase(inst_logger)
+        {
+        }
+
+        void writeSymbols(const std::string & symbols) override
+        {
+            INSTLOG("    Call <" << symbols << ">");
+        }
+
+        void writeInstHeader(const AtlasInst* inst, uint64_t pc, uint64_t opcode) override
+        {
+            if (inst)
+            {
+                INSTLOG(" " << HEX(pc, WIDTH) << ": " << inst->dasmString() << " (" << HEX8(opcode)
+                            << ") uid:" << inst->getUid());
+            }
+            else
+            {
+                // TODO: Only display opcode for certain exception types
+                INSTLOG(" " << HEX(pc, WIDTH) << ": ??? (" << HEX8(opcode) << ") uid: ?");
+            }
+        }
+
+        void writeFaultCause(const FaultCause cause) override
+        {
+            INSTLOG("Fault cause: " << cause << " (" << HEX8(static_cast<uint32_t>(cause)) << ')');
+        }
+
+        void writeImmediate(const uint64_t imm) override
+        {
+            using SXLEN = typename std::make_signed<XLEN>::type;
+            const SXLEN imm_val = imm;
+            INSTLOG("     imm: " << HEX(imm_val, WIDTH));
+        }
+
+        void writeSrcRegister(const std::string & reg_name, const uint64_t reg_value,
+                              const uint32_t reg_width) override
+        {
+            INSTLOG("   src " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                              << HEX(reg_value, reg_width));
+        }
+
+        void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
+                              const uint64_t reg_prev_value, const uint32_t reg_width) override
+        {
+            INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                              << HEX(reg_value, reg_width)
+                              << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
+        }
+
+        void writeMemRead(const Observer::MemRead & mem_read) override
+        {
+            INSTLOG("       mem read:  addr: " << HEX(mem_read.addr, WIDTH)
+                                               << ", size: " << mem_read.size
+                                               << ", value: " << HEX(mem_read.value, WIDTH));
+        }
+
+        void writeMemWrite(const Observer::MemWrite & mem_write) override
+        {
+            INSTLOG("      mem write: addr: "
+                    << HEX(mem_write.addr, WIDTH) << ", size: " << mem_write.size
+                    << ", value: " << HEX(mem_write.value, WIDTH)
+                    << " (prev: " << HEX(mem_write.prior_value, WIDTH) << ")");
+        }
+
+        void finishInst() override { INSTLOG(""); }
+    };
+
+    template <typename XLEN> class SpikeInstLogWriter : public InstLogWriterBase
+    {
+      public:
+        static constexpr uint32_t WIDTH = std::is_same_v<XLEN, RV64> ? 16 : 8;
+
+        SpikeInstLogWriter(sparta::log::MessageSource & inst_logger) :
+            InstLogWriterBase(inst_logger)
+        {
+        }
+
+        void beginInst(AtlasState* state, const AtlasInst*, uint64_t opcode) override
+        {
+            inst_oss_.str("");
+            inst_oss_.clear();
+
+            inst_oss_ << "core   " << state->getHartId() << ": " << (int)state->getPrivMode() << " "
+                      << HEX(state->getPc(), WIDTH) << " (" << HEX8(opcode) << ") ";
+        }
+
+        void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
+                              const uint64_t reg_prev_value, const uint32_t reg_width) override
+        {
+            (void)reg_prev_value;
+            inst_oss_ << " " << std::setw(4) << std::left << reg_name << HEX(reg_value, reg_width);
+        }
+
+        void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
+                         const uint64_t reg_value, const uint64_t reg_prev_value,
+                         const uint32_t reg_width) override
+        {
+            (void)reg_prev_value;
+            inst_oss_ << " c" << reg_num << "_" << reg_name << " " << HEX(reg_value, reg_width);
+        }
+
+        void writeMemRead(const Observer::MemRead & mem_read) override
+        {
+            inst_oss_ << " mem " << HEX(mem_read.addr, WIDTH);
+        }
+
+        void writeMemWrite(const Observer::MemWrite & mem_write) override
+        {
+            inst_oss_ << " mem " << HEX(mem_write.addr, WIDTH) << " " << HEX8(mem_write.value);
+        }
+
+        void finishInst() override { INSTLOG(inst_oss_.str()); }
+
+      private:
+        std::ostringstream inst_oss_;
+    };
+
     template <typename XLEN>
     InstructionLogger<XLEN>::InstructionLogger(sparta::log::MessageSource & inst_logger) :
-        inst_logger_(inst_logger)
+        inst_logger_(inst_logger),
+        inst_log_writer_(std::make_shared<AtlasInstLogWriter<XLEN>>(inst_logger_))
     {
+    }
+
+    template <typename XLEN> void InstructionLogger<XLEN>::useSpikeFormatting()
+    {
+        inst_log_writer_ = std::make_shared<SpikeInstLogWriter<XLEN>>(inst_logger_);
     }
 
     template class InstructionLogger<RV64>;
@@ -116,37 +309,25 @@ namespace atlas
             }
         }
 
-        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger
         const auto & symbols = state->getAtlasSystem()->getSymbols();
         if (symbols.find(pc_) != symbols.end())
         {
-            INSTLOG("Call <" << symbols.at(pc_) << ">");
+            inst_log_writer_->writeSymbols(symbols.at(pc_));
         }
 
-        if (inst)
-        {
-            INSTLOG(HEX(pc_, width) << ": " << inst->dasmString() << " (" << HEX8(opcode_)
-                                    << ") uid:" << inst->getUid());
-        }
-        else
-        {
-            // TODO: Only display opcode for certain exception types
-            INSTLOG(HEX(pc_, width) << ": ??? (" << HEX8(opcode_) << ") uid: ?");
-        }
+        inst_log_writer_->writeInstHeader(inst.get(), pc_, opcode_);
 
         if (fault_cause_.isValid())
         {
-            INSTLOG("trap cause: " << fault_cause_.getValue() << " ("
-                                   << HEX8(static_cast<uint32_t>(fault_cause_.getValue())) << ')');
+            inst_log_writer_->writeFaultCause(fault_cause_.getValue());
         }
 
         if (inst && inst->hasImmediate())
         {
-            using SXLEN = typename std::make_signed<XLEN>::type;
-            const SXLEN imm_val = inst->getImmediate();
-            INSTLOG("       imm: " << HEX(imm_val, width));
+            inst_log_writer_->writeImmediate(inst->getImmediate());
         }
 
         // TODO: Support for different register sizes (RV32, vector)
@@ -154,8 +335,7 @@ namespace atlas
         {
             const uint32_t reg_width = src_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(src_reg.reg_value);
-            INSTLOG("   src " << std::setfill(' ') << std::setw(3) << src_reg.reg_id.reg_name
-                              << ": " << HEX(reg_value, reg_width));
+            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, reg_value, reg_width);
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -163,27 +343,30 @@ namespace atlas
             const uint32_t reg_width = dst_reg.reg_value.size() * 2;
             const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
             const uint64_t reg_prev_value = getRegValue_(dst_reg.reg_prev_value);
-            INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << dst_reg.reg_id.reg_name
-                              << ": " << HEX(reg_value, reg_width)
-                              << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
+
+            if (dst_reg.reg_id.reg_type == RegType::CSR)
+            {
+                inst_log_writer_->writeDstCSR(dst_reg.reg_id.reg_name, dst_reg.reg_id.reg_num,
+                                              reg_value, reg_prev_value, reg_width);
+            }
+            else
+            {
+                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, reg_value,
+                                                   reg_prev_value, reg_width);
+            }
         }
 
         for (const auto & mem_read : mem_reads_)
         {
-            INSTLOG("   mem read:  addr: " << HEX(mem_read.addr, width)
-                                           << ", size: " << mem_read.size
-                                           << ", value: " << HEX(mem_read.value, width));
+            inst_log_writer_->writeMemRead(mem_read);
         }
 
         for (const auto & mem_write : mem_writes_)
         {
-            INSTLOG("   mem write: addr: "
-                    << HEX(mem_write.addr, width) << ", size: " << mem_write.size
-                    << ", value: " << HEX(mem_write.value, width)
-                    << " (prev: " << HEX(mem_write.prior_value, width) << ")");
+            inst_log_writer_->writeMemWrite(mem_write);
         }
 
-        INSTLOG("");
+        inst_log_writer_->finishInst();
         return nullptr;
     }
 } // namespace atlas
