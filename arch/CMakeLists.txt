@@ -26,10 +26,17 @@ set(AUTOGEN_REGISTER_FILES
   ${AUTOGEN_CSR_HEADERS}
 )
 
+set(DEPENDS_REGISTER_FILES
+  ${SIM_BASE}/scripts/GenRISCVRegisterDefinitions.py
+  ${SIM_BASE}/scripts/RV32_CSR.py
+  ${SIM_BASE}/scripts/RV64_CSR.py
+  ${SIM_BASE}/scripts/REG_CONSTS.py
+)
+
 add_custom_command(
   OUTPUT ${AUTOGEN_REGISTER_FILES}
   COMMAND python3 ${SIM_BASE}/scripts/GenRISCVRegisterDefinitions.py
-  DEPENDS ${SIM_BASE}/scripts/GenRISCVRegisterDefinitions.py
+  DEPENDS ${DEPENDS_REGISTER_FILES}
 )
 
 set(AUTOGEN_RV32_INST_JSON_FILES
@@ -38,8 +45,8 @@ set(AUTOGEN_RV32_INST_JSON_FILES
   ${SIM_BASE}/arch/rv32/atlas_uarch_rv32a.json
   ${SIM_BASE}/arch/rv32/atlas_uarch_rv32f.json
   ${SIM_BASE}/arch/rv32/atlas_uarch_rv32d.json
-  ${SIM_BASE}/arch/rv32/atlas_uarch_rv32Zicsr.json
-  ${SIM_BASE}/arch/rv32/atlas_uarch_rv32Zifencei.json
+  ${SIM_BASE}/arch/rv32/atlas_uarch_rv32zicsr.json
+  ${SIM_BASE}/arch/rv32/atlas_uarch_rv32zifencei.json
 )
 
 set(AUTOGEN_RV64_INST_JSON_FILES
@@ -48,8 +55,8 @@ set(AUTOGEN_RV64_INST_JSON_FILES
   ${SIM_BASE}/arch/rv64/atlas_uarch_rv64a.json
   ${SIM_BASE}/arch/rv64/atlas_uarch_rv64f.json
   ${SIM_BASE}/arch/rv64/atlas_uarch_rv64d.json
-  ${SIM_BASE}/arch/rv64/atlas_uarch_rv64Zicsr.json
-  ${SIM_BASE}/arch/rv64/atlas_uarch_rv64Zifencei.json
+  ${SIM_BASE}/arch/rv64/atlas_uarch_rv64zicsr.json
+  ${SIM_BASE}/arch/rv64/atlas_uarch_rv64zifencei.json
 )
 
 set(AUTOGEN_INST_FILES
@@ -58,14 +65,14 @@ set(AUTOGEN_INST_FILES
 )
 
 set(DEPENDS_INST_JSON_FILES
-    ${SIM_BASE}/scripts/GenInstructionJSON.py
-    ${SIM_BASE}/scripts/insts/RVI_INST.py
-    ${SIM_BASE}/scripts/insts/RVM_INST.py
-    ${SIM_BASE}/scripts/insts/RVA_INST.py
-    ${SIM_BASE}/scripts/insts/RVF_INST.py
-    ${SIM_BASE}/scripts/insts/RVD_INST.py
-    ${SIM_BASE}/scripts/insts/RVZICSR_INST.py
-    ${SIM_BASE}/scripts/insts/RVZIFENCEI_INST.py
+  ${SIM_BASE}/scripts/GenInstructionJSON.py
+  ${SIM_BASE}/scripts/insts/RVI_INST.py
+  ${SIM_BASE}/scripts/insts/RVM_INST.py
+  ${SIM_BASE}/scripts/insts/RVA_INST.py
+  ${SIM_BASE}/scripts/insts/RVF_INST.py
+  ${SIM_BASE}/scripts/insts/RVD_INST.py
+  ${SIM_BASE}/scripts/insts/RVZICSR_INST.py
+  ${SIM_BASE}/scripts/insts/RVZIFENCEI_INST.py
 )
 
 add_custom_command(
@@ -80,4 +87,4 @@ add_custom_command(
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
-add_custom_target(AutogenArchFiles ALL DEPENDS ${AUTOGEN_CSR_HEADERS} ${AUTOGEN_REGISTER_FILES} ${AUTOGEN_INST_FILES})
+add_custom_target(AutogenArchFiles ALL DEPENDS ${AUTOGEN_REGISTER_FILES} ${AUTOGEN_INST_FILES})

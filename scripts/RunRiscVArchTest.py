@@ -7,8 +7,10 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS_NON_VIRT= ["122", "127"]
-PASSING_STATUS_VIRT=     ["199", "235"]
+PASSING_STATUS_RV32_NON_VIRT = [84, 97]
+PASSING_STATUS_RV32_VIRT     = [0, 78]
+PASSING_STATUS_RV64_NON_VIRT = [123, 127]
+PASSING_STATUS_RV64_VIRT     = [77, 106]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -22,12 +24,15 @@ def get_tests(directory):
     return tests
 
 # Function to run a single test and append to the appropriate queue
-def run_test(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir):
+def run_test(test, passing_tests, failing_tests, timeout_tests, output_dir):
     testname = os.path.basename(test)
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32g_zicsr_zifencei" if xlen == "rv32" else "rv64g_zicsr_zifencei"
+
+    rv32_test = "rv32" in test
+
+    isa_string = "rv32gc_zicsr_zifencei" if rv32_test else "rv64gc_zicsr_zifencei"
     atlas_cmd = ["./atlas", "-l", "top", "inst", instlogname,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, test]
@@ -50,13 +55,13 @@ def run_test(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir
         failing_tests.put(testname)
 
 # Function to run tests using processes
-def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tests, output_dir):
+def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
     print("Running " + str(len(tests)) + " arch tests...")
     processes = []
 
     # Create a process for each test command
     for test in tests:
-        process = multiprocessing.Process(target=run_test, args=(test, xlen, passing_tests, failing_tests, timeout_tests, output_dir))
+        process = multiprocessing.Process(target=run_test, args=(test, passing_tests, failing_tests, timeout_tests, output_dir))
         process.start()
         processes.append(process)
 
@@ -67,11 +72,13 @@ def run_tests_in_parallel(tests, xlen, passing_tests, failing_tests, timeout_tes
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")
-    parser.add_argument("xlen", type=str, choices=['rv32', 'rv64'], help="The XLEN value (rv32 or rv64)")
     parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
-    parser.add_argument("--skip-virt", action='store_true', help="Do not skip virtual tests")
+    parser.add_argument("--v-only", action='store_true', help="Only run virtual tests (skip baremetal)")
+    parser.add_argument("--p-only", action='store_true', help="Only run baremetal tests (skip virtual)")
+    parser.add_argument("--rv32-only", action='store_true', help="Only run RV32 tests (skip RV64)")
+    parser.add_argument("--rv64-only", action='store_true', help="Only run RV64 tests (skip RV32)")
     args = parser.parse_args()
 
     SUPPORTED_EXTENSIONS = ["mi", "si", "ui", "um", "ua", "uf", "ud", "uc"]
@@ -90,15 +97,32 @@ def main():
             sys.exit(1)
 
     tests = get_tests(args.directory)
-    if args.xlen == "rv32":
+
+    if args.rv32_only and args.rv64_only:
+        print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
+        sys.exit(1)
+
+    if args.p_only and args.v_only:
+        print("ERROR: Cannot set both \'--p-only\' and \'--v-only\'")
+        sys.exit(1)
+
+
+    if args.rv32_only:
+        print("WARNING: Skipping RV64 tests")
         tests = [test for test in tests if "rv32" in test]
-    elif args.xlen == "rv64":
+
+    if args.rv64_only:
+        print("WARNING: Skipping RV32 tests")
         tests = [test for test in tests if "rv64" in test]
 
-    # TODO: Atlas does not support translation yet
-    if args.skip_virt:
+    if args.p_only:
         print("WARNING: Skipping translation tests")
         tests = [test for test in tests if "-p-" in test]
+
+    if args.v_only:
+        print("WARNING: Skipping baremetal tests")
+        tests = [test for test in tests if "-v-" in test]
+
     # TODO: Atlas does not support zba, zbb, zbc, zbs or zfh extensions
     print("WARNING: Skipping all non-G extension tests")
     tests = [test for test in tests if any(ext+"-" in test for ext in SUPPORTED_EXTENSIONS)]
@@ -106,12 +130,19 @@ def main():
     # Ignore some tests that are unsupported or bad tests
     skip_tests = [
         "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
+        "rv64uf-v-fclass",
         "rv32uf-p-fclass",
+        "rv32uf-v-fclass",
         "rv64ud-p-fclass",
+        "rv64ud-v-fclass",
         "rv32ud-p-fclass",
+        "rv32ud-v-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
+        "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",
+        "rv32mi-v-breakpoint",
         "rv64mi-p-access",     # BAD TEST: Has check for max paddr size restriction which has been lifted
+        "rv64mi-v-access",
     ]
     for skip_test in skip_tests:
         print("Skipping", skip_test)
@@ -122,7 +153,7 @@ def main():
     failing_tests = multiprocessing.Queue()
     timeout_tests = multiprocessing.Queue()
 
-    run_tests_in_parallel(tests, args.xlen, passing_tests, failing_tests, timeout_tests, output_dir)
+    run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir)
 
     num_passed = 0
     print("PASSED:")
@@ -139,16 +170,30 @@ def main():
         while not timeout_tests.empty():
             print("\t" + timeout_tests.get())
 
-    print("\nPASS     RATE: " + str(num_passed) + "/" + str(len(tests)))
+    print("\n    PASS RATE: " + str(num_passed) + "/" + str(len(tests)))
 
-    if not args.skip_virt:
-        print("EXPECTED RATE: " + PASSING_STATUS_VIRT[0] + "/" + PASSING_STATUS_VIRT[1])
-        if (str(num_passed) < PASSING_STATUS_VIRT[0]):
-            print("ERROR: failed!")
-    else:
-        print("EXPECTED RATE: " + PASSING_STATUS_NON_VIRT[0] + "/" + PASSING_STATUS_NON_VIRT[1])
-        if (str(num_passed) < PASSING_STATUS_NON_VIRT[0]):
-            print("ERROR: failed!")
+    expected_passing_tests = 0
+    total_tests = 0
+
+    # Get expected pass rate
+    if not args.rv64_only:
+        if not args.v_only:
+            expected_passing_tests += PASSING_STATUS_RV32_NON_VIRT[0]
+            total_tests += PASSING_STATUS_RV32_NON_VIRT[1]
+        if not args.p_only:
+            expected_passing_tests += PASSING_STATUS_RV32_VIRT[0]
+            total_tests += PASSING_STATUS_RV32_VIRT[1]
+    if not args.rv32_only:
+        if not args.v_only:
+            expected_passing_tests += PASSING_STATUS_RV64_NON_VIRT[0]
+            total_tests += PASSING_STATUS_RV64_NON_VIRT[1]
+        if not args.p_only:
+            expected_passing_tests += PASSING_STATUS_RV64_VIRT[0]
+            total_tests += PASSING_STATUS_RV64_VIRT[1]
+
+    print("EXPECTED RATE: " + str(expected_passing_tests) + "/" + str(total_tests))
+    if (num_passed < expected_passing_tests):
+        print("ERROR: failed!")
 
 if __name__ == "__main__":
     main()

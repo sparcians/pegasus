@@ -89,7 +89,7 @@ namespace atlas
             // Set next PC, can be overidden by a branch/jump instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);
         }
-        catch (const mavis::UnknownOpcode & e)
+        catch (const mavis::BaseException & e)
         {
             THROW_ILLEGAL_INST;
         }

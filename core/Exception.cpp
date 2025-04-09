@@ -110,10 +110,17 @@ namespace atlas
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
 
             const uint64_t mpv_val = 0;
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
-
             const uint64_t gva_val = 0;
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+            }
+            else
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv", mpv_val);
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUSH, "gva", gva_val);
+            }
         }
         state->setPrivMode(priv_mode, prev_virt_mode);
 

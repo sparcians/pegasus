@@ -890,7 +890,14 @@ namespace atlas
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
 
             // Get the previous virtual mode from the MPV field of MSTATUS
-            prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
+            }
+            else
+            {
+                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv");
+            }
 
             // If the mret instruction changes the privilege mode to a mode less privileged
             // than Machine mode, the MPRV bit is reset to 0
@@ -911,7 +918,14 @@ namespace atlas
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", (XLEN)PrivMode::USER);
 
             // Reset MPV
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", 0);
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", 0);
+            }
+            else
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv", 0);
+            }
         }
         else
         {
@@ -992,6 +1006,10 @@ namespace atlas
                 // Function arguments are a0-a6 (x10-x16)
                 const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
                 state->stopSim(exit_code);
+            }
+            else
+            {
+                sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
             }
         }
         else
