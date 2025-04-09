@@ -3,10 +3,14 @@
 #include "elfio/elfio.hpp"
 
 #include "include/AtlasTypes.hpp"
+#include "system/SimpleUART.hpp"
+#include "system/MagicMemory.hpp"
 
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/memory/AddressTypes.hpp"
+#include "sparta/simulation/ResourceTreeNode.hpp"
+#include "sparta/simulation/ResourceFactory.hpp"
 
 namespace sparta::memory
 {
@@ -29,20 +33,23 @@ namespace atlas
           public:
             AtlasSystemParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
+            PARAMETER(bool, enable_syscall_emulation, false,
+                      "Enable emulation of system calls via the ecall instruction")
+            PARAMETER(bool, enable_uart, false, "Enable a Uart")
             HIDDEN_PARAMETER(std::string, workload, "", "Workload to load into memory")
         };
 
         // Constructor
         AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p);
 
+        // Is syscall emulation enabled?
+        bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
+
         // Get pointer to system memory
         sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
 
         // Get starting PC from ELF
         Addr getStartingPc() const { return starting_pc_; }
-
-        //
-        void initializeMemory(const std::string & name, sparta::memory::BlockingMemoryIF* memory);
 
         const std::unordered_map<Addr, std::string> & getSymbols() const { return symbols_; }
 
@@ -52,14 +59,23 @@ namespace atlas
         constexpr static uint64_t ATLAS_MEMORY_FILL = 0x0;
 
       private:
-        // Factories and tree nodes
+        // Device factories
+        sparta::ResourceFactory<SimpleUART, SimpleUART::SimpleUARTParameters> uart_fact_;
+        sparta::ResourceFactory<MagicMemory, MagicMemory::MagicMemoryParameters> magic_mem_fact_;
+
+        // Tree nodes
         std::vector<std::unique_ptr<sparta::TreeNode>> tree_nodes_;
+
+        // System call emulation
+        const bool syscall_emulation_enabled_;
+
+        // Devices
+        SimpleUART* uart_ = nullptr;
+        MagicMemory* magic_mem_ = nullptr;
 
         // Memory and memory maps
         std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
-        std::vector<std::unique_ptr<sparta::memory::BlockingMemoryObjectIFNode>>
-            memory_object_nodes_;
 
         struct MemorySection
         {
@@ -68,9 +84,23 @@ namespace atlas
             sparta::memory::addr_t total_size_aligned = 0;
             sparta::memory::addr_t start_address = 0;
             const uint8_t* data = nullptr;
+
+            MemorySection() = default;
+
+            MemorySection(const std::string name, const sparta::memory::addr_t file_size,
+                          const sparta::memory::addr_t total_size_aligned,
+                          const sparta::memory::addr_t start_address, const uint8_t* data) :
+                name(name),
+                file_size(file_size),
+                total_size_aligned(total_size_aligned),
+                start_address(start_address),
+                data(data)
+            {
+            }
         };
 
         std::vector<MemorySection> memory_sections_;
+        sparta::utils::ValidValue<MemorySection> magic_memory_section_;
 
         void createMemoryMappings_(sparta::TreeNode* sys_node);
 

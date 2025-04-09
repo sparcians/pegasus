@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/translate/AtlasTranslationState.hpp"
 #include "core/AtlasAllocatorWrapper.hpp"
 #include "core/AtlasInst.hpp"
 
@@ -64,7 +63,7 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64g", "ISA string")
+            PARAMETER(std::string, isa_string, "rv64gc_zicsr_zifencei", "ISA string")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
@@ -81,7 +80,33 @@ namespace atlas
 
         uint64_t getXlen() const { return xlen_; }
 
+        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
+        {
+            return extension_manager_;
+        }
+
         MavisType* getMavis() { return mavis_.get(); }
+
+        enum MavisUIDs : mavis::InstructionUniqueID
+        {
+            MAVIS_UID_CSRRW = 1,
+            MAVIS_UID_CSRRS,
+            MAVIS_UID_CSRRC,
+            MAVIS_UID_CSRRWI,
+            MAVIS_UID_CSRRSI,
+            MAVIS_UID_CSRRCI
+        };
+
+        std::set<std::string> & getMavisInclusions() { return inclusions_; }
+
+        void updateMavisContext()
+        {
+            const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
+            // FIXME: Use ISA string for context name and check if it already exists
+            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(),
+                                getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
+            mavis_->switchContext(std::to_string(pc_));
+        }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -89,21 +114,28 @@ namespace atlas
 
         Addr getPc() const { return pc_; }
 
+        Addr getPrevPc() const { return prev_pc_; }
+
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
 
-        void setPrivMode(PrivMode priv_mode) { priv_mode_ = priv_mode; }
-
         PrivMode getPrivMode() const { return priv_mode_; }
 
-        void setNextPrivMode(PrivMode next_priv_mode) { next_priv_mode_ = next_priv_mode; }
+        bool getVirtualMode() const { return virtual_mode_; }
 
-        PrivMode getNextPrivMode() const { return next_priv_mode_; }
+        void setPrivMode(PrivMode priv_mode, bool virt_mode)
+        {
+            virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
+            priv_mode_ = priv_mode;
+        }
+
+        void changeMMUMode(uint32_t satp_mode);
 
         struct SimState
         {
             uint64_t current_opcode = 0;
+            uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
             bool sim_stopped = false;
@@ -125,11 +157,14 @@ namespace atlas
 
         void setCurrentInst(AtlasInstPtr inst)
         {
-            inst->setUid(uid_++);
+            inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
 
-        AtlasTranslationState* getTranslationState() { return &translation_state_; }
+        // Is the "H" extension enabled?
+        bool hasHypervisor() const { return hypervisor_enabled_; }
+
+        AtlasTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
         AtlasSystem* getAtlasSystem() const { return atlas_system_; }
 
@@ -183,6 +218,15 @@ namespace atlas
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
         Exception* getExceptionUnit() const { return exception_unit_; }
+
+        void stopSim(const uint64_t exit_code)
+        {
+            sim_state_.workload_exit_code = exit_code;
+            sim_state_.test_passed = (exit_code == 0) ? true : false;
+            sim_state_.sim_stopped = true;
+
+            finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
+        }
 
         // tuple: reg name, group num, reg id, initial expected val, initial actual val
         using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
@@ -248,11 +292,16 @@ namespace atlas
         // Supported ISA string
         const std::string supported_isa_string_;
 
+        template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
+
         // Path to Mavis
         const std::string isa_file_path_;
 
         // Path to Atlas
         const std::string uarch_file_path_;
+
+        // Get Atlas arch JSONs for Mavis
+        mavis::FileNameListType getUArchFiles_() const;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
@@ -263,8 +312,19 @@ namespace atlas
         // Mavis
         std::unique_ptr<MavisType> mavis_;
 
+        static inline mavis::InstUIDList mavis_uid_list_{
+            {"csrrw", MAVIS_UID_CSRRW},   {"csrrs", MAVIS_UID_CSRRS},
+            {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
+            {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
+
+        // Mavis list of included extension tags
+        std::set<std::string> inclusions_;
+
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Do we have hypervisor?
+        const bool hypervisor_enabled_;
 
         //! Current pc
         Addr pc_ = 0x0;
@@ -272,14 +332,14 @@ namespace atlas
         //! Next pc
         Addr next_pc_ = 0x0;
 
+        //! Previous pc
+        Addr prev_pc_ = 0x0;
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
-        //! Next privilege mode
-        PrivMode next_priv_mode_ = PrivMode::MACHINE;
-
-        //! Unique instruction ID
-        uint64_t uid_ = 0;
+        //! Current virtual translation mode
+        bool virtual_mode_ = false;
 
         //! Simulation state
         SimState sim_state_;
@@ -288,8 +348,8 @@ namespace atlas
         ActionGroup* incrementPc_(AtlasState* state);
         atlas::Action increment_pc_action_;
 
-        // Translation state
-        AtlasTranslationState translation_state_;
+        // Translation/MMU state
+        AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory
         AtlasSystem* atlas_system_;

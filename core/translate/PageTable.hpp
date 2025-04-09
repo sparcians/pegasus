@@ -109,7 +109,7 @@ namespace atlas
         const uint32_t max_entries_;
         const uint32_t base_addr_;
 
-        bool isValidIndex_(uint32_t idx) const { return (idx >= 0) && (idx < max_entries_); }
+        bool isValidIndex_(uint32_t idx) const { return idx < max_entries_; }
     };
 
     template <typename XLEN, MMUMode Mode>

@@ -1,4 +1,6 @@
 import sqlite3
+from backend.sim_api import FormatHex
+from backend.c_dtypes import MemRead, MemWrite
 
 class StateQuery:
     def __init__(self, db_file):
@@ -12,38 +14,42 @@ class StateQuery:
         return self.cursor.fetchall()
 
     def GetSnapshot(self, pc):
-        pc = int(pc, 16) if isinstance(pc, str) else pc
+        pc = FormatHex(pc)
         reg_vals = self.__GetInitRegValues()
 
         class RegVal:
             def __init__(self, val):
                 self.prev_val = None
-                self.curr_val = val
+                self.curr_val = FormatHex(val)
 
             def SetValue(self, val):
                 self.prev_val = self.curr_val
-                self.curr_val = val
+                self.curr_val = FormatHex(val)
 
         reg_vals = {reg_name: RegVal(reg_val) for reg_name, reg_val in reg_vals.items()}
-
-        cmd = 'SELECT ElemName, ElemVal, InstUID FROM InstChanges'
+        cmd = 'SELECT ElemName, ElemVal, ExpectedElemVal, InstUID FROM InstChanges'
         self.cursor.execute(cmd)
 
         changes_by_inst_uid = {}
-        for elem_name, curr_val, inst_uid in self.cursor.fetchall():
+        expected_vals_by_inst_uid = {}
+        for elem_name, curr_val, expected_val, inst_uid in self.cursor.fetchall():
             if inst_uid not in changes_by_inst_uid:
                 changes_by_inst_uid[inst_uid] = {}
-            changes_by_inst_uid[inst_uid][elem_name] = curr_val
+            if inst_uid not in expected_vals_by_inst_uid:
+                expected_vals_by_inst_uid[inst_uid] = {}
 
-        cmd = 'SELECT Opcode, Dasm, InstUID FROM Instructions WHERE PC = {}'.format(pc)
+            changes_by_inst_uid[inst_uid][elem_name] = FormatHex(curr_val)
+            expected_vals_by_inst_uid[inst_uid][elem_name] = FormatHex(expected_val)
+
+        cmd = 'SELECT Opcode, Dasm, InstUID FROM Instructions WHERE PC = "{}"'.format(pc)
         self.cursor.execute(cmd)
         opcode, dasm, inst_uid = self.cursor.fetchone()
 
-        cmd = 'SELECT PC,InstUID FROM Instructions'
+        cmd = 'SELECT PC, InstUID FROM Instructions'
         self.cursor.execute(cmd)
         for inst_pc, uid in self.cursor.fetchall():
             # Don't replay the simulation too far
-            if inst_pc > pc:
+            if int(inst_pc, 16) > int(pc, 16):
                 break
 
             if uid in changes_by_inst_uid:
@@ -51,18 +57,45 @@ class StateQuery:
                     reg_vals[elem_name].SetValue(curr_val)
 
         changes = changes_by_inst_uid.get(inst_uid, {})
-        changes = {reg_name: (reg_vals[reg_name].prev_val, reg_vals[reg_name].curr_val) for reg_name in changes}
-        reg_vals = {reg_name: reg_val.curr_val for reg_name, reg_val in reg_vals.items()}
+        changes = {reg_name: (FormatHex(reg_vals[reg_name].prev_val), FormatHex(reg_vals[reg_name].curr_val)) for reg_name in changes}
+        reg_vals = {reg_name: FormatHex(reg_val.curr_val) for reg_name, reg_val in reg_vals.items()}
 
-        return StateSnapshot(pc, opcode, dasm, changes, reg_vals)
+        expected_vals = expected_vals_by_inst_uid.get(inst_uid, {})
+        expected_vals = {reg_name: expected_vals[reg_name] for reg_name in changes}
+        for reg_name in expected_vals:
+            reg_val = expected_vals[reg_name]
+            if reg_val is None:
+                continue
+
+            expected_vals[reg_name] = FormatHex(reg_val)
+
+        cmd = 'SELECT Addr, Value, Prior FROM MemoryAccesses WHERE InstUID = "{}"'.format(inst_uid)
+        self.cursor.execute(cmd)
+
+        mem_reads = []
+        mem_writes = []
+        for addr, value, prior in self.cursor.fetchall():
+            addr = FormatHex(addr)
+            value = FormatHex(value)
+            is_read = prior == 'N/A'
+
+            if is_read:
+                read = MemRead(addr, value)
+                mem_reads.append(read)
+            else:
+                prior = FormatHex(prior)
+                write = MemWrite(addr, value, prior)
+                mem_writes.append(write)
+
+        return StateSnapshot(pc, opcode, dasm, changes, reg_vals, expected_vals, mem_reads, mem_writes)
 
     def GetInitialState(self):
-        cmd = 'SELECT MIN(PC) FROM Instructions'
+        cmd = 'SELECT PC FROM Instructions ORDER BY Id ASC LIMIT 1'
         self.cursor.execute(cmd)
-        pc = self.cursor.fetchone()[0]
+        pc = FormatHex(self.cursor.fetchone()[0])
         reg_vals = self.__GetInitRegValues()
 
-        return StateSnapshot(pc, None, None, None, reg_vals)
+        return StateSnapshot(pc, None, None, None, reg_vals, {}, [], [])
 
     def __GetInitRegValues(self):
         if self.init_reg_values is None:
@@ -73,12 +106,15 @@ class StateQuery:
         return self.init_reg_values.copy()
 
 class StateSnapshot:
-    def __init__(self, pc, opcode, dasm, changes, reg_vals):
+    def __init__(self, pc, opcode, dasm, changes, reg_vals, expected_vals, mem_reads, mem_writes):
         self.pc = pc
         self.opcode = opcode
         self.dasm = dasm
         self.changes = changes
         self.reg_vals = reg_vals
+        self.expected_vals = expected_vals
+        self.mem_reads = mem_reads
+        self.mem_writes = mem_writes
 
     def getPC(self):
         return self.pc
@@ -94,3 +130,12 @@ class StateSnapshot:
 
     def getRegValue(self, reg_name):
         return self.reg_vals[reg_name]
+
+    def getExpectedValue(self, reg_name):
+        return self.expected_vals.get(reg_name)
+
+    def getMemReads(self):
+        return self.mem_reads
+
+    def getMemWrites(self):
+        return self.mem_writes

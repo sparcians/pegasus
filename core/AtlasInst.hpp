@@ -4,6 +4,8 @@
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
+#include "core/translate/AtlasTranslationState.hpp"
+
 namespace sparta
 {
     class Register;
@@ -27,9 +29,14 @@ namespace atlas
 
         mavis::OpcodeInfo::PtrType getMavisOpcodeInfo() { return opcode_info_; }
 
+        mavis::InstructionUniqueID getMavisUid() const
+        {
+            return opcode_info_->getInstructionUniqueID();
+        }
+
         const std::string & getMnemonic() const { return opcode_info_->getMnemonic(); }
 
-        const std::string dasmString() const { return opcode_info_->dasmString(); }
+        std::string dasmString() const { return opcode_info_->dasmString(); }
 
         mavis::Opcode getOpcode() const { return opcode_info_->getOpcode(); }
 
@@ -65,7 +72,11 @@ namespace atlas
 
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
 
+        bool writesCsr() const;
+
         uint32_t getOpcodeSize() const { return opcode_size_; }
+
+        uint32_t isStoreType() const { return is_store_type_; }
 
         uint32_t getRs1() const
         {
@@ -79,10 +90,29 @@ namespace atlas
             return rs2_info_->field_value;
         }
 
+        uint32_t getRs3() const
+        {
+            sparta_assert(rs3_info_, "Operand RS3 is a nullptr! " << *this);
+            return rs3_info_->field_value;
+        }
+
         uint32_t getRd() const
         {
             sparta_assert(rd_info_, "Operand RD is a nullptr! " << *this);
             return rd_info_->field_value;
+        }
+
+        uint64_t getRM() const
+        {
+            try
+            {
+                return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::RM);
+            }
+            catch (...)
+            {
+                sparta_assert(false, "Can't get SpecialField RM! " << *this);
+            }
+            return 0;
         }
 
         sparta::Register* getRs1Reg() const
@@ -97,6 +127,12 @@ namespace atlas
             return rs2_reg_;
         }
 
+        sparta::Register* getRs3Reg() const
+        {
+            sparta_assert(rs3_reg_, "Operand RS3 is a nullptr! " << *this);
+            return rs3_reg_;
+        }
+
         sparta::Register* getRdReg() const
         {
             sparta_assert(rd_reg_, "Operand RD is a nullptr! " << *this);
@@ -106,6 +142,8 @@ namespace atlas
         bool hasRs1() const { return rs1_reg_ != nullptr; }
 
         bool hasRs2() const { return rs2_reg_ != nullptr; }
+
+        bool hasRs3() const { return rs3_reg_ != nullptr; }
 
         bool hasRd() const { return rd_reg_ != nullptr; }
 
@@ -117,6 +155,10 @@ namespace atlas
 
         bool unimplemented() const { return unimplemented_; }
 
+        // Translation information.  Specifically, this is for data
+        // accesses
+        AtlasTranslationState* getTranslationState() { return &translation_state_; }
+
       private:
         // Unique ID
         uint64_t uid_;
@@ -127,16 +169,24 @@ namespace atlas
         // Opcode size in bytes, either 4 or 2 (compressed)
         const uint32_t opcode_size_;
 
+        // Is this a store-type instruction
+        const bool is_store_type_;
+
         // Next PC
         Addr next_pc_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;
         const mavis::OperandInfo::Element* rs2_info_;
+        const mavis::OperandInfo::Element* rs3_info_;
         const mavis::OperandInfo::Element* rd_info_;
         sparta::Register* rs1_reg_;
         sparta::Register* rs2_reg_;
+        sparta::Register* rs3_reg_;
         sparta::Register* rd_reg_;
+
+        // Translation state for load/store instructions
+        AtlasTranslationState translation_state_;
 
         ActionGroup inst_action_group_;
         bool unimplemented_ = false;

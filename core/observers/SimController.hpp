@@ -16,12 +16,13 @@ namespace atlas
         SimController();
 
         void postInit(AtlasState*);
-        ActionGroup* preExecute(AtlasState* state) override;
-        ActionGroup* postExecute(AtlasState* state) override;
-        ActionGroup* preException(AtlasState* state) override;
         void onSimulationFinished(AtlasState* state);
 
       private:
+        ActionGroup* preExecute_(AtlasState* state) override;
+        ActionGroup* postExecute_(AtlasState* state) override;
+        ActionGroup* preException_(AtlasState* state) override;
+
         class SimEndpoint;
         std::shared_ptr<SimEndpoint> endpoint_;
     };

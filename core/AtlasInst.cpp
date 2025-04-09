@@ -51,17 +51,43 @@ namespace atlas
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
+        is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
         rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(
+            opcode_info->getSourceOpInfoList())),
+        rs3_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS3>(
             opcode_info->getSourceOpInfoList())),
         rd_info_(
             getOperand<mavis::InstMetaData::OperandFieldID::RD>(opcode_info->getDestOpInfoList())),
         rs1_reg_(getSpartaReg(state, rs1_info_)),
         rs2_reg_(getSpartaReg(state, rs2_info_)),
+        rs3_reg_(getSpartaReg(state, rs3_info_)),
         rd_reg_(getSpartaReg(state, rd_info_)),
         inst_action_group_(extractor_info_->inst_action_group_)
     {
+    }
+
+    bool AtlasInst::writesCsr() const
+    {
+        switch (getMavisUid())
+        {
+            // csrrw/csrrwi always writes
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRW:
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRWI:
+                return true;
+            // csrrs/csrrc write if rs1 != 0
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRS:
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRC:
+                return rs1_info_ && (rs1_info_->field_value != 0);
+            // csrrsi/csrrci writes if imm != 0
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRSI:
+            case AtlasState::MavisUIDs::MAVIS_UID_CSRRCI:
+                return getImmediate() != 0;
+            default:
+                sparta_assert(hasCsr() == false, "Unknown instruction with CSR: " << *this);
+                return false;
+        }
     }
 
     std::ostream & operator<<(std::ostream & os, const AtlasInst & inst)

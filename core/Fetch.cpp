@@ -50,8 +50,8 @@ namespace atlas
         AtlasState::SimState* sim_state = state->getSimState();
         sim_state->reset();
 
-        AtlasTranslationState* translation_state = state->getTranslationState();
-        translation_state->makeTranslationRequest(state->getPc(), sizeof(Opcode));
+        AtlasTranslationState* translation_state = state->getFetchTranslationState();
+        translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
         return nullptr;
@@ -60,13 +60,13 @@ namespace atlas
     ActionGroup* Fetch::decode_(AtlasState* state)
     {
         // Get translation result
-        const AtlasTranslationState* translation_state = state->getTranslationState();
-        const AtlasTranslationState::TranslationResult result =
-            translation_state->getTranslationResult();
+        const AtlasTranslationState::TranslationResult & result =
+            state->getFetchTranslationState()->getResult();
 
         // Read opcode from memory
-        std::vector<uint8_t> buffer(sizeof(result.size), 0);
-        Opcode opcode = state->readMemory<Opcode>(result.physical_addr);
+        std::vector<uint8_t> buffer(sizeof(result.getSize()), 0);
+        // TBD: Opcode opcode = result.readMemory<Opcode>(result.physical_addr);
+        Opcode opcode = state->readMemory<Opcode>(result.getPaddr());
 
         // Compression detection
         OpcodeSize opcode_size = 4;
@@ -77,19 +77,21 @@ namespace atlas
         }
 
         state->getSimState()->current_opcode = opcode;
+        ++(state->getSimState()->current_uid);
 
         // Decode instruction with Mavis
         AtlasInstPtr inst = nullptr;
         try
         {
             inst = state->getMavis()->makeInst(opcode, state);
+            assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);
         }
         catch (const mavis::UnknownOpcode & e)
         {
-            THROW_ILLEGAL_INSTRUCTION;
+            THROW_ILLEGAL_INST;
         }
 
         if (SPARTA_EXPECT_FALSE(inst->hasCsr()))
@@ -98,7 +100,7 @@ namespace atlas
                 inst->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
             if (state->getCsrRegister(csr) == nullptr)
             {
-                THROW_ILLEGAL_INSTRUCTION;
+                THROW_ILLEGAL_INST;
             }
 
             // TODO: This is probably not the best place for this check...
@@ -107,7 +109,7 @@ namespace atlas
                 const uint32_t tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
                 if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm_val)
                 {
-                    THROW_ILLEGAL_INSTRUCTION;
+                    THROW_ILLEGAL_INST;
                 }
             }
         }

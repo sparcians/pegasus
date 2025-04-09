@@ -82,7 +82,7 @@ namespace atlas
         // returns, environment calls, breakpoints, fences
         template <typename XLEN, PrivMode PRIV_MODE>
         ActionGroup* xret_handler(atlas::AtlasState* state);
-        ActionGroup* ecall_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* ecall_handler(atlas::AtlasState* state);
         ActionGroup* ebreak_handler(atlas::AtlasState* state);
         ActionGroup* fence_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* sfence_vma_handler(atlas::AtlasState* state);

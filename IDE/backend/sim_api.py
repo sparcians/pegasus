@@ -1,6 +1,36 @@
 import json
 import backend.c_dtypes as c_dtypes
 
+def FormatHex(val):
+    if val is None:
+        return 'NULL'
+
+    if isinstance(val, int):
+        return FormatHex(hex(val))
+
+    assert isinstance(val, str)
+
+    if val.startswith('-0x'):
+        val = val.lstrip('-0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '-0x0'
+        else:
+            return '-0x' + val
+
+    if val.startswith('0x'):
+        val = val.lstrip('0x')
+        val = val.lstrip('0')
+        if val == '':
+            return '0x0'
+        else:
+            return '0x' + val
+
+    if val == 'NULL':
+        return 'NULL'
+
+    return hex(int(val))
+
 class SimResponse:
     def __init__(self, response=None):
         self.response = response
@@ -27,7 +57,23 @@ def atlas_xlen(endpoint):
 
 # Equiv C++:  AtlasState::getPc()
 def atlas_pc(endpoint):
-    return endpoint.request('state.pc')
+    pc = endpoint.request('state.pc')
+    if type(pc) in (int, str):
+        pc = FormatHex(pc)
+
+    return pc
+
+# Equiv C++:  AtlasState::getPrevPc()
+def atlas_prev_pc(endpoint):
+    pc = endpoint.request('state.prev_pc')
+    if type(pc) in (int, str):
+        pc = FormatHex(pc)
+
+    return pc
+
+# Equiv C++:  AtlasState::getSimState()->current_uid
+def atlas_current_uid(endpoint):
+    return endpoint.request('state.current_uid')
 
 # Equiv C++:  AtlasState::getSimState()->workload_exit_code
 def atlas_exit_code(endpoint):
@@ -59,7 +105,11 @@ def atlas_inst_dasm_string(endpoint):
 
 # Equiv C++:  AtlasState::getCurrentInst()->getOpcode()
 def atlas_inst_opcode(endpoint):
-    return endpoint.request('inst.opcode')
+    opcode = endpoint.request('inst.opcode')
+    if type(opcode) in (int, str):
+        opcode = FormatHex(opcode)
+
+    return opcode
 
 # Equiv C++:  AtlasState::getCurrentInst()->getPrivMode()
 def atlas_inst_priv(endpoint):
@@ -71,7 +121,11 @@ def atlas_inst_has_immediate(endpoint):
 
 # Equiv C++:  AtlasState::getCurrentInst()->getImmediate()
 def atlas_inst_immediate(endpoint):
-    return endpoint.request('inst.immediate')
+    imm = endpoint.request('inst.immediate')
+    if type(imm) in (int, str):
+        imm = FormatHex(imm)
+
+    return imm
 
 # Equiv C++:  AtlasState::getCurrentInst()->getRs1()->getName()
 def atlas_inst_rs1_name(endpoint):
@@ -119,7 +173,11 @@ def atlas_reg_id(endpoint, reg_name):
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->read()
 def atlas_reg_value(endpoint, reg_name):
-    return endpoint.request('reg.value %s' % reg_name)
+    reg_value = endpoint.request('reg.value %s' % reg_name)
+    if type(reg_value) in (int, str):
+        reg_value = FormatHex(reg_value)
+
+    return reg_value
 
 # Equiv C++:  AtlasState::findRegister(reg_name)->write(value)
 def atlas_reg_write(endpoint, reg_name, value):
@@ -130,6 +188,72 @@ def atlas_reg_write(endpoint, reg_name, value):
 def atlas_reg_dmiwrite(endpoint, reg_name, value):
     value = c_dtypes.convert_to_hex(value)
     return endpoint.request('reg.dmiwrite %s %s' % (reg_name, value))
+
+# Equiv C++:  This goes through the AtlasState's SimController observer,
+#             whose Observer base class holds a vector of these structs:
+#
+#                 struct MemRead
+#                 {
+#                     Addr addr;
+#                     size_t size;
+#                     uint64_t value;
+#                 };
+#
+# This is intended to be called during postExecute() where the memory reads/writes
+# have occurred during the inst handler method.
+#
+# Returns a list of c_dtypes.MemRead objects.
+#
+def atlas_mem_reads(endpoint):
+    reads = []
+    ans = endpoint.request('mem.reads')
+    if not isinstance(ans, str):
+        return reads
+
+    for pair in ans.split(','):
+        if not pair:
+            continue
+
+        addr, value = pair.split()
+        addr = FormatHex(addr.strip())
+        value = FormatHex(value.strip())
+        reads.append(c_dtypes.MemRead(addr, value))
+
+    return reads
+
+# Equiv C++:  This goes through the AtlasState's SimController observer,
+#             whose Observer base class holds a vector of these structs:
+#
+#                 struct MemWrite
+#                 {
+#                     Addr addr;
+#                     size_t size;
+#                     uint64_t value;
+#                     uint64_t prior_value;
+#                 };
+#
+# This is intended to be called during postExecute() where the memory reads/writes
+# have occurred during the inst handler method.
+#
+# Returns a list of c_dtypes.MemWrite objects.
+#
+def atlas_mem_writes(endpoint):
+    writes = []
+    ans = endpoint.request('mem.writes')
+    if not isinstance(ans, str):
+        return writes
+
+    for trip in ans.split(','):
+        if not trip:
+            continue
+
+        addr, prior, new = trip.split()
+        addr = FormatHex(addr.strip())
+        prior = FormatHex(prior.strip())
+        new = FormatHex(new.strip())
+        writes.append(c_dtypes.MemWrite(addr, prior, new))
+
+    return writes
 
 # Equiv C++:  AtlasState->getCurrentInst()
 #                       ->getMavisOpcodeInfo()

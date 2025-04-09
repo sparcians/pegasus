@@ -39,6 +39,11 @@ class InstViewer(wx.Panel):
         riscv_tests_dir = self.frame.riscv_tests_dir
         sim_exe_path = self.frame.sim_exe_path
         obs_sim = ObserverSim(riscv_tests_dir, sim_exe_path, test)
+        if obs_sim.reg_info_query is None:
+            msg = 'Test will load without "truth" values for comparison. '
+            msg += 'Please follow the steps in <atlas>/spike/README.md to build Spike to enable this feature.'
+            wx.MessageBox(msg, 'Warning', wx.OK | wx.ICON_WARNING)
+
         state_db = StateDB()
 
         self.msg_queue = multiprocessing.Queue()
@@ -46,7 +51,8 @@ class InstViewer(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.__UpdateLoadingMsg, self.timer)
         self.timer.Start(100)
 
-        obs = StateSerializer(state_db, self.msg_queue)
+        rv = test[:4]
+        obs = StateSerializer(state_db, self.msg_queue, rv)
 
         # Get ready to call the transaction on a separate thread
         def RunObserver():
@@ -77,7 +83,6 @@ class InstViewer(wx.Panel):
 
         for pc, _, dasm, inst_uid in state_query.GetInstructions():
             i = self.inst_list_ctrl.GetItemCount()
-            pc = '0x{:x}'.format(pc)
             self.inst_list_ctrl.InsertItem(i, pc)
             self.inst_list_ctrl.SetItem(i, 1, dasm)
             self.insts_by_pc[pc] = inst_uid

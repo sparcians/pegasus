@@ -64,10 +64,14 @@ namespace atlas
             return nullptr;
         }
 
-        ActionGroup* postExecute(AtlasState* state)
+        ActionGroup* postExecute(AtlasState* state,
+                                 const std::vector<Observer::MemRead> & mem_reads,
+                                 const std::vector<Observer::MemWrite> & mem_writes)
         {
             if (break_on_post_execute_)
             {
+                mem_reads_ = mem_reads;
+                mem_writes_ = mem_writes;
                 sendString_("post_execute");
                 return enterLoop_(state);
             }
@@ -85,6 +89,8 @@ namespace atlas
         {
             XLEN,
             PC,
+            PREV_PC,
+            CURRENT_UID,
             EXIT_CODE,
             TEST_PASSED,
             SIM_STOPPED,
@@ -109,6 +115,8 @@ namespace atlas
             REG_VALUE,
             REG_WRITE,
             REG_DMI_WRITE,
+            MEM_READS,
+            MEM_WRITES,
             BREAKPOINT,
             FINISH_EXECUTE,
             CONTINUE_SIM,
@@ -141,6 +149,8 @@ namespace atlas
             static const std::unordered_map<std::string, SimCommand> sim_commands = {
                 {"state.xlen", SimCommand::XLEN},
                 {"state.pc", SimCommand::PC},
+                {"state.prev_pc", SimCommand::PREV_PC},
+                {"state.current_uid", SimCommand::CURRENT_UID},
                 {"state.exit_code", SimCommand::EXIT_CODE},
                 {"state.test_passed", SimCommand::TEST_PASSED},
                 {"state.sim_stopped", SimCommand::SIM_STOPPED},
@@ -166,6 +176,8 @@ namespace atlas
                 {"reg.value", SimCommand::REG_VALUE},
                 {"reg.write", SimCommand::REG_WRITE},
                 {"reg.dmiwrite", SimCommand::REG_DMI_WRITE},
+                {"mem.reads", SimCommand::MEM_READS},
+                {"mem.writes", SimCommand::MEM_WRITES},
                 {"sim.break", SimCommand::BREAKPOINT},
                 {"sim.finish_execute", SimCommand::FINISH_EXECUTE},
                 {"sim.continue", SimCommand::CONTINUE_SIM},
@@ -243,6 +255,16 @@ namespace atlas
             sendJson_(json);
         }
 
+        template <typename T> void sendHex_(const T val)
+        {
+            static_assert(std::is_integral_v<T>);
+            std::stringstream ss;
+            ss << "0x" << std::hex << val;
+            const auto json = "{\"response_code\": \"ok\", \"response_payload\": \"" + ss.str()
+                              + "\", \"response_type\": \"str\"}";
+            sendJson_(json);
+        }
+
         ActionGroup* enterLoop_(AtlasState* state)
         {
             while (true)
@@ -273,6 +295,9 @@ namespace atlas
                                const std::vector<std::string> & args,
                                ActionGroup*& fail_action_group)
         {
+            // TODO cnyce: Consider replacing all use of stringstream here to
+            // only send hex values as uint64_t and format in Python.
+
             switch (sim_cmd)
             {
                 case SimCommand::XLEN:
@@ -280,7 +305,15 @@ namespace atlas
                     return true;
 
                 case SimCommand::PC:
-                    sendInt_(state->getPc());
+                    sendHex_(state->getPc());
+                    return true;
+
+                case SimCommand::PREV_PC:
+                    sendHex_(state->getPrevPc());
+                    return true;
+
+                case SimCommand::CURRENT_UID:
+                    sendInt_(state->getSimState()->current_uid);
                     return true;
 
                 case SimCommand::EXIT_CODE:
@@ -341,7 +374,7 @@ namespace atlas
                         if (!inst)
                             sendError_("No instruction");
                         else
-                            sendInt_(inst->getOpcode());
+                            sendHex_(inst->getOpcode());
                         return true;
                     }
 
@@ -369,7 +402,7 @@ namespace atlas
                         else if (!inst->hasImmediate())
                             sendError_("No immediate");
                         else
-                            sendInt_(inst->getImmediate());
+                            sendHex_(inst->getImmediate());
                         return true;
                     }
 
@@ -470,7 +503,7 @@ namespace atlas
 
                 case SimCommand::ACTIVE_EXCEPTION:
                     {
-                        const auto & exception = state->getExceptionUnit()->getUnhandledException();
+                        const auto & exception = state->getExceptionUnit()->getUnhandledFault();
                         sendInt_(exception.isValid() ? (int)exception.getValue() : -1);
                         return true;
                     }
@@ -572,7 +605,7 @@ namespace atlas
                             sendError_("Invalid register");
                             break;
                         }
-                        sendInt_(reg->dmiRead<uint64_t>());
+                        sendHex_(reg->dmiRead<uint64_t>());
                         return true;
                     }
 
@@ -621,6 +654,57 @@ namespace atlas
 
                         reg->dmiWrite(val);
                         sendAck_();
+                        return true;
+                    }
+
+                case SimCommand::MEM_READS:
+                    {
+                        std::string json;
+                        for (size_t idx = 0; idx < mem_reads_.size(); ++idx)
+                        {
+                            const auto & mem_read = mem_reads_[idx];
+                            std::stringstream ss;
+                            ss << "0x" << std::hex << mem_read.addr << " 0x" << mem_read.value;
+                            json += ss.str();
+                            if (idx < mem_reads_.size() - 1)
+                            {
+                                json += ", ";
+                            }
+                        }
+
+                        if (json.empty())
+                        {
+                            sendError_("No memory reads");
+                            break;
+                        }
+
+                        sendString_(json);
+                        return true;
+                    }
+
+                case SimCommand::MEM_WRITES:
+                    {
+                        std::string json;
+                        for (size_t idx = 0; idx < mem_writes_.size(); ++idx)
+                        {
+                            const auto & mem_write = mem_writes_[idx];
+                            std::stringstream ss;
+                            ss << "0x" << std::hex << mem_write.addr << " 0x"
+                               << mem_write.prior_value << " 0x" << mem_write.value;
+                            json += ss.str();
+                            if (idx < mem_writes_.size() - 1)
+                            {
+                                json += ", ";
+                            }
+                        }
+
+                        if (json.empty())
+                        {
+                            sendError_("No memory writes");
+                            break;
+                        }
+
+                        sendString_(json);
                         return true;
                     }
 
@@ -694,23 +778,26 @@ namespace atlas
         bool break_on_pre_execute_ = false;
         bool break_on_post_execute_ = false;
         bool break_on_pre_exception_ = false;
+
+        std::vector<Observer::MemRead> mem_reads_;
+        std::vector<Observer::MemWrite> mem_writes_;
     };
 
     SimController::SimController() : endpoint_(std::make_shared<SimEndpoint>()) {}
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 
-    ActionGroup* SimController::preExecute(AtlasState* state)
+    ActionGroup* SimController::preExecute_(AtlasState* state)
     {
         return endpoint_->preExecute(state);
     }
 
-    ActionGroup* SimController::postExecute(AtlasState* state)
+    ActionGroup* SimController::postExecute_(AtlasState* state)
     {
-        return endpoint_->postExecute(state);
+        return endpoint_->postExecute(state, mem_reads_, mem_writes_);
     }
 
-    ActionGroup* SimController::preException(AtlasState* state)
+    ActionGroup* SimController::preException_(AtlasState* state)
     {
         return endpoint_->preException(state);
     }

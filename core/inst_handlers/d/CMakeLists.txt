@@ -5,3 +5,4 @@ add_library(rvd
     OBJECT
     ${SOURCES}
 )
+add_dependencies(rvd AutogenArchFiles)

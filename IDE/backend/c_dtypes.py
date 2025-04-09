@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 class c_style_int:
     def __init__(self, value):
         """Initialize the integer value. This method should be overridden in derived classes for sign handling."""
@@ -162,3 +164,14 @@ def convert_to_hex(value):
         return f"0x{value.__value:016x}"
 
     return f"0x{value:016x}"
+
+@dataclass
+class MemRead:
+    addr:  str # address of the read (hex)
+    value: str # value (hex)
+
+@dataclass
+class MemWrite:
+    addr:  str # address of the write (hex)
+    value: str # value (hex)
+    prior: str # prior value (hex)

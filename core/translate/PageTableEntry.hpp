@@ -29,11 +29,17 @@ namespace atlas
         // Dirty bit, same for all modes
         bool isDirty() const { return pte_val_ & translate_types::Sv32::PteFields::dirty.bitmask; }
 
+        // Set the page dirty
+        void setDirty() { pte_val_ |= translate_types::Sv32::PteFields::dirty.bitmask; }
+
         // Accessed bit, same for all modes
         bool isAccessed() const
         {
             return pte_val_ & translate_types::Sv32::PteFields::accessed.bitmask;
         }
+
+        // Set accessed
+        void setAccessed() { pte_val_ |= translate_types::Sv32::PteFields::accessed.bitmask; }
 
         // Global bit, same for all modes
         bool isGlobal() const
@@ -62,7 +68,17 @@ namespace atlas
         // Valid bit, same fpr all modes
         bool isValid() const { return pte_val_ & translate_types::Sv32::PteFields::valid.bitmask; }
 
+        // Is this a Leaf PTE entry
         bool isLeaf() const { return canRead() || canExecute(); }
+
+        // Is this PTE accessable to the type
+        bool isAccessable(bool store) const
+        {
+            const decltype(pte_val_) access_mask =
+                translate_types::Sv32::PteFields::accessed.bitmask
+                | (store ? translate_types::Sv32::PteFields::dirty.bitmask : 0);
+            return pte_val_ & access_mask;
+        }
 
       private:
         XLEN pte_val_;
@@ -101,6 +117,49 @@ namespace atlas
                            | translate_types::Sv39::PteFields::ppn1.bitmask
                            | translate_types::Sv39::PteFields::ppn0.bitmask))
                        >> translate_types::Sv39::PteFields::ppn0.lsb;
+            }
+            else if constexpr (Mode == MMUMode::SV48)
+            {
+                ppn_fields_.resize(translate_types::Sv48::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv48::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv48::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn1.lsb;
+                ppn_fields_[2] = (pte_val_ & translate_types::Sv48::PteFields::ppn2.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn2.lsb;
+                ppn_fields_[3] = (pte_val_ & translate_types::Sv48::PteFields::ppn3.bitmask)
+                                 >> translate_types::Sv48::PteFields::ppn3.lsb;
+
+                // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
+                ppn_ = (pte_val_
+                        & (translate_types::Sv48::PteFields::ppn3.bitmask
+                           | translate_types::Sv48::PteFields::ppn2.bitmask
+                           | translate_types::Sv48::PteFields::ppn1.bitmask
+                           | translate_types::Sv48::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv48::PteFields::ppn0.lsb;
+            }
+            else if constexpr (Mode == MMUMode::SV57)
+            {
+                ppn_fields_.resize(translate_types::Sv57::num_ppn_fields);
+                ppn_fields_[0] = (pte_val_ & translate_types::Sv57::PteFields::ppn0.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn0.lsb;
+                ppn_fields_[1] = (pte_val_ & translate_types::Sv57::PteFields::ppn1.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn1.lsb;
+                ppn_fields_[2] = (pte_val_ & translate_types::Sv57::PteFields::ppn2.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn2.lsb;
+                ppn_fields_[3] = (pte_val_ & translate_types::Sv57::PteFields::ppn3.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn3.lsb;
+                ppn_fields_[4] = (pte_val_ & translate_types::Sv57::PteFields::ppn4.bitmask)
+                                 >> translate_types::Sv57::PteFields::ppn4.lsb;
+
+                // Combine PPN1 and PPN0 to form the full PPN, 22 bits total
+                ppn_ = (pte_val_
+                        & (translate_types::Sv57::PteFields::ppn4.bitmask
+                           | translate_types::Sv57::PteFields::ppn3.bitmask
+                           | translate_types::Sv57::PteFields::ppn2.bitmask
+                           | translate_types::Sv57::PteFields::ppn1.bitmask
+                           | translate_types::Sv57::PteFields::ppn0.bitmask))
+                       >> translate_types::Sv57::PteFields::ppn0.lsb;
             }
             else
             {
