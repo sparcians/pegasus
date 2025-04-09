@@ -10,7 +10,7 @@ import multiprocessing
 PASSING_STATUS_RV32_NON_VIRT = [84, 97]
 PASSING_STATUS_RV32_VIRT     = [0, 78]
 PASSING_STATUS_RV64_NON_VIRT = [123, 127]
-PASSING_STATUS_RV64_VIRT     = [77, 106]
+PASSING_STATUS_RV64_VIRT     = [104, 106]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
