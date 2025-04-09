@@ -291,7 +291,7 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::xret_handler<RV64, PrivMode::SUPERVISOR>,
                                             RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
-                                  atlas::Action::createAction<&RviInsts::srl_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srl_handler<RV64>, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srli",
                                   atlas::Action::createAction<&RviInsts::srli_handler, RviInsts>(
@@ -475,7 +475,7 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::xret_handler<RV32, PrivMode::SUPERVISOR>,
                                             RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srl",
-                                  atlas::Action::createAction<&RviInsts::srl_handler, RviInsts>(
+                                  atlas::Action::createAction<&RviInsts::srl_handler<RV32>, RviInsts>(
                                       nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srli",
                                   atlas::Action::createAction<&RviInsts::srli_handler, RviInsts>(
@@ -714,14 +714,13 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srl_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RviInsts::srl_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
-
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
-        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const XLEN rd_val = (XLEN)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
+        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
         return nullptr;
     }
