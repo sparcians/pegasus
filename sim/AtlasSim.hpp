@@ -6,7 +6,6 @@
 #include "core/Execute.hpp"
 #include "core/Exception.hpp"
 #include "system/AtlasSystem.hpp"
-
 #include "sparta/app/Simulation.hpp"
 
 namespace atlas
@@ -14,8 +13,7 @@ namespace atlas
     class AtlasSim : public sparta::app::Simulation
     {
       public:
-        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
-                 bool interactive = false);
+        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit);
         ~AtlasSim();
 
         // Run the simulator
@@ -26,6 +24,10 @@ namespace atlas
         AtlasSystem* getAtlasSystem() const { return system_; }
 
         void enableCoSimDebugger(std::unique_ptr<CoSimQuery> query);
+
+        void enableInteractiveMode();
+
+        void useSpikeFormatting();
 
       private:
         void buildTree_() override;
@@ -53,7 +55,6 @@ namespace atlas
 
         const std::string workload_;
         const uint64_t ilimit_;
-        bool interactive_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::shared_ptr<simdb::ObjectManager> cosim_db_;
 

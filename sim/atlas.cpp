@@ -1,5 +1,4 @@
 #include "sim/AtlasSim.hpp"
-
 #include "sparta/app/CommandLineSimulator.hpp"
 
 const char USAGE[] = "Usage:\n"
@@ -10,7 +9,6 @@ int main(int argc, char** argv)
 {
     uint64_t ilimit = 0;
     std::string workload;
-    const char* WORKLOAD = "workload";
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
@@ -31,18 +29,22 @@ int main(int argc, char** argv)
         // classs can be done manually if desired. Use the source for the
         // CommandLineSimulator class as a starting point
         sparta::app::CommandLineSimulator cls(USAGE, DEFAULTS);
+        namespace po = boost::program_options;
+
         auto & app_opts = cls.getApplicationOptions();
-        app_opts.add_options()(
-            "inst-limit,i",
-            sparta::app::named_value<uint64_t>("LIMIT", &ilimit)->default_value(ilimit),
-            "Stop simulation after the instruction limit has been reached")(
-            "interactive", "Enable interactive mode")(
-            WORKLOAD, sparta::app::named_value<std::string>(WORKLOAD, &workload),
-            "Worklad to run (ELF or JSON)");
+
+        // clang-format off
+        app_opts.add_options()
+            ("inst-limit,i", po::value<uint64_t>(&ilimit),
+             "Stop simulation after the instruction limit has been reached")
+            ("interactive", "Enable interactive mode (IDE)")
+            ("spike-formatting", "Format the Instruction Logger similar to Spike")
+            ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
 
         // Add any positional command-line options
         po::positional_options_description & pos_opts = cls.getPositionalOptions();
-        pos_opts.add(WORKLOAD, -1);
+        pos_opts.add("workload", -1);
+        // clang-format on
 
         // Parse command line options and configure simulator
         int err_code = 0;
@@ -51,41 +53,40 @@ int main(int argc, char** argv)
             return err_code; // Any errors already printed to cerr
         }
 
-        const auto & vm = cls.getVariablesMap();
-        const bool interactive = vm.count("interactive") > 0;
-
-        // Create the simulator
-        sparta::Scheduler scheduler;
-        atlas::AtlasSim sim(&scheduler, workload, ilimit, interactive);
-
-        cls.populateSimulation(&sim);
-
-        if (workload.empty() == false)
-        {
-            cls.runSimulator(&sim);
-
-            cls.postProcess(&sim);
-
-            // Get workload exit code
-            const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
-            exit_code = sim_state->workload_exit_code;
-            if (exit_code)
-            {
-                std::cout << "FAILED: ";
-            }
-            else
-            {
-                std::cout << "PASS: ";
-            }
-            std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
-        }
-        else
+        if (workload.empty())
         {
             std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
                       << std::endl;
             std::cout << USAGE;
-            return 0;
+            return 1;
         }
+
+        const auto & vm = cls.getVariablesMap();
+
+        // Create the simulator
+        sparta::Scheduler scheduler;
+        atlas::AtlasSim sim(&scheduler, workload, ilimit);
+
+        cls.populateSimulation(&sim);
+
+        if (vm.count("interactive"))
+        {
+            sim.enableInteractiveMode();
+        }
+
+        if (vm.count("spike-formatting") > 0)
+        {
+            sim.useSpikeFormatting();
+        }
+
+        cls.runSimulator(&sim);
+
+        cls.postProcess(&sim);
+
+        // Get workload exit code
+        const atlas::AtlasState::SimState* sim_state = sim.getAtlasState()->getSimState();
+        exit_code = sim_state->workload_exit_code;
+        std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
     }
     catch (...)
     {

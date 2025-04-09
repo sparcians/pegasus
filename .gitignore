@@ -20,3 +20,5 @@ mavis_json
 riscv-tests
 IDE/backend/__pycache__/**
 IDE/editor/__pycache__/**
+.spike_commit_log
+clang-format-files.out

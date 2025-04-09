@@ -9,6 +9,7 @@
 #include "system/AtlasSystem.hpp"
 #include "core/Snapshotters.hpp"
 #include "core/observers/SimController.hpp"
+#include "core/observers/InstructionLogger.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
@@ -173,13 +174,6 @@ namespace atlas
 
         // Set up translation; baremetal (value 0) for now
         changeMMUMode(0);
-
-        if (interactive_mode_)
-        {
-            auto observer = std::make_unique<SimController>();
-            sim_controller_ = observer.get();
-            addObserver(std::move(observer));
-        }
 
         for (auto & obs : observers_)
         {
@@ -455,6 +449,29 @@ namespace atlas
         ext_val |= 1 << CSR::MISA::s::high_bit;
 
         return ext_val;
+    }
+
+    void AtlasState::enableInteractiveMode()
+    {
+        sparta_assert(sim_controller_ == nullptr, "Interactive mode is already enabled");
+        auto observer = std::make_unique<SimController>();
+        sim_controller_ = observer.get();
+        addObserver(std::move(observer));
+    }
+
+    void AtlasState::useSpikeFormatting()
+    {
+        for (auto & obs : observers_)
+        {
+            if (auto inst_logger = dynamic_cast<InstructionLogger<RV32>*>(obs.get()))
+            {
+                inst_logger->useSpikeFormatting();
+            }
+            else if (auto inst_logger = dynamic_cast<InstructionLogger<RV64>*>(obs.get()))
+            {
+                inst_logger->useSpikeFormatting();
+            }
+        }
     }
 
     sparta::Register* AtlasState::findRegister(const std::string & reg_name, bool must_exist) const
