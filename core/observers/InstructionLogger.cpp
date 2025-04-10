@@ -177,14 +177,14 @@ namespace atlas
             // we want the log to look like this:
             //
             //     postExecute_: 0x8000000c: li x1, +0xf (0xdeadbeef) uid: 34
-            //     postExecute_: imm: 0xf
-            //     postExecute_: dst x1: 0xf (prev: 0x0)
+            //     postExecute_:    imm: 0xf
+            //     postExecute_:    dst x1: 0xf (prev: 0x0)
             //
             // Instead of this:
             //
             //     writeInstHeader:  0x8000000c: li x1, +0xf (0xdeadbeef) uid: 34
-            //     writeImmediate:   imm: 0xf
-            //     writeDstRegister: dst x1: 0xf (prev: 0x0)
+            //     writeImmediate:      imm: 0xf
+            //     writeDstRegister:    dst x1: 0xf (prev: 0x0)
             //
             // We also use the somewhat confusing method name postExecute_() here since
             // that is the InstructionLogger's calling function name.
@@ -248,11 +248,12 @@ namespace atlas
 
         void postExecute_(const std::string & msg)
         {
+            // clang-format off
+
             // The reason we call INSTLOG inside postExecute_() is because
             // we want the log to look like this:
             //
-            //     postExecute_: core   0: 3 0x800000e4 (0x30529073) x0  0x00000000 c773_mtvec
-            //     0x800000e8
+            //     postExecute_: core   0: 3 0x800000e4 (0x30529073) x0  0x00000000 c773_mtvec 0x800000e8
             //
             // Instead of this:
             //
@@ -263,6 +264,7 @@ namespace atlas
             // We also use the somewhat confusing method name postExecute_() here since
             // that is the InstructionLogger's calling function name.
 
+            // clang-format on
             INSTLOG(msg);
         }
 
