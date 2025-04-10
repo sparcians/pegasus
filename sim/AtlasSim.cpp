@@ -19,12 +19,11 @@
 
 namespace atlas
 {
-    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit,
-                       bool interactive) :
+    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const std::string & workload,
+                       uint64_t ilimit) :
         sparta::app::Simulation("AtlasSim", scheduler),
         workload_(workload),
-        ilimit_(ilimit),
-        interactive_(interactive)
+        ilimit_(ilimit)
     {
     }
 
@@ -183,6 +182,24 @@ namespace atlas
             });
     }
 
+    void AtlasSim::enableInteractiveMode()
+    {
+        sparta_assert(!state_.empty(), "Must call after bindTree_()");
+        for (auto state : state_)
+        {
+            state->enableInteractiveMode();
+        }
+    }
+
+    void AtlasSim::useSpikeFormatting()
+    {
+        sparta_assert(!state_.empty(), "Must call after bindTree_()");
+        for (auto state : state_)
+        {
+            state->useSpikeFormatting();
+        }
+    }
+
     void AtlasSim::buildTree_()
     {
         auto root_tn = getRoot();
@@ -245,11 +262,6 @@ namespace atlas
             AtlasState* state = state_.back();
             state->setAtlasSystem(system_);
             state->setPc(system_->getStartingPc());
-
-            if (interactive_)
-            {
-                state->enableInteractiveMode();
-            }
         }
     }
 } // namespace atlas

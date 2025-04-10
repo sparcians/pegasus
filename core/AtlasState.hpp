@@ -3,8 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasAllocatorWrapper.hpp"
 #include "core/AtlasInst.hpp"
-
-#include "core/observers/InstructionLogger.hpp"
+#include "core/observers/Observer.hpp"
 #include "core/CoSimQuery.hpp"
 
 #include "arch/RegisterSet.hpp"
@@ -170,7 +169,9 @@ namespace atlas
 
         void setAtlasSystem(AtlasSystem* atlas_system) { atlas_system_ = atlas_system; }
 
-        void enableInteractiveMode() { interactive_mode_ = true; }
+        void enableInteractiveMode();
+
+        void useSpikeFormatting();
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -353,9 +354,6 @@ namespace atlas
 
         //! AtlasSystem for accessing memory
         AtlasSystem* atlas_system_;
-
-        //! Interactive mode
-        bool interactive_mode_ = false;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
