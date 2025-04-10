@@ -53,7 +53,8 @@ namespace atlas
     {
         if (elf_reader_.load(workload) == false)
         {
-            // fail
+            std::cout << "\n\nWARNING: ELF binary failed to load! Does it exist?\n" << std::endl;
+            return;
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
