@@ -337,5 +337,5 @@ int main(int argc, char** argv)
     translate_tester.testSv32Translation();
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }
