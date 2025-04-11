@@ -596,8 +596,8 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
         constexpr uint64_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
-        const uint64_t vaddr = rs1_val + imm;
+        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN vaddr = rs1_val + imm;
         insn->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
         return nullptr;
     }
@@ -968,8 +968,8 @@ namespace atlas
         // Update the privilege mode to the previous privilege mode
         state->setPrivMode(prev_priv_mode, prev_virt_mode);
 
-        // Update the MMU Mode from SATP
-        state->changeMMUMode(READ_CSR_FIELD<XLEN>(state, SATP, "mode"));
+        // Update the MMU Mode from SATP and MSTATUS
+        state->changeMMUMode<XLEN>();
 
         return nullptr;
     }

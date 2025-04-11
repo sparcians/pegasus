@@ -59,25 +59,25 @@ namespace atlas
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
         ActionGroup* translate_(atlas::AtlasState* state);
 
-        template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
+        template <MMUMode MODE> uint32_t getNumPageWalkLevels_() const
         {
-            if constexpr (Mode == MMUMode::BAREMETAL)
+            if constexpr (MODE == MMUMode::BAREMETAL)
             {
                 return 0;
             }
-            if constexpr (Mode == MMUMode::SV32)
+            if constexpr (MODE == MMUMode::SV32)
             {
                 return translate_types::Sv32::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV39)
+            else if constexpr (MODE == MMUMode::SV39)
             {
                 return translate_types::Sv39::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV48)
+            else if constexpr (MODE == MMUMode::SV48)
             {
                 return translate_types::Sv48::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV57)
+            else if constexpr (MODE == MMUMode::SV57)
             {
                 return translate_types::Sv57::num_pagewalk_levels;
             }
@@ -122,13 +122,12 @@ namespace atlas
             return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
         }
 
-        template <typename XLEN, MMUMode MODE, bool TRANSLATION>
+        template <typename XLEN, MMUMode MODE, AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {
             Action action =
-                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TRANSLATION>>(this,
-                                                                                             desc);
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TYPE>>(this, desc);
             action.addTag(tags);
             xlation_actions[static_cast<uint32_t>(MODE)] = action;
         }

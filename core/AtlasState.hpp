@@ -121,6 +121,8 @@ namespace atlas
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
+        PrivMode getLdstPrivMode() const { return ldst_priv_mode_; }
+
         bool getVirtualMode() const { return virtual_mode_; }
 
         void setPrivMode(PrivMode priv_mode, bool virt_mode)
@@ -129,7 +131,7 @@ namespace atlas
             priv_mode_ = priv_mode;
         }
 
-        void changeMMUMode(uint32_t satp_mode);
+        template <typename XLEN> void changeMMUMode();
 
         struct SimState
         {
@@ -338,6 +340,9 @@ namespace atlas
 
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
+
+        //! Current privilege mode for LS translation
+        PrivMode ldst_priv_mode_ = PrivMode::MACHINE;
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;

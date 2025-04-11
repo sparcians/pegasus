@@ -123,6 +123,7 @@ namespace atlas
             }
         }
         state->setPrivMode(priv_mode, prev_virt_mode);
+        state->changeMMUMode<XLEN>();
 
         state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();

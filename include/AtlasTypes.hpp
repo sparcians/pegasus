@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <string>
+#include <ostream>
 
 namespace atlas
 {
@@ -82,6 +83,32 @@ namespace atlas
     };
 
     static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
+
+    inline std::ostream & operator<<(std::ostream & os, const MMUMode mode)
+    {
+        switch (mode)
+        {
+            case MMUMode::BAREMETAL:
+                os << "BAREMETAL";
+                break;
+            case MMUMode::SV32:
+                os << "SV32";
+                break;
+            case MMUMode::SV39:
+                os << "SV39";
+                break;
+            case MMUMode::SV48:
+                os << "SV48";
+                break;
+            case MMUMode::SV57:
+                os << "SV57";
+                break;
+            case MMUMode::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
 
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;

@@ -142,7 +142,7 @@ namespace atlas
     template void Translate::changeMMUMode<RV32>(const MMUMode, const MMUMode);
     template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
 
-    template <typename XLEN, MMUMode MODE, AccessType TYPE>
+    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
     ActionGroup* Translate::translate_(AtlasState* state)
     {
         AtlasTranslationState* translation_state = nullptr;
@@ -192,7 +192,7 @@ namespace atlas
             // If accessing pte violates a PMA or PMP check, raise an
             // access-fault exception corresponding to the original
             // access type
-            if ((pte.isValid() = false) || ((pte.canRead() == false) && pte.canWrite()))
+            if ((pte.isValid() == false) || ((pte.canRead() == false) && pte.canWrite()))
             {
                 DLOG("Translation FAILED! PTE is not valid");
                 break;
@@ -211,26 +211,30 @@ namespace atlas
                 }
 
                 // TODO: Check access permissions more better...
-                if constexpr (TYPE != AccessType::INSTRUCTION)
+                if constexpr (TYPE == AccessType::STORE)
                 {
-                    if (is_store && (false == pte.canWrite()))
+                    if (false == pte.canWrite())
                     {
                         DLOG("Translation FAILED! PTE does not have write access");
                         THROW_STORE_AMO_PAGE_FAULT;
                     }
-                    else if (false == pte.canRead())
+                }
+                else if constexpr (TYPE == AccessType::LOAD)
+                {
+                    if (false == pte.canRead())
                     {
                         DLOG("Translation FAILED! PTE does not have read access");
                         THROW_LOAD_PAGE_FAULT;
                     }
                 }
 
+                constexpr bool is_store = TYPE == AccessType::STORE;
                 if (false == pte.isAccessable(is_store))
                 {
                     // See if we're required to update access bits in the PTE
                     if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
                     {
-                        if (is_store)
+                        if constexpr (TYPE == AccessType::STORE)
                         {
                             pte.setDirty();
                         }
@@ -273,32 +277,56 @@ namespace atlas
                 THROW_FETCH_PAGE_FAULT;
             case AccessType::STORE:
                 THROW_STORE_AMO_PAGE_FAULT;
-            case AccessType::STORE:
+            case AccessType::LOAD:
                 THROW_LOAD_PAGE_FAULT;
         }
     }
 
     // Being pedantic
-    template ActionGroup* Translate::translate_<RV32, MMUMode::BAREMETAL, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::BAREMETAL, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV32, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV32, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV39, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV39, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV48, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV48, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV57, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV32, MMUMode::SV57, false>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+        AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
 
-    template ActionGroup* Translate::translate_<RV64, MMUMode::BAREMETAL, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::BAREMETAL, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV32, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV32, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV39, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV39, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV48, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV48, false>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV57, true>(AtlasState*);
-    template ActionGroup* Translate::translate_<RV64, MMUMode::SV57, false>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+        AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(AtlasState*);
+    template ActionGroup*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(AtlasState*);
 
 } // namespace atlas
