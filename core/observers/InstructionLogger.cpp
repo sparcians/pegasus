@@ -209,7 +209,7 @@ namespace atlas
         {
             reset_();
             inst_oss_ << "core   " << state->getHartId() << ": " << (int)state->getPrivMode() << " "
-                      << HEX(state->getPc(), WIDTH) << " (" << HEX8(opcode) << ")";
+                      << HEX(state->getPrevPc(), WIDTH) << " (" << HEX8(opcode) << ")";
         }
 
         void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
