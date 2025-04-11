@@ -23,6 +23,8 @@ class AtlasInstructionTester
         fetch_unit_ = state_->getFetchUnit();
     }
 
+    virtual ~AtlasInstructionTester() = default;
+
     atlas::AtlasState* getAtlasState() const { return state_; }
 
     void injectInstruction(const uint64_t pc, const uint32_t opcode)
