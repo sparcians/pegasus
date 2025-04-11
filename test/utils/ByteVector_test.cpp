@@ -75,5 +75,5 @@ int main()
     testConvertFromByteVector();
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }
