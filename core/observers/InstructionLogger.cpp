@@ -265,7 +265,6 @@ namespace atlas
             // that is the InstructionLogger's calling function name.
 
             // clang-format on
-
             INSTLOG(msg);
         }
 
