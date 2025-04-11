@@ -1,3 +1,5 @@
+#pragma once
+
 #include "sim/AtlasSim.hpp"
 #include "core/AtlasState.hpp"
 #include "include/AtlasTypes.hpp"
@@ -21,7 +23,7 @@ class AtlasInstructionTester
         fetch_unit_ = state_->getFetchUnit();
     }
 
-    atlas::AtlasState* getAtlasState() { return state_; }
+    atlas::AtlasState* getAtlasState() const { return state_; }
 
     void injectInstruction(const uint64_t pc, const uint32_t opcode)
     {
@@ -30,10 +32,11 @@ class AtlasInstructionTester
 
         // Execute instruction
         atlas::ActionGroup* next_action_group = fetch_unit_->getActionGroup();
-        do 
+        do
         {
             next_action_group = next_action_group->execute(state_);
-        } while (next_action_group && (next_action_group->hasTag(atlas::ActionTags::FETCH_TAG) == false));
+        } while (next_action_group
+                 && (next_action_group->hasTag(atlas::ActionTags::FETCH_TAG) == false));
     }
 
   private:

@@ -1,7 +1,7 @@
 #include "test/sim/InstructionTester.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
-class VsetInstructionTester : AtlasInstructionTester
+class VsetInstructionTester : public AtlasInstructionTester
 {
 
   public:
@@ -13,25 +13,22 @@ class VsetInstructionTester : AtlasInstructionTester
         const uint32_t opcode = 0x00000013;
         injectInstruction(pc, opcode);
 
-	const atlas::AtlasState* state = getAtlasState();
-	const atlas::AtlasState::SimState* sim_state = state->getSimState();
+        const atlas::AtlasState* state = getAtlasState();
+        const atlas::AtlasState::SimState* sim_state = state->getSimState();
 
-	std::cout << sim_state->current_inst << std::endl;
-	EXPECT_EQUAL(sim_state->inst_count, 1);
+        std::cout << sim_state->current_inst << std::endl;
+        EXPECT_EQUAL(sim_state->inst_count, 1);
     }
 
   private:
 };
 
-int main(int argc, char** argv)
+int main()
 {
-    (void)argc;
-    (void)argv;
-
     VsetInstructionTester vset_tester;
 
     vset_tester.testVsetvl();
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }
