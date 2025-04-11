@@ -20,117 +20,133 @@ namespace atlas
 
         // Baremetal (translation disabled)
         {
-            registerAction_<RV32, MMUMode::BAREMETAL, INST_TRANSLATION>(
+            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
                 "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_);
-
-            registerAction_<RV32, MMUMode::BAREMETAL, DATA_TRANSLATION>(
-                "Data Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv32_data_translation_actions_);
-
-            // RV64
-            registerAction_<RV64, MMUMode::BAREMETAL, INST_TRANSLATION>(
+            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::LOAD>(
+                "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                rv32_load_translation_actions_);
+            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::STORE>(
+                "Store Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                rv32_store_translation_actions_);
+            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
                 "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-
-            registerAction_<RV64, MMUMode::BAREMETAL, DATA_TRANSLATION>(
-                "Data Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_data_translation_actions_);
+            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::LOAD>(
+                "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::STORE>(
+                "Store Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_);
         }
 
         // Sv32
         {
-            registerAction_<RV32, MMUMode::SV32, INST_TRANSLATION>("Inst Translate (Sv32)",
-                                                                   ActionTags::INST_TRANSLATE_TAG,
-                                                                   rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, DATA_TRANSLATION>("Data Translate (Sv32)",
+            registerAction_<RV32, MMUMode::SV32, AccessType::INSTRUCTION>(
+                "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
+                rv32_inst_translation_actions_);
+            registerAction_<RV32, MMUMode::SV32, AccessType::LOAD>("Load Translate (Sv32)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv32_data_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, INST_TRANSLATION>("Inst Translate (Sv32)",
-                                                                   ActionTags::INST_TRANSLATE_TAG,
-                                                                   rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, DATA_TRANSLATION>("Data Translate (Sv32)",
+                                                                   rv32_load_translation_actions_);
+            registerAction_<RV32, MMUMode::SV32, AccessType::STORE>(
+                "Store Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
+                rv32_store_translation_actions_);
+            registerAction_<RV64, MMUMode::SV32, AccessType::INSTRUCTION>(
+                "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
+                rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV32, AccessType::LOAD>("Load Translate (Sv32)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_data_translation_actions_);
+                                                                   rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV32, AccessType::STORE>(
+                "Store Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_);
         }
         // Sv39
         {
-            registerAction_<RV64, MMUMode::SV39, INST_TRANSLATION>("Inst Translate (Sv39)",
-                                                                   ActionTags::INST_TRANSLATE_TAG,
-                                                                   rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV39, DATA_TRANSLATION>("Data Translate (Sv39)",
+            registerAction_<RV64, MMUMode::SV39, AccessType::INSTRUCTION>(
+                "Inst Translate (Sv39)", ActionTags::INST_TRANSLATE_TAG,
+                rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV39, AccessType::LOAD>("Load Translate (Sv39)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_data_translation_actions_);
+                                                                   rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV39, AccessType::STORE>(
+                "Store Translate (Sv39)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_);
         }
         // Sv48
         {
-            registerAction_<RV64, MMUMode::SV48, INST_TRANSLATION>("Inst Translate (Sv48)",
-                                                                   ActionTags::INST_TRANSLATE_TAG,
-                                                                   rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV48, DATA_TRANSLATION>("Data Translate (Sv48)",
+            registerAction_<RV64, MMUMode::SV48, AccessType::INSTRUCTION>(
+                "Inst Translate (Sv48)", ActionTags::INST_TRANSLATE_TAG,
+                rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV48, AccessType::LOAD>("Load Translate (Sv48)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_data_translation_actions_);
+                                                                   rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV48, AccessType::STORE>(
+                "Store Translate (Sv48)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_);
         }
         // Sv57
         {
-            registerAction_<RV64, MMUMode::SV57, INST_TRANSLATION>("Inst Translate (Sv57)",
-                                                                   ActionTags::INST_TRANSLATE_TAG,
-                                                                   rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV57, DATA_TRANSLATION>("Data Translate (Sv57)",
+            registerAction_<RV64, MMUMode::SV57, AccessType::INSTRUCTION>(
+                "Inst Translate (Sv57)", ActionTags::INST_TRANSLATE_TAG,
+                rv64_inst_translation_actions_);
+            registerAction_<RV64, MMUMode::SV57, AccessType::LOAD>("Load Translate (Sv57)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_data_translation_actions_);
+                                                                   rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV57, AccessType::STORE>(
+                "Store Translate (Sv57)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_);
         }
 
         // Assume we are booting in RV64 Machine mode with translation disabled
         inst_translate_action_group_.addAction(
             rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
-        data_translate_action_group_.addAction(
-            rv64_data_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+        load_translate_action_group_.addAction(
+            rv64_load_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+        store_translate_action_group_.addAction(
+            rv64_store_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
     }
 
-    void Translate::changeMMUMode(uint64_t xlen, uint32_t satp_mode)
+    template <typename XLEN>
+    void Translate::changeMMUMode(const MMUMode mode, const MMUMode ls_mode)
     {
-        static const std::vector<MMUMode> satp_mmu_mode_map = {
-            MMUMode::BAREMETAL, // mode == 0
-            MMUMode::SV32,      // mode == 1 xlen==32
-            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
-            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
-            MMUMode::INVALID, // mode ==  7
-            MMUMode::SV39,    // mode ==  8, xlen==64
-            MMUMode::SV48,    // mode ==  9, xlen==64
-            MMUMode::SV57     // mode == 10, xlen==64
-        };
-
-        sparta_assert(satp_mode < satp_mmu_mode_map.size());
-
-        const MMUMode mode = satp_mmu_mode_map[satp_mode];
         sparta_assert(mode != MMUMode::INVALID);
+        sparta_assert(ls_mode != MMUMode::INVALID);
 
-        if (xlen == 64)
+        if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_translate_action_group_.replaceAction(
                 ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
-            data_translate_action_group_.replaceAction(
+            load_translate_action_group_.replaceAction(
                 ActionTags::DATA_TRANSLATE_TAG,
-                rv64_data_translation_actions_.at(static_cast<uint32_t>(mode)));
+                rv64_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
+            store_translate_action_group_.replaceAction(
+                ActionTags::DATA_TRANSLATE_TAG,
+                rv64_store_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
         }
         else
         {
             inst_translate_action_group_.replaceAction(
                 ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
-            data_translate_action_group_.replaceAction(
+            load_translate_action_group_.replaceAction(
                 ActionTags::DATA_TRANSLATE_TAG,
-                rv32_data_translation_actions_.at(static_cast<uint32_t>(mode)));
+                rv32_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
+            store_translate_action_group_.replaceAction(
+                ActionTags::DATA_TRANSLATE_TAG,
+                rv32_store_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
         }
     }
 
-    template <typename XLEN, MMUMode MODE, bool TRANSLATION>
+    template void Translate::changeMMUMode<RV32>(const MMUMode, const MMUMode);
+    template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
+
+    template <typename XLEN, MMUMode MODE, AccessType TYPE>
     ActionGroup* Translate::translate_(AtlasState* state)
     {
         AtlasTranslationState* translation_state = nullptr;
-        if constexpr (TRANSLATION == INST_TRANSLATION)
+        if constexpr (TYPE == AccessType::INSTRUCTION)
         {
             // Translation reqest is from fetch
             translation_state = state->getFetchTranslationState();
@@ -146,7 +162,8 @@ namespace atlas
 
         uint32_t level = getNumPageWalkLevels_<MODE>();
 
-        const auto priv_mode = state->getPrivMode();
+        const auto priv_mode =
+            (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
 
         // See if xlation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
@@ -155,10 +172,6 @@ namespace atlas
             // Keep going
             return nullptr;
         }
-
-        // TODO: TRANSLATION should be an enum for inst, load or store
-        const bool is_store =
-            (TRANSLATION == DATA_TRANSLATION) && state->getCurrentInst()->isStoreType();
 
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
@@ -179,34 +192,35 @@ namespace atlas
             // If accessing pte violates a PMA or PMP check, raise an
             // access-fault exception corresponding to the original
             // access type
-            if (false == pte.isValid())
+            if ((pte.isValid() = false) || ((pte.canRead() == false) && pte.canWrite()))
             {
-                if constexpr (TRANSLATION == INST_TRANSLATION)
-                {
-                    translation_state->clearRequest();
-                }
-
+                DLOG("Translation FAILED! PTE is not valid");
                 break;
             }
 
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                if ((false == pte.isUserMode()) && (priv_mode != PrivMode::SUPERVISOR))
+                const uint32_t sum_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sum");
+                if ((sum_val == 0) && (false == pte.isUserMode())
+                    && (priv_mode != PrivMode::SUPERVISOR))
                 {
                     // Must throw
+                    DLOG("Translation FAILED! Cannot access User mode PTE");
                     break;
                 }
 
                 // TODO: Check access permissions more better...
-                if (TRANSLATION == DATA_TRANSLATION)
+                if constexpr (TYPE != AccessType::INSTRUCTION)
                 {
                     if (is_store && (false == pte.canWrite()))
                     {
+                        DLOG("Translation FAILED! PTE does not have write access");
                         THROW_STORE_AMO_PAGE_FAULT;
                     }
                     else if (false == pte.canRead())
                     {
+                        DLOG("Translation FAILED! PTE does not have read access");
                         THROW_LOAD_PAGE_FAULT;
                     }
                 }
@@ -226,6 +240,7 @@ namespace atlas
                     else
                     {
                         // Take exception -- no access allowed or not dirty
+                        DLOG("Translation FAILED: Cannot access dirty page");
                         break;
                     }
                 }
@@ -251,20 +266,16 @@ namespace atlas
 
         // If we got here, then Atlas could not translate the address
         // at any level.  We throw at this point.
-        if constexpr (TRANSLATION == INST_TRANSLATION)
+        switch (TYPE)
         {
-            translation_state->clearRequest();
-            THROW_FETCH_PAGE_FAULT;
+            case AccessType::INSTRUCTION:
+                translation_state->clearRequest();
+                THROW_FETCH_PAGE_FAULT;
+            case AccessType::STORE:
+                THROW_STORE_AMO_PAGE_FAULT;
+            case AccessType::STORE:
+                THROW_LOAD_PAGE_FAULT;
         }
-        else if (is_store)
-        {
-            THROW_STORE_AMO_PAGE_FAULT;
-        }
-        else
-        {
-            THROW_LOAD_PAGE_FAULT;
-        }
-        return nullptr;
     }
 
     // Being pedantic

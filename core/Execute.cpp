@@ -78,10 +78,11 @@ namespace atlas
         // handler and the execute handler
         if (inst->isMemoryInst())
         {
-            const ActionGroup* data_translate_action_group =
-                state->getTranslateUnit()->getDataTranslateActionGroup();
-            for (auto it = data_translate_action_group->getActions().rbegin();
-                 it != data_translate_action_group->getActions().rend(); ++it)
+            const ActionGroup* translate_action_group =
+                inst->isStoreType() ? state->getTranslateUnit()->getStoreTranslateActionGroup()
+                                    : state->getTranslateUnit()->getLoadTranslateActionGroup();
+            for (auto it = translate_action_group->getActions().rbegin();
+                 it != translate_action_group->getActions().rend(); ++it)
             {
                 auto & action = *it;
                 inst_action_group->insertActionAfter(action, ActionTags::COMPUTE_ADDR_TAG);

@@ -31,23 +31,32 @@ namespace atlas
 
         ActionGroup* getInstTranslateActionGroup() { return &inst_translate_action_group_; }
 
-        ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
+        ActionGroup* getLoadTranslateActionGroup() { return &load_translate_action_group_; }
 
-        void changeMMUMode(uint64_t xlen, uint32_t satp_mode);
+        ActionGroup* getStoreTranslateActionGroup() { return &store_translate_action_group_; }
 
-        static constexpr bool INST_TRANSLATION = true;
-        static constexpr bool DATA_TRANSLATION = false;
+        template <typename XLEN> void changeMMUMode(const MMUMode mode, const MMUMode ls_mode);
+
+        enum class AccessType
+        {
+            INSTRUCTION,
+            LOAD,
+            STORE
+        };
 
       private:
         ActionGroup inst_translate_action_group_{"Inst Translate"};
-        ActionGroup data_translate_action_group_{"Data Translate"};
+        ActionGroup load_translate_action_group_{"Load Translate"};
+        ActionGroup store_translate_action_group_{"Store Translate"};
 
         std::array<Action, N_MMU_MODES> rv64_inst_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_inst_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv64_data_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_data_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv64_load_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv32_load_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv64_store_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv32_store_translation_actions_;
 
-        template <typename XLEN, MMUMode Mode, bool>
+        template <typename XLEN, MMUMode MODE, AccessType TYPE>
         ActionGroup* translate_(atlas::AtlasState* state);
 
         template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
