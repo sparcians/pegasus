@@ -75,7 +75,7 @@ namespace atlas
         ActionGroup* sraiw_handler(atlas::AtlasState* state);
         ActionGroup* sraw_handler(atlas::AtlasState* state);
         template <typename XLEN> ActionGroup* srl_handler(atlas::AtlasState* state);
-        ActionGroup* srli_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* srli_handler(atlas::AtlasState* state);
         ActionGroup* srliw_handler(atlas::AtlasState* state);
         ActionGroup* srlw_handler(atlas::AtlasState* state);
 
