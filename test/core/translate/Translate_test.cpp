@@ -236,7 +236,7 @@ class AtlasTranslateTester
         // Execute translation
         auto next_action_group =
             translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL,
-                                        atlas::Translate::AccessType::LOAD>(state_);
+                                        atlas::Translate::AccessType::INSTRUCTION>(state_);
         EXPECT_EQUAL(next_action_group, nullptr);
 
         // Get translation result
@@ -302,9 +302,8 @@ class AtlasTranslateTester
         std::cout << ", Access size: " << std::dec << access_size << std::endl;
 
         // Translate!
-        translate_unit_
-            ->translate_<atlas::RV32, atlas::MMUMode::SV32, atlas::Translate::AccessType::LOAD>(
-                state_);
+        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32,
+                                    atlas::Translate::AccessType::INSTRUCTION>(state_);
 
         // Get translation result
         const atlas::AtlasTranslationState::TranslationResult result =
