@@ -20,15 +20,18 @@ namespace atlas
 
         // Baremetal (translation disabled)
         {
+            // RV32
             registerAction_<RV32, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
-                "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
+                "Inst Translate (RV32 Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_);
             registerAction_<RV32, MMUMode::BAREMETAL, AccessType::LOAD>(
-                "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                "Load Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_load_translation_actions_);
             registerAction_<RV32, MMUMode::BAREMETAL, AccessType::STORE>(
-                "Store Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
+                "Store Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_store_translation_actions_);
+
+            // RV64
             registerAction_<RV64, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
                 "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
@@ -42,15 +45,18 @@ namespace atlas
 
         // Sv32
         {
+            // RV32
             registerAction_<RV32, MMUMode::SV32, AccessType::INSTRUCTION>(
-                "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
+                "Inst Translate (RV32 Sv32)", ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, AccessType::LOAD>("Load Translate (Sv32)",
+            registerAction_<RV32, MMUMode::SV32, AccessType::LOAD>("Load Translate (RV32 Sv32)",
                                                                    ActionTags::DATA_TRANSLATE_TAG,
                                                                    rv32_load_translation_actions_);
             registerAction_<RV32, MMUMode::SV32, AccessType::STORE>(
-                "Store Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
+                "Store Translate (RV32 Sv32)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_store_translation_actions_);
+
+            // RV64
             registerAction_<RV64, MMUMode::SV32, AccessType::INSTRUCTION>(
                 "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);

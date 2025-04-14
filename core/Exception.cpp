@@ -13,16 +13,26 @@ namespace atlas
     Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters*) :
         sparta::Unit(exception_node)
     {
-        // TODO: Add RV32 exception handling support
-        Action exception_action = atlas::Action::createAction<&Exception::handleException_<RV64>>(
+        rv32_exception_action_ = atlas::Action::createAction<&Exception::handleException_<RV32>>(
             this, "exception", ActionTags::EXCEPTION_TAG);
-        exception_action_group_.addAction(exception_action);
+        rv64_exception_action_ = atlas::Action::createAction<&Exception::handleException_<RV64>>(
+            this, "exception", ActionTags::EXCEPTION_TAG);
     }
 
     void Exception::onBindTreeEarly_()
     {
         auto core_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
         AtlasState* state = core_tn->getResourceAs<AtlasState>();
+
+        const auto xlen = state->getXlen();
+        if (xlen == 64)
+        {
+            exception_action_group_.addAction(rv64_exception_action_);
+        }
+        else
+        {
+            exception_action_group_.addAction(rv32_exception_action_);
+        }
 
         // Connect exception ActionGroup to instruction finish ActionGroup
         exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
@@ -36,8 +46,8 @@ namespace atlas
                       "Fault and interrupt cause cannot both be valid!");
 
         const bool is_interrupt = interrupt_cause_.isValid();
-        const uint64_t excp_code = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue())
-                                                : static_cast<uint64_t>(fault_cause_.getValue());
+        const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
+                                                : static_cast<XLEN>(fault_cause_.getValue());
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
@@ -72,7 +82,7 @@ namespace atlas
             const auto mstatus_sie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sie");
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", mstatus_sie);
 
-            const auto spp_val = static_cast<uint64_t>(state->getPrivMode());
+            const auto spp_val = static_cast<XLEN>(state->getPrivMode());
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
 
             const uint64_t sie_val = 0;
@@ -103,7 +113,7 @@ namespace atlas
             const auto mstatus_mie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "mie");
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", mstatus_mie);
 
-            const auto mpp_val = static_cast<uint64_t>(state->getPrivMode());
+            const auto mpp_val = static_cast<XLEN>(state->getPrivMode());
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", mpp_val);
 
             const uint64_t mie_val = 0;

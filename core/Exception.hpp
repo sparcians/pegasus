@@ -51,6 +51,9 @@ namespace atlas
 
         ActionGroup exception_action_group_{"Exception"};
 
+        Action rv32_exception_action_;
+        Action rv64_exception_action_;
+
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 

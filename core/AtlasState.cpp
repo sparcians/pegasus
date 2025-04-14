@@ -132,19 +132,6 @@ namespace atlas
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
-
-        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        if (inst_logger_.observed())
-        {
-            if (xlen_ == 64)
-            {
-                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
-            }
-            else
-            {
-                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
-            }
-        }
     }
 
     void AtlasState::onBindTreeLate_()
@@ -182,6 +169,19 @@ namespace atlas
             changeMMUMode<RV32>();
         }
 
+        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
+        if (inst_logger_.observed())
+        {
+            if (xlen_ == 64)
+            {
+                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
+            }
+            else
+            {
+                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
+            }
+        }
+
         for (auto & obs : observers_)
         {
             obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
@@ -208,7 +208,7 @@ namespace atlas
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
         const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
         ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
-        MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
+        const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
 
         DLOG("MMU Mode: " << mode);
         DLOG("MMU LS Mode: " << ls_mode);

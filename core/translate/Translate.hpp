@@ -102,7 +102,7 @@ namespace atlas
             }
             else if constexpr (MODE == MMUMode::SV32)
             {
-                sparta_assert(level < translate_types::Sv32::num_pagewalk_levels);
+                sparta_assert(level <= translate_types::Sv32::num_pagewalk_levels);
                 return (level == 0) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
             }
             else
