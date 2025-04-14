@@ -65,7 +65,7 @@ namespace atlas
             {
                 return 0;
             }
-            if constexpr (MODE == MMUMode::SV32)
+            else if constexpr (MODE == MMUMode::SV32)
             {
                 return translate_types::Sv32::num_pagewalk_levels;
             }
@@ -87,23 +87,47 @@ namespace atlas
             }
         }
 
-        template <MMUMode Mode> auto extractVpnField_(const uint32_t level) const
+        template <MMUMode MODE> PageSize getPageSize_(const uint32_t level) const
+        {
+            static const std::map<uint32_t, PageSize> level_to_pagesize = {
+                {1, PageSize::SIZE_4K},
+                {2, PageSize::SIZE_2M},
+                {3, PageSize::SIZE_1G},
+                {4, PageSize::SIZE_512G},
+                {5, PageSize::SIZE_256T}};
+
+            if constexpr (MODE == MMUMode::BAREMETAL)
+            {
+                return PageSize::INVALID;
+            }
+            else if constexpr (MODE == MMUMode::SV32)
+            {
+                sparta_assert(level < translate_types::Sv32::num_pagewalk_levels);
+                return (level == 0) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
+            }
+            else
+            {
+                return level_to_pagesize.at(level);
+            }
+        }
+
+        template <MMUMode MODE> auto extractVpnField_(const uint32_t level) const
         {
             auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
             {
-                if constexpr (Mode == MMUMode::SV32)
+                if constexpr (MODE == MMUMode::SV32)
                 {
                     return translate_types::Sv32::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV39)
+                else if constexpr (MODE == MMUMode::SV39)
                 {
                     return translate_types::Sv39::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV48)
+                else if constexpr (MODE == MMUMode::SV48)
                 {
                     return translate_types::Sv48::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV57)
+                else if constexpr (MODE == MMUMode::SV57)
                 {
                     return translate_types::Sv57::vpn_fields.at(level);
                 }

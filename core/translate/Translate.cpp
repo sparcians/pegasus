@@ -165,7 +165,7 @@ namespace atlas
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
 
-        // See if xlation is disable -- no level walks
+        // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
             translation_state->setResult(vaddr, request.getSize());
@@ -201,6 +201,8 @@ namespace atlas
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
+                const PageSize page_size = getPageSize_<MODE>(indexed_level);
+
                 const uint32_t sum_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sum");
                 if ((sum_val == 0) && (false == pte.isUserMode())
                     && (priv_mode != PrivMode::SUPERVISOR))
@@ -255,7 +257,8 @@ namespace atlas
                 paddr |= extractPageOffset_(vaddr); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
-                ILOG("  Result: " << HEX(paddr, width));
+                DLOG("    Size: " << page_size);
+                ILOG("   Result: " << HEX(paddr, width));
 
                 // Keep going
                 return nullptr;
