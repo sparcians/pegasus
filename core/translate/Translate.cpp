@@ -185,7 +185,7 @@ namespace atlas
             const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
             const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
             PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
-            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << indexed_level << " Page Walk");
+            DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
 
@@ -201,13 +201,37 @@ namespace atlas
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                const PageSize page_size = getPageSize_<MODE>(indexed_level);
+                const PageSize page_size = getPageSize_<MODE>(level);
+                DLOG("    Size: " << page_size);
+
+                // TODO: Check page alignment
+
+                // If page is a super page, unused PPN fields should be zero
+                if (page_size != PageSize::SIZE_4K)
+                {
+                    bool throw_page_fault = false;
+                    for (int32_t ppn_field_idx = indexed_level - 1; ppn_field_idx >= 0;
+                         --ppn_field_idx)
+                    {
+                        const XLEN ppn_field = pte.getPpnField(ppn_field_idx);
+                        if (ppn_field != 0)
+                        {
+                            DLOG("Translation FAILED! PPN field " << std::dec << ppn_field_idx
+                                                                  << " is not zero: 0x" << std::hex
+                                                                  << ppn_field);
+                            throw_page_fault = true;
+                        }
+                    }
+                    if (throw_page_fault)
+                    {
+                        break;
+                    }
+                }
 
                 const uint32_t sum_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sum");
                 if ((sum_val == 0) && (false == pte.isUserMode())
                     && (priv_mode != PrivMode::SUPERVISOR))
                 {
-                    // Must throw
                     DLOG("Translation FAILED! Cannot access User mode PTE");
                     break;
                 }
@@ -257,7 +281,6 @@ namespace atlas
                 paddr |= extractPageOffset_(vaddr); // Add the page offset
 
                 translation_state->setResult(paddr, request.getSize());
-                DLOG("    Size: " << page_size);
                 ILOG("   Result: " << HEX(paddr, width));
 
                 // Keep going
