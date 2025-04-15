@@ -77,7 +77,7 @@ namespace atlas
             const decltype(pte_val_) access_mask =
                 translate_types::Sv32::PteFields::accessed.bitmask
                 | (store ? translate_types::Sv32::PteFields::dirty.bitmask : 0);
-            return pte_val_ & access_mask;
+            return (pte_val_ & access_mask) == access_mask;
         }
 
       private:

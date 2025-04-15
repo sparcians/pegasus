@@ -88,66 +88,111 @@ namespace atlas
 
         void writeSymbols(const std::string & symbols) override
         {
-            INSTLOG("    Call <" << symbols << ">");
+            reset_();
+            inst_oss_ << "Call <" << symbols << ">";
+            postExecute_(inst_oss_.str());
         }
 
         void writeInstHeader(const AtlasInst* inst, uint64_t pc, uint64_t opcode) override
         {
+            reset_();
             if (inst)
             {
-                INSTLOG(" " << HEX(pc, WIDTH) << ": " << inst->dasmString() << " (" << HEX8(opcode)
-                            << ") uid:" << inst->getUid());
+                inst_oss_ << HEX(pc, WIDTH) << ": " << inst->dasmString() << " (" << HEX8(opcode)
+                          << ") uid:" << inst->getUid();
             }
             else
             {
                 // TODO: Only display opcode for certain exception types
-                INSTLOG(" " << HEX(pc, WIDTH) << ": ??? (" << HEX8(opcode) << ") uid: ?");
+                inst_oss_ << HEX(pc, WIDTH) << ": ??? (" << HEX8(opcode) << ") uid: ?";
             }
+            postExecute_(inst_oss_.str());
         }
 
         void writeFaultCause(const FaultCause cause) override
         {
-            INSTLOG("Fault cause: " << cause << " (" << HEX8(static_cast<uint32_t>(cause)) << ')');
+            reset_();
+            inst_oss_ << "Fault cause: " << cause << " (" << HEX8(static_cast<uint32_t>(cause))
+                      << ")";
+            postExecute_(inst_oss_.str());
         }
 
         void writeImmediate(const uint64_t imm) override
         {
+            reset_();
             using SXLEN = typename std::make_signed<XLEN>::type;
             const SXLEN imm_val = imm;
-            INSTLOG("     imm: " << HEX(imm_val, WIDTH));
+            inst_oss_ << "   imm: " << HEX(imm_val, WIDTH);
+            postExecute_(inst_oss_.str());
         }
 
         void writeSrcRegister(const std::string & reg_name, const uint64_t reg_value,
                               const uint32_t reg_width) override
         {
-            INSTLOG("   src " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                              << HEX(reg_value, reg_width));
+            reset_();
+            inst_oss_ << "   src " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                      << HEX(reg_value, reg_width);
+            postExecute_(inst_oss_.str());
         }
 
         void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
                               const uint64_t reg_prev_value, const uint32_t reg_width) override
         {
-            INSTLOG("   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                              << HEX(reg_value, reg_width)
-                              << " (prev: " << HEX(reg_prev_value, reg_width) << ")");
+            reset_();
+            inst_oss_ << "   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                      << HEX(reg_value, reg_width) << " (prev: " << HEX(reg_prev_value, reg_width)
+                      << ")";
+            postExecute_(inst_oss_.str());
         }
 
         void writeMemRead(const Observer::MemRead & mem_read) override
         {
-            INSTLOG("       mem read:  addr: " << HEX(mem_read.addr, WIDTH)
-                                               << ", size: " << mem_read.size
-                                               << ", value: " << HEX(mem_read.value, WIDTH));
+            reset_();
+            inst_oss_ << "   mem read:  addr: " << HEX(mem_read.addr, WIDTH)
+                      << ", size: " << mem_read.size << ", value: " << HEX(mem_read.value, WIDTH);
+            postExecute_(inst_oss_.str());
         }
 
         void writeMemWrite(const Observer::MemWrite & mem_write) override
         {
-            INSTLOG("      mem write: addr: "
-                    << HEX(mem_write.addr, WIDTH) << ", size: " << mem_write.size
-                    << ", value: " << HEX(mem_write.value, WIDTH)
-                    << " (prev: " << HEX(mem_write.prior_value, WIDTH) << ")");
+            reset_();
+            inst_oss_ << "   mem write: addr: " << HEX(mem_write.addr, WIDTH)
+                      << ", size: " << mem_write.size << ", value: " << HEX(mem_write.value, WIDTH)
+                      << " (prev: " << HEX(mem_write.prior_value, WIDTH) << ")";
+            postExecute_(inst_oss_.str());
         }
 
-        void finishInst() override { INSTLOG(""); }
+        void finishInst() override { postExecute_(""); }
+
+      private:
+        void reset_()
+        {
+            inst_oss_.str("");
+            inst_oss_.clear();
+        }
+
+        void postExecute_(const std::string & msg)
+        {
+            // The reason we call INSTLOG inside postExecute_() is because
+            // we want the log to look like this:
+            //
+            //     postExecute_: 0x8000000c: li x1, +0xf (0xdeadbeef) uid: 34
+            //     postExecute_:    imm: 0xf
+            //     postExecute_:    dst x1: 0xf (prev: 0x0)
+            //
+            // Instead of this:
+            //
+            //     writeInstHeader:  0x8000000c: li x1, +0xf (0xdeadbeef) uid: 34
+            //     writeImmediate:      imm: 0xf
+            //     writeDstRegister:    dst x1: 0xf (prev: 0x0)
+            //
+            // We also use the somewhat confusing method name postExecute_() here since
+            // that is the InstructionLogger's calling function name.
+
+            INSTLOG(msg);
+        }
+
+        std::ostringstream inst_oss_;
     };
 
     template <typename XLEN> class SpikeInstLogWriter : public InstLogWriterBase
@@ -162,11 +207,9 @@ namespace atlas
 
         void beginInst(AtlasState* state, const AtlasInst*, uint64_t opcode) override
         {
-            inst_oss_.str("");
-            inst_oss_.clear();
-
+            reset_();
             inst_oss_ << "core   " << state->getHartId() << ": " << (int)state->getPrivMode() << " "
-                      << HEX(state->getPc(), WIDTH) << " (" << HEX8(opcode) << ") ";
+                      << HEX(state->getPrevPc(), WIDTH) << " (" << HEX8(opcode) << ")";
         }
 
         void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
@@ -194,9 +237,37 @@ namespace atlas
             inst_oss_ << " mem " << HEX(mem_write.addr, WIDTH) << " " << HEX8(mem_write.value);
         }
 
-        void finishInst() override { INSTLOG(inst_oss_.str()); }
+        void finishInst() override { postExecute_(inst_oss_.str()); }
 
       private:
+        void reset_()
+        {
+            inst_oss_.str("");
+            inst_oss_.clear();
+        }
+
+        void postExecute_(const std::string & msg)
+        {
+            // clang-format off
+
+            // The reason we call INSTLOG inside postExecute_() is because
+            // we want the log to look like this:
+            //
+            //     postExecute_: core   0: 3 0x800000e4 (0x30529073) x0  0x00000000 c773_mtvec 0x800000e8
+            //
+            // Instead of this:
+            //
+            //     beginInst:         core   0: 3 0x800000e4 (0x30529073)
+            //     writeDstRegister:  x0  0x00000000
+            //     writeDstCSR:       c773_mtvec 0x800000e8
+            //
+            // We also use the somewhat confusing method name postExecute_() here since
+            // that is the InstructionLogger's calling function name.
+
+            // clang-format on
+            INSTLOG(msg);
+        }
+
         std::ostringstream inst_oss_;
     };
 

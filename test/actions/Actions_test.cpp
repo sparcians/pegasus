@@ -132,5 +132,5 @@ int main()
     runSim(&state, &fetch, 6, 30);
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }

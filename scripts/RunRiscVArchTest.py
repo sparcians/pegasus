@@ -10,7 +10,7 @@ import multiprocessing
 PASSING_STATUS_RV32_NON_VIRT = [84, 97]
 PASSING_STATUS_RV32_VIRT     = [0, 78]
 PASSING_STATUS_RV64_NON_VIRT = [123, 127]
-PASSING_STATUS_RV64_VIRT     = [77, 106]
+PASSING_STATUS_RV64_VIRT     = [104, 106]
 
 def get_tests(directory):
     regex = re.compile(r'rv[36][24]')
@@ -42,6 +42,7 @@ def run_test(test, passing_tests, failing_tests, timeout_tests, output_dir):
             result = subprocess.run(atlas_cmd, stdout=f, stderr=f, timeout=10)
             if result.returncode == 0:
                 test_passed = True
+
     except subprocess.TimeoutExpired:
         timeout_tests.put(testname)
         return
@@ -52,7 +53,14 @@ def run_test(test, passing_tests, failing_tests, timeout_tests, output_dir):
         os.remove(logname)
         os.remove(instlogname)
     else:
-        failing_tests.put(testname)
+        error = 'UNKNOWN'
+        with open(logname, "r") as log:
+            for line in log:
+                if line.startswith('MAGIC') or line.startswith('FAIL'):
+                    error = line.strip()
+                    break
+
+        failing_tests.put(testname + ' : ' + error)
 
 # Function to run tests using processes
 def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):

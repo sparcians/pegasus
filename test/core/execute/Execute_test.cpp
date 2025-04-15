@@ -84,5 +84,5 @@ int main(int argc, char** argv)
     ExecuteTester tester;
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }
