@@ -92,9 +92,8 @@ class InstJSONGenerator():
 
         for ext in self.extensions:
             filename = self.xlen_str + "/atlas_uarch_" + self.xlen_str + ext.lower() + ".json"
-            if not os.path.isfile(filename):
-                with open(filename,"w") as fh:
-                    json.dump(self.isa_map[ext], fh, indent=4)
+            with open(filename,"w") as fh:
+                json.dump(self.isa_map[ext], fh, indent=4)
 
 
 USAGE_STR = "Usage: GenInstructionJSON.py [isa string]"
