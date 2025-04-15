@@ -18,6 +18,7 @@ namespace atlas
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),
+        is_cof_inst_(getUarchJsonValue<bool>(uarch_json, "cof")),
         inst_action_group_(mnemonic_)
     {
         const Execute* execute_unit = state->getExecuteUnit();
