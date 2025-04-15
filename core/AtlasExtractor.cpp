@@ -32,14 +32,14 @@ namespace atlas
             try
             {
                 const Action & inst_compute_address_handler =
-                    inst_compute_address_handlers->at(mnemonic_);
+                    inst_compute_address_handlers->at(inst_handler_name_);
                 inst_action_group_.addAction(inst_compute_address_handler);
             }
             catch (const std::out_of_range & excp)
             {
                 sparta_assert(false, "Missing key in rv"
                                          << std::to_string(xlen)
-                                         << " inst compute address handler map: " << mnemonic_);
+                                         << " inst compute address handler map: " << inst_handler_name_);
             }
         }
 
@@ -48,13 +48,13 @@ namespace atlas
                          : execute_unit->getInstHandlersMap<RV32>();
         try
         {
-            const Action & inst_handler = inst_handlers->at(mnemonic_);
+            const Action & inst_handler = inst_handlers->at(inst_handler_name_);
             inst_action_group_.addAction(inst_handler);
         }
         catch (const std::out_of_range & excp)
         {
             sparta_assert(false, "Missing key in rv" << std::to_string(xlen)
-                                                     << " inst handler map: " << mnemonic_);
+                                                     << " inst handler map: " << inst_handler_name_);
         }
     }
 } // namespace atlas
