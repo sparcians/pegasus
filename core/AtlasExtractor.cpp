@@ -37,9 +37,9 @@ namespace atlas
             }
             catch (const std::out_of_range & excp)
             {
-                sparta_assert(false, "Missing key in rv"
-                                         << std::to_string(xlen)
-                                         << " inst compute address handler map: " << inst_handler_name_);
+                sparta_assert(false, "Missing key in rv" << std::to_string(xlen)
+                                                         << " inst compute address handler map: "
+                                                         << inst_handler_name_);
             }
         }
 
@@ -53,8 +53,9 @@ namespace atlas
         }
         catch (const std::out_of_range & excp)
         {
-            sparta_assert(false, "Missing key in rv" << std::to_string(xlen)
-                                                     << " inst handler map: " << inst_handler_name_);
+            sparta_assert(false, "Missing key in rv"
+                                     << std::to_string(xlen)
+                                     << " inst handler map: " << inst_handler_name_);
         }
     }
 } // namespace atlas
