@@ -64,8 +64,6 @@ class InstJSONGenerator():
                     else:
                         self.extensions.append(x)
 
-        print(self.extensions)
-
         self.isa_map = {}
         for ext in self.extensions:
             xlen_str = "" if "zve" in ext else str(self.xlen)
