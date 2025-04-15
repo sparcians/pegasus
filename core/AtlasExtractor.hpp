@@ -24,10 +24,13 @@ namespace atlas
 
         bool isMemoryInst() const { return is_memory_inst_; }
 
+        bool isChangeOfFlowInst() const { return is_cof_inst_; }
+
       private:
         const std::string mnemonic_;
         const std::string inst_handler_name_;
         const bool is_memory_inst_;
+        const bool is_cof_inst_;
 
         ActionGroup inst_action_group_;
 
