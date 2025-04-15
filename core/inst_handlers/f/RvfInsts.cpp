@@ -25,91 +25,91 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "fadd.s", atlas::Action::createAction<&RvfInsts::fadd_s_handler<XLEN>, RvfInsts>(
+            "fadd_s", atlas::Action::createAction<&RvfInsts::fadd_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fadd_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fclass.s", atlas::Action::createAction<&RvfInsts::fclass_s_handler<XLEN>, RvfInsts>(
+            "fclass_s", atlas::Action::createAction<&RvfInsts::fclass_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fclass_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.l.s", atlas::Action::createAction<&RvfInsts::fcvt_l_s_handler<XLEN>, RvfInsts>(
+            "fcvt_l_s", atlas::Action::createAction<&RvfInsts::fcvt_l_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fcvt_l_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.lu.s", atlas::Action::createAction<&RvfInsts::fcvt_lu_s_handler<XLEN>, RvfInsts>(
+            "fcvt_lu_s", atlas::Action::createAction<&RvfInsts::fcvt_lu_s_handler<XLEN>, RvfInsts>(
                              nullptr, "fcvt_lu_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.s.l", atlas::Action::createAction<&RvfInsts::fcvt_s_l_handler<XLEN>, RvfInsts>(
+            "fcvt_s_l", atlas::Action::createAction<&RvfInsts::fcvt_s_l_handler<XLEN>, RvfInsts>(
                             nullptr, "fcvt_s_l", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.s.lu", atlas::Action::createAction<&RvfInsts::fcvt_s_lu_handler<XLEN>, RvfInsts>(
+            "fcvt_s_lu", atlas::Action::createAction<&RvfInsts::fcvt_s_lu_handler<XLEN>, RvfInsts>(
                              nullptr, "fcvt_s_lu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.s.w", atlas::Action::createAction<&RvfInsts::fcvt_s_w_handler<XLEN>, RvfInsts>(
+            "fcvt_s_w", atlas::Action::createAction<&RvfInsts::fcvt_s_w_handler<XLEN>, RvfInsts>(
                             nullptr, "fcvt_s_w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.s.wu", atlas::Action::createAction<&RvfInsts::fcvt_s_wu_handler<XLEN>, RvfInsts>(
+            "fcvt_s_wu", atlas::Action::createAction<&RvfInsts::fcvt_s_wu_handler<XLEN>, RvfInsts>(
                              nullptr, "fcvt_s_wu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.w.s", atlas::Action::createAction<&RvfInsts::fcvt_w_s_handler<XLEN>, RvfInsts>(
+            "fcvt_w_s", atlas::Action::createAction<&RvfInsts::fcvt_w_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fcvt_w_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt.wu.s", atlas::Action::createAction<&RvfInsts::fcvt_wu_s_handler<XLEN>, RvfInsts>(
+            "fcvt_wu_s", atlas::Action::createAction<&RvfInsts::fcvt_wu_s_handler<XLEN>, RvfInsts>(
                              nullptr, "fcvt_wu_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fdiv.s", atlas::Action::createAction<&RvfInsts::fdiv_s_handler<XLEN>, RvfInsts>(
+            "fdiv_s", atlas::Action::createAction<&RvfInsts::fdiv_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fdiv_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("feq.s",
+        inst_handlers.emplace("feq_s",
                               atlas::Action::createAction<&RvfInsts::feq_s_handler<XLEN>, RvfInsts>(
                                   nullptr, "feq_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("fle.s",
+        inst_handlers.emplace("fle_s",
                               atlas::Action::createAction<&RvfInsts::fle_s_handler<XLEN>, RvfInsts>(
                                   nullptr, "fle_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("flt.s",
+        inst_handlers.emplace("flt_s",
                               atlas::Action::createAction<&RvfInsts::flt_s_handler<XLEN>, RvfInsts>(
                                   nullptr, "flt_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "flw", atlas::Action::createAction<&RvfInsts::floatLsHandler<SP, true>, RvfInstsBase>(
                        nullptr, "flw", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmadd.s", atlas::Action::createAction<&RvfInsts::fmadd_s_handler<XLEN>, RvfInsts>(
+            "fmadd_s", atlas::Action::createAction<&RvfInsts::fmadd_s_handler<XLEN>, RvfInsts>(
                            nullptr, "fmadd_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmax.s", atlas::Action::createAction<&RvfInsts::fmax_s_handler<XLEN>, RvfInsts>(
+            "fmax_s", atlas::Action::createAction<&RvfInsts::fmax_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fmax_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmin.s", atlas::Action::createAction<&RvfInsts::fmin_s_handler<XLEN>, RvfInsts>(
+            "fmin_s", atlas::Action::createAction<&RvfInsts::fmin_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fmin_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmsub.s", atlas::Action::createAction<&RvfInsts::fmsub_s_handler<XLEN>, RvfInsts>(
+            "fmsub_s", atlas::Action::createAction<&RvfInsts::fmsub_s_handler<XLEN>, RvfInsts>(
                            nullptr, "fmsub_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmul.s", atlas::Action::createAction<&RvfInsts::fmul_s_handler<XLEN>, RvfInsts>(
+            "fmul_s", atlas::Action::createAction<&RvfInsts::fmul_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fmul_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmv.w.x", atlas::Action::createAction<&RvfInsts::fmv_w_x_handler<XLEN>, RvfInsts>(
+            "fmv_w_x", atlas::Action::createAction<&RvfInsts::fmv_w_x_handler<XLEN>, RvfInsts>(
                            nullptr, "fmv_w_x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fmv.x.w", atlas::Action::createAction<&RvfInsts::fmv_x_w_handler<XLEN>, RvfInsts>(
+            "fmv_x_w", atlas::Action::createAction<&RvfInsts::fmv_x_w_handler<XLEN>, RvfInsts>(
                            nullptr, "fmv_x_w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fnmadd.s", atlas::Action::createAction<&RvfInsts::fnmadd_s_handler<XLEN>, RvfInsts>(
+            "fnmadd_s", atlas::Action::createAction<&RvfInsts::fnmadd_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fnmadd_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fnmsub.s", atlas::Action::createAction<&RvfInsts::fnmsub_s_handler<XLEN>, RvfInsts>(
+            "fnmsub_s", atlas::Action::createAction<&RvfInsts::fnmsub_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fnmsub_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsgnj.s", atlas::Action::createAction<&RvfInsts::fsgnj_s_handler<XLEN>, RvfInsts>(
+            "fsgnj_s", atlas::Action::createAction<&RvfInsts::fsgnj_s_handler<XLEN>, RvfInsts>(
                            nullptr, "fsgnj_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsgnjn.s", atlas::Action::createAction<&RvfInsts::fsgnjn_s_handler<XLEN>, RvfInsts>(
+            "fsgnjn_s", atlas::Action::createAction<&RvfInsts::fsgnjn_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fsgnjn_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsgnjx.s", atlas::Action::createAction<&RvfInsts::fsgnjx_s_handler<XLEN>, RvfInsts>(
+            "fsgnjx_s", atlas::Action::createAction<&RvfInsts::fsgnjx_s_handler<XLEN>, RvfInsts>(
                             nullptr, "fsgnjx_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsqrt.s", atlas::Action::createAction<&RvfInsts::fsqrt_s_handler<XLEN>, RvfInsts>(
+            "fsqrt_s", atlas::Action::createAction<&RvfInsts::fsqrt_s_handler<XLEN>, RvfInsts>(
                            nullptr, "fsqrt_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsub.s", atlas::Action::createAction<&RvfInsts::fsub_s_handler<XLEN>, RvfInsts>(
+            "fsub_s", atlas::Action::createAction<&RvfInsts::fsub_s_handler<XLEN>, RvfInsts>(
                           nullptr, "fsub_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fsw", atlas::Action::createAction<&RvfInsts::floatLsHandler<SP, false>, RvfInstsBase>(

@@ -239,7 +239,7 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV64, uint64_t>, RviInsts>(
                     nullptr, "sd", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma",
+                "sfence_vma",
                 atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV64>, RviInsts>(
                     nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
@@ -435,7 +435,7 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::store_handler<RV32, uint8_t>, RviInsts>(
                     nullptr, "sb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sfence.vma",
+                "sfence_vma",
                 atlas::Action::createAction<&RviInsts::sfence_vma_handler<RV32>, RviInsts>(
                     nullptr, "sfence_vma", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
