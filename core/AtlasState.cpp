@@ -210,8 +210,8 @@ namespace atlas
         ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
         const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
 
-        DLOG("MMU Mode: " << mode);
-        DLOG("MMU LS Mode: " << ls_mode);
+        DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
+                        DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
         translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
     }
 
