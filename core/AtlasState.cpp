@@ -225,6 +225,14 @@ namespace atlas
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zba.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbb.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbc.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbs.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve64x.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve64d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32x.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
         return uarch_files;
