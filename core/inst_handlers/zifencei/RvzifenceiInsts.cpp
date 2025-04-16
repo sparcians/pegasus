@@ -13,14 +13,14 @@ namespace atlas
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "fence.i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV64>,
+                "fence_i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV64>,
                                                        RvzifenceiInsts>(nullptr, "fence_i",
                                                                         ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "fence.i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV32>,
+                "fence_i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV32>,
                                                        RvzifenceiInsts>(nullptr, "fence_i",
                                                                         ActionTags::EXECUTE_TAG));
         }
