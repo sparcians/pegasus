@@ -68,6 +68,8 @@ class InstJSONGenerator():
                 for x in ext:
                     if "g" == x:
                         self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
+                    elif "b" == x:
+                        self.extensions.extend(['zba', 'zbb', 'zbc', 'zbs'])
                     elif "v" == x:
                         self.extensions.extend(['zve64x', 'zve64d', 'zve32x', 'zve32f'])
                     else:

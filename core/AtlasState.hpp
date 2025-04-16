@@ -101,10 +101,13 @@ namespace atlas
         void updateMavisContext()
         {
             const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            // FIXME: Use ISA string for context name and check if it already exists
-            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(),
-                                getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
-            mavis_->switchContext(std::to_string(pc_));
+            const std::string context_name = std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
+            if (mavis_->hasContext(context_name) == false)
+            {
+                mavis_->makeContext(context_name, extension_manager_.getJSONs(),
+                                    getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
+            }
+            mavis_->switchContext(context_name);
         }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }

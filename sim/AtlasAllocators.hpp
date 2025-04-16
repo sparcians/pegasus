@@ -47,7 +47,7 @@ namespace atlas
             return allocators;
         }
 
-        AtlasInstAllocator inst_allocator{3000, 2500};
-        AtlasExtractorAllocator extractor_allocator{3000, 2500};
+        AtlasInstAllocator inst_allocator{1000, 500};
+        AtlasExtractorAllocator extractor_allocator{5000, 4500};
     };
 } // namespace atlas
