@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <string>
+#include <ostream>
 
 namespace atlas
 {
@@ -81,7 +82,73 @@ namespace atlas
         INVALID
     };
 
+    enum class PageSize : uint32_t
+    {
+        SIZE_4K,
+        SIZE_2M,   // Megapage (Sv39, Sv48, Sv57)
+        SIZE_4M,   // Megapage (Sv32 only)
+        SIZE_1G,   // Gigapage (Sv39, Sv48, Sv57)
+        SIZE_512G, // Terapage (Sv48, Sv57)
+        SIZE_256T, // Petapage (Sv57)
+        INVALID
+    };
+
     static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
+
+    inline std::ostream & operator<<(std::ostream & os, const MMUMode mode)
+    {
+        switch (mode)
+        {
+            case MMUMode::BAREMETAL:
+                os << "BAREMETAL";
+                break;
+            case MMUMode::SV32:
+                os << "SV32";
+                break;
+            case MMUMode::SV39:
+                os << "SV39";
+                break;
+            case MMUMode::SV48:
+                os << "SV48";
+                break;
+            case MMUMode::SV57:
+                os << "SV57";
+                break;
+            case MMUMode::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const PageSize page_size)
+    {
+        switch (page_size)
+        {
+            case PageSize::SIZE_4K:
+                os << "4K";
+                break;
+            case PageSize::SIZE_2M:
+                os << "2M";
+                break;
+            case PageSize::SIZE_4M:
+                os << "4M";
+                break;
+            case PageSize::SIZE_1G:
+                os << "1G";
+                break;
+            case PageSize::SIZE_512G:
+                os << "512G";
+                break;
+            case PageSize::SIZE_256T:
+                os << "256T";
+                break;
+            case PageSize::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
 
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;

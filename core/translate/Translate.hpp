@@ -31,44 +31,53 @@ namespace atlas
 
         ActionGroup* getInstTranslateActionGroup() { return &inst_translate_action_group_; }
 
-        ActionGroup* getDataTranslateActionGroup() { return &data_translate_action_group_; }
+        ActionGroup* getLoadTranslateActionGroup() { return &load_translate_action_group_; }
 
-        void changeMMUMode(uint64_t xlen, uint32_t satp_mode);
+        ActionGroup* getStoreTranslateActionGroup() { return &store_translate_action_group_; }
 
-        static constexpr bool INST_TRANSLATION = true;
-        static constexpr bool DATA_TRANSLATION = false;
+        template <typename XLEN> void changeMMUMode(const MMUMode mode, const MMUMode ls_mode);
+
+        enum class AccessType
+        {
+            INSTRUCTION,
+            LOAD,
+            STORE
+        };
 
       private:
         ActionGroup inst_translate_action_group_{"Inst Translate"};
-        ActionGroup data_translate_action_group_{"Data Translate"};
+        ActionGroup load_translate_action_group_{"Load Translate"};
+        ActionGroup store_translate_action_group_{"Store Translate"};
 
         std::array<Action, N_MMU_MODES> rv64_inst_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_inst_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv64_data_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_data_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv64_load_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv32_load_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv64_store_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv32_store_translation_actions_;
 
-        template <typename XLEN, MMUMode Mode, bool>
+        template <typename XLEN, MMUMode MODE, AccessType TYPE>
         ActionGroup* translate_(atlas::AtlasState* state);
 
-        template <MMUMode Mode> uint32_t getNumPageWalkLevels_() const
+        template <MMUMode MODE> uint32_t getNumPageWalkLevels_() const
         {
-            if constexpr (Mode == MMUMode::BAREMETAL)
+            if constexpr (MODE == MMUMode::BAREMETAL)
             {
                 return 0;
             }
-            if constexpr (Mode == MMUMode::SV32)
+            else if constexpr (MODE == MMUMode::SV32)
             {
                 return translate_types::Sv32::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV39)
+            else if constexpr (MODE == MMUMode::SV39)
             {
                 return translate_types::Sv39::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV48)
+            else if constexpr (MODE == MMUMode::SV48)
             {
                 return translate_types::Sv48::num_pagewalk_levels;
             }
-            else if constexpr (Mode == MMUMode::SV57)
+            else if constexpr (MODE == MMUMode::SV57)
             {
                 return translate_types::Sv57::num_pagewalk_levels;
             }
@@ -78,23 +87,47 @@ namespace atlas
             }
         }
 
-        template <MMUMode Mode> auto extractVpnField_(const uint32_t level) const
+        template <MMUMode MODE> PageSize getPageSize_(const uint32_t level) const
+        {
+            static const std::map<uint32_t, PageSize> level_to_pagesize = {
+                {1, PageSize::SIZE_4K},
+                {2, PageSize::SIZE_2M},
+                {3, PageSize::SIZE_1G},
+                {4, PageSize::SIZE_512G},
+                {5, PageSize::SIZE_256T}};
+
+            if constexpr (MODE == MMUMode::BAREMETAL)
+            {
+                return PageSize::INVALID;
+            }
+            else if constexpr (MODE == MMUMode::SV32)
+            {
+                sparta_assert(level <= translate_types::Sv32::num_pagewalk_levels);
+                return (level == 0) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
+            }
+            else
+            {
+                return level_to_pagesize.at(level);
+            }
+        }
+
+        template <MMUMode MODE> auto extractVpnField_(const uint32_t level) const
         {
             auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
             {
-                if constexpr (Mode == MMUMode::SV32)
+                if constexpr (MODE == MMUMode::SV32)
                 {
                     return translate_types::Sv32::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV39)
+                else if constexpr (MODE == MMUMode::SV39)
                 {
                     return translate_types::Sv39::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV48)
+                else if constexpr (MODE == MMUMode::SV48)
                 {
                     return translate_types::Sv48::vpn_fields.at(level);
                 }
-                else if constexpr (Mode == MMUMode::SV57)
+                else if constexpr (MODE == MMUMode::SV57)
                 {
                     return translate_types::Sv57::vpn_fields.at(level);
                 }
@@ -113,13 +146,12 @@ namespace atlas
             return vaddr & translate_types::Sv32::VAddrFields::page_offset.bitmask;
         }
 
-        template <typename XLEN, MMUMode MODE, bool TRANSLATION>
+        template <typename XLEN, MMUMode MODE, AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {
             Action action =
-                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TRANSLATION>>(this,
-                                                                                             desc);
+                Action::createAction<&atlas::Translate::translate_<XLEN, MODE, TYPE>>(this, desc);
             action.addTag(tags);
             xlation_actions[static_cast<uint32_t>(MODE)] = action;
         }

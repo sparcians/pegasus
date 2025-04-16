@@ -326,6 +326,7 @@ namespace atlas
         }
 
         state->updateMavisContext();
+        state->changeMMUMode<XLEN>();
 
         return nullptr;
     }
