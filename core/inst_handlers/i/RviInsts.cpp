@@ -757,7 +757,8 @@ namespace atlas
         // require(SHAMT < state->getXlen());
         const XLEN rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
         const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const int64_t rd_val = (int64_t)(rs1_val >> shift_amount);
+//        const XLEN rd_val = (int64_t)(rs1_val >> shift_amount);
+        const std::make_signed_t<XLEN> rd_val =  (std::make_signed_t<XLEN>)(rs1_val >> shift_amount);
         WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
 
         return nullptr;
