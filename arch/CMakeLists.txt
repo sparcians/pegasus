@@ -77,13 +77,13 @@ set(DEPENDS_INST_JSON_FILES
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdv_zicsr_zifencei
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdv_zicsr_zifencei
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 

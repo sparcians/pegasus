@@ -31,92 +31,92 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "amoadd.w",
+            "amoadd_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoadd_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoand.w",
+            "amoand_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoand_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomax.w",
+            "amomax_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amomax_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomaxu.w",
+            "amomaxu_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amomaxu_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomin.w",
+            "amomin_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amomin_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amominu.w",
+            "amominu_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amominu_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoor.w",
+            "amoor_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoor_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoswap.w",
+            "amoswap_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoswap_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoxor.w",
+            "amoxor_w",
             atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                 nullptr, "amoxor_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "lr.w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
+            "lr_w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                         nullptr, "lr_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "sc.w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
+            "sc_w", atlas::Action::createAction<&RvaInsts::compute_address_handler<XLEN>, RvaInsts>(
                         nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "amoadd.d",
+                "amoadd_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amoadd_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amoand.d",
+                "amoand_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amoand_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amomax.d",
+                "amomax_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amomax_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amomaxu.d",
+                "amomaxu_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amomaxu_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amomin.d",
+                "amomin_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amomin_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amominu.d",
+                "amominu_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amominu_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amoor.d",
+                "amoor_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amoor_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amoswap.d",
+                "amoswap_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amoswap_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "amoxor.d",
+                "amoxor_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "amoxor_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lr.d",
+                "lr_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "lr_d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "sc.d",
+                "sc_d",
                 atlas::Action::createAction<&RvaInsts::compute_address_handler<RV64>, RvaInsts>(
                     nullptr, "sc_d", ActionTags::COMPUTE_ADDR_TAG));
         }
@@ -129,156 +129,156 @@ namespace atlas
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "amoadd.d",
+                "amoadd_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, std::plus<D>>,
                                             RvaInsts>(nullptr, "amoadd_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoadd.w",
+                "amoadd_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, std::plus<W>>,
                                             RvaInsts>(nullptr, "amoadd_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoand.d",
+                "amoand_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, std::bit_and<D>>,
                                             RvaInsts>(nullptr, "amoand_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoand.w",
+                "amoand_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, std::bit_and<W>>,
                                             RvaInsts>(nullptr, "amoand_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomax.d",
+                "amomax_d",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV64, D, MaxFunctor<std::make_signed_t<D>>, false>,
                     RvaInsts>(nullptr, "amomax_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomax.w",
+                "amomax_w",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV64, W, MaxFunctor<std::make_signed_t<W>>, false>,
                     RvaInsts>(nullptr, "amomax_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomaxu.d",
+                "amomaxu_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MaxFunctor<D>>,
                                             RvaInsts>(nullptr, "amomaxu_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomaxu.w",
+                "amomaxu_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, MaxFunctor<W>>,
                                             RvaInsts>(nullptr, "amomaxu_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomin.d",
+                "amomin_d",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV64, D, MinFunctor<std::make_signed_t<D>>, false>,
                     RvaInsts>(nullptr, "amomin_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomin.w",
+                "amomin_w",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV64, W, MinFunctor<std::make_signed_t<W>>, false>,
                     RvaInsts>(nullptr, "amomin_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amominu.d",
+                "amominu_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, MinFunctor<D>>,
                                             RvaInsts>(nullptr, "amominu_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amominu.w",
+                "amominu_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, MinFunctor<W>>,
                                             RvaInsts>(nullptr, "amominu_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoor.d",
+                "amoor_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, std::bit_or<D>>,
                                             RvaInsts>(nullptr, "amoor_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoor.w",
+                "amoor_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, std::bit_or<W>>,
                                             RvaInsts>(nullptr, "amoor_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoswap.d",
+                "amoswap_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, SwapFunctor<D>>,
                                             RvaInsts>(nullptr, "amoswap_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoswap.w",
+                "amoswap_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, SwapFunctor<W>>,
                                             RvaInsts>(nullptr, "amoswap_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoxor.d",
+                "amoxor_d",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, D, std::bit_xor<D>>,
                                             RvaInsts>(nullptr, "amoxor_d",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoxor.w",
+                "amoxor_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV64, W, std::bit_xor<W>>,
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr.d",
+            inst_handlers.emplace("lr_d",
                                   atlas::Action::createAction<&RvaInsts::lr_d_64_handler, RvaInsts>(
                                       nullptr, "lr_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr.w",
+            inst_handlers.emplace("lr_w",
                                   atlas::Action::createAction<&RvaInsts::lr_w_64_handler, RvaInsts>(
                                       nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc.d",
+            inst_handlers.emplace("sc_d",
                                   atlas::Action::createAction<&RvaInsts::sc_d_64_handler, RvaInsts>(
                                       nullptr, "sc_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc.w",
+            inst_handlers.emplace("sc_w",
                                   atlas::Action::createAction<&RvaInsts::sc_w_64_handler, RvaInsts>(
                                       nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "amoadd.w",
+                "amoadd_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, std::plus<W>>,
                                             RvaInsts>(nullptr, "amoadd_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoand.w",
+                "amoand_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, std::bit_and<W>>,
                                             RvaInsts>(nullptr, "amoand_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomax.w",
+                "amomax_w",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV32, W, MaxFunctor<std::make_signed_t<W>>, false>,
                     RvaInsts>(nullptr, "amomax_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomaxu.w",
+                "amomaxu_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MaxFunctor<W>>,
                                             RvaInsts>(nullptr, "amomaxu_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amomin.w",
+                "amomin_w",
                 atlas::Action::createAction<
                     &RvaInsts::amo_handler<RV32, W, MinFunctor<std::make_signed_t<W>>, false>,
                     RvaInsts>(nullptr, "amomin_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amominu.w",
+                "amominu_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, MinFunctor<W>>,
                                             RvaInsts>(nullptr, "amominu_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoor.w",
+                "amoor_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, std::bit_or<W>>,
                                             RvaInsts>(nullptr, "amoor_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoswap.w",
+                "amoswap_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, SwapFunctor<W>>,
                                             RvaInsts>(nullptr, "amoswap_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "amoxor.w",
+                "amoxor_w",
                 atlas::Action::createAction<&RvaInsts::amo_handler<RV32, W, std::bit_xor<W>>,
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr.w",
+            inst_handlers.emplace("lr_w",
                                   atlas::Action::createAction<&RvaInsts::lr_w_64_handler, RvaInsts>(
                                       nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc.w",
+            inst_handlers.emplace("sc_w",
                                   atlas::Action::createAction<&RvaInsts::sc_w_64_handler, RvaInsts>(
                                       nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }

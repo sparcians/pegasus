@@ -101,10 +101,14 @@ namespace atlas
         void updateMavisContext()
         {
             const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            // FIXME: Use ISA string for context name and check if it already exists
-            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(),
-                                getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
-            mavis_->switchContext(std::to_string(pc_));
+            const std::string context_name =
+                std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
+            if (mavis_->hasContext(context_name) == false)
+            {
+                mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
+                                    mavis_uid_list_, {}, inclusions, {});
+            }
+            mavis_->switchContext(context_name);
         }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
@@ -121,6 +125,8 @@ namespace atlas
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
+        PrivMode getLdstPrivMode() const { return ldst_priv_mode_; }
+
         bool getVirtualMode() const { return virtual_mode_; }
 
         void setPrivMode(PrivMode priv_mode, bool virt_mode)
@@ -129,7 +135,7 @@ namespace atlas
             priv_mode_ = priv_mode;
         }
 
-        void changeMMUMode(uint32_t satp_mode);
+        template <typename XLEN> void changeMMUMode();
 
         struct SimState
         {
@@ -338,6 +344,9 @@ namespace atlas
 
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
+
+        //! Current privilege mode for LS translation
+        PrivMode ldst_priv_mode_ = PrivMode::MACHINE;
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;

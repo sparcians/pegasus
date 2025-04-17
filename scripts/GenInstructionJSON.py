@@ -68,6 +68,8 @@ class InstJSONGenerator():
                 for x in ext:
                     if "g" == x:
                         self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
+                    elif "b" == x:
+                        self.extensions.extend(['zba', 'zbb', 'zbc', 'zbs'])
                     elif "v" == x:
                         self.extensions.extend(['zve64x', 'zve64d', 'zve32x', 'zve32f'])
                     else:
@@ -92,9 +94,8 @@ class InstJSONGenerator():
 
         for ext in self.extensions:
             filename = self.xlen_str + "/atlas_uarch_" + self.xlen_str + ext.lower() + ".json"
-            if not os.path.isfile(filename):
-                with open(filename,"w") as fh:
-                    json.dump(self.isa_map[ext], fh, indent=4)
+            with open(filename,"w") as fh:
+                json.dump(self.isa_map[ext], fh, indent=4)
 
 
 USAGE_STR = "Usage: GenInstructionJSON.py [isa string]"

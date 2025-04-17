@@ -132,19 +132,6 @@ namespace atlas
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
-
-        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
-        if (inst_logger_.observed())
-        {
-            if (xlen_ == 64)
-            {
-                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
-            }
-            else
-            {
-                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
-            }
-        }
     }
 
     void AtlasState::onBindTreeLate_()
@@ -172,8 +159,28 @@ namespace atlas
             }
         }
 
-        // Set up translation; baremetal (value 0) for now
-        changeMMUMode(0);
+        // Set up translation
+        if (xlen_ == 64)
+        {
+            changeMMUMode<RV64>();
+        }
+        else
+        {
+            changeMMUMode<RV32>();
+        }
+
+        // FIXME: Does Sparta have a callback notif for when debug icount is reached?
+        if (inst_logger_.observed())
+        {
+            if (xlen_ == 64)
+            {
+                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
+            }
+            else
+            {
+                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
+            }
+        }
 
         for (auto & obs : observers_)
         {
@@ -181,9 +188,31 @@ namespace atlas
         }
     }
 
-    void AtlasState::changeMMUMode(uint32_t satp_mode)
+    template <typename XLEN> void AtlasState::changeMMUMode()
     {
-        translate_unit_->changeMMUMode(xlen_, satp_mode);
+        static const std::vector<MMUMode> satp_mmu_mode_map = {
+            MMUMode::BAREMETAL, // mode == 0
+            MMUMode::SV32,      // mode == 1 xlen==32
+            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
+            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
+            MMUMode::INVALID, // mode ==  7
+            MMUMode::SV39,    // mode ==  8, xlen==64
+            MMUMode::SV48,    // mode ==  9, xlen==64
+            MMUMode::SV57     // mode == 10, xlen==64
+        };
+
+        const uint32_t satp_val = READ_CSR_FIELD<XLEN>(this, SATP, "mode");
+        sparta_assert(satp_val < satp_mmu_mode_map.size());
+        const MMUMode mode = satp_mmu_mode_map[satp_val];
+
+        const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
+        const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
+        ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
+        const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
+
+        DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
+                        DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
+        translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
     }
 
     mavis::FileNameListType AtlasState::getUArchFiles_() const
@@ -196,6 +225,14 @@ namespace atlas
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "a.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zba.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbb.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbc.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zbs.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve64x.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve64d.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32x.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
         return uarch_files;
