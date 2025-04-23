@@ -275,10 +275,10 @@ namespace atlas
                             &RviInsts::integer_reg_reg_handler<RV64, std::less<RV64>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sra", atlas::Action::createAction<&RviInsts::sra_handler<int64_t>, RviInsts>(
+                "sra", atlas::Action::createAction<&RviInsts::sra_handler<RV64>, RviInsts>(
                            nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srai", atlas::Action::createAction<&RviInsts::srai_handler<int64_t>, RviInsts>(
+                "srai", atlas::Action::createAction<&RviInsts::srai_handler<RV64>, RviInsts>(
                             nullptr, "srai", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sraiw",
                                   atlas::Action::createAction<&RviInsts::sraiw_handler, RviInsts>(
@@ -465,10 +465,10 @@ namespace atlas
                             &RviInsts::integer_reg_reg_handler<RV32, std::less<RV32>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sra", atlas::Action::createAction<&RviInsts::sra_handler<int32_t>, RviInsts>(
+                "sra", atlas::Action::createAction<&RviInsts::sra_handler<RV32>, RviInsts>(
                            nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srai", atlas::Action::createAction<&RviInsts::srai_handler<int32_t>, RviInsts>(
+                "srai", atlas::Action::createAction<&RviInsts::srai_handler<RV32>, RviInsts>(
                             nullptr, "srai", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sret",
@@ -752,13 +752,14 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RviInsts::srai_handler(atlas::AtlasState* state)
     {
+        using SXLEN = std::make_signed_t<XLEN>;
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         // require(SHAMT < state->getXlen());
-        const XLEN rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const std::make_signed_t<XLEN> rd_val =  (std::make_signed_t<XLEN>)(rs1_val >> shift_amount);
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
+        const XLEN shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const SXLEN rd_val =  (SXLEN)(rs1_val >> shift_amount);
+        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
         return nullptr;
     }
@@ -830,12 +831,13 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RviInsts::sra_handler(atlas::AtlasState* state)
     {
+        using SXLEN = std::make_signed_t<XLEN>;
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
-        const uint64_t rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const XLEN rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
+        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
         return nullptr;
     }
