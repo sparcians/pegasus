@@ -10,13 +10,11 @@ namespace atlas
     class Action;
     class ActionGroup;
 
-    class RvvInsts
+    class RvvcsInsts
     {
       public:
-        using base_type = RvvInsts;
+        using base_type = RvvcsInsts;
 
-        template <typename XLEN>
-        static void getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers);
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 

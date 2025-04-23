@@ -1,4 +1,4 @@
-#include "core/inst_handlers/v/RvvInsts.hpp"
+#include "core/inst_handlers/v/RvvcsInsts.hpp"
 #include "core/AtlasState.hpp"
 #include "core/VectorState.hpp"
 #include "core/ActionGroup.hpp"
@@ -8,14 +8,7 @@
 namespace atlas
 {
     template <typename XLEN>
-    void RvvInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
-    {
-        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        (void)inst_handlers;
-    }
-
-    template <typename XLEN>
-    void RvvInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
+    void RvvcsInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -35,10 +28,8 @@ namespace atlas
                 nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
     }
 
-    template void RvvInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
-    template void RvvInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
-    template void RvvInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
-    template void RvvInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
+    template void RvvcsInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
+    template void RvvcsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename VLEN>
     ActionGroup* RvvInsts::vsetvlHandler_(atlas::AtlasState* state)

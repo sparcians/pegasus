@@ -10,19 +10,39 @@ namespace atlas
     class VectorState
     {
       public:
-        uint8_t getLMUL() const { return lmul_; }
+        inline uint8_t getLMUL() const { return lmul_; }
 
-        uint8_t getSEW() const { return sew_; }
+        inline uint8_t getSEW() const { return sew_; }
 
-        bool getVTA() const { return vta_; }
+        inline bool getVTA() const { return vta_; }
 
-        bool getVMA() const { return vma_; }
+        inline bool getVMA() const { return vma_; }
 
-        uint8_t getVL() const { return vl_; }
+        inline uint8_t getVL() const { return vl_; }
 
-        uint8_t getVSTART() const { return vstart_; }
+        inline uint8_t getVSTART() const { return vstart_; }
 
-        uint8_t getIndex() const { return index_; }
+        template <uint8_t SEW> struct GetSewType;
+
+        template <> struct GetSewType<8>
+        {
+            using type = uint8_t;
+        };
+
+        template <> struct GetSewType<16>
+        {
+            using type = uint16_t;
+        };
+
+        template <> struct GetSewType<32>
+        {
+            using type = uint32_t;
+        };
+
+        template <> struct GetSewType<64>
+        {
+            using type = uint64_t;
+        };
 
         template <typename VLEN> inline uint8_t getVLMAX()
         {
@@ -89,8 +109,6 @@ namespace atlas
         uint8_t vl_ = 0;
         // vstart csr
         uint8_t vstart_ = 0;
-        // internal
-        uint8_t index_ = 0;
     }; // struct VectorState
 
     template <typename VLEN>
@@ -111,9 +129,6 @@ namespace atlas
         os << "VL: " << vector_state.getVL() << " "
            << "VLMAX:" << vector_state.getVLMAX<VLEN>() << " "
            << "VSTART: " << vector_state.getVSTART() << "; ";
-
-        os << "index: " << vector_state.getIndex();
-
         return os;
     }
 
