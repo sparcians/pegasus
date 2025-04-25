@@ -650,8 +650,7 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         XLEN rd_val = state->getPc() + insn->getOpcodeSize();
-        constexpr uint32_t IMM_SIZE = 21;
-        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN imm = insn->getImmediate();
         const XLEN jump_target = state->getPc() + imm;
         state->setNextPc(jump_target);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
@@ -665,8 +664,7 @@ namespace atlas
 
         XLEN rd_val = state->getPc() + insn->getOpcodeSize();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        constexpr uint32_t IMM_SIZE = 12;
-        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN imm = insn->getImmediate();
         const XLEN jump_target = (rs1_val + imm) & ~std::make_signed_t<XLEN>(1);
         state->setNextPc(jump_target);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);

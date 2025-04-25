@@ -113,9 +113,7 @@ namespace atlas
 
             const AtlasInstPtr & inst = state->getCurrentInst();
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-            constexpr uint32_t IMM_SIZE = 12;
-            const XLEN imm =
-                inst->hasImmediate() ? inst->getSignExtendedImmediate<XLEN, IMM_SIZE>() : 0;
+            const XLEN imm = inst->getImmediate();
             const XLEN vaddr = rs1_val + imm;
             inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
             return nullptr;

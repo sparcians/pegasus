@@ -58,16 +58,6 @@ namespace atlas
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
         }
 
-        template <class T, uint32_t imm_size> T getSignExtendedImmediate() const
-        {
-            static_assert(std::is_same<T, RV64>() or std::is_same<T, RV32>());
-            static_assert(imm_size <= 32);
-            T imm_val = 1;
-            imm_val <<= imm_size - 1;
-            imm_val = (immediate_value_ ^ imm_val) - imm_val;
-            return imm_val;
-        }
-
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
 
         bool writesCsr() const;
