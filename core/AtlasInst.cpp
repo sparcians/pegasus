@@ -46,12 +46,18 @@ namespace atlas
         return nullptr;
     }
 
+    uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info) {
+        return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED ?
+            opcode_info->getSignedOffset() : opcode_info->getImmediate();
+    }
+
     AtlasInst::AtlasInst(const mavis::OpcodeInfo::PtrType & opcode_info,
                          const AtlasExtractorPtr & extractor_info, AtlasState* state) :
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
         is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
+        immediate_value_(getImmediateValue(opcode_info)),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
         rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(

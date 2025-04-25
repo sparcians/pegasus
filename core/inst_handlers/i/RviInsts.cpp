@@ -552,8 +552,7 @@ namespace atlas
         const AtlasInstPtr & insn = state->getCurrentInst();
 
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        constexpr uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const uint64_t imm = insn->getImmediate();
         const uint64_t rd_val = OPERATOR()(rs1_val, imm);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
@@ -564,8 +563,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<RV64, IMM_SIZE>();
+        const uint64_t imm = insn->getImmediate();
         const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + imm));
@@ -693,8 +691,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint32_t IMM_SIZE = 32;
-        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const uint64_t imm = insn->getImmediate();
         WRITE_INT_REG<XLEN>(state, insn->getRd(), imm);
 
         return nullptr;
@@ -704,8 +701,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint32_t IMM_SIZE = 32;
-        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN imm = insn->getImmediate();
         const XLEN pc = state->getPc();
         const XLEN rd_val = ((std::make_signed_t<XLEN>)(imm + pc) << (64 - (state->getXlen())))
                             >> (64 - (state->getXlen()));
