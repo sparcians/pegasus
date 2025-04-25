@@ -593,8 +593,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        constexpr uint64_t IMM_SIZE = 12;
-        const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const XLEN imm = insn->getImmediate();
         const XLEN vaddr = rs1_val + imm;
         insn->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
         return nullptr;
@@ -638,8 +637,7 @@ namespace atlas
         if (OPERATOR()(rs1_val, rs2_val))
         {
             const XLEN pc = state->getPc();
-            constexpr uint32_t IMM_SIZE = 13;
-            const XLEN imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+            const XLEN imm = insn->getImmediate();
             const XLEN branch_target = pc + imm;
             state->setNextPc(branch_target);
         }
@@ -680,8 +678,7 @@ namespace atlas
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
-        const uint32_t IMM_SIZE = 12;
-        const uint64_t imm = insn->getSignExtendedImmediate<XLEN, IMM_SIZE>();
+        const uint64_t imm = insn->getImmediate();
         WRITE_INT_REG<XLEN>(state, insn->getRd(), imm);
 
         return nullptr;
