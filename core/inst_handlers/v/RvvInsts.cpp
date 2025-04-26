@@ -23,15 +23,15 @@ namespace atlas
         using VLEN = XLEN;
 
         inst_handlers.emplace(
-            "vsetvl", atlas::Action::createAction<&RvvInsts::vsetvl_handler<XLEN, VLEN>, RvvInsts>(
+            "vsetvl", atlas::Action::createAction<&RvvInsts::vsetvlHandler_<XLEN, VLEN>, RvvInsts>(
                           nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsetvli",
-            atlas::Action::createAction<&RvvInsts::vsetvli_handler<XLEN, VLEN>, RvvInsts>(
+            atlas::Action::createAction<&RvvInsts::vsetvliHandler_<XLEN, VLEN>, RvvInsts>(
                 nullptr, "vsetvli", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsetivli",
-            atlas::Action::createAction<&RvvInsts::vsetivli_handler<XLEN, VLEN>, RvvInsts>(
+            atlas::Action::createAction<&RvvInsts::vsetivliHandler_<XLEN, VLEN>, RvvInsts>(
                 nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
     }
 
@@ -41,7 +41,7 @@ namespace atlas
     template void RvvInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetvl_handler(atlas::AtlasState* state)
+    ActionGroup* RvvInsts::vsetvlHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -64,7 +64,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetvli_handler(atlas::AtlasState* state)
+    ActionGroup* RvvInsts::vsetvliHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -87,7 +87,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetivli_handler(atlas::AtlasState* state)
+    ActionGroup* RvvInsts::vsetivliHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getImmediate());
