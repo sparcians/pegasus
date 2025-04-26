@@ -163,14 +163,14 @@ namespace atlas
             translation_state = inst->getTranslationState();
         }
 
+        // Pop request from the request queue
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
+        translation_state->clearRequest();
+
         const XLEN vaddr = request.getVaddr();
-
         uint32_t level = getNumPageWalkLevels_<MODE>();
-
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
-
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {

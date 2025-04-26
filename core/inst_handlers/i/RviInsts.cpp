@@ -758,7 +758,7 @@ namespace atlas
         // require(SHAMT < state->getXlen());
         const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
         const XLEN shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const SXLEN rd_val =  (SXLEN)(rs1_val >> shift_amount);
+        const SXLEN rd_val = (SXLEN)(rs1_val >> shift_amount);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
         return nullptr;

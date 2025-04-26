@@ -539,7 +539,8 @@ namespace atlas
         sparta_assert(success, "Failed to read from memory at address 0x" << std::hex << paddr);
 
         const MemoryType value = convertFromByteVector<MemoryType>(buffer);
-        ILOG("Memory read to 0x" << std::hex << paddr << ": 0x" << (uint64_t)value);
+        ILOG("Memory read (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
+                             << (uint64_t)value);
         return value;
     }
 
@@ -555,7 +556,8 @@ namespace atlas
         const bool success = memory->tryWrite(paddr, size, buffer.data());
         sparta_assert(success, "Failed to write to memory at address 0x" << std::hex << paddr);
 
-        ILOG("Memory write to 0x" << std::hex << paddr << ": 0x" << (uint64_t)value);
+        ILOG("Memory write (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
+                              << (uint64_t)value);
     }
 
     template int8_t AtlasState::readMemory<int8_t>(const Addr);

@@ -140,7 +140,7 @@ namespace atlas
 
         struct SimState
         {
-            uint64_t current_opcode = 0;
+            uint32_t current_opcode = 0;
             uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
