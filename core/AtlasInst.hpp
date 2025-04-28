@@ -44,8 +44,7 @@ namespace atlas
 
         uint64_t getImmediate() const
         {
-            sparta_assert(hasImmediate(), "Failed to get immediate value!");
-            return opcode_info_->getImmediate();
+            return immediate_value_;
         }
 
         bool hasCsr() const
@@ -57,17 +56,6 @@ namespace atlas
         {
             sparta_assert(hasCsr(), "Failed to get CSR!");
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-        }
-
-        template <class T, uint32_t imm_size> T getSignExtendedImmediate() const
-        {
-            sparta_assert(opcode_info_->hasImmediate(), "Failed to get immediate value!");
-            static_assert(std::is_same<T, RV64>() or std::is_same<T, RV32>());
-            static_assert(imm_size <= 32);
-            T imm_val = 1;
-            imm_val <<= imm_size - 1;
-            imm_val = (opcode_info_->getImmediate() ^ imm_val) - imm_val;
-            return imm_val;
         }
 
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
@@ -176,6 +164,9 @@ namespace atlas
 
         // Is this a store-type instruction
         const bool is_store_type_;
+
+        // Cache immediate value, unsigned and signed
+        const uint64_t immediate_value_;
 
         // Next PC
         Addr next_pc_;
