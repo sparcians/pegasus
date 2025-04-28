@@ -14,70 +14,70 @@ namespace atlas
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "div", atlas::Action::createAction<&RvmInsts::div_64_handler<RV64>, RvmInsts>(
+                "div", atlas::Action::createAction<&RvmInsts::div_64Handler_<RV64>, RvmInsts>(
                            nullptr, "div", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "divu", atlas::Action::createAction<&RvmInsts::divu_64_handler<RV64>, RvmInsts>(
+                "divu", atlas::Action::createAction<&RvmInsts::divu_64Handler_<RV64>, RvmInsts>(
                             nullptr, "divu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "divuw", atlas::Action::createAction<&RvmInsts::divuw_64_handler, RvmInsts>(
+                "divuw", atlas::Action::createAction<&RvmInsts::divuw_64Handler_, RvmInsts>(
                              nullptr, "divuw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("divw",
-                                  atlas::Action::createAction<&RvmInsts::divw_64_handler, RvmInsts>(
+                                  atlas::Action::createAction<&RvmInsts::divw_64Handler_, RvmInsts>(
                                       nullptr, "divw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mul", atlas::Action::createAction<&RvmInsts::mul_64_handler<RV64>, RvmInsts>(
+                "mul", atlas::Action::createAction<&RvmInsts::mul_64Handler_<RV64>, RvmInsts>(
                            nullptr, "mul", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulh", atlas::Action::createAction<&RvmInsts::mulh_64_handler<RV64>, RvmInsts>(
+                "mulh", atlas::Action::createAction<&RvmInsts::mulh_64Handler_<RV64>, RvmInsts>(
                             nullptr, "mulh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhsu", atlas::Action::createAction<&RvmInsts::mulhsu_64_handler<RV64>, RvmInsts>(
+                "mulhsu", atlas::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV64>, RvmInsts>(
                               nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhu", atlas::Action::createAction<&RvmInsts::mulhu_64_handler<RV64>, RvmInsts>(
+                "mulhu", atlas::Action::createAction<&RvmInsts::mulhu_64Handler_<RV64>, RvmInsts>(
                              nullptr, "mulhu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("mulw",
-                                  atlas::Action::createAction<&RvmInsts::mulw_64_handler, RvmInsts>(
+                                  atlas::Action::createAction<&RvmInsts::mulw_64Handler_, RvmInsts>(
                                       nullptr, "mulw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "rem", atlas::Action::createAction<&RvmInsts::rem_64_handler<RV64>, RvmInsts>(
+                "rem", atlas::Action::createAction<&RvmInsts::rem_64Handler_<RV64>, RvmInsts>(
                            nullptr, "rem", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "remu", atlas::Action::createAction<&RvmInsts::remu_64_handler<RV64>, RvmInsts>(
+                "remu", atlas::Action::createAction<&RvmInsts::remu_64Handler_<RV64>, RvmInsts>(
                             nullptr, "remu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "remuw", atlas::Action::createAction<&RvmInsts::remuw_64_handler, RvmInsts>(
+                "remuw", atlas::Action::createAction<&RvmInsts::remuw_64Handler_, RvmInsts>(
                              nullptr, "remuw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("remw",
-                                  atlas::Action::createAction<&RvmInsts::remw_64_handler, RvmInsts>(
+                                  atlas::Action::createAction<&RvmInsts::remw_64Handler_, RvmInsts>(
                                       nullptr, "remw", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "div", atlas::Action::createAction<&RvmInsts::div_64_handler<RV32>, RvmInsts>(
+                "div", atlas::Action::createAction<&RvmInsts::div_64Handler_<RV32>, RvmInsts>(
                            nullptr, "div", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "divu", atlas::Action::createAction<&RvmInsts::divu_64_handler<RV32>, RvmInsts>(
+                "divu", atlas::Action::createAction<&RvmInsts::divu_64Handler_<RV32>, RvmInsts>(
                             nullptr, "divu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mul", atlas::Action::createAction<&RvmInsts::mul_64_handler<RV32>, RvmInsts>(
+                "mul", atlas::Action::createAction<&RvmInsts::mul_64Handler_<RV32>, RvmInsts>(
                            nullptr, "mul", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulh", atlas::Action::createAction<&RvmInsts::mulh_64_handler<RV32>, RvmInsts>(
+                "mulh", atlas::Action::createAction<&RvmInsts::mulh_64Handler_<RV32>, RvmInsts>(
                             nullptr, "mulh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhsu", atlas::Action::createAction<&RvmInsts::mulhsu_64_handler<RV32>, RvmInsts>(
+                "mulhsu", atlas::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV32>, RvmInsts>(
                               nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhu", atlas::Action::createAction<&RvmInsts::mulhu_64_handler<RV32>, RvmInsts>(
+                "mulhu", atlas::Action::createAction<&RvmInsts::mulhu_64Handler_<RV32>, RvmInsts>(
                              nullptr, "mulhu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "rem", atlas::Action::createAction<&RvmInsts::rem_64_handler<RV32>, RvmInsts>(
+                "rem", atlas::Action::createAction<&RvmInsts::rem_64Handler_<RV32>, RvmInsts>(
                            nullptr, "rem", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "remu", atlas::Action::createAction<&RvmInsts::remu_64_handler<RV32>, RvmInsts>(
+                "remu", atlas::Action::createAction<&RvmInsts::remu_64Handler_<RV32>, RvmInsts>(
                             nullptr, "remu", ActionTags::EXECUTE_TAG));
         }
     }
@@ -85,7 +85,7 @@ namespace atlas
     template void RvmInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
     template void RvmInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
-    template <typename XLEN> ActionGroup* RvmInsts::div_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::div_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -110,7 +110,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::divu_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::divu_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -130,7 +130,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvmInsts::divuw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RvmInsts::divuw_64Handler_(atlas::AtlasState* state)
     {
         using XLEN = uint64_t;
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -151,7 +151,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvmInsts::divw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RvmInsts::divw_64Handler_(atlas::AtlasState* state)
     {
         using XLEN = uint64_t;
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -172,7 +172,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mul_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::mul_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
 
@@ -184,7 +184,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulh_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::mulh_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -203,7 +203,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulhsu_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::mulhsu_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -222,7 +222,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulhu_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::mulhu_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -242,7 +242,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvmInsts::mulw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RvmInsts::mulw_64Handler_(atlas::AtlasState* state)
     {
         using XLEN = uint64_t;
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -254,7 +254,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::rem_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::rem_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -279,7 +279,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::remu_64_handler(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvmInsts::remu_64Handler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & insn = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
@@ -299,7 +299,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvmInsts::remuw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RvmInsts::remuw_64Handler_(atlas::AtlasState* state)
     {
         using XLEN = uint64_t;
         const AtlasInstPtr & insn = state->getCurrentInst();
@@ -320,7 +320,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvmInsts::remw_64_handler(atlas::AtlasState* state)
+    ActionGroup* RvmInsts::remw_64Handler_(atlas::AtlasState* state)
     {
         using XLEN = uint64_t;
         const AtlasInstPtr & insn = state->getCurrentInst();
