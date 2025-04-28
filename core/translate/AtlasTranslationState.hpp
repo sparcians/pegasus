@@ -45,19 +45,15 @@ namespace atlas
         {
             sparta_assert(results_.empty());
 
-            const bool misaligned = ((vaddr & 0xfff) + size) > 0x1000;
-
+	    const Addr page_offset = vaddr & 0xfff;
+            const bool misaligned = (page_offset + size) > 0x1000;
             if (misaligned)
             {
-                const size_t size_second_access = ((vaddr & 0xfff) + size) % 0x1000;
+                const size_t size_second_access = (page_offset + size) % 0x1000;
                 const size_t size_first_access = size - size_second_access;
 
                 requests_.emplace(vaddr, size_first_access);
                 requests_.emplace(vaddr + size_first_access, size_second_access);
-                std::cout << "VA: 0x" << std::hex << vaddr << ", 0x" << (size_second_access)
-                          << std::endl;
-                std::cout << "SZ: " << std::dec << size_first_access << ", " << size_second_access
-                          << std::endl;
             }
             else
             {
