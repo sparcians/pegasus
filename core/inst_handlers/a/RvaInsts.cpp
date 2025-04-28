@@ -310,7 +310,9 @@ namespace atlas
         static_assert(sizeof(RV) >= sizeof(SIZE));
 
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const RV paddr = inst->getTranslationState()->getResult().getPaddr();
+        const RV paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
+
         RV rd_val = 0;
         if constexpr (sizeof(RV) > sizeof(SIZE))
         {
@@ -329,7 +331,8 @@ namespace atlas
     ActionGroup* RvaInsts::lr_d_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPaddr();
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         const uint64_t rd_val = state->readMemory<uint64_t>(paddr);
         inst->getRdReg()->write(rd_val);
         return nullptr;
@@ -338,7 +341,8 @@ namespace atlas
     ActionGroup* RvaInsts::lr_w_64_handler(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPaddr();
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         const uint64_t rd_val = signExtend<uint32_t, uint64_t>(state->readMemory<uint32_t>(paddr));
         inst->getRdReg()->write(rd_val);
         return nullptr;
@@ -348,7 +352,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPaddr();
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         state->writeMemory<uint64_t>(paddr, rs2_val);
         return nullptr;
     }
@@ -357,7 +362,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPaddr();
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         state->writeMemory<uint32_t>(paddr, rs2_val);
         return nullptr;
     }

@@ -163,17 +163,17 @@ namespace atlas
             translation_state = inst->getTranslationState();
         }
 
-        // Pop request from the request queue
+        // Get request from the request queue
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
-        translation_state->clearRequest();
+        const XLEN vaddr = request.getVAddr();
 
-        const XLEN vaddr = request.getVaddr();
         uint32_t level = getNumPageWalkLevels_<MODE>();
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
+            translation_state->popRequest();
             translation_state->setResult(vaddr, request.getSize());
             // Keep going
             return nullptr;
@@ -280,14 +280,48 @@ namespace atlas
                         break;
                     }
                 }
+
+                // PTE can be used, calculate the physical address
+                translation_state->popRequest();
                 const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
                 const auto virt_base = vaddr >> PAGESHIFT;
                 Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
                              << PAGESHIFT;
                 paddr |= extractPageOffset_(vaddr); // Add the page offset
 
-                translation_state->setResult(paddr, request.getSize());
+                // If there are multiple requests and the page size is larger than 4K, then
+                // multiple requests may be able to be resolved with the current page.
+                if((translation_state->getNumRequests() > 0) && (page_size != PageSize::SIZE_4K))
+                {
+                    // FIXME: Check that second request can be handled by the current page
+                    const AtlasTranslationState::TranslationRequest second_request = translation_state->getRequest();
+                    const size_t result_size = request.getSize() + second_request.getSize();
+                    translation_state->setResult(paddr, result_size);
+                    translation_state->popRequest();
+                }
+                else
+                {
+                    const size_t result_size = request.getSize();
+                    translation_state->setResult(paddr, result_size);
+                }
                 ILOG("   Result: " << HEX(paddr, width));
+
+                // For misaligned accesses, there may be another translation request to resolve.
+                // In some scenarios, Fetch/Decode may decide to not translate the second request
+                // so keep going and let Fetch/Decode determine if translation needs to be
+                // performed again.
+                if(translation_state->getNumRequests() > 0)
+                {
+                    switch (TYPE)
+                    {
+                        case AccessType::INSTRUCTION:
+                            return nullptr;
+                        case AccessType::STORE:
+                            return getStoreTranslateActionGroup();
+                        case AccessType::LOAD:
+                            return getLoadTranslateActionGroup();
+                    }
+                }
 
                 // Keep going
                 return nullptr;
@@ -305,7 +339,6 @@ namespace atlas
         switch (TYPE)
         {
             case AccessType::INSTRUCTION:
-                translation_state->clearRequest();
                 THROW_FETCH_PAGE_FAULT;
             case AccessType::STORE:
                 THROW_STORE_AMO_PAGE_FAULT;

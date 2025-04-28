@@ -155,7 +155,8 @@ namespace atlas
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
 
             const AtlasInstPtr & inst = state->getCurrentInst();
-            const Addr paddr = inst->getTranslationState()->getResult().getPaddr();
+            const Addr paddr = inst->getTranslationState()->getResult().getPAddr();
+            inst->getTranslationState()->popResult();
 
             if constexpr (LOAD)
             {

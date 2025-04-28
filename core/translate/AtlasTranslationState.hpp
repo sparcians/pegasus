@@ -14,7 +14,7 @@ namespace atlas
           public:
             TranslationRequest(Addr vaddr, size_t size) : vaddr_(vaddr), size_(size) {}
 
-            Addr getVaddr() const { return vaddr_; }
+            Addr getVAddr() const { return vaddr_; }
 
             size_t getSize() const { return size_; }
 
@@ -30,7 +30,7 @@ namespace atlas
           public:
             TranslationResult(Addr paddr, size_t sz) : paddr_(paddr), size_(sz) {}
 
-            Addr getPaddr() const { return paddr_; }
+            Addr getPAddr() const { return paddr_; }
 
             size_t getSize() const { return size_; }
 
@@ -67,23 +67,43 @@ namespace atlas
 
         uint32_t getNumRequests() const { return requests_.size(); }
 
-        const TranslationRequest & getRequest()
+        const TranslationRequest getRequest()
         {
             sparta_assert(requests_.empty() == false);
             return requests_.front();
         }
 
-        void clearRequest() { requests_.pop(); }
+        void popRequest()
+        {
+            sparta_assert(requests_.empty() == false);
+            requests_.pop();
+        }
 
         void setResult(const Addr paddr, const size_t size) { results_.emplace(paddr, size); }
 
-        const TranslationResult & getResult()
+        const TranslationResult getResult()
         {
             sparta_assert(results_.empty() == false);
             return results_.front();
         }
 
-        void clearResult() { results_.pop(); }
+        void popResult()
+        {
+            sparta_assert(results_.empty() == false);
+            results_.pop();
+        }
+
+        void reset()
+        {
+            while (requests_.empty() == false)
+            {
+                requests_.pop();
+            }
+            while (results_.empty() == false)
+            {
+                results_.pop();
+            }
+        }
 
       private:
         // Translation request

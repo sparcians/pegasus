@@ -51,6 +51,7 @@ namespace atlas
         sim_state->reset();
 
         AtlasTranslationState* translation_state = state->getFetchTranslationState();
+        translation_state->reset();
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
@@ -60,9 +61,9 @@ namespace atlas
     ActionGroup* Fetch::decode_(AtlasState* state)
     {
         // Get translation result
-        const AtlasTranslationState::TranslationResult & result =
+        const AtlasTranslationState::TranslationResult result =
             state->getFetchTranslationState()->getResult();
-        state->getFetchTranslationState()->clearResult();
+        state->getFetchTranslationState()->popResult();
 
         // When compressed instructions are enabled, it is possible for a full sized instruction (32
         // bits) to cross a 4K page boundary meaning that first 16 bits of the instruction are on a
@@ -100,7 +101,7 @@ namespace atlas
         if (SPARTA_EXPECT_TRUE(!page_crossing_access))
         {
             // TBD: Opcode opcode = result.readMemory<Opcode>(result.physical_addr);
-            opcode = state->readMemory<uint32_t>(result.getPaddr());
+            opcode = state->readMemory<uint32_t>(result.getPAddr());
 
             // Compression detection
             if ((opcode & 0x3) != 0x3)
@@ -115,7 +116,7 @@ namespace atlas
             if (num_requests == 1)
             {
                 // Load the first 2B, could be a valid 2B compressed inst
-                opcode = state->readMemory<uint16_t>(result.getPaddr());
+                opcode = state->readMemory<uint16_t>(result.getPAddr());
                 opcode_size = 2;
 
                 if ((opcode & 0x3) == 0x3)
@@ -127,7 +128,7 @@ namespace atlas
             {
                 // Load the second 2B of a possible 4B inst
                 DLOG("OPCODE BEFORE: 0x" << std::hex << opcode);
-                opcode |= state->readMemory<uint16_t>(result.getPaddr()) << 16;
+                opcode |= state->readMemory<uint16_t>(result.getPAddr()) << 16;
                 DLOG("OPCODE AFTER: 0x" << std::hex << opcode);
             }
         }
@@ -153,7 +154,7 @@ namespace atlas
         // request for the second 2B
         if (page_crossing_access && (opcode_size == 2))
         {
-            state->getFetchTranslationState()->clearRequest();
+            state->getFetchTranslationState()->popRequest();
         }
 
         if (SPARTA_EXPECT_FALSE(inst->hasCsr()))
