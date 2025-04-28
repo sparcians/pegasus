@@ -18,6 +18,6 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN> ActionGroup* fence_i_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* fence_iHandler_(atlas::AtlasState* state);
     };
 } // namespace atlas

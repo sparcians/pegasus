@@ -22,10 +22,10 @@ namespace atlas
 
       private:
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetvl_handler(atlas::AtlasState* state);
+        ActionGroup* vsetvlHandler_(atlas::AtlasState* state);
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetvli_handler(atlas::AtlasState* state);
+        ActionGroup* vsetvliHandler_(atlas::AtlasState* state);
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetivli_handler(atlas::AtlasState* state);
+        ActionGroup* vsetivliHandler_(atlas::AtlasState* state);
     };
 } // namespace atlas
