@@ -99,18 +99,7 @@ namespace atlas
 
         std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
-        void updateMavisContext()
-        {
-            const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            const std::string context_name =
-                std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
-            if (mavis_->hasContext(context_name) == false)
-            {
-                mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
-                                    mavis_uid_list_, {}, inclusions, {});
-            }
-            mavis_->switchContext(context_name);
-        }
+        void changeMavisContext();
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -120,9 +109,11 @@ namespace atlas
 
         Addr getPrevPc() const { return prev_pc_; }
 
-        void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
+        void setNextPc(Addr next_pc) { next_pc_ = next_pc & pc_alignment_mask_; }
 
         Addr getNextPc() const { return next_pc_; }
+
+        uint64_t getPcAlignment() const { return pc_alignment_; }
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
@@ -346,6 +337,20 @@ namespace atlas
 
         //! Previous pc
         Addr prev_pc_ = 0x0;
+
+        //! PC alignment
+        uint64_t pc_alignment_ = 4;
+
+        //! PC alignment
+        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
+
+        void setPcAlignment_(uint64_t pc_alignment)
+        {
+            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
+                          "Invalid PC alignment value! " << pc_alignment);
+            pc_alignment_ = pc_alignment;
+            pc_alignment_mask_ = ~(pc_alignment - 1);
+        }
 
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;

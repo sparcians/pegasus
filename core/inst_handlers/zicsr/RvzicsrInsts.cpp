@@ -286,11 +286,20 @@ namespace atlas
             }
             else
             {
-                inclusions.erase(ext_str);
+                // Disabling compression will fail if doing so would cause an instruction
+                // misalignment exception. Check if the next PC is not 32-bit aligned.
+                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
+                {
+                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                }
+                else
+                {
+                    inclusions.erase(ext_str);
+                }
             }
         }
 
-        state->updateMavisContext();
+        state->changeMavisContext();
 
         return nullptr;
     }
@@ -325,7 +334,7 @@ namespace atlas
             }
         }
 
-        state->updateMavisContext();
+        state->changeMavisContext();
         state->changeMMUMode<XLEN>();
 
         return nullptr;

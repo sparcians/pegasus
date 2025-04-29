@@ -196,6 +196,31 @@ namespace atlas
         }
     }
 
+    void AtlasState::changeMavisContext()
+    {
+        const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
+        const std::string context_name =
+            std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
+        if (mavis_->hasContext(context_name) == false)
+        {
+            DLOG("Creating new Mavis context: " << context_name);
+            mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
+                                mavis_uid_list_, {}, inclusions, {});
+        }
+        DLOG("Changing Mavis context: " << context_name);
+        mavis_->switchContext(context_name);
+
+        const bool compression_enabled = inclusions_.contains("c");
+        if (compression_enabled)
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+    }
+
     template <typename XLEN> void AtlasState::changeMMUMode()
     {
         static const std::vector<MMUMode> satp_mmu_mode_map = {
