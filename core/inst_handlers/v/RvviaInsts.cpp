@@ -13,7 +13,7 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         // TODO: decide how to pass VLEN as argument.
-        using VLEN = std::array<VectorState::GetSewType<8>::type, 8>;
+        using VLEN = std::array<GetUintType<8>, 8>;
 
         inst_handlers.emplace(
             "vadd.vv", atlas::Action::createAction<&RvviaInsts::viavv_handler_<XLEN, VLEN, std::plus>, RvviaInsts>(
@@ -31,8 +31,7 @@ namespace atlas
     template void RvviaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvviaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename VLEN, typename SEW, typename OP>
-    void viavv_helper(AtlasState* state)
+    template <typename VLEN, typename SEW, typename OP> void viavv_helper(AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         VectorState* vector_state = state->getVectorState();
@@ -49,8 +48,7 @@ namespace atlas
             }
             uint8_t result = OP()(
                 *(reinterpret_cast<uint8_t*>(rs1_val.data() + (index % (vlenb / sewb)) * sewb)),
-                *(reinterpret_cast<uint8_t*>(rs2_val.data() + (index % (vlenb / sewb)) * sewb))
-            );
+                *(reinterpret_cast<uint8_t*>(rs2_val.data() + (index % (vlenb / sewb)) * sewb)));
             memcpy(rd_val.data() + (index % (vlenb / sewb)) * sewb, &result, sewb);
             if (index == vector_state->getVL() - 1 || index % (vlenb / sewb) == (vlenb / sewb) - 1)
             {
@@ -63,7 +61,7 @@ namespace atlas
     ActionGroup* RvviaInsts::viavv_handler_(AtlasState* state)
     {
         VectorState* vector_state = state->getVectorState();
-        switch(vector_state->getSEW())
+        switch (vector_state->getSEW())
         {
             case 8:
                 viavv_helper<VLEN, uint8_t, OP<uint8_t>>(state);
@@ -78,7 +76,7 @@ namespace atlas
                 viavv_helper<VLEN, uint64_t, OP<uint64_t>>(state);
                 break;
             default:
-                assert(false);
+                sparta_assert(false, "Invalid SEW value");
                 break;
         }
         return nullptr;

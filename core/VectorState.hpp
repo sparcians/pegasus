@@ -22,28 +22,6 @@ namespace atlas
 
         inline uint8_t getVSTART() const { return vstart_; }
 
-        template <uint8_t SEW> struct GetSewType;
-
-        template <> struct GetSewType<8>
-        {
-            using type = uint8_t;
-        };
-
-        template <> struct GetSewType<16>
-        {
-            using type = uint16_t;
-        };
-
-        template <> struct GetSewType<32>
-        {
-            using type = uint32_t;
-        };
-
-        template <> struct GetSewType<64>
-        {
-            using type = uint64_t;
-        };
-
         template <typename VLEN> inline uint8_t getVLMAX()
         {
             return sizeof(VLEN) * lmul_ / (sew_ == 0 ? 1 : sew_);
