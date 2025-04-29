@@ -45,7 +45,7 @@ namespace atlas
         {
             sparta_assert(results_.empty());
 
-	    const Addr page_offset = vaddr & 0xfff;
+            const Addr page_offset = vaddr & 0xfff;
             const bool misaligned = (page_offset + size) > 0x1000;
             if (misaligned)
             {

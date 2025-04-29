@@ -291,10 +291,11 @@ namespace atlas
 
                 // If there are multiple requests and the page size is larger than 4K, then
                 // multiple requests may be able to be resolved with the current page.
-                if((translation_state->getNumRequests() > 0) && (page_size != PageSize::SIZE_4K))
+                if ((translation_state->getNumRequests() > 0) && (page_size != PageSize::SIZE_4K))
                 {
                     // FIXME: Check that second request can be handled by the current page
-                    const AtlasTranslationState::TranslationRequest second_request = translation_state->getRequest();
+                    const AtlasTranslationState::TranslationRequest second_request =
+                        translation_state->getRequest();
                     const size_t result_size = request.getSize() + second_request.getSize();
                     translation_state->setResult(paddr, result_size);
                     translation_state->popRequest();
@@ -310,7 +311,7 @@ namespace atlas
                 // In some scenarios, Fetch/Decode may decide to not translate the second request
                 // so keep going and let Fetch/Decode determine if translation needs to be
                 // performed again.
-                if(translation_state->getNumRequests() > 0)
+                if (translation_state->getNumRequests() > 0)
                 {
                     switch (TYPE)
                     {

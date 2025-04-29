@@ -46,9 +46,11 @@ namespace atlas
         return nullptr;
     }
 
-    uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info) {
-        return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED ?
-            opcode_info->getSignedOffset() : opcode_info->getImmediate();
+    uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)
+    {
+        return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED
+                   ? opcode_info->getSignedOffset()
+                   : opcode_info->getImmediate();
     }
 
     AtlasInst::AtlasInst(const mavis::OpcodeInfo::PtrType & opcode_info,
