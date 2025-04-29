@@ -109,11 +109,13 @@ namespace atlas
 
         Addr getPrevPc() const { return prev_pc_; }
 
-        void setNextPc(Addr next_pc) { next_pc_ = next_pc & pc_alignment_mask_; }
+        void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
 
         uint64_t getPcAlignment() const { return pc_alignment_; }
+
+        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
         PrivMode getPrivMode() const { return priv_mode_; }
 

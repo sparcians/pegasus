@@ -876,7 +876,7 @@ namespace atlas
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC));
+            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC) & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
@@ -930,7 +930,7 @@ namespace atlas
             }
 
             // Update the PC with SEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
+            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC) & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the SPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
