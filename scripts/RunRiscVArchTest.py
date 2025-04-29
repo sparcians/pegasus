@@ -7,9 +7,9 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS_RV32_NON_VIRT = [91, 97]
+PASSING_STATUS_RV32_NON_VIRT = [93, 97]
 PASSING_STATUS_RV32_VIRT     = [76, 78]
-PASSING_STATUS_RV64_NON_VIRT = [124, 127]
+PASSING_STATUS_RV64_NON_VIRT = [126, 127]
 PASSING_STATUS_RV64_VIRT     = [104, 106]
 
 def get_riscv_arch_tests(directory):
