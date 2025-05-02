@@ -22,6 +22,8 @@ namespace atlas
 
         inline uint8_t getVSTART() const { return vstart_; }
 
+        inline void setVSTART(uint8_t value) { vstart_ = value; }
+
         template <typename VLEN> inline uint8_t getVLMAX()
         {
             return sizeof(VLEN) * lmul_ / (sew_ == 0 ? 1 : sew_);
