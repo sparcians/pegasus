@@ -17,16 +17,17 @@ namespace atlas
         using VLEN = std::array<GetUintType<8>, 8>;
 
         inst_handlers.emplace(
-            "vadd.vv", atlas::Action::createAction<&RvviaInsts::viavv_handler_<XLEN, VLEN, std::plus>, RvviaInsts>(
-                          nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
+            "vadd.vv",
+            atlas::Action::createAction<&RvviaInsts::viavv_handler_<XLEN, VLEN, std::plus>,
+                                        RvviaInsts>(nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadd.vx",
-            atlas::Action::createAction<&RvviaInsts::viavx_handler_<XLEN, VLEN, std::plus>, RvviaInsts>(
-                nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
+            atlas::Action::createAction<&RvviaInsts::viavx_handler_<XLEN, VLEN, std::plus>,
+                                        RvviaInsts>(nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadd.vi",
-            atlas::Action::createAction<&RvviaInsts::viavi_handler_<XLEN, VLEN, std::plus>, RvviaInsts>(
-                nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
+            atlas::Action::createAction<&RvviaInsts::viavi_handler_<XLEN, VLEN, std::plus>,
+                                        RvviaInsts>(nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
     }
 
     template void RvviaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -52,11 +53,12 @@ namespace atlas
         VLEN rd_val = READ_VEC_REG<VLEN>(state, rd + vstart / (vlenb / sewb));
         uint8_t const stop = std::min<uint8_t>(vl, (vstart / (vlenb / sewb) + 1) * (vlenb / sewb));
         uint8_t index = vstart;
-        for ( ; index < stop; ++index)
+        for (; index < stop; ++index)
         {
-            uint8_t result = OP()(
-                *(reinterpret_cast<const uint8_t*>(rs1_val.data() + (index % (vlenb / sewb)) * sewb)),
-                *(reinterpret_cast<const uint8_t*>(rs2_val.data() + (index % (vlenb / sewb)) * sewb)));
+            SEW result = OP()(*(reinterpret_cast<const uint8_t*>(
+                                      rs1_val.data() + (index % (vlenb / sewb)) * sewb)),
+                                  *(reinterpret_cast<const uint8_t*>(
+                                      rs2_val.data() + (index % (vlenb / sewb)) * sewb)));
             memcpy(rd_val.data() + (index % (vlenb / sewb)) * sewb, &result, sewb);
         }
         WRITE_VEC_REG<VLEN>(state, rd + vstart / (vlenb / sewb), rd_val);
@@ -68,7 +70,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN, typename VLEN, template<typename> typename OP>
+    template <typename XLEN, typename VLEN, template <typename> typename OP>
     ActionGroup* RvviaInsts::viavv_handler_(AtlasState* state)
     {
         VectorState* vector_state = state->getVectorState();
@@ -93,14 +95,14 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN, typename VLEN, template<typename> typename OP>
+    template <typename XLEN, typename VLEN, template <typename> typename OP>
     ActionGroup* RvviaInsts::viavx_handler_(AtlasState* state)
     {
         (void)state;
         return nullptr;
     }
 
-    template <typename XLEN, typename VLEN, template<typename> typename OP>
+    template <typename XLEN, typename VLEN, template <typename> typename OP>
     ActionGroup* RvviaInsts::viavi_handler_(AtlasState* state)
     {
         (void)state;

@@ -16,15 +16,16 @@ namespace atlas
         using VLEN = XLEN;
 
         inst_handlers.emplace(
-            "vsetvl", atlas::Action::createAction<&RvvInsts::vsetvlHandler_<XLEN, VLEN>, RvvInsts>(
-                          nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
+            "vsetvl",
+            atlas::Action::createAction<&RvvcsInsts::vsetvlHandler_<XLEN, VLEN>, RvvcsInsts>(
+                nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsetvli",
-            atlas::Action::createAction<&RvvInsts::vsetvliHandler_<XLEN, VLEN>, RvvInsts>(
+            atlas::Action::createAction<&RvvcsInsts::vsetvliHandler_<XLEN, VLEN>, RvvcsInsts>(
                 nullptr, "vsetvli", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsetivli",
-            atlas::Action::createAction<&RvvInsts::vsetivliHandler_<XLEN, VLEN>, RvvInsts>(
+            atlas::Action::createAction<&RvvcsInsts::vsetivliHandler_<XLEN, VLEN>, RvvcsInsts>(
                 nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
     }
 
@@ -32,7 +33,7 @@ namespace atlas
     template void RvvcsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetvlHandler_(atlas::AtlasState* state)
+    ActionGroup* RvvcsInsts::vsetvlHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -50,12 +51,13 @@ namespace atlas
         {
             vector_state->vsetAVL<XLEN, VLEN>(state, false,
                                               READ_INT_REG<XLEN>(state, inst->getRs1()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
         }
         return nullptr;
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetvliHandler_(atlas::AtlasState* state)
+    ActionGroup* RvvcsInsts::vsetvliHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -73,18 +75,20 @@ namespace atlas
         {
             vector_state->vsetAVL<XLEN, VLEN>(state, false,
                                               READ_INT_REG<XLEN>(state, inst->getRs1()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
         }
         return nullptr;
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvInsts::vsetivliHandler_(atlas::AtlasState* state)
+    ActionGroup* RvvcsInsts::vsetivliHandler_(atlas::AtlasState* state)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getImmediate());
+        const XLEN vtype_val = inst->getImmediate();
         VectorState* vector_state = state->getVectorState();
         vector_state->vsetVTYPE<XLEN>(state, vtype_val);
-        vector_state->vsetAVL<XLEN, VLEN>(state, false, READ_INT_REG<XLEN>(state, inst->getAVL()));
+        vector_state->vsetAVL<XLEN, VLEN>(state, false, inst->getAVL());
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
         return nullptr;
     }
 

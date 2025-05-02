@@ -67,14 +67,7 @@ namespace atlas
         template <typename XLEN, typename VLEN>
         XLEN vsetAVL(AtlasState* state, bool set_max, XLEN avl = 0)
         {
-            if (set_max)
-            {
-                vl_ = std::min<uint8_t>(getVLMAX<VLEN>(), avl);
-            }
-            else
-            {
-                vl_ = getVLMAX<VLEN>();
-            }
+            vl_ = set_max ? getVLMAX<VLEN>() : std::min<uint8_t>(getVLMAX<VLEN>(), avl);
             WRITE_CSR_REG<XLEN>(state, VL, vl_);
             return vl_;
         }

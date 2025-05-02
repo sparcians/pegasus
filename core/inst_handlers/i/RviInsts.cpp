@@ -22,10 +22,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
                                             RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu",
-                atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
-                                            RviInsts>(nullptr, "lbu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                "lbu", atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
+                                                   RviInsts>(nullptr, "lbu",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "ld",
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint64_t>,
@@ -72,10 +71,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
                                             RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu",
-                atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
-                                            RviInsts>(nullptr, "lbu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                "lbu", atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
+                                                   RviInsts>(nullptr, "lbu",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lh",
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint16_t>,
@@ -749,7 +747,7 @@ namespace atlas
         // require(SHAMT < state->getXlen());
         const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
         const XLEN shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const SXLEN rd_val =  (SXLEN)(rs1_val >> shift_amount);
+        const SXLEN rd_val = (SXLEN)(rs1_val >> shift_amount);
         WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
 
         return nullptr;

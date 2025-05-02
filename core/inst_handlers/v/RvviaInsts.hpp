@@ -19,11 +19,11 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, typename VLEN, template<typename> typename OP>
+        template <typename XLEN, typename VLEN, template <typename> typename OP>
         ActionGroup* viavv_handler_(atlas::AtlasState* state);
-        template <typename XLEN, typename VLEN, template<typename> typename OP>
+        template <typename XLEN, typename VLEN, template <typename> typename OP>
         ActionGroup* viavx_handler_(atlas::AtlasState* state);
-        template <typename XLEN, typename VLEN, template<typename> typename OP>
+        template <typename XLEN, typename VLEN, template <typename> typename OP>
         ActionGroup* viavi_handler_(atlas::AtlasState* state);
     };
 } // namespace atlas

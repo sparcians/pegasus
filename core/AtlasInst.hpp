@@ -42,10 +42,7 @@ namespace atlas
 
         bool hasImmediate() const { return opcode_info_->hasImmediate(); }
 
-        uint64_t getImmediate() const
-        {
-            return immediate_value_;
-        }
+        uint64_t getImmediate() const { return immediate_value_; }
 
         bool hasCsr() const
         {

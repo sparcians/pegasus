@@ -269,8 +269,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN>
-    ActionGroup* RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
         const auto & ext_manager = state->getExtensionManager();
@@ -383,8 +382,7 @@ namespace atlas
             READ_CSR_REG<XLEN>(state, FFLAGS) & softfloat_exceptionFlags_mask;
     }
 
-    template <typename XLEN>
-    ActionGroup* RvzicsrInsts::fcsrUpdateHandler_(atlas::AtlasState* state)
+    template <typename XLEN> ActionGroup* RvzicsrInsts::fcsrUpdateHandler_(atlas::AtlasState* state)
     {
         // FFLAGS
         const XLEN nx_val = READ_CSR_FIELD<XLEN>(state, FCSR, "NX");
