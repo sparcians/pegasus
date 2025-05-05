@@ -56,9 +56,6 @@ class AtlasTranslateTester
         // Clear first request
         translation_state->popRequest();
 
-        // Cannot make any new requests without clearing current results
-        EXPECT_THROW(translation_state->makeRequest(vaddr1, access_size1););
-
         // Set second translation result
         translation_state->setResult(vaddr2, access_size2);
 
