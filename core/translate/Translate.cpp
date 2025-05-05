@@ -166,7 +166,6 @@ namespace atlas
         // Get request from the request queue
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVAddr();
-        const size_t access_size = request.getSize();
 
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
@@ -175,13 +174,7 @@ namespace atlas
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            translation_state->popRequest();
-            translation_state->setResult(vaddr, access_size);
-
-            // TOOD: Handle more requests?
-
-            // Keep going
-            return nullptr;
+            return setResult_<XLEN, MODE, TYPE>(translation_state, vaddr);
         }
 
         // Width in bytes for logging
@@ -302,49 +295,8 @@ namespace atlas
                     translate_types::getPageOffsetMask<MODE>(indexed_level);
                 paddr |= page_offset_mask & vaddr;
 
-                ILOG("   Result: " << HEX(paddr, width));
-
-                // Check if address is misaligned
-                const bool is_misaligned =
-                    ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
-                if (SPARTA_EXPECT_FALSE(is_misaligned))
-                {
-                    const size_t num_misaligned_bytes =
-                        (vaddr + access_size) % (page_offset_mask + 1);
-                    DLOG("Address is misaligned by " << std::dec << num_misaligned_bytes << "B!");
-
-                    // Resolve first request
-                    const size_t first_access_size = access_size - num_misaligned_bytes;
-                    translation_state->popRequest();
-                    translation_state->setResult(paddr, first_access_size);
-
-                    // Make request for misaligned bytes
-                    translation_state->makeRequest(vaddr + first_access_size, num_misaligned_bytes);
-
-                    // For misaligned accesses, there may be another translation request to resolve.
-                    // In some scenarios, Fetch/Decode may decide to not translate the second
-                    // so keep going and let Fetch/Decode determine if translation needs to be
-                    // performed again.
-                    switch (TYPE)
-                    {
-                        case AccessType::INSTRUCTION:
-                            return nullptr;
-                        case AccessType::STORE:
-                            return getStoreTranslateActionGroup();
-                        case AccessType::LOAD:
-                            return getLoadTranslateActionGroup();
-                    }
-                }
-                else
-                {
-                    translation_state->popRequest();
-                    translation_state->setResult(paddr, access_size);
-                }
-
-                // TODO: Check if there are more requests
-
-                // Keep going
-                return nullptr;
+                // Set result and determine whether to keep going or performa translation again
+                return setResult_<XLEN, MODE, TYPE>(translation_state, paddr, level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -367,6 +319,62 @@ namespace atlas
             case AccessType::LOAD:
                 THROW_LOAD_PAGE_FAULT;
         }
+    }
+
+    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    ActionGroup* Translate::setResult_(AtlasTranslationState* translation_state, const Addr paddr,
+                                       const uint32_t level)
+    {
+        // Width in bytes for logging
+        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        ILOG("   Result: " << HEX(paddr, width));
+
+        const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
+        const XLEN vaddr = request.getVAddr();
+        const size_t access_size = request.getSize();
+
+        // Check if address is misaligned
+        const auto indexed_level = level - 1;
+        const Addr page_offset_mask = translate_types::getPageOffsetMask<MODE>(indexed_level);
+        const bool is_misaligned =
+            ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
+        if (SPARTA_EXPECT_FALSE(is_misaligned))
+        {
+            const size_t num_misaligned_bytes = (vaddr + access_size) % (page_offset_mask + 1);
+            DLOG("Address is misaligned by " << std::dec << num_misaligned_bytes << "B!");
+
+            // Resolve first request
+            const size_t first_access_size = access_size - num_misaligned_bytes;
+            translation_state->popRequest();
+            translation_state->setResult(paddr, first_access_size);
+
+            // Make request for misaligned bytes
+            translation_state->makeRequest(vaddr + first_access_size, num_misaligned_bytes);
+
+            // For misaligned accesses, there may be another translation request to resolve.
+            // In some scenarios, Fetch/Decode may decide to not translate the second
+            // so keep going and let Fetch/Decode determine if translation needs to be
+            // performed again.
+            switch (TYPE)
+            {
+                case AccessType::INSTRUCTION:
+                    return nullptr;
+                case AccessType::STORE:
+                    return getStoreTranslateActionGroup();
+                case AccessType::LOAD:
+                    return getLoadTranslateActionGroup();
+            }
+        }
+        else
+        {
+            translation_state->popRequest();
+            translation_state->setResult(paddr, access_size);
+        }
+
+        // TODO: Check if there are more requests
+
+        // Keep going
+        return nullptr;
     }
 
     // Being pedantic

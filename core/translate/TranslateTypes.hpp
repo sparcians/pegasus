@@ -280,7 +280,11 @@ namespace atlas::translate_types
     {
         auto get_page_offset_mask = [](const uint32_t level) -> uint64_t
         {
-            if constexpr (MODE == MMUMode::SV32)
+            if constexpr (MODE == MMUMode::BAREMETAL)
+            {
+                return translate_types::Sv32::page_offset_masks.at(0);
+            }
+            else if constexpr (MODE == MMUMode::SV32)
             {
                 return translate_types::Sv32::page_offset_masks.at(level);
             }

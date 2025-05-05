@@ -13,6 +13,7 @@ class AtlasTranslateTester;
 namespace atlas
 {
     class AtlasState;
+    class AtlasTranslationState;
 
     class Translate : public sparta::Unit
     {
@@ -58,6 +59,10 @@ namespace atlas
 
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
         ActionGroup* translate_(atlas::AtlasState* state);
+
+        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        ActionGroup* setResult_(AtlasTranslationState* translation_state, const Addr paddr,
+                                const uint32_t level = 1);
 
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,
