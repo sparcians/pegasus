@@ -41,11 +41,7 @@ namespace atlas
             const size_t size_;
         };
 
-        void makeRequest(const Addr vaddr, const size_t size)
-        {
-            sparta_assert(results_.empty());
-            requests_.emplace(vaddr, size);
-        }
+        void makeRequest(const Addr vaddr, const size_t size) { requests_.emplace(vaddr, size); }
 
         uint32_t getNumRequests() const { return requests_.size(); }
 

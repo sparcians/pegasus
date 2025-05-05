@@ -166,7 +166,7 @@ namespace atlas
         // Get request from the request queue
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVAddr();
-	const size_t access_size = request.getSize();
+        const size_t access_size = request.getSize();
 
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
@@ -298,25 +298,29 @@ namespace atlas
                 const Addr virt_base = vaddr >> PAGESHIFT;
                 Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
                              << PAGESHIFT;
-		const Addr page_offset_mask =  translate_types::getPageOffsetMask<MODE>(indexed_level);
-	 	paddr |= page_offset_mask & vaddr;
+                const Addr page_offset_mask =
+                    translate_types::getPageOffsetMask<MODE>(indexed_level);
+                paddr |= page_offset_mask & vaddr;
 
                 ILOG("   Result: " << HEX(paddr, width));
 
                 // Check if address is misaligned
-		const bool is_misaligned = ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
+                const bool is_misaligned =
+                    ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
                 if (SPARTA_EXPECT_FALSE(is_misaligned))
                 {
-                    const size_t num_misaligned_bytes = (page_offset_mask + access_size) % (page_offset_mask + 1);
+                    const size_t num_misaligned_bytes =
+                        (vaddr + access_size) % (page_offset_mask + 1);
                     DLOG("Address is misaligned by " << std::dec << num_misaligned_bytes << "B!");
 
-		    // Resolve first request
+                    // Resolve first request
+                    const size_t first_access_size = access_size - num_misaligned_bytes;
                     translation_state->popRequest();
-		    translation_state->setResult(paddr, access_size - num_misaligned_bytes);
+                    translation_state->setResult(paddr, first_access_size);
 
-		    // Make request for misaligned bytes
-                    //requests_.emplace(vaddr, size_first_access);
-                    //requests_.emplace(vaddr + size_first_access, size_second_access);
+                    // Make request for misaligned bytes
+                    translation_state->makeRequest(vaddr + first_access_size, num_misaligned_bytes);
+
                     // For misaligned accesses, there may be another translation request to resolve.
                     // In some scenarios, Fetch/Decode may decide to not translate the second
                     // so keep going and let Fetch/Decode determine if translation needs to be
@@ -331,11 +335,11 @@ namespace atlas
                             return getLoadTranslateActionGroup();
                     }
                 }
-	        else
-		{
+                else
+                {
                     translation_state->popRequest();
-		    translation_state->setResult(paddr, access_size);
-		}
+                    translation_state->setResult(paddr, access_size);
+                }
 
                 // TODO: Check if there are more requests
 
