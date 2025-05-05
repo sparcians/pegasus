@@ -7,7 +7,7 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS_RV32_NON_VIRT = [94, 97]
+PASSING_STATUS_RV32_NON_VIRT = [95, 97]
 PASSING_STATUS_RV32_VIRT     = [76, 78]
 PASSING_STATUS_RV64_NON_VIRT = [126, 127]
 PASSING_STATUS_RV64_VIRT     = [104, 106]
