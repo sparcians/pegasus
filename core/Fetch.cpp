@@ -112,8 +112,7 @@ namespace atlas
         }
         else
         {
-            const auto num_requests = state->getFetchTranslationState()->getNumRequests();
-            if (num_requests == 1)
+            if (opcode == 0)
             {
                 // Load the first 2B, could be a valid 2B compressed inst
                 opcode = state->readMemory<uint16_t>(result.getPAddr());
@@ -127,9 +126,7 @@ namespace atlas
             else
             {
                 // Load the second 2B of a possible 4B inst
-                DLOG("OPCODE BEFORE: 0x" << std::hex << opcode);
                 opcode |= state->readMemory<uint16_t>(result.getPAddr()) << 16;
-                DLOG("OPCODE AFTER: 0x" << std::hex << opcode);
             }
         }
 
