@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <array>
+#include <map>
 
 namespace atlas::translate_types
 {
@@ -56,6 +57,11 @@ namespace atlas::translate_types
         static const std::array<FieldDef, num_vpn_fields> vpn_fields{VAddrFields::vpn0,
                                                                      VAddrFields::vpn1};
         static constexpr uint32_t num_pagewalk_levels = 2;
+        static const std::array<uint64_t, num_pagewalk_levels> page_offset_masks{
+            0xfff,   // 4K
+            0x3fffff // 4M
+        };
+
     } // namespace Sv32
 
     namespace Sv39
@@ -91,6 +97,12 @@ namespace atlas::translate_types
         static const std::array<FieldDef, num_vpn_fields> vpn_fields{
             VAddrFields::vpn0, VAddrFields::vpn1, VAddrFields::vpn2};
         static constexpr uint32_t num_pagewalk_levels = 3;
+        static const std::array<uint64_t, num_pagewalk_levels> page_offset_masks{
+            0xfff,     // 4K
+            0x1fffff,  // 2M
+            0x3fffffff // 1G
+        };
+
     } // namespace Sv39
 
     namespace Sv48
@@ -128,6 +140,13 @@ namespace atlas::translate_types
         static const std::array<FieldDef, num_vpn_fields> vpn_fields{
             VAddrFields::vpn0, VAddrFields::vpn1, VAddrFields::vpn2, VAddrFields::vpn2};
         static constexpr uint32_t num_pagewalk_levels = 4;
+        static const std::array<uint64_t, num_pagewalk_levels> page_offset_masks{
+            0xfff,       // 4K
+            0x1fffff,    // 2M
+            0x3fffffff,  // 1G
+            0x7fffffffff // 512G
+        };
+
     } // namespace Sv48
 
     namespace Sv57
@@ -168,5 +187,121 @@ namespace atlas::translate_types
             VAddrFields::vpn0, VAddrFields::vpn1, VAddrFields::vpn2, VAddrFields::vpn3,
             VAddrFields::vpn4};
         static constexpr uint32_t num_pagewalk_levels = 5;
+        static const std::array<uint64_t, num_pagewalk_levels> page_offset_masks{
+            0xfff,         // 4K
+            0x1fffff,      // 2M
+            0x3fffffff,    // 1G
+            0x7fffffffff,  // 512G
+            0xffffffffffff // 256T
+        };
     } // namespace Sv57
+
+    template <MMUMode MODE> inline uint32_t getNumPageWalkLevels()
+    {
+        if constexpr (MODE == MMUMode::BAREMETAL)
+        {
+            return 0;
+        }
+        else if constexpr (MODE == MMUMode::SV32)
+        {
+            return translate_types::Sv32::num_pagewalk_levels;
+        }
+        else if constexpr (MODE == MMUMode::SV39)
+        {
+            return translate_types::Sv39::num_pagewalk_levels;
+        }
+        else if constexpr (MODE == MMUMode::SV48)
+        {
+            return translate_types::Sv48::num_pagewalk_levels;
+        }
+        else if constexpr (MODE == MMUMode::SV57)
+        {
+            return translate_types::Sv57::num_pagewalk_levels;
+        }
+        else
+        {
+            sparta_assert(false, "Unsupported MMU Mode!");
+        }
+    }
+
+    template <MMUMode MODE> inline PageSize getPageSize(const uint32_t level)
+    {
+        static const std::map<uint32_t, PageSize> level_to_pagesize = {{1, PageSize::SIZE_4K},
+                                                                       {2, PageSize::SIZE_2M},
+                                                                       {3, PageSize::SIZE_1G},
+                                                                       {4, PageSize::SIZE_512G},
+                                                                       {5, PageSize::SIZE_256T}};
+
+        if constexpr (MODE == MMUMode::BAREMETAL)
+        {
+            return PageSize::INVALID;
+        }
+        else if constexpr (MODE == MMUMode::SV32)
+        {
+            sparta_assert(level <= translate_types::Sv32::num_pagewalk_levels);
+            return (level == 0) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
+        }
+        else
+        {
+            return level_to_pagesize.at(level);
+        }
+    }
+
+    template <MMUMode MODE> inline auto getVpnField(const uint32_t level)
+    {
+        auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
+        {
+            if constexpr (MODE == MMUMode::SV32)
+            {
+                return translate_types::Sv32::vpn_fields.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV39)
+            {
+                return translate_types::Sv39::vpn_fields.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV48)
+            {
+                return translate_types::Sv48::vpn_fields.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV57)
+            {
+                return translate_types::Sv57::vpn_fields.at(level);
+            }
+            else
+            {
+                sparta_assert(false, "Unsupported MMU Mode!");
+            }
+        };
+
+        return get_vpn_field(level);
+    }
+
+    template <MMUMode MODE> inline uint64_t getPageOffsetMask(const uint32_t level)
+    {
+        auto get_page_offset_mask = [](const uint32_t level) -> uint64_t
+        {
+            if constexpr (MODE == MMUMode::SV32)
+            {
+                return translate_types::Sv32::page_offset_masks.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV39)
+            {
+                return translate_types::Sv39::page_offset_masks.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV48)
+            {
+                return translate_types::Sv48::page_offset_masks.at(level);
+            }
+            else if constexpr (MODE == MMUMode::SV57)
+            {
+                return translate_types::Sv57::page_offset_masks.at(level);
+            }
+            else
+            {
+                sparta_assert(false, "Unsupported MMU Mode!");
+            }
+        };
+
+        return get_page_offset_mask(level);
+    }
 } // namespace atlas::translate_types
