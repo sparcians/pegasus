@@ -166,29 +166,36 @@ namespace atlas
         // Get request from the request queue
         const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
         const XLEN vaddr = request.getVAddr();
+	const size_t access_size = request.getSize();
 
-        uint32_t level = getNumPageWalkLevels_<MODE>();
+        uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
+
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
             translation_state->popRequest();
-            translation_state->setResult(vaddr, request.getSize());
+            translation_state->setResult(vaddr, access_size);
+
+            // TOOD: Handle more requests?
+
             // Keep going
             return nullptr;
         }
 
+        // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
 
-        // Page size is 4K for both RV32 and RV64
+        // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
         uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
         while (level > 0)
         {
+            // Read PTE from memory
             const auto indexed_level = level - 1;
-            const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
+            const auto & vpn_field = translate_types::getVpnField<MODE>(indexed_level);
             const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
             PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
             DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << level << " Page Walk");
@@ -207,7 +214,7 @@ namespace atlas
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                const PageSize page_size = getPageSize_<MODE>(level);
+                const PageSize page_size = translate_types::getPageSize<MODE>(level);
                 DLOG("    Size: " << page_size);
 
                 // TODO: Check page alignment
@@ -234,6 +241,8 @@ namespace atlas
                     }
                 }
 
+                // If the SUM bit is set, Supervisor mode software is allowed to access User mode
+                // pages
                 const uint32_t sum_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sum");
                 if ((sum_val == 0) && (false == pte.isUserMode())
                     && (priv_mode != PrivMode::SUPERVISOR))
@@ -242,31 +251,34 @@ namespace atlas
                     break;
                 }
 
-                // TODO: Check access permissions more better...
-                if constexpr (TYPE == AccessType::STORE)
+                // Instruction (fetch) accesses must have execute permissions
+                if ((TYPE == AccessType::INSTRUCTION) && (false == pte.canExecute()))
                 {
-                    if (false == pte.canWrite())
-                    {
-                        DLOG("Translation FAILED! PTE does not have write access");
-                        THROW_STORE_AMO_PAGE_FAULT;
-                    }
-                }
-                else if constexpr (TYPE == AccessType::LOAD)
-                {
-                    if (false == pte.canRead())
-                    {
-                        DLOG("Translation FAILED! PTE does not have read access");
-                        THROW_LOAD_PAGE_FAULT;
-                    }
+                    DLOG("Translation FAILED! PTE does not have execute access");
+                    break;
                 }
 
+                // Load accesses must have read permissions
+                if ((TYPE == AccessType::LOAD) && (false == pte.canRead()))
+                {
+                    DLOG("Translation FAILED! PTE does not have read access");
+                    break;
+                }
+
+                // Store accesses must have write permissions
                 constexpr bool is_store = TYPE == AccessType::STORE;
+                if ((is_store) && (false == pte.canWrite()))
+                {
+                    DLOG("Translation FAILED! PTE does not have write access");
+                    break;
+                }
+
                 if (false == pte.isAccessable(is_store))
                 {
                     // See if we're required to update access bits in the PTE
                     if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
                     {
-                        if constexpr (TYPE == AccessType::STORE)
+                        if constexpr (is_store)
                         {
                             pte.setDirty();
                         }
@@ -281,38 +293,34 @@ namespace atlas
                     }
                 }
 
-                // PTE can be used, calculate the physical address
-                translation_state->popRequest();
-                const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
-                const auto virt_base = vaddr >> PAGESHIFT;
+                // Translate!
+                const Addr index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
+                const Addr virt_base = vaddr >> PAGESHIFT;
                 Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
                              << PAGESHIFT;
-                paddr |= extractPageOffset_(vaddr); // Add the page offset
+		const Addr page_offset_mask =  translate_types::getPageOffsetMask<MODE>(indexed_level);
+	 	paddr |= page_offset_mask & vaddr;
 
-                // If there are multiple requests and the page size is larger than 4K, then
-                // multiple requests may be able to be resolved with the current page.
-                if ((translation_state->getNumRequests() > 0) && (page_size != PageSize::SIZE_4K))
-                {
-                    // FIXME: Check that second request can be handled by the current page
-                    const AtlasTranslationState::TranslationRequest second_request =
-                        translation_state->getRequest();
-                    const size_t result_size = request.getSize() + second_request.getSize();
-                    translation_state->setResult(paddr, result_size);
-                    translation_state->popRequest();
-                }
-                else
-                {
-                    const size_t result_size = request.getSize();
-                    translation_state->setResult(paddr, result_size);
-                }
                 ILOG("   Result: " << HEX(paddr, width));
 
-                // For misaligned accesses, there may be another translation request to resolve.
-                // In some scenarios, Fetch/Decode may decide to not translate the second request
-                // so keep going and let Fetch/Decode determine if translation needs to be
-                // performed again.
-                if (translation_state->getNumRequests() > 0)
+                // Check if address is misaligned
+		const bool is_misaligned = ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
+                if (SPARTA_EXPECT_FALSE(is_misaligned))
                 {
+                    const size_t num_misaligned_bytes = (page_offset_mask + access_size) % (page_offset_mask + 1);
+                    DLOG("Address is misaligned by " << std::dec << num_misaligned_bytes << "B!");
+
+		    // Resolve first request
+                    translation_state->popRequest();
+		    translation_state->setResult(paddr, access_size - num_misaligned_bytes);
+
+		    // Make request for misaligned bytes
+                    //requests_.emplace(vaddr, size_first_access);
+                    //requests_.emplace(vaddr + size_first_access, size_second_access);
+                    // For misaligned accesses, there may be another translation request to resolve.
+                    // In some scenarios, Fetch/Decode may decide to not translate the second
+                    // so keep going and let Fetch/Decode determine if translation needs to be
+                    // performed again.
                     switch (TYPE)
                     {
                         case AccessType::INSTRUCTION:
@@ -323,15 +331,24 @@ namespace atlas
                             return getLoadTranslateActionGroup();
                     }
                 }
+	        else
+		{
+                    translation_state->popRequest();
+		    translation_state->setResult(paddr, access_size);
+		}
+
+                // TODO: Check if there are more requests
 
                 // Keep going
                 return nullptr;
             }
-            // Read next level PTE
+            // If PTE is NOT a leaf, keep walking the page table
             else
             {
                 ppn = pte.getPpn() << PAGESHIFT;
             }
+
+            // Go to next level
             --level;
         }
 

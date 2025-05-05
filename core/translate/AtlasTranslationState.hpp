@@ -44,21 +44,7 @@ namespace atlas
         void makeRequest(const Addr vaddr, const size_t size)
         {
             sparta_assert(results_.empty());
-
-            const Addr page_offset = vaddr & 0xfff;
-            const bool misaligned = (page_offset + size) > 0x1000;
-            if (misaligned)
-            {
-                const size_t size_second_access = (page_offset + size) % 0x1000;
-                const size_t size_first_access = size - size_second_access;
-
-                requests_.emplace(vaddr, size_first_access);
-                requests_.emplace(vaddr + size_first_access, size_second_access);
-            }
-            else
-            {
-                requests_.emplace(vaddr, size);
-            }
+            requests_.emplace(vaddr, size);
         }
 
         uint32_t getNumRequests() const { return requests_.size(); }
