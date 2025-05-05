@@ -239,7 +239,7 @@ namespace atlas::translate_types
         else if constexpr (MODE == MMUMode::SV32)
         {
             sparta_assert(level <= translate_types::Sv32::num_pagewalk_levels);
-            return (level == 0) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
+            return (level == 2) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
         }
         else
         {
