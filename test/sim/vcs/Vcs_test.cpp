@@ -1,11 +1,11 @@
 #include "test/sim/InstructionTester.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
-class VsetInstructionTester : public AtlasInstructionTester
+class VcsInstructionTester : public AtlasInstructionTester
 {
 
   public:
-    VsetInstructionTester() = default;
+    VcsInstructionTester() = default;
 
     void testVsetvl()
     {
@@ -51,11 +51,11 @@ class VsetInstructionTester : public AtlasInstructionTester
 
 int main()
 {
-    VsetInstructionTester vset_tester;
+    VcsInstructionTester Vcs_tester;
 
-    vset_tester.testVsetvl();
-    vset_tester.testVsetvli();
-    vset_tester.testVsetivli();
+    Vcs_tester.testVsetvl();
+    Vcs_tester.testVsetvli();
+    Vcs_tester.testVsetivli();
 
     REPORT_ERROR;
     return ERROR_CODE;

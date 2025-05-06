@@ -8,7 +8,8 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../mavis/json               ${CMAKE_C
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_CURRENT_BINARY_DIR}/workloads SYMBOLIC)
 
 # Tests
-add_subdirectory(vset)
+add_subdirectory(vcs)
+add_subdirectory(via)
 
 # Tests
 atlas_named_test(atlas_nop_test atlas -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
