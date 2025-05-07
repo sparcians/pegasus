@@ -157,8 +157,7 @@ namespace atlas
             case FaultCause::STORE_AMO_PAGE_FAULT:
                 {
                     const auto vaddr_val =
-                        state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
-                    state->getCurrentInst()->getTranslationState()->clearRequest();
+                        state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
                 }
             case FaultCause::ILLEGAL_INST:

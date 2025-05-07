@@ -7,12 +7,12 @@ import subprocess
 import multiprocessing
 
 # Passing and total
-PASSING_STATUS_RV32_NON_VIRT = [91, 97]
+PASSING_STATUS_RV32_NON_VIRT = [95, 97]
 PASSING_STATUS_RV32_VIRT     = [76, 78]
-PASSING_STATUS_RV64_NON_VIRT = [124, 127]
+PASSING_STATUS_RV64_NON_VIRT = [126, 127]
 PASSING_STATUS_RV64_VIRT     = [104, 106]
 
-def get_tests(directory):
+def get_riscv_arch_tests(directory):
     regex = re.compile(r'rv[36][24]')
     tests = []
 
@@ -104,7 +104,7 @@ def main():
             print("ERROR: Could not make output directory", output_dir, e)
             sys.exit(1)
 
-    tests = get_tests(args.directory)
+    tests = get_riscv_arch_tests(args.directory)
 
     if args.rv32_only and args.rv64_only:
         print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")

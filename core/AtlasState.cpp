@@ -196,6 +196,31 @@ namespace atlas
         }
     }
 
+    void AtlasState::changeMavisContext()
+    {
+        const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
+        const std::string context_name =
+            std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
+        if (mavis_->hasContext(context_name) == false)
+        {
+            DLOG("Creating new Mavis context: " << context_name);
+            mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
+                                mavis_uid_list_, {}, inclusions, {});
+        }
+        DLOG("Changing Mavis context: " << context_name);
+        mavis_->switchContext(context_name);
+
+        const bool compression_enabled = inclusions_.contains("c");
+        if (compression_enabled)
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+    }
+
     template <typename XLEN> void AtlasState::changeMMUMode()
     {
         static const std::vector<MMUMode> satp_mmu_mode_map = {
@@ -539,7 +564,8 @@ namespace atlas
         sparta_assert(success, "Failed to read from memory at address 0x" << std::hex << paddr);
 
         const MemoryType value = convertFromByteVector<MemoryType>(buffer);
-        ILOG("Memory read to 0x" << std::hex << paddr << ": 0x" << (uint64_t)value);
+        ILOG("Memory read (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
+                             << (uint64_t)value);
         return value;
     }
 
@@ -555,7 +581,8 @@ namespace atlas
         const bool success = memory->tryWrite(paddr, size, buffer.data());
         sparta_assert(success, "Failed to write to memory at address 0x" << std::hex << paddr);
 
-        ILOG("Memory write to 0x" << std::hex << paddr << ": 0x" << (uint64_t)value);
+        ILOG("Memory write (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
+                              << (uint64_t)value);
     }
 
     template int8_t AtlasState::readMemory<int8_t>(const Addr);

@@ -48,6 +48,6 @@ namespace atlas
         }
 
         AtlasInstAllocator inst_allocator{1000, 500};
-        AtlasExtractorAllocator extractor_allocator{5000, 4500};
+        AtlasExtractorAllocator extractor_allocator{10000, 8500};
     };
 } // namespace atlas

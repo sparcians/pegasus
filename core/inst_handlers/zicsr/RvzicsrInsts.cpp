@@ -93,11 +93,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrcHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const auto rs1 = insn->getRs1();
-        auto rd = insn->getRd();
-        const uint32_t csr = insn->getCsr();
+        const auto rs1 = inst->getRs1();
+        auto rd = inst->getRd();
+        const uint32_t csr = inst->getCsr();
 
         if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -124,11 +124,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrciHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN imm = insn->getImmediate();
-        const auto rd = insn->getRd();
-        const int csr = insn->getCsr();
+        const XLEN imm = inst->getImmediate();
+        const auto rd = inst->getRd();
+        const int csr = inst->getCsr();
 
         if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -152,11 +152,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrsHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const auto rs1 = insn->getRs1();
-        const auto rd = insn->getRd();
-        const int csr = insn->getCsr();
+        const auto rs1 = inst->getRs1();
+        const auto rd = inst->getRd();
+        const int csr = inst->getCsr();
 
         if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -182,11 +182,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrsiHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN imm = insn->getImmediate();
-        const auto rd = insn->getRd();
-        const int csr = insn->getCsr();
+        const XLEN imm = inst->getImmediate();
+        const auto rd = inst->getRd();
+        const int csr = inst->getCsr();
 
         if (!isAccessLegal_<AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -211,11 +211,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrwHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const auto rs1 = insn->getRs1();
-        const auto rd = insn->getRd();
-        const int csr = insn->getCsr();
+        const auto rs1 = inst->getRs1();
+        const auto rd = inst->getRd();
+        const int csr = inst->getCsr();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
@@ -242,11 +242,11 @@ namespace atlas
 
     template <typename XLEN> ActionGroup* RvzicsrInsts::csrrwiHandler_(atlas::AtlasState* state)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN imm = insn->getImmediate();
-        const auto rd = insn->getRd();
-        const int csr = insn->getCsr();
+        const XLEN imm = inst->getImmediate();
+        const auto rd = inst->getRd();
+        const int csr = inst->getCsr();
 
         if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
         {
@@ -285,11 +285,20 @@ namespace atlas
             }
             else
             {
-                inclusions.erase(ext_str);
+                // Disabling compression will fail if doing so would cause an instruction
+                // misalignment exception. Check if the next PC is not 32-bit aligned.
+                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
+                {
+                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                }
+                else
+                {
+                    inclusions.erase(ext_str);
+                }
             }
         }
 
-        state->updateMavisContext();
+        state->changeMavisContext();
 
         return nullptr;
     }
@@ -324,7 +333,7 @@ namespace atlas
             }
         }
 
-        state->updateMavisContext();
+        state->changeMavisContext();
         state->changeMMUMode<XLEN>();
 
         return nullptr;

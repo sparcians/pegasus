@@ -32,30 +32,62 @@ class AtlasTranslateTester
     {
         std::cout << "Testing AtlasTranslationState class" << std::endl;
         std::cout << std::endl;
-        const atlas::Addr vaddr = 0x1000;
-        const uint32_t access_size = 4;
-        // TODO: Add test for AtlasTranslationState state machine
+        const atlas::Addr vaddr1 = 0x1000;
+        const uint32_t access_size1 = 4;
+        const atlas::Addr vaddr2 = 0x1004;
+        const uint32_t access_size2 = 4;
 
         atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
 
-        // Request should be invalid and throw an exception
+        // Requests and results should be invalid and throw an exception
         EXPECT_THROW(translation_state->getRequest());
-
-        // This will call setTransaltionRequest which should fail as transalationRequest is invalid
-        // FIXME: Sparta macro doesn't understand templated methods
-        // EXPECT_THROW(translate_unit_->translate_<atlas::RV64,
-        // atlas::MMUMode::BAREMETAL>(state_));
-
-        // Make a second request without resolving the first request
-        translation_state->makeRequest(vaddr, access_size);
-        EXPECT_THROW(translation_state->makeRequest(vaddr, access_size););
-
-        // Try to get a result before it is ready will fail
         EXPECT_THROW(translation_state->getResult());
 
-        // Clear current request so subsequent tests will pass
-        translation_state->setResult(vaddr, access_size);
+        // Make some requests
+        translation_state->makeRequest(vaddr1, access_size1);
+        translation_state->makeRequest(vaddr2, access_size2);
 
+        // Trying to get a result before it is ready will fail
+        EXPECT_THROW(translation_state->getResult());
+
+        // Set first translation result
+        translation_state->setResult(vaddr1, access_size1);
+
+        // Clear first request
+        translation_state->popRequest();
+
+        // Set second translation result
+        translation_state->setResult(vaddr2, access_size2);
+
+        // Clear second request
+        translation_state->popRequest();
+
+        // Get first translation result
+        const atlas::AtlasTranslationState::TranslationResult & result1 =
+            translation_state->getResult();
+        EXPECT_TRUE(result1.isValid());
+        EXPECT_EQUAL(result1.getPAddr(), vaddr1);
+        EXPECT_EQUAL(result1.getSize(), access_size1);
+
+        // Clear first result
+        translation_state->popResult();
+
+        // Get second translation result
+        const atlas::AtlasTranslationState::TranslationResult & result2 =
+            translation_state->getResult();
+        EXPECT_TRUE(result2.isValid());
+        EXPECT_EQUAL(result2.getPAddr(), vaddr2);
+        EXPECT_EQUAL(result2.getSize(), access_size2);
+
+        // Clear second result
+        translation_state->popResult();
+
+        // No more requests or results that can be cleared
+        EXPECT_THROW(translation_state->popRequest());
+        EXPECT_THROW(translation_state->popResult());
+
+        // Get second translation result
+        // TODO: Add tests for AtlasTranslationState request/result validation
         // TODO: Add tests for AtlasTranslationState request/result validation
         //    - Make a misaligned request (is it supported?)
         //    - Make a request with an invalid size (too large, too small, not power of 2, etc.)
@@ -240,15 +272,17 @@ class AtlasTranslateTester
         EXPECT_EQUAL(next_action_group, nullptr);
 
         // Get translation result
-        const atlas::AtlasTranslationState::TranslationResult result =
+        const atlas::AtlasTranslationState::TranslationResult & result =
             translation_state->getResult();
         std::cout << "Translation result:" << std::endl;
-        std::cout << "    PA: 0x" << std::hex << result.getPaddr();
+        std::cout << "    PA: 0x" << std::hex << result.getPAddr();
         std::cout << ", Access size: " << std::dec << result.getSize() << "\n\n";
 
         // Test translation result
-        EXPECT_EQUAL(result.getPaddr(), vaddr);
+        EXPECT_EQUAL(result.getPAddr(), vaddr);
         EXPECT_EQUAL(result.getSize(), access_size);
+
+        translation_state->reset();
     }
 
     void testSv32Translation()
@@ -306,14 +340,17 @@ class AtlasTranslateTester
                                     atlas::Translate::AccessType::INSTRUCTION>(state_);
 
         // Get translation result
-        const atlas::AtlasTranslationState::TranslationResult result =
+        const atlas::AtlasTranslationState::TranslationResult & result =
             translation_state->getResult();
         std::cout << "Translation result:" << std::endl;
-        std::cout << "    PA: 0x" << std::hex << result.getPaddr();
+        std::cout << "    PA: 0x" << std::hex << result.getPAddr();
         std::cout << ", Access size: " << std::dec << result.getSize() << "\n\n";
 
         // Test translation result
-        EXPECT_EQUAL(result.getPaddr(), expected_paddr);
+        EXPECT_EQUAL(result.getPAddr(), expected_paddr);
+        EXPECT_EQUAL(result.getSize(), access_size);
+
+        translation_state->reset();
     }
 
   private:

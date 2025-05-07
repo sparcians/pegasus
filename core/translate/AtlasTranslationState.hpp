@@ -11,81 +11,83 @@ namespace atlas
       public:
         struct TranslationRequest
         {
-          private:
-            Addr virtual_addr_ = 0x0;
-            size_t size_ = 0;
-
           public:
-            TranslationRequest() = default;
+            TranslationRequest(Addr vaddr, size_t size) : vaddr_(vaddr), size_(size) {}
 
-            TranslationRequest(Addr vaddr, size_t sz) : virtual_addr_(vaddr), size_(sz) {}
-
-            Addr getVaddr() const { return virtual_addr_; }
+            Addr getVAddr() const { return vaddr_; }
 
             size_t getSize() const { return size_; }
 
             bool isValid() const { return size_ != 0; }
+
+          private:
+            const Addr vaddr_;
+            const size_t size_;
         };
 
         struct TranslationResult
         {
-          private:
-            Addr physical_addr_ = 0x0;
-            size_t size_ = 0;
-
           public:
-            TranslationResult() = default;
+            TranslationResult(Addr paddr, size_t sz) : paddr_(paddr), size_(sz) {}
 
-            TranslationResult(Addr paddr, size_t sz) : physical_addr_(paddr), size_(sz) {}
-
-            Addr getPaddr() const { return physical_addr_; }
+            Addr getPAddr() const { return paddr_; }
 
             size_t getSize() const { return size_; }
 
             bool isValid() const { return size_ != 0; }
+
+          private:
+            const Addr paddr_;
+            const size_t size_;
         };
 
-        void makeRequest(const Addr virtual_addr, const size_t size)
+        void makeRequest(const Addr vaddr, const size_t size) { requests_.emplace(vaddr, size); }
+
+        uint32_t getNumRequests() const { return requests_.size(); }
+
+        const TranslationRequest getRequest()
         {
-            sparta_assert(request_.isValid() == false);
-
-            request_ = TranslationRequest(virtual_addr, size);
-
-            // Invalidate previous result
-            result_ = TranslationResult();
+            sparta_assert(requests_.empty() == false);
+            return requests_.front();
         }
 
-        const TranslationRequest & getRequest() const
+        void popRequest()
         {
-            sparta_assert(request_.isValid());
-
-            return request_;
+            sparta_assert(requests_.empty() == false);
+            requests_.pop();
         }
 
-        void clearRequest() { request_ = TranslationRequest(); }
+        void setResult(const Addr paddr, const size_t size) { results_.emplace(paddr, size); }
 
-        void setResult(const Addr physical_addr, const size_t size)
+        const TranslationResult getResult()
         {
-            sparta_assert(request_.isValid());
-
-            result_ = TranslationResult(physical_addr, size);
-
-            // Invalidate request
-            request_ = TranslationRequest();
+            sparta_assert(results_.empty() == false);
+            return results_.front();
         }
 
-        const TranslationResult & getResult() const
+        void popResult()
         {
-            sparta_assert(result_.isValid());
+            sparta_assert(results_.empty() == false);
+            results_.pop();
+        }
 
-            return result_;
+        void reset()
+        {
+            while (requests_.empty() == false)
+            {
+                requests_.pop();
+            }
+            while (results_.empty() == false)
+            {
+                results_.pop();
+            }
         }
 
       private:
         // Translation request
-        TranslationRequest request_;
+        std::queue<TranslationRequest> requests_;
 
         // Translation result
-        TranslationResult result_;
+        std::queue<TranslationResult> results_;
     };
 } // namespace atlas
