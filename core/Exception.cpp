@@ -60,11 +60,11 @@ namespace atlas
         if (priv_mode == PrivMode::SUPERVISOR)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, SEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
@@ -91,11 +91,11 @@ namespace atlas
         else if (priv_mode == PrivMode::MACHINE)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, MEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
