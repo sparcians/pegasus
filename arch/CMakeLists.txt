@@ -73,6 +73,14 @@ set(DEPENDS_INST_JSON_FILES
   ${SIM_BASE}/scripts/insts/RVD_INST.py
   ${SIM_BASE}/scripts/insts/RVZICSR_INST.py
   ${SIM_BASE}/scripts/insts/RVZIFENCEI_INST.py
+  ${SIM_BASE}/scripts/insts/RVZBA_INST.py
+  ${SIM_BASE}/scripts/insts/RVZBB_INST.py
+  ${SIM_BASE}/scripts/insts/RVZBC_INST.py
+  ${SIM_BASE}/scripts/insts/RVZBS_INST.py
+  ${SIM_BASE}/scripts/insts/RVZVE32F_INST.py
+  ${SIM_BASE}/scripts/insts/RVZVE32X_INST.py
+  ${SIM_BASE}/scripts/insts/RVZVE64D_INST.py
+  ${SIM_BASE}/scripts/insts/RVZVE64X_INST.py
 )
 
 add_custom_command(
