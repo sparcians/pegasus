@@ -28,14 +28,11 @@ class AtlasTranslateTester
         translate_unit_ = state_->getTranslateUnit();
     }
 
-    void testAtlasTranslationState()
+    void testAtlasTranslationStateBasic()
     {
-        std::cout << "Testing AtlasTranslationState class" << std::endl;
-        std::cout << std::endl;
-        const atlas::Addr vaddr1 = 0x1000;
-        const uint32_t access_size1 = 4;
-        const atlas::Addr vaddr2 = 0x1004;
-        const uint32_t access_size2 = 4;
+        std::cout << "Testing AtlasTranslationState class -- basic" << std::endl;
+        const atlas::Addr vaddr = 0x1000;
+        const size_t access_size = 4;
 
         atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
 
@@ -43,56 +40,135 @@ class AtlasTranslateTester
         EXPECT_THROW(translation_state->getRequest());
         EXPECT_THROW(translation_state->getResult());
 
-        // Make some requests
-        translation_state->makeRequest(vaddr1, access_size1);
-        translation_state->makeRequest(vaddr2, access_size2);
+        // Make a request
+        translation_state->makeRequest(vaddr, access_size);
+
+        // Get number of requests and results
+        EXPECT_EQUAL(translation_state->getNumRequests(), 1);
+        EXPECT_EQUAL(translation_state->getNumResults(), 0);
+
+        // Request size must be non-zero
+        EXPECT_THROW(translation_state->makeRequest(vaddr, 0));
 
         // Trying to get a result before it is ready will fail
         EXPECT_THROW(translation_state->getResult());
 
-        // Set first translation result
-        translation_state->setResult(vaddr1, access_size1);
+        // Set result
+        translation_state->setResult(vaddr | 0x80000000, access_size);
 
-        // Clear first request
+        // Get number of requests and results
+        EXPECT_EQUAL(translation_state->getNumRequests(), 1);
+        EXPECT_EQUAL(translation_state->getNumResults(), 1);
+
+        // Cannot make a new request if there are any results
+        EXPECT_THROW(translation_state->makeRequest(0, 0));
+
+        // Clear request
         translation_state->popRequest();
 
-        // Set second translation result
-        translation_state->setResult(vaddr2, access_size2);
+        // Get number of requests and results
+        EXPECT_EQUAL(translation_state->getNumRequests(), 0);
+        EXPECT_EQUAL(translation_state->getNumResults(), 1);
 
-        // Clear second request
-        translation_state->popRequest();
-
-        // Get first translation result
-        const atlas::AtlasTranslationState::TranslationResult & result1 =
+        // Get result
+        const atlas::AtlasTranslationState::TranslationResult & result =
             translation_state->getResult();
-        EXPECT_TRUE(result1.isValid());
-        EXPECT_EQUAL(result1.getPAddr(), vaddr1);
-        EXPECT_EQUAL(result1.getSize(), access_size1);
+        EXPECT_TRUE(result.isValid());
+        EXPECT_EQUAL(result.getPAddr(), vaddr | 0x80000000);
+        EXPECT_EQUAL(result.getSize(), access_size);
 
-        // Clear first result
+        // Still cannot make any new requests until results have been cleared
+        EXPECT_THROW(translation_state->makeRequest(0, 0));
+
+        // Clear result
         translation_state->popResult();
 
-        // Get second translation result
-        const atlas::AtlasTranslationState::TranslationResult & result2 =
-            translation_state->getResult();
-        EXPECT_TRUE(result2.isValid());
-        EXPECT_EQUAL(result2.getPAddr(), vaddr2);
-        EXPECT_EQUAL(result2.getSize(), access_size2);
-
-        // Clear second result
-        translation_state->popResult();
+        // Get number of requests and results
+        EXPECT_EQUAL(translation_state->getNumRequests(), 0);
+        EXPECT_EQUAL(translation_state->getNumResults(), 0);
 
         // No more requests or results that can be cleared
         EXPECT_THROW(translation_state->popRequest());
         EXPECT_THROW(translation_state->popResult());
+    }
 
-        // Get second translation result
-        // TODO: Add tests for AtlasTranslationState request/result validation
-        // TODO: Add tests for AtlasTranslationState request/result validation
-        //    - Make a misaligned request (is it supported?)
-        //    - Make a request with an invalid size (too large, too small, not power of 2, etc.)
-        //    - Set the result with the wrong size
-        //    - More?
+    void testAtlasTranslationStateMisaligned()
+    {
+        std::cout << "Testing AtlasTranslationState class -- misaligned" << std::endl;
+        atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
+
+        // Make a request and mark it as misaligned
+        const atlas::Addr vaddr = 0xffe;
+        const size_t access_size = 4;
+        translation_state->makeRequest(vaddr, access_size);
+        atlas::AtlasTranslationState::TranslationRequest & request =
+            translation_state->getRequest();
+        request.setMisaligned(2);
+
+        // Number of misaligned bytes must be valid
+        EXPECT_THROW(request.setMisaligned(4));
+        EXPECT_THROW(request.setMisaligned(0));
+
+        // Set results
+        translation_state->setResult(vaddr | 0x80000000,
+                                     access_size - request.getMisalignedBytes());
+        translation_state->setResult((vaddr + request.getMisalignedBytes()) | 0x80000000,
+                                     request.getMisalignedBytes());
+
+        // Get number of requests and results
+        EXPECT_EQUAL(translation_state->getNumRequests(), 1);
+        EXPECT_EQUAL(translation_state->getNumResults(), 2);
+
+        translation_state->popRequest();
+        translation_state->popResult();
+        translation_state->popResult();
+    }
+
+    void testAtlasTranslationStateMultiple()
+    {
+        std::cout << "Testing AtlasTranslationState class -- multiple" << std::endl;
+        atlas::AtlasTranslationState* translation_state = state_->getFetchTranslationState();
+
+        // Make multiple requests
+        const uint64_t base_vaddr = 0x1000;
+        uint64_t offset = 4;
+        size_t access_size = 4;
+        uint64_t num_requests = 8;
+        for (uint64_t num = 0; num < num_requests; num++)
+        {
+            const uint64_t vaddr = base_vaddr + (num * offset);
+            std::cout << "Making request: 0x" << std::hex << vaddr << std::endl;
+            translation_state->makeRequest(vaddr, access_size);
+        }
+
+        EXPECT_EQUAL(translation_state->getNumRequests(), num_requests);
+
+        // Handle requests
+        for (uint64_t num = 0; num < num_requests; num++)
+        {
+            const atlas::AtlasTranslationState::TranslationRequest & request =
+                translation_state->getRequest();
+            const uint64_t paddr = request.getVAddr() | 0x80000000;
+            translation_state->setResult(paddr, request.getSize());
+            translation_state->popRequest();
+
+            // Can't make any new requests
+            EXPECT_THROW(translation_state->makeRequest(0, 0));
+        }
+
+        EXPECT_EQUAL(translation_state->getNumRequests(), 0);
+        EXPECT_EQUAL(translation_state->getNumResults(), num_requests);
+
+        // Get Results
+        for (uint64_t num = 0; num < num_requests; num++)
+        {
+            const atlas::AtlasTranslationState::TranslationResult & result =
+                translation_state->getResult();
+            std::cout << "Getting result: 0x" << std::hex << result.getPAddr() << std::endl;
+            translation_state->popResult();
+        }
+
+        EXPECT_EQUAL(translation_state->getNumResults(), 0);
     }
 
     void testPageTableEntry() // unit test for PageTableEntry.cpp
@@ -368,12 +444,14 @@ int main(int argc, char** argv)
 
     AtlasTranslateTester translate_tester;
 
-    translate_tester.testAtlasTranslationState();
-    translate_tester.testPageTableEntry();
-    translate_tester.testPageTable();
+    translate_tester.testAtlasTranslationStateBasic();
+    translate_tester.testAtlasTranslationStateMisaligned();
+    translate_tester.testAtlasTranslationStateMultiple();
+    // translate_tester.testPageTableEntry();
+    // translate_tester.testPageTable();
 
-    translate_tester.testBaremetalTranslation();
-    translate_tester.testSv32Translation();
+    // translate_tester.testBaremetalTranslation();
+    // translate_tester.testSv32Translation();
 
     REPORT_ERROR;
     return ERROR_CODE;

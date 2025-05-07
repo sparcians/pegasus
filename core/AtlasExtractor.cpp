@@ -5,16 +5,17 @@
 namespace atlas
 {
     template <typename ValueType>
-    ValueType getUarchJsonValue(const nlohmann::json & uarch_json, const std::string & key)
+    ValueType getUarchJsonValue(const boost::json::object & entry, const std::string & key)
     {
-        if (SPARTA_EXPECT_FALSE(uarch_json.find(key) == uarch_json.end()))
+        if (SPARTA_EXPECT_FALSE(entry.find(key) == entry.end()))
         {
             sparta_assert(false, "Missing key in uarch json: " << key);
         }
-        return uarch_json[key].get<ValueType>();
+        return boost::json::value_to<ValueType>(entry.find(key)->value());
     }
 
-    AtlasExtractor::AtlasExtractor(const nlohmann::json & uarch_json, const AtlasState* state) :
+    AtlasExtractor::AtlasExtractor(const boost::json::object & uarch_json,
+                                   const AtlasState* state) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),

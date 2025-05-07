@@ -20,9 +20,23 @@ namespace atlas
 
             bool isValid() const { return size_ != 0; }
 
+            void setMisaligned(const size_t misaligned_bytes)
+            {
+                sparta_assert(misaligned_bytes > 0);
+                sparta_assert(misaligned_bytes < size_);
+                misaligned_bytes_ = misaligned_bytes;
+                misaligned_ = true;
+            }
+
+            bool isMisaligned() const { return misaligned_; }
+
+            size_t getMisalignedBytes() const { return misaligned_bytes_; }
+
           private:
             const Addr vaddr_;
             const size_t size_;
+            bool misaligned_ = false;
+            size_t misaligned_bytes_ = 0;
         };
 
         struct TranslationResult
@@ -41,11 +55,16 @@ namespace atlas
             const size_t size_;
         };
 
-        void makeRequest(const Addr vaddr, const size_t size) { requests_.emplace(vaddr, size); }
+        void makeRequest(const Addr vaddr, const size_t size)
+        {
+            sparta_assert(size > 0);
+            sparta_assert(results_.empty());
+            requests_.emplace(vaddr, size);
+        }
 
         uint32_t getNumRequests() const { return requests_.size(); }
 
-        const TranslationRequest getRequest()
+        TranslationRequest & getRequest()
         {
             sparta_assert(requests_.empty() == false);
             return requests_.front();
@@ -59,7 +78,9 @@ namespace atlas
 
         void setResult(const Addr paddr, const size_t size) { results_.emplace(paddr, size); }
 
-        const TranslationResult getResult()
+        uint32_t getNumResults() const { return results_.size(); }
+
+        const TranslationResult & getResult() const
         {
             sparta_assert(results_.empty() == false);
             return results_.front();
