@@ -355,20 +355,6 @@ namespace atlas
 
             // Set request as misaligned
             request.setMisaligned(num_misaligned_bytes);
-
-            // For misaligned accesses, there may be another translation request to resolve.
-            // In some scenarios, Fetch/Decode may decide to not translate the second
-            // so keep going and let Fetch/Decode determine if translation needs to be
-            // performed again.
-            switch (TYPE)
-            {
-                case AccessType::INSTRUCTION:
-                    return nullptr;
-                case AccessType::STORE:
-                    return getStoreTranslateActionGroup();
-                case AccessType::LOAD:
-                    return getLoadTranslateActionGroup();
-            }
         }
         else
         {
@@ -376,7 +362,24 @@ namespace atlas
             translation_state->setResult(paddr, access_size);
         }
 
-        // TODO: Check if there are more requests
+        if (is_misaligned || (translation_state->getNumRequests() > 0))
+        {
+            // For misaligned accesses, there may be another translation request to resolve.
+            // In some scenarios, Fetch/Decode may decide to not translate the second
+            // so keep going and let Fetch/Decode determine if translation needs to be
+            // performed again.
+            switch (TYPE)
+            {
+                case AccessType::INSTRUCTION:
+                    sparta_assert(is_misaligned,
+                                  "Should never receive multiple translation requests from Fetch!");
+                    return nullptr;
+                case AccessType::STORE:
+                    return getStoreTranslateActionGroup();
+                case AccessType::LOAD:
+                    return getLoadTranslateActionGroup();
+            }
+        }
 
         // Keep going
         return nullptr;
