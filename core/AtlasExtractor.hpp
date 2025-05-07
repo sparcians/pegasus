@@ -1,8 +1,7 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-
-#include "mavis/json.hpp"
+#include "mavis/JSONUtils.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
 namespace atlas
@@ -13,11 +12,11 @@ namespace atlas
         // Required by Mavis
         using PtrType = sparta::SpartaSharedPointer<AtlasExtractor>;
 
-        AtlasExtractor(const nlohmann::json & json, const AtlasState* state);
+        AtlasExtractor(const boost::json::object & json, const AtlasState* state);
         AtlasExtractor(const AtlasExtractor &) = default;
 
         // Required by Mavis
-        void update(const nlohmann::json &) {}
+        void update(const boost::json::object &) {}
 
         // Required by Mavis
         const std::string & getName() const { return mnemonic_; }

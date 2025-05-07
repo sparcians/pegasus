@@ -145,17 +145,25 @@ namespace atlas
     void AtlasState::onBindTreeLate_()
     {
         // Write initial values to CSR registers
-        std::ifstream ifs(csr_values_json_);
-        nlohmann::json csr_values_json = nlohmann::json::parse(ifs);
-        for (const auto & [csr_name, hex_str] : csr_values_json.items())
+        const boost::json::array json = mavis::parseJSON(csr_values_json_).as_array();
+        for (uint32_t idx = 0; idx < json.size(); idx++)
         {
+            const boost::json::object & csr_entry = json.at(idx).as_object();
+            const auto csr_name_it = csr_entry.find("name");
+            sparta_assert(csr_name_it != csr_entry.end());
+            const auto csr_value_it = csr_entry.find("value");
+            sparta_assert(csr_value_it != csr_entry.end());
+
+            const std::string csr_name = boost::json::value_to<std::string>(csr_name_it->value());
             sparta::Register* csr_reg = findRegister(csr_name);
             if (csr_reg)
             {
                 sparta_assert(csr_reg->getGroupNum()
                                   == (sparta::RegisterBase::group_num_type)RegType::CSR,
                               "Provided initial value for not-CSR register: " << csr_name);
-                const uint64_t csr_val = std::stoull(std::string(hex_str), nullptr, 16);
+                const std::string csr_hex_str =
+                    boost::json::value_to<std::string>(csr_value_it->value());
+                const uint64_t csr_val = std::stoull(csr_hex_str, nullptr, 16);
                 std::cout << csr_name << ": " << HEX16(csr_val) << std::endl;
                 csr_reg->dmiWrite(csr_val);
             }
