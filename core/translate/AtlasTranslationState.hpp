@@ -22,6 +22,7 @@ namespace atlas
 
             void setMisaligned(const size_t misaligned_bytes)
             {
+                sparta_assert(misaligned_bytes > 0);
                 sparta_assert(misaligned_bytes < size_);
                 misaligned_bytes_ = misaligned_bytes;
                 misaligned_ = true;
@@ -56,7 +57,7 @@ namespace atlas
 
         void makeRequest(const Addr vaddr, const size_t size)
         {
-	    sparta_assert(size > 0);
+            sparta_assert(size > 0);
             sparta_assert(results_.empty());
             requests_.emplace(vaddr, size);
         }
