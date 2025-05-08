@@ -56,9 +56,9 @@ namespace atlas
         for (; index < stop; ++index)
         {
             SEW result = OP()(*(reinterpret_cast<const uint8_t*>(
-                                      rs1_val.data() + (index % (vlenb / sewb)) * sewb)),
-                                  *(reinterpret_cast<const uint8_t*>(
-                                      rs2_val.data() + (index % (vlenb / sewb)) * sewb)));
+                                  rs1_val.data() + (index % (vlenb / sewb)) * sewb)),
+                              *(reinterpret_cast<const uint8_t*>(
+                                  rs2_val.data() + (index % (vlenb / sewb)) * sewb)));
             memcpy(rd_val.data() + (index % (vlenb / sewb)) * sewb, &result, sewb);
         }
         WRITE_VEC_REG<VLEN>(state, rd + vstart / (vlenb / sewb), rd_val);
