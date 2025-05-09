@@ -56,15 +56,26 @@ namespace atlas
 
         const std::vector<Action> & getActions() const { return action_group_; };
 
-        ActionGroup* execute(AtlasState* state) const
+        ActionGroup* execute(AtlasState* state)
         {
-            ActionGroup* fail_action_group = nullptr;
-            for (const Action & action : action_group_)
+            fail_action_group_ = nullptr;
+            Action* next_action = nullptr;
+            for (auto action_it = action_group_.begin(); action_it != action_group_.end();)
             {
-                fail_action_group = action.execute(state);
-                if (SPARTA_EXPECT_FALSE(fail_action_group))
+                next_action = action_it->execute(state, &(*action_it));
+
+                // If next_action is not a nullptr, do something special
+                if (SPARTA_EXPECT_FALSE(next_action != nullptr))
                 {
-                    return fail_action_group;
+                    fail_action_group_ = next_action->getNextActionGroup();
+                    if (fail_action_group_ != nullptr)
+                    {
+                        return fail_action_group_;
+                    }
+                }
+                else
+                {
+                    ++action_it;
                 }
             }
 
@@ -137,6 +148,8 @@ namespace atlas
         std::vector<Action> action_group_;
 
         ActionGroup* next_action_group_ = nullptr;
+
+        ActionGroup* fail_action_group_ = nullptr;
 
         //! Find first Action in the group with the specified Tag
         std::vector<Action>::iterator findActionWithTag_(const ActionTagType tag)

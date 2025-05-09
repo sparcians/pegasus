@@ -258,7 +258,7 @@ class ExecuteUnit : public Unit
         return action;
     }
 
-    atlas::Action* inst_handler(atlas::AtlasState* state, atlas::Action*)
+    atlas::Action* inst_handler(atlas::AtlasState* state, atlas::Action* action)
     {
         const atlas::AtlasInstPtr & inst = state->getCurrentInst();
         std::cout << "Executing " << inst << std::endl;
@@ -266,15 +266,16 @@ class ExecuteUnit : public Unit
         state->incrNumActionsExecuted();
 
         // Determine if the inst handler needs to be called again
-        static uint32_t num_uops_to_execute = 4;
-        if (inst->isVector() && num_uops_to_execute)
+        static uint32_t num_uops_to_execute = 2;
+        --num_uops_to_execute;
+        if (inst->isVector() && (num_uops_to_execute > 0))
         {
-            --num_uops_to_execute;
-            // return nullptr;
+            return action;
         }
 
         state->incrNumInstsExecuted();
-        num_uops_to_execute = 4;
+        // reset
+        num_uops_to_execute = 2;
 
         // Increment the PC
         state->incrPc();
