@@ -38,7 +38,7 @@ namespace atlas
         exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
     }
 
-    template <typename XLEN> ActionGroup* Exception::handleException_(atlas::AtlasState* state)
+    template <typename XLEN> Action* Exception::handleException_(atlas::AtlasState* state, Action*)
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");

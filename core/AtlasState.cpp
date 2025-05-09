@@ -279,7 +279,7 @@ namespace atlas
         return uarch_files;
     }
 
-    ActionGroup* AtlasState::preExecute_(AtlasState* state)
+    Action* AtlasState::preExecute_(AtlasState* state, Action*)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
         // and change the observers' preExecute() to take both AtlasState
@@ -287,7 +287,7 @@ namespace atlas
         //
         // class ObserverContainer {
         // public:
-        //     void preExecute(AtlasState* state) {
+        //     void preExecute(AtlasState* state, Action*) {
         //         for (const auto & observer : observers_) {
         //             observer->preExecute(state, this);
         //         }
@@ -322,45 +322,45 @@ namespace atlas
         // AtlasState.hpp:
         //     std::unique_ptr<ObserverContainer> observer_container_;
 
-        ActionGroup* fail_action_group = nullptr;
+        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            next_action = observer->preExecute(state, next_action);
+            if (SPARTA_EXPECT_FALSE(next_action))
             {
-                return fail_action_group;
+                return next_action;
             }
         }
 
         return nullptr;
     }
 
-    ActionGroup* AtlasState::postExecute_(AtlasState* state)
+    Action* AtlasState::postExecute_(AtlasState* state, Action*)
     {
         // TODO cnyce: See comments in preExecute_()
-        ActionGroup* fail_action_group = nullptr;
+        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->postExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            next_action = observer->postExecute(state, next_action);
+            if (SPARTA_EXPECT_FALSE(next_action))
             {
-                return fail_action_group;
+                return next_action;
             }
         }
 
         return nullptr;
     }
 
-    ActionGroup* AtlasState::preException_(AtlasState* state)
+    Action* AtlasState::preException_(AtlasState* state, Action*)
     {
         // TODO cnyce: See comments in preExecute_()
-        ActionGroup* fail_action_group = nullptr;
+        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preException(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
+            next_action = observer->preException(state, next_action);
+            if (SPARTA_EXPECT_FALSE(next_action))
             {
-                return fail_action_group;
+                return next_action;
             }
         }
 
@@ -633,7 +633,7 @@ namespace atlas
         }
     }
 
-    ActionGroup* AtlasState::incrementPc_(AtlasState*)
+    Action* AtlasState::incrementPc_(AtlasState*, Action*)
     {
         // Set PC
         prev_pc_ = pc_;

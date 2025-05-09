@@ -254,15 +254,15 @@ namespace atlas
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
 
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
-        ActionGroup* preException_(AtlasState* state);
+        Action* preExecute_(AtlasState* state, Action* action);
+        Action* postExecute_(AtlasState* state, Action* action);
+        Action* preException_(AtlasState* state, Action* action);
 
         Action pre_execute_action_;
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        ActionGroup* stopSim_(AtlasState*)
+        Action* stopSim_(AtlasState*, Action*)
         {
             for (auto & obs : observers_)
             {
@@ -370,7 +370,7 @@ namespace atlas
         VectorState* vector_state_ptr_ = nullptr;
 
         // Increment PC Action
-        ActionGroup* incrementPc_(AtlasState* state);
+        Action* incrementPc_(AtlasState* state, Action* action);
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state

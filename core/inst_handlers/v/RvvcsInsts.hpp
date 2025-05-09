@@ -20,10 +20,10 @@ namespace atlas
 
       private:
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetvlHandler_(atlas::AtlasState* state);
+        Action* vsetvlHandler_(atlas::AtlasState* state, Action*);
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetvliHandler_(atlas::AtlasState* state);
+        Action* vsetvliHandler_(atlas::AtlasState* state, Action*);
         template <typename XLEN, typename VLEN>
-        ActionGroup* vsetivliHandler_(atlas::AtlasState* state);
+        Action* vsetivliHandler_(atlas::AtlasState* state, Action*);
     };
 } // namespace atlas

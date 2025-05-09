@@ -73,7 +73,7 @@ namespace atlas
     template const Execute::InstHandlersMap*
     Execute::getInstComputeAddressHandlersMap<RV32>() const;
 
-    ActionGroup* Execute::execute_(AtlasState* state)
+    Action* Execute::execute_(AtlasState* state, Action* action)
     {
         // Connect instruction to Fetch
         const auto inst = state->getCurrentInst();
@@ -113,6 +113,7 @@ namespace atlas
         ILOG(inst);
 
         // Execute the instruction
-        return inst_action_group;
+        action->setNextActionGroup(inst_action_group);
+        return action;
     }
 } // namespace atlas

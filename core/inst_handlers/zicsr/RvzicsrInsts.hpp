@@ -27,19 +27,19 @@ namespace atlas
         template <AccessType TYPE>
         bool isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode);
 
-        template <typename XLEN> ActionGroup* csrrcHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* csrrciHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* csrrsHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* csrrsiHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* csrrwHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* csrrwiHandler_(atlas::AtlasState* state);
+        template <typename XLEN> Action* csrrcHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* csrrciHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* csrrsHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* csrrsiHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* csrrwHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* csrrwiHandler_(atlas::AtlasState* state, Action*);
 
         // CSR update Actions for executing write side effects
-        template <typename XLEN> ActionGroup* fcsrUpdateHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fflagsUpdateHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* frmUpdateHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* misaUpdateHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* sstatusUpdateHandler_(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* mstatusUpdateHandler_(atlas::AtlasState* state);
+        template <typename XLEN> Action* fcsrUpdateHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* fflagsUpdateHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* frmUpdateHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* misaUpdateHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* sstatusUpdateHandler_(atlas::AtlasState* state, Action*);
+        template <typename XLEN> Action* mstatusUpdateHandler_(atlas::AtlasState* state, Action*);
     };
 } // namespace atlas

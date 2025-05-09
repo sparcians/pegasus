@@ -189,12 +189,12 @@ namespace atlas
          *
          * All arguments must be pointers
          */
-        ActionGroup* execute(AtlasState* state) const
+        Action* execute(AtlasState* state, Action* action) const
         {
             // For speed, we will use assert (which gets compiled out on release)
             assert(method_);
 
-            return (*method_)(object_ptr_, state);
+            return (*method_)(object_ptr_, state, action);
         }
 
         //! \brief Set the name of this Action
@@ -239,6 +239,11 @@ namespace atlas
         //! \brief Get names of tags
         std::string getTagName() const { return ActionTagFactory::getTagName(tag_); }
 
+        void setNextActionGroup(ActionGroup* action_group) { next_action_group_ = action_group; }
+
+        //! \brief
+        ActionGroup* getNextActionGroup() const { return next_action_group_; }
+
       private:
         //! \brief The object pointer
         void* object_ptr_ = nullptr;
@@ -249,15 +254,15 @@ namespace atlas
 #endif
 
         //! \brief The internal method stub
-        template <class ObjT, ActionGroup* (ObjT::*TMethod)(AtlasState*)>
-        static ActionGroup* method_stub(void* object_ptr, AtlasState* state)
+        template <class ObjT, Action* (ObjT::*TMethod)(AtlasState*, Action*)>
+        static Action* method_stub(void* object_ptr, AtlasState* state, Action* action)
         {
             ObjT* p = static_cast<ObjT*>(object_ptr);
 
-            return (p->*TMethod)(state);
+            return (p->*TMethod)(state, action);
         }
 
-        using stub_type = ActionGroup* (*)(void*, AtlasState*);
+        using stub_type = Action* (*)(void*, AtlasState*, Action*);
         stub_type method_ = nullptr;
 
         //! \brief Name of this Action
@@ -265,6 +270,9 @@ namespace atlas
 
         //! \brief ActionTag tags for this Action
         ActionTagType tag_ = 0;
+
+        //! \brief TODO
+        ActionGroup* next_action_group_;
     };
 
     // Operators for comparing aginst nullptr

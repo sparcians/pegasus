@@ -149,7 +149,7 @@ namespace atlas
     template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
 
     template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
-    ActionGroup* Translate::translate_(AtlasState* state)
+    Action* Translate::translate_(AtlasState* state, Action* action)
     {
         AtlasTranslationState* translation_state = nullptr;
         if constexpr (TYPE == AccessType::INSTRUCTION)
@@ -176,7 +176,7 @@ namespace atlas
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            return setResult_<XLEN, MODE, TYPE>(translation_state, vaddr);
+            return setResult_<XLEN, MODE, TYPE>(translation_state, action, vaddr);
         }
 
         // Width in bytes for logging
@@ -298,7 +298,7 @@ namespace atlas
                 paddr |= page_offset_mask & vaddr;
 
                 // Set result and determine whether to keep going or performa translation again
-                return setResult_<XLEN, MODE, TYPE>(translation_state, paddr, level);
+                return setResult_<XLEN, MODE, TYPE>(translation_state, action, paddr, level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -324,8 +324,8 @@ namespace atlas
     }
 
     template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
-    ActionGroup* Translate::setResult_(AtlasTranslationState* translation_state, const Addr paddr,
-                                       const uint32_t level)
+    Action* Translate::setResult_(AtlasTranslationState* translation_state, Action* action,
+                                  const Addr paddr, const uint32_t level)
     {
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
@@ -375,9 +375,9 @@ namespace atlas
                                   "Should never receive multiple translation requests from Fetch!");
                     return nullptr;
                 case AccessType::STORE:
-                    return getStoreTranslateActionGroup();
                 case AccessType::LOAD:
-                    return getLoadTranslateActionGroup();
+                    // Execute the translate Action again
+                    return action;
             }
         }
 
@@ -386,50 +386,59 @@ namespace atlas
     }
 
     // Being pedantic
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
-        AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                        Action*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*,
+                                                                                 Action*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*,
+                                                                                  Action*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*, Action*);
 
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
-        AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(AtlasState*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                        Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*,
+                                                                                 Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*,
+                                                                                  Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(AtlasState*, Action*);
+    template Action*
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(AtlasState*, Action*);
 
 } // namespace atlas

@@ -42,7 +42,7 @@ namespace atlas
         execute_action_group->setNextActionGroup(&fetch_action_group_);
     }
 
-    ActionGroup* Fetch::fetch_(AtlasState* state)
+    Action* Fetch::fetch_(AtlasState* state, Action*)
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
@@ -58,7 +58,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* Fetch::decode_(AtlasState* state)
+    Action* Fetch::decode_(AtlasState* state, Action* action)
     {
         // Get translation result
         const AtlasTranslationState::TranslationResult result =
@@ -120,7 +120,8 @@ namespace atlas
 
                 if ((opcode & 0x3) == 0x3)
                 {
-                    return fetch_action_group_.getNextActionGroup();
+                    action->setNextActionGroup(fetch_action_group_.getNextActionGroup());
+                    return action;
                 }
             }
             else

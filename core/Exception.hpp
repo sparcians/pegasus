@@ -47,7 +47,7 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
-        template <typename XLEN> ActionGroup* handleException_(atlas::AtlasState* state);
+        template <typename XLEN> Action* handleException_(atlas::AtlasState* state, Action* action);
 
         ActionGroup exception_action_group_{"Exception"};
 

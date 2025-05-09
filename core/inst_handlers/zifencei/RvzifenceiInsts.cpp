@@ -29,7 +29,8 @@ namespace atlas
     template void RvzifenceiInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzifenceiInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN> ActionGroup* RvzifenceiInsts::fence_iHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action* RvzifenceiInsts::fence_iHandler_(atlas::AtlasState* state, Action*)
     {
         // TODO: Flush any TLBs and instruction/block caches in the future
         (void)state;

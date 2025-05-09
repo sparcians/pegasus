@@ -506,7 +506,7 @@ namespace atlas
     template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename OPERATOR>
-    ActionGroup* RviInsts::integer_reg_regHandler_(atlas::AtlasState* state)
+    Action* RviInsts::integer_reg_regHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -518,7 +518,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::addwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::addwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -531,7 +531,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::subwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::subwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -545,7 +545,7 @@ namespace atlas
     }
 
     template <typename XLEN, class OPERATOR>
-    ActionGroup* RviInsts::integer_reg_immHandler_(atlas::AtlasState* state)
+    Action* RviInsts::integer_reg_immHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -557,7 +557,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::addiwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::addiwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -570,7 +570,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::mvHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::mvHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -580,14 +580,14 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::nopHandler_(atlas::AtlasState* state)
+    Action* RviInsts::nopHandler_(atlas::AtlasState* state, Action*)
     {
         (void)state;
         return nullptr;
     }
 
     template <typename XLEN, typename SIZE>
-    ActionGroup* RviInsts::computeAddressHandler_(atlas::AtlasState* state)
+    Action* RviInsts::computeAddressHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -598,7 +598,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename SIZE, bool SIGN_EXTEND>
-    ActionGroup* RviInsts::loadHandler_(atlas::AtlasState* state)
+    Action* RviInsts::loadHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
@@ -617,7 +617,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename SIZE>
-    ActionGroup* RviInsts::storeHandler_(atlas::AtlasState* state)
+    Action* RviInsts::storeHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -628,7 +628,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename OPERATOR>
-    ActionGroup* RviInsts::branchHandler_(atlas::AtlasState* state)
+    Action* RviInsts::branchHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -645,7 +645,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::jalHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::jalHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -658,7 +658,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::jalrHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::jalrHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -672,7 +672,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::liHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::liHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -682,7 +682,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::luiHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::luiHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -692,7 +692,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::auipcHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::auipcHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -705,7 +705,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::srlHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::srlHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -716,7 +716,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srliwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::srliwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -729,7 +729,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sllHandler_(atlas::AtlasState* state)
+    Action* RviInsts::sllHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -741,7 +741,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sraiHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::sraiHandler_(atlas::AtlasState* state, Action*)
     {
         using SXLEN = std::make_signed_t<XLEN>;
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -755,7 +755,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srawHandler_(atlas::AtlasState* state)
+    Action* RviInsts::srawHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -768,7 +768,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::srliHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::srliHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -781,7 +781,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sllwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::sllwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -794,7 +794,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::slliwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::slliwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -807,7 +807,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::sraiwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::sraiwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -820,7 +820,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sraHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::sraHandler_(atlas::AtlasState* state, Action*)
     {
         using SXLEN = std::make_signed_t<XLEN>;
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -833,7 +833,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::slliHandler_(atlas::AtlasState* state)
+    Action* RviInsts::slliHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -846,7 +846,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::srlwHandler_(atlas::AtlasState* state)
+    Action* RviInsts::srlwHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -860,7 +860,7 @@ namespace atlas
     }
 
     template <typename XLEN, PrivMode PRIV_MODE>
-    ActionGroup* RviInsts::xretHandler_(atlas::AtlasState* state)
+    Action* RviInsts::xretHandler_(atlas::AtlasState* state, Action* action)
     {
         static_assert(PRIV_MODE == PrivMode::MACHINE || PRIV_MODE == PrivMode::SUPERVISOR);
 
@@ -966,7 +966,8 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::ecallHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action* RviInsts::ecallHandler_(atlas::AtlasState* state, Action* action)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1026,7 +1027,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RviInsts::ebreakHandler_(atlas::AtlasState* state)
+    Action* RviInsts::ebreakHandler_(atlas::AtlasState* state, Action* action)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1048,14 +1049,15 @@ namespace atlas
         THROW_BREAKPOINT;
     }
 
-    ActionGroup* RviInsts::fenceHandler_(atlas::AtlasState* state)
+    Action* RviInsts::fenceHandler_(atlas::AtlasState* state, Action*)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sfence_vmaHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action* RviInsts::sfence_vmaHandler_(atlas::AtlasState* state, Action* action)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1083,7 +1085,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::wfiHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RviInsts::wfiHandler_(atlas::AtlasState* state, Action* action)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1113,7 +1115,8 @@ namespace atlas
         {
             AtlasState::SimState* sim_state = state->getSimState();
             sim_state->sim_stopped = true;
-            return state->getStopSimActionGroup();
+            action->setNextActionGroup(state->getStopSimActionGroup());
+            return action;
         }
         return nullptr;
     }

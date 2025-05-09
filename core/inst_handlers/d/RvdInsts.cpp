@@ -132,7 +132,7 @@ namespace atlas
     template void RvdInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvdInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_d_wHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_d_wHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -141,7 +141,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fsub_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fsub_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -152,7 +152,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmv_x_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmv_x_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -160,7 +160,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_wu_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_wu_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -171,7 +171,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fnmsub_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fnmsub_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -185,7 +185,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fle_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fle_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -195,7 +195,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmul_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmul_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -206,7 +206,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fsqrt_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fsqrt_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -216,7 +216,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmadd_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmadd_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -230,7 +230,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fnmadd_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fnmadd_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -244,7 +244,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmin_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmin_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -256,7 +256,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fdiv_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fdiv_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -267,7 +267,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fsgnjx_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fsgnjx_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -278,7 +278,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmv_d_xHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmv_d_xHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -286,7 +286,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_w_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_w_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -297,7 +297,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_lu_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_lu_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -307,7 +307,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fsgnjn_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fsgnjn_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -318,7 +318,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fclass_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fclass_dHandler_(atlas::AtlasState* state, Action*)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
@@ -334,7 +334,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fadd_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fadd_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -345,7 +345,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmsub_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmsub_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<RV64>(state);
@@ -359,7 +359,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_d_sHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_d_sHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -368,7 +368,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fmax_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fmax_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -380,7 +380,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_s_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_s_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -390,7 +390,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_d_luHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_d_luHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -399,7 +399,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::feq_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::feq_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -409,7 +409,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fsgnj_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fsgnj_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -419,7 +419,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_d_lHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_d_lHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -428,7 +428,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_d_wuHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_d_wuHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -437,7 +437,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::flt_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::flt_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -447,7 +447,7 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* RvdInsts::fcvt_l_dHandler_(atlas::AtlasState* state)
+    template <typename XLEN> Action* RvdInsts::fcvt_l_dHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());

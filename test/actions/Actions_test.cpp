@@ -116,12 +116,15 @@ int main()
     //
     // Create another ActionGroup for Translation
     //
+    std::cout << "TEST: Add Translation ActionGroup\n";
+    std::cout << std::endl;
     atlas::ActionGroup translate{"translate"};
     TranslateUnit translate_unit;
     atlas::Action translate_action = atlas::Action::createAction<&TranslateUnit::translate_addr>(
         &translate_unit, translate_unit.getName().c_str());
     translate_action.addTag(atlas::ActionTags::INST_TRANSLATE_TAG);
     translate.addAction(translate_action);
+    // fetch -> translate -> decode
     fetch.setNextActionGroup(&translate);
     translate.setNextActionGroup(&decode);
     std::cout << fetch << std::endl;
@@ -130,6 +133,13 @@ int main()
     std::cout << execute << std::endl;
     std::cout << std::endl;
     runSim(&state, &fetch, 6, 30);
+
+    //
+    // Configure Execute for Vector Instruction Execution
+    //
+    const bool vector_wkld = true;
+    fetch_unit.loadWorkload(vector_wkld);
+    runSim(&state, &fetch, 6, 35);
 
     REPORT_ERROR;
     return ERROR_CODE;

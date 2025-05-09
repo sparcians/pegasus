@@ -27,9 +27,9 @@ namespace atlas
         }
 
       private:
-        ActionGroup* preExecute_(AtlasState* state) override;
-        ActionGroup* preException_(AtlasState* state) override;
-        ActionGroup* postExecute_(AtlasState* state) override;
+        Action* preExecute_(AtlasState*, Action*) override;
+        Action* preException_(AtlasState*, Action*) override;
+        Action* postExecute_(AtlasState*, Action*) override;
 
         uint64_t event_uid_ = 0;
         cosim::Event last_event_ = cosim::Event(event_uid_, cosim::Event::Type::INSTRUCTION);

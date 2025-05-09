@@ -71,7 +71,7 @@ namespace atlas
         }
 
       private:
-        ActionGroup* execute_(atlas::AtlasState* state);
+        Action* execute_(atlas::AtlasState* state, Action* action);
 
         ActionGroup execute_action_group_{"Execute"};
 

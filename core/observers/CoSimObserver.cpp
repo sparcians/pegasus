@@ -9,7 +9,7 @@ namespace atlas
 {
     CoSimObserver::CoSimObserver() {}
 
-    ActionGroup* CoSimObserver::preExecute_(AtlasState* state)
+    Action* CoSimObserver::preExecute_(AtlasState* state, Action*)
     {
         last_event_ = cosim::Event(++event_uid_, cosim::Event::Type::INSTRUCTION);
         last_event_.hart_id_ = state->getHartId();
@@ -53,9 +53,9 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* CoSimObserver::preException_(AtlasState* state)
+    Action* CoSimObserver::preException_(AtlasState* state, Action* action)
     {
-        preExecute(state);
+        preExecute(state, action);
 
         // Get value of source registers
         fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
@@ -63,7 +63,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
+    Action* CoSimObserver::postExecute_(AtlasState* state, Action*)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();

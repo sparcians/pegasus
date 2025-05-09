@@ -286,7 +286,8 @@ namespace atlas
     template class InstructionLogger<RV64>;
     template class InstructionLogger<RV32>;
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preExecute_(AtlasState* state)
+    template <typename XLEN>
+    Action* InstructionLogger<XLEN>::preExecute_(AtlasState* state, Action*)
     {
         pc_ = state->getPc();
         AtlasInstPtr inst = state->getCurrentInst();
@@ -332,9 +333,10 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::preException_(AtlasState* state)
+    template <typename XLEN>
+    Action* InstructionLogger<XLEN>::preException_(AtlasState* state, Action* action)
     {
-        preExecute(state);
+        preExecute(state, action);
 
         // Get value of source registers
         fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
@@ -342,7 +344,8 @@ namespace atlas
         return nullptr;
     }
 
-    template <typename XLEN> ActionGroup* InstructionLogger<XLEN>::postExecute_(AtlasState* state)
+    template <typename XLEN>
+    Action* InstructionLogger<XLEN>::postExecute_(AtlasState* state, Action*)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();

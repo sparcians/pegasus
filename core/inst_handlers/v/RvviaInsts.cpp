@@ -33,7 +33,8 @@ namespace atlas
     template void RvviaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvviaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename VLEN, typename SEW, typename OP> ActionGroup* viavv_helper(AtlasState* state)
+    template <typename VLEN, typename SEW, typename OP>
+    Action* viavv_helper(AtlasState* state, Action* action)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         VectorState* vector_state = state->getVectorState();
@@ -65,28 +66,29 @@ namespace atlas
         vector_state->setVSTART(index);
         if (index != vl)
         {
-            return state->getExecuteUnit()->getActionGroup();
+            action->setNextActionGroup(state->getExecuteUnit()->getActionGroup());
+            return action;
         }
         return nullptr;
     }
 
     template <typename XLEN, typename VLEN, template <typename> typename OP>
-    ActionGroup* RvviaInsts::viavv_handler_(AtlasState* state)
+    Action* RvviaInsts::viavv_handler_(AtlasState* state, Action* action)
     {
         VectorState* vector_state = state->getVectorState();
         switch (vector_state->getSEW())
         {
             case 8:
-                return viavv_helper<VLEN, uint8_t, OP<uint8_t>>(state);
+                return viavv_helper<VLEN, uint8_t, OP<uint8_t>>(state, action);
                 break;
             case 16:
-                return viavv_helper<VLEN, uint16_t, OP<uint16_t>>(state);
+                return viavv_helper<VLEN, uint16_t, OP<uint16_t>>(state, action);
                 break;
             case 32:
-                return viavv_helper<VLEN, uint32_t, OP<uint32_t>>(state);
+                return viavv_helper<VLEN, uint32_t, OP<uint32_t>>(state, action);
                 break;
             case 64:
-                return viavv_helper<VLEN, uint64_t, OP<uint64_t>>(state);
+                return viavv_helper<VLEN, uint64_t, OP<uint64_t>>(state, action);
                 break;
             default:
                 sparta_assert(false, "Invalid SEW value");
@@ -96,14 +98,14 @@ namespace atlas
     }
 
     template <typename XLEN, typename VLEN, template <typename> typename OP>
-    ActionGroup* RvviaInsts::viavx_handler_(AtlasState* state)
+    Action* RvviaInsts::viavx_handler_(AtlasState* state, Action*)
     {
         (void)state;
         return nullptr;
     }
 
     template <typename XLEN, typename VLEN, template <typename> typename OP>
-    ActionGroup* RvviaInsts::viavi_handler_(AtlasState* state)
+    Action* RvviaInsts::viavi_handler_(AtlasState* state, Action*)
     {
         (void)state;
         return nullptr;

@@ -289,7 +289,7 @@ namespace atlas
     template void RvaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename T> ActionGroup* RvaInsts::computeAddressHandler_(AtlasState* state)
+    template <typename T> Action* RvaInsts::computeAddressHandler_(AtlasState* state, Action*)
     {
         static_assert(std::is_same_v<T, RV64> || std::is_same_v<T, RV32>);
 
@@ -302,7 +302,7 @@ namespace atlas
     }
 
     template <typename RV, typename SIZE, typename OP, bool U>
-    ActionGroup* RvaInsts::amoHandler_(atlas::AtlasState* state)
+    Action* RvaInsts::amoHandler_(atlas::AtlasState* state, Action*)
     {
         static_assert(std::is_same_v<RV, RV64> || std::is_same_v<RV, RV32>);
         static_assert(std::is_same_v<SIZE, W> || std::is_same_v<SIZE, D>);
@@ -327,7 +327,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvaInsts::lr_d_64Handler_(atlas::AtlasState* state)
+    Action* RvaInsts::lr_d_64Handler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
@@ -337,7 +337,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvaInsts::lr_w_64Handler_(atlas::AtlasState* state)
+    Action* RvaInsts::lr_w_64Handler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
@@ -347,7 +347,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvaInsts::sc_d_64Handler_(atlas::AtlasState* state)
+    Action* RvaInsts::sc_d_64Handler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
@@ -357,7 +357,7 @@ namespace atlas
         return nullptr;
     }
 
-    ActionGroup* RvaInsts::sc_w_64Handler_(atlas::AtlasState* state)
+    Action* RvaInsts::sc_w_64Handler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();

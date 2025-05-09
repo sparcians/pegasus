@@ -40,7 +40,8 @@ namespace atlas
     {                                                                                              \
         auto exception_unit = state->getExceptionUnit();                                           \
         exception_unit->setUnhandledException(cause);                                              \
-        return exception_unit->getActionGroup();                                                   \
+        action->setNextActionGroup(exception_unit->getActionGroup());                              \
+        return action;                                                                             \
     }
 
 #define THROW_MISALIGNED_FETCH TRAP_IMPL(FaultCause::INST_ADDR_MISALIGNED)

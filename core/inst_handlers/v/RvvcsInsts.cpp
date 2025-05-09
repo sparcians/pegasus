@@ -33,7 +33,7 @@ namespace atlas
     template void RvvcsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvcsInsts::vsetvlHandler_(atlas::AtlasState* state)
+    Action* RvvcsInsts::vsetvlHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -57,7 +57,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvcsInsts::vsetvliHandler_(atlas::AtlasState* state)
+    Action* RvvcsInsts::vsetvliHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -81,7 +81,7 @@ namespace atlas
     }
 
     template <typename XLEN, typename VLEN>
-    ActionGroup* RvvcsInsts::vsetivliHandler_(atlas::AtlasState* state)
+    Action* RvvcsInsts::vsetivliHandler_(atlas::AtlasState* state, Action*)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();

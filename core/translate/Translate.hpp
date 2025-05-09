@@ -58,11 +58,11 @@ namespace atlas
         std::array<Action, N_MMU_MODES> rv32_store_translation_actions_;
 
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
-        ActionGroup* translate_(atlas::AtlasState* state);
+        Action* translate_(atlas::AtlasState* state, Action* action);
 
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
-        ActionGroup* setResult_(AtlasTranslationState* translation_state, const Addr paddr,
-                                const uint32_t level = 1);
+        Action* setResult_(AtlasTranslationState* translation_state, Action* action,
+                           const Addr paddr, const uint32_t level = 1);
 
         template <typename XLEN, MMUMode MODE, AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,

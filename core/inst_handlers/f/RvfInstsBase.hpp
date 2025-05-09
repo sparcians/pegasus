@@ -65,7 +65,7 @@ namespace atlas
             }
         }
 
-        template <typename XLEN> static ActionGroup* updateCsr(AtlasState* state)
+        template <typename XLEN> static Action* updateCsr(AtlasState* state)
         {
             // TODO: it would be nice to have field shift, then a single combined CSR write will
             // suffice.
@@ -107,7 +107,7 @@ namespace atlas
             return nullptr;
         }
 
-        template <typename XLEN> ActionGroup* computeAddressHandler(AtlasState* state)
+        template <typename XLEN> Action* computeAddressHandler(AtlasState* state, Action*)
         {
             static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
@@ -148,7 +148,7 @@ namespace atlas
             return num;
         }
 
-        template <typename SIZE, bool LOAD> ActionGroup* floatLsHandler(AtlasState* state)
+        template <typename SIZE, bool LOAD> Action* floatLsHandler(AtlasState* state, Action*)
         {
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
 

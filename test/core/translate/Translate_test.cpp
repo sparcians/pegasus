@@ -342,10 +342,11 @@ class AtlasTranslateTester
         translation_state->makeRequest(vaddr, access_size);
 
         // Execute translation
-        auto next_action_group =
-            translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL,
-                                        atlas::Translate::AccessType::INSTRUCTION>(state_);
-        EXPECT_EQUAL(next_action_group, nullptr);
+        atlas::Action dummy_action;
+        auto next_action = translate_unit_->translate_<atlas::RV64, atlas::MMUMode::BAREMETAL,
+                                                       atlas::Translate::AccessType::INSTRUCTION>(
+            state_, &dummy_action);
+        EXPECT_EQUAL(next_action, nullptr);
 
         // Get translation result
         const atlas::AtlasTranslationState::TranslationResult & result =
@@ -412,8 +413,11 @@ class AtlasTranslateTester
         std::cout << ", Access size: " << std::dec << access_size << std::endl;
 
         // Translate!
-        translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32,
-                                    atlas::Translate::AccessType::INSTRUCTION>(state_);
+        atlas::Action dummy_action;
+        auto next_action = translate_unit_->translate_<atlas::RV32, atlas::MMUMode::SV32,
+                                                       atlas::Translate::AccessType::INSTRUCTION>(
+            state_, &dummy_action);
+        EXPECT_EQUAL(next_action, nullptr);
 
         // Get translation result
         const atlas::AtlasTranslationState::TranslationResult & result =
