@@ -2,7 +2,7 @@
 #include "sparta/app/CommandLineSimulator.hpp"
 
 const char USAGE[] = "Usage:\n"
-                     "./atlas [-i inst limit] <workload>"
+                     "./atlas [-i inst limit] [--reg \"name value\"] [--interactive] [--spike-formatting] <workload>"
                      "\n";
 
 struct regOverride
@@ -53,9 +53,9 @@ int main(int argc, char** argv)
         app_opts.add_options()
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
+            ("reg", po::value<std::vector<regOverride>>()->multitoken(), "Override initial value of a register")
             ("interactive", "Enable interactive mode (IDE)")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
-            ("reg", po::value<std::vector<regOverride>>()->multitoken(), "Override initial value of a register")
             ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
 
         // Add any positional command-line options
@@ -103,9 +103,8 @@ int main(int argc, char** argv)
             auto & reg_overrides = vm["reg"].as<std::vector<regOverride>>();
             for (auto reg_override : reg_overrides)
             {
-                bool hex_value = reg_override.value.find("0x", 0) != std::string::npos;
                 const uint64_t reg_value =
-                    std::strtoull(reg_override.value.c_str(), nullptr, (hex_value ? 16 : 10));
+                    std::strtoull(reg_override.value.c_str(), nullptr, 0);
 
                 const bool MUST_EXIST = true;
                 sparta::Register* reg = state->findRegister(reg_override.name, MUST_EXIST);
