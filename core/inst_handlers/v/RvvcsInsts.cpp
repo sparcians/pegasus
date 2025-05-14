@@ -33,7 +33,7 @@ namespace atlas
     template void RvvcsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename VLEN>
-    Action* RvvcsInsts::vsetvlHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvvcsInsts::vsetvlHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -53,11 +53,11 @@ namespace atlas
                                               READ_INT_REG<XLEN>(state, inst->getRs1()));
             WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
         }
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, typename VLEN>
-    Action* RvvcsInsts::vsetvliHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvvcsInsts::vsetvliHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -77,11 +77,12 @@ namespace atlas
                                               READ_INT_REG<XLEN>(state, inst->getRs1()));
             WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
         }
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, typename VLEN>
-    Action* RvvcsInsts::vsetivliHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvvcsInsts::vsetivliHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -89,7 +90,7 @@ namespace atlas
         vector_state->vsetVTYPE<XLEN>(state, vtype_val);
         vector_state->vsetAVL<XLEN, VLEN>(state, false, inst->getAVL());
         WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_state->getVL());
-        return nullptr;
+        return ++action_it;
     }
 
 } // namespace atlas

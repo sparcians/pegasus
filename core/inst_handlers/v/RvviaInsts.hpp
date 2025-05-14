@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Action.hpp"
+
 #include <map>
 #include <string>
 #include <stdint.h>
@@ -7,8 +9,6 @@
 namespace atlas
 {
     class AtlasState;
-    class Action;
-    class ActionGroup;
 
     class RvviaInsts
     {
@@ -20,10 +20,10 @@ namespace atlas
 
       private:
         template <typename XLEN, typename VLEN, template <typename> typename OP>
-        Action* viavv_handler_(atlas::AtlasState* state, Action*);
+        Action::ItrType viavv_handler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN, typename VLEN, template <typename> typename OP>
-        Action* viavx_handler_(atlas::AtlasState* state, Action*);
+        Action::ItrType viavx_handler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN, typename VLEN, template <typename> typename OP>
-        Action* viavi_handler_(atlas::AtlasState* state, Action*);
+        Action::ItrType viavi_handler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

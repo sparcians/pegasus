@@ -92,7 +92,7 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrcHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrcHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -120,11 +120,12 @@ namespace atlas
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrciHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrciHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -149,11 +150,11 @@ namespace atlas
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrsHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrsHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -180,11 +181,12 @@ namespace atlas
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrsiHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrsiHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -210,11 +212,11 @@ namespace atlas
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrwHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -242,11 +244,12 @@ namespace atlas
 
         WRITE_CSR_REG<XLEN>(state, csr, rs1_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::csrrwiHandler_(atlas::AtlasState* state, Action* action)
+    Action::ItrType RvzicsrInsts::csrrwiHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -272,11 +275,12 @@ namespace atlas
 
         WRITE_CSR_REG<XLEN>(state, csr, imm);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
         const auto & ext_manager = state->getExtensionManager();
@@ -307,11 +311,12 @@ namespace atlas
 
         state->changeMavisContext();
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::mstatusUpdateHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvzicsrInsts::mstatusUpdateHandler_(atlas::AtlasState* state,
+                                                        Action::ItrType action_it)
     {
         // Non-shared fields of SSTATUS are read-only so writing the MSTATUS value to SSTATUS will
         // only write to the shared fields
@@ -343,11 +348,12 @@ namespace atlas
         state->changeMavisContext();
         state->changeMMUMode<XLEN>();
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::sstatusUpdateHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvzicsrInsts::sstatusUpdateHandler_(atlas::AtlasState* state,
+                                                        Action::ItrType action_it)
     {
         // Update shared fields only
         const XLEN sie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sie");
@@ -386,7 +392,7 @@ namespace atlas
         const XLEN sd_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sd");
         WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", sd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN> void set_softfloat_excpetionFlags(atlas::AtlasState* state)
@@ -399,7 +405,8 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action* RvzicsrInsts::fcsrUpdateHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvzicsrInsts::fcsrUpdateHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
     {
         // FFLAGS
         const XLEN nx_val = READ_CSR_FIELD<XLEN>(state, FCSR, "NX");
@@ -423,10 +430,11 @@ namespace atlas
 
         set_softfloat_excpetionFlags<XLEN>(state);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> Action* RvzicsrInsts::fflagsUpdateHandler_(AtlasState* state, Action*)
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::fflagsUpdateHandler_(AtlasState* state, Action::ItrType action_it)
     {
         // FCSR
         const XLEN nx_val = READ_CSR_FIELD<XLEN>(state, FFLAGS, "NX");
@@ -446,15 +454,16 @@ namespace atlas
 
         set_softfloat_excpetionFlags<XLEN>(state);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> Action* RvzicsrInsts::frmUpdateHandler_(AtlasState* state, Action*)
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::frmUpdateHandler_(AtlasState* state, Action::ItrType action_it)
     {
         // FCSR
         const XLEN frm_val = READ_CSR_REG<XLEN>(state, FRM);
         WRITE_CSR_FIELD<XLEN>(state, FCSR, "frm", frm_val);
 
-        return nullptr;
+        return ++action_it;
     }
 } // namespace atlas

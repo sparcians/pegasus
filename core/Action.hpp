@@ -42,6 +42,11 @@ namespace atlas
      */
     class Action
     {
+      public:
+        //! \brief TODO
+        typedef std::vector<Action>::iterator ItrType;
+
+      private:
         /*!
          * \brief ArgType template prototype
          * \param FuncT The function to pull arguments from
@@ -73,7 +78,7 @@ namespace atlas
          *     `ObjT`     -> `Foo`
          *     `RetT`     -> `Action *`
          */
-        template <class RetT, class ObjT> struct ArgType<RetT (ObjT::*)(AtlasState*, Action*)>
+        template <class RetT, class ObjT> struct ArgType<RetT (ObjT::*)(AtlasState*, ItrType)>
         {
         };
 
@@ -189,12 +194,12 @@ namespace atlas
          *
          * All arguments must be pointers
          */
-        Action* execute(AtlasState* state, Action* action) const
+        ItrType execute(AtlasState* state, ItrType action_it) const
         {
             // For speed, we will use assert (which gets compiled out on release)
             assert(method_);
 
-            return (*method_)(object_ptr_, state, action);
+            return (*method_)(object_ptr_, state, action_it);
         }
 
         //! \brief Set the name of this Action
@@ -239,11 +244,6 @@ namespace atlas
         //! \brief Get names of tags
         std::string getTagName() const { return ActionTagFactory::getTagName(tag_); }
 
-        void setNextActionGroup(ActionGroup* action_group) { next_action_group_ = action_group; }
-
-        //! \brief
-        ActionGroup* getNextActionGroup() const { return next_action_group_; }
-
       private:
         //! \brief The object pointer
         void* object_ptr_ = nullptr;
@@ -254,15 +254,15 @@ namespace atlas
 #endif
 
         //! \brief The internal method stub
-        template <class ObjT, Action* (ObjT::*TMethod)(AtlasState*, Action*)>
-        static Action* method_stub(void* object_ptr, AtlasState* state, Action* action)
+        template <class ObjT, ItrType (ObjT::*TMethod)(AtlasState*, ItrType)>
+        static ItrType method_stub(void* object_ptr, AtlasState* state, ItrType action_it)
         {
             ObjT* p = static_cast<ObjT*>(object_ptr);
 
-            return (p->*TMethod)(state, action);
+            return (p->*TMethod)(state, action_it);
         }
 
-        using stub_type = Action* (*)(void*, AtlasState*, Action*);
+        using stub_type = ItrType (*)(void*, AtlasState*, ItrType);
         stub_type method_ = nullptr;
 
         //! \brief Name of this Action
@@ -270,9 +270,6 @@ namespace atlas
 
         //! \brief ActionTag tags for this Action
         ActionTagType tag_ = 0;
-
-        //! \brief TODO
-        ActionGroup* next_action_group_;
     };
 
     // Operators for comparing aginst nullptr
@@ -291,8 +288,8 @@ namespace atlas
         return os;
     }
 
-    inline std::ostream & operator<<(std::ostream & os, const Action* action)
+    inline std::ostream & operator<<(std::ostream & os, const Action::ItrType action_it)
     {
-        return (os << *action);
+        return (os << *action_it);
     }
 } // namespace atlas

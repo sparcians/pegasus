@@ -44,33 +44,28 @@ namespace atlas
             enterLoop_(state);
         }
 
-        Action* preExecute(AtlasState* state, Action* action)
+        void preExecute(AtlasState* state)
         {
             if (break_on_pre_execute_)
             {
                 sendString_("pre_execute");
                 ActionGroup* fail_action_group = enterLoop_(state);
-                action->setNextActionGroup(fail_action_group);
-                return action;
+                throw ActionException(fail_action_group);
             }
-            return nullptr;
         }
 
-        Action* preException(AtlasState* state, Action* action)
+        void preException(AtlasState* state)
         {
             if (break_on_pre_exception_)
             {
                 sendString_("pre_exception");
                 ActionGroup* fail_action_group = enterLoop_(state);
-                action->setNextActionGroup(fail_action_group);
-                return action;
+                throw ActionException(fail_action_group);
             }
-            return nullptr;
         }
 
-        Action* postExecute(AtlasState* state, Action* action,
-                            const std::vector<Observer::MemRead> & mem_reads,
-                            const std::vector<Observer::MemWrite> & mem_writes)
+        void postExecute(AtlasState* state, const std::vector<Observer::MemRead> & mem_reads,
+                         const std::vector<Observer::MemWrite> & mem_writes)
         {
             if (break_on_post_execute_)
             {
@@ -78,10 +73,8 @@ namespace atlas
                 mem_writes_ = mem_writes;
                 sendString_("post_execute");
                 ActionGroup* fail_action_group = enterLoop_(state);
-                action->setNextActionGroup(fail_action_group);
-                return action;
+                throw ActionException(fail_action_group);
             }
-            return nullptr;
         }
 
         void onSimulationFinished(AtlasState* state)
@@ -793,20 +786,14 @@ namespace atlas
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 
-    Action* SimController::preExecute_(AtlasState* state, Action* action)
+    void SimController::preExecute_(AtlasState* state) { return endpoint_->preExecute(state); }
+
+    void SimController::postExecute_(AtlasState* state)
     {
-        return endpoint_->preExecute(state, action);
+        return endpoint_->postExecute(state, mem_reads_, mem_writes_);
     }
 
-    Action* SimController::postExecute_(AtlasState* state, Action* action)
-    {
-        return endpoint_->postExecute(state, action, mem_reads_, mem_writes_);
-    }
-
-    Action* SimController::preException_(AtlasState* state, Action* action)
-    {
-        return endpoint_->preException(state, action);
-    }
+    void SimController::preException_(AtlasState* state) { return endpoint_->preException(state); }
 
     void SimController::onSimulationFinished(AtlasState* state)
     {

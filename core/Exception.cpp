@@ -38,7 +38,8 @@ namespace atlas
         exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
     }
 
-    template <typename XLEN> Action* Exception::handleException_(atlas::AtlasState* state, Action*)
+    template <typename XLEN>
+    Action::ItrType Exception::handleException_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");
@@ -138,7 +139,7 @@ namespace atlas
         state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();
-        return nullptr;
+        return ++action_it;
     }
 
     uint64_t Exception::determineTrapValue_(const FaultCause & cause, AtlasState* state)

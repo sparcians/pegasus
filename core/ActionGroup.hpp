@@ -8,6 +8,19 @@
 
 namespace atlas
 {
+    class ActionException : public std::exception
+    {
+      public:
+        ActionException(ActionGroup* action_group) : action_group_(action_group) {}
+
+        ActionGroup* getActionGroup() { return action_group_; }
+
+        const char* what() const throw();
+
+      private:
+        ActionGroup* action_group_;
+    };
+
     /*
      * \class ActionGroup
      *
@@ -59,23 +72,16 @@ namespace atlas
         ActionGroup* execute(AtlasState* state)
         {
             fail_action_group_ = nullptr;
-            Action* next_action = nullptr;
-            for (auto action_it = action_group_.begin(); action_it != action_group_.end();)
+            Action::ItrType action_it = action_group_.begin();
+            while (action_it != action_group_.end())
             {
-                next_action = action_it->execute(state, &(*action_it));
-
-                // If next_action is not a nullptr, do something special
-                if (SPARTA_EXPECT_FALSE(next_action != nullptr))
+                try
                 {
-                    fail_action_group_ = next_action->getNextActionGroup();
-                    if (fail_action_group_ != nullptr)
-                    {
-                        return fail_action_group_;
-                    }
+                    action_it = action_it->execute(state, action_it);
                 }
-                else
+                catch (ActionException & action_excp)
                 {
-                    ++action_it;
+                    return action_excp.getActionGroup();
                 }
             }
 

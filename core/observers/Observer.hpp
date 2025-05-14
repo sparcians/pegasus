@@ -49,21 +49,15 @@ namespace atlas
             return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
         }
 
-        Action* preExecute(AtlasState* state, Action* action)
+        void preExecute(AtlasState* state)
         {
             reset_();
-            return preExecute_(state, action);
+            preExecute_(state);
         }
 
-        Action* postExecute(AtlasState* state, Action* action)
-        {
-            return postExecute_(state, action);
-        }
+        void postExecute(AtlasState* state) { postExecute_(state); }
 
-        Action* preException(AtlasState* state, Action* action)
-        {
-            return preException_(state, action);
-        }
+        void preException(AtlasState* state) { preException_(state); }
 
         virtual void stopSim() {}
 
@@ -102,11 +96,11 @@ namespace atlas
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
       private:
-        virtual Action* preExecute_(AtlasState*, Action*) { return nullptr; }
+        virtual void preExecute_(AtlasState*) {}
 
-        virtual Action* postExecute_(AtlasState*, Action*) { return nullptr; }
+        virtual void postExecute_(AtlasState*) {}
 
-        virtual Action* preException_(AtlasState*, Action*) { return nullptr; }
+        virtual void preException_(AtlasState*) {}
 
         void reset_()
         {

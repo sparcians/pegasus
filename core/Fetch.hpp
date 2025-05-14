@@ -32,11 +32,11 @@ namespace atlas
 
         void onBindTreeEarly_() override;
 
-        Action* fetch_(atlas::AtlasState* state, Action* action);
+        Action::ItrType fetch_(atlas::AtlasState* state, Action::ItrType action_it);
 
         ActionGroup fetch_action_group_{"Fetch"};
 
-        Action* decode_(atlas::AtlasState* state, Action* action);
+        Action::ItrType decode_(atlas::AtlasState* state, Action::ItrType action_it);
 
         ActionGroup decode_action_group_{"Decode"};
 

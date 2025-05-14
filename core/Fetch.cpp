@@ -42,7 +42,7 @@ namespace atlas
         execute_action_group->setNextActionGroup(&fetch_action_group_);
     }
 
-    Action* Fetch::fetch_(AtlasState* state, Action*)
+    Action::ItrType Fetch::fetch_(AtlasState* state, Action::ItrType action_it)
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
@@ -55,10 +55,10 @@ namespace atlas
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
-        return nullptr;
+        return ++action_it;
     }
 
-    Action* Fetch::decode_(AtlasState* state, Action* action)
+    Action::ItrType Fetch::decode_(AtlasState* state, Action::ItrType action_it)
     {
         // Get translation result
         const AtlasTranslationState::TranslationResult result =
@@ -120,8 +120,9 @@ namespace atlas
 
                 if ((opcode & 0x3) == 0x3)
                 {
-                    action->setNextActionGroup(fetch_action_group_.getNextActionGroup());
-                    return action;
+                    // FIXME: Go to inst translation with a throw
+                    // action->setNextActionGroup(fetch_action_group_.getNextActionGroup());
+                    // return action;
                 }
             }
             else
@@ -175,7 +176,7 @@ namespace atlas
             }
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
     void Fetch::advanceSim_()

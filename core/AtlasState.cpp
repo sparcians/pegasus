@@ -279,7 +279,7 @@ namespace atlas
         return uarch_files;
     }
 
-    Action* AtlasState::preExecute_(AtlasState* state, Action*)
+    Action::ItrType AtlasState::preExecute_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
         // and change the observers' preExecute() to take both AtlasState
@@ -287,7 +287,7 @@ namespace atlas
         //
         // class ObserverContainer {
         // public:
-        //     void preExecute(AtlasState* state, Action*) {
+        //     void preExecute(AtlasState* state, Action::ItrType action_it) {
         //         for (const auto & observer : observers_) {
         //             observer->preExecute(state, this);
         //         }
@@ -322,49 +322,34 @@ namespace atlas
         // AtlasState.hpp:
         //     std::unique_ptr<ObserverContainer> observer_container_;
 
-        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            next_action = observer->preExecute(state, next_action);
-            if (SPARTA_EXPECT_FALSE(next_action))
-            {
-                return next_action;
-            }
+            observer->preExecute(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    Action* AtlasState::postExecute_(AtlasState* state, Action*)
+    Action::ItrType AtlasState::postExecute_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: See comments in preExecute_()
-        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            next_action = observer->postExecute(state, next_action);
-            if (SPARTA_EXPECT_FALSE(next_action))
-            {
-                return next_action;
-            }
+            observer->postExecute(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    Action* AtlasState::preException_(AtlasState* state, Action*)
+    Action::ItrType AtlasState::preException_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: See comments in preExecute_()
-        Action* next_action = nullptr;
         for (const auto & observer : observers_)
         {
-            next_action = observer->preException(state, next_action);
-            if (SPARTA_EXPECT_FALSE(next_action))
-            {
-                return next_action;
-            }
+            observer->preException(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
     // Check all PC/reg/csr values against our cosim comparator,
@@ -633,7 +618,7 @@ namespace atlas
         }
     }
 
-    Action* AtlasState::incrementPc_(AtlasState*, Action*)
+    Action::ItrType AtlasState::incrementPc_(AtlasState*, Action::ItrType action_it)
     {
         // Set PC
         prev_pc_ = pc_;
@@ -643,7 +628,7 @@ namespace atlas
         // Increment instruction count
         ++sim_state_.inst_count;
 
-        return nullptr;
+        return ++action_it;
     }
 
     void AtlasState::enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,

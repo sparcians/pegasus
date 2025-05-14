@@ -22,9 +22,9 @@ namespace atlas
         void useSpikeFormatting();
 
       private:
-        Action* preExecute_(AtlasState*, Action*) override;
-        Action* postExecute_(AtlasState*, Action*) override;
-        Action* preException_(AtlasState*, Action*) override;
+        void preExecute_(AtlasState*) override;
+        void postExecute_(AtlasState*) override;
+        void preException_(AtlasState*) override;
 
         sparta::log::MessageSource & inst_logger_;
         std::shared_ptr<InstLogWriterBase> inst_log_writer_;

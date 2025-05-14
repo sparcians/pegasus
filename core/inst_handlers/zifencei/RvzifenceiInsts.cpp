@@ -30,12 +30,13 @@ namespace atlas
     template void RvzifenceiInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN>
-    Action* RvzifenceiInsts::fence_iHandler_(atlas::AtlasState* state, Action*)
+    Action::ItrType RvzifenceiInsts::fence_iHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
     {
         // TODO: Flush any TLBs and instruction/block caches in the future
         (void)state;
 
-        return nullptr;
+        return ++action_it;
     }
 
 } // namespace atlas
