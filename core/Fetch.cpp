@@ -120,9 +120,8 @@ namespace atlas
 
                 if ((opcode & 0x3) == 0x3)
                 {
-                    // FIXME: Go to inst translation with a throw
-                    // action->setNextActionGroup(fetch_action_group_.getNextActionGroup());
-                    // return action;
+                    // Go back to inst translate
+                    throw ActionException(fetch_action_group_.getNextActionGroup());
                 }
             }
             else
