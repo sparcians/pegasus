@@ -182,9 +182,8 @@ namespace atlas
     {
         // Run
         ActionGroup* next_action_group = &fetch_action_group_;
-        while (next_action_group && (next_action_group->hasTag(ActionTags::STOP_SIM_TAG) == false))
+        while (next_action_group)
         {
-            DLOG(next_action_group);
             next_action_group = next_action_group->execute(state_);
         }
         // End of sim
