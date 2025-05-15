@@ -29,11 +29,6 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
-namespace simdb
-{
-    class ObjectManager;
-}
-
 namespace atlas
 {
     class AtlasInst;
@@ -233,16 +228,6 @@ namespace atlas
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
 
-        // tuple: reg name, group num, reg id, initial expected val, initial actual val
-        using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
-
-        void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
-                                 std::shared_ptr<CoSimQuery> query,
-                                 const std::vector<RegisterInfo> & reg_info);
-
-        // Take register snapshot and send to the database (Atlas IDE backend support)
-        void snapshotAndSyncWithCoSim();
-
         // For standalone Atlas simulations, this method will be called
         // at the top of AtlasSim::run()
         void boot();
@@ -271,19 +256,6 @@ namespace atlas
 
             return ++action_it;
         }
-
-        // Check all PC/reg/csr values against our cosim comparator,
-        // and return the result code as follows:
-        //
-        //   success            0x00
-        //   exception          0x1x (x encodes the exception cause)
-        //   pc mismatch        0x2- (- means ignored)
-        //   reg val mismatch   0x3-
-        //   unimplemented inst 0x4-
-        //
-        // At the end of this method, all PC/reg/csr values will be
-        // synced with the other simulation ("truth").
-        int compareWithCoSimAndSync_();
 
         //! Hart ID
         const HartId hart_id_;
@@ -414,7 +386,6 @@ namespace atlas
         ActionGroup stop_sim_action_group_;
 
         // Co-simulation debug utils
-        std::shared_ptr<simdb::ObjectManager> cosim_db_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
