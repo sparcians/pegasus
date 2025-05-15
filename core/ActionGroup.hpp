@@ -158,8 +158,6 @@ namespace atlas
 
         ActionGroup* next_action_group_ = nullptr;
 
-        ActionGroup* fail_action_group_ = nullptr;
-
         //! Find first Action in the group with the specified Tag
         std::vector<Action>::iterator findActionWithTag_(const ActionTagType tag)
         {
