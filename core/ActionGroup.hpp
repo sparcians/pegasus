@@ -77,6 +77,9 @@ namespace atlas
             {
                 try
                 {
+                    // Actions are responsible for incrementing the Action iterator. If an Action
+                    // needs to be repeated, the Action iterator will be returned without being
+                    // incremented.
                     action_it = action_it->execute(state, action_it);
                 }
                 catch (ActionException & action_excp)

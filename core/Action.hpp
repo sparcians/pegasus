@@ -43,7 +43,7 @@ namespace atlas
     class Action
     {
       public:
-        //! \brief TODO
+        //! \brief Iterator type
         typedef std::vector<Action>::iterator ItrType;
 
       private:
