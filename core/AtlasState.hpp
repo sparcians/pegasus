@@ -239,22 +239,22 @@ namespace atlas
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
 
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
-        ActionGroup* preException_(AtlasState* state);
+        Action::ItrType preExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType postExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType preException_(AtlasState* state, Action::ItrType action_it);
 
         Action pre_execute_action_;
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        ActionGroup* stopSim_(AtlasState*)
+        Action::ItrType stopSim_(AtlasState*, Action::ItrType action_it)
         {
             for (auto & obs : observers_)
             {
                 obs->stopSim();
             }
 
-            return nullptr;
+            return ++action_it;
         }
 
         //! Hart ID
@@ -342,7 +342,7 @@ namespace atlas
         VectorState* vector_state_ptr_ = nullptr;
 
         // Increment PC Action
-        ActionGroup* incrementPc_(AtlasState* state);
+        Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
