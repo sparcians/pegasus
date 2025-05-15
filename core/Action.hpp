@@ -44,7 +44,7 @@ namespace atlas
     {
       public:
         //! \brief Iterator type
-        typedef std::vector<Action>::iterator ItrType;
+        using ItrType = std::vector<Action>::iterator;
 
       private:
         /*!

@@ -56,9 +56,7 @@ namespace atlas
       public:
         ActionGroup(const std::string & name) : name_(name) {}
 
-        ActionGroup(const std::string & name, const Action & action) :
-            name_(name),
-            action_group_{action}
+        ActionGroup(const std::string & name, const Action & action) : name_(name), actions_{action}
         {
         }
 
@@ -67,12 +65,13 @@ namespace atlas
 
         const std::string & getName() const { return name_; }
 
-        const std::vector<Action> & getActions() const { return action_group_; };
+        const std::vector<Action> & getActions() const { return actions_; };
 
         ActionGroup* execute(AtlasState* state)
         {
-            Action::ItrType action_it = action_group_.begin();
-            while (action_it != action_group_.end())
+            Action::ItrType action_it = actions_.begin();
+            const Action::ItrType end_it = actions_.end();
+            while (action_it != end_it)
             {
                 try
                 {
@@ -91,32 +90,29 @@ namespace atlas
         }
 
         //! Add Action to the back of the group
-        void addAction(const Action & action) { action_group_.emplace_back(action); }
+        void addAction(const Action & action) { actions_.emplace_back(action); }
 
         //! Add Action to the front of the group
-        void insertActionFront(const Action & action)
-        {
-            action_group_.insert(action_group_.begin(), action);
-        }
+        void insertActionFront(const Action & action) { actions_.insert(actions_.begin(), action); }
 
         //! Insert Action before the first Action in the group with the specified Tag
         void insertActionBefore(const Action & action, const ActionTagType tag)
         {
             auto action_it = findActionWithTag_(tag);
-            action_group_.insert(action_it, action);
+            actions_.insert(action_it, action);
         }
 
         //! Insert Action after the first Action in the group with the specified Tag
         void insertActionAfter(const Action & action, const ActionTagType tag)
         {
             auto action_it = findActionWithTag_(tag);
-            action_group_.insert(++action_it, action);
+            actions_.insert(++action_it, action);
         }
 
         //! Remove all Actions from the group with the specified Tag
         void removeAction(const ActionTagType tag)
         {
-            const auto num_erased = std::erase_if(action_group_, [tag](const Action & action)
+            const auto num_erased = std::erase_if(actions_, [tag](const Action & action)
                                                   { return action.hasTag(tag); });
             sparta_assert(num_erased != 0, "Failed to remove any Actions with tag "
                                                << ActionTagFactory::getTagName(tag).c_str()
@@ -143,9 +139,9 @@ namespace atlas
 
         bool hasTag(ActionTagType tag) const
         {
-            if (SPARTA_EXPECT_TRUE(action_group_.empty() == false))
+            if (SPARTA_EXPECT_TRUE(actions_.empty() == false))
             {
-                return action_group_.front().hasTag(tag);
+                return actions_.front().hasTag(tag);
             }
             return false;
         }
@@ -153,18 +149,18 @@ namespace atlas
       private:
         const std::string name_;
 
-        std::vector<Action> action_group_;
+        std::vector<Action> actions_;
 
         ActionGroup* next_action_group_ = nullptr;
 
         //! Find first Action in the group with the specified Tag
-        std::vector<Action>::iterator findActionWithTag_(const ActionTagType tag)
+        Action::ItrType findActionWithTag_(const ActionTagType tag)
         {
-            std::vector<Action>::iterator action_it =
-                std::find_if(action_group_.begin(), action_group_.end(),
+            Action::ItrType action_it =
+                std::find_if(actions_.begin(), actions_.end(),
                              [tag](const Action & action) { return action.hasTag(tag); });
 
-            sparta_assert(action_it != action_group_.end(),
+            sparta_assert(action_it != actions_.end(),
                           "Failed to find any Actions with tag "
                               << ActionTagFactory::getTagName(tag).c_str()
                               << " in the ActionGroup: " << this);
@@ -177,10 +173,10 @@ namespace atlas
 
     inline std::ostream & operator<<(std::ostream & os, const ActionGroup & action_group)
     {
-        const size_t size = action_group.action_group_.size();
+        const size_t size = action_group.actions_.size();
         for (size_t idx = 0; idx < size; ++idx)
         {
-            const Action & action = action_group.action_group_[idx];
+            const Action & action = action_group.actions_[idx];
             os << "[" << action << " (" << ActionTagFactory::getTagName(action.getTag())
                << ")] -> ";
         }
