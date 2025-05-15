@@ -15,7 +15,7 @@ namespace atlas
 
         ActionGroup* getActionGroup() { return action_group_; }
 
-        const char* what() const throw();
+        const char* what() const noexcept;
 
       private:
         ActionGroup* action_group_;
