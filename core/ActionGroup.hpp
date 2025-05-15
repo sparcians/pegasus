@@ -71,7 +71,6 @@ namespace atlas
 
         ActionGroup* execute(AtlasState* state)
         {
-            fail_action_group_ = nullptr;
             Action::ItrType action_it = action_group_.begin();
             while (action_it != action_group_.end())
             {
