@@ -47,7 +47,11 @@ while (action_it != end_it)
 }
 ----
 
-TODO: Action Exceptions
+There are some scenarios where Atlas needs to deviate from its standard execution path. While an Action Group is being
+executed, an Action can throw an Action Exception. When an Action Exception is thrown, the Action Group will break out
+of the loop executing its vector of Actions and return the Action Exception's Action Group. This feature supports the
+handling of exceptions that can occur during instruction execution like illegal instruction exceptions, page faults, and
+system calls.
 
 [source,c++]
 ----
@@ -68,8 +72,14 @@ while (action_it != end_it)
 }
 ----
 
-TODO: Action functions
+When an Action is executed, it will determine which Action will be executedi next. In most cases, the Action iterator will
+be incremented and returned to execute the next Action in the Action Group, or finish the execution of the current Action
+Group. To repeat the current Action, the Action will return the Action iterator without incrementing it. To interrupt the
+execution of the current Action Group and begin the execution of a new Action Group, the Action will throw an Action
+Exception.
 
+[source,c++]
+----
 Action::ItrType example_action(AtlasState* state, Action::ItrType action_it)
 {
     if (exception)
