@@ -286,7 +286,7 @@ namespace atlas
         //
         // class ObserverContainer {
         // public:
-        //     void preExecute(AtlasState* state, Action::ItrType action_it) {
+        //     void preExecute(AtlasState* state) {
         //         for (const auto & observer : observers_) {
         //             observer->preExecute(state, this);
         //         }
