@@ -980,61 +980,51 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action::ItrType RviInsts::ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        // Command
+        const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
 
-        // switch (STATE.prv)
-        //{
-        //   case PRV_U: throw trap_user_ecall();
-        //   case PRV_S:
-        //     if (STATE.v)
-        //       throw trap_virtual_supervisor_ecall();
-        //     else
-        //       throw trap_supervisor_ecall();
-        //   case PRV_M: throw trap_machine_ecall();
-        //   default: abort();
-        // }
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        // TODO: System call emulation support will eventually be supported by AtlasSystem
-        if (state->getAtlasSystem()->isSystemCallEmulationEnabled())
+        // Only support exit for now so we can end simulation
+        if (cmd == 93)
         {
-            // Command
-            const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
-
-            // Only support exit for now so we can end simulation
-            if (cmd == 93)
-            {
-                // Function arguments are a0-a6 (x10-x16)
-                const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
-                state->stopSim(exit_code);
-            }
-            else
-            {
-                sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
-            }
+            // Function arguments are a0-a6 (x10-x16)
+            const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
+            state->stopSim(exit_code);
         }
         else
         {
-            switch (state->getPrivMode())
-            {
-                case PrivMode::USER:
-                    THROW_USER_ECALL;
-                    break;
-                case PrivMode::SUPERVISOR:
-                    THROW_SUPERVISOR_ECALL;
-                    break;
-                case PrivMode::MACHINE:
-                    THROW_MACHINE_ECALL;
-                    break;
-                default:
-                    sparta_assert(false, "Invalid privilege mode!");
-                    break;
-            }
+            sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RviInsts::ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        // If system call emulation is enabled, replace the action
+        // with the emulator
+        if (SPARTA_EXPECT_FALSE(state->getAtlasSystem()->isSystemCallEmulationEnabled()))
+        {
+            *action_it = atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<XLEN>, RviInsts>(
+                nullptr, "ecall", ActionTags::EXECUTE_TAG);
+            return action_it->execute(state, action_it);
+        }
+
+        switch (state->getPrivMode())
+        {
+            case PrivMode::USER:
+                THROW_USER_ECALL;
+                break;
+            case PrivMode::SUPERVISOR:
+                THROW_SUPERVISOR_ECALL;
+                break;
+            case PrivMode::MACHINE:
+                THROW_MACHINE_ECALL;
+                break;
+            default:
+                sparta_assert(false, "Invalid privilege mode!");
+                break;
         }
 
         return ++action_it;

@@ -95,6 +95,9 @@ namespace atlas
         Action::ItrType xretHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType ecallHandlerSystemEmulation_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it);
         Action::ItrType ebreakHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         Action::ItrType fenceHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN>
