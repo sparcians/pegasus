@@ -16,6 +16,10 @@ def get_riscv_arch_tests(directory):
     regex = re.compile(r'rv[36][24]')
     tests = []
 
+    if not os.path.isdir(directory):
+        print(f"ERROR: RISC-V test directory '{directory}' not found")
+        sys.exit(1)
+
     for root, dirs, files in os.walk(directory):
         for file in files:
             if regex.match(file) and "dump" not in file:
@@ -80,7 +84,7 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the RISC-V architecture tests on Atlas")
-    parser.add_argument("directory", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
+    parser.add_argument("risc_tests", type=str, help="The directory of the built RISC-V architecture tests i.e. riscv-tests/isa")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (mi, si, ui, um, ua, uf, ud)")
     parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
     parser.add_argument("--v-only", action='store_true', help="Only run virtual tests (skip baremetal)")
@@ -104,7 +108,7 @@ def main():
             print("ERROR: Could not make output directory", output_dir, e)
             sys.exit(1)
 
-    tests = get_riscv_arch_tests(args.directory)
+    tests = get_riscv_arch_tests(args.risc_tests)
 
     if args.rv32_only and args.rv64_only:
         print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
@@ -160,6 +164,10 @@ def main():
     passing_tests = multiprocessing.Queue()
     failing_tests = multiprocessing.Queue()
     timeout_tests = multiprocessing.Queue()
+
+    if not os.path.isfile('./atlas'):
+        print("ERROR: ./atlas command not found.  Run inside sim directory")
+        sys.exit(1)
 
     run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir)
 
