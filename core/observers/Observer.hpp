@@ -4,6 +4,7 @@
 #include "core/Exception.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "include/AtlasUtils.hpp"
+#include "sparta/functional/Register.hpp"
 #include "sparta/memory/BlockingMemoryIFNode.hpp"
 
 namespace atlas
@@ -73,10 +74,16 @@ namespace atlas
             uint64_t prior_value;
         };
 
-        void registerReadWriteCallbacks(sparta::memory::BlockingMemoryIFNode* m)
+        void registerReadWriteCsrCallbacks(sparta::RegisterBase* reg)
         {
-            m->getPostWriteNotificationSource().REGISTER_FOR_THIS(postWrite_);
-            m->getReadNotificationSource().REGISTER_FOR_THIS(postRead_);
+            reg->getPostWriteNotificationSource().REGISTER_FOR_THIS(postCsrWrite_);
+            reg->getReadNotificationSource().REGISTER_FOR_THIS(postCsrRead_);
+        }
+
+        void registerReadWriteMemCallbacks(sparta::memory::BlockingMemoryIFNode* m)
+        {
+            m->getPostWriteNotificationSource().REGISTER_FOR_THIS(postMemWrite_);
+            m->getReadNotificationSource().REGISTER_FOR_THIS(postMemRead_);
         }
 
       protected:
@@ -114,7 +121,19 @@ namespace atlas
             mem_writes_.clear();
         }
 
-        void postWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
+        void postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,
+                           const sparta::Register::PostWriteAccess &)
+        {
+            std::cout << "Read!" << std::endl;
+        }
+
+        void postCsrRead_(const sparta::TreeNode &, const sparta::TreeNode &,
+                          const sparta::Register::ReadAccess &)
+        {
+            std::cout << "Write!" << std::endl;
+        }
+
+        void postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
         {
             uint64_t prior_val = 0;
             if (data.prior)
@@ -142,7 +161,7 @@ namespace atlas
             mem_writes_.push_back(mem_write);
         }
 
-        void postRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
+        void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
         {
             uint64_t val = 0;
             for (size_t i = 0; i < data.size; ++i)
