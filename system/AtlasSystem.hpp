@@ -40,9 +40,6 @@ namespace atlas
         // Constructor
         AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p);
 
-        // Is syscall emulation enabled?
-        bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
-
         // Get pointer to system memory
         sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
 
@@ -63,9 +60,6 @@ namespace atlas
 
         // Tree nodes
         std::vector<std::unique_ptr<sparta::TreeNode>> tree_nodes_;
-
-        // System call emulation
-        const bool syscall_emulation_enabled_;
 
         // Devices
         SimpleUART* uart_ = nullptr;
