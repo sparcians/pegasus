@@ -149,7 +149,7 @@ namespace atlas
     template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
 
     template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
-    ActionGroup* Translate::translate_(AtlasState* state)
+    Action::ItrType Translate::translate_(AtlasState* state, Action::ItrType action_it)
     {
         AtlasTranslationState* translation_state = nullptr;
         if constexpr (TYPE == AccessType::INSTRUCTION)
@@ -163,32 +163,34 @@ namespace atlas
             translation_state = inst->getTranslationState();
         }
 
-        const AtlasTranslationState::TranslationRequest request = translation_state->getRequest();
-        const XLEN vaddr = request.getVaddr();
+        // Get request from the request queue
+        const AtlasTranslationState::TranslationRequest & request = translation_state->getRequest();
+        const XLEN vaddr = request.isMisaligned()
+                               ? (request.getVAddr() + request.getMisalignedBytes())
+                               : request.getVAddr();
 
-        uint32_t level = getNumPageWalkLevels_<MODE>();
-
+        uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            translation_state->setResult(vaddr, request.getSize());
-            // Keep going
-            return nullptr;
+            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
         }
 
+        // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         ILOG("Translating " << HEX(vaddr, width));
 
-        // Page size is 4K for both RV32 and RV64
+        // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
         uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
         while (level > 0)
         {
+            // Read PTE from memory
             const auto indexed_level = level - 1;
-            const auto & vpn_field = extractVpnField_<MODE>(indexed_level);
+            const auto & vpn_field = translate_types::getVpnField<MODE>(indexed_level);
             const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
             PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
             DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << level << " Page Walk");
@@ -207,7 +209,7 @@ namespace atlas
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                const PageSize page_size = getPageSize_<MODE>(level);
+                const PageSize page_size = translate_types::getPageSize<MODE>(level);
                 DLOG("    Size: " << page_size);
 
                 // TODO: Check page alignment
@@ -234,6 +236,8 @@ namespace atlas
                     }
                 }
 
+                // If the SUM bit is set, Supervisor mode software is allowed to access User mode
+                // pages
                 const uint32_t sum_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sum");
                 if ((sum_val == 0) && (false == pte.isUserMode())
                     && (priv_mode != PrivMode::SUPERVISOR))
@@ -242,31 +246,34 @@ namespace atlas
                     break;
                 }
 
-                // TODO: Check access permissions more better...
-                if constexpr (TYPE == AccessType::STORE)
+                // Instruction (fetch) accesses must have execute permissions
+                if ((TYPE == AccessType::INSTRUCTION) && (false == pte.canExecute()))
                 {
-                    if (false == pte.canWrite())
-                    {
-                        DLOG("Translation FAILED! PTE does not have write access");
-                        THROW_STORE_AMO_PAGE_FAULT;
-                    }
-                }
-                else if constexpr (TYPE == AccessType::LOAD)
-                {
-                    if (false == pte.canRead())
-                    {
-                        DLOG("Translation FAILED! PTE does not have read access");
-                        THROW_LOAD_PAGE_FAULT;
-                    }
+                    DLOG("Translation FAILED! PTE does not have execute access");
+                    break;
                 }
 
+                // Load accesses must have read permissions
+                if ((TYPE == AccessType::LOAD) && (false == pte.canRead()))
+                {
+                    DLOG("Translation FAILED! PTE does not have read access");
+                    break;
+                }
+
+                // Store accesses must have write permissions
                 constexpr bool is_store = TYPE == AccessType::STORE;
+                if ((is_store) && (false == pte.canWrite()))
+                {
+                    DLOG("Translation FAILED! PTE does not have write access");
+                    break;
+                }
+
                 if (false == pte.isAccessable(is_store))
                 {
                     // See if we're required to update access bits in the PTE
                     if (READ_CSR_FIELD<XLEN>(state, MENVCFG, "adue"))
                     {
-                        if constexpr (TYPE == AccessType::STORE)
+                        if constexpr (is_store)
                         {
                             pte.setDirty();
                         }
@@ -280,23 +287,26 @@ namespace atlas
                         break;
                     }
                 }
-                const auto index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
-                const auto virt_base = vaddr >> PAGESHIFT;
+
+                // Translate!
+                const Addr index_bits = (vpn_field.msb - vpn_field.lsb + 1) * indexed_level;
+                const Addr virt_base = vaddr >> PAGESHIFT;
                 Addr paddr = (Addr(pte.getPpn()) | (virt_base & ((0b1 << index_bits) - 1)))
                              << PAGESHIFT;
-                paddr |= extractPageOffset_(vaddr); // Add the page offset
+                const Addr page_offset_mask =
+                    translate_types::getPageOffsetMask<MODE>(indexed_level);
+                paddr |= page_offset_mask & vaddr;
 
-                translation_state->setResult(paddr, request.getSize());
-                ILOG("   Result: " << HEX(paddr, width));
-
-                // Keep going
-                return nullptr;
+                // Set result and determine whether to keep going or performa translation again
+                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, paddr, level);
             }
-            // Read next level PTE
+            // If PTE is NOT a leaf, keep walking the page table
             else
             {
                 ppn = pte.getPpn() << PAGESHIFT;
             }
+
+            // Go to next level
             --level;
         }
 
@@ -305,7 +315,6 @@ namespace atlas
         switch (TYPE)
         {
             case AccessType::INSTRUCTION:
-                translation_state->clearRequest();
                 THROW_FETCH_PAGE_FAULT;
             case AccessType::STORE:
                 THROW_STORE_AMO_PAGE_FAULT;
@@ -314,51 +323,133 @@ namespace atlas
         }
     }
 
-    // Being pedantic
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
-        AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
+    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    Action::ItrType Translate::setResult_(AtlasTranslationState* translation_state,
+                                          Action::ItrType action_it, const Addr paddr,
+                                          const uint32_t level)
+    {
+        // Width in bytes for logging
+        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        ILOG("   Result: " << HEX(paddr, width));
 
-    template ActionGroup*
+        AtlasTranslationState::TranslationRequest & request = translation_state->getRequest();
+        const XLEN vaddr = request.isMisaligned()
+                               ? (request.getVAddr() + request.getMisalignedBytes())
+                               : request.getVAddr();
+        const size_t access_size =
+            request.isMisaligned() ? request.getMisalignedBytes() : request.getSize();
+
+        // Check if address is misaligned
+        const auto indexed_level = level - 1;
+        const Addr page_offset_mask = translate_types::getPageOffsetMask<MODE>(indexed_level);
+        const bool is_misaligned =
+            ((vaddr & page_offset_mask) + access_size) > (page_offset_mask + 1);
+        if (SPARTA_EXPECT_FALSE(is_misaligned))
+        {
+            sparta_assert(request.isMisaligned() == false);
+            const size_t num_misaligned_bytes = (vaddr + access_size) % (page_offset_mask + 1);
+            DLOG("Address is misaligned by " << std::dec << num_misaligned_bytes << "B!");
+
+            // Resolve first request
+            const size_t first_access_size = access_size - num_misaligned_bytes;
+            translation_state->setResult(paddr, first_access_size);
+
+            // Set request as misaligned
+            request.setMisaligned(num_misaligned_bytes);
+        }
+        else
+        {
+            translation_state->popRequest();
+            translation_state->setResult(paddr, access_size);
+        }
+
+        if (is_misaligned || (translation_state->getNumRequests() > 0))
+        {
+            // For misaligned accesses, there may be another translation request to resolve.
+            // In some scenarios, Fetch/Decode may decide to not translate the second
+            // so keep going and let Fetch/Decode determine if translation needs to be
+            // performed again.
+            switch (TYPE)
+            {
+                case AccessType::INSTRUCTION:
+                    sparta_assert(is_misaligned,
+                                  "Should never receive multiple translation requests from Fetch!");
+                    break;
+                case AccessType::STORE:
+                case AccessType::LOAD:
+                    // Execute the translate Action again
+                    return action_it;
+            }
+        }
+
+        // Keep going
+        return ++action_it;
+    }
+
+    // Being pedantic
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+        AtlasState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*,
+                                                                                 Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*,
+                                                                                  Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*,
+                                                                            Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*,
+                                                                             Action::ItrType);
+
+    template Action::ItrType
     Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
-        AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(AtlasState*);
-    template ActionGroup*
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(AtlasState*);
+        AtlasState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(AtlasState*,
+                                                                                 Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(AtlasState*,
+                                                                                  Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(AtlasState*,
+                                                                            Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(AtlasState*,
+                                                                             Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(AtlasState*,
+                                                                            Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(AtlasState*,
+                                                                             Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(AtlasState*,
+                                                                            Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(AtlasState*,
+                                                                             Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(AtlasState*,
+                                                                                   Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(AtlasState*,
+                                                                            Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(AtlasState*,
+                                                                             Action::ItrType);
 
 } // namespace atlas

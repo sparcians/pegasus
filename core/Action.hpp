@@ -42,6 +42,11 @@ namespace atlas
      */
     class Action
     {
+      public:
+        //! \brief Iterator type
+        using ItrType = std::vector<Action>::iterator;
+
+      private:
         /*!
          * \brief ArgType template prototype
          * \param FuncT The function to pull arguments from
@@ -73,7 +78,7 @@ namespace atlas
          *     `ObjT`     -> `Foo`
          *     `RetT`     -> `Action *`
          */
-        template <class RetT, class ObjT> struct ArgType<RetT (ObjT::*)(AtlasState*, Action*)>
+        template <class RetT, class ObjT> struct ArgType<RetT (ObjT::*)(AtlasState*, ItrType)>
         {
         };
 
@@ -189,12 +194,12 @@ namespace atlas
          *
          * All arguments must be pointers
          */
-        ActionGroup* execute(AtlasState* state) const
+        ItrType execute(AtlasState* state, ItrType action_it) const
         {
             // For speed, we will use assert (which gets compiled out on release)
             assert(method_);
 
-            return (*method_)(object_ptr_, state);
+            return (*method_)(object_ptr_, state, action_it);
         }
 
         //! \brief Set the name of this Action
@@ -249,15 +254,15 @@ namespace atlas
 #endif
 
         //! \brief The internal method stub
-        template <class ObjT, ActionGroup* (ObjT::*TMethod)(AtlasState*)>
-        static ActionGroup* method_stub(void* object_ptr, AtlasState* state)
+        template <class ObjT, ItrType (ObjT::*TMethod)(AtlasState*, ItrType)>
+        static ItrType method_stub(void* object_ptr, AtlasState* state, ItrType action_it)
         {
             ObjT* p = static_cast<ObjT*>(object_ptr);
 
-            return (p->*TMethod)(state);
+            return (p->*TMethod)(state, action_it);
         }
 
-        using stub_type = ActionGroup* (*)(void*, AtlasState*);
+        using stub_type = ItrType (*)(void*, AtlasState*, ItrType);
         stub_type method_ = nullptr;
 
         //! \brief Name of this Action
@@ -283,8 +288,8 @@ namespace atlas
         return os;
     }
 
-    inline std::ostream & operator<<(std::ostream & os, const Action* action)
+    inline std::ostream & operator<<(std::ostream & os, const Action::ItrType action_it)
     {
-        return (os << *action);
+        return (os << *action_it);
     }
 } // namespace atlas

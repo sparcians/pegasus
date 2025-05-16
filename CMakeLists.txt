@@ -46,6 +46,9 @@ else()
     -Woverloaded-virtual -Wmissing-field-initializers -pipe)
 endif()
 
+find_package (Boost 1.74.0 REQUIRED COMPONENTS program_options)
+message (STATUS "Using BOOST ${Boost_VERSION_STRING}")
+
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
@@ -101,6 +104,9 @@ endif()
 ################################################################################
 
 include_directories(${CMAKE_SOURCE_DIR})
+
+# Boost
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Mavis
 include_directories(SYSTEM mavis)

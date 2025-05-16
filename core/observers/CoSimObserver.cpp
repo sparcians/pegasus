@@ -9,7 +9,7 @@ namespace atlas
 {
     CoSimObserver::CoSimObserver() {}
 
-    ActionGroup* CoSimObserver::preExecute_(AtlasState* state)
+    void CoSimObserver::preExecute_(AtlasState* state)
     {
         last_event_ = cosim::Event(++event_uid_, cosim::Event::Type::INSTRUCTION);
         last_event_.hart_id_ = state->getHartId();
@@ -49,21 +49,18 @@ namespace atlas
 
             last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
         }
-
-        return nullptr;
     }
 
-    ActionGroup* CoSimObserver::preException_(AtlasState* state)
+    void CoSimObserver::preException_(AtlasState* state)
     {
         preExecute(state);
 
         // Get value of source registers
         fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
         interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
-        return nullptr;
     }
 
-    ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
+    void CoSimObserver::postExecute_(AtlasState* state)
     {
         // Get final value of destination registers
         AtlasInstPtr inst = state->getCurrentInst();
@@ -98,7 +95,5 @@ namespace atlas
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
         // TODO: next_priv_
-
-        return nullptr;
     }
 } // namespace atlas

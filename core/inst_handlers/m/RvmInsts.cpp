@@ -85,259 +85,267 @@ namespace atlas
     template void RvmInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
     template void RvmInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
-    template <typename XLEN> ActionGroup* RvmInsts::div_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::div_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         sreg_t lhs = sext(rs1_val, state->getXlen());
         sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), UINT64_MAX);
         }
         else if (lhs == INT64_MIN && rhs == -1)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), lhs);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), lhs);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext((lhs / rhs), state->getXlen()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext((lhs / rhs), state->getXlen()));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::divu_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::divu_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         reg_t lhs = zext(rs1_val, state->getXlen());
         reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext((lhs / rhs), state->getXlen()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext((lhs / rhs), state->getXlen()));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RvmInsts::divuw_64Handler_(atlas::AtlasState* state)
+    Action::ItrType RvmInsts::divuw_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using XLEN = uint64_t;
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         reg_t lhs = zext32(rs1_val);
         reg_t rhs = zext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(lhs / rhs));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(lhs / rhs));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RvmInsts::divw_64Handler_(atlas::AtlasState* state)
+    Action::ItrType RvmInsts::divw_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using XLEN = uint64_t;
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         sreg_t lhs = sext32(rs1_val);
         sreg_t rhs = sext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), UINT64_MAX);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), UINT64_MAX);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(lhs / rhs));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(lhs / rhs));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mul_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::mul_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         const XLEN rd_val = rs1_val * rs2_val;
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulh_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::mulh_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), mulh(rs1_val, rs2_val));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulh(rs1_val, rs2_val));
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(),
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
                                 sext32((sext32(rs1_val) * sext32(rs2_val)) >> 32));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulhsu_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::mulhsu_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), mulhsu(rs1_val, rs2_val));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulhsu(rs1_val, rs2_val));
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(),
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
                                 sext32((sext32(rs1_val) * reg_t((uint32_t)rs2_val)) >> 32));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::mulhu_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::mulhu_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), mulhu(rs1_val, rs2_val));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulhu(rs1_val, rs2_val));
         }
         else
         {
             WRITE_INT_REG<XLEN>(
-                state, insn->getRd(),
+                state, inst->getRd(),
                 sext32(((uint64_t)(uint32_t)rs1_val * (uint64_t)(uint32_t)rs2_val) >> 32));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RvmInsts::mulw_64Handler_(atlas::AtlasState* state)
+    Action::ItrType RvmInsts::mulw_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using XLEN = uint64_t;
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(rs1_val * rs2_val));
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(rs1_val * rs2_val));
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::rem_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::rem_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         sreg_t lhs = sext(rs1_val, state->getXlen());
         sreg_t rhs = sext(rs2_val, state->getXlen());
 
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), lhs);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), lhs);
         }
         else if (lhs == INT64_MIN && rhs == -1)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), 0);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), 0);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext((lhs % rhs), state->getXlen()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext((lhs % rhs), state->getXlen()));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RvmInsts::remu_64Handler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvmInsts::remu_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         reg_t lhs = zext(rs1_val, state->getXlen());
         reg_t rhs = zext(rs2_val, state->getXlen());
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext(lhs, state->getXlen()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext(lhs, state->getXlen()));
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext((lhs % rhs), state->getXlen()));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext((lhs % rhs), state->getXlen()));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RvmInsts::remuw_64Handler_(atlas::AtlasState* state)
+    Action::ItrType RvmInsts::remuw_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using XLEN = uint64_t;
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         reg_t lhs = zext32(rs1_val);
         reg_t rhs = zext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(lhs));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(lhs));
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(lhs % rhs));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(lhs % rhs));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RvmInsts::remw_64Handler_(atlas::AtlasState* state)
+    Action::ItrType RvmInsts::remw_64Handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using XLEN = uint64_t;
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         sreg_t lhs = sext32(rs1_val);
         sreg_t rhs = sext32(rs2_val);
         if (rhs == 0)
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), lhs);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), lhs);
         }
         else
         {
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), sext32(lhs % rhs));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), sext32(lhs % rhs));
         }
 
-        return nullptr;
+        return ++action_it;
     }
 } // namespace atlas

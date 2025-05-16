@@ -38,7 +38,8 @@ namespace atlas
         exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
     }
 
-    template <typename XLEN> ActionGroup* Exception::handleException_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType Exception::handleException_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");
@@ -60,11 +61,11 @@ namespace atlas
         if (priv_mode == PrivMode::SUPERVISOR)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, SEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
@@ -91,11 +92,11 @@ namespace atlas
         else if (priv_mode == PrivMode::MACHINE)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, MEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
@@ -135,10 +136,9 @@ namespace atlas
         state->setPrivMode(priv_mode, prev_virt_mode);
         state->changeMMUMode<XLEN>();
 
-        state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();
-        return nullptr;
+        return ++action_it;
     }
 
     uint64_t Exception::determineTrapValue_(const FaultCause & cause, AtlasState* state)
@@ -157,8 +157,7 @@ namespace atlas
             case FaultCause::STORE_AMO_PAGE_FAULT:
                 {
                     const auto vaddr_val =
-                        state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
-                    state->getCurrentInst()->getTranslationState()->clearRequest();
+                        state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
                 }
             case FaultCause::ILLEGAL_INST:

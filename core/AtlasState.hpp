@@ -29,11 +29,6 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
-namespace simdb
-{
-    class ObjectManager;
-}
-
 namespace atlas
 {
     class AtlasInst;
@@ -99,18 +94,7 @@ namespace atlas
 
         std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
-        void updateMavisContext()
-        {
-            const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            const std::string context_name =
-                std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
-            if (mavis_->hasContext(context_name) == false)
-            {
-                mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
-                                    mavis_uid_list_, {}, inclusions, {});
-            }
-            mavis_->switchContext(context_name);
-        }
+        void changeMavisContext();
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -123,6 +107,10 @@ namespace atlas
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
+
+        uint64_t getPcAlignment() const { return pc_alignment_; }
+
+        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
@@ -140,7 +128,7 @@ namespace atlas
 
         struct SimState
         {
-            uint64_t current_opcode = 0;
+            uint32_t current_opcode = 0;
             uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
@@ -240,16 +228,6 @@ namespace atlas
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
 
-        // tuple: reg name, group num, reg id, initial expected val, initial actual val
-        using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
-
-        void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
-                                 std::shared_ptr<CoSimQuery> query,
-                                 const std::vector<RegisterInfo> & reg_info);
-
-        // Take register snapshot and send to the database (Atlas IDE backend support)
-        void snapshotAndSyncWithCoSim();
-
         // For standalone Atlas simulations, this method will be called
         // at the top of AtlasSim::run()
         void boot();
@@ -261,36 +239,23 @@ namespace atlas
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
 
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
-        ActionGroup* preException_(AtlasState* state);
+        Action::ItrType preExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType postExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType preException_(AtlasState* state, Action::ItrType action_it);
 
         Action pre_execute_action_;
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        ActionGroup* stopSim_(AtlasState*)
+        Action::ItrType stopSim_(AtlasState*, Action::ItrType action_it)
         {
             for (auto & obs : observers_)
             {
                 obs->stopSim();
             }
 
-            return nullptr;
+            return ++action_it;
         }
-
-        // Check all PC/reg/csr values against our cosim comparator,
-        // and return the result code as follows:
-        //
-        //   success            0x00
-        //   exception          0x1x (x encodes the exception cause)
-        //   pc mismatch        0x2- (- means ignored)
-        //   reg val mismatch   0x3-
-        //   unimplemented inst 0x4-
-        //
-        // At the end of this method, all PC/reg/csr values will be
-        // synced with the other simulation ("truth").
-        int compareWithCoSimAndSync_();
 
         //! Hart ID
         const HartId hart_id_;
@@ -347,6 +312,20 @@ namespace atlas
         //! Previous pc
         Addr prev_pc_ = 0x0;
 
+        //! PC alignment
+        uint64_t pc_alignment_ = 4;
+
+        //! PC alignment
+        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
+
+        void setPcAlignment_(uint64_t pc_alignment)
+        {
+            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
+                          "Invalid PC alignment value! " << pc_alignment);
+            pc_alignment_ = pc_alignment;
+            pc_alignment_mask_ = ~(pc_alignment - 1);
+        }
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
@@ -363,7 +342,7 @@ namespace atlas
         VectorState* vector_state_ptr_ = nullptr;
 
         // Increment PC Action
-        ActionGroup* incrementPc_(AtlasState* state);
+        Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
@@ -407,7 +386,6 @@ namespace atlas
         ActionGroup stop_sim_action_group_;
 
         // Co-simulation debug utils
-        std::shared_ptr<simdb::ObjectManager> cosim_db_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;

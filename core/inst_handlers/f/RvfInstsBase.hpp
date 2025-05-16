@@ -65,7 +65,7 @@ namespace atlas
             }
         }
 
-        template <typename XLEN> static ActionGroup* updateCsr(AtlasState* state)
+        template <typename XLEN> static void updateCsr(AtlasState* state)
         {
             // TODO: it would be nice to have field shift, then a single combined CSR write will
             // suffice.
@@ -103,11 +103,10 @@ namespace atlas
             WRITE_CSR_FIELD<XLEN>(
                 state, FCSR, "NV",
                 static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_invalid) != 0));
-
-            return nullptr;
         }
 
-        template <typename XLEN> ActionGroup* computeAddressHandler(AtlasState* state)
+        template <typename XLEN>
+        Action::ItrType computeAddressHandler(AtlasState* state, Action::ItrType action_it)
         {
             static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
@@ -116,7 +115,7 @@ namespace atlas
             const XLEN imm = inst->getImmediate();
             const XLEN vaddr = rs1_val + imm;
             inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
-            return nullptr;
+            return ++action_it;
         }
 
         // Check and convert a narrower SIZE floating point value from wider floating point
@@ -148,12 +147,14 @@ namespace atlas
             return num;
         }
 
-        template <typename SIZE, bool LOAD> ActionGroup* floatLsHandler(AtlasState* state)
+        template <typename SIZE, bool LOAD>
+        Action::ItrType floatLsHandler(AtlasState* state, Action::ItrType action_it)
         {
             static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
 
             const AtlasInstPtr & inst = state->getCurrentInst();
-            const Addr paddr = inst->getTranslationState()->getResult().getPaddr();
+            const Addr paddr = inst->getTranslationState()->getResult().getPAddr();
+            inst->getTranslationState()->popResult();
 
             if constexpr (LOAD)
             {
@@ -165,7 +166,7 @@ namespace atlas
             {
                 state->writeMemory<SIZE>(paddr, READ_FP_REG<RV64>(state, inst->getRs2()));
             }
-            return nullptr;
+            return ++action_it;
         }
 
       private:

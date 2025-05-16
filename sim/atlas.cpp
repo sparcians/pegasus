@@ -1,9 +1,26 @@
 #include "sim/AtlasSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] = "Usage:\n"
-                     "./atlas [-i inst limit] <workload>"
-                     "\n";
+const char USAGE[] =
+    "Usage:\n"
+    "./atlas [-i inst limit] [--reg \"name value\"] [--interactive] [--spike-formatting] <workload>"
+    "\n";
+
+struct regOverride
+{
+    std::string name;
+    std::string value;
+};
+
+inline std::ostream & operator<<(std::ostream & os, regOverride const & v)
+{
+    return os << "regOverride {" << v.name << ", " << v.value << "}";
+}
+
+static inline std::istream & operator>>(std::istream & is, regOverride & into)
+{
+    return is >> std::skipws >> into.name >> into.value;
+}
 
 int main(int argc, char** argv)
 {
@@ -37,6 +54,7 @@ int main(int argc, char** argv)
         app_opts.add_options()
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
+            ("reg", po::value<std::vector<regOverride>>()->multitoken(), "Override initial value of a register")
             ("interactive", "Enable interactive mode (IDE)")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
             ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
@@ -77,6 +95,29 @@ int main(int argc, char** argv)
         if (vm.count("spike-formatting") > 0)
         {
             sim.useSpikeFormatting();
+        }
+
+        const atlas::HartId hart_id = 0;
+        atlas::AtlasState* state = sim.getAtlasState(hart_id);
+        if (vm.count("reg"))
+        {
+            auto & reg_overrides = vm["reg"].as<std::vector<regOverride>>();
+            for (auto reg_override : reg_overrides)
+            {
+                const uint64_t reg_value = std::strtoull(reg_override.value.c_str(), nullptr, 0);
+
+                const bool MUST_EXIST = true;
+                sparta::Register* reg = state->findRegister(reg_override.name, MUST_EXIST);
+                if (state->getXlen() == 64)
+                {
+                    reg->dmiWrite<uint64_t>(reg_value);
+                }
+                else
+                {
+                    reg->dmiWrite<uint32_t>(reg_value);
+                }
+                std::cout << reg << std::endl;
+            }
         }
 
         cls.runSimulator(&sim);

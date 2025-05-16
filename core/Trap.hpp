@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ActionGroup.hpp"
+
 #include <cstdint>
 #include <iostream>
 
@@ -40,7 +42,7 @@ namespace atlas
     {                                                                                              \
         auto exception_unit = state->getExceptionUnit();                                           \
         exception_unit->setUnhandledException(cause);                                              \
-        return exception_unit->getActionGroup();                                                   \
+        throw ActionException(exception_unit->getActionGroup());                                   \
     }
 
 #define THROW_MISALIGNED_FETCH TRAP_IMPL(FaultCause::INST_ADDR_MISALIGNED)

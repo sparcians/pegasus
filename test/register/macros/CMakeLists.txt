@@ -1,7 +1,7 @@
 project(AtlasRegisterMacros_Test)
 
 add_executable(AtlasRegisterMacros_test RegisterMacros_test.cpp)
-target_link_libraries(AtlasRegisterMacros_test atlassim atlascore atlasinsts softfloat atlassys ${SPARTA_LIBS} mavis)
+target_link_libraries(AtlasRegisterMacros_test atlassim atlascore atlasinsts softfloat atlassys ${SPARTA_LIBS} mavis boost_json)
 
 atlas_named_test(RegisterMacros_test_run AtlasRegisterMacros_test)
 

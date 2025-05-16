@@ -42,10 +42,7 @@ namespace atlas
 
         bool hasImmediate() const { return opcode_info_->hasImmediate(); }
 
-        uint64_t getImmediate() const
-        {
-            return immediate_value_;
-        }
+        uint64_t getImmediate() const { return immediate_value_; }
 
         bool hasCsr() const
         {
@@ -90,6 +87,12 @@ namespace atlas
             return rd_info_->field_value;
         }
 
+        uint32_t getRd2() const
+        {
+            sparta_assert(rd_info_, "Operand RD2 is a nullptr! " << *this);
+            return rd2_info_->field_value;
+        }
+
         uint64_t getRM() const
         {
             try
@@ -132,6 +135,12 @@ namespace atlas
             return rd_reg_;
         }
 
+        sparta::Register* getRd2Reg() const
+        {
+            sparta_assert(rd2_reg_, "Operand RD2 is a nullptr! " << *this);
+            return rd2_reg_;
+        }
+
         bool hasRs1() const { return rs1_reg_ != nullptr; }
 
         bool hasRs2() const { return rs2_reg_ != nullptr; }
@@ -139,6 +148,8 @@ namespace atlas
         bool hasRs3() const { return rs3_reg_ != nullptr; }
 
         bool hasRd() const { return rd_reg_ != nullptr; }
+
+        bool hasRd2() const { return rd2_reg_ != nullptr; }
 
         ActionGroup* getActionGroup() { return &inst_action_group_; }
 
@@ -176,10 +187,12 @@ namespace atlas
         const mavis::OperandInfo::Element* rs2_info_;
         const mavis::OperandInfo::Element* rs3_info_;
         const mavis::OperandInfo::Element* rd_info_;
+        const mavis::OperandInfo::Element* rd2_info_;
         sparta::Register* rs1_reg_;
         sparta::Register* rs2_reg_;
         sparta::Register* rs3_reg_;
         sparta::Register* rd_reg_;
+        sparta::Register* rd2_reg_;
 
         // Translation state for load/store instructions
         AtlasTranslationState translation_state_;

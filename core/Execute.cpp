@@ -13,7 +13,8 @@
 #include "core/inst_handlers/m/RvmInsts.hpp"
 #include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
 #include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
-#include "core/inst_handlers/v/RvvInsts.hpp"
+#include "core/inst_handlers/v/RvvcsInsts.hpp"
+#include "core/inst_handlers/v/RvviaInsts.hpp"
 
 namespace atlas
 {
@@ -34,7 +35,8 @@ namespace atlas
         RvdInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzicsrInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        RvvInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvcsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvviaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -44,7 +46,8 @@ namespace atlas
         RvdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvvInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvcsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvviaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
@@ -70,7 +73,7 @@ namespace atlas
     template const Execute::InstHandlersMap*
     Execute::getInstComputeAddressHandlersMap<RV32>() const;
 
-    ActionGroup* Execute::execute_(AtlasState* state)
+    Action::ItrType Execute::execute_(AtlasState* state, Action::ItrType action_it)
     {
         // Connect instruction to Fetch
         const auto inst = state->getCurrentInst();
@@ -110,6 +113,7 @@ namespace atlas
         ILOG(inst);
 
         // Execute the instruction
-        return inst_action_group;
+        execute_action_group_.setNextActionGroup(inst_action_group);
+        return ++action_it;
     }
 } // namespace atlas

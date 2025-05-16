@@ -22,10 +22,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
                                             RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu",
-                atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
-                                            RviInsts>(nullptr, "lbu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                "lbu", atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
+                                                   RviInsts>(nullptr, "lbu",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "ld",
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint64_t>,
@@ -72,10 +71,9 @@ namespace atlas
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
                                             RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu",
-                atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
-                                            RviInsts>(nullptr, "lbu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                "lbu", atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
+                                                   RviInsts>(nullptr, "lbu",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lh",
                 atlas::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint16_t>,
@@ -508,359 +506,374 @@ namespace atlas
     template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename OPERATOR>
-    ActionGroup* RviInsts::integer_reg_regHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::integer_reg_regHandler_(atlas::AtlasState* state,
+                                                      Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         const XLEN rd_val = OPERATOR()(rs1_val, rs2_val);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::addwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::addwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + rs2_val));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::subwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::subwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val - rs2_val));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, class OPERATOR>
-    ActionGroup* RviInsts::integer_reg_immHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::integer_reg_immHandler_(atlas::AtlasState* state,
+                                                      Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const uint64_t imm = insn->getImmediate();
+        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const uint64_t imm = inst->getImmediate();
         const uint64_t rd_val = OPERATOR()(rs1_val, imm);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::addiwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::addiwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t imm = insn->getImmediate();
-        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
+        const uint64_t imm = inst->getImmediate();
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = ((int64_t)(int32_t)(rs1_val + imm));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::mvHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::mvHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rs1_val);
+        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rs1_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::nopHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::nopHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         (void)state;
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, typename SIZE>
-    ActionGroup* RviInsts::computeAddressHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::computeAddressHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN imm = insn->getImmediate();
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN imm = inst->getImmediate();
         const XLEN vaddr = rs1_val + imm;
-        insn->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
-        return nullptr;
+        inst->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
+        return ++action_it;
     }
 
     template <typename XLEN, typename SIZE, bool SIGN_EXTEND>
-    ActionGroup* RviInsts::loadHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::loadHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t paddr = insn->getTranslationState()->getResult().getPaddr();
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         if constexpr (SIGN_EXTEND)
         {
             const XLEN rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(paddr));
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
         else
         {
             const XLEN rd_val = state->readMemory<SIZE>(paddr);
-            WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, typename SIZE>
-    ActionGroup* RviInsts::storeHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::storeHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const uint64_t rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
-        const uint64_t paddr = insn->getTranslationState()->getResult().getPaddr();
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        inst->getTranslationState()->popResult();
         state->writeMemory<SIZE>(paddr, rs2_val);
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, typename OPERATOR>
-    ActionGroup* RviInsts::branchHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::branchHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         if (OPERATOR()(rs1_val, rs2_val))
         {
             const XLEN pc = state->getPc();
-            const XLEN imm = insn->getImmediate();
+            const XLEN imm = inst->getImmediate();
             const XLEN branch_target = pc + imm;
             state->setNextPc(branch_target);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::jalHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::jalHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        XLEN rd_val = state->getPc() + insn->getOpcodeSize();
-        const XLEN imm = insn->getImmediate();
+        XLEN rd_val = state->getPc() + inst->getOpcodeSize();
+        const XLEN imm = inst->getImmediate();
         const XLEN jump_target = state->getPc() + imm;
         state->setNextPc(jump_target);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::jalrHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::jalrHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        XLEN rd_val = state->getPc() + insn->getOpcodeSize();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN imm = insn->getImmediate();
+        XLEN rd_val = state->getPc() + inst->getOpcodeSize();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN imm = inst->getImmediate();
         const XLEN jump_target = (rs1_val + imm) & ~std::make_signed_t<XLEN>(1);
         state->setNextPc(jump_target);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::liHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::liHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t imm = insn->getImmediate();
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), imm);
+        const uint64_t imm = inst->getImmediate();
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), imm);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::luiHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::luiHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t imm = insn->getImmediate();
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), imm);
+        const uint64_t imm = inst->getImmediate();
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), imm);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::auipcHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::auipcHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN imm = insn->getImmediate();
+        const XLEN imm = inst->getImmediate();
         const XLEN pc = state->getPc();
         const XLEN rd_val = ((std::make_signed_t<XLEN>)(imm + pc) << (64 - (state->getXlen())))
                             >> (64 - (state->getXlen()));
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::srlHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::srlHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         const XLEN rd_val = (XLEN)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::srliwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::srliwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t shift_amount = inst->getImmediate() & (state->getXlen() - 1);
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::sllHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::sllHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         const uint64_t rd_val = rs1_val << (rs2_val & (state->getXlen() - 1));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sraiHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::sraiHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using SXLEN = std::make_signed_t<XLEN>;
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
         // require(SHAMT < state->getXlen());
-        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN shift_amount = insn->getImmediate() & (state->getXlen() - 1);
-        const SXLEN rd_val =  (SXLEN)(rs1_val >> shift_amount);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN shift_amount = inst->getImmediate() & (state->getXlen() - 1);
+        const SXLEN rd_val = (SXLEN)(rs1_val >> shift_amount);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::srawHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::srawHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const int32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const int32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::srliHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::srliHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
         // require(SHAMT < state->getXlen());
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN shift_amount = inst->getImmediate() & (state->getXlen() - 1);
         const XLEN rd_val = (XLEN)(rs1_val >> shift_amount);
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::sllwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::sllwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint32_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint32_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         // Casting from int32_t to int64_t will sign extend the value
         const int64_t rd_val = (int64_t)(int32_t)(rs1_val << (rs2_val & 0x1F));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::slliwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::slliwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t shift_amount = insn->getImmediate() & 0x1F;
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t shift_amount = inst->getImmediate() & 0x1F;
         // Casting from int32_t to int64_t will sign extend the value
         const int64_t rd_val = (int64_t)(int32_t)(rs1_val << shift_amount);
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::sraiwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::sraiwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const int32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const int32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t shift_amount = inst->getImmediate() & (state->getXlen() - 1);
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sraHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::sraHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using SXLEN = std::make_signed_t<XLEN>;
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, insn->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, insn->getRs2());
+        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         const XLEN rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<XLEN>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::slliHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::slliHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
         // require(SHAMT < state->getXlen());
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t shift_amount = insn->getImmediate() & (state->getXlen() - 1);
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t shift_amount = inst->getImmediate() & (state->getXlen() - 1);
         const uint64_t rd_val = rs1_val << shift_amount;
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::srlwHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::srlwHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr & insn = state->getCurrentInst();
+        const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, insn->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, insn->getRs2());
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
+        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
-        WRITE_INT_REG<uint64_t>(state, insn->getRd(), rd_val);
+        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN, PrivMode PRIV_MODE>
-    ActionGroup* RviInsts::xretHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::xretHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         static_assert(PRIV_MODE == PrivMode::MACHINE || PRIV_MODE == PrivMode::SUPERVISOR);
 
@@ -876,7 +889,7 @@ namespace atlas
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC));
+            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC) & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
@@ -930,7 +943,7 @@ namespace atlas
             }
 
             // Update the PC with SEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC));
+            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC) & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the SPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
@@ -963,10 +976,11 @@ namespace atlas
         // Update the MMU Mode from SATP and MSTATUS
         state->changeMMUMode<XLEN>();
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::ecallHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1023,10 +1037,10 @@ namespace atlas
             }
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* RviInsts::ebreakHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::ebreakHandler_(atlas::AtlasState* state, Action::ItrType)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1048,14 +1062,16 @@ namespace atlas
         THROW_BREAKPOINT;
     }
 
-    ActionGroup* RviInsts::fenceHandler_(atlas::AtlasState* state)
+    Action::ItrType RviInsts::fenceHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         state->getCurrentInst()->markUnimplemented();
         (void)state;
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::sfence_vmaHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::sfence_vmaHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1080,10 +1096,11 @@ namespace atlas
             THROW_ILLEGAL_INST;
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    template <typename XLEN> ActionGroup* RviInsts::wfiHandler_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RviInsts::wfiHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         ///////////////////////////////////////////////////////////////////////
         // START OF SPIKE CODE
@@ -1113,9 +1130,10 @@ namespace atlas
         {
             AtlasState::SimState* sim_state = state->getSimState();
             sim_state->sim_stopped = true;
-            return state->getStopSimActionGroup();
+            ActionGroup* inst_action_group = state->getCurrentInst()->getActionGroup();
+            inst_action_group->setNextActionGroup(state->getStopSimActionGroup());
         }
-        return nullptr;
+        return ++action_it;
     }
 
 } // namespace atlas
