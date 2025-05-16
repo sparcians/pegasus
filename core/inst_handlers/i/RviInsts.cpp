@@ -103,7 +103,8 @@ namespace atlas
     }
 
     template <typename XLEN>
-    void RviInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
+    void RviInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers,
+                                   bool enable_syscall_emulation)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -164,9 +165,17 @@ namespace atlas
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
-                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            if (enable_syscall_emulation)
+            {
+                inst_handlers.emplace(
+                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            }
+            else {
+                inst_handlers.emplace(
+                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            }
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -502,8 +511,8 @@ namespace atlas
 
     template void RviInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
     template void RviInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
-    template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
-    template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
+    template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &, bool);
+    template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &, bool);
 
     template <typename XLEN, typename OPERATOR>
     Action::ItrType RviInsts::integer_reg_regHandler_(atlas::AtlasState* state,
@@ -982,35 +991,29 @@ namespace atlas
     template <typename XLEN>
     Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        // Command
-        const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
+        // x10 -> x16 are the function arguments.
+        // x17 holds the system call number, first item on the stack
+        const auto cmd = READ_INT_REG<XLEN>(state, 17);
+        SystemCallEmulator::SystemCallStack call_stack = {
+            cmd,
+            READ_INT_REG<XLEN>(state, 10),
+            READ_INT_REG<XLEN>(state, 11),
+            READ_INT_REG<XLEN>(state, 12),
+            READ_INT_REG<XLEN>(state, 13),
+            READ_INT_REG<XLEN>(state, 14),
+            READ_INT_REG<XLEN>(state, 15),
+            READ_INT_REG<XLEN>(state, 16)
+        };
 
-        // Only support exit for now so we can end simulation
-        if (cmd == 93)
-        {
-            // Function arguments are a0-a6 (x10-x16)
-            const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
-            state->stopSim(exit_code);
-        }
-        else
-        {
-            sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
-        }
+        auto ret_code = static_cast<XLEN>(state->emulateSystemCall(call_stack));
+        WRITE_INT_REG<XLEN>(state, 10, ret_code);
+
         return ++action_it;
     }
 
     template <typename XLEN>
     Action::ItrType RviInsts::ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        // If system call emulation is enabled, replace the action
-        // with the emulator
-        if (SPARTA_EXPECT_FALSE(state->getAtlasSystem()->isSystemCallEmulationEnabled()))
-        {
-            *action_it = atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<XLEN>, RviInsts>(
-                nullptr, "ecall", ActionTags::EXECUTE_TAG);
-            return action_it->execute(state, action_it);
-        }
-
         switch (state->getPrivMode())
         {
             case PrivMode::USER:

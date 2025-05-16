@@ -76,6 +76,11 @@ namespace atlas
         tns_to_delete_.emplace_back(
             new sparta::ResourceTreeNode(root_tn, "system", "Atlas System", &system_factory_));
 
+        // top.system_call_emulator
+        tns_to_delete_.emplace_back(
+            new sparta::ResourceTreeNode(root_tn, "system_call_emulator", "System Call Emulator",
+                                         &sys_call_factory_));
+
         // top.core
         sparta::TreeNode* core_tn = nullptr;
         const std::string core_name = "core0";
@@ -115,7 +120,11 @@ namespace atlas
 
     void AtlasSim::bindTree_()
     {
+
+        // Atlas System (shared by all harts)
         system_ = getRoot()->getChild("system")->getResourceAs<atlas::AtlasSystem>();
+        SystemCallEmulator *system_call_emulator =
+            getRoot()->getChild("system_call_emulator")->getResourceAs<atlas::SystemCallEmulator>();
 
         const uint32_t num_harts = 1;
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
@@ -126,7 +135,16 @@ namespace atlas
             // Give AtlasState a pointer to AtlasSystem for accessing memory
             AtlasState* state = state_.back();
             state->setAtlasSystem(system_);
+            state->setSystemCallEmulator(system_call_emulator);
             state->setPc(system_->getStartingPc());
         }
     }
+
+    void AtlasSim::endSimulation(int64_t exit_code)
+    {
+        for (auto state : state_) {
+            state->stopSim(exit_code);
+        }
+    }
+
 } // namespace atlas

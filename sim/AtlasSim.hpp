@@ -27,6 +27,8 @@ namespace atlas
 
         void useSpikeFormatting();
 
+        void endSimulation(int64_t exit_code);
+
       private:
         void buildTree_() override;
         void configureTree_() override;
@@ -42,14 +44,17 @@ namespace atlas
             state_factory_;
         sparta::ResourceFactory<atlas::AtlasSystem, atlas::AtlasSystem::AtlasSystemParameters>
             system_factory_;
+        sparta::ResourceFactory<atlas::SystemCallEmulator,
+                                atlas::SystemCallEmulator::SystemCallEmulatorParameters>
+        sys_call_factory_;
         std::unique_ptr<AtlasAllocators> allocators_tn_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
         // Atlas State for each hart
         std::vector<AtlasState*> state_;
 
-        // Atlas System (shared by all harts)
-        AtlasSystem* system_ = nullptr;
+        // Atlas system
+        AtlasSystem * system_ = nullptr;
 
         const std::string workload_;
         const uint64_t ilimit_;

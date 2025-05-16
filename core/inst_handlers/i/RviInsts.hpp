@@ -17,7 +17,7 @@ namespace atlas
 
         template <typename XLEN>
         static void getInstComputeAddressHandlers(std::map<std::string, Action> &);
-        template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
+        template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &, bool);
 
       private:
         // add,slt,sltu,and,or,xor,sub

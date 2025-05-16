@@ -21,7 +21,8 @@ namespace atlas
         class ExecuteParameters : public sparta::ParameterSet
         {
           public:
-            ExecuteParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+            ExecuteParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) { }
+            PARAMETER(bool, enable_syscall_emulation, false, "ecalls will be emulated");
         };
 
         Execute(sparta::TreeNode* execute_node, const ExecuteParameters* p);

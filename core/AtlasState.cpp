@@ -278,6 +278,12 @@ namespace atlas
         return uarch_files;
     }
 
+    int64_t AtlasState::emulateSystemCall(const SystemCallEmulator::SystemCallStack &call_stack)
+    {
+        return system_call_emulator_->emulateSystemCall(call_stack,
+                                                        atlas_system_->getSystemMemory());
+    }
+
     Action::ItrType AtlasState::preExecute_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.

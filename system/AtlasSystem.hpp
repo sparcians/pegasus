@@ -33,8 +33,6 @@ namespace atlas
           public:
             AtlasSystemParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
-            PARAMETER(bool, enable_syscall_emulation, false,
-                      "Enable emulation of system calls via the ecall instruction")
             PARAMETER(bool, enable_uart, false, "Enable a Uart")
             HIDDEN_PARAMETER(std::string, workload, "", "Workload to load into memory")
         };
