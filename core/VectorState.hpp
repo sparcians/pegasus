@@ -12,11 +12,19 @@ namespace atlas
       public:
         inline uint8_t getLMUL() const { return lmul_; }
 
-        inline void setLMUL(uint8_t value) { lmul_ = value; }
+        inline void setLMUL(uint8_t value)
+        {
+            sparta_assert((value & (value - 1)) == 0 && value != 0, "Invalid LMUL value.");
+            lmul_ = value;
+        }
 
         inline uint8_t getSEW() const { return sew_; }
 
-        inline void setSEW(uint8_t value) { sew_ = value; }
+        inline void setSEW(uint8_t value)
+        {
+            sparta_assert(value % 8 == 0, "Invalid SEW value.");
+            sew_ = value;
+        }
 
         inline bool getVTA() const { return vta_; }
 
@@ -68,6 +76,7 @@ namespace atlas
                     lmul_ = 64;
                     break;
                 default:
+                    sparta_assert(false, "Invalid vtype VLMUL encoding.");
                     break;
             }
             vta_ = READ_CSR_FIELD<XLEN>(state, VTYPE, "vta");
@@ -107,11 +116,9 @@ namespace atlas
             os << vector_state.getLMUL() / 8 << " ";
         }
         os << "SEW: " << vector_state.getSEW() << " ";
-        os << "VTA: " << vector_state.getVTA() << " "
-           << "VMA: " << vector_state.getVMA() << " ";
-        os << "VL: " << vector_state.getVL() << " "
-           << "VLMAX:" << vector_state.getVLMAX<VLEN>() << " "
-           << "VSTART: " << vector_state.getVSTART() << "; ";
+        os << "VTA: " << vector_state.getVTA() << " " << "VMA: " << vector_state.getVMA() << " ";
+        os << "VL: " << vector_state.getVL() << " " << "VLMAX:" << vector_state.getVLMAX<VLEN>()
+           << " " << "VSTART: " << vector_state.getVSTART() << "; ";
         return os;
     }
 
