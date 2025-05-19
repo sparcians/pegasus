@@ -41,21 +41,18 @@ namespace atlas
 
         virtual void writeImmediate(const uint64_t imm) { (void)imm; }
 
-        virtual void writeSrcRegister(const std::string & reg_name, const uint64_t reg_value,
-                                      const uint32_t reg_width)
+        virtual void writeSrcRegister(const std::string &, const uint64_t, const uint32_t) {}
+
+        virtual void writeDstRegister(const std::string &, const uint64_t, const uint64_t,
+                                      const uint32_t)
         {
-            (void)reg_name;
-            (void)reg_value;
-            (void)reg_width;
         }
 
-        virtual void writeDstRegister(const std::string & reg_name, const uint64_t reg_value,
-                                      const uint64_t reg_prev_value, const uint32_t reg_width)
+        virtual void writeCsrRead(const std::string &, const uint64_t, const uint32_t) {}
+
+        virtual void writeCsrWrite(const std::string &, const uint64_t, const uint64_t,
+                                   const uint32_t)
         {
-            (void)reg_name;
-            (void)reg_value;
-            (void)reg_prev_value;
-            (void)reg_width;
         }
 
         virtual void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
@@ -140,6 +137,25 @@ namespace atlas
         {
             reset_();
             inst_oss_ << "   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                      << HEX(reg_value, reg_width) << " (prev: " << HEX(reg_prev_value, reg_width)
+                      << ")";
+            postExecute_(inst_oss_.str());
+        }
+
+        void writeCsrRead(const std::string & reg_name, const uint64_t reg_value,
+                          const uint32_t reg_width) override
+        {
+            reset_();
+            inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
+                      << HEX(reg_value, reg_width);
+            postExecute_(inst_oss_.str());
+        }
+
+        void writeCsrWrite(const std::string & reg_name, const uint64_t reg_value,
+                           const uint64_t reg_prev_value, const uint32_t reg_width) override
+        {
+            reset_();
+            inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
                       << HEX(reg_value, reg_width) << " (prev: " << HEX(reg_prev_value, reg_width)
                       << ")";
             postExecute_(inst_oss_.str());
@@ -425,6 +441,22 @@ namespace atlas
                 inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, reg_value,
                                                    reg_prev_value, reg_width);
             }
+        }
+
+        for (const auto & [csr_num, csr_read] : csr_reads_)
+        {
+            const uint32_t reg_width = csr_read.reg_value.size() * 2;
+            const uint64_t reg_value = getRegValue_(csr_read.reg_value);
+            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, reg_value, reg_width);
+        }
+
+        for (const auto & [csr_num, csr_write] : csr_writes_)
+        {
+            const uint32_t reg_width = csr_write.reg_value.size() * 2;
+            const uint64_t reg_value = getRegValue_(csr_write.reg_value);
+            const uint64_t reg_prev_value = getRegValue_(csr_write.reg_prev_value);
+            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, reg_value, reg_prev_value,
+                                            reg_width);
         }
 
         for (const auto & mem_read : mem_reads_)

@@ -11,6 +11,7 @@ add_library(atlascore
     AtlasExtractor.cpp
     AtlasInst.cpp
     translate/Translate.cpp
+    observers/Observer.cpp
     observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp

@@ -39,6 +39,12 @@ namespace atlas
             {
             }
 
+            DestReg(const RegId id, std::vector<uint8_t> value, std::vector<uint8_t> prev_value) :
+                SrcReg(id, value),
+                reg_prev_value(prev_value)
+            {
+            }
+
             void setPrevValue(const std::vector<uint8_t> & value) { reg_prev_value = value; }
 
             std::vector<uint8_t> reg_prev_value;
@@ -93,8 +99,15 @@ namespace atlas
         // Mavis pointer for getting the disassembly string
         mavis::OpcodeInfo::PtrType opcode_info_;
 
+        // Instruction source and destination registers
         std::vector<SrcReg> src_regs_;
         std::vector<DestReg> dst_regs_;
+
+        // Implicit CSR reads and writes
+        std::map<uint32_t, SrcReg> csr_reads_;
+        std::map<uint32_t, DestReg> csr_writes_;
+
+        // Memory reads and writes
         std::vector<MemRead> mem_reads_;
         std::vector<MemWrite> mem_writes_;
 
@@ -115,66 +128,21 @@ namespace atlas
             opcode_ = std::numeric_limits<uint64_t>::max();
             src_regs_.clear();
             dst_regs_.clear();
+            csr_reads_.clear();
+            csr_writes_.clear();
             fault_cause_.clearValid();
             interrupt_cause_.clearValid();
             mem_reads_.clear();
             mem_writes_.clear();
         }
 
+        // Callbacks
         void postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,
-                           const sparta::Register::PostWriteAccess &)
-        {
-            std::cout << "Read!" << std::endl;
-        }
-
+                           const sparta::Register::PostWriteAccess &);
         void postCsrRead_(const sparta::TreeNode &, const sparta::TreeNode &,
-                          const sparta::Register::ReadAccess &)
-        {
-            std::cout << "Write!" << std::endl;
-        }
-
-        void postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
-        {
-            uint64_t prior_val = 0;
-            if (data.prior)
-            {
-                for (size_t i = 0; i < data.size; ++i)
-                {
-                    prior_val |= static_cast<uint64_t>(data.prior[i]) << (i * 8);
-                }
-            }
-
-            uint8_t buf[2048];
-            data.mem->peek(data.addr, data.size, buf);
-
-            uint64_t final_val = 0;
-            for (size_t i = 0; i < data.size; ++i)
-            {
-                final_val |= static_cast<uint64_t>(buf[i]) << (i * 8);
-            }
-
-            MemWrite mem_write;
-            mem_write.addr = data.addr;
-            mem_write.size = data.size;
-            mem_write.value = final_val;
-            mem_write.prior_value = prior_val;
-            mem_writes_.push_back(mem_write);
-        }
-
-        void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
-        {
-            uint64_t val = 0;
-            for (size_t i = 0; i < data.size; ++i)
-            {
-                val |= static_cast<uint64_t>(data.data[i]) << (i * 8);
-            }
-
-            MemRead mem_read;
-            mem_read.addr = data.addr;
-            mem_read.size = data.size;
-            mem_read.value = val;
-            mem_reads_.push_back(mem_read);
-        }
+                          const sparta::Register::ReadAccess &);
+        void postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess &);
+        void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess &);
     };
 
 } // namespace atlas
