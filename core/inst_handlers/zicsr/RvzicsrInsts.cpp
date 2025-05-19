@@ -104,7 +104,7 @@ namespace atlas
             THROW_ILLEGAL_INST;
         }
 
-        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
+        const XLEN csr_val = PEEK_CSR_REG<XLEN>(state, csr);
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
@@ -114,7 +114,7 @@ namespace atlas
             }
             // rs1 value is treated as a bit mask to clear bits
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
-            WRITE_CSR_REG<XLEN>(state, csr, (~rs1_val & csr_val));
+            POKE_CSR_REG<XLEN>(state, csr, (~rs1_val & csr_val));
         }
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
@@ -135,14 +135,14 @@ namespace atlas
             THROW_ILLEGAL_INST;
         }
 
-        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
+        const XLEN csr_val = PEEK_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
             if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
             {
                 THROW_ILLEGAL_INST;
             }
-            WRITE_CSR_REG<XLEN>(state, csr, (~imm & csr_val));
+            POKE_CSR_REG<XLEN>(state, csr, (~imm & csr_val));
         }
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
@@ -163,7 +163,7 @@ namespace atlas
             THROW_ILLEGAL_INST;
         }
 
-        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
+        const XLEN csr_val = PEEK_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
             if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
@@ -172,7 +172,7 @@ namespace atlas
             }
             // rs1 value is treated as a bit mask to set bits
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
-            WRITE_CSR_REG<XLEN>(state, csr, (rs1_val | csr_val));
+            POKE_CSR_REG<XLEN>(state, csr, (rs1_val | csr_val));
         }
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
@@ -193,7 +193,7 @@ namespace atlas
             THROW_ILLEGAL_INST;
         }
 
-        const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
+        const XLEN csr_val = PEEK_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
             if (!isAccessLegal_<AccessType::WRITE>(csr, state->getPrivMode()))
@@ -201,7 +201,7 @@ namespace atlas
                 THROW_ILLEGAL_INST;
             }
             // imm value is treated as a bit mask
-            WRITE_CSR_REG<XLEN>(state, csr, (imm | csr_val));
+            POKE_CSR_REG<XLEN>(state, csr, (imm | csr_val));
         }
 
         WRITE_INT_REG<XLEN>(state, rd, csr_val);
@@ -231,11 +231,11 @@ namespace atlas
             {
                 THROW_ILLEGAL_INST;
             }
-            const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
+            const XLEN csr_val = zext(PEEK_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
 
-        WRITE_CSR_REG<XLEN>(state, csr, rs1_val);
+        POKE_CSR_REG<XLEN>(state, csr, rs1_val);
 
         return nullptr;
     }
@@ -260,11 +260,11 @@ namespace atlas
             {
                 THROW_ILLEGAL_INST;
             }
-            const XLEN csr_val = zext(READ_CSR_REG<XLEN>(state, csr), state->getXlen());
+            const XLEN csr_val = zext(PEEK_CSR_REG<XLEN>(state, csr), state->getXlen());
             WRITE_INT_REG<XLEN>(state, rd, csr_val);
         }
 
-        WRITE_CSR_REG<XLEN>(state, csr, imm);
+        POKE_CSR_REG<XLEN>(state, csr, imm);
 
         return nullptr;
     }
