@@ -117,6 +117,12 @@ add_subdirectory(mavis)
 include_directories(SYSTEM softfloat)
 add_subdirectory(softfloat)
 
+# STF Library
+set(DISABLE_STF_DOXYGEN 1)
+set(NO_STF_LTO 1)
+include_directories(SYSTEM stf_lib)
+add_subdirectory(stf_lib)
+
 # 32-bit register JSON directory
 add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
 add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
