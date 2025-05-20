@@ -278,7 +278,7 @@ namespace atlas
         return uarch_files;
     }
 
-    ActionGroup* AtlasState::preExecute_(AtlasState* state)
+    Action::ItrType AtlasState::preExecute_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
         // and change the observers' preExecute() to take both AtlasState
@@ -321,49 +321,34 @@ namespace atlas
         // AtlasState.hpp:
         //     std::unique_ptr<ObserverContainer> observer_container_;
 
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->preExecute(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* AtlasState::postExecute_(AtlasState* state)
+    Action::ItrType AtlasState::postExecute_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: See comments in preExecute_()
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->postExecute(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->postExecute(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* AtlasState::preException_(AtlasState* state)
+    Action::ItrType AtlasState::preException_(AtlasState* state, Action::ItrType action_it)
     {
         // TODO cnyce: See comments in preExecute_()
-        ActionGroup* fail_action_group = nullptr;
         for (const auto & observer : observers_)
         {
-            fail_action_group = observer->preException(state);
-            if (SPARTA_EXPECT_FALSE(fail_action_group))
-            {
-                return fail_action_group;
-            }
+            observer->preException(state);
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
     template <typename XLEN> uint32_t AtlasState::getMisaExtFieldValue_() const
@@ -489,7 +474,7 @@ namespace atlas
         }
     }
 
-    ActionGroup* AtlasState::incrementPc_(AtlasState*)
+    Action::ItrType AtlasState::incrementPc_(AtlasState*, Action::ItrType action_it)
     {
         // Set PC
         prev_pc_ = pc_;
@@ -499,7 +484,7 @@ namespace atlas
         // Increment instruction count
         ++sim_state_.inst_count;
 
-        return nullptr;
+        return ++action_it;
     }
 
     void AtlasState::boot()

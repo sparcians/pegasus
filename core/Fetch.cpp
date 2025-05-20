@@ -42,7 +42,7 @@ namespace atlas
         execute_action_group->setNextActionGroup(&fetch_action_group_);
     }
 
-    ActionGroup* Fetch::fetch_(AtlasState* state)
+    Action::ItrType Fetch::fetch_(AtlasState* state, Action::ItrType action_it)
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
@@ -55,10 +55,10 @@ namespace atlas
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
-        return nullptr;
+        return ++action_it;
     }
 
-    ActionGroup* Fetch::decode_(AtlasState* state)
+    Action::ItrType Fetch::decode_(AtlasState* state, Action::ItrType action_it)
     {
         // Get translation result
         const AtlasTranslationState::TranslationResult result =
@@ -120,7 +120,8 @@ namespace atlas
 
                 if ((opcode & 0x3) == 0x3)
                 {
-                    return fetch_action_group_.getNextActionGroup();
+                    // Go back to inst translate
+                    throw ActionException(fetch_action_group_.getNextActionGroup());
                 }
             }
             else
@@ -174,16 +175,15 @@ namespace atlas
             }
         }
 
-        return nullptr;
+        return ++action_it;
     }
 
     void Fetch::advanceSim_()
     {
         // Run
         ActionGroup* next_action_group = &fetch_action_group_;
-        while (next_action_group && (next_action_group->hasTag(ActionTags::STOP_SIM_TAG) == false))
+        while (next_action_group)
         {
-            DLOG(next_action_group);
             next_action_group = next_action_group->execute(state_);
         }
         // End of sim

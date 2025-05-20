@@ -1,12 +1,13 @@
 #pragma once
 
+#include "core/Action.hpp"
+
 #include <map>
 #include <string>
 
 namespace atlas
 {
     class AtlasState;
-    class Action;
     class ActionGroup;
 
     class RvzifenceiInsts
@@ -18,6 +19,7 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN> ActionGroup* fence_iHandler_(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType fence_iHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
