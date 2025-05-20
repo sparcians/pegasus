@@ -10,6 +10,7 @@ target_link_libraries(atlascosimlib
     atlascore
     atlasinsts
     softfloat
+    ${STF_LINK_LIBS}
     atlassys
     ${ATLAS_LIBS}
 )
