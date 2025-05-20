@@ -42,19 +42,19 @@ namespace atlas
         // Converts a string to a const char* pointer
         class StringRef
         {
-        public:
+          public:
             StringRef(const std::string & str) : storage_(str) {}
 
             const char* raw() const { return storage_.c_str(); }
 
-        private:
+          private:
             std::string storage_;
         };
 
         // Converts a vector of strings to an array of const char* pointers
         class AliasRef
         {
-        public:
+          public:
             AliasRef(const std::vector<std::string> & aliases) : storage_(aliases)
             {
                 for (const auto & str : storage_)
@@ -66,7 +66,7 @@ namespace atlas
 
             const char** raw() { return pointers_.data(); }
 
-        private:
+          private:
             std::vector<std::string> storage_;
             std::vector<const char*> pointers_;
         };
@@ -74,7 +74,7 @@ namespace atlas
         // Converts any hex ("0xdeafbeef") to a const unsigned char* pointer
         class InitialValueRef
         {
-        public:
+          public:
             InitialValueRef(const std::string & hex_str)
             {
                 // Remove the "0x" prefix if present
@@ -108,26 +108,27 @@ namespace atlas
 
             const unsigned char* raw() const { return hex_bytes_.data(); }
 
-        private:
+          private:
             std::vector<unsigned char> hex_bytes_;
         };
 
         // Converts a rapidjson::Value that represents a field to a Field::Definition
         class FieldDefnConverter
         {
-        public:
+          public:
             FieldDefnConverter(const std::string & field_name,
                                const boost::json::value & field_info) :
                 field_name_(field_name),
                 desc_(field_info.at("desc").as_string()),
                 field_defn_(field_name_.c_str(), desc_.c_str(), field_info.at("low_bit").as_int64(),
-                            field_info.at("high_bit").as_int64(), field_info.at("readonly").as_bool())
+                            field_info.at("high_bit").as_int64(),
+                            field_info.at("readonly").as_bool())
             {
             }
 
             const sparta::RegisterBase::Field::Definition & getDefn() const { return field_defn_; }
 
-        private:
+          private:
             std::string field_name_;
             std::string desc_;
             sparta::RegisterBase::Field::Definition field_defn_;
@@ -142,7 +143,7 @@ namespace atlas
         // TODO: Find the official way to handle group_idx. For now we will just use
         // a map of auto-incrementing group_idx values for each group_num
         std::map<sparta::RegisterBase::group_num_type, sparta::RegisterBase::group_idx_type>
-        group_idx_map_;
+            group_idx_map_;
     };
 
 } // namespace atlas
