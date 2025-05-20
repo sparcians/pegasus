@@ -1,10 +1,11 @@
 #pragma once
 
+#include <vector>
+#include <string>
+#include <deque>
+#include <boost/json.hpp>
+
 #include "sparta/functional/Register.hpp"
-#include <rapidjson/document.h>
-#include <rapidjson/filereadstream.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
 
 namespace atlas
 {
@@ -36,125 +37,24 @@ namespace atlas
         size_t getNumDefns() const { return register_defns_.size() - 1; }
 
       private:
-        void parse_(const std::string & register_defns_json_filename)
-        {
-            // Read the file into a string
-            std::ifstream ifs(register_defns_json_filename);
-            std::stringstream ss;
-            ss << ifs.rdbuf();
-            std::string json_str = ss.str();
-
-            // Parse the JSON string
-            rapidjson::Document document;
-            document.Parse(json_str.c_str());
-
-            for (auto & item : document.GetArray())
-            {
-                if (item.HasMember("enabled") && !item["enabled"].GetBool())
-                {
-                    continue;
-                }
-
-                const sparta::RegisterBase::ident_type id = item["num"].GetInt();
-
-                cached_strings_.emplace_back(item["name"].GetString());
-                const char* name = cached_strings_.back().raw();
-
-                const sparta::RegisterBase::group_num_type group_num = item["group_num"].GetUint();
-                auto iter = group_idx_map_.find(group_num);
-                if (iter == group_idx_map_.end())
-                {
-                    group_idx_map_[group_num] = 0;
-                }
-
-                sparta::RegisterBase::group_idx_type group_idx = group_idx_map_[group_num]++;
-                cached_strings_.emplace_back(item["group_name"].GetString());
-                const char* group = cached_strings_.back().raw();
-
-                if (std::string(group).empty())
-                {
-                    group_idx = sparta::RegisterBase::GROUP_IDX_NONE;
-                }
-
-                cached_strings_.emplace_back(item["desc"].GetString());
-                const char* desc = cached_strings_.back().raw();
-
-                const sparta::RegisterBase::size_type bytes = item["size"].GetInt();
-
-                std::vector<sparta::RegisterBase::Field::Definition> field_defns;
-                if (item.HasMember("fields"))
-                {
-                    auto it = item["fields"].MemberBegin();
-                    auto count = item["fields"].MemberCount();
-                    auto i = 0u;
-                    while (i != count)
-                    {
-                        const char* field_name = it->name.GetString();
-                        const rapidjson::Value & field_info = it->value;
-                        cached_field_defns_.emplace_back(field_name, field_info);
-                        field_defns.push_back(cached_field_defns_.back().getDefn());
-                        ++it;
-                        ++i;
-                    }
-                }
-
-                static const std::vector<sparta::RegisterBase::bank_idx_type> bank_membership;
-
-                std::vector<std::string> alias_strings;
-                for (auto & alias : item["aliases"].GetArray())
-                {
-                    alias_strings.push_back(alias.GetString());
-                }
-                cached_aliases_.emplace_back(alias_strings);
-                const char** aliases = cached_aliases_.back().raw();
-
-                constexpr sparta::RegisterBase::ident_type subset_of =
-                    sparta::RegisterBase::INVALID_ID;
-                constexpr sparta::RegisterBase::size_type subset_offset = 0;
-
-                const unsigned char* initial_value = nullptr;
-                if (item.HasMember("initial_value"))
-                {
-                    cached_initial_values_.emplace_back(item["initial_value"].GetString());
-                    initial_value = cached_initial_values_.back().raw();
-                }
-                else
-                {
-                    cached_initial_values_.emplace_back(bytes);
-                    initial_value = cached_initial_values_.back().raw();
-                }
-
-                constexpr sparta::RegisterBase::Definition::HintsT hints = 0;
-                constexpr sparta::RegisterBase::Definition::RegDomainT regdomain = 0;
-
-                const bool writable = id != 0 || group_num != 0;
-
-                sparta::RegisterBase::Definition defn = {
-                    id,        name,          group_num,     group,           group_idx,
-                    desc,      bytes,         field_defns,   bank_membership, aliases,
-                    subset_of, subset_offset, initial_value, hints,           regdomain,
-                    writable};
-
-                register_defns_.push_back(defn);
-            }
-        }
+        void parse_(const std::string & register_defns_json_filename);
 
         // Converts a string to a const char* pointer
         class StringRef
         {
-          public:
+        public:
             StringRef(const std::string & str) : storage_(str) {}
 
             const char* raw() const { return storage_.c_str(); }
 
-          private:
+        private:
             std::string storage_;
         };
 
         // Converts a vector of strings to an array of const char* pointers
         class AliasRef
         {
-          public:
+        public:
             AliasRef(const std::vector<std::string> & aliases) : storage_(aliases)
             {
                 for (const auto & str : storage_)
@@ -166,7 +66,7 @@ namespace atlas
 
             const char** raw() { return pointers_.data(); }
 
-          private:
+        private:
             std::vector<std::string> storage_;
             std::vector<const char*> pointers_;
         };
@@ -174,7 +74,7 @@ namespace atlas
         // Converts any hex ("0xdeafbeef") to a const unsigned char* pointer
         class InitialValueRef
         {
-          public:
+        public:
             InitialValueRef(const std::string & hex_str)
             {
                 // Remove the "0x" prefix if present
@@ -208,26 +108,26 @@ namespace atlas
 
             const unsigned char* raw() const { return hex_bytes_.data(); }
 
-          private:
+        private:
             std::vector<unsigned char> hex_bytes_;
         };
 
         // Converts a rapidjson::Value that represents a field to a Field::Definition
         class FieldDefnConverter
         {
-          public:
+        public:
             FieldDefnConverter(const std::string & field_name,
-                               const rapidjson::Value & field_info) :
+                               const boost::json::value & field_info) :
                 field_name_(field_name),
-                desc_(field_info["desc"].GetString()),
-                field_defn_(field_name_.c_str(), desc_.c_str(), field_info["low_bit"].GetInt(),
-                            field_info["high_bit"].GetInt(), field_info["readonly"].GetBool())
+                desc_(field_info.at("desc").as_string()),
+                field_defn_(field_name_.c_str(), desc_.c_str(), field_info.at("low_bit").as_int64(),
+                            field_info.at("high_bit").as_int64(), field_info.at("readonly").as_bool())
             {
             }
 
             const sparta::RegisterBase::Field::Definition & getDefn() const { return field_defn_; }
 
-          private:
+        private:
             std::string field_name_;
             std::string desc_;
             sparta::RegisterBase::Field::Definition field_defn_;
@@ -242,7 +142,7 @@ namespace atlas
         // TODO: Find the official way to handle group_idx. For now we will just use
         // a map of auto-incrementing group_idx values for each group_num
         std::map<sparta::RegisterBase::group_num_type, sparta::RegisterBase::group_idx_type>
-            group_idx_map_;
+        group_idx_map_;
     };
 
 } // namespace atlas
