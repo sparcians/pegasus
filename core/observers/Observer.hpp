@@ -52,15 +52,15 @@ namespace atlas
             return dst_regs_[0].reg_prev_value;
         }
 
-        ActionGroup* preExecute(AtlasState* state)
+        void preExecute(AtlasState* state)
         {
             reset_();
-            return preExecute_(state);
+            preExecute_(state);
         }
 
-        ActionGroup* postExecute(AtlasState* state) { return postExecute_(state); }
+        void postExecute(AtlasState* state) { postExecute_(state); }
 
-        ActionGroup* preException(AtlasState* state) { return preException_(state); }
+        void preException(AtlasState* state) { preException_(state); }
 
         virtual void stopSim() {}
 
@@ -112,11 +112,11 @@ namespace atlas
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
       private:
-        virtual ActionGroup* preExecute_(AtlasState*) { return nullptr; }
+        virtual void preExecute_(AtlasState*) {}
 
-        virtual ActionGroup* postExecute_(AtlasState*) { return nullptr; }
+        virtual void postExecute_(AtlasState*) {}
 
-        virtual ActionGroup* preException_(AtlasState*) { return nullptr; }
+        virtual void preException_(AtlasState*) {}
 
         void reset_()
         {

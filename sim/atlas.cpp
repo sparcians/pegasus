@@ -1,9 +1,10 @@
 #include "sim/AtlasSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] = "Usage:\n"
-                     "./atlas [-i inst limit] [--reg \"name value\"] [--interactive] [--spike-formatting] <workload>"
-                     "\n";
+const char USAGE[] =
+    "Usage:\n"
+    "./atlas [-i inst limit] [--reg \"name value\"] [--interactive] [--spike-formatting] <workload>"
+    "\n";
 
 struct regOverride
 {
@@ -103,8 +104,7 @@ int main(int argc, char** argv)
             auto & reg_overrides = vm["reg"].as<std::vector<regOverride>>();
             for (auto reg_override : reg_overrides)
             {
-                const uint64_t reg_value =
-                    std::strtoull(reg_override.value.c_str(), nullptr, 0);
+                const uint64_t reg_value = std::strtoull(reg_override.value.c_str(), nullptr, 0);
 
                 const bool MUST_EXIST = true;
                 sparta::Register* reg = state->findRegister(reg_override.name, MUST_EXIST);
