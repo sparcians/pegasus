@@ -334,6 +334,7 @@ namespace atlas
             }
 
             // For instructions that read/write CSRs
+            /*
             if (inst->hasCsr())
             {
                 const auto csr_reg = state->getCsrRegister(inst->getCsr());
@@ -343,6 +344,7 @@ namespace atlas
                     dst_regs_.emplace_back(getRegId(csr_reg), value);
                 }
             }
+            */
         }
 
         return nullptr;

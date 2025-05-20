@@ -22,7 +22,7 @@ namespace atlas
             const uint64_t prior_value = (csr_reg->getNumBits() == 64)
                                              ? data.prior->read<uint64_t>()
                                              : data.prior->read<uint32_t>();
-            csr_writes_.insert({csr_num, DestReg(reg_id, prior_value, final_value)});
+            csr_writes_.insert({csr_num, DestReg(reg_id, final_value, prior_value)});
         }
 
         // No need to also capture a read if there is a write since the write records the previous
