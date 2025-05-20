@@ -119,8 +119,9 @@ add_subdirectory(softfloat)
 
 # STF Library
 set(DISABLE_STF_DOXYGEN 1)
-set(NO_STF_LTO 1)
 include_directories(SYSTEM stf_lib)
+include(stf_lib/cmake/stf_linker_setup.cmake)
+setup_stf_linker(false)
 add_subdirectory(stf_lib)
 
 # 32-bit register JSON directory
