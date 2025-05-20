@@ -52,7 +52,7 @@ jobs:
       - name: Install packages needed for sparta/atlas
         run: |
           sudo apt-get update --fix-missing
-          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
 
       # Build
       - name: Build & Regress
