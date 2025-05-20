@@ -25,7 +25,7 @@ namespace atlas
 
             SrcReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
 
-            void setValue(const uint64_t & value) { reg_value = value; }
+            void setValue(const uint64_t value) { reg_value = value; }
 
             const RegId reg_id;
             uint64_t reg_value;
@@ -41,7 +41,7 @@ namespace atlas
             {
             }
 
-            void setPrevValue(const uint64_t & value) { reg_prev_value = value; }
+            void setPrevValue(const uint64_t value) { reg_prev_value = value; }
 
             uint64_t reg_prev_value;
         };
@@ -100,8 +100,8 @@ namespace atlas
         std::vector<DestReg> dst_regs_;
 
         // Implicit CSR reads and writes
-        std::map<uint32_t, SrcReg> csr_reads_;
-        std::map<uint32_t, DestReg> csr_writes_;
+        std::unordered_map<uint32_t, SrcReg> csr_reads_;
+        std::unordered_map<uint32_t, DestReg> csr_writes_;
 
         // Memory reads and writes
         std::vector<MemRead> mem_reads_;

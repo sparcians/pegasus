@@ -332,19 +332,6 @@ namespace atlas
                 const uint64_t value = rd_reg->dmiRead<XLEN>();
                 dst_regs_.emplace_back(getRegId(rd_reg), value);
             }
-
-            // For instructions that read/write CSRs
-            /*
-            if (inst->hasCsr())
-            {
-                const auto csr_reg = state->getCsrRegister(inst->getCsr());
-                if (csr_reg)
-                {
-                    const uint64_t value = csr_reg->dmiRead<XLEN>();
-                    dst_regs_.emplace_back(getRegId(csr_reg), value);
-                }
-            }
-            */
         }
 
         return nullptr;
