@@ -23,37 +23,33 @@ namespace atlas
         {
             SrcReg(const RegId id) : reg_id(id) {}
 
-            SrcReg(const RegId id, std::vector<uint8_t> value) : reg_id(id), reg_value(value) {}
+            SrcReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
 
-            void setValue(const std::vector<uint8_t> & value) { reg_value = value; }
+            void setValue(const uint64_t & value) { reg_value = value; }
 
             const RegId reg_id;
-            std::vector<uint8_t> reg_value;
+            uint64_t reg_value;
         };
 
         struct DestReg : SrcReg
         {
-            DestReg(const RegId id, std::vector<uint8_t> prev_value) :
-                SrcReg(id),
-                reg_prev_value(prev_value)
-            {
-            }
+            DestReg(const RegId id, uint64_t prev_value) : SrcReg(id), reg_prev_value(prev_value) {}
 
-            DestReg(const RegId id, std::vector<uint8_t> value, std::vector<uint8_t> prev_value) :
+            DestReg(const RegId id, uint64_t value, uint64_t prev_value) :
                 SrcReg(id, value),
                 reg_prev_value(prev_value)
             {
             }
 
-            void setPrevValue(const std::vector<uint8_t> & value) { reg_prev_value = value; }
+            void setPrevValue(const uint64_t & value) { reg_prev_value = value; }
 
-            std::vector<uint8_t> reg_prev_value;
+            uint64_t reg_prev_value;
         };
 
         uint64_t getPrevRdValue() const
         {
             sparta_assert(dst_regs_.size() == 1);
-            return convertFromByteVector<uint64_t>(dst_regs_[0].reg_prev_value);
+            return dst_regs_[0].reg_prev_value;
         }
 
         ActionGroup* preExecute(AtlasState* state)

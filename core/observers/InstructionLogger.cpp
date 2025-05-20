@@ -314,14 +314,14 @@ namespace atlas
             if (inst->hasRs1())
             {
                 const auto rs1_reg = inst->getRs1Reg();
-                const std::vector<uint8_t> value = getRegByteVector_(rs1_reg);
+                const uint64_t value = rs1_reg->dmiRead<XLEN>();
                 src_regs_.emplace_back(getRegId(rs1_reg), value);
             }
 
             if (inst->hasRs2())
             {
                 const auto rs2_reg = inst->getRs2Reg();
-                const std::vector<uint8_t> value = getRegByteVector_(rs2_reg);
+                const uint64_t value = rs2_reg->dmiRead<XLEN>();
                 src_regs_.emplace_back(getRegId(rs2_reg), value);
             }
 
@@ -329,7 +329,7 @@ namespace atlas
             if (inst->hasRd())
             {
                 const auto rd_reg = inst->getRdReg();
-                const std::vector<uint8_t> value = getRegByteVector_(rd_reg);
+                const uint64_t value = rd_reg->dmiRead<XLEN>();
                 dst_regs_.emplace_back(getRegId(rd_reg), value);
             }
 
@@ -339,7 +339,7 @@ namespace atlas
                 const auto csr_reg = state->getCsrRegister(inst->getCsr());
                 if (csr_reg)
                 {
-                    const std::vector<uint8_t> value = getRegByteVector_(csr_reg);
+                    const uint64_t value = csr_reg->dmiRead<XLEN>();
                     dst_regs_.emplace_back(getRegId(csr_reg), value);
                 }
             }
@@ -391,7 +391,7 @@ namespace atlas
                         sparta_assert(false, "Invalid register type!");
                 }
                 sparta_assert(reg != nullptr);
-                const std::vector<uint8_t> value = getRegByteVector_(reg);
+                const uint64_t value = reg->dmiRead<XLEN>();
                 dst_reg.setValue(value);
             }
         }
@@ -417,46 +417,37 @@ namespace atlas
             inst_log_writer_->writeImmediate(inst->getImmediate());
         }
 
-        // TODO: Support for different register sizes (RV32, vector)
+        // Assume all registers are the same size
+        const uint32_t reg_width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         for (const auto & src_reg : src_regs_)
         {
-            const uint32_t reg_width = src_reg.reg_value.size() * 2;
-            const uint64_t reg_value = getRegValue_(src_reg.reg_value);
-            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, reg_value, reg_width);
+            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, src_reg.reg_value,
+                                               reg_width);
         }
 
         for (const auto & dst_reg : dst_regs_)
         {
-            const uint32_t reg_width = dst_reg.reg_value.size() * 2;
-            const uint64_t reg_value = getRegValue_(dst_reg.reg_value);
-            const uint64_t reg_prev_value = getRegValue_(dst_reg.reg_prev_value);
-
             if (dst_reg.reg_id.reg_type == RegType::CSR)
             {
                 inst_log_writer_->writeDstCSR(dst_reg.reg_id.reg_name, dst_reg.reg_id.reg_num,
-                                              reg_value, reg_prev_value, reg_width);
+                                              dst_reg.reg_value, dst_reg.reg_prev_value, reg_width);
             }
             else
             {
-                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, reg_value,
-                                                   reg_prev_value, reg_width);
+                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, dst_reg.reg_value,
+                                                   dst_reg.reg_prev_value, reg_width);
             }
         }
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            const uint32_t reg_width = csr_read.reg_value.size() * 2;
-            const uint64_t reg_value = getRegValue_(csr_read.reg_value);
-            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, reg_value, reg_width);
+            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, csr_read.reg_value, reg_width);
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            const uint32_t reg_width = csr_write.reg_value.size() * 2;
-            const uint64_t reg_value = getRegValue_(csr_write.reg_value);
-            const uint64_t reg_prev_value = getRegValue_(csr_write.reg_prev_value);
-            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, reg_value, reg_prev_value,
-                                            reg_width);
+            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, csr_write.reg_value,
+                                            csr_write.reg_prev_value, reg_width);
         }
 
         for (const auto & mem_read : mem_reads_)

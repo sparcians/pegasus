@@ -9,16 +9,24 @@ namespace atlas
         const auto csr_reg = data.reg;
         const auto csr_num = csr_reg->getGroupIdx();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
+
+        const uint64_t final_value = (csr_reg->getNumBits() == 64) ? data.final->read<uint64_t>()
+                                                                   : data.final->read<uint32_t>();
+        // If this CSR has already been written to, just update the final value
         if (csr_writes_.find(csr_num) != csr_writes_.end())
         {
-            csr_writes_.at(csr_num).setValue(convertToByteVector(data.final->read<uint64_t>()));
+            csr_writes_.at(csr_num).setValue(final_value);
         }
         else
         {
-            csr_writes_.insert(
-                {csr_num, DestReg(reg_id, convertToByteVector(data.prior->read<uint64_t>()),
-                                  convertToByteVector(data.final->read<uint64_t>()))});
+            const uint64_t prior_value = (csr_reg->getNumBits() == 64)
+                                             ? data.prior->read<uint64_t>()
+                                             : data.prior->read<uint32_t>();
+            csr_writes_.insert({csr_num, DestReg(reg_id, prior_value, final_value)});
         }
+
+        // No need to also capture a read if there is a write since the write records the previous
+        // value
         csr_reads_.erase(csr_num);
     }
 
@@ -28,8 +36,13 @@ namespace atlas
         const auto csr_reg = data.reg;
         const auto csr_num = csr_reg->getGroupIdx();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
-        csr_reads_.insert(
-            {csr_num, SrcReg(reg_id, convertToByteVector(data.value->read<uint64_t>()))});
+        if ((csr_reads_.find(csr_num) == csr_reads_.end())
+            && (csr_writes_.find(csr_num) == csr_writes_.end()))
+        {
+            const uint64_t value = (csr_reg->getNumBits() == 64) ? data.value->read<uint64_t>()
+                                                                 : data.value->read<uint32_t>();
+            csr_reads_.insert({csr_num, SrcReg(reg_id, value)});
+        }
     }
 
     void Observer::postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)

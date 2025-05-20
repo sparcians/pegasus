@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include/AtlasTypes.hpp"
+#include "include/AtlasUtils.hpp"
 #include "mavis/OpcodeInfo.h"
 
 #include <vector>
@@ -45,6 +46,12 @@ namespace atlas::cosim
             std::vector<uint8_t> value;
 
             RegReadAccess(RegId id, const std::vector<uint8_t> & val) : reg_id(id), value(val) {}
+
+            RegReadAccess(RegId id, const uint64_t val) :
+                reg_id(id),
+                value(convertToByteVector(val))
+            {
+            }
         };
 
         struct RegWriteAccess : public RegReadAccess
@@ -55,6 +62,12 @@ namespace atlas::cosim
                            const std::vector<uint8_t> & prev_val) :
                 RegReadAccess(id, val),
                 prev_value(prev_val)
+            {
+            }
+
+            RegWriteAccess(RegId id, const uint64_t val, const uint64_t prev_val) :
+                RegReadAccess(id, val),
+                prev_value(convertToByteVector(prev_val))
             {
             }
         };
