@@ -782,7 +782,11 @@ namespace atlas
         std::vector<Observer::MemWrite> mem_writes_;
     };
 
-    SimController::SimController() : endpoint_(std::make_shared<SimEndpoint>()) {}
+    SimController::SimController() :
+        Observer(Observer::Arch::RV64),
+        endpoint_(std::make_shared<SimEndpoint>())
+    {
+    }
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 
