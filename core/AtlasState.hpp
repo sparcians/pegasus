@@ -434,7 +434,7 @@ namespace atlas
     template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+        return state->getCsrRegister(reg_ident)->read<XLEN>();
     }
 
     template <typename XLEN>
@@ -447,17 +447,18 @@ namespace atlas
             const auto old_value = reg->dmiRead<XLEN>();
             const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
-            reg->dmiWrite<XLEN>(write_val);
+            reg->write<XLEN>(write_val);
         }
         else
         {
-            state->getCsrRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+            state->getCsrRegister(reg_ident)->write<XLEN>(reg_value);
         }
     }
 
     template <typename XLEN> static inline XLEN PEEK_CSR_REG(AtlasState* state, uint32_t reg_ident)
     {
-        return READ_CSR_REG<XLEN>(state, reg_ident);
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
     }
 
     template <typename XLEN>
