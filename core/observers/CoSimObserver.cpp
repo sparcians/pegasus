@@ -7,11 +7,9 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver()
-        // TODO: CoSimObserver for rv32
-        :
-        Observer(Observer::Arch::RV64)
+    CoSimObserver::CoSimObserver() : Observer(Observer::Arch::RV64)
     {
+        // TODO: CoSimObserver for rv32
     }
 
     void CoSimObserver::preExecute_(AtlasState* state)
