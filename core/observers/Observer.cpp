@@ -116,8 +116,10 @@ namespace atlas
     {
         const uint32_t reg_width = getRegWidth();
 
-        if (reg_width == 8) return reg->dmiRead<RV32>();
-        if (reg_width == 16) return reg->dmiRead<RV64>();
+        if (reg_width == 8)
+            return reg->dmiRead<RV32>();
+        if (reg_width == 16)
+            return reg->dmiRead<RV64>();
 
         sparta_assert(false, "Invalid register width");
         return 0;
