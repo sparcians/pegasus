@@ -782,7 +782,16 @@ namespace atlas
         std::vector<Observer::MemWrite> mem_writes_;
     };
 
-    SimController::SimController() : endpoint_(std::make_shared<SimEndpoint>()) {}
+    // Note that the SimController does not need to tell the base class to
+    // track the register/CSR values before and after each instruction. The
+    // python observer impl will handle that logic. We skip the unnecessary
+    // extra work in C++ by passing in ObserverMode::UNUSED to the
+    // base class.
+    SimController::SimController() :
+        Observer(ObserverMode::UNUSED),
+        endpoint_(std::make_shared<SimEndpoint>())
+    {
+    }
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 

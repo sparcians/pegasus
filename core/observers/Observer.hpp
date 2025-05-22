@@ -1,29 +1,66 @@
 #pragma once
 
-#include "core/Action.hpp"
-#include "core/Exception.hpp"
 #include "mavis/OpcodeInfo.h"
-#include "include/AtlasUtils.hpp"
 #include "sparta/functional/Register.hpp"
 #include "sparta/memory/BlockingMemoryIFNode.hpp"
+#include "core/Trap.hpp"
+#include "include/AtlasTypes.hpp"
 
 namespace atlas
 {
     class AtlasState;
     class ActionGroup;
 
+    // The base class needs to know if we are rv32 or rv64 since it is responsible for
+    // reading register values (XLEN).
+    //
+    // We do not use templates here (template <typename XLEN>) because then AtlasState
+    // cannot hold onto arch-agnostic observers (std::vector<std::unique_ptr<Observer>>).
+    //
+    // Note that if your subclass tells the Observer to use ObserverMode::UNUSED, then
+    // the before/after register values will NOT be tracked.
+    enum class ObserverMode
+    {
+        RV32,
+        RV64,
+        UNUSED
+    };
+
     class Observer
     {
       public:
-        Observer() { reset_(); }
+        static uint32_t getRegWidth(const ObserverMode arch)
+        {
+            switch (arch)
+            {
+                case ObserverMode::RV32:
+                    return 8;
+                case ObserverMode::RV64:
+                    return 16;
+                default:
+                    sparta_assert(false, "Invalid architecture");
+            }
+        }
+
+        uint32_t getRegWidth() const { return Observer::getRegWidth(arch_); }
+
+        Observer(const ObserverMode arch)
+        {
+            if (arch != ObserverMode::UNUSED)
+            {
+                arch_ = arch;
+            }
+
+            reset_();
+        }
 
         virtual ~Observer() = default;
 
-        struct SrcReg
+        struct ObservedReg
         {
-            SrcReg(const RegId id) : reg_id(id) {}
+            ObservedReg(const RegId id) : reg_id(id) {}
 
-            SrcReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
+            ObservedReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
 
             void setValue(const uint64_t value) { reg_value = value; }
 
@@ -31,12 +68,18 @@ namespace atlas
             uint64_t reg_value;
         };
 
-        struct DestReg : SrcReg
+        using SrcReg = ObservedReg;
+
+        struct DestReg : ObservedReg
         {
-            DestReg(const RegId id, uint64_t prev_value) : SrcReg(id), reg_prev_value(prev_value) {}
+            DestReg(const RegId id, uint64_t prev_value) :
+                ObservedReg(id),
+                reg_prev_value(prev_value)
+            {
+            }
 
             DestReg(const RegId id, uint64_t value, uint64_t prev_value) :
-                SrcReg(id, value),
+                ObservedReg(id, value),
                 reg_prev_value(prev_value)
             {
             }
@@ -46,46 +89,44 @@ namespace atlas
             uint64_t reg_prev_value;
         };
 
-        uint64_t getPrevRdValue() const
-        {
-            sparta_assert(dst_regs_.size() == 1);
-            return dst_regs_[0].reg_prev_value;
-        }
+        void preExecute(AtlasState* state);
 
-        void preExecute(AtlasState* state)
-        {
-            reset_();
-            preExecute_(state);
-        }
+        void postExecute(AtlasState* state);
 
-        void postExecute(AtlasState* state) { postExecute_(state); }
-
-        void preException(AtlasState* state) { preException_(state); }
+        void preException(AtlasState* state);
 
         virtual void stopSim() {}
 
-        struct MemRead
+        struct ObservedMemAccess
         {
             Addr addr;
             size_t size;
             uint64_t value;
         };
 
-        struct MemWrite : MemRead
+        using MemRead = ObservedMemAccess;
+
+        struct MemWrite : ObservedMemAccess
         {
             uint64_t prior_value;
         };
 
         void registerReadWriteCsrCallbacks(sparta::RegisterBase* reg)
         {
-            reg->getPostWriteNotificationSource().REGISTER_FOR_THIS(postCsrWrite_);
-            reg->getReadNotificationSource().REGISTER_FOR_THIS(postCsrRead_);
+            if (arch_.isValid())
+            {
+                reg->getPostWriteNotificationSource().REGISTER_FOR_THIS(postCsrWrite_);
+                reg->getReadNotificationSource().REGISTER_FOR_THIS(postCsrRead_);
+            }
         }
 
         void registerReadWriteMemCallbacks(sparta::memory::BlockingMemoryIFNode* m)
         {
-            m->getPostWriteNotificationSource().REGISTER_FOR_THIS(postMemWrite_);
-            m->getReadNotificationSource().REGISTER_FOR_THIS(postMemRead_);
+            if (arch_.isValid())
+            {
+                m->getPostWriteNotificationSource().REGISTER_FOR_THIS(postMemWrite_);
+                m->getReadNotificationSource().REGISTER_FOR_THIS(postMemRead_);
+            }
         }
 
       protected:
@@ -112,6 +153,10 @@ namespace atlas
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
       private:
+        sparta::utils::ValidValue<ObserverMode> arch_;
+
+        void inspectInitialState_(AtlasState* state);
+
         virtual void preExecute_(AtlasState*) {}
 
         virtual void postExecute_(AtlasState*) {}
@@ -131,6 +176,8 @@ namespace atlas
             mem_reads_.clear();
             mem_writes_.clear();
         }
+
+        uint64_t readRegister_(const sparta::Register* reg);
 
         // Callbacks
         void postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,

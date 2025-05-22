@@ -51,7 +51,7 @@ namespace atlas
                 const auto eit = value->as_object().end();
                 while (it != eit)
                 {
-                    cached_field_defns_.emplace_back(it->key(), it->value());
+                    cached_field_defns_.emplace_back(std::string(it->key()), it->value());
                     field_defns.emplace_back(cached_field_defns_.back().getDefn());
                     ++it;
                 }

@@ -7,7 +7,10 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver() {}
+    CoSimObserver::CoSimObserver() : Observer(ObserverMode::RV64)
+    {
+        // TODO: CoSimObserver for rv32
+    }
 
     void CoSimObserver::preExecute_(AtlasState* state)
     {
@@ -25,54 +28,12 @@ namespace atlas
 
         if (inst)
         {
-            if (inst->hasRs1())
-            {
-                const auto rs1 = inst->getRs1Reg();
-                const uint64_t value = rs1->dmiRead<uint64_t>();
-                src_regs_.emplace_back(getRegId(rs1), value);
-            }
-
-            if (inst->hasRs2())
-            {
-                const auto rs2 = inst->getRs2Reg();
-                const uint64_t value = rs2->dmiRead<uint64_t>();
-                src_regs_.emplace_back(getRegId(rs2), value);
-            }
-
-            // Get initial value of destination registers
-            if (inst->hasRd())
-            {
-                const auto rd = inst->getRdReg();
-                const uint64_t value = rd->dmiRead<uint64_t>();
-                dst_regs_.emplace_back(getRegId(rd), value);
-            }
-
             last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
         }
     }
 
-    void CoSimObserver::preException_(AtlasState* state)
-    {
-        preExecute(state);
-
-        // Get value of source registers
-        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
-        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
-    }
-
     void CoSimObserver::postExecute_(AtlasState* state)
     {
-        // Get final value of destination registers
-        AtlasInstPtr inst = state->getCurrentInst();
-
-        if (inst && inst->hasRd())
-        {
-            sparta_assert(dst_regs_.size() == 1);
-            const auto & rd_reg = inst->getRdReg();
-            const uint64_t rd_value = rd_reg->dmiRead<uint64_t>();
-            dst_regs_[0].setValue(rd_value);
-        }
-
         for (auto & src_reg : src_regs_)
         {
             last_event_.register_reads_.emplace_back(src_reg.reg_id, src_reg.reg_value);
