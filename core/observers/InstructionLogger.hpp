@@ -17,7 +17,7 @@ namespace atlas
       public:
         using base_type = InstructionLogger;
 
-        InstructionLogger(sparta::log::MessageSource & inst_logger, const Observer::Arch arch);
+        InstructionLogger(sparta::log::MessageSource & inst_logger, const ObserverMode arch);
 
         void useSpikeFormatting();
 

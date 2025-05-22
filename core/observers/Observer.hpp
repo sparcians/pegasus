@@ -11,31 +11,31 @@ namespace atlas
     class AtlasState;
     class ActionGroup;
 
+    // The base class needs to know if we are rv32 or rv64 since it is responsible for
+    // reading register values (XLEN).
+    //
+    // We do not use templates here (template <typename XLEN>) because then AtlasState
+    // cannot hold onto arch-agnostic observers (std::vector<std::unique_ptr<Observer>>).
+    //
+    // Note that if your subclass tells the Observer to use ObserverMode::UNUSED, then
+    // the before/after register values will NOT be tracked.
+    enum class ObserverMode
+    {
+        RV32,
+        RV64,
+        UNUSED
+    };
+
     class Observer
     {
       public:
-        // The base class needs to know if we are rv32 or rv64 since it is responsible for
-        // reading register values (XLEN).
-        //
-        // We do not use templates here (template <typename XLEN>) because then AtlasState
-        // cannot hold onto arch-agnostic observers (std::vector<std::unique_ptr<Observer>>).
-        //
-        // Note that if your subclass tells the Observer to use Arch::UNUSED, then the
-        // before/after register values will NOT be tracked.
-        enum class Arch
-        {
-            RV32,
-            RV64,
-            UNUSED
-        };
-
-        static uint32_t getRegWidth(const Arch arch)
+        static uint32_t getRegWidth(const ObserverMode arch)
         {
             switch (arch)
             {
-                case Arch::RV32:
+                case ObserverMode::RV32:
                     return 8;
-                case Arch::RV64:
+                case ObserverMode::RV64:
                     return 16;
                 default:
                     sparta_assert(false, "Invalid architecture");
@@ -44,9 +44,9 @@ namespace atlas
 
         uint32_t getRegWidth() const { return Observer::getRegWidth(arch_); }
 
-        Observer(const Arch arch)
+        Observer(const ObserverMode arch)
         {
-            if (arch != Arch::UNUSED)
+            if (arch != ObserverMode::UNUSED)
             {
                 arch_ = arch;
             }
@@ -153,7 +153,7 @@ namespace atlas
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
       private:
-        sparta::utils::ValidValue<Arch> arch_;
+        sparta::utils::ValidValue<ObserverMode> arch_;
 
         void inspectInitialState_(AtlasState* state);
 

@@ -298,7 +298,7 @@ namespace atlas
     };
 
     InstructionLogger::InstructionLogger(sparta::log::MessageSource & inst_logger,
-                                         const Observer::Arch arch) :
+                                         const ObserverMode arch) :
         Observer(arch),
         inst_logger_(inst_logger),
         inst_log_writer_(std::make_shared<AtlasInstLogWriter>(inst_logger_, getRegWidth()))

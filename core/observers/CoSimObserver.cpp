@@ -7,7 +7,7 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver() : Observer(Observer::Arch::RV64)
+    CoSimObserver::CoSimObserver() : Observer(ObserverMode::RV64)
     {
         // TODO: CoSimObserver for rv32
     }

@@ -190,12 +190,12 @@ namespace atlas
             if (xlen_ == 64)
             {
                 addObserver(
-                    std::make_unique<InstructionLogger>(inst_logger_, Observer::Arch::RV64));
+                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV64));
             }
             else
             {
                 addObserver(
-                    std::make_unique<InstructionLogger>(inst_logger_, Observer::Arch::RV32));
+                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
             }
         }
 
