@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cinttypes>
-#include <map>
 
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
@@ -14,6 +13,7 @@
 namespace atlas
 {
     class AtlasSim;
+    class Callbacks;
 
     /**
      * \class SystemCallEmulator
@@ -46,6 +46,9 @@ namespace atlas
    '1'       Means ALL output should go to stdout
    '2'       Means ALL output should go to stderr
   <filename> Means ALL output to given filename)desc")
+            PARAMETER(std::vector<uint64_t>, mem_map_params,
+                      std::vector<uint64_t>({0x10000000, 0x1000000, 0x1000}),
+                      "Memory Mapping parameters: <base addr> <total size> <page size>")
         };
 
         //! Construct!
@@ -62,19 +65,23 @@ namespace atlas
         //! Handle exit call
         void exitCall(uint64_t exit_code);
 
+        //! Get the default write FD
+        int getFDOverrideForWrite(int caller_fd);
+
+        //! Get AtlasSim
+        AtlasSim *getAtlasSim() { return sim_; }
+
+        const std::vector<uint64_t> & getMemMapParams() const {
+            return memory_map_params_;
+        }
+
       private:
+        const std::vector<uint64_t> memory_map_params_;
+
         sparta::log::MessageSource syscall_log_;
         FILE* file_for_write_ = nullptr;
         int fd_for_write_ = DEFAULT_WRITE_FD;
         AtlasSim* sim_ = nullptr;
-
-        using HandlerFunc =
-            std::function<int64_t (const SystemCallStack &, sparta::memory::BlockingMemoryIF*)>;
-        struct SystemCall
-        {
-            const std::string name;
-            const HandlerFunc handler;
-        };
 
         //! Bad handler
         void badSystemCallHandler_(const SystemCallStack &,
@@ -83,27 +90,6 @@ namespace atlas
             throw ("System Call is known, but not supported");
         }
 
-        std::map<uint64_t, SystemCall> supported_sys_calls_;
-
-        // The system calls
-        int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t openat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t lseek_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t read_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t write_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t writev_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t pread_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t pwrite_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t readlinkat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t fstatat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t exit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t lstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getmainvars_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        std::unique_ptr<Callbacks> callbacks_;
 };
 } // namespace atlas
