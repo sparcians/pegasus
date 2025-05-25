@@ -60,7 +60,7 @@ namespace atlas
                                          {131, {"tgkill",       cfp(&Callbacks::tgkill_)}},
                                          {135, {"rt_sigprocmask", cfp(&Callbacks::rtSIGProcMask_)}},
                                          {160, {"uname",        cfp(&Callbacks::uname_)}},
-                                         {172, {"iopl",         cfp(&Callbacks::iopl_)}},
+                                         {172, {"getpid",         cfp(&Callbacks::getpid_)}},
                                          {174, {"getuid",       cfp(&Callbacks::getuid_)}},
                                          {175, {"geteuid",      cfp(&Callbacks::geteuid_)}},
                                          {176, {"getgid",       cfp(&Callbacks::getgid_)}},
@@ -82,7 +82,7 @@ namespace atlas
             try {
                 const auto & syscall = supported_sys_calls_.at(sc_call_id);
                 ret_val = syscall.handler(call_stack, memory);
-                SYSCALL_LOG("SYSCALL: "<< syscall.name << "(" << sc_call_id << ") -> " << ret_val);
+                SYSCALL_LOG(syscall.name << " #" << sc_call_id << " -> " << ret_val);
             }
             catch (const std::out_of_range &) {
                 sparta_assert(false, "System call #" << sc_call_id << " is not known");
@@ -112,7 +112,7 @@ namespace atlas
         int64_t setRobustList_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t tgkill_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t rtSIGProcMask_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t iopl_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getpid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t uname_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t geteuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -421,9 +421,46 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::writev_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::writev_(const SystemCallEmulator::SystemCallStack &call_stack,
+                               sparta::memory::BlockingMemoryIF*mem)
     {
-        int64_t ret = -1;
+        auto fd             = emulator_->getFDOverrideForWrite(call_stack[1]);
+        const auto iov_addr = call_stack[2];
+        const auto iov_cnt  = call_stack[3];
+
+        // Grab the iovec structure from mem
+        iovec * iov = (iovec*)alloca(sizeof(iovec) * iov_cnt);
+        mem->peek(iov_addr, sizeof(iovec) * iov_cnt, reinterpret_cast<uint8_t*>(iov));
+
+        int64_t ret = 0;
+        for(uint32_t i = 0; i < iov_cnt; ++i)
+        {
+            const uint64_t str_addr = (uint64_t)iov[i].iov_base;
+            const auto     str_len  = iov[i].iov_len;
+            std::vector<uint8_t> char_str(str_len);
+            if(SPARTA_EXPECT_FALSE(mem->doesAccessSpan(str_addr, str_len)))
+            {
+                const auto mem_block_size = mem->getBlockSize();
+
+                // Need to break up the read into parts.
+                // Math: 0x400 - (0x3fe & 0x3ff) = 2 -- will fetch 2 bytes
+                const uint32_t len_first_half =
+                    mem_block_size - (str_addr & (mem_block_size - 1));
+
+                mem->peek(str_addr, len_first_half, &char_str[0]);
+
+                mem->peek(str_addr + len_first_half, str_len - len_first_half,
+                             &char_str[0] + len_first_half);
+
+            }
+            else {
+                mem->peek(str_addr, str_len, &char_str[0]);
+            }
+
+            ret += ::write(fd, &char_str[0], str_len);
+        }
+        SYSCALL_LOG("writev(" << fd << ", " << HEX16(iov_addr) << ", " << iov_cnt << ") -> " << ret);
+
         return ret;
     }
     int64_t Callbacks::pread_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
@@ -474,10 +511,10 @@ namespace atlas
         int64_t ret = 0;
         return ret;
     }
-    int64_t Callbacks::iopl_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getpid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // ignored
-        int64_t ret = 0;
+        auto ret = ::getpid();
+        SYSCALL_LOG("getpid() -> " << ret);
         return ret;
     }
     int64_t Callbacks::uname_(const SystemCallEmulator::SystemCallStack &call_stack,
@@ -489,8 +526,8 @@ namespace atlas
         struct uname_info {
             const char sysname    [UTS_CHAR_LENGTH] = "Atlas Core Model";
             const char nodename   [UTS_CHAR_LENGTH] = "";
-            const char release    [UTS_CHAR_LENGTH] = "0,0.0";
-            const char version    [UTS_CHAR_LENGTH] = "0.0.0"; // TBD ATLAS_VERSION;
+            const char release    [UTS_CHAR_LENGTH] = "4,15.0";
+            const char version    [UTS_CHAR_LENGTH] = "";
             const char machine    [UTS_CHAR_LENGTH] = "";
             const char domainname [UTS_CHAR_LENGTH] = "";  // Domainname (if exists)
         } atlas_uname_info;
