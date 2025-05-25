@@ -68,6 +68,7 @@ namespace atlas
                                          {178, {"getegid",      cfp(&Callbacks::getegid_)}},
                                          {214, {"brk",          cfp(&Callbacks::brk_)}},
                                          {222, {"mmap",         cfp(&Callbacks::mmap_)}},
+                                         {261, {"prlimit",      cfp(&Callbacks::prlimit_)}},
                                          {291, {"statx",        cfp(&Callbacks::statx_)}},
                                          {1024, {"open",        cfp(&Callbacks::open_)}},
                                          {1039, {"lstat",       cfp(&Callbacks::lstat_)}},
@@ -82,12 +83,15 @@ namespace atlas
             try {
                 const auto & syscall = supported_sys_calls_.at(sc_call_id);
                 ret_val = syscall.handler(call_stack, memory);
-                SYSCALL_LOG(syscall.name << " #" << sc_call_id << " -> " << ret_val);
             }
             catch (const std::out_of_range &) {
                 sparta_assert(false, "System call #" << sc_call_id << " is not known");
             }
             return ret_val;
+        }
+
+        void setWorkload(const std::string & workload) {
+            workload_ = workload;
         }
 
     private:
@@ -121,6 +125,7 @@ namespace atlas
         int64_t getegid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t brk_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mmap_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t prlimit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t statx_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t open_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t lstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -191,11 +196,14 @@ namespace atlas
         // Logging
         sparta::log::MessageSource & syscall_log_;
 
+        // The workload
+        std::string workload_;
+
     };
 
 
     SystemCallEmulator::SystemCallEmulator(sparta::TreeNode* my_node,
-                                     const SystemCallEmulator::SystemCallEmulatorParameters* p) :
+                                           const SystemCallEmulator::SystemCallEmulatorParameters* p) :
         sparta::Unit(my_node),
         memory_map_params_(p->mem_map_params),
         syscall_log_(my_node, "syscall", "System Call Logger")
@@ -243,6 +251,11 @@ namespace atlas
             fd = fd_for_write_;
         }
         return fd;
+    }
+
+    void SystemCallEmulator::setWorkload(const std::string workload) {
+        workload_ = workload;
+        callbacks_->setWorkload(workload);
     }
 
 
@@ -338,20 +351,28 @@ namespace atlas
         return guest_addr;
     }
 
+    int64_t Callbacks::prlimit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+
     int64_t Callbacks::stime_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
     int64_t Callbacks::faccessat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
     int64_t Callbacks::close_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        int64_t ret = 0;
-        return ret;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
     int64_t Callbacks::lseek_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
@@ -465,40 +486,96 @@ namespace atlas
     }
     int64_t Callbacks::pread_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::pwrite_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::readlinkat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::readlinkat_(const SystemCallEmulator::SystemCallStack &call_stack,
+                                   sparta::memory::BlockingMemoryIF*mem)
     {
         int64_t ret = -1;
+        const auto dirfd    = call_stack[1];
+        const auto pathname = call_stack[2];
+        const auto buf      = call_stack[3];
+        const auto bufsize  = call_stack[4];
+
+        std::string pathname_in_memory;
+        uint8_t one_char = 0;
+        uint32_t next_byte = 0;
+        do {
+            mem->peek(pathname + next_byte, 1, &one_char);
+            if (one_char != 0)
+            {
+                pathname_in_memory += one_char;
+            }
+            else {
+                // end of string
+                break;
+            }
+            ++next_byte;
+        } while(true);
+
+        std::vector<uint8_t> final_resolved_path(bufsize, '\0');
+        auto final_resolved_path_ptr = (char*)final_resolved_path.data();
+
+        ret = 0;
+        if("/proc/self/exe" == pathname_in_memory) {
+            auto was_resolved = ::realpath(workload_.c_str(), final_resolved_path_ptr);
+            if(was_resolved != final_resolved_path_ptr) {
+                ret = -errno;
+            }
+            else {
+                ret = strlen(final_resolved_path_ptr);
+            }
+        }
+        else {
+            ret = ::readlinkat(dirfd, pathname_in_memory.c_str(),
+                               (char*)final_resolved_path_ptr, bufsize);
+        }
+        mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
+
+        SYSCALL_LOG("readlinkat("
+                    << HEX16(dirfd) << ", "
+                    << HEX16(pathname)
+                    << "(\"" << pathname_in_memory << "\"), "
+                    << HEX16(buf)
+                    << "(\"" << final_resolved_path_ptr << "\"), "
+                    << bufsize
+                    << ") -> " << ret);
+        if(ret == -1) {
+            SYSCALL_LOG("\treadlinkat reports FAILED: errno: " << errno << " " << ::strerror(errno));
+            ret = -errno;
+        }
+
         return ret;
     }
     int64_t Callbacks::fstatat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::fstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::setTIDAddress_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // ignored
-        int64_t ret = 0;
-        return ret;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
     int64_t Callbacks::setRobustList_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // ignored
-        int64_t ret = 0;
-        return ret;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
     int64_t Callbacks::tgkill_(const SystemCallEmulator::SystemCallStack &call_stack,
                                sparta::memory::BlockingMemoryIF*mem)
@@ -507,32 +584,31 @@ namespace atlas
     }
     int64_t Callbacks::rtSIGProcMask_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // ignored
-        int64_t ret = 0;
-        return ret;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
     int64_t Callbacks::getpid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         auto ret = ::getpid();
-        SYSCALL_LOG("getpid() -> " << ret);
         return ret;
     }
     int64_t Callbacks::uname_(const SystemCallEmulator::SystemCallStack &call_stack,
                               sparta::memory::BlockingMemoryIF*memory)
     {
-        const auto pbuf = call_stack[1];
+        const auto uname_data_ptr = call_stack[1];
         const auto UTS_CHAR_LENGTH = 64 + 1;  // standard
 
         struct uname_info {
-            const char sysname    [UTS_CHAR_LENGTH] = "Atlas Core Model";
+            const char sysname    [UTS_CHAR_LENGTH] = "Atlas Core Emulator";
             const char nodename   [UTS_CHAR_LENGTH] = "";
-            const char release    [UTS_CHAR_LENGTH] = "4,15.0";
+            const char release    [UTS_CHAR_LENGTH] = "4.15.0";
             const char version    [UTS_CHAR_LENGTH] = "";
             const char machine    [UTS_CHAR_LENGTH] = "";
             const char domainname [UTS_CHAR_LENGTH] = "";  // Domainname (if exists)
         } atlas_uname_info;
 
-        memory->poke(pbuf, sizeof(uname_info),  reinterpret_cast<uint8_t*>(&atlas_uname_info));
+        memory->poke(uname_data_ptr, sizeof(uname_info),  reinterpret_cast<uint8_t*>(&atlas_uname_info));
+        SYSCALL_LOG("uname(" << HEX16(uname_data_ptr) << ") -> 0");
         return 0;
     }
     int64_t Callbacks::exit_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
@@ -544,21 +620,25 @@ namespace atlas
     }
     int64_t Callbacks::statx_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::open_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::lstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
     int64_t Callbacks::getmainvars_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }

@@ -126,6 +126,8 @@ namespace atlas
         SystemCallEmulator *system_call_emulator =
             getRoot()->getChild("system_call_emulator")->getResourceAs<atlas::SystemCallEmulator>();
 
+        system_call_emulator->setWorkload(workload_);
+
         const uint32_t num_harts = 1;
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
         {

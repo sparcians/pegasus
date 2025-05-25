@@ -71,9 +71,13 @@ namespace atlas
         //! Get AtlasSim
         AtlasSim *getAtlasSim() { return sim_; }
 
+        //! Get the memory map parameters (used by Callback delegate class)
         const std::vector<uint64_t> & getMemMapParams() const {
             return memory_map_params_;
         }
+
+        //! Set the workload
+        void setWorkload(const std::string workload);
 
       private:
         const std::vector<uint64_t> memory_map_params_;
@@ -82,6 +86,8 @@ namespace atlas
         FILE* file_for_write_ = nullptr;
         int fd_for_write_ = DEFAULT_WRITE_FD;
         AtlasSim* sim_ = nullptr;
+
+        std::string workload_;
 
         //! Bad handler
         void badSystemCallHandler_(const SystemCallStack &,
