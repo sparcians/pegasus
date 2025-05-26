@@ -56,6 +56,7 @@ namespace atlas
                                          {80, {"fstat",         cfp(&Callbacks::fstat_)}},
                                          {93, {"exit",          cfp(&Callbacks::exit_)}},
                                          {96, {"set_tid_address", cfp(&Callbacks::setTIDAddress_)}},
+                                         {98, {"futex",         cfp(&Callbacks::futex_)}},
                                          {99, {"set_robust_list", cfp(&Callbacks::setRobustList_)}},
                                          {131, {"tgkill",       cfp(&Callbacks::tgkill_)}},
                                          {135, {"rt_sigprocmask", cfp(&Callbacks::rtSIGProcMask_)}},
@@ -69,6 +70,7 @@ namespace atlas
                                          {214, {"brk",          cfp(&Callbacks::brk_)}},
                                          {222, {"mmap",         cfp(&Callbacks::mmap_)}},
                                          {261, {"prlimit",      cfp(&Callbacks::prlimit_)}},
+                                         {278, {"getrandom",    cfp(&Callbacks::getrandom_)}},
                                          {291, {"statx",        cfp(&Callbacks::statx_)}},
                                          {1024, {"open",        cfp(&Callbacks::open_)}},
                                          {1039, {"lstat",       cfp(&Callbacks::lstat_)}},
@@ -113,6 +115,7 @@ namespace atlas
         int64_t fstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t exit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t setTIDAddress_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t futex_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t setRobustList_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t tgkill_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t rtSIGProcMask_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -126,6 +129,7 @@ namespace atlas
         int64_t brk_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mmap_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t prlimit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getrandom_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t statx_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t open_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t lstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -357,6 +361,30 @@ namespace atlas
         return 0;
     }
 
+    int64_t Callbacks::getrandom_(const SystemCallEmulator::SystemCallStack &call_stack,
+                                  sparta::memory::BlockingMemoryIF*mem)
+    {
+        auto buffer = call_stack[1];
+        auto buflen = call_stack[2];
+
+        // Use cycles to provide a deterministic answer
+        do
+        {
+            uint64_t cycle = emulator_->getClock()->currentCycle(); ;
+            cycle = cycle * 6364136223846793005 + 1442695040888963407; // knuth random seed
+
+            mem->poke(buffer, std::min(buflen, sizeof(cycle)), (uint8_t*)&cycle);
+
+            if (buflen <= sizeof(cycle))
+                break;
+
+            buffer += sizeof(cycle);
+            buflen -= sizeof(cycle);
+        } while(true);
+
+        return buflen;
+    }
+
     int64_t Callbacks::stime_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
@@ -451,7 +479,7 @@ namespace atlas
 
         // Grab the iovec structure from mem
         iovec * iov = (iovec*)alloca(sizeof(iovec) * iov_cnt);
-        mem->peek(iov_addr, sizeof(iovec) * iov_cnt, reinterpret_cast<uint8_t*>(iov));
+        mem->peek(iov_addr, sizeof(iovec) * iov_cnt, (uint8_t*)(iov));
 
         int64_t ret = 0;
         for(uint32_t i = 0; i < iov_cnt; ++i)
@@ -536,7 +564,7 @@ namespace atlas
         }
         else {
             ret = ::readlinkat(dirfd, pathname_in_memory.c_str(),
-                               (char*)final_resolved_path_ptr, bufsize);
+                               final_resolved_path_ptr, bufsize);
         }
         mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
 
@@ -568,6 +596,11 @@ namespace atlas
         return ret;
     }
     int64_t Callbacks::setTIDAddress_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+    int64_t Callbacks::futex_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
