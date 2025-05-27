@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include/AtlasTypes.hpp"
+#include "core/Action.hpp"
 
 #include <map>
 #include <string>
@@ -8,8 +9,6 @@
 namespace atlas
 {
     class AtlasState;
-    class Action;
-    class ActionGroup;
 
     class RviInsts
     {
@@ -23,71 +22,86 @@ namespace atlas
       private:
         // add,slt,sltu,and,or,xor,sub
         template <typename XLEN, typename OPERATOR>
-        ActionGroup* integer_reg_reg_handler(atlas::AtlasState* state);
+        Action::ItrType integer_reg_regHandler_(atlas::AtlasState* state,
+                                                Action::ItrType action_it);
 
         // integer reg-reg 32-bit operations
-        ActionGroup* addw_handler(atlas::AtlasState* state);
-        ActionGroup* subw_handler(atlas::AtlasState* state);
+        Action::ItrType addwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType subwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // addi,slti,sltui,andi,ori,xori
         template <typename XLEN, typename OPERATOR>
-        ActionGroup* integer_reg_imm_handler(atlas::AtlasState* state);
+        Action::ItrType integer_reg_immHandler_(atlas::AtlasState* state,
+                                                Action::ItrType action_it);
 
         // integer reg-imm 32-bit operations
-        ActionGroup* addiw_handler(atlas::AtlasState* state);
+        Action::ItrType addiwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // move and nop pseudo insts
-        template <typename XLEN> ActionGroup* mv_handler(atlas::AtlasState* state);
-        ActionGroup* nop_handler(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType mvHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType nopHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // compute address for loads and stores
         template <typename XLEN, typename SIZE>
-        ActionGroup* compute_address_handler(atlas::AtlasState* state);
+        Action::ItrType computeAddressHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // lb,lbu,lh,lw,ld
         template <typename XLEN, typename SIZE, bool SIGN_EXTEND = false>
-        ActionGroup* load_handler(atlas::AtlasState* state);
+        Action::ItrType loadHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // sb,sh,sw,sd
         template <typename XLEN, typename SIZE>
-        ActionGroup* store_handler(atlas::AtlasState* state);
+        Action::ItrType storeHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // beq,bge,bgeu,blt,bltu,bne
         template <typename XLEN, typename OPERATOR>
-        ActionGroup* branch_handler(atlas::AtlasState* state);
+        Action::ItrType branchHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // jumps
-        template <typename XLEN> ActionGroup* jal_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* jalr_handler(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType jalHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType jalrHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // load imm, load upper imm, add upper imm to pc
-        template <typename XLEN> ActionGroup* li_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* lui_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* auipc_handler(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType liHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType luiHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType auipcHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // shifts,
-        ActionGroup* sll_handler(atlas::AtlasState* state);
-        ActionGroup* slli_handler(atlas::AtlasState* state);
-        ActionGroup* slliw_handler(atlas::AtlasState* state);
-        ActionGroup* sllw_handler(atlas::AtlasState* state);
-        ActionGroup* sra_handler(atlas::AtlasState* state);
-        ActionGroup* srai_handler(atlas::AtlasState* state);
-        ActionGroup* sraiw_handler(atlas::AtlasState* state);
-        ActionGroup* sraw_handler(atlas::AtlasState* state);
-        ActionGroup* srl_handler(atlas::AtlasState* state);
-        ActionGroup* srli_handler(atlas::AtlasState* state);
-        ActionGroup* srliw_handler(atlas::AtlasState* state);
-        ActionGroup* srlw_handler(atlas::AtlasState* state);
+        Action::ItrType sllHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType slliHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType slliwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType sllwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType sraHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType sraiHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType sraiwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType srawHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType srlHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType srliHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType srliwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType srlwHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // returns, environment calls, breakpoints, fences
         template <typename XLEN, PrivMode PRIV_MODE>
-        ActionGroup* xret_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* ecall_handler(atlas::AtlasState* state);
-        ActionGroup* ebreak_handler(atlas::AtlasState* state);
-        ActionGroup* fence_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* sfence_vma_handler(atlas::AtlasState* state);
+        Action::ItrType xretHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType ebreakHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType fenceHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType sfence_vmaHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // wfi
-        template <typename XLEN> ActionGroup* wfi_handler(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType wfiHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

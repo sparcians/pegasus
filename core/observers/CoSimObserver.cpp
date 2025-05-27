@@ -7,9 +7,12 @@
 
 namespace atlas
 {
-    CoSimObserver::CoSimObserver() {}
+    CoSimObserver::CoSimObserver() : Observer(ObserverMode::RV64)
+    {
+        // TODO: CoSimObserver for rv32
+    }
 
-    ActionGroup* CoSimObserver::preExecute_(AtlasState* state)
+    void CoSimObserver::preExecute_(AtlasState* state)
     {
         last_event_ = cosim::Event(++event_uid_, cosim::Event::Type::INSTRUCTION);
         last_event_.hart_id_ = state->getHartId();
@@ -25,59 +28,12 @@ namespace atlas
 
         if (inst)
         {
-            if (inst->hasRs1())
-            {
-                const auto rs1 = inst->getRs1Reg();
-                const std::vector<uint8_t> value = convertToByteVector(rs1->dmiRead<uint64_t>());
-                src_regs_.emplace_back(getRegId(rs1), value);
-            }
-
-            if (inst->hasRs2())
-            {
-                const auto rs2 = inst->getRs2Reg();
-                const std::vector<uint8_t> value = convertToByteVector(rs2->dmiRead<uint64_t>());
-                src_regs_.emplace_back(getRegId(rs2), value);
-            }
-
-            // Get initial value of destination registers
-            if (inst->hasRd())
-            {
-                const auto rd = inst->getRdReg();
-                const std::vector<uint8_t> value = convertToByteVector(rd->dmiRead<uint64_t>());
-                dst_regs_.emplace_back(getRegId(rd), value);
-            }
-
             last_event_.mavis_opcode_info_ = inst->getMavisOpcodeInfo();
         }
-
-        return nullptr;
     }
 
-    ActionGroup* CoSimObserver::preException_(AtlasState* state)
+    void CoSimObserver::postExecute_(AtlasState* state)
     {
-        preExecute(state);
-
-        // Get value of source registers
-        fault_cause_ = state->getExceptionUnit()->getUnhandledFault();
-        interrupt_cause_ = state->getExceptionUnit()->getUnhandledInterrupt();
-        return nullptr;
-    }
-
-    ActionGroup* CoSimObserver::postExecute_(AtlasState* state)
-    {
-        // Get final value of destination registers
-        AtlasInstPtr inst = state->getCurrentInst();
-
-        if (inst && inst->hasRd())
-        {
-            sparta_assert(dst_regs_.size() == 1);
-            const auto & rd_reg = inst->getRdReg();
-            std::vector<uint8_t> value(sizeof(uint64_t));
-            const uint64_t rd_value = rd_reg->dmiRead<uint64_t>();
-            std::memcpy(value.data(), &rd_value, sizeof(uint64_t));
-            dst_regs_[0].setValue(value);
-        }
-
         for (auto & src_reg : src_regs_)
         {
             last_event_.register_reads_.emplace_back(src_reg.reg_id, src_reg.reg_value);
@@ -98,7 +54,5 @@ namespace atlas
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
         // TODO: next_priv_
-
-        return nullptr;
     }
 } // namespace atlas

@@ -47,9 +47,13 @@ namespace atlas
       private:
         void onBindTreeEarly_() override;
 
-        template <typename XLEN> ActionGroup* handleException_(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType handleException_(atlas::AtlasState* state, Action::ItrType action_it);
 
         ActionGroup exception_action_group_{"Exception"};
+
+        Action rv32_exception_action_;
+        Action rv64_exception_action_;
 
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;

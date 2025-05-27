@@ -3,8 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/AtlasAllocatorWrapper.hpp"
 #include "core/AtlasInst.hpp"
-
-#include "core/observers/InstructionLogger.hpp"
+#include "core/observers/Observer.hpp"
 #include "core/CoSimQuery.hpp"
 
 #include "arch/RegisterSet.hpp"
@@ -30,11 +29,6 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
-namespace simdb
-{
-    class ObjectManager;
-}
-
 namespace atlas
 {
     class AtlasInst;
@@ -45,6 +39,7 @@ namespace atlas
     class Translate;
     class Exception;
     class SimController;
+    class VectorState;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -63,7 +58,7 @@ namespace atlas
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64gc_zicsr_zifencei", "ISA string")
+            PARAMETER(std::string, isa_string, "rv64gcbv_zicsr_zifencei", "ISA string")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
@@ -74,7 +69,7 @@ namespace atlas
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
 
         // Not default -- defined in source file to reduce massive inlining
-        ~AtlasState();
+        virtual ~AtlasState();
 
         HartId getHartId() const { return hart_id_; }
 
@@ -99,14 +94,7 @@ namespace atlas
 
         std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
-        void updateMavisContext()
-        {
-            const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-            // FIXME: Use ISA string for context name and check if it already exists
-            mavis_->makeContext(std::to_string(pc_), extension_manager_.getJSONs(),
-                                getUArchFiles_(), mavis_uid_list_, {}, inclusions, {});
-            mavis_->switchContext(std::to_string(pc_));
-        }
+        void changeMavisContext();
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -120,7 +108,13 @@ namespace atlas
 
         Addr getNextPc() const { return next_pc_; }
 
+        uint64_t getPcAlignment() const { return pc_alignment_; }
+
+        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
+
         PrivMode getPrivMode() const { return priv_mode_; }
+
+        PrivMode getLdstPrivMode() const { return ldst_priv_mode_; }
 
         bool getVirtualMode() const { return virtual_mode_; }
 
@@ -130,11 +124,11 @@ namespace atlas
             priv_mode_ = priv_mode;
         }
 
-        void changeMMUMode(uint32_t satp_mode);
+        template <typename XLEN> void changeMMUMode();
 
         struct SimState
         {
-            uint64_t current_opcode = 0;
+            uint32_t current_opcode = 0;
             uint64_t current_uid = 0;
             AtlasInstPtr current_inst = nullptr;
             uint64_t inst_count = 0;
@@ -153,6 +147,10 @@ namespace atlas
 
         SimState* getSimState() { return &sim_state_; }
 
+        const VectorState* getVectorState() const { return vector_state_ptr_; }
+
+        VectorState* getVectorState() { return vector_state_ptr_; }
+
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
         void setCurrentInst(AtlasInstPtr inst)
@@ -170,7 +168,9 @@ namespace atlas
 
         void setAtlasSystem(AtlasSystem* atlas_system) { atlas_system_ = atlas_system; }
 
-        void enableInteractiveMode() { interactive_mode_ = true; }
+        void enableInteractiveMode();
+
+        void useSpikeFormatting();
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -228,16 +228,6 @@ namespace atlas
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
 
-        // tuple: reg name, group num, reg id, initial expected val, initial actual val
-        using RegisterInfo = std::tuple<std::string, uint32_t, uint32_t, uint64_t, uint64_t>;
-
-        void enableCoSimDebugger(std::shared_ptr<simdb::ObjectManager> db,
-                                 std::shared_ptr<CoSimQuery> query,
-                                 const std::vector<RegisterInfo> & reg_info);
-
-        // Take register snapshot and send to the database (Atlas IDE backend support)
-        void snapshotAndSyncWithCoSim();
-
         // For standalone Atlas simulations, this method will be called
         // at the top of AtlasSim::run()
         void boot();
@@ -249,36 +239,23 @@ namespace atlas
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
 
-        ActionGroup* preExecute_(AtlasState* state);
-        ActionGroup* postExecute_(AtlasState* state);
-        ActionGroup* preException_(AtlasState* state);
+        Action::ItrType preExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType postExecute_(AtlasState* state, Action::ItrType action_it);
+        Action::ItrType preException_(AtlasState* state, Action::ItrType action_it);
 
         Action pre_execute_action_;
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        ActionGroup* stopSim_(AtlasState*)
+        Action::ItrType stopSim_(AtlasState*, Action::ItrType action_it)
         {
             for (auto & obs : observers_)
             {
                 obs->stopSim();
             }
 
-            return nullptr;
+            return ++action_it;
         }
-
-        // Check all PC/reg/csr values against our cosim comparator,
-        // and return the result code as follows:
-        //
-        //   success            0x00
-        //   exception          0x1x (x encodes the exception cause)
-        //   pc mismatch        0x2- (- means ignored)
-        //   reg val mismatch   0x3-
-        //   unimplemented inst 0x4-
-        //
-        // At the end of this method, all PC/reg/csr values will be
-        // synced with the other simulation ("truth").
-        int compareWithCoSimAndSync_();
 
         //! Hart ID
         const HartId hart_id_;
@@ -335,8 +312,25 @@ namespace atlas
         //! Previous pc
         Addr prev_pc_ = 0x0;
 
+        //! PC alignment
+        uint64_t pc_alignment_ = 4;
+
+        //! PC alignment
+        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
+
+        void setPcAlignment_(uint64_t pc_alignment)
+        {
+            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
+                          "Invalid PC alignment value! " << pc_alignment);
+            pc_alignment_ = pc_alignment;
+            pc_alignment_mask_ = ~(pc_alignment - 1);
+        }
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
+
+        //! Current privilege mode for LS translation
+        PrivMode ldst_priv_mode_ = PrivMode::MACHINE;
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;
@@ -344,8 +338,11 @@ namespace atlas
         //! Simulation state
         SimState sim_state_;
 
+        //! Vector state
+        VectorState* vector_state_ptr_ = nullptr;
+
         // Increment PC Action
-        ActionGroup* incrementPc_(AtlasState* state);
+        Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
         atlas::Action increment_pc_action_;
 
         // Translation/MMU state
@@ -353,9 +350,6 @@ namespace atlas
 
         //! AtlasSystem for accessing memory
         AtlasSystem* atlas_system_;
-
-        //! Interactive mode
-        bool interactive_mode_ = false;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
@@ -392,7 +386,6 @@ namespace atlas
         ActionGroup stop_sim_action_group_;
 
         // Co-simulation debug utils
-        std::shared_ptr<simdb::ObjectManager> cosim_db_;
         std::shared_ptr<CoSimQuery> cosim_query_;
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
@@ -427,23 +420,21 @@ namespace atlas
         state->getFpRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
     }
 
-    template <typename XLEN> static inline XLEN READ_VEC_REG(AtlasState* state, uint32_t reg_ident)
+    template <typename VLEN> static inline VLEN READ_VEC_REG(AtlasState* state, uint32_t reg_ident)
     {
-        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        return state->getVecRegister(reg_ident)->dmiRead<XLEN>();
+        return state->getVecRegister(reg_ident)->dmiRead<VLEN>();
     }
 
-    template <typename XLEN>
-    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
+    template <typename VLEN>
+    static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, VLEN reg_value)
     {
-        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        state->getVecRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+        state->getVecRegister(reg_ident)->dmiWrite<VLEN>(reg_value);
     }
 
     template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
+        return state->getCsrRegister(reg_ident)->read<XLEN>();
     }
 
     template <typename XLEN>
@@ -456,17 +447,18 @@ namespace atlas
             const auto old_value = reg->dmiRead<XLEN>();
             const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
-            reg->dmiWrite<XLEN>(write_val);
+            reg->write<XLEN>(write_val);
         }
         else
         {
-            state->getCsrRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
+            state->getCsrRegister(reg_ident)->write<XLEN>(reg_value);
         }
     }
 
     template <typename XLEN> static inline XLEN PEEK_CSR_REG(AtlasState* state, uint32_t reg_ident)
     {
-        return READ_CSR_REG<XLEN>(state, reg_ident);
+        static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+        return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
     }
 
     template <typename XLEN>

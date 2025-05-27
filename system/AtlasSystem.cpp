@@ -10,8 +10,9 @@ namespace atlas
         sparta::Unit(sys_node),
         syscall_emulation_enabled_(p->enable_syscall_emulation)
     {
-        const std::string workload = p->workload;
-        loadWorkload_(workload);
+        if (const std::string workload = p->workload; false == workload.empty()) {
+            loadWorkload_(workload);
+        }
 
         if (p->enable_uart)
         {
@@ -53,7 +54,7 @@ namespace atlas
     {
         if (elf_reader_.load(workload) == false)
         {
-            // fail
+            throw sparta::SpartaException() << "\n\nERROR: ELF binary '" << workload << "' failed to load! Does it exist?\n";
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;

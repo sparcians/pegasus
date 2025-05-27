@@ -10,9 +10,9 @@ target_link_libraries(atlascosimlib
     atlascore
     atlasinsts
     softfloat
+    ${STF_LINK_LIBS}
     atlassys
-    ${SPARTA_LIBS}
-    mavis
+    ${ATLAS_LIBS}
 )
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/arch          ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)

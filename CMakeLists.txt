@@ -46,6 +46,9 @@ else()
     -Woverloaded-virtual -Wmissing-field-initializers -pipe)
 endif()
 
+find_package (Boost 1.74.0 REQUIRED COMPONENTS program_options)
+message (STATUS "Using BOOST ${Boost_VERSION_STRING}")
+
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
 if (CCACHE_PROGRAM)
@@ -70,8 +73,8 @@ set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 if(BUILD_SPARTA_FROM_SOURCE)
   message (STATUS "Building SPARTA from source in ${SPARTA_SEARCH_DIR}")
   add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta")
-  include_directories(${SPARTA_SEARCH_DIR})
-  include_directories(${SPARTA_SEARCH_DIR}/simdb/include)
+  include_directories(SYSTEM ${SPARTA_SEARCH_DIR})
+  include_directories(SYSTEM ${SPARTA_SEARCH_DIR}/simdb/include)
   include(${SPARTA_SEARCH_DIR}/cmake/SpartaTestingMacros.cmake)
   include(${SPARTA_SEARCH_DIR}/cmake/sparta-config.cmake)
   set(SPARTA_LIBS ${Sparta_LIBS})
@@ -95,12 +98,15 @@ else()
     message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
   endif()
 
-  include_directories(${SPARTA_INCLUDE_DIRS})
+  include_directories(SYSTEM ${SPARTA_INCLUDE_DIRS})
 endif()
 
 ################################################################################
 
 include_directories(${CMAKE_SOURCE_DIR})
+
+# Boost
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Mavis
 include_directories(SYSTEM mavis)
@@ -111,9 +117,21 @@ add_subdirectory(mavis)
 include_directories(SYSTEM softfloat)
 add_subdirectory(softfloat)
 
+# STF Library
+set(DISABLE_STF_DOXYGEN 1)
+set(DISABLE_STF_TESTS 1)
+include_directories(SYSTEM stf_lib)
+include(stf_lib/cmake/stf_linker_setup.cmake)
+setup_stf_linker(false)
+add_subdirectory(stf_lib)
+
 # 32-bit register JSON directory
 add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
 add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
+
+# Atlas dependencies
+find_package (Boost REQUIRED COMPONENTS json)
+set (ATLAS_LIBS ${SPARTA_LIBS} ${STF_LIB} mavis Boost::json)
 
 add_subdirectory(arch)
 add_subdirectory(core)

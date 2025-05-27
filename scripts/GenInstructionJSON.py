@@ -19,10 +19,24 @@ from insts.RVF_INST import RV64F_INST
 from insts.RVD_INST import RV32D_INST
 from insts.RVD_INST import RV64D_INST
 
+from insts.RVZBA_INST import RV32ZBA_INST
+from insts.RVZBA_INST import RV64ZBA_INST
+from insts.RVZBB_INST import RV32ZBB_INST
+from insts.RVZBB_INST import RV64ZBB_INST
+from insts.RVZBC_INST import RV32ZBC_INST
+from insts.RVZBC_INST import RV64ZBC_INST
+from insts.RVZBS_INST import RV32ZBS_INST
+from insts.RVZBS_INST import RV64ZBS_INST
+
 from insts.RVZICSR_INST import RV32ZICSR_INST
 from insts.RVZICSR_INST import RV64ZICSR_INST
 from insts.RVZIFENCEI_INST import RV32ZIFENCEI_INST
 from insts.RVZIFENCEI_INST import RV64ZIFENCEI_INST
+
+from insts.RVZVE64X_INST import RVZVE64X_INST
+from insts.RVZVE64D_INST import RVZVE64D_INST
+from insts.RVZVE32X_INST import RVZVE32X_INST
+from insts.RVZVE32F_INST import RVZVE32F_INST
 
 class InstJSONGenerator():
     """Generates instruction definition JSON files.
@@ -48,16 +62,23 @@ class InstJSONGenerator():
         self.extensions = []
         isa_str = isa_str.removeprefix("rv32").removeprefix("rv64")
         for ext in isa_str.split('_'):
-            if "g" == ext:
-                self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
-            elif len(ext) == 1 or "Z" == ext[0] or "z" == ext[0]:
+            if len(ext) == 1 or "Z" == ext[0] or "z" == ext[0]:
                 self.extensions.append(ext)
             else:
-                self.extensions.extend([x for x in ext])
+                for x in ext:
+                    if "g" == x:
+                        self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
+                    elif "b" == x:
+                        self.extensions.extend(['zba', 'zbb', 'zbc', 'zbs'])
+                    elif "v" == x:
+                        self.extensions.extend(['zve64x', 'zve64d', 'zve32x', 'zve32f'])
+                    else:
+                        self.extensions.append(x)
 
         self.isa_map = {}
         for ext in self.extensions:
-            global_str = "RV" + str(self.xlen) + ext.upper() + "_INST"
+            xlen_str = "" if "zve" in ext else str(self.xlen)
+            global_str = "RV" + xlen_str + ext.upper() + "_INST"
             self.isa_map[ext] = globals()[global_str]
             for inst in self.isa_map[ext]:
                 inst['xlen'] = self.xlen
@@ -73,9 +94,8 @@ class InstJSONGenerator():
 
         for ext in self.extensions:
             filename = self.xlen_str + "/atlas_uarch_" + self.xlen_str + ext.lower() + ".json"
-            if not os.path.isfile(filename):
-                with open(filename,"w") as fh:
-                    json.dump(self.isa_map[ext], fh, indent=4)
+            with open(filename,"w") as fh:
+                json.dump(self.isa_map[ext], fh, indent=4)
 
 
 USAGE_STR = "Usage: GenInstructionJSON.py [isa string]"

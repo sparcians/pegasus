@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ActionGroup.hpp"
+
 #include <cstdint>
 #include <iostream>
 
@@ -36,11 +38,18 @@ namespace atlas
         COUNTER_OVERFLOW = 0xd,
     };
 
+    // Defined in Exception.cpp
+    std::ostream & operator<<(std::ostream & os, const FaultCause & cause);
+
+} // namespace atlas
+
+#include "core/Exception.hpp"
+
 #define TRAP_IMPL(cause)                                                                           \
     {                                                                                              \
         auto exception_unit = state->getExceptionUnit();                                           \
         exception_unit->setUnhandledException(cause);                                              \
-        return exception_unit->getActionGroup();                                                   \
+        throw ActionException(exception_unit->getActionGroup());                                   \
     }
 
 #define THROW_MISALIGNED_FETCH TRAP_IMPL(FaultCause::INST_ADDR_MISALIGNED)
@@ -59,7 +68,3 @@ namespace atlas
 #define THROW_STORE_AMO_PAGE_FAULT TRAP_IMPL(FaultCause::STORE_AMO_PAGE_FAULT)
 #define THROW_SOFTWARE_CHECK_FAULT TRAP_IMPL(FaultCause::SOFTWARE_CHECK)
 #define THROW_HARDWARE_ERROR_FAULT TRAP_IMPL(FaultCause::HARDWARE_ERROR)
-
-    // Defined in Exception.cpp
-    std::ostream & operator<<(std::ostream & os, const FaultCause & cause);
-} // namespace atlas

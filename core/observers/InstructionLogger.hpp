@@ -1,58 +1,30 @@
 #pragma once
 
 #include "core/observers/Observer.hpp"
-
-#include "sparta/log/MessageSource.hpp"
 #include "sparta/functional/Register.hpp"
+
+namespace sparta::log
+{
+    class MessageSource;
+}
 
 namespace atlas
 {
-    template <typename XLEN> class InstructionLogger : public Observer
+    class InstLogWriterBase;
+
+    class InstructionLogger : public Observer
     {
       public:
-        using base_type = InstructionLogger<XLEN>;
+        using base_type = InstructionLogger;
 
-        InstructionLogger(sparta::log::MessageSource & inst_logger);
+        InstructionLogger(sparta::log::MessageSource & inst_logger, const ObserverMode arch);
+
+        void useSpikeFormatting();
 
       private:
-        ActionGroup* preExecute_(AtlasState* state) override;
-        ActionGroup* postExecute_(AtlasState* state) override;
-        ActionGroup* preException_(AtlasState* state) override;
+        void postExecute_(AtlasState*) override;
 
         sparta::log::MessageSource & inst_logger_;
-
-        std::vector<uint8_t> getRegByteVector_(const sparta::Register* reg) const
-        {
-            const auto size = reg->getNumBits();
-            if (size == 64)
-            {
-                return convertToByteVector(reg->dmiRead<uint64_t>());
-            }
-            else if (size == 32)
-            {
-                return convertToByteVector(reg->dmiRead<uint32_t>());
-            }
-            else
-            {
-                sparta_assert(false, "Unexpected register size, num bits: " << std::dec << size);
-            }
-        }
-
-        uint64_t getRegValue_(const std::vector<uint8_t> & reg) const
-        {
-            const auto size = reg.size() * 8;
-            if (size == 64)
-            {
-                return convertFromByteVector<uint64_t>(reg);
-            }
-            else if (size == 32)
-            {
-                return convertFromByteVector<uint32_t>(reg);
-            }
-            else
-            {
-                sparta_assert(false, "Unexpected register size, num bits: " << std::dec << size);
-            }
-        }
+        std::shared_ptr<InstLogWriterBase> inst_log_writer_;
     };
 } // namespace atlas

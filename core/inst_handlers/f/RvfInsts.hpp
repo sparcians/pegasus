@@ -19,33 +19,61 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN> ActionGroup* fadd_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fclass_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_l_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_lu_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_s_l_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_s_lu_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_s_w_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_s_wu_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_w_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fcvt_wu_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fdiv_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* feq_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fle_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* flt_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmadd_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmax_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmin_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmsub_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmul_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmv_w_x_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fmv_x_w_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fnmadd_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fnmsub_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fsgnj_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fsgnjn_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fsgnjx_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fsqrt_s_handler(atlas::AtlasState* state);
-        template <typename XLEN> ActionGroup* fsub_s_handler(atlas::AtlasState* state);
+        template <typename XLEN>
+        Action::ItrType fadd_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fclass_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_l_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_lu_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_s_lHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_s_luHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_s_wHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_s_wuHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_w_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_wu_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fdiv_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType feq_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fle_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType flt_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmadd_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmax_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmin_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmsub_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmul_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmv_w_xHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fmv_x_wHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fnmadd_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fnmsub_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fsgnj_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fsgnjn_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fsgnjx_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fsqrt_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fsub_sHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

@@ -13,14 +13,14 @@ namespace atlas
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "fence.i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV64>,
+                "fence_i", atlas::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV64>,
                                                        RvzifenceiInsts>(nullptr, "fence_i",
                                                                         ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "fence.i", atlas::Action::createAction<&RvzifenceiInsts::fence_i_handler<RV32>,
+                "fence_i", atlas::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV32>,
                                                        RvzifenceiInsts>(nullptr, "fence_i",
                                                                         ActionTags::EXECUTE_TAG));
         }
@@ -29,12 +29,14 @@ namespace atlas
     template void RvzifenceiInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzifenceiInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN> ActionGroup* RvzifenceiInsts::fence_i_handler(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType RvzifenceiInsts::fence_iHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
     {
         // TODO: Flush any TLBs and instruction/block caches in the future
         (void)state;
 
-        return nullptr;
+        return ++action_it;
     }
 
 } // namespace atlas

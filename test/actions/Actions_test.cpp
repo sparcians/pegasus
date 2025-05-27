@@ -23,14 +23,13 @@ int main()
 {
     atlas::AtlasState state;
 
-    // Create core ActionGroup
-    atlas::ActionGroup fetch{"fetch"};
-    atlas::ActionGroup decode{"decode"};
-    atlas::ActionGroup execute{"execute"};
-
-    FetchUnit fetch_unit;
-    DecodeUnit decode_unit;
-    ExecuteUnit execute_unit{&fetch};
+    // Create core units
+    FetchUnit fetch_unit{};
+    atlas::ActionGroup* fetch = fetch_unit.getActionGroup();
+    DecodeUnit decode_unit{};
+    atlas::ActionGroup* decode = decode_unit.getActionGroup();
+    ExecuteUnit execute_unit{fetch};
+    atlas::ActionGroup* execute = execute_unit.getActionGroup();
 
     atlas::Action fetch_action = atlas::Action::createAction<&FetchUnit::fetch_inst>(
         &fetch_unit, fetch_unit.getName().c_str());
@@ -42,14 +41,14 @@ int main()
         &execute_unit, execute_unit.getName().c_str());
     execute_action.addTag(atlas::ActionTags::EXECUTE_TAG);
 
-    fetch.addAction(fetch_action);
-    decode.addAction(decode_action);
-    execute.addAction(execute_action);
+    fetch->addAction(fetch_action);
+    decode->addAction(decode_action);
+    execute->addAction(execute_action);
 
     // Connect the ActionGroups together
-    fetch.setNextActionGroup(&decode);
-    decode.setNextActionGroup(&execute);
-    execute.setNextActionGroup(&fetch);
+    fetch->setNextActionGroup(decode);
+    decode->setNextActionGroup(execute);
+    execute->setNextActionGroup(fetch);
 
     // Dummy Action
     const std::string dummy_action_name = "Dummy";
@@ -66,71 +65,81 @@ int main()
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, &fetch, 6, 24);
+    runSim(&state, fetch, 6, 24);
 
     //
     // Add a dummy Action after Fetch
     //
-    fetch.insertActionAfter(dummy_action, atlas::ActionTags::FETCH_TAG);
+    fetch->insertActionAfter(dummy_action, atlas::ActionTags::FETCH_TAG);
     std::cout << "TEST: Insert Action After\n";
     std::cout << fetch << std::endl;
     std::cout << std::endl;
-    runSim(&state, &fetch, 6, 30);
+    runSim(&state, fetch, 6, 30);
 
     //
     // Add another dummy Action before Execute
     //
-    execute.insertActionBefore(dummy_action, atlas::ActionTags::EXECUTE_TAG);
+    execute->insertActionBefore(dummy_action, atlas::ActionTags::EXECUTE_TAG);
     std::cout << "TEST: Insert Action After\n";
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, &fetch, 6, 36);
+    runSim(&state, fetch, 6, 36);
 
     //
     // Remove the dummy Actions that were added
     //
     std::cout << "TEST: Remove Actions\n";
-    fetch.removeAction(DUMMY_TAG);
-    execute.removeAction(DUMMY_TAG);
+    fetch->removeAction(DUMMY_TAG);
+    execute->removeAction(DUMMY_TAG);
     std::cout << fetch << std::endl;
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
-    runSim(&state, &fetch, 6, 24);
+    runSim(&state, fetch, 6, 24);
 
     //
     // Trying to remove an Action that is not in the ActionGroup will fail
     //
     std::cout << "TEST: Remove Action Fails\n";
-    EXPECT_THROW(decode.removeAction(DUMMY_TAG));
+    EXPECT_THROW(decode->removeAction(DUMMY_TAG));
 
     //
     // Bypass the Decode ActionGroup
     //
     //
-    fetch.setNextActionGroup(&execute);
+    fetch->setNextActionGroup(execute);
     std::cout << "TEST: Bypass ActionGroup\n";
     std::cout << std::endl;
-    runSim(&state, &fetch, 6, 18);
-    fetch.setNextActionGroup(&decode);
+    runSim(&state, fetch, 6, 18);
+    fetch->setNextActionGroup(decode);
 
     //
     // Create another ActionGroup for Translation
     //
-    atlas::ActionGroup translate{"translate"};
+    std::cout << "TEST: Add Translation ActionGroup\n";
+    std::cout << std::endl;
     TranslateUnit translate_unit;
+    atlas::ActionGroup* translate = translate_unit.getActionGroup();
     atlas::Action translate_action = atlas::Action::createAction<&TranslateUnit::translate_addr>(
         &translate_unit, translate_unit.getName().c_str());
     translate_action.addTag(atlas::ActionTags::INST_TRANSLATE_TAG);
-    translate.addAction(translate_action);
-    fetch.setNextActionGroup(&translate);
-    translate.setNextActionGroup(&decode);
+    translate->addAction(translate_action);
+    // fetch -> translate -> decode
+    fetch->setNextActionGroup(translate);
+    translate->setNextActionGroup(decode);
     std::cout << fetch << std::endl;
     std::cout << translate << std::endl;
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, &fetch, 6, 30);
+    runSim(&state, fetch, 6, 30);
+
+    //
+    // Configure Execute for Vector Instruction Execution
+    //
+    const bool vector_wkld = true;
+    fetch_unit.loadWorkload(vector_wkld);
+    runSim(&state, fetch, 6, 35);
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }

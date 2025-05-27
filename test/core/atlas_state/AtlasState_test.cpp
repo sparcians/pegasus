@@ -85,5 +85,5 @@ int main(int argc, char** argv)
     tester.testRegisterSet();
 
     REPORT_ERROR;
-    return (int)ERROR_CODE;
+    return ERROR_CODE;
 }

@@ -13,10 +13,10 @@ namespace atlas
     Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters*) :
         sparta::Unit(exception_node)
     {
-        // TODO: Add RV32 exception handling support
-        Action exception_action = atlas::Action::createAction<&Exception::handleException_<RV64>>(
+        rv32_exception_action_ = atlas::Action::createAction<&Exception::handleException_<RV32>>(
             this, "exception", ActionTags::EXCEPTION_TAG);
-        exception_action_group_.addAction(exception_action);
+        rv64_exception_action_ = atlas::Action::createAction<&Exception::handleException_<RV64>>(
+            this, "exception", ActionTags::EXCEPTION_TAG);
     }
 
     void Exception::onBindTreeEarly_()
@@ -24,11 +24,22 @@ namespace atlas
         auto core_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
         AtlasState* state = core_tn->getResourceAs<AtlasState>();
 
+        const auto xlen = state->getXlen();
+        if (xlen == 64)
+        {
+            exception_action_group_.addAction(rv64_exception_action_);
+        }
+        else
+        {
+            exception_action_group_.addAction(rv32_exception_action_);
+        }
+
         // Connect exception ActionGroup to instruction finish ActionGroup
         exception_action_group_.setNextActionGroup(state->getFinishActionGroup());
     }
 
-    template <typename XLEN> ActionGroup* Exception::handleException_(atlas::AtlasState* state)
+    template <typename XLEN>
+    Action::ItrType Exception::handleException_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");
@@ -36,8 +47,8 @@ namespace atlas
                       "Fault and interrupt cause cannot both be valid!");
 
         const bool is_interrupt = interrupt_cause_.isValid();
-        const uint64_t excp_code = is_interrupt ? static_cast<uint64_t>(interrupt_cause_.getValue())
-                                                : static_cast<uint64_t>(fault_cause_.getValue());
+        const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
+                                                : static_cast<XLEN>(fault_cause_.getValue());
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
@@ -50,11 +61,11 @@ namespace atlas
         if (priv_mode == PrivMode::SUPERVISOR)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, SEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
@@ -72,7 +83,7 @@ namespace atlas
             const auto mstatus_sie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sie");
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", mstatus_sie);
 
-            const auto spp_val = static_cast<uint64_t>(state->getPrivMode());
+            const auto spp_val = static_cast<XLEN>(state->getPrivMode());
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
 
             const uint64_t sie_val = 0;
@@ -81,11 +92,11 @@ namespace atlas
         else if (priv_mode == PrivMode::MACHINE)
         {
             // Set next PC
-            const reg_t trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(reg_t)1);
+            const XLEN trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(XLEN)1);
             state->setNextPc(trap_handler_address);
 
             // Get PC that caused the exception
-            const reg_t epc_val = state->getPc();
+            const XLEN epc_val = state->getPc();
             WRITE_CSR_REG<XLEN>(state, MEPC, epc_val);
 
             // Get the exception code, set upper bit for interrupts
@@ -103,24 +114,31 @@ namespace atlas
             const auto mstatus_mie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "mie");
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpie", mstatus_mie);
 
-            const auto mpp_val = static_cast<uint64_t>(state->getPrivMode());
+            const auto mpp_val = static_cast<XLEN>(state->getPrivMode());
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpp", mpp_val);
 
             const uint64_t mie_val = 0;
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
 
             const uint64_t mpv_val = 0;
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
-
             const uint64_t gva_val = 0;
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "gva", gva_val);
+            }
+            else
+            {
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv", mpv_val);
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUSH, "gva", gva_val);
+            }
         }
         state->setPrivMode(priv_mode, prev_virt_mode);
+        state->changeMMUMode<XLEN>();
 
-        state->snapshotAndSyncWithCoSim();
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();
-        return nullptr;
+        return ++action_it;
     }
 
     uint64_t Exception::determineTrapValue_(const FaultCause & cause, AtlasState* state)
@@ -139,8 +157,7 @@ namespace atlas
             case FaultCause::STORE_AMO_PAGE_FAULT:
                 {
                     const auto vaddr_val =
-                        state->getCurrentInst()->getTranslationState()->getRequest().getVaddr();
-                    state->getCurrentInst()->getTranslationState()->clearRequest();
+                        state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
                 }
             case FaultCause::ILLEGAL_INST:
