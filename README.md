@@ -95,7 +95,7 @@ See [Python IDE for Atlas](IDE/README.md)
 | **F** Single-precision floating-point instructions. | :white_check_mark: |
 | **D** Double-precision floating-point instructions. | :white_check_mark: |
 | **C** Compressed instructions. | :white_check_mark: |
-| **B** Bit-manipulation instructions. | :white_check_mark: |
+| **B** Bit-manipulation instructions. | :x: |
 | **Zicsr** CSR instructions. These are implied by presence of F. | :white_check_mark: |
 | **Zicntr** Base counters and timers. | :x: |
 | **Zihpm** Hardware performance counters. | :x: |
@@ -104,35 +104,35 @@ See [Python IDE for Atlas](IDE/README.md)
 | **Ziccamoa** Main memory regions with both the cacheability and coherence PMAs must support all atomics in A. | :x: |
 | **Zicclsm** Misaligned loads and stores to main memory regions with both the cacheability and coherence PMAs must be supported. | :x: |
 | **Za64rs** Reservation sets are contiguous, naturally aligned, and a maximum of 64 bytes. | :x: |
-| **Zihintpause** Pause hint. | :white_check_mark: |
+| **Zihintpause** Pause hint. | :x: |
 | **Zic64b** Cache blocks must be 64 bytes in size, naturally aligned in the address space. | :x: |
-| **Zicbom** Cache-block management instructions. | :white_check_mark: |
-| **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
-| **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
-| **Zfhmin** Half-precision floating-point. | :white_check_mark: |
+| **Zicbom** Cache-block management instructions. | :x: |
+| **Zicbop** Cache-block prefetch instructions. | :x: |
+| **Zicboz** Cache-Block Zero Instructions. | :x: |
+| **Zfhmin** Half-precision floating-point. | :x: |
 | **Zkt** Data-independent execution latency. | :x: |
-| **V** Vector extension. | :white_check_mark: |
-| **Zvfhmin** Vector minimal half-precision floating-point. | :white_check_mark: |
-| **Zvbb** Vector basic bit-manipulation instructions. | :white_check_mark: |
+| **V** Vector extension. | :x: |
+| **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
+| **Zvbb** Vector basic bit-manipulation instructions. | :x: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
-| **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
-| **Zicond** Integer conditional operations. | :white_check_mark: |
+| **Zihintntl** Non-temporal locality hints. | :x: |
+| **Zicond** Integer conditional operations. | :x: |
 | **Zimop** may-be-operations. | :x: |
 | **Zcmop** Compressed may-be-operations. | :x: |
-| **Zcb** Additional compressed instructions. | :white_check_mark: |
-| **Zfa** Additional floating-Point instructions. | :white_check_mark: |
-| **Zawrs** Wait-on-reservation-set instructions. | :white_check_mark: |
+| **Zcb** Additional compressed instructions. | :x: |
+| **Zfa** Additional floating-Point instructions. | :x: |
+| **Zawrs** Wait-on-reservation-set instructions. | :x: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
 
 | RVA23U64 Optional Extensions | Status |
 | :---------------------------- | :----: |
-| **Zvkng** Vector crypto NIST algorithms with GCM. | :white_check_mark: |
-| **Zvksg** Vector crypto ShangMi algorithms with GCM. | :white_check_mark: |
+| **Zvkng** Vector crypto NIST algorithms with GCM. | :x: |
+| **Zvksg** Vector crypto ShangMi algorithms with GCM. | :x: |
 | **Zabha** Byte and halfword atomic memory operations. | :x: |
 | **Zacas** Compare-and-Swap instructions. | :x: |
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
-| **Zvbc** Vector carryless multiplication. | :white_check_mark: |
+| **Zvbc** Vector carryless multiplication. | :x: |
 | **Zama16b** Misaligned loads, stores, and AMOs to main memory regions that do not cross a naturally aligned 16-byte boundary are atomic. | :x: |
 | **Zfh** Scalar half-precision floating-point. | :x: |
 | **Zbc** Scalar carryless multiply. | :x: |
@@ -140,15 +140,15 @@ See [Python IDE for Atlas](IDE/README.md)
 | **Zicfiss** Shadow Stack. | :x: |
 | **Zvfh** Vector half-precision floating-point. | :x: |
 | **Zfbfmin** Scalar BF16 converts. | :x: |
-| **Zvfbfmin** Vector BF16 converts. | :white_check_mark: |
-| **Zvfbfwma** Vector BF16 widening mul-add. | :white_check_mark: |
+| **Zvfbfmin** Vector BF16 converts. | :x: |
+| **Zvfbfwma** Vector BF16 widening mul-add. | :x: |
 
 
 | RVA23S64 Mandatory Extensions | Status |
 | :---------------------------- | :----: |
-| **Zifencei** Instruction-Fetch Fence. | :x: |
-| **Svbare** The satp mode Bare must be supported. | :x: |
-| **Sv39** Page-based 39-bit virtual-Memory system. | :x: |
+| **Zifencei** Instruction-Fetch Fence. | :white_check_mark: |
+| **Svbare** The satp mode Bare must be supported. | :white_check_mark: |
+| **Sv39** Page-based 39-bit virtual-Memory system. | :white_check_mark: |
 | **Svade** Page-fault exceptions are raised when a page is accessed when A bit is clear, or written when D bit is clear. | :x: |
 | **Ssccptr** Main memory regions with both the cacheability and coherence PMAs must support hardware page-table reads. | :x: |
 | **Sstvecd** stvec.MODE must be capable of holding the value 0 (Direct). When stvec.MODE=Direct, stvec.BASE must be capable of holding any valid four-byte-aligned address. | :x: |
@@ -174,8 +174,8 @@ must be writable. | |
 
 | RVA23S64 Optional Extensions | Status |
 | :--------------------------- | :----: |
-| **Sv48** Page-based 48-bit virtual-memory system. | :x: |
-| **Sv57** Page-based 57-bit virtual-memory system. | :x: |
+| **Sv48** Page-based 48-bit virtual-memory system. | :white_check_mark: |
+| **Sv57** Page-based 57-bit virtual-memory system. | :white_check_mark: |
 | **Zkr** Entropy CSR. | :x: |
 | **Svadu** Hardware A/D bit updates. | :x: |
 | **Sdtrig** Debug triggers. | :x: |
