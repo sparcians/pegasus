@@ -6,13 +6,20 @@ RISC-V Functional Model
 Install the following packages (tested with Ubuntu 24.04):
 
 - (apt-get install cmake) cmake v3.22
+- (apt-get install clang) Clang, Version: 14.0.0
 - (apt-get install libboost-all-dev) boost 1.74.0
-- (apt-get install yaml-cpp-dev) YAML CPP 0.7.0
+- (apt-get install libyaml-cpp-dev) YAML CPP 0.7.0
 - (apt-get install rapidjson-dev) RapidJSON CPP 1.1.0
 - (apt-get install libsqlite3-dev) SQLite3 3.37.2
 - (apt-get install libhdf5-dev) HDF5 1.10.7
-- (apt-get install clang) Clang, Version: 14.0.0
 
+An Atlas Conda environment is also available:
+```
+conda env create -f conda/atlas_env.yaml
+conda activate atlas
+```
+
+## Install Sparta
 Download and build sparta, map_v2:
 ```
 git clone git@github.com:sparcians/map
@@ -22,6 +29,12 @@ cd release
 CC=$COMPILER CXX=$CXX_COMPILER cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/
 sudo make -j$(nproc --all) install
 ```
+
+If using Conda, you must install Sparta in the Atlas Conda environment:
+```
+cmake --install . --prefix $CONDA_PREFIX
+```
+
 
 ## Clone Atlas and Build/Regress
 ```
