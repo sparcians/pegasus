@@ -42,7 +42,7 @@ namespace atlas
 
         // Get RV32 instruction handlers
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvzbaInsts::getInstHandlers<RV32>(rv64_inst_actions_);
+        RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvfInsts::getInstHandlers<RV32>(rv32_inst_actions_);
