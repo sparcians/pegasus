@@ -39,8 +39,8 @@ namespace atlas
     class Translate;
     class Exception;
     class SimController;
-    class VectorState;
     class SystemCallEmulator;
+    class VectorConfig;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -154,9 +154,9 @@ namespace atlas
 
         SimState* getSimState() { return &sim_state_; }
 
-        const VectorState* getVectorState() const { return vector_state_ptr_; }
+        const VectorConfig* getVectorConfig() const { return vector_config_ptr_; }
 
-        VectorState* getVectorState() { return vector_state_ptr_; }
+        VectorConfig* getVectorConfig() { return vector_config_ptr_; }
 
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
@@ -362,7 +362,7 @@ namespace atlas
         SimState sim_state_;
 
         //! Vector state
-        VectorState* vector_state_ptr_ = nullptr;
+        VectorConfig* vector_config_ptr_ = nullptr;
 
         // Increment PC Action
         Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
@@ -455,6 +455,19 @@ namespace atlas
     static inline void WRITE_VEC_REG(AtlasState* state, uint32_t reg_ident, VLEN reg_value)
     {
         state->getVecRegister(reg_ident)->dmiWrite<VLEN>(reg_value);
+    }
+
+    template <typename Elem>
+    static inline Elem READ_VEC_ELEM(AtlasState* state, uint32_t reg_ident, uint32_t idx)
+    {
+        return state->getVecRegister(reg_ident)->dmiRead<Elem>(idx);
+    }
+
+    template <typename Elem>
+    static inline void WRITE_VEC_ELEM(AtlasState* state, uint32_t reg_ident, Elem value,
+                                      uint32_t idx)
+    {
+        state->getVecRegister(reg_ident)->dmiWrite<Elem>(value, idx);
     }
 
     template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
