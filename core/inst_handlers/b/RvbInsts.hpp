@@ -16,24 +16,23 @@ namespace atlas
       public:
         using base_type = RvbInsts;
 
-        template <typename XLEN> 
         template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
 
       private:
 
-        ActionGroup* add_uw_handler(atlas::AtlasState* state);
-        ActionGroup* zextw_handler(atlas::AtlasState* state);
+        Action::ItrType add_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType zextw_handler(atlas::AtlasState* state, Action::ItrType action_it);
         
         //sh1add and sh1add.uw
-        template <typename XLEN> ActionGroup* sh1add_handler(atlas::AtlasState* state);
-        ActionGroup* sh1add_uw_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* sh1add_handler(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType sh1add_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
         
-        template <typename XLEN> ActionGroup* sh2add_handler(atlas::AtlasState* state);
-        ActionGroup* sh2add_uw_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* sh2add_handler(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType sh2add_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
 
-        template <typename XLEN> ActionGroup* sh3add_handler(atlas::AtlasState* state);
-        ActionGroup* sh3add_uw_handler(atlas::AtlasState* state);
+        template <typename XLEN> ActionGroup* sh3add_handler(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType sh3add_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
 
-        ActionGroup* sll1uw_handler(atlas::AtlasState* state);
+        Action::ItrType sll1uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
