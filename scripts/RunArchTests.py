@@ -10,8 +10,7 @@ import functools
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [172, 239]
 PASSING_STATUS_RISCV_ARCH_RV64 = [230, 319]
-PASSING_STATUS_TENSTORRENT_RV32 = [84, 2800]
-PASSING_STATUS_TENSTORRENT_RV64 = [300, 4463]
+PASSING_STATUS_TENSTORRENT_RV64 = [0, 3999]
 
 def get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     RISCV_ARCH_SUPPORTED_EXTENSIONS = []
@@ -26,27 +25,29 @@ def get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
         for file in files:
             if regex.match(file) and "dump" not in file:
                 riscv_arch_tests.append(os.path.abspath(os.path.join(root, file)))
-        
+
     riscv_arch_tests = [test for test in riscv_arch_tests if any(ext+"-" in test for ext in RISCV_ARCH_SUPPORTED_EXTENSIONS)]
     riscv_arch_tests.sort()
- 
+
     tests = []
     for test in riscv_arch_tests:
-        testname = test.split("/")[-1] 
+        testname = test.split("/")[-1]
         tests.append([testname, test]);
     return tests
 
 
 def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     TENSTORRENT_SUPPORTED_EXTENSIONS = []
-    for xlen in SUPPORTED_XLEN:
-        TENSTORRENT_SUPPORTED_EXTENSIONS.extend([xlen+ext for ext in SUPPORTED_EXTENSIONS])
+    # Tenstorrent tests are all RV64 even if name contains "rv32"
+    if "rv64" in SUPPORTED_XLEN:
+        TENSTORRENT_SUPPORTED_EXTENSIONS.extend(["rv64"+ext for ext in SUPPORTED_EXTENSIONS])
+        TENSTORRENT_SUPPORTED_EXTENSIONS.extend(["rv32"+ext for ext in SUPPORTED_EXTENSIONS])
+    else:
+        return []
 
     regex = re.compile(r'rv[36][24]')
     tenstorrent_tests = []
     for root, dirs, files in os.walk(directory):
-        if "h_ext" in root:
-            continue
         for file in files:
             if regex.match(file) and "dump" not in file:
                 tenstorrent_tests.append(os.path.abspath(os.path.join(root, file)))
@@ -56,9 +57,10 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tests = []
     for test in tenstorrent_tests:
         dirs = test.split('/')
-        prefixes = dirs[dirs.index("release")+1:-1]
+        prefixes = dirs[dirs.index("tenstorrent_tests")+1:-1]
         prefix = "_".join(prefixes) + "_"
         testname = prefix + os.path.basename(test)
+        testname = testname.replace("rv32", "rv64")
         tests.append([testname, test]);
     return tests
 
@@ -232,12 +234,8 @@ def main():
             expected_passing_tests += PASSING_STATUS_RISCV_ARCH_RV64[0]
             total_tests += PASSING_STATUS_RISCV_ARCH_RV64[1]
     if args.tenstorrent:
-        if not args.rv64_only:
-            expected_passing_tests += PASSING_STATUS_TENSTORRENT_RV32[0]
-            total_tests += PASSING_STATUS_TENSTORRENT_RV32[1]
-        if not args.rv32_only:
-            expected_passing_tests += PASSING_STATUS_TENSTORRENT_RV64[0]
-            total_tests += PASSING_STATUS_TENSTORRENT_RV64[1]
+        expected_passing_tests += PASSING_STATUS_TENSTORRENT_RV64[0]
+        total_tests += PASSING_STATUS_TENSTORRENT_RV64[1]
 
     print("EXPECTED RATE: " + str(expected_passing_tests) + "/" + str(total_tests))
     if (num_passed < expected_passing_tests):
