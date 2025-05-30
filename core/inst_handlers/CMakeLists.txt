@@ -17,7 +17,7 @@ target_link_libraries(atlasinsts
     rva
     rvf
     rvd
-    rvzba
+    rvb
     rvzicsr
     rvzifencei
     rvv
