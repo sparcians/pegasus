@@ -5,6 +5,7 @@ import re
 import argparse
 import subprocess
 import multiprocessing
+import time
 
 # Passing and total
 PASSING_STATUS_RV32_NON_VIRT = [96, 97]
@@ -70,7 +71,6 @@ def run_test(test, passing_tests, failing_tests, timeout_tests, output_dir):
 def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
     print("Running " + str(len(tests)) + " arch tests...")
     processes = []
-
     # Create a process for each test command
     for test in tests:
         process = multiprocessing.Process(target=run_test, args=(test, passing_tests, failing_tests, timeout_tests, output_dir))

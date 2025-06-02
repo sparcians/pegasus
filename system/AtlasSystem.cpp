@@ -9,8 +9,9 @@ namespace atlas
     AtlasSystem::AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p) :
         sparta::Unit(sys_node)
     {
-        const std::string workload = p->workload;
-        loadWorkload_(workload);
+        if (const std::string workload = p->workload; false == workload.empty()) {
+            loadWorkload_(workload);
+        }
 
         if (p->enable_uart)
         {
@@ -52,8 +53,7 @@ namespace atlas
     {
         if (elf_reader_.load(workload) == false)
         {
-            std::cout << "\n\nWARNING: ELF binary failed to load! Does it exist?\n" << std::endl;
-            return;
+            throw sparta::SpartaException() << "\n\nERROR: ELF binary '" << workload << "' failed to load! Does it exist?\n";
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;

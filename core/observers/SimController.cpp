@@ -49,8 +49,9 @@ namespace atlas
             if (break_on_pre_execute_)
             {
                 sendString_("pre_execute");
-                ActionGroup* fail_action_group = enterLoop_(state);
-                throw ActionException(fail_action_group);
+                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                    throw ActionException(fail_action_group);
+                }
             }
         }
 
@@ -59,8 +60,9 @@ namespace atlas
             if (break_on_pre_exception_)
             {
                 sendString_("pre_exception");
-                ActionGroup* fail_action_group = enterLoop_(state);
-                throw ActionException(fail_action_group);
+                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                    throw ActionException(fail_action_group);
+                }
             }
         }
 
@@ -72,8 +74,9 @@ namespace atlas
                 mem_reads_ = mem_reads;
                 mem_writes_ = mem_writes;
                 sendString_("post_execute");
-                ActionGroup* fail_action_group = enterLoop_(state);
-                throw ActionException(fail_action_group);
+                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                    throw ActionException(fail_action_group);
+                }
             }
         }
 
@@ -782,7 +785,16 @@ namespace atlas
         std::vector<Observer::MemWrite> mem_writes_;
     };
 
-    SimController::SimController() : endpoint_(std::make_shared<SimEndpoint>()) {}
+    // Note that the SimController does not need to tell the base class to
+    // track the register/CSR values before and after each instruction. The
+    // python observer impl will handle that logic. We skip the unnecessary
+    // extra work in C++ by passing in ObserverMode::UNUSED to the
+    // base class.
+    SimController::SimController() :
+        Observer(ObserverMode::UNUSED),
+        endpoint_(std::make_shared<SimEndpoint>())
+    {
+    }
 
     void SimController::postInit(AtlasState* state) { endpoint_->postInit(state); }
 

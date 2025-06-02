@@ -188,17 +188,23 @@ namespace atlas
         {
             if (xlen_ == 64)
             {
-                addObserver(std::make_unique<InstructionLogger<RV64>>(inst_logger_));
+                addObserver(
+                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV64));
             }
             else
             {
-                addObserver(std::make_unique<InstructionLogger<RV32>>(inst_logger_));
+                addObserver(
+                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
             }
         }
 
         for (auto & obs : observers_)
         {
-            obs->registerReadWriteCallbacks(atlas_system_->getSystemMemory());
+            obs->registerReadWriteMemCallbacks(atlas_system_->getSystemMemory());
+            for (auto reg : csr_rset_->getRegisters())
+            {
+                obs->registerReadWriteCsrCallbacks(reg);
+            }
         }
     }
 
@@ -285,47 +291,6 @@ namespace atlas
 
     Action::ItrType AtlasState::preExecute_(AtlasState* state, Action::ItrType action_it)
     {
-        // TODO cnyce: Package up all rs1/rs2/rd registers, pc, opcode, etc.
-        // and change the observers' preExecute() to take both AtlasState
-        // and ObserverContainer as arguments.
-        //
-        // class ObserverContainer {
-        // public:
-        //     void preExecute(AtlasState* state) {
-        //         for (const auto & observer : observers_) {
-        //             observer->preExecute(state, this);
-        //         }
-        //     }
-        //
-        //     uint64_t getPc() const;
-        //     uint64_t getOpcode() const;
-        //
-        //     bool hasRs1() const;
-        //     const Observer::SrcReg & getRs1() const;
-        //
-        //     bool hasRs2() const;
-        //     const Observer::SrcReg & getRs2() const;
-        //
-        //     bool hasRs3() const;
-        //     const Observer::SrcReg & getRs3() const;
-        //
-        //     bool hasRd() const;
-        //     const Observer::DestReg & getRd() const;
-        //
-        //     bool hasImmediate() const;
-        //     uint64_t getImmediate() const;
-        //
-        //     TrapCause getTrapCause() const;
-        //     std::string getMnemonic() const;
-        //     std::string getDasmString() const;
-        //
-        //     enum class InstResult { PASS, INVALID_PC, INVALID_REG_VAL, UNIMPLEMENTED };
-        //     InstResult getResult() const;
-        // };
-        //
-        // AtlasState.hpp:
-        //     std::unique_ptr<ObserverContainer> observer_container_;
-
         for (const auto & observer : observers_)
         {
             observer->preExecute(state);
@@ -336,7 +301,6 @@ namespace atlas
 
     Action::ItrType AtlasState::postExecute_(AtlasState* state, Action::ItrType action_it)
     {
-        // TODO cnyce: See comments in preExecute_()
         for (const auto & observer : observers_)
         {
             observer->postExecute(state);
@@ -347,7 +311,6 @@ namespace atlas
 
     Action::ItrType AtlasState::preException_(AtlasState* state, Action::ItrType action_it)
     {
-        // TODO cnyce: See comments in preExecute_()
         for (const auto & observer : observers_)
         {
             observer->preException(state);
@@ -387,11 +350,7 @@ namespace atlas
     {
         for (auto & obs : observers_)
         {
-            if (auto inst_logger = dynamic_cast<InstructionLogger<RV32>*>(obs.get()))
-            {
-                inst_logger->useSpikeFormatting();
-            }
-            else if (auto inst_logger = dynamic_cast<InstructionLogger<RV64>*>(obs.get()))
+            if (auto inst_logger = dynamic_cast<InstructionLogger*>(obs.get()))
             {
                 inst_logger->useSpikeFormatting();
             }

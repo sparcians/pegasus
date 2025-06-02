@@ -11,9 +11,11 @@ add_library(atlascore
     AtlasExtractor.cpp
     AtlasInst.cpp
     translate/Translate.cpp
+    observers/Observer.cpp
     observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp
+    ../arch/RegisterDefnsJSON.cpp
 )
 
 target_include_directories(atlascore PUBLIC ${CMAKE_BINARY_DIR})

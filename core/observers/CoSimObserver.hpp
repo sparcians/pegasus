@@ -28,7 +28,6 @@ namespace atlas
 
       private:
         void preExecute_(AtlasState*) override;
-        void preException_(AtlasState*) override;
         void postExecute_(AtlasState*) override;
 
         uint64_t event_uid_ = 0;

@@ -3,7 +3,7 @@
 
 void testSingleStepNop()
 {
-    const std::string & workload = "test";
+    const std::string & workload = ""; // leave empty -- not used
     const uint64_t ilimit = 0;
     sparta::Scheduler scheduler;
     atlas::AtlasCoSim cosim(&scheduler, workload, ilimit);
@@ -40,7 +40,7 @@ void testSingleStepNop()
     // EXPECT_EQUAL(event.isEventInRoi(), false);
     // EXPECT_EQUAL(event.isEventEnteringRoi(), false);
     // EXPECT_EQUAL(event.isEventExitingRoi(), false);
-    EXPECT_EQUAL(event.getArchId(), 0);
+    EXPECT_EQUAL(event.getArchId(), 1);
     EXPECT_EQUAL(event.getOpcode(), opcode);
     EXPECT_EQUAL(event.getOpcodeSize(), 4);
     // EXPECT_EQUAL(event.getInstType(), atlas::InstType);
@@ -74,7 +74,7 @@ void testSingleStepNop()
 
 void testSingleStepAdd()
 {
-    const std::string & workload = "test";
+    const std::string & workload = "";
     const uint64_t ilimit = 0;
     sparta::Scheduler scheduler;
     atlas::AtlasCoSim cosim(&scheduler, workload, ilimit);
@@ -117,7 +117,7 @@ void testSingleStepAdd()
     // EXPECT_EQUAL(event.isEventInRoi(), false);
     // EXPECT_EQUAL(event.isEventEnteringRoi(), false);
     // EXPECT_EQUAL(event.isEventExitingRoi(), false);
-    EXPECT_EQUAL(event.getArchId(), 0);
+    EXPECT_EQUAL(event.getArchId(), 1);
     EXPECT_EQUAL(event.getOpcode(), opcode);
     EXPECT_EQUAL(event.getOpcodeSize(), 4);
     // EXPECT_EQUAL(event.getInstType(), atlas::InstType);
