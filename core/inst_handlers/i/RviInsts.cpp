@@ -993,9 +993,8 @@ namespace atlas
     {
         // x10 -> x16 are the function arguments.
         // x17 holds the system call number, first item on the stack
-        const auto cmd = READ_INT_REG<XLEN>(state, 17);
         SystemCallEmulator::SystemCallStack call_stack = {
-            cmd,
+            READ_INT_REG<XLEN>(state, 17),
             READ_INT_REG<XLEN>(state, 10),
             READ_INT_REG<XLEN>(state, 11),
             READ_INT_REG<XLEN>(state, 12),
