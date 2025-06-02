@@ -124,11 +124,12 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
 def main():
     parser = argparse.ArgumentParser(description="Script to run the Tenstorrent architecture tests on Atlas")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (e.g. i, m, a, f, d)")
-    parser.add_argument("--output", type=str, nargs=1, help="Where logs and error files should go")
-    parser.add_argument("--rv32-only", action='store_true', help="Only run RV32 tests (skip RV64)")
-    parser.add_argument("--rv64-only", action='store_true', help="Only run RV64 tests (skip RV32)")
-    parser.add_argument("--riscv-arch", type=str, help="The directory of the built Tenstorrent tests")
-    parser.add_argument("--tenstorrent", type=str, help="The directory of the built RISC-V Arch tests")
+    parser.add_argument("--output", type=str, help="Where logs and error files should go")
+    xlen_group = parser.add_mutually_exclusive_group()
+    xlen_group.add_argument("--rv32-only", action='store_true', help="Only run RV32 tests (skip RV64)")
+    xlen_group.add_argument("--rv64-only", action='store_true', help="Only run RV64 tests (skip RV32)")
+    parser.add_argument("--riscv-arch", type=str, help="The directory of the built RISC-V Arch tests")
+    parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
     args = parser.parse_args()
 
     ###########################################################################
@@ -139,19 +140,16 @@ def main():
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
         SUPPORTED_EXTENSIONS = args.extensions
 
-    if args.rv32_only and args.rv64_only:
-        print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
-        sys.exit(1)
-    elif args.rv32_only:
-        print("WARNING: Skipping RV64 tests")
+    if args.rv32_only:
+        print("Skipping RV64 tests")
         SUPPORTED_XLEN = ["rv32"]
     elif args.rv64_only:
-        print("WARNING: Skipping RV32 tests")
+        print("Skipping RV32 tests")
         SUPPORTED_XLEN = ["rv64"]
 
     output_dir = "./"
     if args.output:
-        output_dir = args.output[0]
+        output_dir = args.output
         try:
             os.makedirs(output_dir, exist_ok=True)
             output_dir += '/'
