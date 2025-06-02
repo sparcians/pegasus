@@ -47,7 +47,7 @@ namespace atlas
             system_factory_;
         sparta::ResourceFactory<atlas::SystemCallEmulator,
                                 atlas::SystemCallEmulator::SystemCallEmulatorParameters>
-        sys_call_factory_;
+            sys_call_factory_;
         std::unique_ptr<AtlasAllocators> allocators_tn_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
