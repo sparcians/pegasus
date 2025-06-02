@@ -17,6 +17,8 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include "system/SystemCallEmulator.hpp"
+
 namespace atlas
 {
     uint32_t getXlenFromIsaString_(const std::string & isa_string)
@@ -283,7 +285,7 @@ namespace atlas
         return uarch_files;
     }
 
-    int64_t AtlasState::emulateSystemCall(const SystemCallEmulator::SystemCallStack &call_stack)
+    int64_t AtlasState::emulateSystemCall(const SystemCallStack &call_stack)
     {
         return system_call_emulator_->emulateSystemCall(call_stack,
                                                         atlas_system_->getSystemMemory());

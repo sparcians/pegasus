@@ -7,6 +7,7 @@
 #include "core/Exception.hpp"
 #include "system/AtlasSystem.hpp"
 #include "sparta/app/Simulation.hpp"
+#include "system/SystemCallEmulator.hpp"
 
 namespace atlas
 {

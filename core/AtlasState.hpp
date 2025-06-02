@@ -6,8 +6,6 @@
 #include "core/observers/Observer.hpp"
 #include "core/CoSimQuery.hpp"
 
-#include "system/SystemCallEmulator.hpp"
-
 #include "arch/RegisterSet.hpp"
 #include "include/AtlasTypes.hpp"
 #include "include/CSRBitMasks64.hpp"
@@ -42,6 +40,7 @@ namespace atlas
     class Exception;
     class SimController;
     class VectorState;
+    class SystemCallEmulator;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -179,7 +178,7 @@ namespace atlas
         // Emulate ecall.  This function will determine the route to
         // send the emulation.  The return value is the return code
         // from the call.
-        int64_t emulateSystemCall(const SystemCallEmulator::SystemCallStack &);
+        int64_t emulateSystemCall(const SystemCallStack &);
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 

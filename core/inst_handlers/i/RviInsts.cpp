@@ -993,7 +993,7 @@ namespace atlas
     {
         // x10 -> x16 are the function arguments.
         // x17 holds the system call number, first item on the stack
-        SystemCallEmulator::SystemCallStack call_stack = {
+        SystemCallStack call_stack = {
             READ_INT_REG<XLEN>(state, 17),
             READ_INT_REG<XLEN>(state, 10),
             READ_INT_REG<XLEN>(state, 11),

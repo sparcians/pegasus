@@ -77,7 +77,7 @@ namespace atlas
                                          {2011, {"getmainvars", cfp(&Callbacks::getmainvars_)}}});
         }
 
-        int64_t emulateSystemCall(const SystemCallEmulator::SystemCallStack & call_stack,
+        int64_t emulateSystemCall(const SystemCallStack & call_stack,
                                   sparta::memory::BlockingMemoryIF* memory)
         {
             int64_t ret_val = -1;
@@ -98,49 +98,49 @@ namespace atlas
 
     private:
         // The system calls
-        int64_t getcwd_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t stime_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t faccessat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t openat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t close_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t lseek_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t read_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t write_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t writev_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t pread_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t pwrite_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t readlinkat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t fstatat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t fstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t exit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setTIDAddress_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t futex_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setRobustList_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t tgkill_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t rtSIGProcMask_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getpid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t uname_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t geteuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getgid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t gettid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getegid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t brk_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t mmap_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t prlimit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getrandom_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t statx_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t open_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t lstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t getmainvars_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t openat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t lseek_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t read_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t write_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t writev_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t pread_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t pwrite_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t readlinkat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t fstatat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t exit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t setTIDAddress_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t futex_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t setRobustList_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t tgkill_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t rtSIGProcMask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t uname_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t geteuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getgid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t gettid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getegid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t brk_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t mmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getrandom_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t lstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t getmainvars_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
 
         // The parent emulator
         SystemCallEmulator * emulator_ = nullptr;
 
         // Callbacks
         using HandlerFunc =
-            std::function<int64_t (const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)>;
+            std::function<int64_t (const SystemCallStack &, sparta::memory::BlockingMemoryIF*)>;
         struct SystemCall
         {
             const std::string name;
@@ -265,7 +265,7 @@ namespace atlas
 
     ////////////////////////////////////////////////////////////////////////////////
     // The system calls
-    int64_t Callbacks::getcwd_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::getcwd_(const SystemCallStack &call_stack,
                               sparta::memory::BlockingMemoryIF * mem)
     {
         const auto pbuf = call_stack[1];
@@ -284,43 +284,43 @@ namespace atlas
         return ret;
     }
 
-    int64_t Callbacks::setuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return 0;
     }
 
-    int64_t Callbacks::getuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return ::getuid();
     }
 
-    int64_t Callbacks::geteuid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::geteuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return ::geteuid();
     }
 
-    int64_t Callbacks::getgid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getgid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return ::getgid();
     }
 
-    int64_t Callbacks::gettid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::gettid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return 1;
     }
 
-    int64_t Callbacks::getegid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getegid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         return ::getegid();
     }
 
-    int64_t Callbacks::brk_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::brk_(const SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
         int64_t ret = call_stack[1];
         return ret;
     }
 
-    int64_t Callbacks::mmap_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::mmap_(const SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
         const auto addr   = call_stack[1];
         const auto size   = call_stack[2];
@@ -355,13 +355,13 @@ namespace atlas
         return guest_addr;
     }
 
-    int64_t Callbacks::prlimit_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
-    int64_t Callbacks::getrandom_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::getrandom_(const SystemCallStack &call_stack,
                                   sparta::memory::BlockingMemoryIF*mem)
     {
         auto buffer = call_stack[1];
@@ -385,24 +385,24 @@ namespace atlas
         return buflen;
     }
 
-    int64_t Callbacks::stime_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
-    int64_t Callbacks::faccessat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
-    int64_t Callbacks::close_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
-    int64_t Callbacks::lseek_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::lseek_(const SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
         const auto fd = call_stack[1];
         const auto offset = call_stack[2];
@@ -416,7 +416,7 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::read_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::read_(const SystemCallStack &call_stack,
                             sparta::memory::BlockingMemoryIF*mem)
     {
         const auto fd = call_stack[1];
@@ -434,7 +434,7 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::write_(const SystemCallEmulator::SystemCallStack & call_stack,
+    int64_t Callbacks::write_(const SystemCallStack & call_stack,
                              sparta::memory::BlockingMemoryIF* mem)
     {
         int fd = emulator_->getFDOverrideForWrite(call_stack[1]);
@@ -470,7 +470,7 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::writev_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::writev_(const SystemCallStack &call_stack,
                                sparta::memory::BlockingMemoryIF*mem)
     {
         auto fd             = emulator_->getFDOverrideForWrite(call_stack[1]);
@@ -512,19 +512,19 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::pread_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::pread_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::pwrite_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::pwrite_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::readlinkat_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::readlinkat_(const SystemCallStack &call_stack,
                                    sparta::memory::BlockingMemoryIF*mem)
     {
         int64_t ret = -1;
@@ -583,49 +583,49 @@ namespace atlas
 
         return ret;
     }
-    int64_t Callbacks::fstatat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::fstatat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::fstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::setTIDAddress_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::setTIDAddress_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
-    int64_t Callbacks::futex_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::futex_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
-    int64_t Callbacks::setRobustList_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::setRobustList_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
-    int64_t Callbacks::tgkill_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::tgkill_(const SystemCallStack &call_stack,
                                sparta::memory::BlockingMemoryIF*mem)
     {
         return exit_(call_stack, mem);
     }
-    int64_t Callbacks::rtSIGProcMask_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::rtSIGProcMask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
-    int64_t Callbacks::getpid_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         auto ret = ::getpid();
         return ret;
     }
-    int64_t Callbacks::uname_(const SystemCallEmulator::SystemCallStack &call_stack,
+    int64_t Callbacks::uname_(const SystemCallStack &call_stack,
                               sparta::memory::BlockingMemoryIF*memory)
     {
         const auto uname_data_ptr = call_stack[1];
@@ -644,32 +644,32 @@ namespace atlas
         SYSCALL_LOG("uname(" << HEX16(uname_data_ptr) << ") -> 0");
         return 0;
     }
-    int64_t Callbacks::exit_(const SystemCallEmulator::SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::exit_(const SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
         const int64_t exit_code = call_stack[1];
         SYSCALL_LOG("exit(" << exit_code << ");");
         emulator_->getAtlasSim()->endSimulation(exit_code);
         return exit_code;
     }
-    int64_t Callbacks::statx_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::open_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::lstat_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::lstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
     }
-    int64_t Callbacks::getmainvars_(const SystemCallEmulator::SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t Callbacks::getmainvars_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;

@@ -3,6 +3,8 @@
 #include <array>
 #include <cinttypes>
 
+#include "include/AtlasTypes.hpp"
+
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
@@ -58,7 +60,6 @@ namespace atlas
         ~SystemCallEmulator();
 
         //! Handle a system call
-        using SystemCallStack = std::array<uint64_t, 8>;
         int64_t emulateSystemCall(const SystemCallStack & call_stack,
                                   sparta::memory::BlockingMemoryIF* memory);
 
