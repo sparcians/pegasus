@@ -12,6 +12,9 @@ PASSING_STATUS_RISCV_ARCH_RV32 = [172, 239]
 PASSING_STATUS_RISCV_ARCH_RV64 = [230, 319]
 PASSING_STATUS_TENSTORRENT_RV64 = [0, 3999]
 
+# Verbosity
+be_noisy = False
+
 def get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     RISCV_ARCH_SUPPORTED_EXTENSIONS = []
     for xlen in SUPPORTED_XLEN:
@@ -67,7 +70,8 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
 # Function to run a single test and append to the appropriate queue
 def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests):
-    print("Running", testname)
+    if be_noisy:
+        print("Running", testname)
     rv32_test = "rv32" in testname
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
@@ -128,9 +132,12 @@ def main():
     xlen_group = parser.add_mutually_exclusive_group()
     xlen_group.add_argument("--rv32-only", action='store_true', help="Only run RV32 tests (skip RV64)")
     xlen_group.add_argument("--rv64-only", action='store_true', help="Only run RV64 tests (skip RV32)")
+    parser.add_argument("-v","--verbose", action='store_true', default=False, help="Be noisy")
     parser.add_argument("--riscv-arch", type=str, help="The directory of the built RISC-V Arch tests")
     parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
     args = parser.parse_args()
+
+    global be_noisy
 
     ###########################################################################
     # Process arguments
@@ -159,6 +166,14 @@ def main():
 
     if args.rv32_only and args.rv64_only:
         print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
+        sys.exit(1)
+
+    be_noisy = args.verbose
+
+    ###########################################################################
+    # Make sure we're in the correct sim directory for atlas
+    if not os.path.isfile('./atlas'):
+        print("ERROR: ./atlas command not found.  Run inside sim directory")
         sys.exit(1)
 
     ###########################################################################
@@ -190,12 +205,13 @@ def main():
         tests = [test for test in tests if skip_test not in test]
 
     if len(tests) == 0:
-        print("Failed to find any tests to run!")
+        print("Failed to find any tests to run! Need to specify --riscv-arch <dir> or --tenstorrent <dir>")
         sys.exit(1)
 
     ###########################################################################
     # Run!
-    print("Running " + str(len(tests)) + " arch tests...")
+    if be_noisy:
+        print("Running " + str(len(tests)) + " arch tests...")
     passing_tests = []
     failing_tests = []
     timeout_tests = []
