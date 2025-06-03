@@ -15,7 +15,7 @@
 namespace atlas
 {
     class AtlasSim;
-    class Callbacks;
+    class SysCallHandlers;
 
     /**
      * \class SystemCallEmulator
@@ -39,7 +39,8 @@ namespace atlas
         class SystemCallEmulatorParameters : public sparta::ParameterSet
         {
           public:
-            explicit SystemCallEmulatorParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
+            explicit SystemCallEmulatorParameters(sparta::TreeNode* node) :
+                sparta::ParameterSet(node)
             {
             }
             PARAMETER(std::string, write_output, "-",
@@ -70,15 +71,13 @@ namespace atlas
         int getFDOverrideForWrite(int caller_fd);
 
         //! Get AtlasSim
-        AtlasSim *getAtlasSim() { return sim_; }
+        AtlasSim* getAtlasSim() const { return sim_; }
 
         //! Get the memory map parameters (used by Callback delegate class)
-        const std::vector<uint64_t> & getMemMapParams() const {
-            return memory_map_params_;
-        }
+        const std::vector<uint64_t> & getMemMapParams() const { return memory_map_params_; }
 
         //! Set the workload
-        void setWorkload(const std::string workload);
+        void setWorkload(const std::string & workload);
 
       private:
         const std::vector<uint64_t> memory_map_params_;
@@ -91,12 +90,11 @@ namespace atlas
         std::string workload_;
 
         //! Bad handler
-        void badSystemCallHandler_(const SystemCallStack &,
-                                   sparta::memory::BlockingMemoryIF*)
+        void badSystemCallHandler_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
         {
-            throw ("System Call is known, but not supported");
+            throw("System Call is known, but not supported");
         }
 
-        std::unique_ptr<Callbacks> callbacks_;
-};
+        std::unique_ptr<SysCallHandlers> callbacks_;
+    };
 } // namespace atlas
