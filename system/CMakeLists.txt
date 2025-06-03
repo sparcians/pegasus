@@ -5,4 +5,5 @@ add_library(atlassys
     AtlasSystem.cpp
     SimpleUART.cpp
     MagicMemory.cpp
+    SystemCallEmulator.cpp
 )

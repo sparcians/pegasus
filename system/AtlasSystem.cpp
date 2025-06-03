@@ -7,8 +7,7 @@ namespace atlas
 {
 
     AtlasSystem::AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p) :
-        sparta::Unit(sys_node),
-        syscall_emulation_enabled_(p->enable_syscall_emulation)
+        sparta::Unit(sys_node)
     {
         if (const std::string workload = p->workload; false == workload.empty())
         {

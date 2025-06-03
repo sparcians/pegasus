@@ -17,6 +17,8 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include "system/SystemCallEmulator.hpp"
+
 namespace atlas
 {
     uint32_t getXlenFromIsaString_(const std::string & isa_string)
@@ -67,22 +69,21 @@ namespace atlas
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
-        for (const auto & kvp : int_rset_->getRegistersByName())
+        auto add_registers = [this] (const auto & reg_set)
         {
-            registers_by_name_[kvp.first] = kvp.second;
-        }
-        for (const auto & kvp : fp_rset_->getRegistersByName())
-        {
-            registers_by_name_[kvp.first] = kvp.second;
-        }
-        for (const auto & kvp : vec_rset_->getRegistersByName())
-        {
-            registers_by_name_[kvp.first] = kvp.second;
-        }
-        for (const auto & kvp : csr_rset_->getRegistersByName())
-        {
-            registers_by_name_[kvp.first] = kvp.second;
-        }
+            for (const auto & kvp : reg_set->getRegistersByName())
+            {
+                registers_by_name_[kvp.first] = kvp.second;
+                for (auto & alias_name : kvp.second->getAliases()) {
+                    registers_by_name_[alias_name] = kvp.second;
+                }
+            }
+        };
+
+        add_registers(int_rset_);
+        add_registers(fp_rset_);
+        add_registers(vec_rset_);
+        add_registers(csr_rset_);
 
         // Increment PC Action
         increment_pc_action_ =
@@ -280,6 +281,12 @@ namespace atlas
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
         return uarch_files;
+    }
+
+    int64_t AtlasState::emulateSystemCall(const SystemCallStack &call_stack)
+    {
+        return system_call_emulator_->emulateSystemCall(call_stack,
+                                                        atlas_system_->getSystemMemory());
     }
 
     Action::ItrType AtlasState::preExecute_(AtlasState* state, Action::ItrType action_it)
