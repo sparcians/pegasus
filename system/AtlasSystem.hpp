@@ -109,5 +109,7 @@ namespace atlas
         ELFIO::elfio elf_reader_;
         Addr starting_pc_;
         std::unordered_map<Addr, std::string> symbols_;
+        sparta::utils::ValidValue<Addr> tohost_addr_;
+        sparta::utils::ValidValue<Addr> fromhost_addr_;
     };
 } // namespace atlas
