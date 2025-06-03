@@ -49,6 +49,7 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
+        // Unprivileged Floating-Point CSRs
         csrUpdate_actions.emplace(
             FCSR,
             atlas::Action::createAction<&RvzicsrInsts::fcsrUpdateHandler_<XLEN>, RvzicsrInsts>(
@@ -60,18 +61,28 @@ namespace atlas
         csrUpdate_actions.emplace(
             FRM, atlas::Action::createAction<&RvzicsrInsts::frmUpdateHandler_<XLEN>, RvzicsrInsts>(
                      nullptr, "frmUpdate"));
+
+        // Supervisor Trap Setup
         csrUpdate_actions.emplace(
-            MISA,
-            atlas::Action::createAction<&RvzicsrInsts::misaUpdateHandler_<XLEN>, RvzicsrInsts>(
-                nullptr, "misaUpdate"));
+            SSTATUS,
+            atlas::Action::createAction<&RvzicsrInsts::sstatusUpdateHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "sstatusUpdate"));
+
+        // Supervisor Protection and Translation
+        csrUpdate_actions.emplace(
+            SATP,
+            atlas::Action::createAction<&RvzicsrInsts::satpUpdateHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "satpUpdate"));
+
+        // Machine Trap Setup
         csrUpdate_actions.emplace(
             MSTATUS,
             atlas::Action::createAction<&RvzicsrInsts::mstatusUpdateHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "mstatusUpdate"));
         csrUpdate_actions.emplace(
-            SSTATUS,
-            atlas::Action::createAction<&RvzicsrInsts::sstatusUpdateHandler_<XLEN>, RvzicsrInsts>(
-                nullptr, "sstatusUpdate"));
+            MISA,
+            atlas::Action::createAction<&RvzicsrInsts::misaUpdateHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "misaUpdate"));
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
@@ -278,123 +289,6 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN>
-    Action::ItrType RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state,
-                                                     Action::ItrType action_it)
-    {
-        const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        const auto & ext_manager = state->getExtensionManager();
-
-        // FIXME: Extension manager should maintain inclusions
-        auto & inclusions = state->getMavisInclusions();
-        for (char ext = 'a'; ext <= 'z'; ++ext)
-        {
-            const std::string ext_str = std::string(1, ext);
-            if ((misa_val & (1 << (ext - 'a'))) && ext_manager.isEnabled(ext_str))
-            {
-                inclusions.emplace(ext_str);
-            }
-            else
-            {
-                // Disabling compression will fail if doing so would cause an instruction
-                // misalignment exception. Check if the next PC is not 32-bit aligned.
-                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
-                {
-                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
-                }
-                else
-                {
-                    inclusions.erase(ext_str);
-                }
-            }
-        }
-
-        state->changeMavisContext();
-
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RvzicsrInsts::mstatusUpdateHandler_(atlas::AtlasState* state,
-                                                        Action::ItrType action_it)
-    {
-        // Non-shared fields of SSTATUS are read-only so writing the MSTATUS value to SSTATUS will
-        // only write to the shared fields
-        const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
-        WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
-
-        // If FS is set to 0 (off), all floating point extensions are disabled
-        const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
-        auto & inclusions = state->getMavisInclusions();
-        if (fs_val == 0)
-        {
-            inclusions.erase("f");
-            inclusions.erase("d");
-        }
-        else
-        {
-            const bool f_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1;
-            const bool d_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1;
-            if (f_ext_enabled)
-            {
-                inclusions.emplace("f");
-            }
-            if (d_ext_enabled)
-            {
-                inclusions.emplace("d");
-            }
-        }
-
-        state->changeMavisContext();
-        state->changeMMUMode<XLEN>();
-
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RvzicsrInsts::sstatusUpdateHandler_(atlas::AtlasState* state,
-                                                        Action::ItrType action_it)
-    {
-        // Update shared fields only
-        const XLEN sie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sie");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", sie_val);
-
-        const XLEN spie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", spie_val);
-
-        const XLEN ube_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "ube");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "ube", ube_val);
-
-        const XLEN spp_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
-
-        const XLEN vs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "vs");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "vs", vs_val);
-
-        const XLEN fs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "fs");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "fs", fs_val);
-
-        const XLEN xs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "xs");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "xs", xs_val);
-
-        const XLEN sum_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sum");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sum", sum_val);
-
-        const XLEN mxr_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "mxr");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mxr", mxr_val);
-
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            const XLEN uxl_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "uxl");
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "uxl", uxl_val);
-        }
-
-        const XLEN sd_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sd");
-        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", sd_val);
-
-        return ++action_it;
-    }
-
     template <typename XLEN> void set_softfloat_excpetionFlags(atlas::AtlasState* state)
     {
         XLEN softfloat_exceptionFlags_mask = softfloat_flag_inexact | softfloat_flag_underflow
@@ -463,6 +357,134 @@ namespace atlas
         // FCSR
         const XLEN frm_val = READ_CSR_REG<XLEN>(state, FRM);
         WRITE_CSR_FIELD<XLEN>(state, FCSR, "frm", frm_val);
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::sstatusUpdateHandler_(atlas::AtlasState* state,
+                                                        Action::ItrType action_it)
+    {
+        // Update shared fields only
+        const XLEN sie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sie");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sie", sie_val);
+
+        const XLEN spie_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spie");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spie", spie_val);
+
+        const XLEN ube_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "ube");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "ube", ube_val);
+
+        const XLEN spp_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "spp", spp_val);
+
+        const XLEN vs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "vs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "vs", vs_val);
+
+        const XLEN fs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "fs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "fs", fs_val);
+
+        const XLEN xs_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "xs");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "xs", xs_val);
+
+        const XLEN sum_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sum");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sum", sum_val);
+
+        const XLEN mxr_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "mxr");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mxr", mxr_val);
+
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
+            const XLEN uxl_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "uxl");
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "uxl", uxl_val);
+        }
+
+        const XLEN sd_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sd");
+        WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", sd_val);
+
+        state->changeMavisContext();
+        state->changeMMUMode<XLEN>();
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::satpUpdateHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
+    {
+        state->changeMMUMode<XLEN>();
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::mstatusUpdateHandler_(atlas::AtlasState* state,
+                                                        Action::ItrType action_it)
+    {
+        // Non-shared fields of SSTATUS are read-only so writing the MSTATUS value to SSTATUS will
+        // only write to the shared fields
+        const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
+        WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
+
+        // If FS is set to 0 (off), all floating point extensions are disabled
+        const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
+        auto & inclusions = state->getMavisInclusions();
+        if (fs_val == 0)
+        {
+            inclusions.erase("f");
+            inclusions.erase("d");
+        }
+        else
+        {
+            const bool f_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1;
+            const bool d_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1;
+            if (f_ext_enabled)
+            {
+                inclusions.emplace("f");
+            }
+            if (d_ext_enabled)
+            {
+                inclusions.emplace("d");
+            }
+        }
+
+        state->changeMavisContext();
+        state->changeMMUMode<XLEN>();
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::misaUpdateHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
+    {
+        const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
+        const auto & ext_manager = state->getExtensionManager();
+
+        // FIXME: Extension manager should maintain inclusions
+        auto & inclusions = state->getMavisInclusions();
+        for (char ext = 'a'; ext <= 'z'; ++ext)
+        {
+            const std::string ext_str = std::string(1, ext);
+            if ((misa_val & (1 << (ext - 'a'))) && ext_manager.isEnabled(ext_str))
+            {
+                inclusions.emplace(ext_str);
+            }
+            else
+            {
+                // Disabling compression will fail if doing so would cause an instruction
+                // misalignment exception. Check if the next PC is not 32-bit aligned.
+                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
+                {
+                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                }
+                else
+                {
+                    inclusions.erase(ext_str);
+                }
+            }
+        }
+
+        state->changeMavisContext();
 
         return ++action_it;
     }
