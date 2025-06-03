@@ -402,10 +402,7 @@ namespace atlas
         const XLEN sd_val = READ_CSR_FIELD<XLEN>(state, SSTATUS, "sd");
         WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", sd_val);
 
-        state->changeMavisContext();
-        state->changeMMUMode<XLEN>();
-
-        return ++action_it;
+        return mstatusUpdateHandler_<XLEN>(state, action_it);
     }
 
     template <typename XLEN>
