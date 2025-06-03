@@ -1,5 +1,9 @@
+
+#include <iomanip>
+
 #include "sim/AtlasSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
+#include "sparta/utils/LogUtils.hpp"
 
 const char USAGE[] =
     "Usage:\n"
@@ -116,7 +120,11 @@ int main(int argc, char** argv)
                 {
                     reg->dmiWrite<uint32_t>(reg_value);
                 }
-                std::cout << reg << std::endl;
+                std::cout << "Writing " << std::quoted(reg->getName());
+                if (reg->getAliases().size() != 0) {
+                    std::cout << " aka " << reg->getAliases();
+                }
+                std::cout << " to " << HEX16(reg_value) << std::endl;
             }
         }
 

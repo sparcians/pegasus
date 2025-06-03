@@ -103,7 +103,8 @@ namespace atlas
     }
 
     template <typename XLEN>
-    void RviInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
+    void RviInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers,
+                                   bool enable_syscall_emulation)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -164,9 +165,17 @@ namespace atlas
             inst_handlers.emplace("ebreak",
                                   atlas::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
                                       nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
-                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            if (enable_syscall_emulation)
+            {
+                inst_handlers.emplace(
+                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            }
+            else {
+                inst_handlers.emplace(
+                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            }
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -502,8 +511,8 @@ namespace atlas
 
     template void RviInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
     template void RviInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
-    template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
-    template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
+    template void RviInsts::getInstHandlers<RV32>(std::map<std::string, Action> &, bool);
+    template void RviInsts::getInstHandlers<RV64>(std::map<std::string, Action> &, bool);
 
     template <typename XLEN, typename OPERATOR>
     Action::ItrType RviInsts::integer_reg_regHandler_(atlas::AtlasState* state,
@@ -980,61 +989,44 @@ namespace atlas
     }
 
     template <typename XLEN>
+    Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        // x10 -> x16 are the function arguments.
+        // x17 holds the system call number, first item on the stack
+        SystemCallStack call_stack = {
+            READ_INT_REG<XLEN>(state, 17),
+            READ_INT_REG<XLEN>(state, 10),
+            READ_INT_REG<XLEN>(state, 11),
+            READ_INT_REG<XLEN>(state, 12),
+            READ_INT_REG<XLEN>(state, 13),
+            READ_INT_REG<XLEN>(state, 14),
+            READ_INT_REG<XLEN>(state, 15),
+            READ_INT_REG<XLEN>(state, 16)
+        };
+
+        auto ret_code = static_cast<XLEN>(state->emulateSystemCall(call_stack));
+        WRITE_INT_REG<XLEN>(state, 10, ret_code);
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
     Action::ItrType RviInsts::ecallHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
-
-        // switch (STATE.prv)
-        //{
-        //   case PRV_U: throw trap_user_ecall();
-        //   case PRV_S:
-        //     if (STATE.v)
-        //       throw trap_virtual_supervisor_ecall();
-        //     else
-        //       throw trap_supervisor_ecall();
-        //   case PRV_M: throw trap_machine_ecall();
-        //   default: abort();
-        // }
-
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
-
-        // TODO: System call emulation support will eventually be supported by AtlasSystem
-        if (state->getAtlasSystem()->isSystemCallEmulationEnabled())
+        switch (state->getPrivMode())
         {
-            // Command
-            const XLEN cmd = READ_INT_REG<XLEN>(state, 17); // a7
-
-            // Only support exit for now so we can end simulation
-            if (cmd == 93)
-            {
-                // Function arguments are a0-a6 (x10-x16)
-                const XLEN exit_code = READ_INT_REG<XLEN>(state, 10);
-                state->stopSim(exit_code);
-            }
-            else
-            {
-                sparta_assert(false, "Unsupported syscall command: " << std::dec << cmd);
-            }
-        }
-        else
-        {
-            switch (state->getPrivMode())
-            {
-                case PrivMode::USER:
-                    THROW_USER_ECALL;
-                    break;
-                case PrivMode::SUPERVISOR:
-                    THROW_SUPERVISOR_ECALL;
-                    break;
-                case PrivMode::MACHINE:
-                    THROW_MACHINE_ECALL;
-                    break;
-                default:
-                    sparta_assert(false, "Invalid privilege mode!");
-                    break;
-            }
+            case PrivMode::USER:
+                THROW_USER_ECALL;
+                break;
+            case PrivMode::SUPERVISOR:
+                THROW_SUPERVISOR_ECALL;
+                break;
+            case PrivMode::MACHINE:
+                THROW_MACHINE_ECALL;
+                break;
+            default:
+                sparta_assert(false, "Invalid privilege mode!");
+                break;
         }
 
         return ++action_it;

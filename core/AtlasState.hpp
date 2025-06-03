@@ -40,6 +40,7 @@ namespace atlas
     class Exception;
     class SimController;
     class VectorState;
+    class SystemCallEmulator;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -134,7 +135,7 @@ namespace atlas
             uint64_t inst_count = 0;
             bool sim_stopped = false;
             bool test_passed = true;
-            uint64_t workload_exit_code = 0;
+            int64_t workload_exit_code = 0;
 
             void reset()
             {
@@ -171,6 +172,13 @@ namespace atlas
         void enableInteractiveMode();
 
         void useSpikeFormatting();
+
+        void setSystemCallEmulator(SystemCallEmulator * emulator) { system_call_emulator_ = emulator; }
+
+        // Emulate ecall.  This function will determine the route to
+        // send the emulation.  The return value is the return code
+        // from the call.
+        int64_t emulateSystemCall(const SystemCallStack &);
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -219,7 +227,7 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const uint64_t exit_code)
+        void stopSim(const int64_t exit_code)
         {
             sim_state_.workload_exit_code = exit_code;
             sim_state_.test_passed = (exit_code == 0) ? true : false;
@@ -349,7 +357,10 @@ namespace atlas
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory
-        AtlasSystem* atlas_system_;
+        AtlasSystem* atlas_system_ = nullptr;
+
+        //! System Call Emulator for ecall emulation
+        SystemCallEmulator* system_call_emulator_ = nullptr;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

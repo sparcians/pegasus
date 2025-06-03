@@ -32,11 +32,11 @@ namespace atlas
         execute_action_group_.addAction(execute_action);
 
         // Get RV64 instruction handlers
-        RviInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         // RvzbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         // RvzbsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, p->enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvfInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -47,11 +47,11 @@ namespace atlas
         RvviaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
-        RviInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // RvzbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // RvzbsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, p->enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvfInsts::getInstHandlers<RV32>(rv32_inst_actions_);
