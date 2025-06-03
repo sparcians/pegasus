@@ -201,7 +201,8 @@ def main():
         "rv64mi-v-access",
     ]
     for skip_test in skip_tests:
-        print("Skipping", skip_test)
+        if be_noisy:
+            print("Skipping", skip_test)
         tests = [test for test in tests if skip_test not in test]
 
     if len(tests) == 0:
@@ -210,8 +211,7 @@ def main():
 
     ###########################################################################
     # Run!
-    if be_noisy:
-        print("Running " + str(len(tests)) + " arch tests...")
+    print("Running " + str(len(tests)) + " arch tests...")
     passing_tests = []
     failing_tests = []
     timeout_tests = []
