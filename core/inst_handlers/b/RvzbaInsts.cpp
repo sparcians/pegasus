@@ -71,7 +71,8 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN> Action::ItrType RvzbaInsts::sh1add_handler(atlas::AtlasState* state, Action::ItrType action_it)
+    template <typename XLEN> 
+    Action::ItrType RvzbaInsts::sh1add_handler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -97,7 +98,8 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN> Action::ItrType RvzbaInsts::sh2add_handler(atlas::AtlasState* state, Action::ItrType action_it)
+    template <typename XLEN> 
+    Action::ItrType RvzbaInsts::sh2add_handler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -123,7 +125,8 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN> Action::ItrType RvzbaInsts::sh3add_handler(atlas::AtlasState* state, Action::ItrType action_it)
+    template <typename XLEN> 
+    Action::ItrType RvzbaInsts::sh3add_handler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
@@ -155,9 +158,9 @@ namespace atlas
 
         const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
 
-        const uint32_t shift_amount = ((uint64_t)(uint32_t)(inst->getImmediate()));
+        const uint32_t shamt = static_cast<uint64_t>(static_cast<uint32_t>(inst->getImmediate()));
 
-        const uint64_t rd_val = rs1_val << shift_amount;
+        const uint64_t rd_val = rs1_val << shamt;
         WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
         return ++action_it;
