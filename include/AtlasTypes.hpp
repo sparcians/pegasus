@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <string>
 #include <ostream>
+#include <array>
 
 namespace atlas
 {
