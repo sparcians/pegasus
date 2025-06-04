@@ -455,8 +455,20 @@ namespace atlas
 
     // Initialze a program stack (argc, argv, envp, auxv, etc)
     // Useful info about ELF binaries: https://lwn.net/Articles/631631/
+    // This is used mostly for system call emulation
     void AtlasState::setupProgramStack(const std::vector<std::string> & program_arguments)
     {
+        if (false == getExecuteUnit()->getSystemCallEmulation()) {
+            // System call emulation is not enabled.  There's a good
+            // chance we might be running a bare metal binary so no
+            // need to set up prog arguments.  In any event, we better
+            // not receive any either.
+            sparta_assert(program_arguments.size() == 1,
+                          "System Call emulation is not enabled, but the program is given arguments: "
+                          << program_arguments);
+            return;
+        }
+
         //
         // Taken from this awesome article:
         //
