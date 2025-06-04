@@ -67,6 +67,7 @@ namespace atlas
                  {178, {"getegid", cfp(&SysCallHandlers::getegid_)}},
                  {214, {"brk", cfp(&SysCallHandlers::brk_)}},
                  {222, {"mmap", cfp(&SysCallHandlers::mmap_)}},
+                 {226, {"mprotect", cfp(&SysCallHandlers::mprotect_)}},
                  {261, {"prlimit", cfp(&SysCallHandlers::prlimit_)}},
                  {278, {"getrandom", cfp(&SysCallHandlers::getrandom_)}},
                  {291, {"statx", cfp(&SysCallHandlers::statx_)}},
@@ -130,6 +131,7 @@ namespace atlas
         int64_t getegid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t brk_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getrandom_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -389,6 +391,12 @@ namespace atlas
                             << ") -> " << guest_addr);
 
         return guest_addr;
+    }
+
+    int64_t SysCallHandlers::mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
 
     int64_t SysCallHandlers::prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
