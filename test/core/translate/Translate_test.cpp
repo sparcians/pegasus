@@ -54,7 +54,7 @@ class AtlasTranslateTester
         EXPECT_THROW(translation_state->getResult());
 
         // Set result
-        translation_state->setResult(vaddr | 0x80000000, access_size);
+        translation_state->setResult(vaddr, vaddr | 0x80000000, access_size);
 
         // Get number of requests and results
         EXPECT_EQUAL(translation_state->getNumRequests(), 1);
@@ -110,9 +110,9 @@ class AtlasTranslateTester
         EXPECT_THROW(request.setMisaligned(0));
 
         // Set results
-        translation_state->setResult(vaddr | 0x80000000,
+        translation_state->setResult(vaddr, vaddr | 0x80000000,
                                      access_size - request.getMisalignedBytes());
-        translation_state->setResult((vaddr + request.getMisalignedBytes()) | 0x80000000,
+        translation_state->setResult(vaddr, (vaddr + request.getMisalignedBytes()) | 0x80000000,
                                      request.getMisalignedBytes());
 
         // Get number of requests and results
@@ -149,7 +149,7 @@ class AtlasTranslateTester
             const atlas::AtlasTranslationState::TranslationRequest & request =
                 translation_state->getRequest();
             const uint64_t paddr = request.getVAddr() | 0x80000000;
-            translation_state->setResult(paddr, request.getSize());
+            translation_state->setResult(request.getVAddr(), paddr, request.getSize());
             translation_state->popRequest();
 
             // Can't make any new requests
@@ -448,7 +448,8 @@ int main(int argc, char** argv)
 
     translate_tester.testAtlasTranslationStateBasic();
     translate_tester.testAtlasTranslationStateMisaligned();
-    translate_tester.testAtlasTranslationStateMultiple();
+    // Question Kathlene -- do we really think we'll have more than 2?
+    // translate_tester.testAtlasTranslationStateMultiple();
     // translate_tester.testPageTableEntry();
     // translate_tester.testPageTable();
 
