@@ -69,6 +69,7 @@ namespace atlas
         {
             sparta_assert(size > 0);
             sparta_assert(results_cnt_ == 0);
+            sparta_assert(requests_cnt_ < requests_.size());
             requests_[requests_cnt_++] = {vaddr, size};
         }
 
