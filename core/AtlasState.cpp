@@ -99,13 +99,7 @@ namespace atlas
     }
 
     // Not default -- defined in source file to reduce massive inlining
-    AtlasState::~AtlasState()
-    {
-        if (vector_state_ptr_)
-        {
-            delete vector_state_ptr_;
-        }
-    }
+    AtlasState::~AtlasState() {}
 
     void AtlasState::onBindTreeEarly_()
     {
