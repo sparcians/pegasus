@@ -217,16 +217,16 @@ namespace atlas
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("lr_d",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<uint64_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint64_t>, RvaInsts>(
                                       nullptr, "lr_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("lr_w",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<uint32_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint32_t>, RvaInsts>(
                                       nullptr, "lr_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sc_d",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<uint64_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint64_t>, RvaInsts>(
                                       nullptr, "sc_d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sc_w",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<uint32_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint32_t>, RvaInsts>(
                                       nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
@@ -276,10 +276,10 @@ namespace atlas
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("lr_w",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<uint32_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV32, uint32_t>, RvaInsts>(
                                       nullptr, "lr_w", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sc_w",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<uint32_t>, RvaInsts>(
+                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV32, uint32_t>, RvaInsts>(
                                       nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
     }
@@ -328,7 +328,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template<typename SIZE>
+    template<typename XLEN, typename SIZE>
     Action::ItrType RvaInsts::lr_handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -340,19 +340,19 @@ namespace atlas
         // Get the memory
         const uint64_t paddr = xlation_state->getResult().getPAddr();
         xlation_state->popResult();
-        const uint64_t rd_val = state->readMemory<SIZE>(paddr);
+        const XLEN rd_val = state->readMemory<SIZE>(paddr);
         inst->getRdReg()->write(rd_val);
 
         return ++action_it;
     }
 
-    template<typename SIZE>
+    template<typename XLEN, typename SIZE>
     Action::ItrType RvaInsts::sc_handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
 
-        uint64_t sc_bad = 1; // assume bad
+        XLEN sc_bad = 1; // assume bad
         if (auto & resv = state->getReservation(); resv.isValid())
         {
             if (resv == xlation_state->getResult().getVAddr())
@@ -365,7 +365,7 @@ namespace atlas
             resv.clearValid();
         }
         xlation_state->popResult();
-        inst->getRdReg()->dmiWrite<uint64_t>(sc_bad);
+        inst->getRdReg()->dmiWrite<XLEN>(sc_bad);
         return ++action_it;
     }
 } // namespace atlas
