@@ -25,7 +25,7 @@ main:
     maxu x0, x1, x2
     min x0, x1, x2
     minu x0, x1, x2
-    /*orc.b x0, x1, x2*/
+    orc.b x0, x1
     orn x0, x1, x2
     rev8 x0, x2
     rol x0, x1, x2

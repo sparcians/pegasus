@@ -1,3 +1,1 @@
-project(ecall_test)
-
-add_executable        (ecall.elf ecall.s)
+add_executable (ecall.elf ecall.s)
