@@ -94,6 +94,10 @@ namespace atlas
 
         void setWorkload(const std::string & workload) { workload_ = workload; }
 
+        void setBreakAddress(Addr addr) { brk_address_ = addr; }
+
+        Addr getBreakAddress() const { return brk_address_; }
+
       private:
         // The system calls
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -206,6 +210,10 @@ namespace atlas
 
         // The workload
         std::string workload_;
+
+        // For a program, if the `brk` system call is made, the
+        // program is asking to extend the data segment
+        Addr brk_address_ =  0;
     };
 
     SystemCallEmulator::SystemCallEmulator(
@@ -268,6 +276,16 @@ namespace atlas
     {
         workload_ = workload;
         callbacks_->setWorkload(workload);
+
+        const auto & symbols = sim_->getAtlasSystem()->getSymbols();
+        for (auto symbol : symbols) {
+            if (symbol.second == "_end") {
+                callbacks_->setBreakAddress(symbol.first);
+                break;
+            }
+        }
+        sparta_assert(callbacks_->getBreakAddress() != 0,
+                      "Could not find _end symbol in workload for system call emulation");
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -301,30 +319,42 @@ namespace atlas
         return ::getuid();
     }
 
-    int64_t SysCallHandlers::geteuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::geteuid_(const SystemCallStack & call_stack,
+                                      sparta::memory::BlockingMemoryIF*memory)
     {
-        return ::geteuid();
+        return getuid_(call_stack, memory);
     }
 
-    int64_t SysCallHandlers::getgid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::getgid_(const SystemCallStack &call_stack,
+                                     sparta::memory::BlockingMemoryIF*memory)
     {
-        return ::getgid();
+        return getuid_(call_stack, memory);
     }
 
-    int64_t SysCallHandlers::gettid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::gettid_(const SystemCallStack & call_stack,
+                                     sparta::memory::BlockingMemoryIF* memory)
     {
-        return 1;
+        return getuid_(call_stack, memory);
     }
 
-    int64_t SysCallHandlers::getegid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::getegid_(const SystemCallStack & call_stack,
+                                      sparta::memory::BlockingMemoryIF*memory)
     {
-        return ::getegid();
+        return getuid_(call_stack, memory);
     }
 
     int64_t SysCallHandlers::brk_(const SystemCallStack & call_stack,
                                   sparta::memory::BlockingMemoryIF*)
     {
-        int64_t ret = call_stack[1];
+        if (call_stack[1] != 0) {
+            // Set new address
+            brk_address_ = call_stack[1];
+        }
+        // else request for address
+
+        const int64_t ret = brk_address_;
+
+        SYSCALL_LOG(__func__ << "(" << HEX16(ret) << ") -> " << ret);
         return ret;
     }
 
