@@ -125,6 +125,11 @@ namespace atlas
             priv_mode_ = priv_mode;
         }
 
+        using Reservation = sparta::utils::ValidValue<Addr>;
+        Reservation & getReservation() { return reservation_; }
+
+        const Reservation & getReservation() const { return reservation_; }
+
         template <typename XLEN> void changeMMUMode();
 
         struct SimState
@@ -342,6 +347,9 @@ namespace atlas
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;
+
+        //! LR/SC Reservations
+        Reservation reservation_;
 
         //! Simulation state
         SimState sim_state_;
