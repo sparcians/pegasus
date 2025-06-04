@@ -23,10 +23,10 @@ from insts.RVZBA_INST import RV32ZBA_INST
 from insts.RVZBA_INST import RV64ZBA_INST
 from insts.RVZBB_INST import RV32ZBB_INST
 from insts.RVZBB_INST import RV64ZBB_INST
-# from insts.RVZBC_INST import RV32ZBC_INST
-# from insts.RVZBC_INST import RV64ZBC_INST
-# from insts.RVZBS_INST import RV32ZBS_INST
-# from insts.RVZBS_INST import RV64ZBS_INST
+from insts.RVZBC_INST import RV32ZBC_INST
+from insts.RVZBC_INST import RV64ZBC_INST
+from insts.RVZBS_INST import RV32ZBS_INST
+from insts.RVZBS_INST import RV64ZBS_INST
 
 from insts.RVZICSR_INST import RV32ZICSR_INST
 from insts.RVZICSR_INST import RV64ZICSR_INST

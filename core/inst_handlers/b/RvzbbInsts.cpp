@@ -63,7 +63,7 @@ namespace atlas
                 "ror", atlas::Action::createAction<&RvzbbInsts::rorHandler<RV64>, RvzbbInsts>(
                             nullptr, "ror", ActionTags::EXECUTE_TAG)); 
             inst_handlers.emplace(
-                "rori", atlas::Action::createAction<&RvzbbInsts::rolHandler<RV64>, RvzbbInsts>(
+                "rori", atlas::Action::createAction<&RvzbbInsts::roriHandler<RV64>, RvzbbInsts>(
                             nullptr, "rori", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "roriw", atlas::Action::createAction<&RvzbbInsts::roriwHandler, RvzbbInsts>(
@@ -117,7 +117,7 @@ namespace atlas
                 "ror", atlas::Action::createAction<&RvzbbInsts::rorHandler<RV32>, RvzbbInsts>(
                             nullptr, "ror", ActionTags::EXECUTE_TAG)); 
             inst_handlers.emplace(
-                "rori", atlas::Action::createAction<&RvzbbInsts::rolHandler<RV32>, RvzbbInsts>(
+                "rori", atlas::Action::createAction<&RvzbbInsts::roriHandler<RV32>, RvzbbInsts>(
                             nullptr, "rori", ActionTags::EXECUTE_TAG)); 
             inst_handlers.emplace(
                 "sext.b", atlas::Action::createAction<&RvzbbInsts::sext_bHandler<RV32>, RvzbbInsts>(
@@ -223,7 +223,7 @@ namespace atlas
         return ++action_it;
     }
 
-    // Needs to be optimized
+    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbbInsts::maxHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -253,7 +253,7 @@ namespace atlas
         return ++action_it;
     }
 
-    // Needs to be optimized
+    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbbInsts::minHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -297,7 +297,7 @@ namespace atlas
         return ++action_it;
     }
 
-    // Needs to be optimized
+    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbbInsts::rolHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -307,12 +307,7 @@ namespace atlas
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         // Chooses appropriate bitmask
-        uint32_t shamt;
-        if constexpr (std::is_same_v<XLEN, RV64>) {
-            shamt = rs2_val & 0x3F;
-        } else {
-            shamt = rs2_val & 0x1F;
-        }
+        const uint32_t shamt = rs2_val & (sizeof(XLEN) * 8 - 1);
 
         const XLEN rd_val = std::rotl(rs1_val, shamt);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -335,7 +330,7 @@ namespace atlas
         return ++action_it;
     }
 
-    // Needs to be optimized
+    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbbInsts::rorHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -345,12 +340,7 @@ namespace atlas
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         // Chooses appropriate bitmask
-        uint32_t shamt;
-        if constexpr (std::is_same_v<XLEN, RV64>) {
-            shamt = rs2_val & 0x3F;
-        } else {
-            shamt = rs2_val & 0x1F;
-        }
+        const uint32_t shamt = rs2_val & (sizeof(XLEN) * 8 - 1);
 
         const XLEN rd_val = std::rotr(rs1_val, shamt);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -358,7 +348,7 @@ namespace atlas
         return ++action_it;
     }
 
-    // Needs to be optimized
+    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbbInsts::roriHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -368,12 +358,7 @@ namespace atlas
         const XLEN imm_val = inst->getImmediate();
 
         // Chooses appropriate bitmask
-        uint32_t shamt;
-        if constexpr (std::is_same_v<XLEN, RV64>) {
-            shamt = imm_val & 0x3F;
-        } else {
-            shamt = imm_val & 0x1F;
-        }
+        const uint32_t shamt = imm_val & (sizeof(XLEN) * 8 - 1);
 
         const XLEN rd_val = std::rotr(rs1_val, shamt);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -381,7 +366,6 @@ namespace atlas
         return ++action_it;
     }
 
-    // NOT FULLY IMPLEMENTED YET
     Action::ItrType RvzbbInsts::roriwHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -397,7 +381,6 @@ namespace atlas
         return ++action_it;
     }
 
-    // NOT FULLY IMPLEMENTED YET
     Action::ItrType RvzbbInsts::rorwHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();

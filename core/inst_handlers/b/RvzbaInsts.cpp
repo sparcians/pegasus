@@ -165,9 +165,4 @@ namespace atlas
 
         return ++action_it;
     }
-
-
-    
-
-    
 }

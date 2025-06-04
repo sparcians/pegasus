@@ -9,8 +9,8 @@
 #include "core/inst_handlers/a/RvaInsts.hpp"
 #include "core/inst_handlers/b/RvzbaInsts.hpp"
 #include "core/inst_handlers/b/RvzbbInsts.hpp"
-// #include "core/inst_handlers/b/RvzbcInsts.hpp"
-// #include "core/inst_handlers/b/RvzbsInsts.hpp"
+#include "core/inst_handlers/b/RvzbcInsts.hpp"
+#include "core/inst_handlers/b/RvzbsInsts.hpp"
 #include "core/inst_handlers/d/RvdInsts.hpp"
 #include "core/inst_handlers/f/RvfInsts.hpp"
 #include "core/inst_handlers/i/RviInsts.hpp"
@@ -34,8 +34,8 @@ namespace atlas
         // Get RV64 instruction handlers
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        // RvzbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        // RvzbsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzbsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, p->enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -49,8 +49,8 @@ namespace atlas
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        // RvzbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        // RvzbsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzbsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, p->enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
