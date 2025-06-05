@@ -18,6 +18,9 @@ namespace atlas{
     }
 
 //METHODS
+    //stf_enable -> user can enable and disable STF Trace Generation
+    //width -> register width (32 or 64)
+    //pc -> initial program counter
     void STFLogger::initialize(const bool stf_enable, const uint32_t width, uint64_t pc){
         enable = stf_enable;
         if (!enable) return;
@@ -25,8 +28,7 @@ namespace atlas{
 
         //set up version and stf generation type
         stf_writer_->addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_GEN_IMPERAS,
-                                                        1, 2, 0, "Trace from Imperas")); // Do I need to say Imperas??
-
+                                                        1, 2, 0, "Trace from Imperas")); 
 
         if(width == 32)  stf_writer_->setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
         else{
@@ -41,6 +43,7 @@ namespace atlas{
         stf_writer_->finalizeHeader();
     }
 
+    //inst -> current instruction being executed (will add register records)
     void STFLogger::writeInstruction(const AtlasInst* inst){
         if (!enable) return;
         if (inst->getOpcodeSize() == 2 ) *stf_writer_ << stf::InstOpcode16Record(inst->getOpcode());
