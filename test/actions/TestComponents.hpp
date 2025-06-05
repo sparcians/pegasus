@@ -1,129 +1,6 @@
-#include "core/ActionGroup.hpp"
-#include "include/AtlasTypes.hpp"
-#include "include/ActionTags.hpp"
-
-#include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+#include "core/AtlasState.hpp"
 
 #include <algorithm>
-#include <map>
-
-namespace atlas
-{
-    class AtlasInst
-    {
-      public:
-        using base_type = AtlasInst;
-
-        AtlasInst(const uint64_t uid, const std::string & mnemonic, const bool is_wfi = false,
-                  const bool is_vector = false) :
-            uid_(uid),
-            mnemonic_(mnemonic),
-            is_wfi_(is_wfi),
-            is_vector_(is_vector)
-        {
-        }
-
-        uint64_t getUid() const { return uid_; }
-
-        const std::string & getMnemonic() const { return mnemonic_; }
-
-        bool isWfi() const { return is_wfi_; }
-
-        bool isVector() const { return is_vector_; }
-
-      private:
-        const uint64_t uid_;
-        const std::string mnemonic_;
-        const bool is_wfi_;
-        const bool is_vector_;
-    };
-
-    using AtlasInstPtr = sparta::SpartaSharedPointer<AtlasInst>;
-
-    class AtlasState
-    {
-      public:
-        using base_type = AtlasState;
-
-        AtlasState() { reset(); }
-
-        void incrUid() { ++uid_; }
-
-        uint64_t getUid() const { return uid_; }
-
-        void incrPc() { pc_ += 4; }
-
-        uint64_t getPc() const { return pc_; }
-
-        void setCurrentInst(const AtlasInstPtr & inst_ptr) { current_inst_ptr_ = inst_ptr; }
-
-        const AtlasInstPtr & getCurrentInst() const { return current_inst_ptr_; }
-
-        void incrNumInstsExecuted() { ++num_insts_executed_; }
-
-        uint64_t getNumInstsExecuted() const { return num_insts_executed_; }
-
-        void incrNumActionsExecuted() { ++num_actions_executed_; }
-
-        uint64_t getNumActionsExecuted() const { return num_actions_executed_; }
-
-        atlas::Action::ItrType dummy_action(atlas::AtlasState* state,
-                                            atlas::Action::ItrType action_it)
-        {
-            (void)state;
-            std::cout << "Executing dummy action" << std::endl;
-            ++num_actions_executed_;
-            return ++action_it;
-        }
-
-        atlas::ActionGroup* getStopActionGroup() { return &stop_sim; }
-
-        atlas::Action::ItrType stopSim(AtlasState* state, atlas::Action::ItrType action_it)
-        {
-            (void)state;
-            std::cout << "Num insts executed: " << num_insts_executed_ << std::endl;
-            std::cout << "Num actions executed: " << num_actions_executed_ << std::endl;
-            std::cout << std::endl;
-
-            // Stop sim
-            return ++action_it;
-        }
-
-        void reset()
-        {
-            uid_ = 0;
-            pc_ = 0x0;
-            current_inst_ptr_ = nullptr;
-            num_insts_executed_ = 0;
-            num_actions_executed_ = 0;
-        }
-
-      private:
-        uint64_t uid_;
-        atlas::Addr pc_;
-        AtlasInstPtr current_inst_ptr_;
-
-        atlas::ActionGroup stop_sim{"stop_sim",
-                                    atlas::Action::createAction<&atlas::AtlasState::stopSim>(
-                                        this, "StopSim", atlas::ActionTags::STOP_SIM_TAG)};
-
-        // For testing
-        uint32_t num_insts_executed_;
-        uint32_t num_actions_executed_;
-    };
-} // namespace atlas
-
-std::ostream & operator<<(std::ostream & os, const atlas::AtlasInst & inst)
-{
-    os << inst.getMnemonic() << " uid:" << std::dec << inst.getUid();
-    return os;
-}
-
-std::ostream & operator<<(std::ostream & os, const atlas::AtlasInstPtr & inst)
-{
-    os << *inst;
-    return os;
-}
 
 // Base Unit class
 class Unit
@@ -156,17 +33,11 @@ class FetchUnit : public Unit
         std::cout << "Fetching PC 0x" << std::hex << pc << std::endl;
 
         // Read the "opcode" from the "workload"
-        const std::string & opcode = workload_.at(pc);
+        const uint64_t opcode = workload_.at(pc);
 
         // Construct and set the current inst
-        const bool is_wfi = (opcode == "wfi") ? true : false;
-        const bool is_vector = (opcode == "vadd") ? true : false;
-        fetched_insts_.emplace_back(
-            new atlas::AtlasInst(state->getUid(), workload_[pc], is_wfi, is_vector));
-        state->setCurrentInst(fetched_insts_.back());
-        state->incrUid();
-
-        state->incrNumActionsExecuted();
+        auto inst = state->getMavis()->makeInst(opcode, state);
+        state->setCurrentInst(inst);
 
         // Always go to either Decode or Translate
         return ++action_it;
@@ -176,19 +47,22 @@ class FetchUnit : public Unit
     {
         workload_.clear();
         // Initialize a fake workload
-        const std::string inst_str = (vector) ? "vadd" : "add";
-        atlas::Addr pc = 0;
-        while (pc < 0x12)
+        const uint64_t opcode = (vector) ? vadd_opcode : add_opcode;
+        atlas::Addr pc = 01000;
+        while (pc < 0x1012)
         {
-            workload_[pc] = inst_str;
+            workload_[pc] = opcode;
             pc += 4;
         }
-        workload_[pc] = "wfi";
+        workload_[pc] = wfi_opcode;
     }
 
   private:
-    std::map<atlas::Addr, std::string> workload_;
+    std::map<atlas::Addr, uint64_t> workload_;
     std::vector<atlas::AtlasInstPtr> fetched_insts_;
+    const uint64_t add_opcode = 0x00000033;  // add x0, x0, x0
+    const uint64_t vadd_opcode = 0x02000057; // vadd.vv v0, v0, v0
+    const uint64_t wfi_opcode = 0x10500073;  // wfi
 };
 
 class TranslateUnit : public Unit
@@ -196,11 +70,10 @@ class TranslateUnit : public Unit
   public:
     TranslateUnit() : Unit("Translate") {}
 
-    atlas::Action::ItrType translate_addr(atlas::AtlasState* state,
+    atlas::Action::ItrType translate_addr(atlas::AtlasState*,
                                           atlas::Action::ItrType action_it)
     {
         std::cout << "Translating" << std::endl;
-        state->incrNumActionsExecuted();
 
         // Always go to Decode
         return ++action_it;
@@ -212,10 +85,9 @@ class DecodeUnit : public Unit
   public:
     DecodeUnit() : Unit("Decode") {}
 
-    atlas::Action::ItrType decode_inst(atlas::AtlasState* state, atlas::Action::ItrType action_it)
+    atlas::Action::ItrType decode_inst(atlas::AtlasState*, atlas::Action::ItrType action_it)
     {
         std::cout << "Decoding" << std::endl;
-        state->incrNumActionsExecuted();
 
         // Always go to Execute
         return ++action_it;
@@ -249,9 +121,9 @@ class ExecuteUnit : public Unit
             inst_action_group.addAction(atlas::Action::createAction<&ExecuteUnit::inst_handler>(
                 this, inst->getMnemonic().c_str()));
 
-            if (inst->isWfi())
+            if (inst->getMnemonic() == "wfi")
             {
-                inst_action_group.setNextActionGroup(state->getStopActionGroup());
+                inst_action_group.setNextActionGroup(state->getStopSimActionGroup());
             }
             else
             {
@@ -259,8 +131,6 @@ class ExecuteUnit : public Unit
                 inst_action_group.setNextActionGroup(fetch_action_group_);
             }
         }
-
-        state->incrNumActionsExecuted();
 
         // Execute the instruction
         action_group_.setNextActionGroup(&inst_action_group_it->second);
@@ -270,26 +140,27 @@ class ExecuteUnit : public Unit
     atlas::Action::ItrType inst_handler(atlas::AtlasState* state, atlas::Action::ItrType action_it)
     {
         const atlas::AtlasInstPtr & inst = state->getCurrentInst();
-        std::cout << "Executing " << inst << std::endl;
-
-        state->incrNumActionsExecuted();
+        std::cout << "Executing " << "uid: " << std::dec << inst->getUid() << " " << inst->dasmString() << std::endl;
+        state->getSimState()->inst_count++;
 
         // Determine if the inst handler needs to be called again
         static uint32_t num_uops_to_execute = 2;
         --num_uops_to_execute;
-        if (inst->isVector() && (num_uops_to_execute > 0))
+        const bool is_vector = inst->getMnemonic() == "vadd.vv";
+        if (is_vector && (num_uops_to_execute > 0))
         {
             return action_it;
         }
+        else
+        {
+            // reset
+            num_uops_to_execute = 2;
 
-        state->incrNumInstsExecuted();
-        // reset
-        num_uops_to_execute = 2;
+            // Increment the PC and inst count
+            state->setPc(state->getPc() + 4);
 
-        // Increment the PC
-        state->incrPc();
-
-        return ++action_it;
+            return ++action_it;
+        }
     }
 
   private:

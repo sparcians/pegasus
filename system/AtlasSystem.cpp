@@ -61,8 +61,6 @@ namespace atlas
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
 
-        sparta::utils::ValidValue<Addr> tohost_addr;
-        sparta::utils::ValidValue<Addr> fromhost_addr;
         for (const auto & section : elf_reader_.sections)
         {
             ELFIO::symbol_section_accessor symbols(elf_reader_, section.get());
@@ -86,29 +84,29 @@ namespace atlas
 
                     if (name == "tohost")
                     {
-                        sparta_assert(tohost_addr.isValid() == false,
+                        sparta_assert(tohost_addr_.isValid() == false,
                                       "Found multiple tohost symbols in ELF!");
-                        tohost_addr = addr;
+                        tohost_addr_ = addr;
                     }
                     else if (name == "fromhost")
                     {
-                        sparta_assert(fromhost_addr.isValid() == false,
+                        sparta_assert(fromhost_addr_.isValid() == false,
                                       "Found multiple fromhost symbols in ELF!");
-                        fromhost_addr = addr;
+                        fromhost_addr_ = addr;
                     }
                 }
             }
         }
 
         // Magic Memory
-        if (tohost_addr.isValid() && fromhost_addr.isValid())
+        if (tohost_addr_.isValid() && fromhost_addr_.isValid())
         {
             std::cout << "Found magic memory symbols in ELF" << std::endl;
-            std::cout << "    tohost:   0x" << std::hex << tohost_addr.getValue() << std::endl;
-            std::cout << "    fromhost: 0x" << std::hex << fromhost_addr.getValue() << std::endl;
+            std::cout << "    tohost:   0x" << std::hex << tohost_addr_.getValue() << std::endl;
+            std::cout << "    fromhost: 0x" << std::hex << fromhost_addr_.getValue() << std::endl;
 
             sparta::memory::addr_t base_addr =
-                std::min(tohost_addr.getValue(), fromhost_addr.getValue());
+                std::min(tohost_addr_.getValue(), fromhost_addr_.getValue());
             if (base_addr % ATLAS_SYSTEM_BLOCK_SIZE != 0)
             {
                 // Align base address of section to the block size
@@ -120,8 +118,8 @@ namespace atlas
                       << std::endl;
 
             // Determine how many blocks are needed to hold the section
-            const sparta::memory::addr_t addr_delt =
-                std::max(tohost_addr.getValue() - base_addr, fromhost_addr.getValue() - base_addr);
+            const sparta::memory::addr_t addr_delt = std::max(
+                tohost_addr_.getValue() - base_addr, fromhost_addr_.getValue() - base_addr);
             const sparta::memory::addr_t size_aligned =
                 ((addr_delt / ATLAS_SYSTEM_BLOCK_SIZE) + 1) * ATLAS_SYSTEM_BLOCK_SIZE;
 
@@ -206,12 +204,18 @@ namespace atlas
                                                                            "Magic memory node",
                                                                            &magic_mem_fact_));
 
-            // Set base address and size params
+            // Set Magic Memory params
             auto base_addr_param =
                 getContainer()->getChildAs<sparta::ParameterBase>("magic_memory.params.base_addr");
+            auto tohost_addr_param = getContainer()->getChildAs<sparta::ParameterBase>(
+                "magic_memory.params.tohost_addr");
+            auto fromhost_addr_param = getContainer()->getChildAs<sparta::ParameterBase>(
+                "magic_memory.params.fromhost_addr");
             auto size_param =
                 getContainer()->getChildAs<sparta::ParameterBase>("magic_memory.params.size");
             base_addr_param->setValueFromString(std::to_string(magic_mem.start_address));
+            tohost_addr_param->setValueFromString(std::to_string(tohost_addr_.getValue()));
+            fromhost_addr_param->setValueFromString(std::to_string(fromhost_addr_.getValue()));
             size_param->setValueFromString(std::to_string(magic_mem.total_size_aligned));
 
             mm_rtn->finalize();

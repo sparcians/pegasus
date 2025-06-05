@@ -32,7 +32,12 @@ set(LINKER_SCRIPT ${BASE_DIR}/common/main.ld)
 set(CMAKE_ASM_LINKER_FLAGS "-T ${LINKER_SCRIPT} -e main")
 set(CMAKE_ASM_LINK_EXECUTABLE "${CMAKE_LINKER} ${CMAKE_ASM_LINKER_FLAGS} <OBJECTS> -o <TARGET>")
 
+# Enable extensions
+add_compile_options(-march=rv64gcv_zba_zbb_zbc_zbs)
+
 include_directories(common)
 
 add_subdirectory(src/nop)
 add_subdirectory(src/uart)
+add_subdirectory(src/ecall)
+add_subdirectory(src/b_ext)
