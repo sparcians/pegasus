@@ -13,6 +13,8 @@
 #include <string.h>
 #include <sys/time.h> // get time of day
 #include <sys/mman.h> // mmap
+#include <sys/types.h>
+#include <sys/stat.h> //fstat, etc
 
 #define SYSCALL_LOG(x)                                                                             \
     if (SPARTA_EXPECT_FALSE(syscall_log_))                                                         \
@@ -638,10 +640,38 @@ namespace atlas
         return ret;
     }
 
-    int64_t SysCallHandlers::fstatat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::fstatat_(const SystemCallStack &call_stack,
+                                      sparta::memory::BlockingMemoryIF*memory)
     {
-        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
-        int64_t ret = -1;
+        int64_t ret = 0;
+
+        const auto dirfd    = call_stack[1];
+        const auto pathname = call_stack[2];
+        const auto statbuf  = call_stack[3];
+        const auto flags    = call_stack[4];
+
+        std::string pathname_str;
+        uint8_t c;
+        uint32_t offset = 0;
+        do {
+            memory->peek(pathname + offset, 1, &c);
+            if(c != 0) {
+                pathname_str += c;
+            }
+            ++offset;
+        } while (c != 0);
+
+        SYSCALL_LOG("fstat("
+                    << HEX16(dirfd) << ", "
+                    << HEX16(pathname) << ", "
+                    << HEX16(statbuf) << ", "
+                    << HEX16(flags) << ", "
+                    << ") -> 0");
+
+        struct stat sbuf;
+        ret = ::fstatat(dirfd, pathname_str.c_str(), &sbuf, flags);
+        memory->poke(statbuf, sizeof(struct stat), reinterpret_cast<uint8_t*>(&sbuf));
+
         return ret;
     }
 
