@@ -528,36 +528,8 @@ namespace atlas
         sp += 8;
 
         ////////////////////////////////////////////////////////////////////////////////
-        // Set up envp
+        // Set up envp -- empty for now
         std::vector<std::string> env_vars;
-        // if(false == workload_env_vars_file_.empty())
-        // {
-        //     auto env_var_file = std::ifstream(workload_env_vars_file_);
-        //     sparta_assert(env_var_file.is_open(),
-        //                   "Could not open " << workload_env_vars_file_
-        //                   << " to read program environment variables");
-        //     info_logger_ << "Atlas: Reading environment variables from "
-        //                  << workload_env_vars_file_;
-        //     std::array<char, 256>  var;
-        //     std::array<char, 2048> value;
-        //     char * pvar = &var[0];
-        //     char * pval = &value[0];
-        //     ::memset(&value[0], 0, value.size());
-        //     uint32_t line = 1;
-        //     while(env_var_file.getline(pvar, var.size(), '='))
-        //     {
-        //         sparta_assert(false == std::string(pvar).empty(),
-        //                       "Malformed environment var on line: " << line
-        //                       << "  Expected name=value.  Var has no name");
-        //         sparta_assert(std::string(pvar).find('\n') == std::string::npos,
-        //                       "Malformed environment var on line: " << line
-        //                       << "  Expected name=value. Got '" << pvar << "'");
-        //         env_var_file.getline(pval, value.size(), '\n');
-        //         info_logger_ << "Atlas:\t\t" << pvar << "=" << pval;
-        //         env_vars.emplace_back(std::string(pvar) + '=' + pval);
-        //         ++line;
-        //     }
-        // }
         auto envp_sp_addr = sp;
         sp += 8 * env_vars.size();
         data = 0;
