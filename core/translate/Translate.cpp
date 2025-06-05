@@ -352,7 +352,7 @@ namespace atlas
 
             // Resolve first request
             const size_t first_access_size = access_size - num_misaligned_bytes;
-            translation_state->setResult(paddr, first_access_size);
+            translation_state->setResult(vaddr, paddr, first_access_size);
 
             // Set request as misaligned
             request.setMisaligned(num_misaligned_bytes);
@@ -360,7 +360,7 @@ namespace atlas
         else
         {
             translation_state->popRequest();
-            translation_state->setResult(paddr, access_size);
+            translation_state->setResult(vaddr, paddr, access_size);
         }
 
         if (is_misaligned || (translation_state->getNumRequests() > 0))
