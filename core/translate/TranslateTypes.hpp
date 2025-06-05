@@ -138,7 +138,7 @@ namespace atlas::translate_types
             PteFields::ppn0, PteFields::ppn1, PteFields::ppn2, PteFields::ppn3};
         static constexpr uint32_t num_vpn_fields = 4;
         static const std::array<FieldDef, num_vpn_fields> vpn_fields{
-            VAddrFields::vpn0, VAddrFields::vpn1, VAddrFields::vpn2, VAddrFields::vpn2};
+            VAddrFields::vpn0, VAddrFields::vpn1, VAddrFields::vpn2, VAddrFields::vpn3};
         static constexpr uint32_t num_pagewalk_levels = 4;
         static const std::array<uint64_t, num_pagewalk_levels> page_offset_masks{
             0xfff,       // 4K
