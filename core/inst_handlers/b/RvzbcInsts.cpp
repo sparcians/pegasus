@@ -14,30 +14,16 @@ namespace atlas
     void RvzbcInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
+
             inst_handlers.emplace(
-                "clmul", atlas::Action::createAction<&RvzbcInsts::clmulHandler<RV64>, RvzbcInsts>(
+                "clmul", atlas::Action::createAction<&RvzbcInsts::clmulHandler<XLEN>, RvzbcInsts>(
                             nullptr, "clmul", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "clmulh", atlas::Action::createAction<&RvzbcInsts::clmulhHandler<RV64>, RvzbcInsts>(
+                "clmulh", atlas::Action::createAction<&RvzbcInsts::clmulhHandler<XLEN>, RvzbcInsts>(
                             nullptr, "clmulh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "clmulr", atlas::Action::createAction<&RvzbcInsts::clmulrHandler<RV64>, RvzbcInsts>(
+                "clmulr", atlas::Action::createAction<&RvzbcInsts::clmulrHandler<XLEN>, RvzbcInsts>(
                             nullptr, "clmulr", ActionTags::EXECUTE_TAG));
-        }
-        else if constexpr (std::is_same_v<XLEN, RV32>)
-        {
-            inst_handlers.emplace(
-                "clmul", atlas::Action::createAction<&RvzbcInsts::clmulHandler<RV32>, RvzbcInsts>(
-                            nullptr, "clmul", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "clmulh", atlas::Action::createAction<&RvzbcInsts::clmulhHandler<RV32>, RvzbcInsts>(
-                            nullptr, "clmulh", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "clmulr", atlas::Action::createAction<&RvzbcInsts::clmulrHandler<RV32>, RvzbcInsts>(
-                            nullptr, "clmulr", ActionTags::EXECUTE_TAG));
-        }
     }
 
     template void RvzbcInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -55,7 +41,7 @@ namespace atlas
         XLEN output = 0;
 
         for(uint32_t i = 0; i < sizeof(XLEN) * 8; i++) {
-            output = ((rs2_val >> i) & 1) ? (output ^ (rs1_val << i)) : (output);
+            output ^= ((rs2_val >> i) & 1) * (rs1_val << i);
         }
         
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
@@ -75,7 +61,7 @@ namespace atlas
         XLEN output = 0;
 
         for(uint32_t i = 1; i < sizeof(XLEN) * 8; i++) {
-            output = ((rs2_val >> i) & 1) ? (output ^ (rs1_val >> (sizeof(XLEN) * 8 - i))) : (output);
+            output ^= ((rs2_val >> i) & 1) * (rs1_val >> (sizeof(XLEN) * 8 - i));
         }
         
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
@@ -95,7 +81,7 @@ namespace atlas
         XLEN output = 0;
 
         for(uint32_t i = 0; i < sizeof(XLEN) * 8; i++) {
-            output = ((rs2_val >> i) & 1) ? (output ^ (rs1_val >> (sizeof(XLEN) * 8 - i - 1))) : (output);
+            output ^= ((rs2_val >> i) & 1) * (rs1_val >> (sizeof(XLEN) * 8 - i -1));
         }
         
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);

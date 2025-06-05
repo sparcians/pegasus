@@ -39,7 +39,11 @@ namespace atlas
             template <typename XLEN>
             Action::ItrType minuHandler(atlas::AtlasState* state, Action::ItrType action_it);
             template <typename XLEN>
+            Action::ItrType orc_bHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN>
             Action::ItrType ornHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN>
+            Action::ItrType rev8Handler(atlas::AtlasState* state, Action::ItrType action_it);
             template <typename XLEN>
             Action::ItrType rolHandler(atlas::AtlasState* state, Action::ItrType action_it);
             Action::ItrType rolwHandler(atlas::AtlasState* state, Action::ItrType action_it);
@@ -55,5 +59,7 @@ namespace atlas
             Action::ItrType sext_hHandler(atlas::AtlasState* state, Action::ItrType action_it);
             template <typename XLEN>
             Action::ItrType xnorHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN>
+            Action::ItrType zext_hHandler(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

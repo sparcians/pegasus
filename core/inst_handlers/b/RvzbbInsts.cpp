@@ -51,8 +51,14 @@ namespace atlas
                 "minu", atlas::Action::createAction<&RvzbbInsts::minuHandler<RV64>, RvzbbInsts>(
                             nullptr, "minu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
+                "orc.b", atlas::Action::createAction<&RvzbbInsts::orc_bHandler<RV64>, RvzbbInsts>(
+                            nullptr, "orc.b", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
                 "orn", atlas::Action::createAction<&RvzbbInsts::ornHandler<RV64>, RvzbbInsts>(
                             nullptr, "orn", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "rev8", atlas::Action::createAction<&RvzbbInsts::rev8Handler<RV64>, RvzbbInsts>(
+                            nullptr, "rev8", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "rol", atlas::Action::createAction<&RvzbbInsts::rolHandler<RV64>, RvzbbInsts>(
                             nullptr, "rol", ActionTags::EXECUTE_TAG));
@@ -79,7 +85,10 @@ namespace atlas
                             nullptr, "sext.h", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "xnor", atlas::Action::createAction<&RvzbbInsts::xnorHandler<RV64>, RvzbbInsts>(
-                            nullptr, "xnor", ActionTags::EXECUTE_TAG));           
+                            nullptr, "xnor", ActionTags::EXECUTE_TAG));  
+            inst_handlers.emplace(
+                "zext.h", atlas::Action::createAction<&RvzbbInsts::zext_hHandler<RV64>, RvzbbInsts>(
+                            nullptr, "zext.h", ActionTags::EXECUTE_TAG));         
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
@@ -108,8 +117,14 @@ namespace atlas
                 "minu", atlas::Action::createAction<&RvzbbInsts::minuHandler<RV32>, RvzbbInsts>(
                             nullptr, "minu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
+                "orc.b", atlas::Action::createAction<&RvzbbInsts::orc_bHandler<RV32>, RvzbbInsts>(
+                            nullptr, "orc.b", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
                 "orn", atlas::Action::createAction<&RvzbbInsts::ornHandler<RV32>, RvzbbInsts>(
                             nullptr, "orn", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "rev8", atlas::Action::createAction<&RvzbbInsts::rev8Handler<RV32>, RvzbbInsts>(
+                            nullptr, "rev8", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "rol", atlas::Action::createAction<&RvzbbInsts::rolHandler<RV32>, RvzbbInsts>(
                             nullptr, "rol", ActionTags::EXECUTE_TAG));   
@@ -127,7 +142,10 @@ namespace atlas
                             nullptr, "sext.h", ActionTags::EXECUTE_TAG)); 
             inst_handlers.emplace(
                 "xnor", atlas::Action::createAction<&RvzbbInsts::xnorHandler<RV32>, RvzbbInsts>(
-                            nullptr, "xnor", ActionTags::EXECUTE_TAG));                     
+                            nullptr, "xnor", ActionTags::EXECUTE_TAG));          
+            inst_handlers.emplace(
+                "zext.h", atlas::Action::createAction<&RvzbbInsts::zext_hHandler<RV32>, RvzbbInsts>(
+                            nullptr, "zext.h", ActionTags::EXECUTE_TAG));            
         }
     }
     
@@ -233,7 +251,7 @@ namespace atlas
         const S_XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const S_XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         
-        const XLEN rd_val = (rs1_val < rs2_val) ? rs2_val : rs1_val;
+        const XLEN rd_val = std::max(rs1_val, rs2_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
@@ -247,7 +265,7 @@ namespace atlas
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         
-        const XLEN rd_val = (rs1_val < rs2_val) ? rs2_val : rs1_val;
+       const XLEN rd_val = std::max(rs1_val, rs2_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
@@ -263,7 +281,7 @@ namespace atlas
         const S_XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const S_XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         
-        const XLEN rd_val = (rs1_val < rs2_val) ? rs1_val : rs2_val;
+        const XLEN rd_val = std::min(rs1_val, rs2_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
@@ -277,8 +295,26 @@ namespace atlas
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         
-        const XLEN rd_val = (rs1_val < rs2_val) ? rs1_val : rs2_val;
+        const XLEN rd_val = std::min(rs1_val, rs2_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+
+        return ++action_it;
+    }
+
+    // Not properly implemented yet
+    template <typename XLEN> 
+    Action::ItrType RvzbbInsts::orc_bHandler(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+
+        XLEN output = 0;
+        for (uint32_t i = 0; i < sizeof(XLEN); i++) {
+            output = ((rs1_val & (0xFFull << i * 8)) == 0) ? output : output | (0xFFull << i * 8);
+        }
+
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
 
         return ++action_it;
     }
@@ -296,6 +332,21 @@ namespace atlas
 
         return ++action_it;
     }
+
+    // Not properly implemented yet
+    template <typename XLEN> 
+    Action::ItrType RvzbbInsts::rev8Handler(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+
+        const XLEN rd_val = sparta::byte_swap(rs1_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+
+        return ++action_it;
+    }
+
 
     // Should be optimized
     template <typename XLEN> 
@@ -319,7 +370,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1()));
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         uint32_t shamt = rs2_val & 0x3F;
@@ -370,7 +421,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1()));
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t imm_val = inst->getImmediate();
 
         uint32_t shamt = imm_val & 0x3F;
@@ -385,7 +436,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint32_t rs1_val = static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1()));
+        const uint32_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         uint32_t shamt = rs2_val & 0x3F;
@@ -401,10 +452,9 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        using S_XLEN = std::conditional_t<std::is_same_v<XLEN, RV64>, int64_t, int32_t>;
-        const int8_t rs1_val = static_cast<int8_t>(READ_INT_REG<XLEN>(state, inst->getRs1()) & 0xFF);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
-        const XLEN rd_val =  static_cast<S_XLEN>(rs1_val);
+         const XLEN rd_val =  sext(rs1_val, 8);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         
         return ++action_it;
@@ -415,11 +465,11 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        using S_XLEN = std::conditional_t<std::is_same_v<XLEN, RV64>, int64_t, int32_t>;
-        const int16_t rs1_val = static_cast<int16_t>(READ_INT_REG<XLEN>(state, inst->getRs1()) & 0xFFFF);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
-        const XLEN rd_val =  static_cast<S_XLEN>(rs1_val);
+         const XLEN rd_val =  sext(rs1_val, 16);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+        
         return ++action_it;
     }
 
@@ -434,6 +484,19 @@ namespace atlas
         const XLEN rd_val = ~(rs1_val ^ rs2_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
+        return ++action_it;
+    }
+
+    template <typename XLEN> 
+    Action::ItrType RvzbbInsts::zext_hHandler(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+
+         const XLEN rd_val =  zext(rs1_val, 16);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+        
         return ++action_it;
     }
 }

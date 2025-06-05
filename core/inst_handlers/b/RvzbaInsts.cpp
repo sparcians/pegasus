@@ -62,7 +62,7 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
 
         // Ensures that rs1_val only receives the least-significant word of rs1
-        const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         const uint64_t rd_val = rs1_val + rs2_val; 
@@ -76,8 +76,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         const XLEN rd_val = (rs1_val << 1) + rs2_val;
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -89,7 +89,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         const uint64_t rd_val = (rs1_val << 1) + rs2_val;
@@ -103,8 +103,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         const XLEN rd_val = (rs1_val << 2) + rs2_val;
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -116,7 +116,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         const uint64_t rd_val = (rs1_val << 2) + rs2_val;
@@ -130,8 +130,8 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const XLEN rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
         const XLEN rd_val = (rs1_val << 3) + rs2_val;
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
@@ -143,7 +143,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
         const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
 
         const uint64_t rd_val = (rs1_val << 3) + rs2_val;
@@ -156,7 +156,7 @@ namespace atlas
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = static_cast<uint64_t>(static_cast<uint32_t>(READ_INT_REG<uint64_t>(state, inst->getRs1())));
+        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1()) & 0xFFFFFFFFull;
 
         const uint32_t shamt = static_cast<uint64_t>(static_cast<uint32_t>(inst->getImmediate()));
 
