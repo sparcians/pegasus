@@ -1,27 +1,53 @@
 #include "TestComponents.hpp"
-#include "include/ActionTags.hpp"
+#include "sim/AtlasSim.hpp"
 
 #include "sparta/utils/SpartaTester.hpp"
 
 void runSim(atlas::AtlasState* state, atlas::ActionGroup* atlas_core,
-            const uint32_t expected_num_insts, const uint32_t expected_num_actions)
+            const uint32_t expected_num_insts, const uint32_t expected_num_action_groups)
 {
+    state->setPc(0x1000);
+    state->getSimState()->inst_count = 0;
+
     atlas::ActionGroup* action_group = atlas_core;
+    uint32_t num_action_groups_executed = 0;
     while (action_group)
     {
         action_group = action_group->execute(state);
+        ++num_action_groups_executed;
     }
 
-    EXPECT_EQUAL(expected_num_insts, state->getNumInstsExecuted());
-    EXPECT_EQUAL(expected_num_actions, state->getNumActionsExecuted());
+    EXPECT_EQUAL(expected_num_insts, state->getSimState()->inst_count);
+    EXPECT_EQUAL(expected_num_action_groups, num_action_groups_executed);
 
     // Reset for next test
-    state->reset();
+    state->getSimState()->inst_count = 0;
 }
+
+class dummyClass
+{
+public:
+    using base_type = dummyClass;
+
+    atlas::Action::ItrType dummyAction(atlas::AtlasState*, atlas::Action::ItrType action_it)
+    {
+        return ++action_it;
+    }
+};
 
 int main()
 {
-    atlas::AtlasState state;
+    // Create the simulator
+    sparta::Scheduler scheduler_;
+    const std::string workload = "";
+    const uint64_t ilimit = 0;
+    atlas::AtlasSim atlas_sim {&scheduler_, workload, ilimit};
+
+    atlas_sim.buildTree();
+    atlas_sim.configureTree();
+    atlas_sim.finalizeTree();
+
+    atlas::AtlasState* state = atlas_sim.getAtlasState();
 
     // Create core units
     FetchUnit fetch_unit{};
@@ -52,8 +78,8 @@ int main()
 
     // Dummy Action
     const std::string dummy_action_name = "Dummy";
-    atlas::Action dummy_action = atlas::Action::createAction<&atlas::AtlasState::dummy_action>(
-        &state, dummy_action_name.c_str());
+    dummyClass dummy_class;
+    atlas::Action dummy_action = atlas::Action::createAction<&dummyClass::dummyAction>(&dummy_class, dummy_action_name.c_str());
     const atlas::ActionTagType DUMMY_TAG = atlas::ActionTagFactory::createTag("DUMMY_TAG");
     dummy_action.addTag(DUMMY_TAG);
 
@@ -65,7 +91,8 @@ int main()
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, fetch, 6, 24);
+    // 5 insts + wfi, 4 ActionGroups each + stop sim
+    runSim(state, fetch, 6, 25);
 
     //
     // Add a dummy Action after Fetch
@@ -74,7 +101,7 @@ int main()
     std::cout << "TEST: Insert Action After\n";
     std::cout << fetch << std::endl;
     std::cout << std::endl;
-    runSim(&state, fetch, 6, 30);
+    runSim(state, fetch, 6, 25);
 
     //
     // Add another dummy Action before Execute
@@ -83,7 +110,7 @@ int main()
     std::cout << "TEST: Insert Action After\n";
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, fetch, 6, 36);
+    runSim(state, fetch, 6, 25);
 
     //
     // Remove the dummy Actions that were added
@@ -94,7 +121,7 @@ int main()
     std::cout << fetch << std::endl;
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
-    runSim(&state, fetch, 6, 24);
+    runSim(state, fetch, 6, 25);
 
     //
     // Trying to remove an Action that is not in the ActionGroup will fail
@@ -109,7 +136,7 @@ int main()
     fetch->setNextActionGroup(execute);
     std::cout << "TEST: Bypass ActionGroup\n";
     std::cout << std::endl;
-    runSim(&state, fetch, 6, 18);
+    runSim(state, fetch, 6, 19);
     fetch->setNextActionGroup(decode);
 
     //
@@ -131,14 +158,15 @@ int main()
     std::cout << decode << std::endl;
     std::cout << execute << std::endl;
     std::cout << std::endl;
-    runSim(&state, fetch, 6, 30);
+    runSim(state, fetch, 6, 31);
 
     //
     // Configure Execute for Vector Instruction Execution
     //
     const bool vector_wkld = true;
     fetch_unit.loadWorkload(vector_wkld);
-    runSim(&state, fetch, 6, 35);
+    // each vadd.vv counts as 2 insts + wfi
+    runSim(state, fetch, 11, 31);
 
     REPORT_ERROR;
     return ERROR_CODE;
