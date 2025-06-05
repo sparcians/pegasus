@@ -45,11 +45,16 @@ namespace atlas
         Action::ItrType fflagsUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType frmUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType misaUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
         template <typename XLEN>
         Action::ItrType sstatusUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        template <typename XLEN>
+        Action::ItrType satpUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
         template <typename XLEN>
         Action::ItrType mstatusUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType misaUpdateHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
