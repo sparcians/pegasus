@@ -99,13 +99,7 @@ namespace atlas
     }
 
     // Not default -- defined in source file to reduce massive inlining
-    AtlasState::~AtlasState()
-    {
-        if (vector_state_ptr_)
-        {
-            delete vector_state_ptr_;
-        }
-    }
+    AtlasState::~AtlasState() {}
 
     void AtlasState::onBindTreeEarly_()
     {
@@ -190,13 +184,11 @@ namespace atlas
         {
             if (xlen_ == 64)
             {
-                addObserver(
-                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV64));
+                addObserver(std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV64));
             }
             else
             {
-                addObserver(
-                    std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
+                addObserver(std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
             }
         }
 
