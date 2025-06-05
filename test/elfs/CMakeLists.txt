@@ -33,7 +33,7 @@ set(CMAKE_ASM_LINKER_FLAGS "-T ${LINKER_SCRIPT} -e main")
 set(CMAKE_ASM_LINK_EXECUTABLE "${CMAKE_LINKER} ${CMAKE_ASM_LINKER_FLAGS} <OBJECTS> -o <TARGET>")
 
 # Enable extensions
-add_compile_options(-march=rv64g_zba_zbb_zbc_zbs)
+add_compile_options(-march=rv64gcv_zba_zbb_zbc_zbs)
 
 include_directories(common)
 
