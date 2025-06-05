@@ -9,6 +9,8 @@ namespace atlas
     class AtlasTranslationState
     {
       public:
+        static const uint32_t MAX_TRANSLATION = 8;
+
         struct TranslationRequest
         {
           public:
@@ -114,11 +116,11 @@ namespace atlas
 
       private:
         // Translation request
-        std::array<TranslationRequest, 2> requests_;
+        std::array<TranslationRequest, MAX_TRANSLATION> requests_;
         uint32_t requests_cnt_ = 0;
 
         // Translation result
-        std::array<TranslationResult, 2> results_;
+        std::array<TranslationResult, MAX_TRANSLATION> results_;
         uint32_t results_cnt_ = 0;
     };
 } // namespace atlas

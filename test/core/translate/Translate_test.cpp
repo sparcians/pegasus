@@ -448,8 +448,7 @@ int main(int argc, char** argv)
 
     translate_tester.testAtlasTranslationStateBasic();
     translate_tester.testAtlasTranslationStateMisaligned();
-    // Question Kathlene -- do we really think we'll have more than 2?
-    // translate_tester.testAtlasTranslationStateMultiple();
+    translate_tester.testAtlasTranslationStateMultiple();
     // translate_tester.testPageTableEntry();
     // translate_tester.testPageTable();
 
