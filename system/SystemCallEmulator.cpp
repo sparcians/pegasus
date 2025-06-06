@@ -43,6 +43,7 @@ namespace atlas
                 {{17, {"getcwd", cfp(&SysCallHandlers::getcwd_)}},
                  {23, {"setuid", cfp(&SysCallHandlers::setuid_)}},
                  {25, {"stime", cfp(&SysCallHandlers::stime_)}},
+                 {29, {"ioctl", cfp(&SysCallHandlers::ioctl_)}},
                  {48, {"faccessat", cfp(&SysCallHandlers::faccessat_)}},
                  {57, {"close", cfp(&SysCallHandlers::close_)}},
                  {62, {"lseek", cfp(&SysCallHandlers::lseek_)}},
@@ -106,6 +107,7 @@ namespace atlas
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t ioctl_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t openat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -438,6 +440,12 @@ namespace atlas
         return 0;
     }
 
+    int64_t SysCallHandlers::ioctl_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+
     int64_t SysCallHandlers::faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
@@ -640,6 +648,43 @@ namespace atlas
         return ret;
     }
 
+    // Pulled from /usr/riscv64-linux-gnu/include/sys/stat.h
+    struct RV_stat
+    {
+        __dev_t st_dev;
+        __ino_t st_ino;
+        __mode_t st_mode;
+        __nlink_t st_nlink;
+        __uid_t st_uid;
+        __gid_t st_gid;
+        __dev_t st_rdev;
+        __dev_t __pad1;
+        __off_t st_size;
+        __blksize_t st_blksize;
+        int __pad2;
+        __blkcnt_t st_blocks;
+        struct timespec st_atim;
+        struct timespec st_mtim;
+        struct timespec st_ctim;
+        int __glibc_reserved[2];
+
+        RV_stat(struct stat host_stat) :
+            st_dev(host_stat.st_dev),
+            st_ino(host_stat.st_ino),
+            st_mode(host_stat.st_mode),
+            st_nlink(host_stat.st_nlink),
+            st_uid(host_stat.st_uid),
+            st_gid(host_stat.st_gid),
+            st_rdev(host_stat.st_rdev),
+            st_size(host_stat.st_size),
+            st_blksize(host_stat.st_blksize),
+            st_blocks(host_stat.st_blocks),
+            st_atim(host_stat.st_atim),
+            st_mtim(host_stat.st_mtim),
+            st_ctim(host_stat.st_ctim)
+        {}
+    };
+
     int64_t SysCallHandlers::fstatat_(const SystemCallStack &call_stack,
                                       sparta::memory::BlockingMemoryIF*memory)
     {
@@ -661,24 +706,46 @@ namespace atlas
             ++offset;
         } while (c != 0);
 
-        SYSCALL_LOG("fstat("
+        // Use the host's stat
+        struct stat host_stat;
+        ret = ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
+
+        SYSCALL_LOG(__func__ << "("
                     << HEX16(dirfd) << ", "
                     << HEX16(pathname) << ", "
                     << HEX16(statbuf) << ", "
                     << HEX16(flags) << ", "
-                    << ") -> 0");
+                    << ") -> " << ret);
 
-        struct stat sbuf;
-        ret = ::fstatat(dirfd, pathname_str.c_str(), &sbuf, flags);
-        memory->poke(statbuf, sizeof(struct stat), reinterpret_cast<uint8_t*>(&sbuf));
+        // Now create a RV stat and populate
+        RV_stat rv_stat(host_stat);
+
+        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
 
         return ret;
     }
 
-    int64_t SysCallHandlers::fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::fstat_(const SystemCallStack & call_stack,
+                                    sparta::memory::BlockingMemoryIF*memory)
     {
-        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
-        int64_t ret = -1;
+        int64_t ret = 0;
+
+        const auto fd       = call_stack[1];
+        const auto statbuf  = call_stack[3];
+
+
+        // Use the host's stat
+        struct stat host_stat;
+        ret = ::fstat(fd, &host_stat);
+
+        // Now create a RV stat and populate
+        RV_stat rv_stat(host_stat);
+        SYSCALL_LOG(__func__ << "("
+                    << HEX16(fd) << ", "
+                    << HEX16(statbuf) << ", "
+                    << ") -> " << ret);
+
+        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
         return ret;
     }
 
