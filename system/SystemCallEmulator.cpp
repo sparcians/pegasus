@@ -648,21 +648,22 @@ namespace atlas
         return ret;
     }
 
-    // Pulled from /usr/riscv64-linux-gnu/include/sys/stat.h
+    // Pulled from /usr/riscv64-linux-gnu/include/sys/stat.h and
+    // frontend.h from pk
     struct RV_stat
     {
-        __dev_t st_dev;
-        __ino_t st_ino;
-        __mode_t st_mode;
-        __nlink_t st_nlink;
-        __uid_t st_uid;
-        __gid_t st_gid;
-        __dev_t st_rdev;
-        __dev_t __pad1;
-        __off_t st_size;
-        __blksize_t st_blksize;
-        int __pad2;
-        __blkcnt_t st_blocks;
+        uint64_t st_dev;
+        uint64_t st_ino;
+        uint32_t st_mode;
+        uint32_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint64_t st_rdev;
+        uint64_t __pad1;
+        uint64_t st_size;
+        uint32_t st_blksize;
+        uint32_t __pad2;
+        uint64_t st_blocks;
         struct timespec st_atim;
         struct timespec st_mtim;
         struct timespec st_ctim;
