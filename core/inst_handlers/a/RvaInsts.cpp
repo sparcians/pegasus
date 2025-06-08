@@ -322,8 +322,10 @@ namespace atlas
         {
             rd_val = state->readMemory<SIZE>(paddr);
         }
-        inst->getRdReg()->write(rd_val);
+        // Must read the RS2 value before writing the Rd (might be the
+        // same register!)
         const RV rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
+        inst->getRdReg()->write(rd_val);
         state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val));
         return ++action_it;
     }
