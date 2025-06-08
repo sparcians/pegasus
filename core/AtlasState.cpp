@@ -497,11 +497,18 @@ namespace atlas
         const bool MUST_EXIST = true;
         sparta::Register* reg = findRegister("sp", MUST_EXIST);
         uint64_t sp = 0;
+
+        // Typicsl stack pointer is 8KB on most linux systems
+        const uint64_t typical_ulimit_stack_size = 8192;
         if (xlen_ == 64) {
             sp = reg->dmiRead<RV64>();
+            sparta_assert(std::numeric_limits<uint64_t>::max() - sp > typical_ulimit_stack_size,
+                          "Stack pointer initial value has a good chance of overflowing");
         }
         else {
-            sp = reg->dmiRead<RV64>();
+            sp = reg->dmiRead<RV32>();
+            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp > typical_ulimit_stack_size,
+                          "Stack pointer initial value has a good chance of overflowing");
         }
         sparta_assert(sp != 0,
                       "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "

@@ -48,7 +48,7 @@ namespace atlas
         Addr getStartingPc() const { return starting_pc_; }
 
         // Get the workload and its program arguments
-        std::vector<std::string> getWorkloadAndArgs() const { return workload_and_args_; }
+        const std::vector<std::string> & getWorkloadAndArgs() const { return workload_and_args_; }
 
         const std::unordered_map<Addr, std::string> & getSymbols() const { return symbols_; }
 
