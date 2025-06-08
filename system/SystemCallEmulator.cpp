@@ -56,6 +56,7 @@ namespace atlas
                  {79, {"fstatat", cfp(&SysCallHandlers::fstatat_)}},
                  {80, {"fstat", cfp(&SysCallHandlers::fstat_)}},
                  {93, {"exit", cfp(&SysCallHandlers::exit_)}},
+                 {94, {"exit_group", cfp(&SysCallHandlers::exit_group_)}},
                  {96, {"set_tid_address", cfp(&SysCallHandlers::setTIDAddress_)}},
                  {98, {"futex", cfp(&SysCallHandlers::futex_)}},
                  {99, {"set_robust_list", cfp(&SysCallHandlers::setRobustList_)}},
@@ -121,6 +122,7 @@ namespace atlas
         int64_t fstatat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t exit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t exit_group_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t setTIDAddress_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t futex_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t setRobustList_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -818,6 +820,14 @@ namespace atlas
         SYSCALL_LOG("exit(" << exit_code << ");");
         emulator_->getAtlasSim()->endSimulation(exit_code);
         return exit_code;
+    }
+
+    int64_t SysCallHandlers::exit_group_(const SystemCallStack & call_stack,
+                                         sparta::memory::BlockingMemoryIF*memory)
+    {
+        const int64_t exit_code = call_stack[1];
+        SYSCALL_LOG("exit_group(" << exit_code << ");");
+        return exit_(call_stack, memory);
     }
 
     int64_t SysCallHandlers::statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
