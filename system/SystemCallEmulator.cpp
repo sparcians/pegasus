@@ -57,11 +57,12 @@ namespace atlas
                  {80, {"fstat", cfp(&SysCallHandlers::fstat_)}},
                  {93, {"exit", cfp(&SysCallHandlers::exit_)}},
                  {94, {"exit_group", cfp(&SysCallHandlers::exit_group_)}},
-                 {96, {"set_tid_address", cfp(&SysCallHandlers::setTIDAddress_)}},
+                 {96, {"set_tid_address", cfp(&SysCallHandlers::set_tid_address_)}},
                  {98, {"futex", cfp(&SysCallHandlers::futex_)}},
-                 {99, {"set_robust_list", cfp(&SysCallHandlers::setRobustList_)}},
+                 {99, {"set_robust_list", cfp(&SysCallHandlers::set_robust_list_)}},
+                 {113, {"clock_gettime", cfp(&SysCallHandlers::clock_gettime_)}},
                  {131, {"tgkill", cfp(&SysCallHandlers::tgkill_)}},
-                 {135, {"rt_sigprocmask", cfp(&SysCallHandlers::rtSIGProcMask_)}},
+                 {135, {"rt_sigprocmask", cfp(&SysCallHandlers::rt_sigprocmask_)}},
                  {160, {"uname", cfp(&SysCallHandlers::uname_)}},
                  {172, {"getpid", cfp(&SysCallHandlers::getpid_)}},
                  {174, {"getuid", cfp(&SysCallHandlers::getuid_)}},
@@ -123,11 +124,12 @@ namespace atlas
         int64_t fstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t exit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t exit_group_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setTIDAddress_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t set_tid_address_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t futex_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setRobustList_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t set_robust_list_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t clock_gettime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t tgkill_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t rtSIGProcMask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t rt_sigprocmask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t uname_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -221,7 +223,7 @@ namespace atlas
 
         // For a program, if the `brk` system call is made, the
         // program is asking to extend the data segment
-        Addr brk_address_ =  0;
+        Addr brk_address_ = 0;
     };
 
     SystemCallEmulator::SystemCallEmulator(
@@ -286,8 +288,10 @@ namespace atlas
         callbacks_->setWorkload(workload);
 
         const auto & symbols = sim_->getAtlasSystem()->getSymbols();
-        for (auto symbol : symbols) {
-            if (symbol.second == "_end") {
+        for (auto symbol : symbols)
+        {
+            if (symbol.second == "_end")
+            {
                 callbacks_->setBreakAddress(symbol.first);
                 break;
             }
@@ -328,13 +332,13 @@ namespace atlas
     }
 
     int64_t SysCallHandlers::geteuid_(const SystemCallStack & call_stack,
-                                      sparta::memory::BlockingMemoryIF*memory)
+                                      sparta::memory::BlockingMemoryIF* memory)
     {
         return getuid_(call_stack, memory);
     }
 
-    int64_t SysCallHandlers::getgid_(const SystemCallStack &call_stack,
-                                     sparta::memory::BlockingMemoryIF*memory)
+    int64_t SysCallHandlers::getgid_(const SystemCallStack & call_stack,
+                                     sparta::memory::BlockingMemoryIF* memory)
     {
         return getuid_(call_stack, memory);
     }
@@ -346,7 +350,7 @@ namespace atlas
     }
 
     int64_t SysCallHandlers::getegid_(const SystemCallStack & call_stack,
-                                      sparta::memory::BlockingMemoryIF*memory)
+                                      sparta::memory::BlockingMemoryIF* memory)
     {
         return getuid_(call_stack, memory);
     }
@@ -354,7 +358,8 @@ namespace atlas
     int64_t SysCallHandlers::brk_(const SystemCallStack & call_stack,
                                   sparta::memory::BlockingMemoryIF*)
     {
-        if (call_stack[1] != 0) {
+        if (call_stack[1] != 0)
+        {
             // Set new address
             brk_address_ = call_stack[1];
         }
@@ -685,25 +690,28 @@ namespace atlas
             st_atim(host_stat.st_atim),
             st_mtim(host_stat.st_mtim),
             st_ctim(host_stat.st_ctim)
-        {}
+        {
+        }
     };
 
-    int64_t SysCallHandlers::fstatat_(const SystemCallStack &call_stack,
-                                      sparta::memory::BlockingMemoryIF*memory)
+    int64_t SysCallHandlers::fstatat_(const SystemCallStack & call_stack,
+                                      sparta::memory::BlockingMemoryIF* memory)
     {
         int64_t ret = 0;
 
-        const auto dirfd    = call_stack[1];
+        const auto dirfd = call_stack[1];
         const auto pathname = call_stack[2];
-        const auto statbuf  = call_stack[3];
-        const auto flags    = call_stack[4];
+        const auto statbuf = call_stack[3];
+        const auto flags = call_stack[4];
 
         std::string pathname_str;
         uint8_t c;
         uint32_t offset = 0;
-        do {
+        do
+        {
             memory->peek(pathname + offset, 1, &c);
-            if(c != 0) {
+            if (c != 0)
+            {
                 pathname_str += c;
             }
             ++offset;
@@ -713,12 +721,9 @@ namespace atlas
         struct stat host_stat;
         ret = ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
 
-        SYSCALL_LOG(__func__ << "("
-                    << HEX16(dirfd) << ", "
-                    << HEX16(pathname) << ", "
-                    << HEX16(statbuf) << ", "
-                    << HEX16(flags) << ", "
-                    << ") -> " << ret);
+        SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << ", " << HEX16(pathname) << ", "
+                             << HEX16(statbuf) << ", " << HEX16(flags) << ", "
+                             << ") -> " << ret);
 
         // Now create a RV stat and populate
         RV_stat rv_stat(host_stat);
@@ -729,13 +734,12 @@ namespace atlas
     }
 
     int64_t SysCallHandlers::fstat_(const SystemCallStack & call_stack,
-                                    sparta::memory::BlockingMemoryIF*memory)
+                                    sparta::memory::BlockingMemoryIF* memory)
     {
         int64_t ret = 0;
 
-        const auto fd       = call_stack[1];
-        const auto statbuf  = call_stack[3];
-
+        const auto fd = call_stack[1];
+        const auto statbuf = call_stack[3];
 
         // Use the host's stat
         struct stat host_stat;
@@ -743,17 +747,15 @@ namespace atlas
 
         // Now create a RV stat and populate
         RV_stat rv_stat(host_stat);
-        SYSCALL_LOG(__func__ << "("
-                    << HEX16(fd) << ", "
-                    << HEX16(statbuf) << ", "
-                    << ") -> " << ret);
+        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf) << ", "
+                             << ") -> " << ret);
 
         memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
         return ret;
     }
 
-    int64_t SysCallHandlers::setTIDAddress_(const SystemCallStack &,
-                                            sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::set_tid_address_(const SystemCallStack &,
+                                              sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
@@ -765,10 +767,35 @@ namespace atlas
         return 0;
     }
 
-    int64_t SysCallHandlers::setRobustList_(const SystemCallStack &,
-                                            sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::set_robust_list_(const SystemCallStack &,
+                                              sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+
+    int64_t SysCallHandlers::clock_gettime_(const SystemCallStack & call_stack,
+                                            sparta::memory::BlockingMemoryIF* memory)
+    {
+        // To be used once we're using the sparta scheduler
+        // auto * clk = emulator_->getClock();
+        // uint32_t clk_freq = (uint32_t)clk->getFrequencyMhz();
+        // uint32_t cyc = (uint32_t)clk->currentCycle();
+
+        // // timespec is 2 uint32_t structures
+        // struct timespec tm = {
+        //     cyc / freq,
+        //     uint32_t((cyc % freq) / (clk->getFrequencyMhz() / 1000000000))
+        // };
+
+        struct timespec tm;
+        ::clock_gettime(call_stack[0], &tm);
+
+        SYSCALL_LOG(__func__ << "(" << HEX16(call_stack[0]) << ", " << HEX16(call_stack[1]) << ", "
+                             << ") -> 0");
+
+        memory->poke(call_stack[1], sizeof(tm), reinterpret_cast<uint8_t*>(&tm));
+
         return 0;
     }
 
@@ -778,8 +805,8 @@ namespace atlas
         return exit_(call_stack, mem);
     }
 
-    int64_t SysCallHandlers::rtSIGProcMask_(const SystemCallStack &,
-                                            sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::rt_sigprocmask_(const SystemCallStack &,
+                                             sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
@@ -823,7 +850,7 @@ namespace atlas
     }
 
     int64_t SysCallHandlers::exit_group_(const SystemCallStack & call_stack,
-                                         sparta::memory::BlockingMemoryIF*memory)
+                                         sparta::memory::BlockingMemoryIF* memory)
     {
         const int64_t exit_code = call_stack[1];
         SYSCALL_LOG("exit_group(" << exit_code << ");");

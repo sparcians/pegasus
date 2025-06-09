@@ -7,10 +7,8 @@
 
 namespace atlas
 {
-    AtlasSim::AtlasSim(sparta::Scheduler* scheduler,
-                       const WorkloadAndArguments & workload_and_args,
-                       const RegValueOverridePairs & reg_value_overrides,
-                       uint64_t ilimit) :
+    AtlasSim::AtlasSim(sparta::Scheduler* scheduler, const WorkloadAndArguments & workload_and_args,
+                       const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit) :
         sparta::app::Simulation("AtlasSim", scheduler),
         workload_and_args_(workload_and_args),
         reg_value_overrides_(reg_value_overrides),
@@ -45,6 +43,9 @@ namespace atlas
         const HartId hart_id = 0;
         const AtlasState* state = state_.at(hart_id);
         const uint64_t inst_count = state->getSimState()->inst_count;
+        std::locale::global(std::locale(""));
+        std::cout.imbue(std::locale());
+        std::cout.precision(12);
         std::cout << "Instructions executed: " << std::dec << inst_count << std::endl;
         std::cout << "Raw time (seconds): " << std::dec << (sim_time / 1000000.0) << std::endl;
         std::cout << "MIPS: " << std::dec << (inst_count / (sim_time / 1000000.0)) << std::endl;
@@ -82,9 +83,8 @@ namespace atlas
             new sparta::ResourceTreeNode(root_tn, "system", "Atlas System", &system_factory_));
 
         // top.system_call_emulator
-        tns_to_delete_.emplace_back(
-            new sparta::ResourceTreeNode(root_tn, "system_call_emulator", "System Call Emulator",
-                                         &sys_call_factory_));
+        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
+            root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
         // top.core
         sparta::TreeNode* core_tn = nullptr;
@@ -128,10 +128,11 @@ namespace atlas
 
         // Atlas System (shared by all harts)
         system_ = getRoot()->getChild("system")->getResourceAs<atlas::AtlasSystem>();
-        SystemCallEmulator *system_call_emulator =
+        SystemCallEmulator* system_call_emulator =
             getRoot()->getChild("system_call_emulator")->getResourceAs<atlas::SystemCallEmulator>();
 
-        if (false == workload_and_args_.empty()) {
+        if (false == workload_and_args_.empty())
+        {
             system_call_emulator->setWorkload(workload_and_args_[0]);
         }
 
@@ -161,13 +162,15 @@ namespace atlas
                     reg->dmiWrite<uint32_t>(reg_value);
                 }
                 std::cout << "Writing " << std::quoted(reg->getName());
-                if (reg->getAliases().size() != 0) {
+                if (reg->getAliases().size() != 0)
+                {
                     std::cout << " aka " << reg->getAliases();
                 }
                 std::cout << " to " << HEX16(reg_value) << std::endl;
             }
 
-            if (false == workload_and_args_.empty()) {
+            if (false == workload_and_args_.empty())
+            {
                 state->setupProgramStack(system_->getWorkloadAndArgs());
             }
         }
@@ -175,7 +178,8 @@ namespace atlas
 
     void AtlasSim::endSimulation(int64_t exit_code)
     {
-        for (auto state : state_) {
+        for (auto state : state_)
+        {
             state->stopSim(exit_code);
         }
     }
