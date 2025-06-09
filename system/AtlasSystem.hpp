@@ -34,8 +34,8 @@ namespace atlas
             AtlasSystemParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(bool, enable_uart, false, "Enable a Uart")
-            HIDDEN_PARAMETER(std::vector<std::string>, workload_and_args,
-                             {}, "Workload and command line arguments")
+            HIDDEN_PARAMETER(std::vector<std::string>, workload_and_args, {},
+                             "Workload and command line arguments")
         };
 
         // Constructor

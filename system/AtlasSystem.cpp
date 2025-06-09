@@ -56,7 +56,14 @@ namespace atlas
         if (elf_reader_.load(workload) == false)
         {
             throw sparta::SpartaException()
-                << "\n\nERROR: ELF binary '" << workload << "' failed to load! Does it exist?\n";
+                << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
+        }
+
+        if (elf_reader_.get_type() == ELFIO::SHT_DYNAMIC)
+        {
+            throw sparta::SpartaException()
+                << "\nERROR: '" << workload
+                << "' is dynamically linked. Atlas can only run statically linked binaries\n";
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
