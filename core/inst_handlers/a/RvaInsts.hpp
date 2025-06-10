@@ -27,9 +27,10 @@ namespace atlas
         template <typename RV, typename SIZE, typename OP, bool U = true>
         Action::ItrType amoHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
-        Action::ItrType lr_d_64Handler_(atlas::AtlasState* state, Action::ItrType action_it);
-        Action::ItrType lr_w_64Handler_(atlas::AtlasState* state, Action::ItrType action_it);
-        Action::ItrType sc_d_64Handler_(atlas::AtlasState* state, Action::ItrType action_it);
-        Action::ItrType sc_w_64Handler_(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN, typename SIZE>
+        Action::ItrType lr_handler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        template <typename XLEN, typename SIZE>
+        Action::ItrType sc_handler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

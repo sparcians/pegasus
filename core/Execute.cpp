@@ -23,10 +23,9 @@
 namespace atlas
 {
     Execute::Execute(sparta::TreeNode* execute_node, const ExecuteParameters* p) :
-        sparta::Unit(execute_node)
+        sparta::Unit(execute_node),
+        enable_syscall_emulation_(p->enable_syscall_emulation)
     {
-        (void)p;
-
         Action execute_action = atlas::Action::createAction<&Execute::execute_>(this, "Execute");
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
@@ -36,7 +35,7 @@ namespace atlas
         RvzbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, p->enable_syscall_emulation);
+        RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, enable_syscall_emulation_);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvfInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -51,7 +50,7 @@ namespace atlas
         RvzbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, p->enable_syscall_emulation);
+        RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, enable_syscall_emulation_);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvfInsts::getInstHandlers<RV32>(rv32_inst_actions_);

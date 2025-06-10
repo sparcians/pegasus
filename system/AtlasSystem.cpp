@@ -7,11 +7,12 @@ namespace atlas
 {
 
     AtlasSystem::AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p) :
-        sparta::Unit(sys_node)
+        sparta::Unit(sys_node),
+        workload_and_args_(p->workload_and_args)
     {
-        if (const std::string workload = p->workload; false == workload.empty())
+        if (false == workload_and_args_.empty())
         {
-            loadWorkload_(workload);
+            loadWorkload_(workload_and_args_[0]);
         }
 
         if (p->enable_uart)
@@ -55,7 +56,14 @@ namespace atlas
         if (elf_reader_.load(workload) == false)
         {
             throw sparta::SpartaException()
-                << "\n\nERROR: ELF binary '" << workload << "' failed to load! Does it exist?\n";
+                << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
+        }
+
+        if (elf_reader_.get_type() == ELFIO::SHT_DYNAMIC)
+        {
+            throw sparta::SpartaException()
+                << "\nERROR: '" << workload
+                << "' is dynamically linked. Atlas can only run statically linked binaries\n";
         }
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;

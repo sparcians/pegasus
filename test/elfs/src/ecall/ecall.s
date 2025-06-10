@@ -16,7 +16,7 @@ main:
 
 pass:
     /* exit system call */
-    li a7, 0x5d    
+    li a7, 0x5d
     ecall
 
 fail:
@@ -25,3 +25,5 @@ fail:
 .section .data
 data:
     .fill 64, 4, 0xFFFFFFFF
+_end:
+    .fill 64, 4, 0
