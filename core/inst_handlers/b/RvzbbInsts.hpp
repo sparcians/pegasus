@@ -5,6 +5,7 @@
 
 #include <map>
 #include <string>
+#include <bit>
 
 namespace atlas
 {
@@ -18,48 +19,90 @@ namespace atlas
             template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
 
         private:
-         
             template <typename XLEN>
-            Action::ItrType andnHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct andn { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return  rs1_val & (~rs2_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType clzHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType clzwHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct countl_zero { XLEN operator()(XLEN rs1_val) const {
+                    return std::countl_zero(rs1_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType cpopHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType cpopwHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct popcount { XLEN operator()(XLEN rs1_val) const {
+                    return std::popcount(rs1_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType ctzHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType ctzwHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct countr_zero { XLEN operator()(XLEN rs1_val) const {
+                    return std::countr_zero(rs1_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType maxHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct byte_swap { XLEN operator()(XLEN rs1_val) const {
+                    if constexpr (std::is_same_v<XLEN, RV64>) {
+                        return __builtin_bswap64(rs1_val);
+                    } else return __builtin_bswap32(rs1_val);
+                }
+            };
+            template <typename S_XLEN>
+                struct max { S_XLEN operator()(S_XLEN rs1_val, S_XLEN rs2_val) const {
+                        return std::max(rs1_val, rs2_val);
+                }
+            };
+            template <typename S_XLEN>
+                struct min { S_XLEN operator()(S_XLEN rs1_val, S_XLEN rs2_val) const {
+                        return std::min(rs1_val, rs2_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType maxuHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct orn { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return  rs1_val | (~rs2_val);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType minHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct rol { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return std::rotl(rs1_val, rs2_val & (sizeof(XLEN) * 8 - 1));
+                }
+            };
+            template <typename S_XLEN>
+                struct rolw { S_XLEN operator()(uint32_t rs1_val, uint32_t rs2_val) const {
+                    return static_cast<int32_t>(std::rotl(rs1_val, rs2_val & 0x1Full));
+                }
+            };
             template <typename XLEN>
-            Action::ItrType minuHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct ror { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return std::rotr(rs1_val, rs2_val & (sizeof(XLEN) * 8 - 1));
+                }
+            };
+            template <typename S_XLEN>
+                struct rorw { S_XLEN operator()(uint32_t rs1_val, uint32_t rs2_val) const {
+                    return static_cast<int32_t>(std::rotr(rs1_val, rs2_val & 0x1Full));
+                }
+            };
+            template <typename XLEN, uint32_t x>
+                struct sext_x { XLEN operator()(XLEN rs1_val) const {
+                    return (((int64_t)(rs1_val) << (64 - (x))) >> (64 - (x)));
+                }
+            };
+            template <typename XLEN>
+                struct xnor { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return  ~(rs1_val ^ rs2_val);
+                }
+            };
+             template <typename XLEN>
+                struct zext_h { XLEN operator()(XLEN rs1_val) const {
+                    return (((uint64_t)(rs1_val) << (64 - (16))) >> (64 - (16)));
+                }
+            };
+            template <typename XLEN, typename OP> 
+            Action::ItrType unaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN, typename OP> 
+            Action::ItrType binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN, typename OP> 
+            Action::ItrType immOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
             template <typename XLEN>
             Action::ItrType orc_bHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType ornHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType rev8Handler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType rolHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType rolwHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType rorHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType roriHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType roriwHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            Action::ItrType rorwHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType sext_bHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType sext_hHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType xnorHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType zext_hHandler(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

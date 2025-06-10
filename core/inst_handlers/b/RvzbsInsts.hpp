@@ -19,20 +19,28 @@ namespace atlas
         
         private:
             template <typename XLEN>
-            Action::ItrType bclrHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct bclr { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return rs1_val & ~(XLEN(1) << (rs2_val & (sizeof(XLEN) * 8 - 1)));
+                }
+            };
             template <typename XLEN>
-            Action::ItrType bclriHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct bext { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return (rs1_val >> (rs2_val & (sizeof(XLEN) * 8 - 1))) & XLEN(1);
+                }
+            };
             template <typename XLEN>
-            Action::ItrType bextHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct binv { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return rs1_val ^ (XLEN(1) << (rs2_val & (sizeof(XLEN) * 8 - 1)));
+                }
+            };
             template <typename XLEN>
-            Action::ItrType bextiHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType binvHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType binviHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType bsetHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType bsetiHandler(atlas::AtlasState* state, Action::ItrType action_it);
+                struct bset { XLEN operator()(XLEN rs1_val, XLEN rs2_val) const {
+                    return rs1_val | (XLEN(1) << (rs2_val & (sizeof(XLEN) * 8 - 1)));
+                }
+            };
+            template <typename XLEN, typename OP>
+            Action::ItrType binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
+            template <typename XLEN, typename OP>
+            Action::ItrType immOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

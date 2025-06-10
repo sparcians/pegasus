@@ -29,7 +29,6 @@ namespace atlas
     template void RvzbcInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbcInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbcInsts::clmulHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -49,7 +48,6 @@ namespace atlas
         return ++action_it;
     }
 
-    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbcInsts::clmulhHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
@@ -69,7 +67,6 @@ namespace atlas
         return ++action_it;
     }
 
-    // Should be optimized
     template <typename XLEN> 
     Action::ItrType RvzbcInsts::clmulrHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
