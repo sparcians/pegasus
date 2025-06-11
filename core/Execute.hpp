@@ -21,12 +21,15 @@ namespace atlas
         class ExecuteParameters : public sparta::ParameterSet
         {
           public:
-            ExecuteParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+            ExecuteParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) { }
+            PARAMETER(bool, enable_syscall_emulation, false, "ecalls will be emulated");
         };
 
         Execute(sparta::TreeNode* execute_node, const ExecuteParameters* p);
 
         ActionGroup* getActionGroup() { return &execute_action_group_; }
+
+        bool getSystemCallEmulation() const { return enable_syscall_emulation_; }
 
         using InstHandlersMap = std::map<std::string, Action>;
         using CsrUpdateActionsMap = std::map<uint32_t, Action>;
@@ -71,6 +74,8 @@ namespace atlas
         }
 
       private:
+        const bool enable_syscall_emulation_;
+
         Action::ItrType execute_(atlas::AtlasState* state, Action::ItrType action_it);
 
         ActionGroup execute_action_group_{"Execute"};

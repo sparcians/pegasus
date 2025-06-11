@@ -27,19 +27,18 @@ endif()
 
 set(BASE_DIR ${PROJECT_SOURCE_DIR})
 
-# Don't test compilers. The riscv toolchain's linker does not support the option '-search_paths_first'
-set(CMAKE_C_COMPILER_WORKS 1)
-#set(CMAKE_C_FLAGS "-march=rv64gc")
-#set(CMAKE_LINK_C_FLAGS "")
-set(CMAKE_CXX_COMPILER_WORKS 1)
-#set(CMAKE_CXX_FLAGS "-march=rv64gc")
-#set(CMAKE_LINK_CXX_FLAGS "")
-
 # Linker setup
 set(LINKER_SCRIPT ${BASE_DIR}/common/main.ld)
 set(CMAKE_ASM_LINKER_FLAGS "-T ${LINKER_SCRIPT} -e main")
 set(CMAKE_ASM_LINK_EXECUTABLE "${CMAKE_LINKER} ${CMAKE_ASM_LINKER_FLAGS} <OBJECTS> -o <TARGET>")
 
+# Enable extensions
+add_compile_options(-march=rv64gcv_zba_zbb_zbc_zbs)
+
 include_directories(common)
 
-add_subdirectory(src)
+add_subdirectory(src/nop)
+add_subdirectory(src/uart)
+add_subdirectory(src/ecall)
+add_subdirectory(src/b_ext)
+#add_subdirectory(src/dhry)

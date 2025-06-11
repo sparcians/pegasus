@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <string>
 #include <ostream>
+#include <array>
 
 namespace atlas
 {
@@ -159,4 +160,8 @@ namespace atlas
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;
     constexpr uint64_t NOP_OPCODE = 0x00000013;
+
+    // System Call emulation
+    using SystemCallStack = std::array<uint64_t, 8>;
+
 } // namespace atlas

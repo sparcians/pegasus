@@ -131,6 +131,10 @@ namespace atlas
 
         const STFLogger* getSTFLogger() const { return stf_logger_.get(); }
         STFLogger* getSTFLogger() { return stf_logger_.get(); }
+        
+        using Reservation = sparta::utils::ValidValue<Addr>;
+        Reservation & getReservation() { return reservation_; }
+        const Reservation & getReservation() const { return reservation_; }
 
         template <typename XLEN> void changeMMUMode();
 
@@ -142,7 +146,7 @@ namespace atlas
             uint64_t inst_count = 0;
             bool sim_stopped = false;
             bool test_passed = true;
-            uint64_t workload_exit_code = 0;
+            int64_t workload_exit_code = 0;
 
             void reset()
             {
@@ -179,6 +183,13 @@ namespace atlas
         void enableInteractiveMode();
 
         void useSpikeFormatting();
+
+        void setSystemCallEmulator(SystemCallEmulator * emulator) { system_call_emulator_ = emulator; }
+
+        // Emulate ecall.  This function will determine the route to
+        // send the emulation.  The return value is the return code
+        // from the call.
+        int64_t emulateSystemCall(const SystemCallStack &);
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -227,7 +238,7 @@ namespace atlas
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const uint64_t exit_code)
+        void stopSim(const int64_t exit_code)
         {
             sim_state_.workload_exit_code = exit_code;
             sim_state_.test_passed = (exit_code == 0) ? true : false;
@@ -236,8 +247,11 @@ namespace atlas
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
 
-        // For standalone Atlas simulations, this method will be called
-        // at the top of AtlasSim::run()
+        // Initialze a program stack (argc, argv, envp, auxv, etc)
+        void setupProgramStack(const std::vector<std::string> & program_arguments);
+
+        // For standalone Atlas simulations, this method will be
+        // called at the top of AtlasSim::run()
         void boot();
 
         // One-time cleanup phase after simulation end.
@@ -348,6 +362,9 @@ namespace atlas
         //! Current virtual translation mode
         bool virtual_mode_ = false;
 
+        //! LR/SC Reservations
+        Reservation reservation_;
+
         //! Simulation state
         SimState sim_state_;
 
@@ -362,7 +379,10 @@ namespace atlas
         AtlasTranslationState fetch_translation_state_;
 
         //! AtlasSystem for accessing memory
-        AtlasSystem* atlas_system_;
+        AtlasSystem* atlas_system_ = nullptr;
+
+        //! System Call Emulator for ecall emulation
+        SystemCallEmulator* system_call_emulator_ = nullptr;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

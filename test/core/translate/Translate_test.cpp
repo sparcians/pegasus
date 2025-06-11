@@ -16,9 +16,8 @@ class AtlasTranslateTester
     AtlasTranslateTester()
     {
         // Create the simulator
-        const std::string workload = "";
         const uint64_t ilimit = 0;
-        atlas_sim_.reset(new atlas::AtlasSim(&scheduler_, workload, ilimit));
+        atlas_sim_.reset(new atlas::AtlasSim(&scheduler_, {}, {}, ilimit));
 
         atlas_sim_->buildTree();
         atlas_sim_->configureTree();
@@ -54,7 +53,7 @@ class AtlasTranslateTester
         EXPECT_THROW(translation_state->getResult());
 
         // Set result
-        translation_state->setResult(vaddr | 0x80000000, access_size);
+        translation_state->setResult(vaddr, vaddr | 0x80000000, access_size);
 
         // Get number of requests and results
         EXPECT_EQUAL(translation_state->getNumRequests(), 1);
@@ -110,9 +109,9 @@ class AtlasTranslateTester
         EXPECT_THROW(request.setMisaligned(0));
 
         // Set results
-        translation_state->setResult(vaddr | 0x80000000,
+        translation_state->setResult(vaddr, vaddr | 0x80000000,
                                      access_size - request.getMisalignedBytes());
-        translation_state->setResult((vaddr + request.getMisalignedBytes()) | 0x80000000,
+        translation_state->setResult(vaddr, (vaddr + request.getMisalignedBytes()) | 0x80000000,
                                      request.getMisalignedBytes());
 
         // Get number of requests and results
@@ -149,7 +148,7 @@ class AtlasTranslateTester
             const atlas::AtlasTranslationState::TranslationRequest & request =
                 translation_state->getRequest();
             const uint64_t paddr = request.getVAddr() | 0x80000000;
-            translation_state->setResult(paddr, request.getSize());
+            translation_state->setResult(request.getVAddr(), paddr, request.getSize());
             translation_state->popRequest();
 
             // Can't make any new requests

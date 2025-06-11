@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <string>
+#include <cinttypes>
+
 #include "core/AtlasState.hpp"
 #include "core/Fetch.hpp"
 #include "core/translate/Translate.hpp"
@@ -7,13 +11,21 @@
 #include "core/Exception.hpp"
 #include "system/AtlasSystem.hpp"
 #include "sparta/app/Simulation.hpp"
+#include "system/SystemCallEmulator.hpp"
 
 namespace atlas
 {
     class AtlasSim : public sparta::app::Simulation
     {
       public:
-        AtlasSim(sparta::Scheduler* scheduler, const std::string & workload, uint64_t ilimit);
+
+        using RegValueOverridePairs = std::vector<std::pair<std::string, std::string>>;
+        using WorkloadAndArguments = std::vector<std::string>;
+
+        AtlasSim(sparta::Scheduler* scheduler,
+                 const WorkloadAndArguments & workload_and_args,
+                 const RegValueOverridePairs & reg_value_overrides,
+                 uint64_t ilimit);
         ~AtlasSim();
 
         // Run the simulator
@@ -26,6 +38,8 @@ namespace atlas
         void enableInteractiveMode();
 
         void useSpikeFormatting();
+
+        void endSimulation(int64_t exit_code);
 
       private:
         void buildTree_() override;
@@ -42,16 +56,20 @@ namespace atlas
             state_factory_;
         sparta::ResourceFactory<atlas::AtlasSystem, atlas::AtlasSystem::AtlasSystemParameters>
             system_factory_;
+        sparta::ResourceFactory<atlas::SystemCallEmulator,
+                                atlas::SystemCallEmulator::SystemCallEmulatorParameters>
+            sys_call_factory_;
         std::unique_ptr<AtlasAllocators> allocators_tn_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
         // Atlas State for each hart
         std::vector<AtlasState*> state_;
 
-        // Atlas System (shared by all harts)
-        AtlasSystem* system_ = nullptr;
+        // Atlas system
+        AtlasSystem * system_ = nullptr;
 
-        const std::string workload_;
+        const WorkloadAndArguments workload_and_args_;
+        const RegValueOverridePairs reg_value_overrides_;
         const uint64_t ilimit_;
         std::shared_ptr<CoSimQuery> cosim_query_;
 

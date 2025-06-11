@@ -33,23 +33,22 @@ namespace atlas
           public:
             AtlasSystemParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
-            PARAMETER(bool, enable_syscall_emulation, false,
-                      "Enable emulation of system calls via the ecall instruction")
             PARAMETER(bool, enable_uart, false, "Enable a Uart")
-            HIDDEN_PARAMETER(std::string, workload, "", "Workload to load into memory")
+            HIDDEN_PARAMETER(std::vector<std::string>, workload_and_args, {},
+                             "Workload and command line arguments")
         };
 
         // Constructor
         AtlasSystem(sparta::TreeNode* sys_node, const AtlasSystemParameters* p);
-
-        // Is syscall emulation enabled?
-        bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
         // Get pointer to system memory
         sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
 
         // Get starting PC from ELF
         Addr getStartingPc() const { return starting_pc_; }
+
+        // Get the workload and its program arguments
+        const std::vector<std::string> & getWorkloadAndArgs() const { return workload_and_args_; }
 
         const std::unordered_map<Addr, std::string> & getSymbols() const { return symbols_; }
 
@@ -65,9 +64,6 @@ namespace atlas
 
         // Tree nodes
         std::vector<std::unique_ptr<sparta::TreeNode>> tree_nodes_;
-
-        // System call emulation
-        const bool syscall_emulation_enabled_;
 
         // Devices
         SimpleUART* uart_ = nullptr;
@@ -104,10 +100,13 @@ namespace atlas
 
         void createMemoryMappings_(sparta::TreeNode* sys_node);
 
-        // Workload
+        // Workload and workload arguments
+        const std::vector<std::string> workload_and_args_;
         void loadWorkload_(const std::string & workload);
         ELFIO::elfio elf_reader_;
         Addr starting_pc_;
         std::unordered_map<Addr, std::string> symbols_;
+        sparta::utils::ValidValue<Addr> tohost_addr_;
+        sparta::utils::ValidValue<Addr> fromhost_addr_;
     };
 } // namespace atlas

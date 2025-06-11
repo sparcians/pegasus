@@ -10,6 +10,8 @@ namespace atlas
         sparta::memory::BlockingMemoryIF("Magic Memory", AtlasSystem::ATLAS_SYSTEM_BLOCK_SIZE,
                                          {0, params->size, "magic_memory"}, nullptr),
         base_addr_(params->base_addr),
+        tohost_addr_(params->tohost_addr),
+        fromhost_addr_(params->fromhost_addr),
         size_(params->size),
         memory_(node, AtlasSystem::ATLAS_SYSTEM_BLOCK_SIZE, size_, 0)
     {
@@ -24,7 +26,7 @@ namespace atlas
     bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                uint8_t* buf, const void*, void*)
     {
-        DLOG("addr: 0x" << std::hex << addr << " sz: " << std::dec << size);
+        DLOG("addr: 0x" << std::hex << (base_addr_ + addr) << " sz: " << std::dec << size);
         memory_.read(addr, size, buf);
         return true;
     }
@@ -32,9 +34,9 @@ namespace atlas
     bool MagicMemory::tryWrite_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                 const uint8_t* buf, const void*, void*)
     {
-        if (addr != 0)
+        DLOG("addr: 0x" << std::hex << (base_addr_ + addr) << " sz: " << std::dec << size);
+        if ((base_addr_ + addr) != tohost_addr_)
         {
-            DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
             memory_.write(addr, size, buf);
             return true;
         }
@@ -90,7 +92,7 @@ namespace atlas
     bool MagicMemory::tryPeek_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                uint8_t* buf) const
     {
-        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
+        DLOG("addr: 0x" << std::hex << (base_addr_ + addr) << " sz: " << std::dec << size);
         memory_.read(addr, size, buf);
         return true;
     }
@@ -98,7 +100,7 @@ namespace atlas
     bool MagicMemory::tryPoke_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
                                const uint8_t* buf)
     {
-        DLOG("addr: 0x" << addr << " sz: " << std::dec << size);
+        DLOG("addr: 0x" << std::hex << (base_addr_ + addr) << " sz: " << std::dec << size);
         memory_.write(addr, size, buf);
         return true;
     }

@@ -15,7 +15,9 @@ main:
     .endr
 
 pass:
-    test_pass
+    /* exit system call */
+    li a7, 0x5d
+    ecall
 
 fail:
     test_fail
