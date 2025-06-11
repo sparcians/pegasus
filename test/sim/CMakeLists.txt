@@ -13,9 +13,12 @@ add_subdirectory(via)
 
 # ASM Tests
 atlas_named_test(atlas_nop_test atlas -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
-atlas_named_test(atlas_inst_logger_test atlas --eot pass_fail -l top inst nop.instlog workloads/nop.elf)
-atlas_named_test(spike_inst_logger_test atlas --eot pass_fail -l top inst nop.instlog --spike-formatting workloads/nop.elf)
-atlas_named_test(atlas_uart_test atlas --eot pass_fail -p top.system.params.enable_uart true workloads/uart.elf)
+atlas_named_test(atlas_uart_test atlas -p top.system.params.enable_uart true workloads/uart.elf)
 
 # Linux Tests
-atlas_named_test(atlas_ecall_test atlas --reg "sp 0x10000" -p top.core0.execute.params.enable_syscall_emulation true workloads/ecall.elf)
+set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000" --reg "gp 0x77000" --reg "tp 0x7d000" -p top.core0.execute.params.enable_syscall_emulation true)
+atlas_named_test(atlas_dhry_test atlas ${LINUX_ARCH_SETUP} workloads/dhry.elf)
+
+# Logging tests
+atlas_named_test(atlas_inst_logger_test atlas -l top inst nop.instlog workloads/nop.elf)
+atlas_named_test(spike_inst_logger_test atlas -l top inst nop.instlog --spike-formatting workloads/nop.elf)
