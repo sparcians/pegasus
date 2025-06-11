@@ -1,5 +1,6 @@
 
 TEST_NAME := $(shell basename $(CURDIR))
+MAKEFILE  := $(lastword $(MAKEFILE_LIST))
 
 ifndef ASM_INCLUDES
 $(error Build this from the parent directory: "$(MAKE) ASM_TESTS=$(TEST_NAME) ..")

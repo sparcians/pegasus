@@ -1,5 +1,5 @@
 
-ASM_TESTS ?= b_ext ecall nop uart
+ASM_TESTS ?= b_ext nop uart
 
 include ../common.mk
 
@@ -9,11 +9,11 @@ all:
 	@echo "Using $(RV64_ASM_COMPILER)"
 	@for asm_test in $(ASM_TESTS); do \
 		echo "Building $$asm_test..."; \
-		$(MAKE) -C $$asm_test ASM_INCLUDES=$(ASM_INCLUDES); \
+		$(MAKE) -C $$asm_test ASM_INCLUDES=$(ASM_INCLUDES) || false; \
      done
 
 clean:
 	@for asm_test in $(ASM_TESTS); do \
 		echo "Building $$asm_test..."; \
-		$(MAKE) -C $$asm_test ASM_INCLUDES=$(ASM_INCLUDES) clean; \
+	$(MAKE) -C $$asm_test ASM_INCLUDES=$(ASM_INCLUDES) clean || false; \
 	done

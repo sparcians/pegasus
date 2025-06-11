@@ -59,7 +59,7 @@ namespace atlas
                 << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
         }
 
-        if (elf_reader_.get_type() == ELFIO::SHT_DYNAMIC)
+        if (elf_reader_.get_type() == ELFIO::ET_DYN)
         {
             throw sparta::SpartaException()
                 << "\nERROR: '" << workload

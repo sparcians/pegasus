@@ -117,7 +117,11 @@ main ()
   printf ("Please give the number of runs through the benchmark: ");
   {
     int n;
+#ifndef N_RUNS
     scanf ("%d", &n);
+#else
+    n = N_RUNS;
+#endif
     Number_Of_Runs = n;
   }
   printf ("\n");
