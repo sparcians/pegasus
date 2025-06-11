@@ -12,6 +12,7 @@ namespace atlas
     // pc -> initial program counter
     // filename -> name of the file the trace will be written to
     STFLogger::STFLogger(const uint32_t width, uint64_t pc, const std::string & filename) :
+        Observer(ObserverMode::RV64),
         stf_writer_(std::make_unique<stf::STFWriter>())
     {
         // set up version and stf generation type
@@ -21,6 +22,7 @@ namespace atlas
 
         if (width == 32)
         {
+
             stf_writer_->setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
         }
         else

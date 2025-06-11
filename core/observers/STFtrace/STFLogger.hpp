@@ -8,7 +8,7 @@
 namespace atlas
 {
 
-    class STFLogger
+    class STFLogger : public Observer
     {
       public:
         STFLogger(const uint32_t width, uint64_t pc, const std::string & filename);
