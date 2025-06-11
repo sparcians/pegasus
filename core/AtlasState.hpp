@@ -19,7 +19,7 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
-#include "core/STFtrace/STFLogger.hpp"
+#include "core/observers/STFtrace/STFLogger.hpp"
 
 #ifndef REG32_JSON_DIR
 #error "REG32_JSON_DIR must be defined"
@@ -42,6 +42,7 @@ namespace atlas
     class Exception;
     class SimController;
     class VectorState;
+    class STFLogger;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -53,9 +54,6 @@ namespace atlas
         // Name of this resource, required by sparta::UnitFactory
         static constexpr char name[] = "AtlasState";
         using base_type = AtlasState;
-
-        //STFLogger Object
-        atlas::STFLogger stf_logger_;
 
         class AtlasStateParameters : public sparta::ParameterSet
         {
@@ -69,7 +67,7 @@ namespace atlas
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
-            PARAMETER(bool, stf_enable, false, "Do you want to enable STF Trace generation?")
+            PARAMETER(std::string, stf_filename, "","STF Trace file name (when not given, STF tracing is disabled)")
         };
 
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
@@ -129,6 +127,9 @@ namespace atlas
             virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
             priv_mode_ = priv_mode;
         }
+
+        const STFLogger* getSTFLogger() const { return stf_logger_.get(); }
+        STFLogger* getSTFLogger() { return stf_logger_.get(); }
 
         template <typename XLEN> void changeMMUMode();
 
@@ -275,6 +276,8 @@ namespace atlas
         // Supported ISA string
         const std::string supported_isa_string_;
 
+        std::shared_ptr<STFLogger> stf_logger_;
+
         template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
 
         // Path to Mavis
@@ -306,8 +309,8 @@ namespace atlas
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
 
-        //STF Trace Generation Enable
-        const bool stf_enable_;
+        //STF Trace Filename
+        std::string stf_filename_;
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
