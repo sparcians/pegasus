@@ -6,7 +6,7 @@ on:
 env:
   CACHE_VERSION: v1
 
-name: Regress Atlas on Ubuntu
+name: Atlas Regression
 jobs:
   build_test_job:
     strategy:
