@@ -52,7 +52,7 @@ jobs:
         with:
           repository: tenstorrent/riscv_arch_tests
           tag: v0.2.0+aligned-access
-          zipBall: release.tar.zip
+          file: release.tar.zip
           out-file-path: tenstorrent-tests
           extract: true
 
