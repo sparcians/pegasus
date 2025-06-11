@@ -177,6 +177,7 @@ namespace atlas
                     << "WARNING: Provided initial value for CSR register that does not exist! "
                     << csr_name << std::endl;
             }
+            
         }
 
         // Set up translation
@@ -202,6 +203,10 @@ namespace atlas
                 addObserver(
                     std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
             }
+        }
+
+        if (!stf_filename_.empty()) {
+            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_));
         }
 
         for (auto & obs : observers_)
@@ -304,11 +309,6 @@ namespace atlas
         for (const auto & observer : observers_)
         {
             observer->postExecute(state);
-        }
-
-        if (!stf_filename_.empty())
-        {
-            stf_logger_->postExecute(state);
         }
 
         return ++action_it;

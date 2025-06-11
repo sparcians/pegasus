@@ -17,9 +17,9 @@ namespace atlas
 
         void writeInstruction(const AtlasInst* inst);
 
-        void postExecute(AtlasState* state);
 
       private:
         std::unique_ptr<stf::STFWriter> stf_writer_;
+        void postExecute_(AtlasState* state) override;
     };
 } // namespace atlas

@@ -12,7 +12,7 @@ namespace atlas
     // pc -> initial program counter
     // filename -> name of the file the trace will be written to
     STFLogger::STFLogger(const uint32_t width, uint64_t pc, const std::string & filename) :
-        Observer(ObserverMode::RV64),
+        Observer((width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
         stf_writer_(std::make_unique<stf::STFWriter>())
     {
         // set up version and stf generation type
@@ -51,8 +51,8 @@ namespace atlas
         }
     }
 
-    // state -> current AtlasState
-    void STFLogger::postExecute(AtlasState* state)
+    // state -> current AtlasState to write instruction record
+    void STFLogger::postExecute_(AtlasState* state) 
     {
         // write the instruction record
         writeInstruction(state->getCurrentInst().get());
