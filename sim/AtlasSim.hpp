@@ -37,6 +37,8 @@ namespace atlas
 
         void enableInteractiveMode();
 
+        void setEOTMode(const std::string & eot_mode);
+
         void useSpikeFormatting();
 
         void endSimulation(int64_t exit_code);

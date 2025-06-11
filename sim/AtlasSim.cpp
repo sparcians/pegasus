@@ -53,6 +53,16 @@ namespace atlas
         // TODO: mem usage, workload exit code
     }
 
+    void AtlasSim::setEOTMode(const std::string & eot_mode)
+    {
+        if (eot_mode == "pass_fail") {
+            sparta::notNull(system_)->enableEOTPassFailMode();
+        }
+        else {
+            sparta_assert(false, "Unknown EOT mode: " << eot_mode << " expected pass_fail");
+        }
+    }
+
     void AtlasSim::enableInteractiveMode()
     {
         sparta_assert(!state_.empty(), "Must call after bindTree_()");
