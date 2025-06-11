@@ -43,6 +43,7 @@ namespace atlas
     class SimController;
     class VectorState;
     class STFLogger;
+    class SystemCallEmulator;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
