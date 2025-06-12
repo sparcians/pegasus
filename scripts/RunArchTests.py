@@ -58,9 +58,10 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tenstorrent_tests.sort()
 
     tests = []
+    base_dir = os.path.basename(os.path.abspath(directory))
     for test in tenstorrent_tests:
         dirs = test.split('/')
-        prefixes = dirs[dirs.index("tenstorrent_tests")+1:-1]
+        prefixes = dirs[dirs.index(base_dir)+1:-1]
         prefix = "_".join(prefixes) + "_"
         testname = prefix + os.path.basename(test)
         testname = testname.replace("rv32", "rv64")

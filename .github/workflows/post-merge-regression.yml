@@ -1,0 +1,110 @@
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CACHE_VERSION: v1
+
+name: Atlas Regression
+jobs:
+  build_test_job:
+    strategy:
+      # Strategy is a matrix of debug and release builds/regression
+      matrix:
+        os: [ubuntu-24.04]
+        BUILD_TYPE: [Release]
+        COMPILER: [clang]
+
+    name: Regress-Atlas
+    runs-on: ${{matrix.os}}
+
+    # Set up a global environment variable for build scripts
+    env:
+      ATLAS_BUILD_TYPE: ${{matrix.BUILD_TYPE}}
+      COMPILER: ${{matrix.COMPILER}}
+
+    steps:
+      # Get Atlas
+      - name: Clone Atlas
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Get Sparta
+      - name: Checkout Sparta
+        uses: actions/checkout@v4
+        with:
+          repository: sparcians/map
+          path: map
+          ref: map_v2.0.22
+
+      # Get RISC-V Arch Tests
+      - name: Checkout RISC-V Arch Tests
+        uses: actions/checkout@v4
+        with:
+          repository: riscv-software-src/riscv-tests
+          path: riscv-arch-tests
+
+      # Download Tenstorrent tests
+      - name: Download Tenstorrent Tests
+        uses: robinraju/release-downloader@v1.12
+        with:
+          repository: tenstorrent/riscv_arch_tests
+          tag: v0.2.0+aligned-access
+          filename: release.tar.zip
+          out-file-path: tenstorrent-tests
+          extract: true
+
+      # Setup CCache to cache builds
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{matrix.os}}-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}-ccache-${{github.ref_name}}
+          restore-keys: |
+            ${{matrix.os}}-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}-ccache-main
+            ${{matrix.os}}-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}-ccache
+
+      # Install missing packages to make everything build
+      - name: Install packages needed for sparta/atlas
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
+
+      # Build
+      - name: Build
+        run: ./.github/actions/build.sh
+
+      # Full Regression
+      - name: Full Regress
+        run: ./.github/actions/full-regress.sh
+
+      # Save error logs, etc
+      - name: Save artifacts
+        if: failure()
+        uses: actions/upload-artifact@main
+        with:
+          name: ErrorLogs-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}
+          path: ${{matrix.BUILD_TYPE}}/
+
+      # Generate GitHub Badges
+      - name: Create RISC-V Arch Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 257907f4095b77a22da35df05f543a4a
+          filename: riscv-arch.json
+          label: RISC-V ARCH
+          message: 100%
+          color: yellow
+
+      # Generate GitHub Badges
+      - name: Create Tenstorrent Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 257907f4095b77a22da35df05f543a4a
+          filename: tenstorrent.json
+          label: TENSTORRENT
+          message: 100%
+          color: yellow

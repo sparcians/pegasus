@@ -31,7 +31,6 @@ if [ ${BUILD_SPARTA} -ne 0 ]; then
     echo "$(<install.log)"
     exit 1
 fi
-rm install.log
 
 cd ${GITHUB_WORKSPACE}
 mkdir $ATLAS_BUILD_TYPE
@@ -41,9 +40,9 @@ if [ $? -ne 0 ]; then
     echo "ERROR: CMake for atlas failed"
     exit 1
 fi
-make -j$(nproc --all) atlas_regress
+make -j$(nproc --all) atlas
 BUILD_ATLAS=$?
 if [ ${BUILD_ATLAS} -ne 0 ]; then
-    echo "ERROR: build/regress of Atlas FAILED!!!"
+    echo "ERROR: build of Atlas FAILED!!!"
     exit 1
 fi
