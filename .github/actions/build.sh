@@ -31,7 +31,6 @@ if [ ${BUILD_SPARTA} -ne 0 ]; then
     echo "$(<install.log)"
     exit 1
 fi
-rm install.log
 
 cd ${GITHUB_WORKSPACE}
 mkdir $ATLAS_BUILD_TYPE
