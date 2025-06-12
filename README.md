@@ -1,6 +1,9 @@
 # Atlas
 RISC-V Functional Model
 
+![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/ee576a1077c218ce2e55e65e682bff78/raw/riscv-tests.json)
+![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/ee576a1077c218ce2e55e65e682bff78/raw/tenstorrent.json)
+
 ## Install Prerequisites
 
 Install the following packages (tested with Ubuntu 24.04):

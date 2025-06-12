@@ -5,6 +5,8 @@ add_library(atlassim
     AtlasSim.cpp
 )
 
+add_dependencies(atlassim AutogenArchFiles)
+
 # Atlas simulator
 add_executable(atlas atlas.cpp)
 
