@@ -86,3 +86,25 @@ jobs:
         with:
           name: ErrorLogs-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}
           path: ${{matrix.BUILD_TYPE}}/
+
+      # Generate GitHub Badges
+      - name: Create RISC-V Arch Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ee576a1077c218ce2e55e65e682bff78
+          filename: riscv-tests.json
+          label: RISC-V ARCH
+          message: 100%
+          color: yellow
+
+      # Generate GitHub Badges
+      - name: Create Tenstorrent Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ee576a1077c218ce2e55e65e682bff78
+          filename: tenstorrent.json
+          label: TENSTORRENT
+          message: 100%
+          color: yellow
