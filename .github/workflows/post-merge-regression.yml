@@ -93,7 +93,7 @@ jobs:
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: ee576a1077c218ce2e55e65e682bff78
-          filename: riscv-tests.json
+          filename: riscv-arch.json
           label: RISC-V ARCH
           message: 100%
           color: yellow
