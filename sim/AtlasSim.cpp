@@ -135,28 +135,31 @@ namespace atlas
 
     void AtlasSim::bindTree_()
     {
-
         // Atlas System (shared by all harts)
         system_ = getRoot()->getChild("system")->getResourceAs<atlas::AtlasSystem>();
         SystemCallEmulator* system_call_emulator =
             getRoot()->getChild("system_call_emulator")->getResourceAs<atlas::SystemCallEmulator>();
 
-        if (false == workload_and_args_.empty())
-        {
-            system_call_emulator->setWorkload(workload_and_args_[0]);
-        }
-
+        bool system_call_emulator_enabled = false;
         const uint32_t num_harts = 1;
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
         {
             // Get AtlasState and Fetch for each hart
             const std::string core_name = "core" + std::to_string(hart_id);
-            state_.emplace_back(getRoot()->getChild(core_name)->getResourceAs<AtlasState*>());
+            const auto core = getRoot()->getChild(core_name);
+            state_.emplace_back(core->getResourceAs<AtlasState*>());
+
             // Give AtlasState a pointer to AtlasSystem for accessing memory
             AtlasState* state = state_.back();
             state->setAtlasSystem(system_);
-            state->setSystemCallEmulator(system_call_emulator);
             state->setPc(system_->getStartingPc());
+
+            if (core->getChildAs<sparta::ResourceTreeNode>("execute")->
+                getParameterSet()->getParameterAs<bool>("enable_syscall_emulation"))
+            {
+                system_call_emulator_enabled = true;
+                state->setSystemCallEmulator(system_call_emulator);
+            }
 
             for (const auto & reg_override : reg_value_overrides_)
             {
@@ -183,6 +186,10 @@ namespace atlas
             {
                 state->setupProgramStack(system_->getWorkloadAndArgs());
             }
+        }
+        if (false == workload_and_args_.empty() && system_call_emulator_enabled)
+        {
+            system_call_emulator->setWorkload(workload_and_args_[0]);
         }
     }
 

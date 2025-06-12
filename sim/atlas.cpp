@@ -76,18 +76,21 @@ int main(int argc, char** argv)
             return err_code; // Any errors already printed to cerr
         }
 
-        if (workload.empty())
+        const auto & vm = cls.getVariablesMap();
+
+        if (0 == vm.count("no-run"))
         {
-            std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
-                      << std::endl;
-            std::cout << USAGE;
-            return 1;
+            if (workload.empty())
+            {
+                std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
+                          << std::endl;
+                std::cout << USAGE;
+                return 1;
+            }
         }
         // Workload command line arguments
         std::vector<std::string> workload_args;
         sparta::utils::tokenize_on_whitespace(workload, workload_args);
-
-        const auto & vm = cls.getVariablesMap();
 
         // Shove some register overrides in
         atlas::AtlasSim::RegValueOverridePairs reg_value_overrides;
