@@ -68,5 +68,3 @@ fail:
 .section .data
 data:
     .fill 64, 4, 0xFFFFFFFF
-_end:
-	.fill 64, 4, 0
