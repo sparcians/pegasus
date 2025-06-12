@@ -1,8 +1,8 @@
 # Atlas
 RISC-V Functional Model
 
-![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/ee576a1077c218ce2e55e65e682bff78/raw/riscv-tests.json)
-![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/ee576a1077c218ce2e55e65e682bff78/raw/tenstorrent.json)
+![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/riscv-arch.json)
+![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/tenstorrent.json)
 
 ## Install Prerequisites
 
