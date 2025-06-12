@@ -55,8 +55,12 @@ jobs:
           sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
 
       # Build
-      - name: Build & Regress
-        run: ./.github/actions/build/entrypoint.sh
+      - name: Build
+        run: ./.github/actions/build.sh
+
+      # Regress
+      - name: Regress
+        run: ./.github/actions/regress.sh
 
       # Save error logs, etc
       - name: Save artifacts

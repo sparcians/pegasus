@@ -43,7 +43,7 @@ jobs:
       - name: Checkout RISC-V Arch Tests
         uses: actions/checkout@v4
         with:
-          repository: riscv-non-isa/riscv-arch-test
+          repository: riscv-software-src/riscv-tests
           path: riscv-arch-tests
 
       # Download Tenstorrent tests
@@ -52,7 +52,7 @@ jobs:
         with:
           repository: tenstorrent/riscv_arch_tests
           tag: v0.2.0+aligned-access
-          file: release.tar.zip
+          filename: release.tar.zip
           out-file-path: tenstorrent-tests
           extract: true
 
@@ -72,8 +72,12 @@ jobs:
           sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
 
       # Build
-      - name: Build & Regress
-        run: ./.github/actions/build/entrypoint.sh
+      - name: Build
+        run: ./.github/actions/build.sh
+
+      # Full Regression
+      - name: Full Regress
+        run: ./.github/actions/full-regress.sh
 
       # Save error logs, etc
       - name: Save artifacts
@@ -82,3 +86,25 @@ jobs:
         with:
           name: ErrorLogs-${{matrix.BUILD_TYPE}}-${{matrix.COMPILER}}
           path: ${{matrix.BUILD_TYPE}}/
+
+      # Generate GitHub Badges
+      - name: Create RISC-V Arch Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ee576a1077c218ce2e55e65e682bff78
+          filename: riscv-tests.json
+          label: RISC-V ARCH
+          message: 100%
+          color: yellow
+
+      # Generate GitHub Badges
+      - name: Create Tenstorrent Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ee576a1077c218ce2e55e65e682bff78
+          filename: tenstorrent.json
+          label: TENSTORRENT
+          message: 100%
+          color: yellow
