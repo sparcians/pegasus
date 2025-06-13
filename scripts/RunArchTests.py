@@ -236,8 +236,10 @@ def main():
         print("TIMED OUT:")
         for test in timeout_tests:
             print("\t" + test)
+    print()
 
-    print("\n    PASS RATE: " + str(num_passed) + "/" + str(len(tests)))
+    pass_rate = num_passed/len(tests)
+    print("PASS RATE: {:.2%} ({}/{})".format(pass_rate, num_passed, len(tests)))
 
     expected_passing_tests = 0
     total_tests = 0
@@ -252,7 +254,8 @@ def main():
         expected_passing_tests += PASSING_STATUS_TENSTORRENT_RV64[0]
         total_tests += PASSING_STATUS_TENSTORRENT_RV64[1]
 
-    print("EXPECTED RATE: " + str(expected_passing_tests) + "/" + str(total_tests))
+    expected_pass_rate = expected_passing_tests/total_tests
+    print("EXPECTED RATE: {:.2%} ({}/{})".format(expected_pass_rate, expected_passing_tests, total_tests))
     if (num_passed < expected_passing_tests):
         print("ERROR: failed!")
 
