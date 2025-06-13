@@ -59,7 +59,7 @@ namespace atlas
                 << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
         }
 
-        if (elf_reader_.get_type() == ELFIO::SHT_DYNAMIC)
+        if (elf_reader_.get_type() == ELFIO::ET_DYN)
         {
             throw sparta::SpartaException()
                 << "\nERROR: '" << workload
@@ -100,6 +100,16 @@ namespace atlas
                         sparta_assert(fromhost_addr_.isValid() == false,
                                       "Found multiple fromhost symbols in ELF!");
                         fromhost_addr_ = addr;
+                    }
+                    else if (name == "pass") {
+                        sparta_assert(pass_addr_.isValid() == false,
+                                      "Found multiple pass symbols in ELF!");
+                        pass_addr_ = addr;
+                    }
+                    else if (name == "fail") {
+                        sparta_assert(fail_addr_.isValid() == false,
+                                      "Found multiple fail symbols in ELF!");
+                        fail_addr_ = addr;
                     }
                 }
             }
@@ -292,4 +302,13 @@ namespace atlas
                                 0x0 /* Additional offset */);
         memory_map_->dumpMappings(std::cout);
     }
+
+    void AtlasSystem::enableEOTPassFailMode()
+    {
+        sparta_assert(pass_addr_.isValid() and fail_addr_.isValid(),
+                      "ERROR: ELF binary does not contain pass/fail labels for EOT Pass/Fail");
+
+
+    }
+
 } // namespace atlas

@@ -1,6 +1,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 #include "system/SystemCallEmulator.hpp"
 #include "sim/AtlasSim.hpp"
@@ -426,10 +427,9 @@ namespace atlas
         do
         {
             uint64_t cycle = emulator_->getClock()->currentCycle();
-            ;
             cycle = cycle * 6364136223846793005 + 1442695040888963407; // knuth random seed
 
-            mem->poke(buffer, std::min(buflen, sizeof(cycle)), (uint8_t*)&cycle);
+            mem->poke(buffer, buflen, (uint8_t*)&cycle);
 
             if (buflen <= sizeof(cycle))
                 break;
@@ -687,11 +687,16 @@ namespace atlas
             st_size(host_stat.st_size),
             st_blksize(host_stat.st_blksize),
             st_blocks(host_stat.st_blocks),
+#ifdef __APPLE__
+            st_atim(0),
+            st_mtim(0),
+            st_ctim(0)
+#else
             st_atim(host_stat.st_atim),
             st_mtim(host_stat.st_mtim),
             st_ctim(host_stat.st_ctim)
-        {
-        }
+#endif
+        {}
     };
 
     int64_t SysCallHandlers::fstatat_(const SystemCallStack & call_stack,
@@ -719,8 +724,10 @@ namespace atlas
 
         // Use the host's stat
         struct stat host_stat;
-        ret = ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
-
+        ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
+        // On MacOS this call fails due to invalid parameters, but
+        // does return a valid structure.  Always return 0
+        ret = 0;
         SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << ", " << HEX16(pathname) << ", "
                              << HEX16(statbuf) << ", " << HEX16(flags) << ", "
                              << ") -> " << ret);
@@ -739,7 +746,7 @@ namespace atlas
         int64_t ret = 0;
 
         const auto fd = call_stack[1];
-        const auto statbuf = call_stack[3];
+        const auto statbuf = call_stack[2];
 
         // Use the host's stat
         struct stat host_stat;
@@ -747,7 +754,7 @@ namespace atlas
 
         // Now create a RV stat and populate
         RV_stat rv_stat(host_stat);
-        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf) << ", "
+        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf)
                              << ") -> " << ret);
 
         memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
@@ -789,7 +796,7 @@ namespace atlas
         // };
 
         struct timespec tm;
-        ::clock_gettime(call_stack[0], &tm);
+        ::clock_gettime((clockid_t)call_stack[0], &tm);
 
         SYSCALL_LOG(__func__ << "(" << HEX16(call_stack[0]) << ", " << HEX16(call_stack[1]) << ", "
                              << ") -> 0");
