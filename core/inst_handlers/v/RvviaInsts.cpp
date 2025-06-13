@@ -1,7 +1,7 @@
 #include "core/inst_handlers/v/RvviaInsts.hpp"
 #include "core/AtlasState.hpp"
 #include "core/ActionGroup.hpp"
-#include "core/VectorState.hpp"
+#include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 
 namespace atlas
@@ -28,32 +28,35 @@ namespace atlas
     template void RvviaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvviaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <uint8_t ElemWidth, typename Functor>
+    template <size_t ElemWidth, typename Functor>
     Action::ItrType viavvHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
-        MaskElements::MaskBitIterator mask_iter_vs1{&mask_elems,
-                                                    state->getVectorConfig()->getVSTART()};
-        MaskElements::MaskBitIterator mask_iter_vs2{&mask_elems,
-                                                    state->getVectorConfig()->getVSTART()};
-        MaskElements::MaskBitIterator mask_iter_vd{&mask_elems,
-                                                   state->getVectorConfig()->getVSTART()};
-        MaskElements::MaskBitIterator* mask_iter_vs1_ptr = inst->getVM() ? nullptr : &mask_iter_vs1;
-        MaskElements::MaskBitIterator* mask_iter_vs2_ptr = inst->getVM() ? nullptr : &mask_iter_vs1;
-        MaskElements::MaskBitIterator* mask_iter_vd_ptr = inst->getVM() ? nullptr : &mask_iter_vd;
-        Elements<Element<ElemWidth>> elems_vs1{state, state->getVectorConfig(), inst->getRs1(),
-                                               mask_iter_vs1_ptr};
-        Elements<Element<ElemWidth>> elems_vs2{state, state->getVectorConfig(), inst->getRs2(),
-                                               mask_iter_vs2_ptr};
-        Elements<Element<ElemWidth>> elems_vd{state, state->getVectorConfig(), inst->getRd(),
-                                              mask_iter_vd_ptr};
+        Elements<Element<ElemWidth>, false> elems_vs1{state, state->getVectorConfig(),
+                                                      inst->getRs1()};
+        Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                     inst->getRd()};
 
-        for (auto iter_vs1 = elems_vs1.begin(), iter_vs2 = elems_vs2.begin(),
-                  iter_vd = elems_vd.begin();
-             iter_vs1 != elems_vs1.end(); ++iter_vs1, ++iter_vs2, ++iter_vd)
+        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
-            iter_vd->setVal(Functor()(iter_vs1->getVal(), iter_vs2->getVal()));
+            size_t index = 0;
+            for (auto iter = begin; iter != end; ++iter)
+            {
+                index = iter.getIndex();
+                elems_vd.getElement(index).setVal(Functor()(elems_vs1.getElement(index).getVal(),
+                                                            elems_vs2.getElement(index).getVal()));
+            }
+        };
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vs1.begin(), elems_vs1.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
         return ++action_it;

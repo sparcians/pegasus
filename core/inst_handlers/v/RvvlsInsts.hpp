@@ -19,10 +19,10 @@ namespace atlas
 
         enum struct AddressingMode
         {
-            Unit,
-            IdxUnordered,
-            Strided,
-            IdxOrdered,
+            UNIT,
+            IDX_UNORDERED,
+            STRIDED,
+            IDX_ORDERED,
         };
 
         template <typename XLEN>
@@ -31,13 +31,13 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, uint8_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
         Action::ItrType vlseComputeAddressHandler_(atlas::AtlasState* state,
                                                    Action::ItrType action_it);
-        template <typename XLEN, uint8_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
         Action::ItrType vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
                                                       Action::ItrType action_it);
-        template <uint8_t ElemWidth, bool load>
+        template <size_t ElemWidth, bool load>
         Action::ItrType vlseHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <bool load>
         Action::ItrType vlseIdxHandler_(atlas::AtlasState* state, Action::ItrType action_it);

@@ -154,9 +154,9 @@ namespace atlas
 
         SimState* getSimState() { return &sim_state_; }
 
-        const VectorConfig* getVectorConfig() const { return vector_config_; }
+        const VectorConfig* getVectorConfig() const { return vector_config_.get(); }
 
-        VectorConfig* getVectorConfig() { return vector_config_; }
+        VectorConfig* getVectorConfig() { return vector_config_.get(); }
 
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
@@ -362,7 +362,7 @@ namespace atlas
         SimState sim_state_;
 
         //! Vector state
-        VectorConfig* vector_config_;
+        std::unique_ptr<VectorConfig> vector_config_;
 
         // Increment PC Action
         Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
