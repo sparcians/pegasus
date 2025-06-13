@@ -97,7 +97,7 @@ jobs:
           filename: riscv-arch.json
           label: RISC-V ARCH
           message: ${{ env.RISCV_ARCH_PASS_RATE }}
-          color: yellow
+          color: ${{ env.RISCV_ARCH_COLOR }}
 
       # Generate GitHub Badges
       - name: Create Tenstorrent Tests Badge
@@ -108,4 +108,4 @@ jobs:
           filename: tenstorrent.json
           label: TENSTORRENT
           message: ${{ env.TENSTORRENT_PASS_RATE }}
-          color: yellow
+          color: ${{ env.TENSTORRENT_COLOR }}
