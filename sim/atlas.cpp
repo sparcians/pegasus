@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 {
     uint64_t ilimit = 0;
     std::string workload;
+    std::string eot_mode;
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
@@ -59,6 +60,7 @@ int main(int argc, char** argv)
              "Stop simulation after the instruction limit has been reached")
             ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register")
             ("interactive", "Enable interactive mode (IDE)")
+            ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
             ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
 
@@ -74,18 +76,21 @@ int main(int argc, char** argv)
             return err_code; // Any errors already printed to cerr
         }
 
-        if (workload.empty())
+        const auto & vm = cls.getVariablesMap();
+
+        if (0 == vm.count("no-run"))
         {
-            std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
-                      << std::endl;
-            std::cout << USAGE;
-            return 1;
+            if (workload.empty())
+            {
+                std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
+                          << std::endl;
+                std::cout << USAGE;
+                return 1;
+            }
         }
         // Workload command line arguments
         std::vector<std::string> workload_args;
         sparta::utils::tokenize_on_whitespace(workload, workload_args);
-
-        const auto & vm = cls.getVariablesMap();
 
         // Shove some register overrides in
         atlas::AtlasSim::RegValueOverridePairs reg_value_overrides;
@@ -112,6 +117,11 @@ int main(int argc, char** argv)
         if (vm.count("spike-formatting") > 0)
         {
             sim.useSpikeFormatting();
+        }
+
+        if (not eot_mode.empty())
+        {
+            sim.setEOTMode(eot_mode);
         }
 
         cls.runSimulator(&sim);

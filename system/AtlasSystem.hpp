@@ -47,6 +47,9 @@ namespace atlas
         // Get starting PC from ELF
         Addr getStartingPc() const { return starting_pc_; }
 
+        // Tell the system we're using pass/fail criteria for stopping simulation
+        void enableEOTPassFailMode();
+
         // Get the workload and its program arguments
         const std::vector<std::string> & getWorkloadAndArgs() const { return workload_and_args_; }
 
@@ -108,5 +111,7 @@ namespace atlas
         std::unordered_map<Addr, std::string> symbols_;
         sparta::utils::ValidValue<Addr> tohost_addr_;
         sparta::utils::ValidValue<Addr> fromhost_addr_;
+        sparta::utils::ValidValue<Addr> pass_addr_;
+        sparta::utils::ValidValue<Addr> fail_addr_;
     };
 } // namespace atlas
