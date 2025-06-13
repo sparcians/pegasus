@@ -10,7 +10,7 @@ those tests.  The tests are divided into two parts/directories:
 
 Building these tests requires a cross compiler for RISC-V.  Some
 systems have these cross compilers as part of their distribution
-packages and can be installed from there.  Keep in mind that there
+packages and can be installed from there.  Keep in mind that there are
 _two_ types of compilers needed for these tests: `linux-gnu` and
 `unknown-elf`.
 

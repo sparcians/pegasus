@@ -119,7 +119,7 @@ int main(int argc, char** argv)
             sim.useSpikeFormatting();
         }
 
-        if (false == eot_mode.empty())
+        if (not eot_mode.empty())
         {
             sim.setEOTMode(eot_mode);
         }
