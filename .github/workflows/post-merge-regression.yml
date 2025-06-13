@@ -93,7 +93,7 @@ jobs:
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
-          gistID: ee576a1077c218ce2e55e65e682bff78
+          gistID: 257907f4095b77a22da35df05f543a4a
           filename: riscv-arch.json
           label: RISC-V ARCH
           message: ${{ env.RISCV_ARCH_PASS_RATE }}
@@ -104,7 +104,7 @@ jobs:
       #  uses: schneegans/dynamic-badges-action@v1.7.0
       #  with:
       #    auth: ${{ secrets.GIST_SECRET }}
-      #    gistID: ee576a1077c218ce2e55e65e682bff78
+      #    gistID: 257907f4095b77a22da35df05f543a4a
       #    filename: tenstorrent.json
       #    label: TENSTORRENT
       #    message: ${{ env.TENSTORRENT_PASS_RATE }}
