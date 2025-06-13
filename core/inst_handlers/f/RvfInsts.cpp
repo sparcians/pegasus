@@ -176,17 +176,81 @@ namespace atlas
     template <typename XLEN>
     Action::ItrType RvfInsts::fclass_sHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        state->getCurrentInst()->markUnimplemented();
-        (void)state;
-        ///////////////////////////////////////////////////////////////////////
-        // START OF SPIKE CODE
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        softfloat_roundingMode = getRM<XLEN>(state);
+        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
-        // require_either_extension('F', EXT_ZFINX);
-        // require_fp;
-        // WRITE_RD(f32_classify(FRS1_F));
+	const uint16_t infOrNaN = expF32UI(rs1_val) == 0xFF;
+        const uint16_t subnormalOrZero = expF32UI(rs1_val) == 0;
+        const bool sign = signF32UI(rs1_val);
+        const bool fracZero = fracF32UI(rs1_val) == 0;
+        const bool isNaN = isNaNF32UI(rs1_val);
+        const bool isSNaN = softfloat_isSigNaNF32UI(rs1_val);
 
-        // END OF SPIKE CODE
-        ///////////////////////////////////////////////////////////////////////
+	XLEN rd_val = 0;
+
+        // Negative infinity 
+	if (sign && infOrNaN && fracZero)
+	{
+	    rd_val |= 1 << 0;
+	}
+
+        // Negative normal number
+	if (sign && !infOrNaN && !subnormalOrZero)
+	{
+	    rd_val |= 1 << 1;
+	}
+
+        // Negative subnormal number
+	if (sign && subnormalOrZero && !fracZero)
+	{
+	    rd_val |= 1 << 2;
+	}
+
+        // Negative zero
+	if (sign && subnormalOrZero && fracZero)
+	{
+	    rd_val |= 1 << 3;
+	}
+
+        // Positive infinity
+	if (!sign && infOrNaN && fracZero)
+	{
+	    rd_val |= 1 << 7;
+	}
+
+        // Positive normal number
+	if (!sign && !infOrNaN && !subnormalOrZero)
+	{
+	    rd_val |= 1 << 6;
+	}
+
+        // Positive subnormal number
+	if (!sign && subnormalOrZero && !fracZero)
+	{
+	    rd_val |= 1 << 5;
+	}
+
+        // Positive zero
+	if (!sign && subnormalOrZero && fracZero)
+	{
+	    rd_val |= 1 << 4;
+	}
+
+        // Signaling NaN
+	if (isNaN &&  isSNaN)
+	{
+	    rd_val |= 1 << 8;
+	}
+
+        // Quiet NaN
+	if (isNaN && !isSNaN)
+	{
+	    rd_val |= 1 << 9;
+	}
+
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+
         return ++action_it;
     }
 

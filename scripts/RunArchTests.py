@@ -8,8 +8,8 @@ import multiprocessing
 import functools
 
 # Passing and total
-PASSING_STATUS_RISCV_ARCH_RV32 = [238, 239]
-PASSING_STATUS_RISCV_ARCH_RV64 = [318, 319]
+PASSING_STATUS_RISCV_ARCH_RV32 = [242, 243]
+PASSING_STATUS_RISCV_ARCH_RV64 = [322, 323]
 PASSING_STATUS_TENSTORRENT_RV64 = [3006, 3999]
 
 # Verbosity
@@ -186,14 +186,6 @@ def main():
         tests.extend(get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.tenstorrent))
 
     skip_tests = [
-        "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
-        "rv64uf-v-fclass",
-        "rv32uf-p-fclass",
-        "rv32uf-v-fclass",
-        "rv64ud-p-fclass",
-        "rv64ud-v-fclass",
-        "rv32ud-p-fclass",
-        "rv32ud-v-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
         "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",

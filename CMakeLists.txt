@@ -109,6 +109,7 @@ add_subdirectory(mavis)
 
 # SoftFloat
 include_directories(SYSTEM softfloat)
+include_directories(SYSTEM softfloat/source/include)
 add_subdirectory(softfloat)
 
 # STF Library
