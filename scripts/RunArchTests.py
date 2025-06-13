@@ -104,7 +104,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
                     error = line.strip()
                     break
 
-        failing_tests.append(testname)
+        failing_tests.append([testname, error])
 
 
 def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
@@ -229,8 +229,8 @@ def main():
 
     if failing_tests:
         print("FAILED:")
-        for test in failing_tests:
-            print("\t" + test)
+        for test,error in failing_tests:
+            print("\t" + test + ": " + error)
 
     if timeout_tests:
         print("TIMED OUT:")
