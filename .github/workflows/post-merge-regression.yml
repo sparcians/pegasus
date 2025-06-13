@@ -1,5 +1,5 @@
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -25,12 +25,6 @@ jobs:
       COMPILER: ${{matrix.COMPILER}}
 
     steps:
-      - name: Setup Keys
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.GIST_TOKEN }}
-
       # Get Atlas
       - name: Clone Atlas
         uses: actions/checkout@v4
@@ -106,12 +100,12 @@ jobs:
           color: yellow
 
       # Generate GitHub Badges
-      #- name: Create Tenstorrent Tests Badge
-      #  uses: schneegans/dynamic-badges-action@v1.7.0
-      #  with:
-      #    auth: ${{ secrets.GIST_TOKEN }}
-      #    gistID: 257907f4095b77a22da35df05f543a4a
-      #    filename: tenstorrent.json
-      #    label: TENSTORRENT
-      #    message: ${{ env.TENSTORRENT_PASS_RATE }}
-      #    color: yellow
+      - name: Create Tenstorrent Tests Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: 257907f4095b77a22da35df05f543a4a
+          filename: tenstorrent.json
+          label: TENSTORRENT
+          message: ${{ env.TENSTORRENT_PASS_RATE }}
+          color: yellow

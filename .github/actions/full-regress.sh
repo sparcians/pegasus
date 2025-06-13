@@ -39,9 +39,9 @@ cd sim
 python $GITHUB_WORKSPACE/scripts/RunArchTests.py --riscv-arch $RISCV_ARCH_TESTS > riscv-arch-tests.log
 
 # Tenstorrent Tests
-#python $GITHUB_WORKSPACE/scripts/RunArchTests.py --tenstorrent $TENSTORRENT_TESTS > tenstorrent-tests.log
+python $GITHUB_WORKSPACE/scripts/RunArchTests.py --tenstorrent $TENSTORRENT_TESTS > tenstorrent-tests.log
 
 RISCV_ARCH_PASS_RATE=`egrep -m 1 -o "[0-9][0-9]\.[0-9][0-9]%" riscv-arch-tests.log`
-#TENSTORRENT_PASS_RATE=`egrep -m 1 -o "[0-9][0-9]\.[0-9][0-9]%" tenstorrent-tests.log`
+TENSTORRENT_PASS_RATE=`egrep -m 1 -o "[0-9][0-9]\.[0-9][0-9]%" tenstorrent-tests.log`
 echo "RISCV_ARCH_PASS_RATE=$RISCV_ARCH_PASS_RATE" >> $GITHUB_ENV
-#echo "TENSTORRENT_PASS_RATE=$TENSTORRENT_PASS_RATE" >> $GITHUB_ENV
+echo "TENSTORRENT_PASS_RATE=$TENSTORRENT_PASS_RATE" >> $GITHUB_ENV
