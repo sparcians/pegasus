@@ -98,7 +98,7 @@ See [Python IDE for Atlas](IDE/README.md)
 | **F** Single-precision floating-point instructions. | :white_check_mark: |
 | **D** Double-precision floating-point instructions. | :white_check_mark: |
 | **C** Compressed instructions. | :white_check_mark: |
-| **B** Bit-manipulation instructions. | :x: |
+| **B** Bit-manipulation instructions. | :white_check_mark: |
 | **Zicsr** CSR instructions. These are implied by presence of F. | :white_check_mark: |
 | **Zicntr** Base counters and timers. | :x: |
 | **Zihpm** Hardware performance counters. | :x: |
