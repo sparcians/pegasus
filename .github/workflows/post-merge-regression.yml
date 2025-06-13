@@ -78,12 +78,7 @@ jobs:
       # Full Regression
       - name: Full Regress
         id: full-regress
-        run: |
-          ./.github/actions/full-regress.sh
-          RISCV_ARCH_PASS_RATE=`egrep -m 1 -o "[0-9][0-9]\.[0-9][0-9]%" riscv-arch-tests.log`
-          TENSTORRENT_PASS_RATE=`egrep -m 1 -o "[0-9][0-9]\.[0-9][0-9]%" tenstorrent-tests.log`
-          echo "RISCV_ARCH_PASS_RATE=$RISCV_ARCH_PASS_RATE" >> $GITHUB_OUTPUT
-          echo "TENSTORRENT_PASS_RATE=$TENSTORRENT_PASS_RATE" >> $GITHUB_OUTPUT
+        run: ./.github/actions/full-regress.sh
 
       # Save error logs, etc
       - name: Save artifacts
@@ -101,7 +96,7 @@ jobs:
           gistID: ee576a1077c218ce2e55e65e682bff78
           filename: riscv-arch.json
           label: RISC-V ARCH
-          message: ${{ steps.full-regress.outputs.RISCV_ARCH_PASS_RATE }}
+          message: ${{ env.RISCV_ARCH_PASS_RATE }}
           color: yellow
 
       # Generate GitHub Badges
@@ -112,5 +107,5 @@ jobs:
           gistID: ee576a1077c218ce2e55e65e682bff78
           filename: tenstorrent.json
           label: TENSTORRENT
-          message: ${{ steps.full-regress.outputs.TENSTORRENT_PASS_RATE }}
+          message: ${{ env.TENSTORRENT_PASS_RATE }}
           color: yellow
