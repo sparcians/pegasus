@@ -77,6 +77,7 @@ jobs:
 
       # Full Regression
       - name: Full Regress
+        id: full-regress
         run: ./.github/actions/full-regress.sh
 
       # Save error logs, etc
@@ -91,20 +92,20 @@ jobs:
       - name: Create RISC-V Arch Tests Badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          auth: ${{ secrets.GIST_SECRET }}
+          auth: ${{ secrets.GIST_TOKEN }}
           gistID: 257907f4095b77a22da35df05f543a4a
           filename: riscv-arch.json
           label: RISC-V ARCH
-          message: 100%
+          message: ${{ env.RISCV_ARCH_PASS_RATE }}
           color: yellow
 
       # Generate GitHub Badges
       - name: Create Tenstorrent Tests Badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          auth: ${{ secrets.GIST_SECRET }}
+          auth: ${{ secrets.GIST_TOKEN }}
           gistID: 257907f4095b77a22da35df05f543a4a
           filename: tenstorrent.json
           label: TENSTORRENT
-          message: 100%
+          message: ${{ env.TENSTORRENT_PASS_RATE }}
           color: yellow
