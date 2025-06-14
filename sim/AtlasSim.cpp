@@ -174,12 +174,55 @@ namespace atlas
                 {
                     reg->dmiWrite<uint32_t>(reg_value);
                 }
-                std::cout << "Writing " << std::quoted(reg->getName());
+                std::cout << std::hex << std::showbase << std::setfill(' ');
+
+                std::cout << "Setting " << std::quoted(reg->getName());
                 if (reg->getAliases().size() != 0)
                 {
                     std::cout << " aka " << reg->getAliases();
                 }
                 std::cout << " to " << HEX16(reg_value) << std::endl;
+
+                std::cout << "Fields:";
+
+                if(not reg->getFields().empty())
+                {
+                    uint64_t max_field_val_size = 0;
+                    size_t   max_field_name_size = 0;
+
+                    // Order the fields based on bit settings
+                    struct OrderFields {
+                        bool operator()(const sparta::RegisterBase::Field* lhs,
+                                        const sparta::RegisterBase::Field* rhs) const
+                        {
+                            return (lhs->getLowBit() > rhs->getLowBit());
+                        }
+                    };
+
+                    // Go through the fields twice -- once to get formatting, the second to actually print
+                    std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
+                    for(const auto & field : reg->getFields())
+                    {
+                        max_field_val_size  = std::max(field->getNumBits(), max_field_val_size);
+                        max_field_name_size = std::max(field->getName().size(), max_field_name_size);
+                        ordered_fields.insert(field);
+                    }
+                    max_field_val_size = (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
+                    max_field_val_size += 2;
+
+                    for(const auto & field : ordered_fields)
+                    {
+                        std::cout << "\n\t"
+                                  << std::setw(max_field_val_size)  << std::right << std::dec << field->read() << " "
+                                  << std::setw(max_field_name_size) << std::right << field->getName()
+                                  << std::right << std::dec << " [" << std::setw(2) << field->getLowBit() << ":" << std::setw(2) << field->getHighBit()
+                                  << "] " << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc() << ")";
+                    }
+                }
+                else {
+                    std::cout << " None";
+                }
+                std::cout << std::endl;
             }
 
             if (false == workload_and_args_.empty())
