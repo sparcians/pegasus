@@ -2,6 +2,8 @@
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 
+constexpr uint64_t dp_sign_mask = 1UL << 63;
+
 namespace atlas
 {
     template <typename XLEN>
@@ -183,8 +185,8 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
-        static constexpr uint64_t sign_mask = 1UL << 63;
-        const uint64_t result = f64_mulAdd(float64_t{rs1_val ^ sign_mask}, float64_t{rs2_val}, float64_t{rs3_val}).v;
+        const uint64_t result =
+            f64_mulAdd(float64_t{rs1_val ^ dp_sign_mask}, float64_t{rs2_val}, float64_t{rs3_val}).v;
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -232,7 +234,9 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v);
+        WRITE_FP_REG<RV64>(
+            state, inst->getRd(),
+            f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -245,8 +249,9 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
-        static constexpr uint64_t sign_mask = 1UL << 63;
-        const uint64_t result = f64_mulAdd(float64_t{rs1_val ^ sign_mask}, float64_t{rs2_val}, float64_t{rs3_val ^ sign_mask}).v;
+        const uint64_t result = f64_mulAdd(float64_t{rs1_val ^ dp_sign_mask}, float64_t{rs2_val},
+                                           float64_t{rs3_val ^ dp_sign_mask})
+                                    .v;
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -283,9 +288,8 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        static constexpr uint64_t sign_mask = 1UL << 63;
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           (rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask));
+                           (rs1_val & ~dp_sign_mask) | ((rs1_val ^ rs2_val) & dp_sign_mask));
         return ++action_it;
     }
 
@@ -327,9 +331,8 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        static constexpr uint64_t sign_mask = 1UL << 63;
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           (rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask));
+                           (rs1_val & ~dp_sign_mask) | ((rs2_val & dp_sign_mask) ^ dp_sign_mask));
         return ++action_it;
     }
 
@@ -349,7 +352,7 @@ namespace atlas
 
         XLEN rd_val = 0;
 
-        // Negative infinity 
+        // Negative infinity
         if (sign && infOrNaN && fracZero)
         {
             rd_val |= 1 << 0;
@@ -398,7 +401,7 @@ namespace atlas
         }
 
         // Signaling NaN
-        if (isNaN &&  isSNaN)
+        if (isNaN && isSNaN)
         {
             rd_val |= 1 << 8;
         }
@@ -434,8 +437,10 @@ namespace atlas
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
-        static constexpr uint64_t sign_mask = 1UL << 63;
-        WRITE_FP_REG<RV64>(state, inst->getRd(), f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val ^ sign_mask}).v);
+        WRITE_FP_REG<RV64>(
+            state, inst->getRd(),
+            f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val ^ dp_sign_mask})
+                .v);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -502,8 +507,8 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
-        const uint64_t sign_mask = 1UL << 63;
-        WRITE_FP_REG<RV64>(state, inst->getRd(), (rs1_val & ~sign_mask) | (rs2_val & sign_mask));
+        WRITE_FP_REG<RV64>(state, inst->getRd(),
+                           (rs1_val & ~dp_sign_mask) | (rs2_val & dp_sign_mask));
         return ++action_it;
     }
 

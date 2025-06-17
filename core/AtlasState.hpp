@@ -126,6 +126,7 @@ namespace atlas
         }
 
         using Reservation = sparta::utils::ValidValue<Addr>;
+
         Reservation & getReservation() { return reservation_; }
 
         const Reservation & getReservation() const { return reservation_; }
@@ -178,7 +179,10 @@ namespace atlas
 
         void useSpikeFormatting();
 
-        void setSystemCallEmulator(SystemCallEmulator * emulator) { system_call_emulator_ = emulator; }
+        void setSystemCallEmulator(SystemCallEmulator* emulator)
+        {
+            system_call_emulator_ = emulator;
+        }
 
         // Emulate ecall.  This function will determine the route to
         // send the emulation.  The return value is the return code
