@@ -128,9 +128,6 @@ namespace atlas
             virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
             priv_mode_ = priv_mode;
         }
-
-        const STFLogger* getSTFLogger() const { return stf_logger_.get(); }
-        STFLogger* getSTFLogger() { return stf_logger_.get(); }
         
         using Reservation = sparta::utils::ValidValue<Addr>;
         Reservation & getReservation() { return reservation_; }
@@ -290,8 +287,6 @@ namespace atlas
 
         // Supported ISA string
         const std::string supported_isa_string_;
-
-        std::shared_ptr<STFLogger> stf_logger_;
 
         template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
 

@@ -52,16 +52,12 @@ namespace atlas
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
-        stf_filename_(p->stf_filename),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         vector_state_ptr_(new VectorState()),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
-        if (!stf_filename_.empty()) {
-            stf_logger_ = std::make_shared<STFLogger>(xlen_, pc_, stf_filename_);
-        }
         sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
         extension_manager_.setISA(isa_string_);
@@ -201,11 +197,6 @@ namespace atlas
 
         if (!stf_filename_.empty()) {
             addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
-        }
-    
-
-        if (!stf_filename_.empty()) {
-            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_));
         }
 
         for (auto & obs : observers_)
