@@ -58,7 +58,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tenstorrent_tests.sort()
 
     tests = []
-    base_dir = os.path.basename(os.path.abspath(directory))
+    base_dir = "bare_metal"
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
