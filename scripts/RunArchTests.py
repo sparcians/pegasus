@@ -8,9 +8,9 @@ import multiprocessing
 import functools
 
 # Passing and total
-PASSING_STATUS_RISCV_ARCH_RV32 = [238, 239]
-PASSING_STATUS_RISCV_ARCH_RV64 = [318, 319]
-PASSING_STATUS_TENSTORRENT_RV64 = [1211, 3999]
+PASSING_STATUS_RISCV_ARCH_RV32 = [242, 243]
+PASSING_STATUS_RISCV_ARCH_RV64 = [322, 323]
+PASSING_STATUS_TENSTORRENT_RV64 = [3434, 3999]
 
 # Verbosity
 be_noisy = False
@@ -58,7 +58,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tenstorrent_tests.sort()
 
     tests = []
-    base_dir = os.path.basename(os.path.abspath(directory))
+    base_dir = "bare_metal"
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
@@ -186,14 +186,6 @@ def main():
         tests.extend(get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.tenstorrent))
 
     skip_tests = [
-        "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
-        "rv64uf-v-fclass",
-        "rv32uf-p-fclass",
-        "rv32uf-v-fclass",
-        "rv64ud-p-fclass",
-        "rv64ud-v-fclass",
-        "rv32ud-p-fclass",
-        "rv32ud-v-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
         "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",
