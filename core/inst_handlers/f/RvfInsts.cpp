@@ -4,6 +4,8 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 
+constexpr uint32_t sp_sign_mask = 1 << 31;
+
 namespace atlas
 {
     template <typename XLEN>
@@ -154,9 +156,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        constexpr uint32_t sign_mask = 1 << 31;
         const RV64 result = nanBoxing<RV64, SP>(
-            f32_mulAdd(float32_t{rs1_val ^ sign_mask}, float32_t{rs2_val}, float32_t{rs3_val}).v);
+            f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val}, float32_t{rs3_val})
+                .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -262,9 +264,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        constexpr uint32_t sign_mask = 1 << 31;
         const RV64 result = nanBoxing<RV64, SP>(
-            f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val ^ sign_mask}).v);
+            f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val ^ sp_sign_mask})
+                .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -322,10 +324,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        constexpr uint32_t sign_mask = 1 << 31;
         const RV64 result =
-            nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val ^ sign_mask}, float32_t{rs2_val},
-                                           float32_t{rs3_val ^ sign_mask})
+            nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val},
+                                           float32_t{rs3_val ^ sp_sign_mask})
                                     .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
@@ -383,10 +384,9 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        constexpr uint32_t sign_mask = 1 << 31;
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs1_val ^ rs2_val) & sign_mask)));
+            nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask) | ((rs1_val ^ rs2_val) & sp_sign_mask)));
         return ++action_it;
     }
 
@@ -459,10 +459,9 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t sign_mask = 1 << 31;
-        WRITE_FP_REG<RV64>(
-            state, inst->getRd(),
-            nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | ((rs2_val & sign_mask) ^ sign_mask)));
+        WRITE_FP_REG<RV64>(state, inst->getRd(),
+                           nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask)
+                                               | ((rs2_val & sp_sign_mask) ^ sp_sign_mask)));
         return ++action_it;
     }
 
@@ -508,9 +507,9 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t sign_mask = 1 << 31;
-        WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>((rs1_val & ~sign_mask) | (rs2_val & sign_mask)));
+        WRITE_FP_REG<RV64>(
+            state, inst->getRd(),
+            nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask) | (rs2_val & sp_sign_mask)));
         return ++action_it;
     }
 
