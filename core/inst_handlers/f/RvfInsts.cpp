@@ -154,10 +154,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
-        WRITE_FP_REG<RV64>(
-            state, inst->getRd(),
-            nanBoxing<RV64, SP>(f32_add(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
+        constexpr uint32_t sign_mask = 1 << 31;
+        const RV64 result = nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val ^ sign_mask}, float32_t{rs2_val}, float32_t{rs3_val}).v);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -180,74 +179,74 @@ namespace atlas
         softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
-	const uint16_t infOrNaN = expF32UI(rs1_val) == 0xFF;
+        const uint16_t infOrNaN = expF32UI(rs1_val) == 0xFF;
         const uint16_t subnormalOrZero = expF32UI(rs1_val) == 0;
         const bool sign = signF32UI(rs1_val);
         const bool fracZero = fracF32UI(rs1_val) == 0;
         const bool isNaN = isNaNF32UI(rs1_val);
         const bool isSNaN = softfloat_isSigNaNF32UI(rs1_val);
 
-	XLEN rd_val = 0;
+        XLEN rd_val = 0;
 
-        // Negative infinity 
-	if (sign && infOrNaN && fracZero)
-	{
-	    rd_val |= 1 << 0;
-	}
+        // Negative infinity
+        if (sign && infOrNaN && fracZero)
+        {
+            rd_val |= 1 << 0;
+        }
 
         // Negative normal number
-	if (sign && !infOrNaN && !subnormalOrZero)
-	{
-	    rd_val |= 1 << 1;
-	}
+        if (sign && !infOrNaN && !subnormalOrZero)
+        {
+            rd_val |= 1 << 1;
+        }
 
         // Negative subnormal number
-	if (sign && subnormalOrZero && !fracZero)
-	{
-	    rd_val |= 1 << 2;
-	}
+        if (sign && subnormalOrZero && !fracZero)
+        {
+            rd_val |= 1 << 2;
+        }
 
         // Negative zero
-	if (sign && subnormalOrZero && fracZero)
-	{
-	    rd_val |= 1 << 3;
-	}
+        if (sign && subnormalOrZero && fracZero)
+        {
+            rd_val |= 1 << 3;
+        }
 
         // Positive infinity
-	if (!sign && infOrNaN && fracZero)
-	{
-	    rd_val |= 1 << 7;
-	}
+        if (!sign && infOrNaN && fracZero)
+        {
+            rd_val |= 1 << 7;
+        }
 
         // Positive normal number
-	if (!sign && !infOrNaN && !subnormalOrZero)
-	{
-	    rd_val |= 1 << 6;
-	}
+        if (!sign && !infOrNaN && !subnormalOrZero)
+        {
+            rd_val |= 1 << 6;
+        }
 
         // Positive subnormal number
-	if (!sign && subnormalOrZero && !fracZero)
-	{
-	    rd_val |= 1 << 5;
-	}
+        if (!sign && subnormalOrZero && !fracZero)
+        {
+            rd_val |= 1 << 5;
+        }
 
         // Positive zero
-	if (!sign && subnormalOrZero && fracZero)
-	{
-	    rd_val |= 1 << 4;
-	}
+        if (!sign && subnormalOrZero && fracZero)
+        {
+            rd_val |= 1 << 4;
+        }
 
         // Signaling NaN
-	if (isNaN &&  isSNaN)
-	{
-	    rd_val |= 1 << 8;
-	}
+        if (isNaN &&  isSNaN)
+        {
+            rd_val |= 1 << 8;
+        }
 
         // Quiet NaN
-	if (isNaN && !isSNaN)
-	{
-	    rd_val |= 1 << 9;
-	}
+        if (isNaN && !isSNaN)
+        {
+            rd_val |= 1 << 9;
+        }
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
@@ -262,10 +261,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        WRITE_FP_REG<RV64>(
-            state, inst->getRd(),
-            nanBoxing<RV64, SP>(
-                f32_sub(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}), float32_t{rs3_val}).v));
+        constexpr uint32_t sign_mask = 1 << 31;
+        const RV64 result = nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val ^ sign_mask}).v);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -307,6 +305,7 @@ namespace atlas
     Action::ItrType RvfInsts::fcvt_s_wHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(i32_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
@@ -321,10 +320,9 @@ namespace atlas
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        const uint32_t product = f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v;
-        WRITE_FP_REG<RV64>(
-            state, inst->getRd(),
-            nanBoxing<RV64, SP>(f32_sub(float32_t{product ^ (1 << 31)}, float32_t{rs3_val}).v));
+        constexpr uint32_t sign_mask = 1 << 31;
+        const RV64 result = nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val ^ sign_mask}, float32_t{rs2_val}, float32_t{rs3_val ^ sign_mask}).v);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -477,6 +475,7 @@ namespace atlas
     Action::ItrType RvfInsts::fcvt_wu_sHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
@@ -514,6 +513,7 @@ namespace atlas
     Action::ItrType RvfInsts::fcvt_s_wuHandler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(ui32_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
