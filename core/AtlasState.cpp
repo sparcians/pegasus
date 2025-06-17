@@ -41,6 +41,7 @@ namespace atlas
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
         isa_string_(p->isa_string),
+        vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
         supported_isa_string_(std::string("rv" + std::to_string(xlen_) + "gcbv_zicsr_zifencei")),
         isa_file_path_(p->isa_file_path),
@@ -64,8 +65,9 @@ namespace atlas
         int_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
         fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
+        const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
         vec_rset_ =
-            RegisterSet::create(core_tn, json_dir + std::string("/reg_vec.json"), "vec_regs");
+            RegisterSet::create(core_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
