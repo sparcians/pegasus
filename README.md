@@ -80,7 +80,7 @@ are a set of self-checking architectural tests provided by Tenstorrent. Follow t
 to build the tests. Alternatively, pre-built tests can be downloaded here: [Releases/v0.2.0+aligned-access](https://github.com/tenstorrent/riscv_arch_tests/releases/tag/v0.2.0%2Baligned-access)
 ```
 cd atlas/<build>/sim
-python ../../scripts/RunArchTest.py --tenstorrent $TENSTORRENT_PATCH/bare_metal/user
+python ../../scripts/RunArchTest.py --tenstorrent $TENSTORRENT_TESTS_PATH/bare_metal/user/
 ```
 
 ## Debug
