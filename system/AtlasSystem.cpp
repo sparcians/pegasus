@@ -101,12 +101,14 @@ namespace atlas
                                       "Found multiple fromhost symbols in ELF!");
                         fromhost_addr_ = addr;
                     }
-                    else if (name == "pass") {
+                    else if (name == "pass")
+                    {
                         sparta_assert(pass_addr_.isValid() == false,
                                       "Found multiple pass symbols in ELF!");
                         pass_addr_ = addr;
                     }
-                    else if (name == "fail") {
+                    else if (name == "fail")
+                    {
                         sparta_assert(fail_addr_.isValid() == false,
                                       "Found multiple fail symbols in ELF!");
                         fail_addr_ = addr;
@@ -307,8 +309,6 @@ namespace atlas
     {
         sparta_assert(pass_addr_.isValid() and fail_addr_.isValid(),
                       "ERROR: ELF binary does not contain pass/fail labels for EOT Pass/Fail");
-
-
     }
 
 } // namespace atlas

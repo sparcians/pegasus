@@ -168,13 +168,16 @@ namespace atlas
             if (enable_syscall_emulation)
             {
                 inst_handlers.emplace(
-                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>, RviInsts>(
-                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+                    "ecall",
+                    atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>,
+                                                RviInsts>(nullptr, "ecall",
+                                                          ActionTags::EXECUTE_TAG));
             }
-            else {
+            else
+            {
                 inst_handlers.emplace(
                     "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
-                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+                                 nullptr, "ecall", ActionTags::EXECUTE_TAG));
             }
             inst_handlers.emplace("fence",
                                   atlas::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
@@ -989,20 +992,15 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state,
+                                                           Action::ItrType action_it)
     {
         // x10 -> x16 are the function arguments.
         // x17 holds the system call number, first item on the stack
-        SystemCallStack call_stack = {
-            READ_INT_REG<XLEN>(state, 17),
-            READ_INT_REG<XLEN>(state, 10),
-            READ_INT_REG<XLEN>(state, 11),
-            READ_INT_REG<XLEN>(state, 12),
-            READ_INT_REG<XLEN>(state, 13),
-            READ_INT_REG<XLEN>(state, 14),
-            READ_INT_REG<XLEN>(state, 15),
-            READ_INT_REG<XLEN>(state, 16)
-        };
+        SystemCallStack call_stack = {READ_INT_REG<XLEN>(state, 17), READ_INT_REG<XLEN>(state, 10),
+                                      READ_INT_REG<XLEN>(state, 11), READ_INT_REG<XLEN>(state, 12),
+                                      READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
+                                      READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
 
         auto ret_code = static_cast<XLEN>(state->emulateSystemCall(call_stack));
         WRITE_INT_REG<XLEN>(state, 10, ret_code);
