@@ -11,14 +11,14 @@ namespace atlas
     // width -> register width (32 or 64)
     // pc -> initial program counter
     // filename -> name of the file the trace will be written to
-    STFLogger::STFLogger(const uint32_t width, uint64_t pc, const std::string & filename) :
+    STFLogger::STFLogger(const uint32_t width, uint64_t pc, const std::string & filename, AtlasState* state) :
         Observer((width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
         stf_writer_(std::make_unique<stf::STFWriter>())
     {
         // set up version and stf generation type
         stf_writer_->open(filename);
         stf_writer_->addTraceInfo(
-            stf::TraceInfoRecord(stf::STF_GEN::STF_GEN_IMPERAS, 1, 2, 0, "Trace from Imperas"));
+            stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0, 0, "Trace from Atlas"));
 
         if (width == 32)
         {
@@ -34,11 +34,11 @@ namespace atlas
         stf_writer_->setISA(stf::ISA::RISCV);
         stf_writer_->setHeaderPC(pc);
         stf_writer_->finalizeHeader();
+        (void) state; // Unused parameter, but will be implemented when recording inital state of registers
+        //recordRegState_(state); record inital state of registers
     }
 
     // METHODS
-
-    // inst -> current instruction being executed (will add register records)
     void STFLogger::writeInstruction(const AtlasInst* inst)
     {
         if (inst->getOpcodeSize() == 2)
@@ -54,8 +54,21 @@ namespace atlas
     // state -> current AtlasState to write instruction record
     void STFLogger::postExecute_(AtlasState* state) 
     {
-        // write the instruction record
+        //write opcode record
         writeInstruction(state->getCurrentInst().get());
     }
 
+    void STFLogger::preExecute_(AtlasState* state) 
+    {
+        (void)state;
+    }
+
+   void STFLogger::preException_(AtlasState* state)
+    {
+        (void)state;
+    }
+
+    void STFLogger::recordRegState_(AtlasState* state){
+        (void)state;
+    }
 } // namespace atlas

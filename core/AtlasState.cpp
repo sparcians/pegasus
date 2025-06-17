@@ -52,6 +52,7 @@ namespace atlas
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
+        stf_filename_(p->stf_filename),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         vector_state_ptr_(new VectorState()),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
@@ -197,6 +198,11 @@ namespace atlas
                 addObserver(std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV32));
             }
         }
+
+        if (!stf_filename_.empty()) {
+            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
+        }
+    
 
         if (!stf_filename_.empty()) {
             addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_));
