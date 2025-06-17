@@ -46,11 +46,14 @@ namespace atlas
         struct TranslationResult
         {
           public:
-
             TranslationResult() = default;
 
             TranslationResult(Addr vaddr, Addr paddr, size_t sz) :
-                vaddr_(vaddr), paddr_(paddr), size_(sz) {}
+                vaddr_(vaddr),
+                paddr_(paddr),
+                size_(sz)
+            {
+            }
 
             // Get the original VAddr
             Addr getVAddr() const { return vaddr_; }
@@ -80,7 +83,7 @@ namespace atlas
         TranslationRequest & getRequest()
         {
             sparta_assert(requests_cnt_ > 0);
-            return requests_[requests_cnt_-1];
+            return requests_[requests_cnt_ - 1];
         }
 
         void popRequest()
@@ -89,7 +92,8 @@ namespace atlas
             --requests_cnt_;
         }
 
-        void setResult(const Addr vaddr, const Addr paddr, const size_t size) {
+        void setResult(const Addr vaddr, const Addr paddr, const size_t size)
+        {
             sparta_assert(results_cnt_ < results_.size());
             results_[results_cnt_++] = {vaddr, paddr, size};
         }

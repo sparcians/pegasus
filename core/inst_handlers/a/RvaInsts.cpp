@@ -216,18 +216,22 @@ namespace atlas
                 atlas::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_xor<W>>,
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr_d",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint64_t>, RvaInsts>(
-                                      nullptr, "lr_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr_w",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint32_t>, RvaInsts>(
-                                      nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc_d",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint64_t>, RvaInsts>(
-                                      nullptr, "sc_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc_w",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint32_t>, RvaInsts>(
-                                      nullptr, "sc_w", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "lr_d",
+                atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint64_t>, RvaInsts>(
+                    nullptr, "lr_d", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "lr_w",
+                atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint32_t>, RvaInsts>(
+                    nullptr, "lr_w", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sc_d",
+                atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint64_t>, RvaInsts>(
+                    nullptr, "sc_d", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sc_w",
+                atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint32_t>, RvaInsts>(
+                    nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
@@ -275,12 +279,14 @@ namespace atlas
                 atlas::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_xor<W>>,
                                             RvaInsts>(nullptr, "amoxor_w",
                                                       ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("lr_w",
-                                  atlas::Action::createAction<&RvaInsts::lr_handler_<RV32, uint32_t>, RvaInsts>(
-                                      nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sc_w",
-                                  atlas::Action::createAction<&RvaInsts::sc_handler_<RV32, uint32_t>, RvaInsts>(
-                                      nullptr, "sc_w", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "lr_w",
+                atlas::Action::createAction<&RvaInsts::lr_handler_<RV32, uint32_t>, RvaInsts>(
+                    nullptr, "lr_w", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sc_w",
+                atlas::Action::createAction<&RvaInsts::sc_handler_<RV32, uint32_t>, RvaInsts>(
+                    nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
     }
 
@@ -330,7 +336,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template<typename XLEN, typename SIZE>
+    template <typename XLEN, typename SIZE>
     Action::ItrType RvaInsts::lr_handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -355,7 +361,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template<typename XLEN, typename SIZE>
+    template <typename XLEN, typename SIZE>
     Action::ItrType RvaInsts::sc_handler_(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();

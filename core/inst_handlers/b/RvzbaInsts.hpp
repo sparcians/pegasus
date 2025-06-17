@@ -18,7 +18,7 @@ namespace atlas
         template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
 
       private:
-        template <typename XLEN, uint32_t SHIFT, bool WORD> 
+        template <typename XLEN, uint32_t SHIFT, bool WORD>
         Action::ItrType shxadd_handler(atlas::AtlasState* state, Action::ItrType action_it);
         Action::ItrType slli_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
     };
