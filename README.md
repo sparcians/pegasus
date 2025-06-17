@@ -63,18 +63,24 @@ make atlas_regress
 ```
 
 ## Validate
+### RISC-V Unit Tests
+The RISC-V unit tests ([riscv-software-src/riscv-tests](https://github.com/riscv-software-src/riscv-tests))
+are a set of self-checking unit tests provided by the RISC-V Foundation. Follow the directions in
+the [README](https://github.com/riscv-software-src/riscv-tests#readme) to build the tests.
 
-Atlas provides a helper script for running the RISC-V architecture
-unit tests from
-[riscv-software-src/riscv-tests](https://github.com/riscv-software-src/riscv-tests)
-Follow the directions on the [riscv-software-src/riscv-tests
-README](https://github.com/riscv-software-src/riscv-tests#readme) to
-build the tests.
-
-From the `sim` subdirectory of your build directory, run the following Python script to run the RV64 tests:
 ```
 cd atlas/<build>/sim
-../../scripts/RunRiscVArchTest.py rv64 $RISCV_TESTS_PATH/isa/
+python ../../scripts/RunArchTest.py --riscv-arch $RISCV_TESTS_PATH/isa/
+```
+
+### Tenstorrent
+The Tenstorrent architectural tests ([tenstorrent/riscv_arch_tests](https://github.com/tenstorrent/riscv_arch_tests))
+are a set of self-checking architectural tests provided by Tenstorrent. Follow the directions in the
+[README](https://github.com/riscv-software-src/riscv-tests?tab=readme-ov-file#building-from-repository)
+to build the tests. Alternatively, pre-builts tests can be downloaded here: [Releases/v0.2.0+aligned-access](https://github.com/tenstorrent/riscv_arch_tests/releases/tag/v0.2.0%2Baligned-access)
+```
+cd atlas/<build>/sim
+python ../../scripts/RunArchTest.py --tenstorrent $TENSTORRENT_PATCH/bare_metal/user
 ```
 
 ## Debug
