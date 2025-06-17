@@ -77,7 +77,7 @@ python ../../scripts/RunArchTest.py --riscv-arch $RISCV_TESTS_PATH/isa/
 The Tenstorrent architectural tests ([tenstorrent/riscv_arch_tests](https://github.com/tenstorrent/riscv_arch_tests))
 are a set of self-checking architectural tests provided by Tenstorrent. Follow the directions in the
 [README](https://github.com/riscv-software-src/riscv-tests?tab=readme-ov-file#building-from-repository)
-to build the tests. Alternatively, pre-builts tests can be downloaded here: [Releases/v0.2.0+aligned-access](https://github.com/tenstorrent/riscv_arch_tests/releases/tag/v0.2.0%2Baligned-access)
+to build the tests. Alternatively, pre-built tests can be downloaded here: [Releases/v0.2.0+aligned-access](https://github.com/tenstorrent/riscv_arch_tests/releases/tag/v0.2.0%2Baligned-access)
 ```
 cd atlas/<build>/sim
 python ../../scripts/RunArchTest.py --tenstorrent $TENSTORRENT_PATCH/bare_metal/user
