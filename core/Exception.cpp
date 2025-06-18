@@ -148,7 +148,10 @@ namespace atlas
             case FaultCause::INST_ADDR_MISALIGNED:
             case FaultCause::INST_ACCESS:
             case FaultCause::INST_PAGE_FAULT:
-                return state->getPc();
+            {
+                const auto request = state->getFetchTranslationState()->getRequest();
+                return (request.getVAddr() + request.getMisalignedBytes());
+            }
             case FaultCause::LOAD_ADDR_MISALIGNED:
             case FaultCause::LOAD_ACCESS:
             case FaultCause::STORE_AMO_ADDR_MISALIGNED:
