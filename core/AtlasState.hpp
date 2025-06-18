@@ -463,11 +463,11 @@ namespace atlas
     static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if (atlas::getCsrBitMask<XLEN>(reg_ident) != std::numeric_limits<XLEN>::max())
+        if (const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
+            mask != std::numeric_limits<XLEN>::max())
         {
             auto reg = state->getCsrRegister(reg_ident);
             const auto old_value = reg->dmiRead<XLEN>();
-            const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
             reg->write<XLEN>(write_val);
         }
