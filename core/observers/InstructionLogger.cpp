@@ -349,8 +349,8 @@ namespace atlas
             else
             {
                 // skip x0 -- you cannot write to x0
-                if (SPARTA_EXPECT_FALSE(dst_reg.reg_id.reg_num == 0 &&
-                                        dst_reg.reg_id.reg_type == RegType::INTEGER))
+                if (SPARTA_EXPECT_FALSE(dst_reg.reg_id.reg_num == 0
+                                        && dst_reg.reg_id.reg_type == RegType::INTEGER))
                 {
                     continue;
                 }

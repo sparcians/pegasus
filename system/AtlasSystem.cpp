@@ -39,8 +39,8 @@ namespace atlas
             if (memory_section.data != nullptr)
             {
                 std::cout << "  -- Loading section " << memory_section.name << " (" << std::dec
-                          << memory_section.file_size << "B) "
-                          << " to 0x" << std::hex << memory_section.start_address << std::endl;
+                          << memory_section.file_size << "B) " << " to 0x" << std::hex
+                          << memory_section.start_address << std::endl;
                 bool success = memory_map_->tryPoke(memory_section.start_address,
                                                     memory_section.file_size, memory_section.data);
                 if (!success)
@@ -101,12 +101,14 @@ namespace atlas
                                       "Found multiple fromhost symbols in ELF!");
                         fromhost_addr_ = addr;
                     }
-                    else if (name == "pass") {
+                    else if (name == "pass")
+                    {
                         sparta_assert(pass_addr_.isValid() == false,
                                       "Found multiple pass symbols in ELF!");
                         pass_addr_ = addr;
                     }
-                    else if (name == "fail") {
+                    else if (name == "fail")
+                    {
                         sparta_assert(fail_addr_.isValid() == false,
                                       "Found multiple fail symbols in ELF!");
                         fail_addr_ = addr;
@@ -307,8 +309,6 @@ namespace atlas
     {
         sparta_assert(pass_addr_.isValid() and fail_addr_.isValid(),
                       "ERROR: ELF binary does not contain pass/fail labels for EOT Pass/Fail");
-
-
     }
 
 } // namespace atlas

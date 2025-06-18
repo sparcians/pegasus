@@ -49,7 +49,8 @@ namespace atlas
             if (break_on_pre_execute_)
             {
                 sendString_("pre_execute");
-                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                if (ActionGroup* fail_action_group = enterLoop_(state))
+                {
                     throw ActionException(fail_action_group);
                 }
             }
@@ -60,7 +61,8 @@ namespace atlas
             if (break_on_pre_exception_)
             {
                 sendString_("pre_exception");
-                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                if (ActionGroup* fail_action_group = enterLoop_(state))
+                {
                     throw ActionException(fail_action_group);
                 }
             }
@@ -74,7 +76,8 @@ namespace atlas
                 mem_reads_ = mem_reads;
                 mem_writes_ = mem_writes;
                 sendString_("post_execute");
-                if (ActionGroup* fail_action_group = enterLoop_(state)) {
+                if (ActionGroup* fail_action_group = enterLoop_(state))
+                {
                     throw ActionException(fail_action_group);
                 }
             }

@@ -99,7 +99,8 @@ int main(int argc, char** argv)
             auto & reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
             for (auto reg_override : reg_overrides)
             {
-                reg_value_overrides.emplace_back(std::make_pair(reg_override.name, reg_override.value));
+                reg_value_overrides.emplace_back(
+                    std::make_pair(reg_override.name, reg_override.value));
             }
         }
 

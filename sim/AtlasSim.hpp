@@ -18,14 +18,11 @@ namespace atlas
     class AtlasSim : public sparta::app::Simulation
     {
       public:
-
         using RegValueOverridePairs = std::vector<std::pair<std::string, std::string>>;
         using WorkloadAndArguments = std::vector<std::string>;
 
-        AtlasSim(sparta::Scheduler* scheduler,
-                 const WorkloadAndArguments & workload_and_args,
-                 const RegValueOverridePairs & reg_value_overrides,
-                 uint64_t ilimit);
+        AtlasSim(sparta::Scheduler* scheduler, const WorkloadAndArguments & workload_and_args,
+                 const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit);
         ~AtlasSim();
 
         // Run the simulator
@@ -68,7 +65,7 @@ namespace atlas
         std::vector<AtlasState*> state_;
 
         // Atlas system
-        AtlasSystem * system_ = nullptr;
+        AtlasSystem* system_ = nullptr;
 
         const WorkloadAndArguments workload_and_args_;
         const RegValueOverridePairs reg_value_overrides_;

@@ -55,10 +55,12 @@ namespace atlas
 
     void AtlasSim::setEOTMode(const std::string & eot_mode)
     {
-        if (eot_mode == "pass_fail") {
+        if (eot_mode == "pass_fail")
+        {
             sparta::notNull(system_)->enableEOTPassFailMode();
         }
-        else {
+        else
+        {
             sparta_assert(false, "Unknown EOT mode: " << eot_mode << " expected pass_fail");
         }
     }
@@ -154,8 +156,9 @@ namespace atlas
             state->setAtlasSystem(system_);
             state->setPc(system_->getStartingPc());
 
-            if (core->getChildAs<sparta::ResourceTreeNode>("execute")->
-                getParameterSet()->getParameterAs<bool>("enable_syscall_emulation"))
+            if (core->getChildAs<sparta::ResourceTreeNode>("execute")
+                    ->getParameterSet()
+                    ->getParameterAs<bool>("enable_syscall_emulation"))
             {
                 system_call_emulator_enabled = true;
                 state->setSystemCallEmulator(system_call_emulator);

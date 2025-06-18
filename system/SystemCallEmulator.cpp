@@ -696,7 +696,8 @@ namespace atlas
             st_mtim(host_stat.st_mtim),
             st_ctim(host_stat.st_ctim)
 #endif
-        {}
+        {
+        }
     };
 
     int64_t SysCallHandlers::fstatat_(const SystemCallStack & call_stack,
@@ -754,8 +755,7 @@ namespace atlas
 
         // Now create a RV stat and populate
         RV_stat rv_stat(host_stat);
-        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf)
-                             << ") -> " << ret);
+        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf) << ") -> " << ret);
 
         memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
         return ret;

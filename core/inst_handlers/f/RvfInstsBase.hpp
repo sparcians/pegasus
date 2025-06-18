@@ -8,7 +8,8 @@
 
 extern "C"
 {
-#include "source/include/softfloat.h"
+#include "source/RISCV/specialize.h"
+#include "source/include/internals.h"
 }
 
 namespace atlas
