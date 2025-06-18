@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "sparta/functional/RegisterBits.hpp"
-
 #include "core/VecConfig.hpp"
 
 namespace atlas
