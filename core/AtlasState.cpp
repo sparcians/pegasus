@@ -1,6 +1,6 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
-#include "core/VectorState.hpp"
+#include "core/VecElements.hpp"
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
@@ -51,7 +51,7 @@ namespace atlas
             isa_file_path_)),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
-        vector_state_ptr_(new VectorState()),
+        vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
@@ -100,7 +100,9 @@ namespace atlas
     }
 
     // Not default -- defined in source file to reduce massive inlining
-    AtlasState::~AtlasState() {}
+    AtlasState::~AtlasState()
+    {
+    }
 
     void AtlasState::onBindTreeEarly_()
     {
