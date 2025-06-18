@@ -11,6 +11,7 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 add_subdirectory(vcs)
 add_subdirectory(via)
 add_subdirectory(vls)
+add_subdirectory(vm)
 
 # ASM Tests
 atlas_named_test(atlas_nop_test atlas -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)

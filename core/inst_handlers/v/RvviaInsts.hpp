@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/Action.hpp"
-
 #include <map>
 #include <string>
 #include <stdint.h>
+
+#include "core/Action.hpp"
 
 namespace atlas
 {

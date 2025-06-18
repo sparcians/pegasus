@@ -103,7 +103,7 @@ namespace atlas
         {
             ValueType bitmask = (((ValueType)1 << (end_pos_ - start_pos_)) - 1) << start_pos_;
             val_ = value & bitmask;
-            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & !bitmask;
+            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & ~bitmask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val | val_, idx_);
         }
 

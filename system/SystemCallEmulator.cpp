@@ -730,8 +730,7 @@ namespace atlas
         // does return a valid structure.  Always return 0
         ret = 0;
         SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << ", " << HEX16(pathname) << ", "
-                             << HEX16(statbuf) << ", " << HEX16(flags) << ", "
-                             << ") -> " << ret);
+                             << HEX16(statbuf) << ", " << HEX16(flags) << ", " << ") -> " << ret);
 
         // Now create a RV stat and populate
         RV_stat rv_stat(host_stat);
