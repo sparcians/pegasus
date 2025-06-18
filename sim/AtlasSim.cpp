@@ -165,14 +165,17 @@ namespace atlas
             {
                 const bool MUST_EXIST = true;
                 sparta::Register* reg = state->findRegister(reg_override.first, MUST_EXIST);
-                const uint64_t reg_value = std::stoull(reg_override.second, nullptr, 0);
+                const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
+                uint64_t old_value = 0;
                 if (state->getXlen() == 64)
                 {
-                    reg->dmiWrite<uint64_t>(reg_value);
+                    old_value = reg->dmiRead<uint64_t>();
+                    reg->dmiWrite<uint64_t>(new_reg_value);
                 }
                 else
                 {
-                    reg->dmiWrite<uint32_t>(reg_value);
+                    old_value = reg->dmiRead<uint32_t>();
+                    reg->dmiWrite<uint32_t>(new_reg_value);
                 }
                 std::cout << std::hex << std::showbase << std::setfill(' ');
 
@@ -181,7 +184,9 @@ namespace atlas
                 {
                     std::cout << " aka " << reg->getAliases();
                 }
-                std::cout << " to " << HEX16(reg_value) << std::endl;
+                std::cout << " to " << HEX16(new_reg_value)
+                          << " from default " << HEX16(old_value)
+                          << std::endl;
 
                 std::cout << "Fields:";
 
@@ -215,7 +220,8 @@ namespace atlas
                         std::cout << "\n\t"
                                   << std::setw(max_field_val_size)  << std::right << std::dec << field->read() << " "
                                   << std::setw(max_field_name_size) << std::right << field->getName()
-                                  << std::right << std::dec << " [" << std::setw(2) << field->getLowBit() << ":" << std::setw(2) << field->getHighBit()
+                                  << std::right << std::dec << " [" << std::setw(2) << field->getLowBit() << ":"
+                                  << std::setw(2) << field->getHighBit()
                                   << "] " << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc() << ")";
                     }
                 }
