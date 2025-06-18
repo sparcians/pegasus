@@ -109,7 +109,7 @@ void testVecElems()
             // Verify the v0 register
             WRITE_VEC_ELEM<uint8_t>(state, atlas::V0, elem_val, elem_idx);
             auto v0_reg_val = READ_VEC_ELEM<uint8_t>(state, atlas::V0, elem_idx);
-            EXPECT_EQUAL(v0_reg_val, elem_idx);
+            EXPECT_EQUAL(v0_reg_val, elem_val);
         }
     }
 }
