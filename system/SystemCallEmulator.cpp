@@ -795,6 +795,12 @@ namespace atlas
 
         // Use the host's stat
         struct stat host_stat;
+        ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
+        // On MacOS this call fails due to invalid parameters, but
+        // does return a valid structure.  Always return 0
+        ret = 0;
+        SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << ", " << HEX16(pathname) << ", "
+                             << HEX16(statbuf) << ", " << HEX16(flags) << ", " << ") -> " << ret);
 
         ret = sysretErrno_(::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags));
 
