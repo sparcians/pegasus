@@ -58,7 +58,8 @@ namespace atlas
           public:
             AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
             {
-                vlen.addDependentValidationCallback(&AtlasStateParameters::validateVlen_, "VLEN constraint");
+                vlen.addDependentValidationCallback(&AtlasStateParameters::validateVlen_,
+                                                    "VLEN constraint");
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
@@ -75,7 +76,7 @@ namespace atlas
             {
                 const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024, 2048};
                 return std::find(valid_vlen_values.begin(), valid_vlen_values.end(), vlen_val)
-                    != valid_vlen_values.end();
+                       != valid_vlen_values.end();
             }
         };
 

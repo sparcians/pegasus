@@ -66,8 +66,7 @@ namespace atlas
             RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
         fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
-        vec_rset_ =
-            RegisterSet::create(core_tn, json_dir + vec_reg_json, "vec_regs");
+        vec_rset_ = RegisterSet::create(core_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
