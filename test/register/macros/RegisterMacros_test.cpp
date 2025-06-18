@@ -102,7 +102,7 @@ void testVecElems()
     RegisterTester tester;
     atlas::AtlasState* state = tester.getAtlasState();
 
-    for (uint8_t elem_val = 0; (uint32_t)elem_val < 256; ++elem_val)
+    for (uint8_t elem_val = 0; elem_val < 255; ++elem_val)
     {
         for (uint8_t elem_idx = 0; elem_idx < 8; ++elem_idx)
         {
