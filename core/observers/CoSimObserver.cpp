@@ -36,13 +36,15 @@ namespace atlas
     {
         for (auto & src_reg : src_regs_)
         {
-            last_event_.register_reads_.emplace_back(src_reg.reg_id, src_reg.reg_value);
+            last_event_.register_reads_.emplace_back(src_reg.reg_id,
+                                                     src_reg.reg_value.getByteVector());
         }
 
         for (auto & dst_reg : dst_regs_)
         {
-            last_event_.register_writes_.emplace_back(dst_reg.reg_id, dst_reg.reg_value,
-                                                      dst_reg.reg_prev_value);
+            last_event_.register_writes_.emplace_back(dst_reg.reg_id,
+                                                      dst_reg.reg_value.getByteVector(),
+                                                      dst_reg.reg_prev_value.getByteVector());
         }
 
         last_event_.done_ = true;

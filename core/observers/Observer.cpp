@@ -3,6 +3,8 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 
+#include "sparta/utils/LogUtils.hpp"
+
 namespace atlas
 {
     void Observer::preExecute(AtlasState* state)
@@ -67,7 +69,7 @@ namespace atlas
                 }
                 sparta_assert(reg != nullptr);
                 const uint64_t value = readRegister_(reg);
-                dst_reg.setValue(value);
+                dst_reg.reg_value.setValue(value);
             }
         }
 
@@ -114,7 +116,7 @@ namespace atlas
 
     uint64_t Observer::readRegister_(const sparta::Register* reg)
     {
-        const uint32_t reg_width = getRegWidth();
+        const uint32_t reg_width = reg->getNumBytes();
 
         if (reg_width == 8)
             return reg->dmiRead<RV32>();
@@ -137,7 +139,7 @@ namespace atlas
         // If this CSR has already been written to, just update the final value
         if (csr_writes_.find(csr_num) != csr_writes_.end())
         {
-            csr_writes_.at(csr_num).setValue(final_value);
+            csr_writes_.at(csr_num).reg_value.setValue(final_value);
         }
         else
         {
@@ -208,5 +210,23 @@ namespace atlas
         mem_read.size = data.size;
         mem_read.value = val;
         mem_reads_.push_back(mem_read);
+    }
+
+    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
+    {
+        const auto num_bytes = reg_value.getNumBytes();
+        if (num_bytes == 8)
+        {
+            os << HEX16(reg_value.getValue<uint64_t>());
+        }
+        else if (num_bytes == 4)
+        {
+            os << HEX8(reg_value.getValue<uint32_t>());
+        }
+        else
+        {
+            os << "???";
+        }
+        return os;
     }
 } // namespace atlas

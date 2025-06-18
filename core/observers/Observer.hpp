@@ -56,37 +56,81 @@ namespace atlas
 
         virtual ~Observer() = default;
 
+        // TODO: Read registers and return formatting string
+        class RegValue
+        {
+          public:
+            RegValue() = default;
+
+            RegValue(const std::vector<uint8_t> & value) : value_(value) {}
+
+            template <typename SIZE> RegValue(SIZE value) { setValue(value); }
+
+            template <typename SIZE> void setValue(SIZE value)
+            {
+                // TODO: Assert on supported POD types?
+                value_.resize(sizeof(SIZE));
+                memcpy(value_.data(), &value, sizeof(SIZE));
+            }
+
+            template <typename SIZE> SIZE getValue() const
+            {
+                assert(sizeof(SIZE) == value_.size());
+                SIZE val = 0;
+                for (size_t i = 0; i < value_.size(); ++i)
+                {
+                    val |= static_cast<SIZE>(value_[i]) << (i * 8);
+                }
+                return val;
+            }
+
+            size_t getNumBytes() const { return value_.size(); }
+
+            const std::vector<uint8_t> & getByteVector() const { return value_; }
+
+          private:
+            std::vector<uint8_t> value_;
+
+            friend std::ostream & operator<<(std::ostream & os, const RegValue & reg_value);
+        };
+
         struct ObservedReg
         {
             ObservedReg(const RegId id) : reg_id(id) {}
 
-            ObservedReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
+            template <typename SIZE>
+            ObservedReg(const RegId id, SIZE value) : reg_id(id), reg_value(value)
+            {
+            }
 
-            void setValue(const uint64_t value) { reg_value = value; }
+            template <typename SIZE> SIZE getRegValue() const { return reg_value.getValue<SIZE>(); }
 
             const RegId reg_id;
-            uint64_t reg_value;
+            RegValue reg_value;
         };
 
         using SrcReg = ObservedReg;
 
         struct DestReg : ObservedReg
         {
-            DestReg(const RegId id, uint64_t prev_value) :
-                ObservedReg(id),
-                reg_prev_value(prev_value)
+            template <typename SIZE>
+            DestReg(const RegId id, SIZE prev_value) : ObservedReg(id), reg_prev_value(prev_value)
             {
             }
 
-            DestReg(const RegId id, uint64_t value, uint64_t prev_value) :
+            template <typename SIZE>
+            DestReg(const RegId id, SIZE value, SIZE prev_value) :
                 ObservedReg(id, value),
                 reg_prev_value(prev_value)
             {
             }
 
-            void setPrevValue(const uint64_t value) { reg_prev_value = value; }
+            template <typename SIZE> SIZE getRegPrevValue() const
+            {
+                return reg_value.getValue<SIZE>();
+            }
 
-            uint64_t reg_prev_value;
+            RegValue reg_prev_value;
         };
 
         void preExecute(AtlasState* state);
@@ -187,5 +231,7 @@ namespace atlas
         void postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess &);
         void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess &);
     };
+
+    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value);
 
 } // namespace atlas
