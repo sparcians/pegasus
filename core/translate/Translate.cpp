@@ -276,6 +276,7 @@ namespace atlas
                         if constexpr (is_store)
                         {
                             pte.setDirty();
+                            DLOG("Setting PTE dirty: " << pte);
                         }
                         pte.setAccessed();
                         state->writeMemory<XLEN>(pte_paddr, pte.getPte());
