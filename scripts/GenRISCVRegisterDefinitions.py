@@ -34,7 +34,7 @@ def main():
     registers["fp"]  = GenRegisterJSON(RegisterGroup.FP,  32, RV64_XLEN)
     for vlen in SUPPORTED_VLENS:
         name = "vec" + str(vlen)
-        registers[name] = GenRegisterJSON(RegisterGroup.VEC, 32, vlen)
+        registers[name] = GenRegisterJSON(RegisterGroup.VEC, 32, int(vlen/8))
     registers["csr"] = GenRegisterJSON(RegisterGroup.CSR, 0,  RV64_XLEN)
 
     # Add register for the PC
