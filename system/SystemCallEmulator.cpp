@@ -42,7 +42,7 @@ namespace atlas
             // https://gpages.juszkiewicz.com.pl/syscalls-table/syscalls.html
             supported_sys_calls_.insert(
                 {{17, {"getcwd", cfp(&SysCallHandlers::getcwd_)}},
-                 {23, {"setuid", cfp(&SysCallHandlers::setuid_)}},
+                 {23, {"dup", cfp(&SysCallHandlers::dup_)}},
                  {25, {"stime", cfp(&SysCallHandlers::stime_)}},
                  {29, {"ioctl", cfp(&SysCallHandlers::ioctl_)}},
                  {48, {"faccessat", cfp(&SysCallHandlers::faccessat_)}},
@@ -108,7 +108,7 @@ namespace atlas
       private:
         // The system calls
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t ioctl_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -225,6 +225,9 @@ namespace atlas
         // For a program, if the `brk` system call is made, the
         // program is asking to extend the data segment
         Addr brk_address_ = 0;
+
+        // Integer used for duplicating file IDs. Starts at stderr.
+        int dup_file_ids_ = 2;
     };
 
     SystemCallEmulator::SystemCallEmulator(
@@ -327,9 +330,9 @@ namespace atlas
         return ret;
     }
 
-    int64_t SysCallHandlers::setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        return 0;
+        return ++dup_file_ids_;
     }
 
     int64_t SysCallHandlers::getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)

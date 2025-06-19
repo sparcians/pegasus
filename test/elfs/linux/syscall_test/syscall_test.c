@@ -27,7 +27,21 @@ void test_getcwd()
     check_errno();
 }
 
-void test_setuid() {}
+const uid_t uid = 100;
+void test_dup()
+{
+    errno = 0;
+    // duplicate stdio
+    int new_fd = dup(1);
+    if (new_fd == -1 || new_fd != 3) {
+        printf("ERROR: %s failed: ret == %d\n", __func__, new_fd);
+    }
+    else {
+        printf("%s: %d\n", __func__, new_fd);
+    }
+    check_errno();
+}
+
 void test_stime() {}
 void test_ioctl() {}
 void test_faccessat() {}
@@ -69,7 +83,7 @@ void test_getmainvars() {}
 int main()
 {
     test_getcwd();
-    test_setuid();
+    test_dup();
     test_stime();
     test_ioctl();
     test_faccessat();
