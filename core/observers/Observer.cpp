@@ -3,6 +3,8 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
 
+#include "sparta/utils/LogUtils.hpp"
+
 namespace atlas
 {
     void Observer::preExecute(AtlasState* state)
@@ -66,8 +68,7 @@ namespace atlas
                         sparta_assert(false, "Invalid register type!");
                 }
                 sparta_assert(reg != nullptr);
-                const uint64_t value = readRegister_(reg);
-                dst_reg.setValue(value);
+                dst_reg.reg_value.setValue(readRegister_(reg));
             }
         }
 
@@ -90,39 +91,35 @@ namespace atlas
                 if (inst->hasRs1())
                 {
                     const auto rs1_reg = inst->getRs1Reg();
-                    const uint64_t value = readRegister_(rs1_reg);
-                    src_regs_.emplace_back(getRegId(rs1_reg), value);
+                    src_regs_.emplace_back(getRegId(rs1_reg), readRegister_(rs1_reg));
                 }
 
                 if (inst->hasRs2())
                 {
                     const auto rs2_reg = inst->getRs2Reg();
-                    const uint64_t value = readRegister_(rs2_reg);
-                    src_regs_.emplace_back(getRegId(rs2_reg), value);
+                    src_regs_.emplace_back(getRegId(rs2_reg), readRegister_(rs2_reg));
+                }
+
+                if (inst->hasRs3())
+                {
+                    const auto rs3_reg = inst->getRs3Reg();
+                    src_regs_.emplace_back(getRegId(rs3_reg), readRegister_(rs3_reg));
                 }
 
                 // Get initial value of destination registers
                 if (inst->hasRd())
                 {
                     const auto rd_reg = inst->getRdReg();
-                    const uint64_t value = readRegister_(rd_reg);
-                    dst_regs_.emplace_back(getRegId(rd_reg), value);
+                    dst_regs_.emplace_back(getRegId(rd_reg), readRegister_(rd_reg));
+                }
+
+                if (inst->hasRd2())
+                {
+                    const auto rd2_reg = inst->getRd2Reg();
+                    dst_regs_.emplace_back(getRegId(rd2_reg), readRegister_(rd2_reg));
                 }
             }
         }
-    }
-
-    uint64_t Observer::readRegister_(const sparta::Register* reg)
-    {
-        const uint32_t reg_width = getRegWidth();
-
-        if (reg_width == 8)
-            return reg->dmiRead<RV32>();
-        if (reg_width == 16)
-            return reg->dmiRead<RV64>();
-
-        sparta_assert(false, "Invalid register width");
-        return 0;
     }
 
     void Observer::postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,
@@ -137,7 +134,7 @@ namespace atlas
         // If this CSR has already been written to, just update the final value
         if (csr_writes_.find(csr_num) != csr_writes_.end())
         {
-            csr_writes_.at(csr_num).setValue(final_value);
+            csr_writes_.at(csr_num).reg_value.setValue(final_value);
         }
         else
         {
@@ -208,5 +205,11 @@ namespace atlas
         mem_read.size = data.size;
         mem_read.value = val;
         mem_reads_.push_back(mem_read);
+    }
+
+    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
+    {
+        os << "0x" << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
+        return os;
     }
 } // namespace atlas
