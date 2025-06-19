@@ -19,12 +19,12 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "czero_eqz",
+            "czero.eqz",
             atlas::Action::createAction<&RvzicondInsts::czeroHandler_<XLEN, std::equal_to<XLEN>>,
                                         RvzicondInsts>(nullptr, "czero.eqz",
                                                        ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "czero_nez",
+            "czero.nez",
             atlas::Action::createAction<
                 &RvzicondInsts::czeroHandler_<XLEN, std::not_equal_to<XLEN>>, RvzicondInsts>(
                 nullptr, "czero.nez", ActionTags::EXECUTE_TAG));

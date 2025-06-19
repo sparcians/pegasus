@@ -276,7 +276,8 @@ namespace atlas
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32x.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicond.json"};
         return uarch_files;
     }
 
