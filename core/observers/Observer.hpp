@@ -73,16 +73,18 @@ namespace atlas
 
             template <typename TYPE> void setValue(TYPE value)
             {
-                static_assert(std::is_trivial<TYPE>());
-                static_assert(std::is_standard_layout<TYPE>());
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
                 value_.resize(sizeof(TYPE));
                 memcpy(value_.data(), &value, sizeof(TYPE));
             }
 
             template <typename TYPE> TYPE getValue(uint32_t offset = 0) const
             {
-                static_assert(std::is_trivial<TYPE>());
-                static_assert(std::is_standard_layout<TYPE>());
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
                 const size_t num_bytes = sizeof(TYPE);
                 assert((offset + num_bytes) < value_.size());
                 TYPE val = 0;
