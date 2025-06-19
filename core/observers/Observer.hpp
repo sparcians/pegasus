@@ -56,7 +56,7 @@ namespace atlas
 
         virtual ~Observer() = default;
 
-        // TODO: Read registers and return formatting string
+        // Holds a register's value as a byte vector
         class RegValue
         {
           public:
@@ -64,27 +64,32 @@ namespace atlas
 
             RegValue(const std::vector<uint8_t> & value) : value_(value) {}
 
-            template <typename SIZE> RegValue(SIZE value) { setValue(value); }
+            template <typename SIZE> RegValue(SIZE value) { setValue<SIZE>(value); }
+
+            void setValue(const std::vector<uint8_t> & value)
+            {
+                value_ = value;
+            }
 
             template <typename SIZE> void setValue(SIZE value)
             {
-                // TODO: Assert on supported POD types?
                 value_.resize(sizeof(SIZE));
                 memcpy(value_.data(), &value, sizeof(SIZE));
             }
 
-            template <typename SIZE> SIZE getValue() const
+            template <typename SIZE> SIZE getValue(uint32_t offset = 0) const
             {
-                assert(sizeof(SIZE) == value_.size());
+                const size_t num_bytes = sizeof(SIZE);
+                assert((offset + num_bytes) < value_.size());
                 SIZE val = 0;
-                for (size_t i = 0; i < value_.size(); ++i)
+                for (size_t i = offset; i < num_bytes; ++i)
                 {
                     val |= static_cast<SIZE>(value_[i]) << (i * 8);
                 }
                 return val;
             }
 
-            size_t getNumBytes() const { return value_.size(); }
+            size_t size() const { return value_.size(); }
 
             const std::vector<uint8_t> & getByteVector() const { return value_; }
 
@@ -221,7 +226,14 @@ namespace atlas
             mem_writes_.clear();
         }
 
-        uint64_t readRegister_(const sparta::Register* reg);
+        std::vector<uint8_t> readRegister_(const sparta::Register* reg)
+        {
+            const size_t num_bytes = reg->getNumBytes();
+            std::vector<uint8_t> value(num_bytes, 0);
+            const uint32_t offset = 0;
+            reg->peek(value.data(), num_bytes, offset);
+            return value;
+        }
 
         // Callbacks
         void postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,
