@@ -307,18 +307,23 @@ namespace atlas
                                      sparta::memory::BlockingMemoryIF* mem)
     {
         const auto pbuf = call_stack[1];
-        const auto count = call_stack[2];
-        std::vector<uint8_t> final_buf(count);
-        int64_t ret = (int64_t)getcwd((char*)final_buf.data(), call_stack[2]);
-        if (ret != 0)
+        const auto size = call_stack[2];
+        int64_t ret = pbuf;
+        std::vector<uint8_t> final_buf(size);
+        char * local_ret = ::getcwd((char*)final_buf.data(), size);
+        if (local_ret == (char*)final_buf.data())
         {
-            size_t slen = strnlen((char*)final_buf.data(), call_stack[2]);
+            size_t slen = strnlen((char*)final_buf.data(), size);
             mem->poke(pbuf, slen, final_buf.data());
+            ret = slen;
         }
-        if (ret)
-        {
-            ret = pbuf;
+        else {
+            ret = NULL;
         }
+        SYSCALL_LOG("getcwd(" << HEX16(pbuf) << ", " << HEX16(size)
+                    << ") -> " << HEX16(ret));
+
+
         return ret;
     }
 

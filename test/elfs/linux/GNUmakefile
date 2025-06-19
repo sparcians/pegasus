@@ -1,5 +1,5 @@
 
-LINUX_TESTS ?= dhry
+LINUX_TESTS ?= dhry syscall_test
 
 include ../common.mk
 
