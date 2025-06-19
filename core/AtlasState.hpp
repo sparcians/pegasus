@@ -39,8 +39,8 @@ namespace atlas
     class Translate;
     class Exception;
     class SimController;
-    class VectorState;
     class SystemCallEmulator;
+    class VectorConfig;
 
     using MavisType =
         Mavis<AtlasInst, AtlasExtractor, AtlasInstAllocatorWrapper<AtlasInstAllocator>,
@@ -167,9 +167,9 @@ namespace atlas
 
         SimState* getSimState() { return &sim_state_; }
 
-        const VectorState* getVectorState() const { return vector_state_ptr_; }
+        const VectorConfig* getVectorConfig() const { return vector_config_.get(); }
 
-        VectorState* getVectorState() { return vector_state_ptr_; }
+        VectorConfig* getVectorConfig() { return vector_config_.get(); }
 
         const AtlasInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
@@ -378,7 +378,7 @@ namespace atlas
         SimState sim_state_;
 
         //! Vector state
-        VectorState* vector_state_ptr_ = nullptr;
+        std::unique_ptr<VectorConfig> vector_config_;
 
         // Increment PC Action
         Action::ItrType incrementPc_(AtlasState* state, Action::ItrType action_it);
@@ -473,6 +473,19 @@ namespace atlas
         state->getVecRegister(reg_ident)->dmiWrite<VLEN>(reg_value);
     }
 
+    template <typename Elem>
+    static inline Elem READ_VEC_ELEM(AtlasState* state, uint32_t reg_ident, uint32_t idx)
+    {
+        return state->getVecRegister(reg_ident)->dmiRead<Elem>(idx);
+    }
+
+    template <typename Elem>
+    static inline void WRITE_VEC_ELEM(AtlasState* state, uint32_t reg_ident, Elem value,
+                                      uint32_t idx)
+    {
+        state->getVecRegister(reg_ident)->dmiWrite<Elem>(value, idx);
+    }
+
     template <typename XLEN> static inline XLEN READ_CSR_REG(AtlasState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
@@ -483,11 +496,11 @@ namespace atlas
     static inline void WRITE_CSR_REG(AtlasState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if (atlas::getCsrBitMask<XLEN>(reg_ident) != std::numeric_limits<XLEN>::max())
+        if (const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
+            mask != std::numeric_limits<XLEN>::max())
         {
             auto reg = state->getCsrRegister(reg_ident);
             const auto old_value = reg->dmiRead<XLEN>();
-            const auto mask = atlas::getCsrBitMask<XLEN>(reg_ident);
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
             reg->write<XLEN>(write_val);
         }

@@ -102,13 +102,13 @@ namespace atlas
             reset_();
             if (inst)
             {
-                inst_oss_ << HEX(pc, getRegWidth()) << ": " << inst->dasmString() << " ("
+                inst_oss_ << HEX(pc, getRegWidth()) << " " << inst->dasmString() << " ("
                           << HEX8(opcode) << ") uid:" << inst->getUid();
             }
             else
             {
                 // TODO: Only display opcode for certain exception types
-                inst_oss_ << HEX(pc, getRegWidth()) << ": ??? (" << HEX8(opcode) << ") uid: ?";
+                inst_oss_ << HEX(pc, getRegWidth()) << " ??? (" << HEX8(opcode) << ") uid: ?";
             }
             postExecute_(inst_oss_.str());
         }
@@ -180,18 +180,18 @@ namespace atlas
         void writeMemRead(const Observer::MemRead & mem_read) override
         {
             reset_();
-            inst_oss_ << "   mem read:  addr: " << HEX(mem_read.addr, getRegWidth())
-                      << ", size: " << mem_read.size
-                      << ", value: " << HEX(mem_read.value, getRegWidth());
+            inst_oss_ << "   mem read addr: " << HEX(mem_read.addr, getRegWidth())
+                      << " size: " << mem_read.size
+                      << " value: " << HEX(mem_read.value, getRegWidth());
             postExecute_(inst_oss_.str());
         }
 
         void writeMemWrite(const Observer::MemWrite & mem_write) override
         {
             reset_();
-            inst_oss_ << "   mem write: addr: " << HEX(mem_write.addr, getRegWidth())
-                      << ", size: " << mem_write.size
-                      << ", value: " << HEX(mem_write.value, getRegWidth())
+            inst_oss_ << "   mem write addr: " << HEX(mem_write.addr, getRegWidth())
+                      << " size: " << mem_write.size
+                      << " value: " << HEX(mem_write.value, getRegWidth())
                       << " (prev: " << HEX(mem_write.prior_value, getRegWidth()) << ")";
             postExecute_(inst_oss_.str());
         }
