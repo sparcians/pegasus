@@ -64,27 +64,31 @@ namespace atlas
 
             RegValue(const std::vector<uint8_t> & value) : value_(value) {}
 
-            template <typename SIZE> RegValue(SIZE value) { setValue<SIZE>(value); }
+            template <typename TYPE> RegValue(TYPE value) { setValue<TYPE>(value); }
 
             void setValue(const std::vector<uint8_t> & value)
             {
                 value_ = value;
             }
 
-            template <typename SIZE> void setValue(SIZE value)
+            template <typename TYPE> void setValue(TYPE value)
             {
-                value_.resize(sizeof(SIZE));
-                memcpy(value_.data(), &value, sizeof(SIZE));
+                static_assert(std::is_trivial<TYPE>());
+                static_assert(std::is_standard_layout<TYPE>());
+                value_.resize(sizeof(TYPE));
+                memcpy(value_.data(), &value, sizeof(TYPE));
             }
 
-            template <typename SIZE> SIZE getValue(uint32_t offset = 0) const
+            template <typename TYPE> TYPE getValue(uint32_t offset = 0) const
             {
-                const size_t num_bytes = sizeof(SIZE);
+                static_assert(std::is_trivial<TYPE>());
+                static_assert(std::is_standard_layout<TYPE>());
+                const size_t num_bytes = sizeof(TYPE);
                 assert((offset + num_bytes) < value_.size());
-                SIZE val = 0;
+                TYPE val = 0;
                 for (size_t i = offset; i < num_bytes; ++i)
                 {
-                    val |= static_cast<SIZE>(value_[i]) << (i * 8);
+                    val |= static_cast<TYPE>(value_[i]) << (i * 8);
                 }
                 return val;
             }
@@ -103,12 +107,12 @@ namespace atlas
         {
             ObservedReg(const RegId id) : reg_id(id) {}
 
-            template <typename SIZE>
-            ObservedReg(const RegId id, SIZE value) : reg_id(id), reg_value(value)
+            template <typename TYPE>
+            ObservedReg(const RegId id, TYPE value) : reg_id(id), reg_value(value)
             {
             }
 
-            template <typename SIZE> SIZE getRegValue() const { return reg_value.getValue<SIZE>(); }
+            template <typename TYPE> TYPE getRegValue() const { return reg_value.getValue<TYPE>(); }
 
             const RegId reg_id;
             RegValue reg_value;
@@ -118,21 +122,21 @@ namespace atlas
 
         struct DestReg : ObservedReg
         {
-            template <typename SIZE>
-            DestReg(const RegId id, SIZE prev_value) : ObservedReg(id), reg_prev_value(prev_value)
+            template <typename TYPE>
+            DestReg(const RegId id, TYPE prev_value) : ObservedReg(id), reg_prev_value(prev_value)
             {
             }
 
-            template <typename SIZE>
-            DestReg(const RegId id, SIZE value, SIZE prev_value) :
+            template <typename TYPE>
+            DestReg(const RegId id, TYPE value, TYPE prev_value) :
                 ObservedReg(id, value),
                 reg_prev_value(prev_value)
             {
             }
 
-            template <typename SIZE> SIZE getRegPrevValue() const
+            template <typename TYPE> TYPE getRegPrevValue() const
             {
-                return reg_value.getValue<SIZE>();
+                return reg_value.getValue<TYPE>();
             }
 
             RegValue reg_prev_value;
@@ -226,7 +230,7 @@ namespace atlas
             mem_writes_.clear();
         }
 
-        std::vector<uint8_t> readRegister_(const sparta::Register* reg)
+        std::vector<uint8_t> readRegister_(const sparta::Register* reg) const
         {
             const size_t num_bytes = reg->getNumBytes();
             std::vector<uint8_t> value(num_bytes, 0);
