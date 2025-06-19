@@ -187,19 +187,19 @@ namespace atlas
                 {
                     std::cout << " aka " << reg->getAliases();
                 }
-                std::cout << " to " << HEX16(new_reg_value)
-                          << " from default " << HEX16(old_value)
+                std::cout << " to " << HEX16(new_reg_value) << " from default " << HEX16(old_value)
                           << std::endl;
 
                 std::cout << "Fields:";
 
-                if(not reg->getFields().empty())
+                if (not reg->getFields().empty())
                 {
                     uint64_t max_field_val_size = 0;
-                    size_t   max_field_name_size = 0;
+                    size_t max_field_name_size = 0;
 
                     // Order the fields based on bit settings
-                    struct OrderFields {
+                    struct OrderFields
+                    {
                         bool operator()(const sparta::RegisterBase::Field* lhs,
                                         const sparta::RegisterBase::Field* rhs) const
                         {
@@ -207,28 +207,34 @@ namespace atlas
                         }
                     };
 
-                    // Go through the fields twice -- once to get formatting, the second to actually print
+                    // Go through the fields twice -- once to get formatting, the second to actually
+                    // print
                     std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
-                    for(const auto & field : reg->getFields())
+                    for (const auto & field : reg->getFields())
                     {
-                        max_field_val_size  = std::max(field->getNumBits(), max_field_val_size);
-                        max_field_name_size = std::max(field->getName().size(), max_field_name_size);
+                        max_field_val_size = std::max(field->getNumBits(), max_field_val_size);
+                        max_field_name_size =
+                            std::max(field->getName().size(), max_field_name_size);
                         ordered_fields.insert(field);
                     }
-                    max_field_val_size = (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
+                    max_field_val_size =
+                        (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
                     max_field_val_size += 2;
 
-                    for(const auto & field : ordered_fields)
+                    for (const auto & field : ordered_fields)
                     {
-                        std::cout << "\n\t"
-                                  << std::setw(max_field_val_size)  << std::right << std::dec << field->read() << " "
-                                  << std::setw(max_field_name_size) << std::right << field->getName()
-                                  << std::right << std::dec << " [" << std::setw(2) << field->getLowBit() << ":"
-                                  << std::setw(2) << field->getHighBit()
-                                  << "] " << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc() << ")";
+                        std::cout << "\n\t" << std::setw(max_field_val_size) << std::right
+                                  << std::dec << field->read() << " "
+                                  << std::setw(max_field_name_size) << std::right
+                                  << field->getName() << std::right << std::dec << " ["
+                                  << std::setw(2) << field->getLowBit() << ":" << std::setw(2)
+                                  << field->getHighBit() << "] "
+                                  << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
+                                  << ")";
                     }
                 }
-                else {
+                else
+                {
                     std::cout << " None";
                 }
                 std::cout << std::endl;
