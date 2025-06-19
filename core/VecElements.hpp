@@ -177,6 +177,7 @@ namespace atlas
 
         template <bool M = isMaskElems>
         requires EnableIf<M>
+
         class MaskBitIterator
         {
           public:
@@ -237,9 +238,8 @@ namespace atlas
             size_t index_ = 0;
         }; // class MaskBitIterator
 
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<!isMaskElems>
-            :
+        Elements(AtlasState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<!isMaskElems> :
             state_(state),
             config_(config),
             start_pos_(config_->getVSTART()),
@@ -248,9 +248,8 @@ namespace atlas
         {
         }
 
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<isMaskElems>
-            :
+        Elements(AtlasState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<isMaskElems> :
             state_(state),
             config_(config),
             start_pos_(config_->getVSTART() / VLEN_MIN),
@@ -263,14 +262,12 @@ namespace atlas
 
         ElementIterator end() const { return ElementIterator(this, end_pos_); }
 
-        auto maskBitIterBegin() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterBegin() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVSTART());
         }
 
-        auto maskBitIterEnd() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterEnd() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVL());
         }

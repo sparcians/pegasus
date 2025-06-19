@@ -64,34 +64,17 @@ set(AUTOGEN_INST_FILES
   ${AUTOGEN_RV64_INST_JSON_FILES}
 )
 
-set(DEPENDS_INST_JSON_FILES
-  ${SIM_BASE}/scripts/GenInstructionJSON.py
-  ${SIM_BASE}/scripts/insts/RVI_INST.py
-  ${SIM_BASE}/scripts/insts/RVM_INST.py
-  ${SIM_BASE}/scripts/insts/RVA_INST.py
-  ${SIM_BASE}/scripts/insts/RVF_INST.py
-  ${SIM_BASE}/scripts/insts/RVD_INST.py
-  ${SIM_BASE}/scripts/insts/RVZICSR_INST.py
-  ${SIM_BASE}/scripts/insts/RVZIFENCEI_INST.py
-  ${SIM_BASE}/scripts/insts/RVZBA_INST.py
-  ${SIM_BASE}/scripts/insts/RVZBB_INST.py
-  ${SIM_BASE}/scripts/insts/RVZBC_INST.py
-  ${SIM_BASE}/scripts/insts/RVZBS_INST.py
-  ${SIM_BASE}/scripts/insts/RVZVE32F_INST.py
-  ${SIM_BASE}/scripts/insts/RVZVE32X_INST.py
-  ${SIM_BASE}/scripts/insts/RVZVE64D_INST.py
-  ${SIM_BASE}/scripts/insts/RVZVE64X_INST.py
-)
+file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicond
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicond
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
