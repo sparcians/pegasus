@@ -125,7 +125,7 @@ See [Python IDE for Atlas](IDE/README.md)
 | **Zvbb** Vector basic bit-manipulation instructions. | :x: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
 | **Zihintntl** Non-temporal locality hints. | :x: |
-| **Zicond** Integer conditional operations. | :x: |
+| **Zicond** Integer conditional operations. | :white_check_mark: |
 | **Zimop** may-be-operations. | :x: |
 | **Zcmop** Compressed may-be-operations. | :x: |
 | **Zcb** Additional compressed instructions. | :x: |
