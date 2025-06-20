@@ -128,7 +128,7 @@ See [Python IDE for Atlas](IDE/README.md)
 | **Zicond** Integer conditional operations. | :white_check_mark: |
 | **Zimop** may-be-operations. | :x: |
 | **Zcmop** Compressed may-be-operations. | :x: |
-| **Zcb** Additional compressed instructions. | :x: |
+| **Zcb** Additional compressed instructions. | :white_check_mark: |
 | **Zfa** Additional floating-Point instructions. | :x: |
 | **Zawrs** Wait-on-reservation-set instructions. | :x: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
