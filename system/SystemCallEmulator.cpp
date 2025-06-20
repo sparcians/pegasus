@@ -46,6 +46,7 @@ namespace atlas
                  {25, {"stime", cfp(&SysCallHandlers::stime_)}},
                  {29, {"ioctl", cfp(&SysCallHandlers::ioctl_)}},
                  {48, {"faccessat", cfp(&SysCallHandlers::faccessat_)}},
+                 {56, {"openat", cfp(&SysCallHandlers::openat_)}},
                  {57, {"close", cfp(&SysCallHandlers::close_)}},
                  {62, {"lseek", cfp(&SysCallHandlers::lseek_)}},
                  {63, {"read", cfp(&SysCallHandlers::read_)}},
@@ -106,6 +107,59 @@ namespace atlas
         Addr getBreakAddress() const { return brk_address_; }
 
       private:
+
+        // Helpers
+        std::string readString_(sparta::memory::BlockingMemoryIF* mem,
+                                uint64_t string_addr, uint64_t string_len = 0) const
+        {
+            std::string ret_string;
+
+            if (string_len == 0)
+            {
+                // Read the string address up to a reasonable limit.
+                const uint32_t reasonable_string_limit = 1024;
+
+                // String length uknown.  Read until we come across
+                // null
+                uint32_t byte = 0;
+                while (byte < reasonable_string_limit)
+                {
+                    uint8_t one_char;
+                    mem->peek(string_addr, 1, &one_char);
+                    if (one_char == 0) {
+                        break;
+                    }
+                    ret_string += one_char;
+                    ++byte;
+                    ++string_addr;
+                }
+                sparta_assert(byte != reasonable_string_limit,
+                              "Attempting to get a string from memory that's larger than "
+                              << reasonable_string_limit << " Got so far: " << ret_string);
+            }
+            else
+            {
+                unsigned char * string_in_memory = static_cast<unsigned char *>(alloca(string_len));
+                if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
+                {
+                    const auto mem_block_size = mem->getBlockSize();
+
+                    // Need to break up the read into parts.
+                    const uint32_t first_half_length =
+                        mem_block_size - (string_addr & (mem_block_size - 1));
+                    mem->peek(string_addr, first_half_length, string_in_memory);
+                    mem->peek(string_addr + first_half_length, string_len - first_half_length,
+                              string_in_memory + first_half_length);
+                }
+                else
+                {
+                    mem->peek(string_addr, string_len, string_in_memory);
+                }
+                ret_string = reinterpret_cast<char *>(string_in_memory);
+            }
+            return ret_string;
+        }
+
         // The system calls
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -464,6 +518,20 @@ namespace atlas
         return 0;
     }
 
+    int64_t SysCallHandlers::openat_(const SystemCallStack & call_stack, sparta::memory::BlockingMemoryIF*mem)
+    {
+        const auto dirfd = call_stack[1];
+        const auto pathname_addr = call_stack[2];
+        const auto flags = call_stack[3];
+        const auto mode = call_stack[3];
+
+        const std::string pathname = readString_(mem, pathname_addr);
+
+        auto ret = ::openat(dirfd, pathname.c_str(), flags, mode);
+
+        return ret;
+    }
+
     int64_t SysCallHandlers::close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
@@ -514,25 +582,10 @@ namespace atlas
         int64_t ret = fcntl(fd, F_GETFD);
         if (ret != -1)
         {
-            std::vector<uint8_t> string_to_write(string_len);
-            if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
-            {
-                const auto mem_block_size = mem->getBlockSize();
-
-                // Need to break up the read into parts.
-                const uint32_t first_half_length =
-                    mem_block_size - (string_addr & (mem_block_size - 1));
-                mem->peek(string_addr, first_half_length, &string_to_write[0]);
-                mem->peek(string_addr + first_half_length, string_len - first_half_length,
-                          &string_to_write[0] + first_half_length);
-            }
-            else
-            {
-                mem->peek(string_addr, string_len, &string_to_write[0]);
-            }
+            const std::string str = readString_(mem, string_addr, string_len);
 
             // send the string to the file descriptor
-            ret = ::write(fd, &string_to_write[0], string_len);
+            ret = ::write(fd, str.c_str(), string_len);
         }
         SYSCALL_LOG("write(" << fd << ", " << HEX16(string_addr) << ", " << string_len << ") -> "
                              << ret);
