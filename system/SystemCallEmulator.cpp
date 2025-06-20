@@ -225,9 +225,6 @@ namespace atlas
         // For a program, if the `brk` system call is made, the
         // program is asking to extend the data segment
         Addr brk_address_ = 0;
-
-        // Integer used for duplicating file IDs. Starts at stderr.
-        int dup_file_ids_ = 2;
     };
 
     SystemCallEmulator::SystemCallEmulator(
@@ -330,9 +327,9 @@ namespace atlas
         return ret;
     }
 
-    int64_t SysCallHandlers::dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::dup_(const SystemCallStack &call_stack, sparta::memory::BlockingMemoryIF*)
     {
-        return ++dup_file_ids_;
+        return ::dup(call_stack[1]);
     }
 
     int64_t SysCallHandlers::getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
