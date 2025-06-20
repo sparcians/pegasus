@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 int fail_code = 0;
 
@@ -42,12 +45,6 @@ void test_dup()
     check_errno();
 }
 
-void test_stime() {}
-void test_ioctl() {}
-void test_faccessat() {}
-void test_close() {}
-void test_lseek() {}
-void test_read() {}
 void test_write() {}
 void test_writev() {}
 void test_pread() {}
@@ -76,20 +73,60 @@ void test_mprotect() {}
 void test_prlimit() {}
 void test_getrandom() {}
 void test_statx() {}
-void test_open() {}
 void test_lstat() {}
 void test_getmainvars() {}
 
-int main()
+////////////////////////////////////////////////////////////////////////////////
+// File I/O operations
+int test_open(const char * filename, int expect_badness) {
+    errno = 0;
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        if (0 == expect_badness) {
+            printf("ERROR: %s failed: ret == %d\n", __func__, fd);
+            check_errno();
+        }
+        printf("%s successful in NOT being able to open: %s\n", __func__, filename);
+    }
+    else {
+        printf("%s success: fd==%d\n", __func__, fd);
+    }
+    return fd;
+}
+void test_read(int fd) {}
+void test_lseek(int fd) {}
+void test_close(int fd) {}
+
+
+// Deprecated system calls or "do nothing" so no testing
+void test_stime() {}
+void test_ioctl() {}
+void test_faccessat() {}
+
+
+// To run this test, you must supply a file to read in/out
+int main(int argc, char ** argv)
 {
+    int fd = -1;
+
+    printf("\nRUNNING SYSCALL TEST %s\n\n", argv[0]);
+
     test_getcwd();
     test_dup();
     test_stime();
     test_ioctl();
     test_faccessat();
-    test_close();
-    test_lseek();
-    test_read();
+
+    test_open("_fake_file_name", 1);
+
+    // Test FILEIO, in this order
+    if (argc == 2) {
+        fd = test_open(argv[1], 0);
+        test_read(fd);
+        test_lseek(fd);
+        test_close(fd);
+    }
+
     test_write();
     test_writev();
     test_pread();
@@ -118,8 +155,10 @@ int main()
     test_prlimit();
     test_getrandom();
     test_statx();
-    test_open();
     test_lstat();
     test_getmainvars();
+
+    printf("\nTEST COMPLETE, return code: %d\n\n", fail_code);
+
     return fail_code;
 }
