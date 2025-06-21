@@ -89,7 +89,7 @@ int test_open(const char * filename, int expect_badness) {
         printf("%s successful in NOT being able to open: %s\n", __func__, filename);
     }
     else {
-        printf("%s success: fd==%d\n", __func__, fd);
+        printf("%s success opening %s: fd==%d\n", __func__, filename, fd);
     }
     return fd;
 }
