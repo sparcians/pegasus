@@ -161,6 +161,12 @@ namespace atlas
             return ret_string;
         }
 
+        // Convert Linux ret to errno value for internal system calls
+        int sysretErrno_(int ret) const
+        {
+            return (ret == -1) ? -errno : ret;
+        }
+
         // The system calls
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -553,7 +559,7 @@ namespace atlas
     int64_t SysCallHandlers::close_(const SystemCallStack & call_stack, sparta::memory::BlockingMemoryIF*)
     {
         const auto fd = call_stack[1];
-        auto ret = ::close(fd);
+        auto ret = sysretErrno_(::close(fd));
         return ret;
     }
 
@@ -564,7 +570,7 @@ namespace atlas
         const auto offset = call_stack[2];
         const auto whence = call_stack[3];
 
-        int64_t ret = ::lseek(fd, offset, whence);
+        int64_t ret = sysretErrno_(::lseek(fd, offset, whence));
 
         SYSCALL_LOG("lseek(" << HEX16(fd) << ", " << HEX16(offset) << ", " << HEX16(whence) << ", "
                              << ") -> " << ret);
@@ -581,8 +587,10 @@ namespace atlas
 
         std::vector<uint8_t> final_buf(count);
         int64_t ret = ::read(fd, (char*)final_buf.data(), count);
-
-        mem->poke(buf, count, final_buf.data());
+        if(ret > 0) {
+            mem->poke(buf, count, final_buf.data());
+        }
+        ret = sysretErrno_(ret);
 
         SYSCALL_LOG("read(" << HEX16(fd) << ", " << HEX16(buf) << ", " << HEX16(count) << ", "
                             << ") -> " << ret);
@@ -604,7 +612,7 @@ namespace atlas
             str = readString_(mem, string_addr, string_len);
 
             // send the string to the file descriptor
-            ret = ::write(fd, str.c_str(), string_len);
+            ret = sysretErrno_(::write(fd, str.c_str(), string_len));
         }
         SYSCALL_LOG("write(" << fd << ", " << HEX16(string_addr) << "['" << str
                     << "'], " << string_len << ") -> "
@@ -652,7 +660,6 @@ namespace atlas
         }
         SYSCALL_LOG("writev(" << fd << ", " << HEX16(iov_addr) << ", " << iov_cnt << ") -> "
                               << ret);
-
         return ret;
     }
 
@@ -715,21 +722,18 @@ namespace atlas
         }
         else
         {
-            ret = ::readlinkat(dirfd, pathname_in_memory.c_str(), final_resolved_path_ptr, bufsize);
+            ret = sysretErrno_(::readlinkat(dirfd, pathname_in_memory.c_str(),
+                                            final_resolved_path_ptr, bufsize));
         }
-        mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
+
+        if(ret > 0) {
+            mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
+        }
 
         SYSCALL_LOG("readlinkat(" << HEX16(dirfd) << ", " << HEX16(pathname) << "(\""
                                   << pathname_in_memory << "\"), " << HEX16(buf) << "(\""
                                   << final_resolved_path_ptr << "\"), " << bufsize << ") -> "
                                   << ret);
-        if (ret == -1)
-        {
-            SYSCALL_LOG("\treadlinkat reports FAILED: errno: " << errno << " "
-                                                               << ::strerror(errno));
-            ret = -errno;
-        }
-
         return ret;
     }
 
@@ -792,7 +796,14 @@ namespace atlas
         // Use the host's stat
         struct stat host_stat;
 
-        ret = ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
+        ret = sysretErrno_(::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags));
+
+        if(ret != -1) {
+            // Now create a RV stat and populate
+            RV_stat rv_stat(host_stat);
+
+            memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        }
 
         SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << "[" <<
                     (int(dirfd) == AT_FDCWD ? "AT_FDCWD" : "stdio or fd")
@@ -800,11 +811,6 @@ namespace atlas
                     << "(\""  << pathname_str << "\"), "
                     << HEX16(statbuf) << ", " << HEX16(flags)
                     << ") -> " << ret);
-
-        // Now create a RV stat and populate
-        RV_stat rv_stat(host_stat);
-
-        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
 
         return ret;
     }
@@ -819,13 +825,15 @@ namespace atlas
 
         // Use the host's stat
         struct stat host_stat;
-        ret = ::fstat(fd, &host_stat);
+        ret = sysretErrno_(::fstat(fd, &host_stat));
 
-        // Now create a RV stat and populate
-        RV_stat rv_stat(host_stat);
+        if (ret != -1) {
+            // Now create a RV stat and populate
+            RV_stat rv_stat(host_stat);
+            memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        }
+
         SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf) << ") -> " << ret);
-
-        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
         return ret;
     }
 
