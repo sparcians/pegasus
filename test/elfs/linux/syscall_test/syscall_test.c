@@ -198,7 +198,6 @@ void test_stime() {}
 void test_ioctl() {}
 void test_faccessat() {}
 
-
 // To run this test, you must supply a file to read in/out
 int main(int argc, char ** argv)
 {
