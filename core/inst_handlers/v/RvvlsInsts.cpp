@@ -187,7 +187,7 @@ namespace atlas
     template void RvvlsInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvlsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t ElemWidth, RvvlsInsts::AddressingMode Mode>
+    template <typename XLEN, size_t ElemWidth, RvvlsInsts::AddressingMode addrMode>
     Action::ItrType RvvlsInsts::vlseComputeAddressHandler_(atlas::AtlasState* state,
                                                            Action::ItrType action_it)
     {
@@ -199,11 +199,11 @@ namespace atlas
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
         Addr stride;
-        if constexpr (Mode == AddressingMode::UNIT)
+        if constexpr (addrMode == AddressingMode::UNIT)
         {
             stride = eewb;
         }
-        else if constexpr (Mode == AddressingMode::STRIDED)
+        else if constexpr (addrMode == AddressingMode::STRIDED)
         {
             stride = READ_INT_REG<XLEN>(state, inst->getRs2());
         }
@@ -227,7 +227,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t ElemWidth, RvvlsInsts::AddressingMode Mode>
+    template <typename XLEN, size_t ElemWidth, RvvlsInsts::AddressingMode addrMode>
     Action::ItrType RvvlsInsts::vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
                                                               Action::ItrType action_it)
     {

@@ -90,18 +90,24 @@ namespace atlas
 
         void setEndPos(size_t end_pos) { end_pos_ = end_pos; }
 
+        ValueType getMask() const
+        {
+            return (((ValueType)1 << (end_pos_ - start_pos_)) - 1) << start_pos_;
+        }
+
         ValueType peekVal() const { return val_; }
+
+        void pokeVal(ValueType value) { val_ = value & getMask(); }
 
         ValueType getVal()
         {
-            ValueType bitmask = (((ValueType)1 << (end_pos_ - start_pos_)) - 1) << start_pos_;
-            val_ = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & bitmask;
+            val_ = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & getMask();
             return val_;
         }
 
         void setVal(ValueType value)
         {
-            ValueType bitmask = (((ValueType)1 << (end_pos_ - start_pos_)) - 1) << start_pos_;
+            ValueType bitmask = getMask();
             val_ = value & bitmask;
             ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & ~bitmask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val | val_, idx_);
@@ -320,6 +326,7 @@ namespace atlas
         uint32_t reg_id_ = 0;
     }; // class Elements
 
-    using MaskElements = Elements<Element<VLEN_MIN>, true>;
+    using MaskElement = Element<VLEN_MIN>;
+    using MaskElements = Elements<MaskElement, true>;
     using MaskBitIterator = MaskElements::MaskBitIterator<>;
 } // namespace atlas
