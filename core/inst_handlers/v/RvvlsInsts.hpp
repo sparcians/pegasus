@@ -22,7 +22,7 @@ namespace atlas
             UNIT,
             IDX_UNORDERED,
             STRIDED,
-            IDX_ORDERED,
+            IDX_ORDERED
         };
 
         template <typename XLEN>
@@ -31,10 +31,10 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode addrMode>
         Action::ItrType vlseComputeAddressHandler_(atlas::AtlasState* state,
                                                    Action::ItrType action_it);
-        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode addrMode>
         Action::ItrType vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
                                                       Action::ItrType action_it);
         template <size_t ElemWidth, bool load>

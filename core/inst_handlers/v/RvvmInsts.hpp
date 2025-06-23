@@ -20,6 +20,13 @@ namespace atlas
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
+        enum struct SetFirstMode
+        {
+            BEFORE,
+            INCLUDING,
+            ONLY
+        };
+
       private:
         template <auto func>
         Action::ItrType vmlHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
@@ -27,5 +34,8 @@ namespace atlas
         Action::ItrType vcpHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType vfirstHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <SetFirstMode sfMode>
+        Action::ItrType vsxfHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

@@ -64,6 +64,19 @@ namespace atlas
         inst_handlers.emplace(
             "vfirst.m", atlas::Action::createAction<&RvvmInsts::vfirstHandler_<XLEN>, RvvmInsts>(
                             nullptr, "vfirst.m", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vmsbf.m",
+            atlas::Action::createAction<&RvvmInsts::vsxfHandler_<SetFirstMode::BEFORE>, RvvmInsts>(
+                nullptr, "vmsbf.m", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmsif.m",
+            atlas::Action::createAction<&RvvmInsts::vsxfHandler_<SetFirstMode::INCLUDING>,
+                                        RvvmInsts>(nullptr, "vmsif.m", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmsof.m",
+            atlas::Action::createAction<&RvvmInsts::vsxfHandler_<SetFirstMode::ONLY>, RvvmInsts>(
+                nullptr, "vmsof.m", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvmInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -101,8 +114,8 @@ namespace atlas
             auto tmp{elems_vs2.getElement(index)};
             if (!inst->getVM())
             {
-                tmp.setVal(elems_vs2.getElement(index).getVal()
-                           & elems_v0.getElement(index).getVal());
+                tmp.pokeVal(elems_vs2.getElement(index).getVal()
+                            & elems_v0.getElement(index).getVal());
             }
             for (auto bit_iter = tmp.begin(); bit_iter != tmp.end(); ++bit_iter)
             {
@@ -127,8 +140,8 @@ namespace atlas
             auto tmp{elems_vs2.getElement(index)};
             if (!inst->getVM())
             {
-                tmp.setVal(elems_vs2.getElement(index).getVal()
-                           & elems_v0.getElement(index).getVal());
+                tmp.pokeVal(elems_vs2.getElement(index).getVal()
+                            & elems_v0.getElement(index).getVal());
             }
             for (auto bit_iter = tmp.begin(); bit_iter != tmp.end(); ++bit_iter)
             {
@@ -138,6 +151,72 @@ namespace atlas
             }
         }
         WRITE_INT_REG<XLEN>(state, inst->getRd(), std::numeric_limits<XLEN>::max());
+
+        return ++action_it;
+    }
+
+    template <RvvmInsts::SetFirstMode sfMode>
+    Action::ItrType RvvmInsts::vsxfHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr inst = state->getCurrentInst();
+        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        MaskElements elems_v0{state, state->getVectorConfig(), atlas::V0};
+        bool found = false;
+
+        for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
+        {
+            size_t index = elem_iter.getIndex();
+            auto elem_v0{elems_v0.getElement(index)};
+            auto elem_vd{elems_vd.getElement(index)};
+            auto elem_vs2{elems_vs2.getElement(index)};
+
+            if (found) // set all active bits to 0
+            {
+                MaskElement::ValueType value =
+                    inst->getVM() ? 0 : elem_vd.getVal() & ~elem_v0.getVal();
+                elem_vd.setVal(value);
+                continue;
+            }
+
+            if (!inst->getVM())
+            {
+                elem_vs2.pokeVal(elem_vs2.getVal() & elem_v0.getVal()); // don't store *elem_vs2*
+            }
+            MaskElement::ValueType value = 0;
+            for (auto bit_iter = elem_vs2.begin(); bit_iter != elem_vs2.end(); ++bit_iter)
+            {
+                // 1 found in current element, compost *value*
+                found = true;
+                size_t idx = bit_iter.getIndex();
+                if constexpr (sfMode == SetFirstMode::BEFORE)
+                {
+                    value = ((MaskElement::ValueType)1 << idx) - 1;
+                }
+                else if constexpr (sfMode == SetFirstMode::INCLUDING)
+                {
+                    value = (((MaskElement::ValueType)1 << idx) - 1)
+                            | ((MaskElement::ValueType)1 << idx);
+                }
+                else // SetFirstMode::ONLY
+                {
+                    value = (MaskElement::ValueType)1 << idx;
+                }
+                break;
+            }
+
+            // 1 not found in current element, set all bits to 1
+            if (!found && sfMode != SetFirstMode::ONLY)
+            {
+                value = std::numeric_limits<MaskElement::ValueType>::max();
+            }
+
+            // only set active bits to *value*
+            value = inst->getVM()
+                        ? value
+                        : (elem_vd.getVal() & ~elem_v0.peekVal()) | (value & elem_v0.peekVal());
+            elem_vd.setVal(value);
+        }
 
         return ++action_it;
     }

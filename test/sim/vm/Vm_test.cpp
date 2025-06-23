@@ -102,6 +102,39 @@ class VmInstructionTester : public AtlasInstructionTester
         EXPECT_EQUAL(sim_state->inst_count, 3);
     }
 
+    void testVmsbfm()
+    {
+        atlas::AtlasState* state = getAtlasState();
+        const atlas::Addr pc = 0x1000;
+        uint32_t opcode;
+        size_t vstart = 1 * 8;
+        size_t vl = 6 * 8;
+
+        state->getVectorConfig()->setVLEN(64);
+        state->getVectorConfig()->setVSTART(vstart);
+        state->getVectorConfig()->setVL(vl);
+
+        VLEN v2_val = {1, 0, 1, 0, 1, 1, 1, 0};
+        VLEN v0_val = {1, 0, 0, 255, 1, 0, 1, 0};
+        VLEN v1_val = {0, 0, 0, 0, 0, 0, 0, 0};
+        VLEN vd_val = {0, 0, 0, 255, 0, 0, 0, 0};
+        WRITE_VEC_REG<VLEN>(state, atlas::V2, v2_val);
+        WRITE_VEC_REG<VLEN>(state, atlas::V0, v0_val);
+        WRITE_VEC_REG<VLEN>(state, atlas::V1, v1_val);
+        opcode = vmsbfmOp(atlas::V1, atlas::V2, 0); // masked
+        injectInstruction(pc, opcode);
+
+        v1_val = READ_VEC_REG<VLEN>(state, atlas::V1);
+        for (size_t i = 0; i < 8; ++i)
+        {
+            EXPECT_EQUAL(v1_val[i], vd_val[i]);
+        }
+
+        const atlas::AtlasState::SimState* sim_state = state->getSimState();
+        std::cout << sim_state->current_inst << std::endl;
+        EXPECT_EQUAL(sim_state->inst_count, 4);
+    }
+
     uint32_t vpopcmOp(uint8_t rd, uint8_t vs2, uint8_t vm)
     {
         uint32_t opcode = 0x40082057;
@@ -128,6 +161,19 @@ class VmInstructionTester : public AtlasInstructionTester
         return opcode;
     }
 
+    uint32_t vmsbfmOp(uint8_t vd, uint8_t vs2, uint8_t vm)
+    {
+        uint32_t opcode = 0x5000a057;
+        uint8_t offset = 0;
+        offset = 7;
+        opcode |= vd << offset; // vd
+        offset = 20;
+        opcode |= vs2 << offset; // vs2
+        offset = 25;
+        opcode |= vm << offset; // vm
+        return opcode;
+    }
+
   private:
     atlas::AtlasInst::PtrType instPtr_ = nullptr;
 };
@@ -139,6 +185,7 @@ int main()
     Vm_tester.testVmandmm();
     Vm_tester.testVpopcm();
     Vm_tester.testVfirst();
+    Vm_tester.testVmsbfm();
 
     REPORT_ERROR;
     return ERROR_CODE;
