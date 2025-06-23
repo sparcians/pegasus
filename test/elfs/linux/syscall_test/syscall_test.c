@@ -173,10 +173,10 @@ void test_write()
     char * tmp_name = tmpnam(NULL);
     if(tmp_name == NULL) {
         printf("ERROR: %s failed to create a tmpfile\n\n", __func__);
+        check_errno();
+        exit(1);
     }
-    check_errno();
 
-    exit(1);
     printf("%s: created tmp file: %s\n", __func__, tmp_name);
     int fd = test_open(tmp_name, 0, O_CREAT, S_IRWXU);
     if (fd == -1) {
@@ -206,24 +206,24 @@ int main(int argc, char ** argv)
 
     printf("\nRUNNING SYSCALL TEST %s\n\n", argv[0]);
 
-    /* test_getcwd(); */
-    /* test_dup(); */
-    /* test_stime(); */
-    /* test_ioctl(); */
-    /* test_faccessat(); */
+    test_getcwd();
+    test_dup();
+    test_stime();
+    test_ioctl();
+    test_faccessat();
 
-    /* test_open("_fake_file_name", 1, O_RDONLY, 0); */
+    test_open("_fake_file_name", 1, O_RDONLY, 0);
 
-    /* // Test FILEIO, in this order */
-    /* if (argc == 2) { */
-    /*     // The test_text.txt file should have 54 bytes of text */
-    /*     const int expected_bytes = 54; */
+    // Test FILEIO, in this order
+    if (argc == 2) {
+        // The test_text.txt file should have 54 bytes of text
+        const int expected_bytes = 54;
 
-    /*     fd = test_open(argv[1], 0, O_RDONLY, 0); */
-    /*     test_read(fd, expected_bytes); */
-    /*     test_lseek(fd, expected_bytes); */
-    /*     test_close(fd); */
-    /* } */
+        fd = test_open(argv[1], 0, O_RDONLY, 0);
+        test_read(fd, expected_bytes);
+        test_lseek(fd, expected_bytes);
+        test_close(fd);
+    }
 
     test_write();
     test_writev();
