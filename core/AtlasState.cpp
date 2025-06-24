@@ -170,7 +170,6 @@ namespace atlas
                     << "WARNING: Provided initial value for CSR register that does not exist! "
                     << csr_name << std::endl;
             }
-            
         }
 
         // Set up translation
