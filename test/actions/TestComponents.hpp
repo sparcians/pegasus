@@ -70,8 +70,7 @@ class TranslateUnit : public Unit
   public:
     TranslateUnit() : Unit("Translate") {}
 
-    atlas::Action::ItrType translate_addr(atlas::AtlasState*,
-                                          atlas::Action::ItrType action_it)
+    atlas::Action::ItrType translate_addr(atlas::AtlasState*, atlas::Action::ItrType action_it)
     {
         std::cout << "Translating" << std::endl;
 
@@ -140,7 +139,9 @@ class ExecuteUnit : public Unit
     atlas::Action::ItrType inst_handler(atlas::AtlasState* state, atlas::Action::ItrType action_it)
     {
         const atlas::AtlasInstPtr & inst = state->getCurrentInst();
-        std::cout << "Executing " << "uid: " << std::dec << inst->getUid() << " " << inst->dasmString() << std::endl;
+        std::cout << "Executing "
+                  << "uid: " << std::dec << inst->getUid() << " " << inst->dasmString()
+                  << std::endl;
         state->getSimState()->inst_count++;
 
         // Determine if the inst handler needs to be called again

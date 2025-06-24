@@ -26,7 +26,7 @@ void runSim(atlas::AtlasState* state, atlas::ActionGroup* atlas_core,
 
 class dummyClass
 {
-public:
+  public:
     using base_type = dummyClass;
 
     atlas::Action::ItrType dummyAction(atlas::AtlasState*, atlas::Action::ItrType action_it)
@@ -40,7 +40,7 @@ int main()
     // Create the simulator
     sparta::Scheduler scheduler_;
     const uint64_t ilimit = 0;
-    atlas::AtlasSim atlas_sim {&scheduler_, {}, {}, ilimit};
+    atlas::AtlasSim atlas_sim{&scheduler_, {}, {}, ilimit};
 
     atlas_sim.buildTree();
     atlas_sim.configureTree();
@@ -78,7 +78,8 @@ int main()
     // Dummy Action
     const std::string dummy_action_name = "Dummy";
     dummyClass dummy_class;
-    atlas::Action dummy_action = atlas::Action::createAction<&dummyClass::dummyAction>(&dummy_class, dummy_action_name.c_str());
+    atlas::Action dummy_action = atlas::Action::createAction<&dummyClass::dummyAction>(
+        &dummy_class, dummy_action_name.c_str());
     const atlas::ActionTagType DUMMY_TAG = atlas::ActionTagFactory::createTag("DUMMY_TAG");
     dummy_action.addTag(DUMMY_TAG);
 

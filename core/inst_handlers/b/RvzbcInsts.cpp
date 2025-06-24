@@ -7,7 +7,6 @@
 #include "core/AtlasInst.hpp"
 #include "system/AtlasSystem.hpp"
 
-
 namespace atlas
 {
     template <typename XLEN>
@@ -15,21 +14,21 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-            inst_handlers.emplace(
-                "clmul", atlas::Action::createAction<&RvzbcInsts::clmulHandler<XLEN>, RvzbcInsts>(
-                            nullptr, "clmul", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "clmulh", atlas::Action::createAction<&RvzbcInsts::clmulhHandler<XLEN>, RvzbcInsts>(
-                            nullptr, "clmulh", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "clmulr", atlas::Action::createAction<&RvzbcInsts::clmulrHandler<XLEN>, RvzbcInsts>(
-                            nullptr, "clmulr", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "clmul", atlas::Action::createAction<&RvzbcInsts::clmulHandler<XLEN>, RvzbcInsts>(
+                         nullptr, "clmul", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "clmulh", atlas::Action::createAction<&RvzbcInsts::clmulhHandler<XLEN>, RvzbcInsts>(
+                          nullptr, "clmulh", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "clmulr", atlas::Action::createAction<&RvzbcInsts::clmulrHandler<XLEN>, RvzbcInsts>(
+                          nullptr, "clmulr", ActionTags::EXECUTE_TAG));
     }
 
     template void RvzbcInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbcInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN> 
+    template <typename XLEN>
     Action::ItrType RvzbcInsts::clmulHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -39,16 +38,17 @@ namespace atlas
 
         XLEN output = 0;
 
-        for(uint32_t i = 0; i < sizeof(XLEN) * 8; i++) {
+        for (uint32_t i = 0; i < sizeof(XLEN) * 8; i++)
+        {
             output ^= ((rs2_val >> i) & 1) * (rs1_val << i);
         }
-        
+
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
 
         return ++action_it;
     }
 
-    template <typename XLEN> 
+    template <typename XLEN>
     Action::ItrType RvzbcInsts::clmulhHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -58,16 +58,17 @@ namespace atlas
 
         XLEN output = 0;
 
-        for(uint32_t i = 1; i < sizeof(XLEN) * 8; i++) {
+        for (uint32_t i = 1; i < sizeof(XLEN) * 8; i++)
+        {
             output ^= ((rs2_val >> i) & 1) * (rs1_val >> (sizeof(XLEN) * 8 - i));
         }
-        
+
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
 
         return ++action_it;
     }
 
-    template <typename XLEN> 
+    template <typename XLEN>
     Action::ItrType RvzbcInsts::clmulrHandler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -77,12 +78,13 @@ namespace atlas
 
         XLEN output = 0;
 
-        for(uint32_t i = 0; i < sizeof(XLEN) * 8; i++) {
-            output ^= ((rs2_val >> i) & 1) * (rs1_val >> (sizeof(XLEN) * 8 - i -1));
+        for (uint32_t i = 0; i < sizeof(XLEN) * 8; i++)
+        {
+            output ^= ((rs2_val >> i) & 1) * (rs1_val >> (sizeof(XLEN) * 8 - i - 1));
         }
-        
+
         WRITE_INT_REG<XLEN>(state, inst->getRd(), output);
 
         return ++action_it;
     }
-}
+} // namespace atlas

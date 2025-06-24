@@ -45,16 +45,16 @@ RISCV_ARCH_PASS_RATE=`egrep -m 1 -o "[0-9]+\.[0-9][0-9]%" riscv-arch-tests.log`
 TENSTORRENT_PASS_RATE=`egrep -m 1 -o "[0-9]+\.[0-9][0-9]%" tenstorrent-tests.log`
 
 RISCV_ARCH_COLOR="yellow"
-if [ ${RISCV_ARCH_PASS_RATE} -e "0.00%"]; then
+if [ ${RISCV_ARCH_PASS_RATE} = "0.00%"]; then
     RISCV_ARCH_COLOR="red"
-elif [ ${RISCV_ARCH_PASS_RATE} -e "100.00%" ]; then
+elif [ ${RISCV_ARCH_PASS_RATE} = "100.00%" ]; then
     RISCV_ARCH_COLOR="green"
 fi
 
 TENSTORRENT_COLOR="yellow"
-if [ ${TENSTORRENT_PASS_RATE} -e "0.00%"]; then
+if [ ${TENSTORRENT_PASS_RATE} = "0.00%"]; then
     TENSTORRENT_COLOR="red"
-elif [ ${TENSTORRENT_PASS_RATE} -e "100.00%" ]; then
+elif [ ${TENSTORRENT_PASS_RATE} = "100.00%" ]; then
     TENSTORRENT_COLOR="green"
 fi
 
