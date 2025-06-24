@@ -18,7 +18,7 @@ namespace atlas
         // set up version and stf generation type
         stf_writer_.open(filename);
         stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
-                                                       0, "Trace from Atlas"));
+                                                      0, "Trace from Atlas"));
 
         if (reg_width == 32)
         {

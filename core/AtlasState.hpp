@@ -39,11 +39,8 @@ namespace atlas
     class Translate;
     class Exception;
     class SimController;
-<<<<<<< HEAD
     class VectorState;
     class STFLogger;
-=======
->>>>>>> upstream/main
     class SystemCallEmulator;
     class VectorConfig;
 
@@ -145,10 +142,11 @@ namespace atlas
             virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
             priv_mode_ = priv_mode;
         }
-        
+
         using Reservation = sparta::utils::ValidValue<Addr>;
 
         Reservation & getReservation() { return reservation_; }
+
         const Reservation & getReservation() const { return reservation_; }
 
         template <typename XLEN> void changeMMUMode();
