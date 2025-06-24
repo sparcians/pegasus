@@ -8,8 +8,8 @@ import multiprocessing
 import functools
 
 # Passing and total
-PASSING_STATUS_RISCV_ARCH_RV32 = [242, 243]
-PASSING_STATUS_RISCV_ARCH_RV64 = [322, 323]
+PASSING_STATUS_RISCV_ARCH_RV32 = [243, 243]
+PASSING_STATUS_RISCV_ARCH_RV64 = [323, 323]
 PASSING_STATUS_TENSTORRENT_RV64 = [3999, 3999]
 
 # Verbosity
@@ -78,7 +78,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbv_zicsr_zifencei" if rv32_test else "rv64gcbv_zicsr_zifencei"
+    isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
     atlas_cmd = ["./atlas",
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, wkld]
@@ -105,7 +105,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
                     error = line.strip()
                     break
 
-        failing_tests.append(testname)
+        failing_tests.append([testname, error])
 
 
 def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
@@ -222,8 +222,8 @@ def main():
 
     if failing_tests:
         print("FAILED:")
-        for test in failing_tests:
-            print("\t" + test)
+        for test,error in failing_tests:
+            print("\t" + test + ": " + error)
 
     if timeout_tests:
         print("TIMED OUT:")

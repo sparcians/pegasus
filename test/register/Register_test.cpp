@@ -891,7 +891,11 @@ int main()
     testRegFileNoThrow("reg_csr.json");
     testRegFileNoThrow("reg_int.json");
     testRegFileNoThrow("reg_fp.json");
-    testRegFileNoThrow("reg_vec.json");
+    testRegFileNoThrow("reg_vec128.json");
+    testRegFileNoThrow("reg_vec256.json");
+    testRegFileNoThrow("reg_vec512.json");
+    testRegFileNoThrow("reg_vec1024.json");
+    testRegFileNoThrow("reg_vec2048.json");
 
     // Register I/O
 

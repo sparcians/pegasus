@@ -56,37 +56,92 @@ namespace atlas
 
         virtual ~Observer() = default;
 
+        // Holds a register's value as a byte vector
+        class RegValue
+        {
+          public:
+            RegValue() = default;
+
+            RegValue(const std::vector<uint8_t> & value) : value_(value) {}
+
+            template <typename TYPE> RegValue(TYPE value) { setValue<TYPE>(value); }
+
+            void setValue(const std::vector<uint8_t> & value)
+            {
+                value_ = value;
+            }
+
+            template <typename TYPE> void setValue(TYPE value)
+            {
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
+                value_.resize(sizeof(TYPE));
+                memcpy(value_.data(), &value, sizeof(TYPE));
+            }
+
+            template <typename TYPE> TYPE getValue(uint32_t offset = 0) const
+            {
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
+                const size_t num_bytes = sizeof(TYPE);
+                assert((offset + num_bytes) < value_.size());
+                TYPE val = 0;
+                for (size_t i = offset; i < num_bytes; ++i)
+                {
+                    val |= static_cast<TYPE>(value_[i]) << (i * 8);
+                }
+                return val;
+            }
+
+            size_t size() const { return value_.size(); }
+
+            const std::vector<uint8_t> & getByteVector() const { return value_; }
+
+          private:
+            std::vector<uint8_t> value_;
+
+            friend std::ostream & operator<<(std::ostream & os, const RegValue & reg_value);
+        };
+
         struct ObservedReg
         {
             ObservedReg(const RegId id) : reg_id(id) {}
 
-            ObservedReg(const RegId id, uint64_t value) : reg_id(id), reg_value(value) {}
+            template <typename TYPE>
+            ObservedReg(const RegId id, TYPE value) : reg_id(id), reg_value(value)
+            {
+            }
 
-            void setValue(const uint64_t value) { reg_value = value; }
+            template <typename TYPE> TYPE getRegValue() const { return reg_value.getValue<TYPE>(); }
 
             const RegId reg_id;
-            uint64_t reg_value;
+            RegValue reg_value;
         };
 
         using SrcReg = ObservedReg;
 
         struct DestReg : ObservedReg
         {
-            DestReg(const RegId id, uint64_t prev_value) :
-                ObservedReg(id),
-                reg_prev_value(prev_value)
+            template <typename TYPE>
+            DestReg(const RegId id, TYPE prev_value) : ObservedReg(id), reg_prev_value(prev_value)
             {
             }
 
-            DestReg(const RegId id, uint64_t value, uint64_t prev_value) :
+            template <typename TYPE>
+            DestReg(const RegId id, TYPE value, TYPE prev_value) :
                 ObservedReg(id, value),
                 reg_prev_value(prev_value)
             {
             }
 
-            void setPrevValue(const uint64_t value) { reg_prev_value = value; }
+            template <typename TYPE> TYPE getRegPrevValue() const
+            {
+                return reg_value.getValue<TYPE>();
+            }
 
-            uint64_t reg_prev_value;
+            RegValue reg_prev_value;
         };
 
         void preExecute(AtlasState* state);
@@ -177,7 +232,14 @@ namespace atlas
             mem_writes_.clear();
         }
 
-        uint64_t readRegister_(const sparta::Register* reg);
+        std::vector<uint8_t> readRegister_(const sparta::Register* reg) const
+        {
+            const size_t num_bytes = reg->getNumBytes();
+            std::vector<uint8_t> value(num_bytes, 0);
+            const uint32_t offset = 0;
+            reg->peek(value.data(), num_bytes, offset);
+            return value;
+        }
 
         // Callbacks
         void postCsrWrite_(const sparta::TreeNode &, const sparta::TreeNode &,
@@ -187,5 +249,7 @@ namespace atlas
         void postMemWrite_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess &);
         void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess &);
     };
+
+    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value);
 
 } // namespace atlas
