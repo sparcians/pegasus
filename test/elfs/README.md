@@ -42,7 +42,7 @@ As an example:
 make RV_ASM=/opt/riscv/bin/riscv64-unknown-elf-as RV_CC=/usr/bin/riscv64-linux-gnu-gcc-12
 ```
 
-When the problems are built, install them for testing:
+When the programs are built, install them for testing:
 
 ```
 make install
