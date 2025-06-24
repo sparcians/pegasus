@@ -55,62 +55,61 @@ int main(int argc, char **argv)
     const int expected_error = strtoul(argv[2], NULL, 10);
     struct stat test_stat;
 
-    errno = 0;
 
     printf("\nfstatat_test: sizeof stat structure: %ld\n", sizeof(struct stat));
 
+    errno = 0;
     int ret = fstatat(AT_FDCWD, "/tmp/bogus", &test_stat, AT_SYMLINK_NOFOLLOW);
-    printf("%d returned\n", ret);
+    check_errors(ret, 1, "/tmp/bogus");
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Test the given file using the CWD
+    // AT_FDCWD is -100 or 0xffffffffffffff9c
+    errno = 0;
+    ret = fstatat(AT_FDCWD, file_to_test, &test_stat, AT_SYMLINK_NOFOLLOW);
     check_errors(ret, expected_error, file_to_test);
 
+    printf("%ld\n", test_stat.st_dev);         /* ID of device containing file */
+    printf("%ld\n", test_stat.st_ino);         /* Inode number */
+    printf("%d\n", test_stat.st_mode);        /* File type and mode */
+    printf("%d\n", test_stat.st_nlink);       /* Number of hard links */
+    printf("%d\n", test_stat.st_uid);         /* User ID of owner */
+    printf("%d\n", test_stat.st_gid);         /* Group ID of owner */
+    printf("%ld\n", test_stat.st_rdev);        /* Device ID (if special file) */
+    printf("%ld\n", test_stat.st_size);        /* Total size, in bytes */
+    printf("%d\n", test_stat.st_blksize);     /* Block size for filesystem I/O */
+    printf("%ld\n", test_stat.st_blocks);      /* Number of 512B blocks allocated */
+    /* printf("%d\n", test_stat.st_atim);  /\* Time of last access *\/ */
+    /* printf("%d\n", test_stat.st_mtim);  /\* Time of last modification *\/ */
+    /* printf("%d\n", test_stat.st_ctim);  /\* Time of last status change *\/ */
 
+    /* printf("%ld\n", sizeof(test_stat.st_dev));         /\* ID of device containing file *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_ino));         /\* Inode number *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_mode));        /\* File type and mode *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_nlink));       /\* Number of hard links *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_uid));         /\* User ID of owner *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_gid));         /\* Group ID of owner *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_rdev));        /\* Device ID (if special file)) *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_size));        /\* Total size, in bytes *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_blksize));     /\* Block size for filesystem I/O *\/ */
+    /* printf("%ld\n", sizeof(test_stat.st_blocks));      /\* Number of 512B blocks allocated *\/ */
+    /* printf("%d\n", sizeof(test_stat.st_atim));  /\* Time of last access *\/ */
+    /* printf("%d\n", sizeof(test_stat.st_mtim));  /\* Time of last modification *\/ */
+    /* printf("%d\n", sizeof(test_stat.st_ctim));  /\* Time of last status change *\/ */
 
-    /* //////////////////////////////////////////////////////////////////////////////// */
-    /* // Test the given file using the CWD */
-    /* // AT_FDCWD is -100 or 0xffffffffffffff9c */
+    ////////////////////////////////////////////////////////////////////////////////
+    // Test stdout/stderr
+    errno = 0;
+    ret = fstatat(STDOUT_FILENO, "", &test_stat, AT_EMPTY_PATH);
+    check_errors(ret, expected_error, file_to_test);
 
-    /* int ret = fstatat(AT_FDCWD, file_to_test, &test_stat, AT_SYMLINK_NOFOLLOW); */
-    /* check_errors(ret, expected_error, file_to_test); */
+    errno = 0;
+    ret = fstatat(STDERR_FILENO, "", &test_stat, AT_EMPTY_PATH);
+    check_errors(ret, expected_error, file_to_test);
 
-    /* printf("%ld\n", test_stat.st_dev);         /\* ID of device containing file *\/ */
-    /* printf("%ld\n", test_stat.st_ino);         /\* Inode number *\/ */
-    /* printf("%d\n", test_stat.st_mode);        /\* File type and mode *\/ */
-    /* printf("%d\n", test_stat.st_nlink);       /\* Number of hard links *\/ */
-    /* printf("%d\n", test_stat.st_uid);         /\* User ID of owner *\/ */
-    /* printf("%d\n", test_stat.st_gid);         /\* Group ID of owner *\/ */
-    /* printf("%ld\n", test_stat.st_rdev);        /\* Device ID (if special file) *\/ */
-    /* printf("%ld\n", test_stat.st_size);        /\* Total size, in bytes *\/ */
-    /* printf("%d\n", test_stat.st_blksize);     /\* Block size for filesystem I/O *\/ */
-    /* printf("%ld\n", test_stat.st_blocks);      /\* Number of 512B blocks allocated *\/ */
-    /* /\* printf("%d\n", test_stat.st_atim);  /\\* Time of last access *\\/ *\/ */
-    /* /\* printf("%d\n", test_stat.st_mtim);  /\\* Time of last modification *\\/ *\/ */
-    /* /\* printf("%d\n", test_stat.st_ctim);  /\\* Time of last status change *\\/ *\/ */
-
-    /* /\* printf("%ld\n", sizeof(test_stat.st_dev));         /\\* ID of device containing file *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_ino));         /\\* Inode number *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_mode));        /\\* File type and mode *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_nlink));       /\\* Number of hard links *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_uid));         /\\* User ID of owner *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_gid));         /\\* Group ID of owner *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_rdev));        /\\* Device ID (if special file)) *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_size));        /\\* Total size, in bytes *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_blksize));     /\\* Block size for filesystem I/O *\\/ *\/ */
-    /* /\* printf("%ld\n", sizeof(test_stat.st_blocks));      /\\* Number of 512B blocks allocated *\\/ *\/ */
-    /* /\* printf("%d\n", sizeof(test_stat.st_atim));  /\\* Time of last access *\\/ *\/ */
-    /* /\* printf("%d\n", sizeof(test_stat.st_mtim));  /\\* Time of last modification *\\/ *\/ */
-    /* /\* printf("%d\n", sizeof(test_stat.st_ctim));  /\\* Time of last status change *\\/ *\/ */
-
-    /* //////////////////////////////////////////////////////////////////////////////// */
-    /* // Test stdout/stderr */
-    /* ret = fstatat(STDOUT_FILENO, "", &test_stat, AT_EMPTY_PATH); */
-    /* check_errors(ret, expected_error, file_to_test); */
-
-    /* ret = fstatat(STDERR_FILENO, "", &test_stat, AT_EMPTY_PATH); */
-    /* check_errors(ret, expected_error, file_to_test); */
-
-    /* //////////////////////////////////////////////////////////////////////////////// */
-    /* // All good */
-    /* printf("\nfstatat_test ran successfully\n\n"); */
+    ////////////////////////////////////////////////////////////////////////////////
+    // All good
+    printf("\nfstatat_test ran successfully\n\n");
 
     return 0;
 }
