@@ -16,7 +16,7 @@ namespace atlas
         return mask;
     }
 
-    inline size_t getFirstSetBit(const RegsiterBits& bits)
+    inline size_t getFirstSetBit(const RegsiterBits & bits)
     {
         sparta::RegisterBits mask{config->getVLEN() / 8, 1};
         sparta::RegisterBits tmp{bits};

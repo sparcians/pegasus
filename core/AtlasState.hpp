@@ -56,15 +56,28 @@ namespace atlas
         class AtlasStateParameters : public sparta::ParameterSet
         {
           public:
-            AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+            AtlasStateParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
+            {
+                vlen.addDependentValidationCallback(&AtlasStateParameters::validateVlen_,
+                                                    "VLEN constraint");
+            }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64gcbv_zicsr_zifencei", "ISA string")
+            PARAMETER(std::string, isa_string, "rv64gcbv_zicsr_zifencei_zicond_zcb", "ISA string")
+            PARAMETER(uint32_t, vlen, 128, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Atlas uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
+
+          private:
+            static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
+            {
+                const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024, 2048};
+                return std::find(valid_vlen_values.begin(), valid_vlen_values.end(), vlen_val)
+                       != valid_vlen_values.end();
+            }
         };
 
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
@@ -282,6 +295,9 @@ namespace atlas
 
         // ISA string
         const std::string isa_string_;
+
+        // VLEN (128, 256, 512, 1024 or 2048 bits)
+        const uint32_t vlen_;
 
         // XLEN (either 32 or 64 bit)
         uint64_t xlen_ = 64;
