@@ -6,4 +6,4 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 
 add_executable(STFLogger STFLogger_test.cpp) 
 
-+target_link_libraries(STFLogger atlascore atlasinsts softfloat atlassys atlassim ${ATLAS_LIBS})
+target_link_libraries(STFLogger atlascore atlasinsts softfloat atlassys atlassim ${ATLAS_LIBS})
