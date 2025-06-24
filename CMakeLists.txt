@@ -32,7 +32,7 @@ else()
 endif()
 
 if(NOT BUILD_SPARTA_FROM_SOURCE)
-  add_compile_options ( -Werror 
+  add_compile_options ( -Werror
     -Wall -Wextra -Winline -Winit-self -Wunused-function
     -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)

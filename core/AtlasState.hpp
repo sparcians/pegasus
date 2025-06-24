@@ -19,8 +19,6 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
-#include "core/observers/STFtrace/STFLogger.hpp"
-
 #ifndef REG32_JSON_DIR
 #error "REG32_JSON_DIR must be defined"
 #endif
@@ -68,7 +66,8 @@ namespace atlas
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
-            PARAMETER(std::string, stf_filename, "","STF Trace file name (when not given, STF tracing is disabled)")
+            PARAMETER(std::string, stf_filename, "",
+                      "STF Trace file name (when not given, STF tracing is disabled)")
         };
 
         AtlasState(sparta::TreeNode* core_node, const AtlasStateParameters* p);
@@ -130,6 +129,7 @@ namespace atlas
         }
 
         using Reservation = sparta::utils::ValidValue<Addr>;
+
         Reservation & getReservation() { return reservation_; }
 
         const Reservation & getReservation() const { return reservation_; }
@@ -182,7 +182,10 @@ namespace atlas
 
         void useSpikeFormatting();
 
-        void setSystemCallEmulator(SystemCallEmulator * emulator) { system_call_emulator_ = emulator; }
+        void setSystemCallEmulator(SystemCallEmulator* emulator)
+        {
+            system_call_emulator_ = emulator;
+        }
 
         // Emulate ecall.  This function will determine the route to
         // send the emulation.  The return value is the return code
@@ -320,8 +323,8 @@ namespace atlas
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
 
-        //STF Trace Filename
-        std::string stf_filename_;
+        // STF Trace Filename
+        const std::string stf_filename_;
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
