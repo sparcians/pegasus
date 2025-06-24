@@ -10,7 +10,7 @@
 #include "system/AtlasSystem.hpp"
 #include "core/observers/SimController.hpp"
 #include "core/observers/InstructionLogger.hpp"
-#include "core/observers/STFtrace/STFLogger.hpp"
+#include "core/observers/STFLogger.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
@@ -71,12 +71,13 @@ namespace atlas
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
-        auto add_registers = [this] (const auto & reg_set)
+        auto add_registers = [this](const auto & reg_set)
         {
             for (const auto & kvp : reg_set->getRegistersByName())
             {
                 registers_by_name_[kvp.first] = kvp.second;
-                for (auto & alias_name : kvp.second->getAliases()) {
+                for (auto & alias_name : kvp.second->getAliases())
+                {
                     registers_by_name_[alias_name] = kvp.second;
                 }
             }
@@ -195,7 +196,8 @@ namespace atlas
             }
         }
 
-        if (!stf_filename_.empty()) {
+        if (!stf_filename_.empty())
+        {
             addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
         }
 
@@ -284,7 +286,7 @@ namespace atlas
         return uarch_files;
     }
 
-    int64_t AtlasState::emulateSystemCall(const SystemCallStack &call_stack)
+    int64_t AtlasState::emulateSystemCall(const SystemCallStack & call_stack)
     {
         return system_call_emulator_->emulateSystemCall(call_stack,
                                                         atlas_system_->getSystemMemory());
@@ -457,14 +459,16 @@ namespace atlas
     // This is used mostly for system call emulation
     void AtlasState::setupProgramStack(const std::vector<std::string> & program_arguments)
     {
-        if (false == getExecuteUnit()->getSystemCallEmulation()) {
+        if (false == getExecuteUnit()->getSystemCallEmulation())
+        {
             // System call emulation is not enabled.  There's a good
             // chance we might be running a bare metal binary so no
             // need to set up prog arguments.  In any event, we better
             // not receive any either.
-            sparta_assert(program_arguments.size() == 1,
-                          "System Call emulation is not enabled, but the program is given arguments: "
-                          << program_arguments);
+            sparta_assert(
+                program_arguments.size() == 1,
+                "System Call emulation is not enabled, but the program is given arguments: "
+                    << program_arguments);
             return;
         }
 
@@ -507,23 +511,24 @@ namespace atlas
 
         // Typicsl stack pointer is 8KB on most linux systems
         const uint64_t typical_ulimit_stack_size = 8192;
-        if (xlen_ == 64) {
+        if (xlen_ == 64)
+        {
             sp = reg->dmiRead<RV64>();
             sparta_assert(std::numeric_limits<uint64_t>::max() - sp > typical_ulimit_stack_size,
                           "Stack pointer initial value has a good chance of overflowing");
         }
-        else {
+        else
+        {
             sp = reg->dmiRead<RV32>();
-            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp > typical_ulimit_stack_size,
+            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp
+                              > typical_ulimit_stack_size,
                           "Stack pointer initial value has a good chance of overflowing");
         }
-        sparta_assert(sp != 0,
-                      "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "
-                      "to set it to something...smarter");
+        sparta_assert(sp != 0, "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "
+                               "to set it to something...smarter");
 
         auto* memory = sparta::notNull(atlas_system_)->getSystemMemory();
-        sparta_assert(memory != nullptr,
-                      "Got no memory to preload with the argument stack");
+        sparta_assert(memory != nullptr, "Got no memory to preload with the argument stack");
 
         ////////////////////////////////////////////////////////////////////////////////
         // Set up argc
@@ -547,7 +552,7 @@ namespace atlas
         auto envp_sp_addr = sp;
         sp += 8 * env_vars.size();
         data = 0;
-        memory->poke(sp, 8, (uint8_t*)&data);  // Write (nil)
+        memory->poke(sp, 8, (uint8_t*)&data); // Write (nil)
         sp += 8;
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -555,32 +560,36 @@ namespace atlas
         // Magic...
         // https://github.com/pytorch/cpuinfo/blob/6c9eb84ba310f237cea13c478be50102e1128e9b/src/riscv/linux/riscv-isa.c
         const auto AT_HWCAP = 16;
-        const auto COMPAT_HWCAP_ISA_I   (1 << ('I' - 'A'));
-        const auto COMPAT_HWCAP_ISA_M   (1 << ('M' - 'A'));
-        const auto COMPAT_HWCAP_ISA_A   (1 << ('A' - 'A'));
-        const auto COMPAT_HWCAP_ISA_F   (1 << ('F' - 'A'));
-        const auto COMPAT_HWCAP_ISA_D   (1 << ('D' - 'A'));
-        const auto COMPAT_HWCAP_ISA_C   (1 << ('C' - 'A'));
-        const auto COMPAT_HWCAP_ISA_V   (1 << ('V' - 'A'));
+        const auto COMPAT_HWCAP_ISA_I(1 << ('I' - 'A'));
+        const auto COMPAT_HWCAP_ISA_M(1 << ('M' - 'A'));
+        const auto COMPAT_HWCAP_ISA_A(1 << ('A' - 'A'));
+        const auto COMPAT_HWCAP_ISA_F(1 << ('F' - 'A'));
+        const auto COMPAT_HWCAP_ISA_D(1 << ('D' - 'A'));
+        const auto COMPAT_HWCAP_ISA_C(1 << ('C' - 'A'));
+        const auto COMPAT_HWCAP_ISA_V(1 << ('V' - 'A'));
 
         uint64_t a_val = COMPAT_HWCAP_ISA_I | COMPAT_HWCAP_ISA_M | COMPAT_HWCAP_ISA_A;
-        if(extension_manager_.isEnabled("f")) {
+        if (extension_manager_.isEnabled("f"))
+        {
             a_val |= COMPAT_HWCAP_ISA_F;
         }
-        if(extension_manager_.isEnabled("d")) {
+        if (extension_manager_.isEnabled("d"))
+        {
             a_val |= COMPAT_HWCAP_ISA_D;
         }
-        if(extension_manager_.isEnabled("c")) {
+        if (extension_manager_.isEnabled("c"))
+        {
             a_val |= COMPAT_HWCAP_ISA_C;
         }
-        if(extension_manager_.isEnabled("v")) {
+        if (extension_manager_.isEnabled("v"))
+        {
             a_val |= COMPAT_HWCAP_ISA_V;
         }
-        uint64_t auxv[2] = { AT_HWCAP, a_val };
+        uint64_t auxv[2] = {AT_HWCAP, a_val};
         memory->poke(sp, 16, (uint8_t*)&auxv);
         sp += 16;
 
-        //padding
+        // padding
         memory->poke(sp, 8, (uint8_t*)&data); // Write (null)
         sp += 8;
         memory->poke(sp, 8, (uint8_t*)&data); // Write (null)
@@ -589,9 +598,10 @@ namespace atlas
         ////////////////////////////////////////////////////////////////////////////////
         // argv string addresses -- need to pad to 16B boundary
         sp &= ~0xf;
-        for(const auto & arg : program_arguments) {
+        for (const auto & arg : program_arguments)
+        {
             // Add 1 to include the null character
-            const auto str_len = arg.size()+1;
+            const auto str_len = arg.size() + 1;
             ILOG("Pushing argv: " << arg);
             memory->poke(sp, str_len, (uint8_t*)arg.data());
             memory->poke(argv_sp_addr, 8, (uint8_t*)&sp);
@@ -603,15 +613,14 @@ namespace atlas
         // envp string addresses -- just like argv
         sp += 16;
         sp &= ~0xf;
-        for(const auto & envp : env_vars)
+        for (const auto & envp : env_vars)
         {
-            const auto str_len = envp.size()+1;
+            const auto str_len = envp.size() + 1;
             memory->poke(sp, str_len, (uint8_t*)envp.data());
             memory->poke(envp_sp_addr, 8, (uint8_t*)&sp);
             sp += str_len;
             envp_sp_addr += 8;
         }
-
     }
 
     void AtlasState::boot()
