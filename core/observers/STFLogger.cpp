@@ -1,5 +1,4 @@
-
-#include "STFLogger.hpp"
+#include "core/observers/STFLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "core/AtlasState.hpp"
 
@@ -41,14 +40,15 @@ namespace atlas
     // METHODS
     void STFLogger::writeInstruction_(const AtlasInst* inst)
     {
-        if (inst->getOpcodeSize() == 2)
+        (void) inst;
+        /*if (inst->getOpcodeSize() == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(inst->getOpcode());
         }
         else
         {
             stf_writer_ << stf::InstOpcode32Record(inst->getOpcode());
-        }
+        }*/
     }
 
     // state -> current AtlasState to write instruction record

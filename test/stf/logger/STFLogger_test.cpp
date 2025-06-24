@@ -1,4 +1,4 @@
-#include "core/observers/STFtrace/STFLogger.hpp"
+#include "core/observers/STFLogger.hpp"
 
 int main(){
     atlas::STFLogger test(32, 0x1000, "Test_enable.stf");
