@@ -15,8 +15,8 @@ add_library(atlascore
     observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp
+    observers/STFLogger.cpp
     ../arch/RegisterDefnsJSON.cpp
-    observers/STFtrace/STFLogger.cpp
 
 )
 

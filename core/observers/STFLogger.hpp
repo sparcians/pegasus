@@ -15,7 +15,7 @@ namespace atlas
                   AtlasState* state);
 
       private:
-        const stf::STFWriter stf_writer_;
+        stf::STFWriter stf_writer_;
         void postExecute_(AtlasState* state) override;
         // TODO: Add exception support
         void preException_(AtlasState* state) override;
