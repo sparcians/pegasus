@@ -77,6 +77,14 @@ namespace atlas
             "vmsof.m",
             atlas::Action::createAction<&RvvmInsts::vsxfHandler_<SetFirstMode::ONLY>, RvvmInsts>(
                 nullptr, "vmsof.m", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace("viota.m",
+                              atlas::Action::createAction<&RvvmInsts::viotaHandler_, RvvmInsts>(
+                                  nullptr, "viota.m", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace("vid.v",
+                              atlas::Action::createAction<&RvvmInsts::veiHandler_, RvvmInsts>(
+                                  nullptr, "vid.v", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvmInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -220,4 +228,143 @@ namespace atlas
 
         return ++action_it;
     }
+
+    template <size_t ElemWidth>
+    Action::ItrType viotaHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        using ElemsType = Elements<Element<ElemWidth>, false>;
+
+        const AtlasInstPtr inst = state->getCurrentInst();
+        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+        MaskElements elems_v0{state, state->getVectorConfig(), atlas::V0};
+        ElemsType elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        size_t count = 0;
+        auto iter_v0 = elems_v0.maskBitIterBegin();
+        auto iter_vd = elems_vd.begin();
+
+        auto execute = [&](auto & iter, const auto & iter_end)
+        {
+            for (; iter != iter_end; ++iter)
+            {
+                elems_vd.getElement(iter.getIndex()).setVal(count);
+            }
+        };
+
+        for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
+        {
+            size_t index = elem_iter.getIndex();
+            auto elem_v0{elems_v0.getElement(index)};
+            auto elem_vs2{elems_vs2.getElement(index)};
+
+            if (!inst->getVM())
+            {
+                elem_vs2.pokeVal(elem_vs2.getVal() & elem_v0.getVal()); // don't store *elem_vs2*
+            }
+            for (auto bit_iter = elem_vs2.begin(); bit_iter != elem_vs2.end(); ++bit_iter)
+            {
+                size_t idx = bit_iter.getIndex();
+                // update parallel prefix sun for each active element of vd till current index
+                if (!inst->getVM()) // masked
+                {
+                    execute(iter_v0, MaskBitIterator{&elems_v0, VLEN_MIN * index + idx + 1});
+                }
+                else
+                {
+                    typename ElemsType::ElementIterator iter_end{&elems_vd,
+                                                                 VLEN_MIN * index + idx + 1};
+                    execute(iter_vd, iter_end);
+                }
+                ++count;
+            }
+            // fill in the sum till tail is reached
+            if (!inst->getVM()) // masked
+            {
+                execute(iter_v0, elems_v0.maskBitIterEnd());
+            }
+            else
+            {
+                execute(iter_vd, elems_vd.end());
+            }
+        }
+
+        return ++action_it;
+    }
+
+    Action::ItrType RvvmInsts::viotaHandler_(AtlasState* state, Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return viotaHelper<8>(state, action_it);
+                break;
+            case 16:
+                return viotaHelper<16>(state, action_it);
+                break;
+            case 32:
+                return viotaHelper<32>(state, action_it);
+                break;
+            case 64:
+                return viotaHelper<64>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Invalid SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <size_t ElemWidth>
+    Action::ItrType veiHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        using ElemsType = Elements<Element<ElemWidth>, false>;
+
+        const AtlasInstPtr inst = state->getCurrentInst();
+        ElemsType elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        MaskElements elems_v0{state, state->getVectorConfig(), atlas::V0};
+
+        auto execute = [&](auto iter, const auto & iter_end)
+        {
+            for (; iter != iter_end; ++iter)
+            {
+                elems_vd.getElement(iter.getIndex()).setVal(iter.getIndex());
+            }
+        };
+
+        if (!inst->getVM())
+        {
+            execute(elems_v0.maskBitIterBegin(), elems_v0.maskBitIterEnd());
+        }
+        else
+        {
+            execute(elems_vd.begin(), elems_vd.end());
+        }
+
+        return ++action_it;
+    }
+
+    Action::ItrType RvvmInsts::veiHandler_(AtlasState* state, Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return veiHelper<8>(state, action_it);
+                break;
+            case 16:
+                return veiHelper<16>(state, action_it);
+                break;
+            case 32:
+                return veiHelper<32>(state, action_it);
+                break;
+            case 64:
+                return veiHelper<64>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Invalid SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
 } // namespace atlas
