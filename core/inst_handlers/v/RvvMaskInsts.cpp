@@ -19,8 +19,8 @@ namespace atlas
         inst_handlers.emplace(
             "vmand.mm",
             atlas::Action::createAction<
-                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a & b; }>, RvvMaskInsts>(
-                nullptr, "vmand.mm", ActionTags::EXECUTE_TAG));
+                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a & b; }>,
+                RvvMaskInsts>(nullptr, "vmand.mm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmnand.mm",
             atlas::Action::createAction<
@@ -34,8 +34,8 @@ namespace atlas
         inst_handlers.emplace(
             "vmor.mm",
             atlas::Action::createAction<
-                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a | b; }>, RvvMaskInsts>(
-                nullptr, "vmor.mm", ActionTags::EXECUTE_TAG));
+                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a | b; }>,
+                RvvMaskInsts>(nullptr, "vmor.mm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmnor.mm",
             atlas::Action::createAction<
@@ -49,38 +49,39 @@ namespace atlas
         inst_handlers.emplace(
             "vmxor.mm",
             atlas::Action::createAction<
-                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a ^ b; }>, RvvMaskInsts>(
-                nullptr, "vmxor.mm", ActionTags::EXECUTE_TAG));
+                &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return a ^ b; }>,
+                RvvMaskInsts>(nullptr, "vmxor.mm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmxnor.mm",
             atlas::Action::createAction<
                 &RvvMaskInsts::vmlHandler_<[](ValueType a, ValueType b) { return ~(a ^ b); }>,
                 RvvMaskInsts>(nullptr, "vmxnor.mm", ActionTags::EXECUTE_TAG));
 
-        inst_handlers.emplace("vpopc.m",
-                              atlas::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
-                                  nullptr, "vpopc.m", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vpopc.m", atlas::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
+                           nullptr, "vpopc.m", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vfirst.m", atlas::Action::createAction<&RvvMaskInsts::vfirstHandler_<XLEN>, RvvMaskInsts>(
-                            nullptr, "vfirst.m", ActionTags::EXECUTE_TAG));
+            "vfirst.m",
+            atlas::Action::createAction<&RvvMaskInsts::vfirstHandler_<XLEN>, RvvMaskInsts>(
+                nullptr, "vfirst.m", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsbf.m",
-            atlas::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::BEFORE>, RvvMaskInsts>(
-                nullptr, "vmsbf.m", ActionTags::EXECUTE_TAG));
+            atlas::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::BEFORE>,
+                                        RvvMaskInsts>(nullptr, "vmsbf.m", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsif.m",
             atlas::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::INCLUDING>,
                                         RvvMaskInsts>(nullptr, "vmsif.m", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsof.m",
-            atlas::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::ONLY>, RvvMaskInsts>(
-                nullptr, "vmsof.m", ActionTags::EXECUTE_TAG));
+            atlas::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::ONLY>,
+                                        RvvMaskInsts>(nullptr, "vmsof.m", ActionTags::EXECUTE_TAG));
 
-        inst_handlers.emplace("viota.m",
-                              atlas::Action::createAction<&RvvMaskInsts::viotaHandler_, RvvMaskInsts>(
-                                  nullptr, "viota.m", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "viota.m", atlas::Action::createAction<&RvvMaskInsts::viotaHandler_, RvvMaskInsts>(
+                           nullptr, "viota.m", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace("vid.v",
                               atlas::Action::createAction<&RvvMaskInsts::veiHandler_, RvvMaskInsts>(
@@ -136,7 +137,8 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action::ItrType RvvMaskInsts::vfirstHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvMaskInsts::vfirstHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         const AtlasInstPtr inst = state->getCurrentInst();
         MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};

@@ -7,37 +7,42 @@
 namespace atlas
 {
     template <typename XLEN>
-    void RvvLoadStoreInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
+    void
+    RvvLoadStoreInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
             "vle8.v",
             atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>, RvvLoadStoreInsts>(
-                nullptr, "vle8.v", ActionTags::COMPUTE_ADDR_TAG));
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vle8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vle16.v", atlas::Action::createAction<
-                           &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
-                           RvvLoadStoreInsts>(nullptr, "vle16.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vle16.v",
+            atlas::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vle16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vle32.v", atlas::Action::createAction<
-                           &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
-                           RvvLoadStoreInsts>(nullptr, "vle32.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vle32.v",
+            atlas::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vle32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vse8.v",
             atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>, RvvLoadStoreInsts>(
-                nullptr, "vse8.v", ActionTags::COMPUTE_ADDR_TAG));
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vse8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vse16.v", atlas::Action::createAction<
-                           &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
-                           RvvLoadStoreInsts>(nullptr, "vse16.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vse16.v",
+            atlas::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vse16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vse32.v", atlas::Action::createAction<
-                           &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
-                           RvvLoadStoreInsts>(nullptr, "vse32.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vse32.v",
+            atlas::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vse32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vlse8.v",
@@ -73,35 +78,41 @@ namespace atlas
 
         inst_handlers.emplace(
             "vloxei8.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 8, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vloxei8.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 8, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vloxei8.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vloxei16.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 16, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vloxei16.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 16, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vloxei16.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vloxei32.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 32, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vloxei32.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 32, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vloxei32.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vsoxei8.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 8, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vsoxei8.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 8, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vsoxei8.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vsoxei16.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 16, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vsoxei16.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 16, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vsoxei16.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vsoxei32.v",
-            atlas::Action::createAction<
-                &RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<XLEN, 32, AddressingMode::IDX_ORDERED>,
-                RvvLoadStoreInsts>(nullptr, "vsoxei32.v", ActionTags::COMPUTE_ADDR_TAG));
+            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                            XLEN, 32, AddressingMode::IDX_ORDERED>,
+                                        RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
+                                                           ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -110,86 +121,94 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vle8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>, RvvLoadStoreInsts>(
-                          nullptr, "vle8.v", ActionTags::EXECUTE_TAG));
+            "vle8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>,
+                                                  RvvLoadStoreInsts>(nullptr, "vle8.v",
+                                                                     ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vle16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>, RvvLoadStoreInsts>(
-                           nullptr, "vle16.v", ActionTags::EXECUTE_TAG));
+            "vle16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>,
+                                                   RvvLoadStoreInsts>(nullptr, "vle16.v",
+                                                                      ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vle32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>, RvvLoadStoreInsts>(
-                           nullptr, "vle32.v", ActionTags::EXECUTE_TAG));
+            "vle32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
+                                                   RvvLoadStoreInsts>(nullptr, "vle32.v",
+                                                                      ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>, RvvLoadStoreInsts>(
-                          nullptr, "vse8.v", ActionTags::EXECUTE_TAG));
+            "vse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
+                                                  RvvLoadStoreInsts>(nullptr, "vse8.v",
+                                                                     ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vse16.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>, RvvLoadStoreInsts>(
-                nullptr, "vse16.v", ActionTags::EXECUTE_TAG));
+            "vse16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>,
+                                                   RvvLoadStoreInsts>(nullptr, "vse16.v",
+                                                                      ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vse32.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>, RvvLoadStoreInsts>(
-                nullptr, "vse32.v", ActionTags::EXECUTE_TAG));
+            "vse32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
+                                                   RvvLoadStoreInsts>(nullptr, "vse32.v",
+                                                                      ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vlse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>, RvvLoadStoreInsts>(
-                           nullptr, "vlse8.v", ActionTags::EXECUTE_TAG));
+            "vlse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>,
+                                                   RvvLoadStoreInsts>(nullptr, "vlse8.v",
+                                                                      ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vlse16.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>, RvvLoadStoreInsts>(
-                nullptr, "vlse16.v", ActionTags::EXECUTE_TAG));
+            "vlse16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>,
+                                                    RvvLoadStoreInsts>(nullptr, "vlse16.v",
+                                                                       ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vlse32.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>, RvvLoadStoreInsts>(
-                nullptr, "vlse32.v", ActionTags::EXECUTE_TAG));
+            "vlse32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
+                                                    RvvLoadStoreInsts>(nullptr, "vlse32.v",
+                                                                       ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vsse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>, RvvLoadStoreInsts>(
-                           nullptr, "vsse8.v", ActionTags::EXECUTE_TAG));
+            "vsse8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
+                                                   RvvLoadStoreInsts>(nullptr, "vsse8.v",
+                                                                      ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsse16.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>, RvvLoadStoreInsts>(
-                nullptr, "vsse16.v", ActionTags::EXECUTE_TAG));
+            "vsse16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>,
+                                                    RvvLoadStoreInsts>(nullptr, "vsse16.v",
+                                                                       ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsse32.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>, RvvLoadStoreInsts>(
-                nullptr, "vsse32.v", ActionTags::EXECUTE_TAG));
+            "vsse32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
+                                                    RvvLoadStoreInsts>(nullptr, "vsse32.v",
+                                                                       ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vloxei8.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>, RvvLoadStoreInsts>(
-                nullptr, "vloxei8.v", ActionTags::EXECUTE_TAG));
+            "vloxei8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                     RvvLoadStoreInsts>(nullptr, "vloxei8.v",
+                                                                        ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vloxei16.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>, RvvLoadStoreInsts>(
-                nullptr, "vloxei16.v", ActionTags::EXECUTE_TAG));
+            "vloxei16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                      RvvLoadStoreInsts>(nullptr, "vloxei16.v",
+                                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vloxei32.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>, RvvLoadStoreInsts>(
-                nullptr, "vloxei32.v", ActionTags::EXECUTE_TAG));
+            "vloxei32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                      RvvLoadStoreInsts>(nullptr, "vloxei32.v",
+                                                                         ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vsoxei8.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>, RvvLoadStoreInsts>(
-                nullptr, "vsoxei8.v", ActionTags::EXECUTE_TAG));
+            "vsoxei8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                     RvvLoadStoreInsts>(nullptr, "vsoxei8.v",
+                                                                        ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsoxei16.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>, RvvLoadStoreInsts>(
-                nullptr, "vsoxei16.v", ActionTags::EXECUTE_TAG));
+            "vsoxei16.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                      RvvLoadStoreInsts>(nullptr, "vsoxei16.v",
+                                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsoxei32.v",
-            atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>, RvvLoadStoreInsts>(
-                nullptr, "vsoxei32.v", ActionTags::EXECUTE_TAG));
+            "vsoxei32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                      RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
+                                                                         ActionTags::EXECUTE_TAG));
     }
 
-    template void RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
-    template void RvvLoadStoreInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
+    template void
+    RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
+    template void
+    RvvLoadStoreInsts::getInstComputeAddressHandlers<RV64>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(atlas::AtlasState* state,
-                                                           Action::ItrType action_it)
+                                                                  Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
@@ -229,7 +248,7 @@ namespace atlas
 
     template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
-                                                              Action::ItrType action_it)
+                                                                     Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
@@ -262,7 +281,8 @@ namespace atlas
     }
 
     template <size_t ElemWidth, bool load>
-    Action::ItrType RvvLoadStoreInsts::vlseHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvLoadStoreInsts::vlseHandler_(atlas::AtlasState* state,
+                                                    Action::ItrType action_it)
     {
         const AtlasInstPtr inst = state->getCurrentInst();
         Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
@@ -303,7 +323,8 @@ namespace atlas
     }
 
     template <bool load>
-    Action::ItrType RvvLoadStoreInsts::vlseIdxHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvLoadStoreInsts::vlseIdxHandler_(atlas::AtlasState* state,
+                                                       Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())

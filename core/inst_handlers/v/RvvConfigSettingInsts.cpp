@@ -12,22 +12,25 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vsetvl", atlas::Action::createAction<&RvvConfigSettingInsts::vsetvlHandler_<XLEN>, RvvConfigSettingInsts>(
-                          nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
+            "vsetvl", atlas::Action::createAction<&RvvConfigSettingInsts::vsetvlHandler_<XLEN>,
+                                                  RvvConfigSettingInsts>(nullptr, "vsetvl",
+                                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsetvli", atlas::Action::createAction<&RvvConfigSettingInsts::vsetvliHandler_<XLEN>, RvvConfigSettingInsts>(
-                           nullptr, "vsetvli", ActionTags::EXECUTE_TAG));
+            "vsetvli", atlas::Action::createAction<&RvvConfigSettingInsts::vsetvliHandler_<XLEN>,
+                                                   RvvConfigSettingInsts>(nullptr, "vsetvli",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsetivli",
-            atlas::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>, RvvConfigSettingInsts>(
-                nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
+            "vsetivli", atlas::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>,
+                                                    RvvConfigSettingInsts>(
+                            nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvConfigSettingInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvConfigSettingInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN>
-    Action::ItrType RvvConfigSettingInsts::vsetvlHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvConfigSettingInsts::vsetvlHandler_(atlas::AtlasState* state,
+                                                          Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -50,7 +53,8 @@ namespace atlas
     }
 
     template <typename XLEN>
-    Action::ItrType RvvConfigSettingInsts::vsetvliHandler_(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvConfigSettingInsts::vsetvliHandler_(atlas::AtlasState* state,
+                                                           Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();
@@ -74,7 +78,7 @@ namespace atlas
 
     template <typename XLEN>
     Action::ItrType RvvConfigSettingInsts::vsetivliHandler_(atlas::AtlasState* state,
-                                                 Action::ItrType action_it)
+                                                            Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         const XLEN vtype_val = inst->getImmediate();

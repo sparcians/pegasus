@@ -12,17 +12,17 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vadd.vv",
-            atlas::Action::createAction<&RvvIntegerInsts::viavvHandler_<std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
+            "vadd.vv", atlas::Action::createAction<&RvvIntegerInsts::viavvHandler_<std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vv",
+                                                                    ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vadd.vx",
-            atlas::Action::createAction<&RvvIntegerInsts::viavxHandler_<XLEN, std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
+            "vadd.vx", atlas::Action::createAction<&RvvIntegerInsts::viavxHandler_<XLEN, std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vx",
+                                                                    ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vadd.vi",
-            atlas::Action::createAction<&RvvIntegerInsts::viaviHandler_<std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
+            "vadd.vi", atlas::Action::createAction<&RvvIntegerInsts::viaviHandler_<std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vi",
+                                                                    ActionTags::EXECUTE_TAG));
     }
 
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
