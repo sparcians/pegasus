@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/Action.hpp"
-
 #include <map>
 #include <string>
 #include <stdint.h>
+
+#include "core/Action.hpp"
 
 namespace atlas
 {
@@ -12,17 +12,17 @@ namespace atlas
     class Action;
     class ActionGroup;
 
-    class RvvlsInsts
+    class RvvLoadStoreInsts
     {
       public:
-        using base_type = RvvlsInsts;
+        using base_type = RvvLoadStoreInsts;
 
         enum struct AddressingMode
         {
             UNIT,
             IDX_UNORDERED,
             STRIDED,
-            IDX_ORDERED,
+            IDX_ORDERED
         };
 
         template <typename XLEN>
@@ -31,10 +31,10 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode addrMode>
         Action::ItrType vlseComputeAddressHandler_(atlas::AtlasState* state,
                                                    Action::ItrType action_it);
-        template <typename XLEN, size_t ElemWidth, AddressingMode Mode>
+        template <typename XLEN, size_t ElemWidth, AddressingMode addrMode>
         Action::ItrType vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
                                                       Action::ItrType action_it);
         template <size_t ElemWidth, bool load>

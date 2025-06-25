@@ -1,4 +1,4 @@
-#include "core/inst_handlers/v/RvviaInsts.hpp"
+#include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/AtlasState.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
@@ -7,26 +7,26 @@
 namespace atlas
 {
     template <typename XLEN>
-    void RvviaInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
+    void RvvIntegerInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vadd.vv",
-            atlas::Action::createAction<&RvviaInsts::viavvHandler_<std::plus>, RvviaInsts>(
-                nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
+            "vadd.vv", atlas::Action::createAction<&RvvIntegerInsts::viavvHandler_<std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vv",
+                                                                    ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vadd.vx",
-            atlas::Action::createAction<&RvviaInsts::viavxHandler_<XLEN, std::plus>, RvviaInsts>(
-                nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
+            "vadd.vx", atlas::Action::createAction<&RvvIntegerInsts::viavxHandler_<XLEN, std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vx",
+                                                                    ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vadd.vi",
-            atlas::Action::createAction<&RvviaInsts::viaviHandler_<std::plus>, RvviaInsts>(
-                nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
+            "vadd.vi", atlas::Action::createAction<&RvvIntegerInsts::viaviHandler_<std::plus>,
+                                                   RvvIntegerInsts>(nullptr, "vadd.vi",
+                                                                    ActionTags::EXECUTE_TAG));
     }
 
-    template void RvviaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
-    template void RvviaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
+    template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
+    template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <size_t ElemWidth, typename Functor>
     Action::ItrType viavvHelper(AtlasState* state, Action::ItrType action_it)
@@ -63,7 +63,7 @@ namespace atlas
     }
 
     template <template <typename> typename FunctorTemp>
-    Action::ItrType RvviaInsts::viavvHandler_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viavvHandler_(AtlasState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -88,14 +88,14 @@ namespace atlas
     }
 
     template <typename XLEN, template <typename> typename OP>
-    Action::ItrType RvviaInsts::viavxHandler_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viavxHandler_(AtlasState* state, Action::ItrType action_it)
     {
         (void)state;
         return ++action_it;
     }
 
     template <template <typename> typename OP>
-    Action::ItrType RvviaInsts::viaviHandler_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viaviHandler_(AtlasState* state, Action::ItrType action_it)
     {
         (void)state;
         return ++action_it;
