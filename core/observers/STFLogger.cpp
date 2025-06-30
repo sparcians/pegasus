@@ -1,4 +1,3 @@
-
 #include "STFLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "core/AtlasState.hpp"
@@ -14,14 +13,14 @@ namespace atlas
         stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
                                                       0, "Trace from Atlas"));
 
-        if (reg_width == 32)
-        {
-            stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
-        }
-        else
+        if (reg_width == 64)
         {
             stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV64);
             stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
+        }
+        else
+        {
+            stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
         }
 
         stf_writer_.setISA(stf::ISA::RISCV);
@@ -36,7 +35,6 @@ namespace atlas
     {
         if (fault_cause_.isValid() || interrupt_cause_.isValid())
         {
-            // Do not write instruction record if there is a fault or interrupt
             return;
         } 
 
