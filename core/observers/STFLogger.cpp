@@ -5,12 +5,6 @@
 
 namespace atlas
 {
-    // CONSTRUCTORS
-
-    // stf_enable -> user can enable and disable STF Trace Generation
-    // width -> register width (32 or 64)
-    // pc -> initial program counter
-    // filename -> name of the file the trace will be written to
     STFLogger::STFLogger(const uint32_t reg_width, uint64_t inital_pc, const std::string & filename,
                          AtlasState* state) :
         Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
@@ -38,9 +32,14 @@ namespace atlas
         // recordRegState_(state); record inital state of registers
     }
 
-    // METHODS
     void STFLogger::writeInstruction_(const AtlasInst* inst)
     {
+        if (fault_cause_.isValid() || interrupt_cause_.isValid())
+        {
+            // Do not write instruction record if there is a fault or interrupt
+            return;
+        } 
+
         if (inst->getOpcodeSize() == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(inst->getOpcode());
@@ -51,7 +50,6 @@ namespace atlas
         }
     }
 
-    // state -> current AtlasState to write instruction record
     void STFLogger::postExecute_(AtlasState* state)
     {
         // write opcode record
