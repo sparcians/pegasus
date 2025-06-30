@@ -11,6 +11,10 @@ namespace atlas
     class STFLogger : public Observer
     {
       public:
+    // param stf_enable -> user can enable and disable STF Trace Generation
+    // width -> register width (32 or 64)
+    // pc -> initial program counter
+    // filename -> name of the file the trace will be written to
         STFLogger(const uint32_t reg_width, uint64_t initial_pc, const std::string & filename,
                   AtlasState* state);
 
@@ -21,6 +25,6 @@ namespace atlas
         void preException_(AtlasState* state) override;
         void preExecute_(AtlasState* state) override;
         void recordRegState_(AtlasState* state);
-        void writeInstruction_(const AtlasInst* inst);
+        void exceptionCodeRecord (AtlasState* state);
     };
 } // namespace atlas
