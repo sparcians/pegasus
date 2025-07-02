@@ -18,16 +18,25 @@ namespace atlas
     class Action;
     class ActionGroup;
 
-    class RvvFloatingInsts
+    class RvvFloatInsts
     {
       public:
-        using base_type = RvvFloatingInsts;
+        using base_type = RvvFloatInsts;
+
+        enum struct OperandMode
+        {
+            VV, // vector vector
+            VF  // vector float
+        };
 
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN>
+        template <typename XLEN, OperandMode opMode>
         Action::ItrType vfaddHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vfmaccHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
