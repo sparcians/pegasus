@@ -24,15 +24,15 @@ namespace atlas
     template void RvvFloatingInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvFloatingInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t ElemWidth>
+    template <typename XLEN, size_t elemWidth>
     Action::ItrType vfaddHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        Elements<Element<ElemWidth>, false> elems_vs1{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
-        Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
-        Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
                                                      inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
@@ -42,7 +42,7 @@ namespace atlas
             {
                 auto index = iter.getIndex();
 
-                if constexpr (ElemWidth == 32)
+                if constexpr (elemWidth == 32)
                 {
                     auto val = f32_add(float32_t{elems_vs1.getElement(index).getVal()},
                                        float32_t{elems_vs2.getElement(index).getVal()})
@@ -87,7 +87,7 @@ namespace atlas
                 return vfaddHelper<XLEN, 64>(state, action_it);
                 break;
             default:
-                sparta_assert(false, "Invalid SEW value");
+                sparta_assert(false, "Unsupported SEW value");
                 break;
         }
         return ++action_it;

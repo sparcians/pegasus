@@ -206,7 +206,7 @@ namespace atlas
     template void RvvLoadStoreInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(atlas::AtlasState* state,
                                                                   Action::ItrType action_it)
     {
@@ -214,7 +214,7 @@ namespace atlas
 
         const AtlasInstPtr inst = state->getCurrentInst();
         VectorConfig* config = state->getVectorConfig();
-        const size_t eewb = ElemWidth / 8;
+        const size_t eewb = elemWidth / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
         Addr stride;
@@ -246,7 +246,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
                                                                      Action::ItrType action_it)
     {
@@ -256,7 +256,7 @@ namespace atlas
         VectorConfig* vector_config = state->getVectorConfig();
         const size_t sewb = vector_config->getSEW() / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
 
         if (inst->getVM())
@@ -280,12 +280,12 @@ namespace atlas
         return ++action_it;
     }
 
-    template <size_t ElemWidth, bool load>
+    template <size_t elemWidth, bool load>
     Action::ItrType RvvLoadStoreInsts::vlseHandler_(atlas::AtlasState* state,
                                                     Action::ItrType action_it)
     {
         const AtlasInstPtr inst = state->getCurrentInst();
-        Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
                                                      inst->getRd()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
@@ -294,15 +294,15 @@ namespace atlas
             {
                 if constexpr (load)
                 {
-                    UintType<ElemWidth> value = state->readMemory<UintType<ElemWidth>>(
+                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr());
                     inst->getTranslationState()->popResult();
                     elems_vd.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
-                    UintType<ElemWidth> value = elems_vd.getElement(iter.getIndex()).getVal();
-                    state->writeMemory<UintType<ElemWidth>>(
+                    UintType<elemWidth> value = elems_vd.getElement(iter.getIndex()).getVal();
+                    state->writeMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr(), value);
                     inst->getTranslationState()->popResult();
                 }
@@ -338,7 +338,7 @@ namespace atlas
             case 64:
                 return vlseHandler_<64, load>(state, action_it);
             default:
-                sparta_assert(false, "Invalid SEW value");
+                sparta_assert(false, "Unsupported SEW value");
                 break;
         }
         return ++action_it;

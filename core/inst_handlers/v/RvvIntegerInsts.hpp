@@ -28,10 +28,27 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
+        // Ingeter Arithmetic / Bitwise Logical
         template <typename XLEN, OperandMode opMode, template <typename> typename FunctorTemp>
-        Action::ItrType viaHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType viablHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        // Widening Integer Arithmetic
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
         Action::ItrType vwiaHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        // Result for Integer Add-with-carry Subtract-with-borrow
+        template <typename XLEN, OperandMode opMode, bool hasMaskOp,
+                  template <typename> typename FunctorTemp>
+        Action::ItrType viacsbHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        // Carry/borrow for Integer Add-with-carry Subtract-with-borrow
+        template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFuc>
+        Action::ItrType vmiacsbHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        // Ingeter Compare
+        template <typename XLEN, OperandMode opMode, bool isSigned,
+                  template <typename> typename FunctorTemp>
+        Action::ItrType vmicHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
