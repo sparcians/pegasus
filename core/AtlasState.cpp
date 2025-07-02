@@ -1,6 +1,6 @@
 #include "core/AtlasState.hpp"
 #include "core/AtlasInst.hpp"
-#include "core/VectorState.hpp"
+#include "core/VecElements.hpp"
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
@@ -42,8 +42,10 @@ namespace atlas
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
         isa_string_(p->isa_string),
+        vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
-        supported_isa_string_(std::string("rv" + std::to_string(xlen_) + "gcbv_zicsr_zifencei")),
+        supported_isa_string_(
+            std::string("rv" + std::to_string(xlen_) + "gcbv_zicsr_zifencei_zicond_zcb")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -53,7 +55,7 @@ namespace atlas
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
-        vector_state_ptr_(new VectorState()),
+        vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Atlas Instruction Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
@@ -66,8 +68,8 @@ namespace atlas
         int_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
         fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
-        vec_rset_ =
-            RegisterSet::create(core_tn, json_dir + std::string("/reg_vec.json"), "vec_regs");
+        const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
+        vec_rset_ = RegisterSet::create(core_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
             RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
@@ -281,7 +283,8 @@ namespace atlas
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32x.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicsr.json",
-            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json"};
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zifencei.json",
+            xlen_uarch_file_path + "/atlas_uarch_rv" + xlen_str + "zicond.json"};
         return uarch_files;
     }
 

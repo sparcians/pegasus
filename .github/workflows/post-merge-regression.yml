@@ -9,6 +9,7 @@ env:
 name: Atlas Regression
 jobs:
   build_test_job:
+    if: github.repository == 'sparcians/atlas'
     strategy:
       # Strategy is a matrix of debug and release builds/regression
       matrix:

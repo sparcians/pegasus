@@ -8,9 +8,9 @@ import multiprocessing
 import functools
 
 # Passing and total
-PASSING_STATUS_RISCV_ARCH_RV32 = [238, 239]
-PASSING_STATUS_RISCV_ARCH_RV64 = [318, 319]
-PASSING_STATUS_TENSTORRENT_RV64 = [1211, 3999]
+PASSING_STATUS_RISCV_ARCH_RV32 = [243, 243]
+PASSING_STATUS_RISCV_ARCH_RV64 = [323, 323]
+PASSING_STATUS_TENSTORRENT_RV64 = [3999, 3999]
 
 # Verbosity
 be_noisy = False
@@ -58,7 +58,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tenstorrent_tests.sort()
 
     tests = []
-    base_dir = os.path.basename(os.path.abspath(directory))
+    base_dir = "bare_metal"
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
@@ -77,7 +77,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbv_zicsr_zifencei" if rv32_test else "rv64gcbv_zicsr_zifencei"
+    isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
     atlas_cmd = ["./atlas",
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, wkld]
@@ -104,7 +104,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
                     error = line.strip()
                     break
 
-        failing_tests.append(testname)
+        failing_tests.append([testname, error])
 
 
 def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
@@ -186,14 +186,6 @@ def main():
         tests.extend(get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.tenstorrent))
 
     skip_tests = [
-        "rv64uf-p-fclass",     # Atlas does not support the fclass instruction
-        "rv64uf-v-fclass",
-        "rv32uf-p-fclass",
-        "rv32uf-v-fclass",
-        "rv64ud-p-fclass",
-        "rv64ud-v-fclass",
-        "rv32ud-p-fclass",
-        "rv32ud-v-fclass",
         "rv64mi-p-breakpoint", # Atlas does not support external debug support
         "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",
@@ -229,8 +221,8 @@ def main():
 
     if failing_tests:
         print("FAILED:")
-        for test in failing_tests:
-            print("\t" + test)
+        for test,error in failing_tests:
+            print("\t" + test + ": " + error)
 
     if timeout_tests:
         print("TIMED OUT:")

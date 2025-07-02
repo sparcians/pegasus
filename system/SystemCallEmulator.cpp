@@ -42,10 +42,12 @@ namespace atlas
             // https://gpages.juszkiewicz.com.pl/syscalls-table/syscalls.html
             supported_sys_calls_.insert(
                 {{17, {"getcwd", cfp(&SysCallHandlers::getcwd_)}},
-                 {23, {"setuid", cfp(&SysCallHandlers::setuid_)}},
+                 {23, {"dup", cfp(&SysCallHandlers::dup_)}},
                  {25, {"stime", cfp(&SysCallHandlers::stime_)}},
                  {29, {"ioctl", cfp(&SysCallHandlers::ioctl_)}},
+                 {35, {"unlinkat", cfp(&SysCallHandlers::unlinkat_)}},
                  {48, {"faccessat", cfp(&SysCallHandlers::faccessat_)}},
+                 {56, {"openat", cfp(&SysCallHandlers::openat_)}},
                  {57, {"close", cfp(&SysCallHandlers::close_)}},
                  {62, {"lseek", cfp(&SysCallHandlers::lseek_)}},
                  {63, {"read", cfp(&SysCallHandlers::read_)}},
@@ -106,11 +108,68 @@ namespace atlas
         Addr getBreakAddress() const { return brk_address_; }
 
       private:
+        // Helpers
+        std::string readString_(sparta::memory::BlockingMemoryIF* mem, uint64_t string_addr,
+                                uint64_t string_len = 0) const
+        {
+            std::string ret_string;
+
+            if (string_len == 0)
+            {
+                // Read the string address up to a reasonable limit.
+                const uint32_t reasonable_string_limit = 1024;
+
+                // String length uknown.  Read until we come across
+                // null
+                uint32_t byte = 0;
+                while (byte < reasonable_string_limit)
+                {
+                    uint8_t one_char;
+                    mem->peek(string_addr, 1, &one_char);
+                    if (one_char == 0)
+                    {
+                        break;
+                    }
+                    ret_string += one_char;
+                    ++byte;
+                    ++string_addr;
+                }
+                sparta_assert(byte != reasonable_string_limit,
+                              "Attempting to get a string from memory that's larger than "
+                                  << reasonable_string_limit << " Got so far: " << ret_string);
+            }
+            else
+            {
+                unsigned char* string_in_memory = static_cast<unsigned char*>(alloca(string_len));
+                if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
+                {
+                    const auto mem_block_size = mem->getBlockSize();
+
+                    // Need to break up the read into parts.
+                    const uint32_t first_half_length =
+                        mem_block_size - (string_addr & (mem_block_size - 1));
+                    mem->peek(string_addr, first_half_length, string_in_memory);
+                    mem->peek(string_addr + first_half_length, string_len - first_half_length,
+                              string_in_memory + first_half_length);
+                }
+                else
+                {
+                    mem->peek(string_addr, string_len, string_in_memory);
+                }
+                ret_string = reinterpret_cast<char*>(string_in_memory);
+            }
+            return ret_string;
+        }
+
+        // Convert Linux ret to errno value for internal system calls
+        int sysretErrno_(int ret) const { return (ret == -1) ? -errno : ret; }
+
         // The system calls
         int64_t getcwd_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t dup_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t ioctl_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t unlinkat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t openat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -307,24 +366,29 @@ namespace atlas
                                      sparta::memory::BlockingMemoryIF* mem)
     {
         const auto pbuf = call_stack[1];
-        const auto count = call_stack[2];
-        std::vector<uint8_t> final_buf(count);
-        int64_t ret = (int64_t)getcwd((char*)final_buf.data(), call_stack[2]);
-        if (ret != 0)
+        const auto size = call_stack[2];
+        int64_t ret = pbuf;
+        std::vector<uint8_t> final_buf(size);
+        char* local_ret = ::getcwd((char*)final_buf.data(), size);
+        if (local_ret == (char*)final_buf.data())
         {
-            size_t slen = strnlen((char*)final_buf.data(), call_stack[2]);
+            size_t slen = strnlen((char*)final_buf.data(), size);
             mem->poke(pbuf, slen, final_buf.data());
+            ret = slen;
         }
-        if (ret)
+        else
         {
-            ret = pbuf;
+            ret = 0;
         }
+        SYSCALL_LOG("getcwd(" << HEX16(pbuf) << ", " << HEX16(size) << ") -> " << HEX16(ret));
+
         return ret;
     }
 
-    int64_t SysCallHandlers::setuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::dup_(const SystemCallStack & call_stack,
+                                  sparta::memory::BlockingMemoryIF*)
     {
-        return 0;
+        return ::dup(call_stack[1]);
     }
 
     int64_t SysCallHandlers::getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
@@ -453,16 +517,49 @@ namespace atlas
         return 0;
     }
 
+    int64_t SysCallHandlers::unlinkat_(const SystemCallStack & call_stack,
+                                       sparta::memory::BlockingMemoryIF* mem)
+    {
+
+        const auto dirfd = call_stack[1];
+        const auto pathname_addr = call_stack[2];
+        const auto flags = call_stack[3];
+        const auto pathname_str = readString_(mem, pathname_addr, 0);
+
+        auto ret = ::unlinkat(dirfd, pathname_str.c_str(), flags);
+
+        SYSCALL_LOG(__func__ << "(" << dirfd << "," << HEX16(pathname_addr) << "['" << pathname_str
+                             << "']" << "-> " << ret);
+        return ret;
+    }
+
     int64_t SysCallHandlers::faccessat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
     }
 
-    int64_t SysCallHandlers::close_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::openat_(const SystemCallStack & call_stack,
+                                     sparta::memory::BlockingMemoryIF* mem)
     {
-        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
-        return 0;
+        const auto dirfd = call_stack[1];
+        const auto pathname_addr = call_stack[2];
+        const auto flags = call_stack[3];
+        const auto mode = call_stack[3];
+
+        const std::string pathname = readString_(mem, pathname_addr);
+
+        auto ret = ::openat(dirfd, pathname.c_str(), flags, mode);
+
+        return ret;
+    }
+
+    int64_t SysCallHandlers::close_(const SystemCallStack & call_stack,
+                                    sparta::memory::BlockingMemoryIF*)
+    {
+        const auto fd = call_stack[1];
+        auto ret = sysretErrno_(::close(fd));
+        return ret;
     }
 
     int64_t SysCallHandlers::lseek_(const SystemCallStack & call_stack,
@@ -472,7 +569,7 @@ namespace atlas
         const auto offset = call_stack[2];
         const auto whence = call_stack[3];
 
-        int64_t ret = ::lseek(fd, offset, whence);
+        int64_t ret = sysretErrno_(::lseek(fd, offset, whence));
 
         SYSCALL_LOG("lseek(" << HEX16(fd) << ", " << HEX16(offset) << ", " << HEX16(whence) << ", "
                              << ") -> " << ret);
@@ -489,8 +586,11 @@ namespace atlas
 
         std::vector<uint8_t> final_buf(count);
         int64_t ret = ::read(fd, (char*)final_buf.data(), count);
-
-        mem->poke(buf, count, final_buf.data());
+        if (ret > 0)
+        {
+            mem->poke(buf, count, final_buf.data());
+        }
+        ret = sysretErrno_(ret);
 
         SYSCALL_LOG("read(" << HEX16(fd) << ", " << HEX16(buf) << ", " << HEX16(count) << ", "
                             << ") -> " << ret);
@@ -504,33 +604,18 @@ namespace atlas
         int fd = emulator_->getFDOverrideForWrite(call_stack[1]);
         const auto string_addr = call_stack[2];
         const auto string_len = call_stack[3];
-
+        std::string str;
         // Check that the file descriptor is valid
         int64_t ret = fcntl(fd, F_GETFD);
         if (ret != -1)
         {
-            std::vector<uint8_t> string_to_write(string_len);
-            if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
-            {
-                const auto mem_block_size = mem->getBlockSize();
-
-                // Need to break up the read into parts.
-                const uint32_t first_half_length =
-                    mem_block_size - (string_addr & (mem_block_size - 1));
-                mem->peek(string_addr, first_half_length, &string_to_write[0]);
-                mem->peek(string_addr + first_half_length, string_len - first_half_length,
-                          &string_to_write[0] + first_half_length);
-            }
-            else
-            {
-                mem->peek(string_addr, string_len, &string_to_write[0]);
-            }
+            str = readString_(mem, string_addr, string_len);
 
             // send the string to the file descriptor
-            ret = ::write(fd, &string_to_write[0], string_len);
+            ret = sysretErrno_(::write(fd, str.c_str(), string_len));
         }
-        SYSCALL_LOG("write(" << fd << ", " << HEX16(string_addr) << ", " << string_len << ") -> "
-                             << ret);
+        SYSCALL_LOG("write(" << fd << ", " << HEX16(string_addr) << "['" << str << "'], "
+                             << string_len << ") -> " << ret);
 
         return ret;
     }
@@ -574,7 +659,6 @@ namespace atlas
         }
         SYSCALL_LOG("writev(" << fd << ", " << HEX16(iov_addr) << ", " << iov_cnt << ") -> "
                               << ret);
-
         return ret;
     }
 
@@ -637,21 +721,19 @@ namespace atlas
         }
         else
         {
-            ret = ::readlinkat(dirfd, pathname_in_memory.c_str(), final_resolved_path_ptr, bufsize);
+            ret = sysretErrno_(
+                ::readlinkat(dirfd, pathname_in_memory.c_str(), final_resolved_path_ptr, bufsize));
         }
-        mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
+
+        if (ret > 0)
+        {
+            mem->poke(buf, bufsize, (uint8_t*)final_resolved_path_ptr);
+        }
 
         SYSCALL_LOG("readlinkat(" << HEX16(dirfd) << ", " << HEX16(pathname) << "(\""
                                   << pathname_in_memory << "\"), " << HEX16(buf) << "(\""
                                   << final_resolved_path_ptr << "\"), " << bufsize << ") -> "
                                   << ret);
-        if (ret == -1)
-        {
-            SYSCALL_LOG("\treadlinkat reports FAILED: errno: " << errno << " "
-                                                               << ::strerror(errno));
-            ret = -errno;
-        }
-
         return ret;
     }
 
@@ -676,7 +758,7 @@ namespace atlas
         struct timespec st_ctim;
         int __glibc_reserved[2];
 
-        RV_stat(struct stat host_stat) :
+        RV_stat(const struct stat & host_stat) :
             st_dev(host_stat.st_dev),
             st_ino(host_stat.st_ino),
             st_mode(host_stat.st_mode),
@@ -696,7 +778,8 @@ namespace atlas
             st_mtim(host_stat.st_mtim),
             st_ctim(host_stat.st_ctim)
 #endif
-        {}
+        {
+        }
     };
 
     int64_t SysCallHandlers::fstatat_(const SystemCallStack & call_stack,
@@ -708,34 +791,25 @@ namespace atlas
         const auto pathname = call_stack[2];
         const auto statbuf = call_stack[3];
         const auto flags = call_stack[4];
-
-        std::string pathname_str;
-        uint8_t c;
-        uint32_t offset = 0;
-        do
-        {
-            memory->peek(pathname + offset, 1, &c);
-            if (c != 0)
-            {
-                pathname_str += c;
-            }
-            ++offset;
-        } while (c != 0);
+        const std::string pathname_str = readString_(memory, pathname, 0);
 
         // Use the host's stat
         struct stat host_stat;
-        ::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags);
-        // On MacOS this call fails due to invalid parameters, but
-        // does return a valid structure.  Always return 0
-        ret = 0;
-        SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << ", " << HEX16(pathname) << ", "
-                             << HEX16(statbuf) << ", " << HEX16(flags) << ", "
-                             << ") -> " << ret);
 
-        // Now create a RV stat and populate
-        RV_stat rv_stat(host_stat);
+        ret = sysretErrno_(::fstatat(dirfd, pathname_str.c_str(), &host_stat, flags));
 
-        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        if (ret != -1)
+        {
+            // Now create a RV stat and populate
+            RV_stat rv_stat(host_stat);
+
+            memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        }
+
+        SYSCALL_LOG(__func__ << "(" << HEX16(dirfd) << "["
+                             << (int(dirfd) == AT_FDCWD ? "AT_FDCWD" : "stdio or fd") << "], "
+                             << HEX16(pathname) << "(\"" << pathname_str << "\"), "
+                             << HEX16(statbuf) << ", " << HEX16(flags) << ") -> " << ret);
 
         return ret;
     }
@@ -750,14 +824,16 @@ namespace atlas
 
         // Use the host's stat
         struct stat host_stat;
-        ret = ::fstat(fd, &host_stat);
+        ret = sysretErrno_(::fstat(fd, &host_stat));
 
-        // Now create a RV stat and populate
-        RV_stat rv_stat(host_stat);
-        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf)
-                             << ") -> " << ret);
+        if (ret != -1)
+        {
+            // Now create a RV stat and populate
+            RV_stat rv_stat(host_stat);
+            memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        }
 
-        memory->poke(statbuf, sizeof(struct RV_stat), reinterpret_cast<uint8_t*>(&rv_stat));
+        SYSCALL_LOG(__func__ << "(" << HEX16(fd) << ", " << HEX16(statbuf) << ") -> " << ret);
         return ret;
     }
 

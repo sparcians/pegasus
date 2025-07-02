@@ -16,57 +16,68 @@ namespace atlas
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "add.uw", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 0, true>, RvzbaInsts>(
-                            nullptr, "add.uw", ActionTags::EXECUTE_TAG));
+                "add.uw",
+                atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 0, true>, RvzbaInsts>(
+                    nullptr, "add.uw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh1add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, false>, RvzbaInsts>(
-                            nullptr, "sh1add", ActionTags::EXECUTE_TAG));
+                "sh1add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, false>,
+                                                      RvzbaInsts>(nullptr, "sh1add",
+                                                                  ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh1add.uw", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, true>, RvzbaInsts>(
-                        nullptr, "sh1add.uw", ActionTags::EXECUTE_TAG));
+                "sh1add.uw",
+                atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, true>, RvzbaInsts>(
+                    nullptr, "sh1add.uw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh2add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, false>, RvzbaInsts>(
-                        nullptr, "sh2add", ActionTags::EXECUTE_TAG));
+                "sh2add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, false>,
+                                                      RvzbaInsts>(nullptr, "sh2add",
+                                                                  ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh2add.uw", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, true>, RvzbaInsts>(
-                        nullptr, "sh2add.uw", ActionTags::EXECUTE_TAG));
+                "sh2add.uw",
+                atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, true>, RvzbaInsts>(
+                    nullptr, "sh2add.uw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh3add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, false>, RvzbaInsts>(
-                        nullptr, "sh3add", ActionTags::EXECUTE_TAG));
+                "sh3add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, false>,
+                                                      RvzbaInsts>(nullptr, "sh3add",
+                                                                  ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sh3add.uw", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, true>, RvzbaInsts>(
-                        nullptr, "sh3add.uw", ActionTags::EXECUTE_TAG));
+                "sh3add.uw",
+                atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, true>, RvzbaInsts>(
+                    nullptr, "sh3add.uw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slli.uw", atlas::Action::createAction<&RvzbaInsts::slli_uw_handler, RvzbaInsts>(
-                        nullptr, "slli.uw", ActionTags::EXECUTE_TAG));
+                               nullptr, "slli.uw", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
-        inst_handlers.emplace(
-            "sh1add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 1, false>, RvzbaInsts>(
-                nullptr, "sh1add", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "sh2add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 2, false>, RvzbaInsts>(
-                nullptr, "sh2add", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "sh3add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 3, false>, RvzbaInsts>(
-                nullptr, "sh3add", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sh1add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 1, false>,
+                                                      RvzbaInsts>(nullptr, "sh1add",
+                                                                  ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sh2add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 2, false>,
+                                                      RvzbaInsts>(nullptr, "sh2add",
+                                                                  ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sh3add", atlas::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 3, false>,
+                                                      RvzbaInsts>(nullptr, "sh3add",
+                                                                  ActionTags::EXECUTE_TAG));
         }
     }
 
     template void RvzbaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, uint32_t SHIFT, bool UW> 
+    template <typename XLEN, uint32_t SHIFT, bool UW>
     Action::ItrType RvzbaInsts::shxadd_handler(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
 
         XLEN mask = -1;
-        if constexpr (UW) {
+        if constexpr (UW)
+        {
             mask = 0xFFFFFFFFul;
         }
-        
+
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1()) & mask;
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
@@ -89,4 +100,4 @@ namespace atlas
 
         return ++action_it;
     }
-}
+} // namespace atlas

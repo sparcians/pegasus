@@ -12,19 +12,17 @@ namespace atlas
 
     class RvzbcInsts
     {
-        public:
-            using base_type = RvzbcInsts;
+      public:
+        using base_type = RvzbcInsts;
 
-            template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
-        
-        private:
+        template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
 
-            template <typename XLEN>
-            Action::ItrType clmulHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType clmulhHandler(atlas::AtlasState* state, Action::ItrType action_it);
-            template <typename XLEN>
-            Action::ItrType clmulrHandler(atlas::AtlasState* state, Action::ItrType action_it);
-        
+      private:
+        template <typename XLEN>
+        Action::ItrType clmulHandler(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType clmulhHandler(atlas::AtlasState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType clmulrHandler(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

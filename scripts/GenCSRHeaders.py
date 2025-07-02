@@ -262,7 +262,7 @@ def gen_csr_field_idxs_header(reg_size):
     reg_csr_json_filename = os.path.join(json_dir, "reg_csr.json")
     reg_fp_json_filename  = os.path.join(json_dir, "reg_fp.json")
     reg_int_json_filename = os.path.join(json_dir, "reg_int.json")
-    reg_vec_json_filename = os.path.join(json_dir, "reg_vec.json")
+    reg_vec_json_filename = os.path.join(json_dir, "reg_vec128.json")
 
     def WriteRegisterFieldIdxs(reg_type, reg_json_filename, fout):
         with open(reg_json_filename) as reg_json_file:

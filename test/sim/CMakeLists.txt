@@ -10,14 +10,22 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 # Tests
 add_subdirectory(vcs)
 add_subdirectory(via)
+add_subdirectory(vls)
+add_subdirectory(vm)
 
 # ASM Tests
 atlas_named_test(atlas_nop_test atlas -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
 atlas_named_test(atlas_uart_test atlas -p top.system.params.enable_uart true workloads/uart.elf)
 
 # Linux Tests
-set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000" --reg "gp 0x77000" --reg "tp 0x7d000" -p top.core0.execute.params.enable_syscall_emulation true)
+set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000"
+                      --reg "gp 0x77000"
+                      --reg "tp 0x7d000" -p top.core0.execute.params.enable_syscall_emulation true)
+
+set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
 atlas_named_test(atlas_dhry_test atlas ${LINUX_ARCH_SETUP} workloads/dhry.elf)
+atlas_named_test(atlas_fstatat_test atlas ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
+atlas_named_test(atlas_syscall_test atlas ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
 
 # Logging tests
 atlas_named_test(atlas_inst_logger_test atlas -l top inst nop.instlog workloads/nop.elf)
