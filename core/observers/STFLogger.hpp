@@ -7,7 +7,6 @@
 
 namespace atlas
 {
-
     class STFLogger : public Observer
     {
       public:
