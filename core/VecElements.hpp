@@ -448,7 +448,6 @@ namespace atlas
             }
 
           private:
-
             /**< Pointer to *Elements* object upon which this iterator operates. */
             const Elements* elems_ptr_ = nullptr;
             /**< Index tracking current pointed bit. */
@@ -570,7 +569,6 @@ namespace atlas
         }
 
       private:
-
         /**< Pointer to *AtlasState* object. */
         AtlasState* state_ = nullptr;
         /**< Pointer to *VectorConfig* object. */
