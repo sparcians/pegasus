@@ -1,19 +1,19 @@
 #pragma once
 
-#include "core/Action.hpp"
-
 #include <map>
 #include <string>
 #include <stdint.h>
+
+#include "core/Action.hpp"
 
 namespace atlas
 {
     class AtlasState;
 
-    class RvvcsInsts
+    class RvvConfigSettingInsts
     {
       public:
-        using base_type = RvvcsInsts;
+        using base_type = RvvConfigSettingInsts;
 
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);

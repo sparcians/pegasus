@@ -72,6 +72,5 @@ RVZVE32F_INST = [
     {'mnemonic': 'vfsqrt.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfrsqrt7.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfrec7.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vfclass.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vfdot.vv', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
+    {'mnemonic': 'vfclass.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False}
 ]
