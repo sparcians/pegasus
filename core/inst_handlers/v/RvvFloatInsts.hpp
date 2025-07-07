@@ -37,6 +37,12 @@ namespace atlas
         Action::ItrType vfaddHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode>
+        Action::ItrType vfsubHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN>
+        Action::ItrType vfrsubHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode>
         Action::ItrType vfmaccHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas

@@ -15,13 +15,21 @@ namespace atlas
       public:
         using base_type = RvvIntegerInsts;
 
-        enum struct OperandMode
+        struct OperandMode
         {
-            VV, // vector vector
-            VX, // vector scaler
-            VI, // vector immediate
-            WV, // wide   vector
-            WX  // wide   scaler
+            enum struct Mode
+            {
+                V, // vector
+                X, // scaler
+                I, // immediate
+                W  // wide
+            };
+
+            Mode dst, src1, src2;
+
+            constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2)
+            {
+            }
         };
 
         template <typename XLEN>
@@ -29,13 +37,9 @@ namespace atlas
 
       private:
         // Ingeter Arithmetic / Bitwise Logical
-        template <typename XLEN, OperandMode opMode, template <typename> typename FunctorTemp>
-        Action::ItrType viablHandler_(atlas::AtlasState* state, Action::ItrType action_it);
-
-        // Widening Integer Arithmetic
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
-        Action::ItrType vwiaHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType viablHandler_(atlas::AtlasState* state, Action::ItrType action_it);
 
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,

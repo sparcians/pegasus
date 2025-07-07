@@ -26,6 +26,20 @@ namespace atlas
             atlas::Action::createAction<&RvvFloatInsts::vfaddHandler_<XLEN, OperandMode::VF>,
                                         RvvFloatInsts>(nullptr, "vfadd.vf",
                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsub.vv",
+            atlas::Action::createAction<&RvvFloatInsts::vfsubHandler_<XLEN, OperandMode::VV>,
+                                        RvvFloatInsts>(nullptr, "vfsub.vv",
+                                                       ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsub.vf",
+            atlas::Action::createAction<&RvvFloatInsts::vfsubHandler_<XLEN, OperandMode::VF>,
+                                        RvvFloatInsts>(nullptr, "vfsub.vf",
+                                                       ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfrsub.vf",
+            atlas::Action::createAction<&RvvFloatInsts::vfrsubHandler_<XLEN>, RvvFloatInsts>(
+                nullptr, "vfrsub.vf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vfmacc.vv",
@@ -105,6 +119,54 @@ namespace atlas
             case 64:
                 return vfbinaryHelper<XLEN, 64, opMode, [](auto a, auto b) {
                     return f64_add(float64_t{a}, float64_t{b}).v;
+                }>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, RvvFloatInsts::OperandMode opMode>
+    Action::ItrType RvvFloatInsts::vfsubHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 32:
+                return vfbinaryHelper<XLEN, 32, opMode, [](auto a, auto b) {
+                    return f32_sub(float32_t{a}, float32_t{b}).v;
+                }>(state, action_it);
+                break;
+            case 64:
+                return vfbinaryHelper<XLEN, 64, opMode, [](auto a, auto b) {
+                    return f64_sub(float64_t{a}, float64_t{b}).v;
+                }>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvvFloatInsts::vfrsubHandler_(atlas::AtlasState* state,
+                                                  Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 32:
+                return vfbinaryHelper<XLEN, 32, OperandMode::VF, [](auto a, auto b) {
+                    return f32_sub(float32_t{b}, float32_t{a}).v;
+                }>(state, action_it);
+                break;
+            case 64:
+                return vfbinaryHelper<XLEN, 64, OperandMode::VF, [](auto a, auto b) {
+                    return f64_sub(float64_t{b}, float64_t{a}).v;
                 }>(state, action_it);
                 break;
             default:

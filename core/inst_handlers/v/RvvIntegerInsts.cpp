@@ -17,320 +17,548 @@ namespace atlas
         inst_handlers.emplace(
             "vadd.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VV, std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::plus>,
+                RvvIntegerInsts>(nullptr, "vadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadd.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VX, std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::plus>,
+                RvvIntegerInsts>(nullptr, "vadd.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadd.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VI, std::plus>, RvvIntegerInsts>(
-                nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::plus>,
+                RvvIntegerInsts>(nullptr, "vadd.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vand.vv", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VV, std::bit_and>,
-                           RvvIntegerInsts>(nullptr, "vand.vv", ActionTags::EXECUTE_TAG));
+            "vand.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::bit_and>,
+                RvvIntegerInsts>(nullptr, "vand.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vand.vx", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VX, std::bit_and>,
-                           RvvIntegerInsts>(nullptr, "vand.vx", ActionTags::EXECUTE_TAG));
+            "vand.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::bit_and>,
+                RvvIntegerInsts>(nullptr, "vand.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vand.vi", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VI, std::bit_and>,
-                           RvvIntegerInsts>(nullptr, "vand.vi", ActionTags::EXECUTE_TAG));
+            "vand.vi",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::bit_and>,
+                RvvIntegerInsts>(nullptr, "vand.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vor.vv", atlas::Action::createAction<
-                          &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VV, std::bit_or>,
-                          RvvIntegerInsts>(nullptr, "vor.vv", ActionTags::EXECUTE_TAG));
+            "vor.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::bit_or>,
+                RvvIntegerInsts>(nullptr, "vor.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vor.vx", atlas::Action::createAction<
-                          &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VX, std::bit_or>,
-                          RvvIntegerInsts>(nullptr, "vor.vx", ActionTags::EXECUTE_TAG));
+            "vor.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::bit_or>,
+                RvvIntegerInsts>(nullptr, "vor.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vor.vi", atlas::Action::createAction<
-                          &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VI, std::bit_or>,
-                          RvvIntegerInsts>(nullptr, "vor.vi", ActionTags::EXECUTE_TAG));
+            "vor.vi",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::bit_or>,
+                RvvIntegerInsts>(nullptr, "vor.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vxor.vv", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VV, std::bit_xor>,
-                           RvvIntegerInsts>(nullptr, "vxor.vv", ActionTags::EXECUTE_TAG));
+            "vxor.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::bit_xor>,
+                RvvIntegerInsts>(nullptr, "vxor.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vxor.vx", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VX, std::bit_xor>,
-                           RvvIntegerInsts>(nullptr, "vxor.vx", ActionTags::EXECUTE_TAG));
+            "vxor.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::bit_xor>,
+                RvvIntegerInsts>(nullptr, "vxor.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vxor.vi", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VI, std::bit_xor>,
-                           RvvIntegerInsts>(nullptr, "vxor.vi", ActionTags::EXECUTE_TAG));
+            "vxor.vi",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::bit_xor>,
+                RvvIntegerInsts>(nullptr, "vxor.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vsub.vv", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VV, std::minus>,
-                           RvvIntegerInsts>(nullptr, "vsub.vv", ActionTags::EXECUTE_TAG));
+            "vsub.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::minus>,
+                RvvIntegerInsts>(nullptr, "vsub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsub.vx", atlas::Action::createAction<
-                           &RvvIntegerInsts::viablHandler_<XLEN, OperandMode::VX, std::minus>,
-                           RvvIntegerInsts>(nullptr, "vsub.vx", ActionTags::EXECUTE_TAG));
+            "vsub.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::minus>,
+                RvvIntegerInsts>(nullptr, "vsub.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vwadd.vv", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VV, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwadd.vv", ActionTags::EXECUTE_TAG));
+            "vwadd.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwadd.vx", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VX, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwadd.vx", ActionTags::EXECUTE_TAG));
+            "vwadd.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwadd.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwadd.wv", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WV, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwadd.vv", ActionTags::EXECUTE_TAG));
+            "vwadd.wv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwadd.wx", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WX, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwadd.vx", ActionTags::EXECUTE_TAG));
+            "vwadd.wx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwadd.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vwaddu.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VV, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwaddu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwaddu.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VX, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwaddu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwaddu.wv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WV, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwaddu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwaddu.wx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WX, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwaddu.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vwsub.vv", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VV, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwsub.vv", ActionTags::EXECUTE_TAG));
+            "vwsub.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwsub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwsub.vx", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VX, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwsub.vx", ActionTags::EXECUTE_TAG));
+            "vwsub.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwsub.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwsub.wv", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WV, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwsub.vv", ActionTags::EXECUTE_TAG));
+            "vwsub.wv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwsub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vwsub.wx", atlas::Action::createAction<
-                            &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WX, true, std::plus>,
-                            RvvIntegerInsts>(nullptr, "vwsub.vx", ActionTags::EXECUTE_TAG));
+            "vwsub.wx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
+                    true, std::plus>,
+                RvvIntegerInsts>(nullptr, "vwsub.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vwsubu.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VV, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwsubu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwsubu.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::VX, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwsubu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwsubu.wv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WV, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwsubu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vwsubu.wx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vwiaHandler_<XLEN, OperandMode::WX, false, std::plus>,
+                &RvvIntegerInsts::viablHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
+                    false, std::plus>,
                 RvvIntegerInsts>(nullptr, "vwsubu.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vadc.vvm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viacsbHandler_<XLEN, OperandMode::VV, true, std::plus>,
+                &RvvIntegerInsts::viacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::plus>,
                 RvvIntegerInsts>(nullptr, "vadc.vvm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadc.vxm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viacsbHandler_<XLEN, OperandMode::VX, true, std::plus>,
+                &RvvIntegerInsts::viacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::plus>,
                 RvvIntegerInsts>(nullptr, "vadc.vxm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vadc.vim",
             atlas::Action::createAction<
-                &RvvIntegerInsts::viacsbHandler_<XLEN, OperandMode::VI, true, std::plus>,
+                &RvvIntegerInsts::viacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, std::plus>,
                 RvvIntegerInsts>(nullptr, "vadc.vim", ActionTags::EXECUTE_TAG));
 
         auto carryFn = []<typename T>(T a, T b, T c)
         { return a >= std::numeric_limits<T>::max() - b - c; };
+
         inst_handlers.emplace(
             "vmadc.vvm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VV, true, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vvm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmadc.vxm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VX, true, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vxm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmadc.vim",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VI, true, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vim", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmadc.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VV, false, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmadc.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VX, false, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmadc.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VI, false, carryFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, carryFn>,
                 RvvIntegerInsts>(nullptr, "vmadc.vi", ActionTags::EXECUTE_TAG));
 
         auto borrowFn = []<typename T>(T a, T b, T c)
         { return (b + c == std::numeric_limits<T>::max()) || (a < b + c); };
+
         inst_handlers.emplace(
             "vmsbc.vvm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VV, true, borrowFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, borrowFn>,
                 RvvIntegerInsts>(nullptr, "vmsbc.vvm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsbc.vxm",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VX, true, borrowFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, borrowFn>,
                 RvvIntegerInsts>(nullptr, "vmsbc.vxm", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsbc.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VV, false, borrowFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, borrowFn>,
                 RvvIntegerInsts>(nullptr, "vmsbc.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsbc.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmiacsbHandler_<XLEN, OperandMode::VX, false, borrowFn>,
+                &RvvIntegerInsts::vmiacsbHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, borrowFn>,
                 RvvIntegerInsts>(nullptr, "vmsbc.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmseq.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, true, std::equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::equal_to>,
                 RvvIntegerInsts>(nullptr, "vmseq.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmseq.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, true, std::equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::equal_to>,
                 RvvIntegerInsts>(nullptr, "vmseq.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmseq.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VI, true, std::equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, std::equal_to>,
                 RvvIntegerInsts>(nullptr, "vmseq.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsne.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, true, std::not_equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::not_equal_to>,
                 RvvIntegerInsts>(nullptr, "vmsne.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsne.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, true, std::not_equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::not_equal_to>,
                 RvvIntegerInsts>(nullptr, "vmsne.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsne.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VI, true, std::not_equal_to>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, std::not_equal_to>,
                 RvvIntegerInsts>(nullptr, "vmsne.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsltu.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, false, std::less>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::less>,
                 RvvIntegerInsts>(nullptr, "vmsltu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsltu.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, false, std::less>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::less>,
                 RvvIntegerInsts>(nullptr, "vmsltu.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vmslt.vv", atlas::Action::createAction<
-                            &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, true, std::less>,
-                            RvvIntegerInsts>(nullptr, "vmslt.vv", ActionTags::EXECUTE_TAG));
+            "vmslt.vv",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::less>,
+                RvvIntegerInsts>(nullptr, "vmslt.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vmslt.vx", atlas::Action::createAction<
-                            &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, true, std::less>,
-                            RvvIntegerInsts>(nullptr, "vmslt.vx", ActionTags::EXECUTE_TAG));
+            "vmslt.vx",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::less>,
+                RvvIntegerInsts>(nullptr, "vmslt.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsleu.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, false, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsleu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsleu.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, false, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsleu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsleu.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VI, false, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsleu.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsle.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, true, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsle.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsle.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, true, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsle.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsle.vi",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VI, true, std::less_equal>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, std::less_equal>,
                 RvvIntegerInsts>(nullptr, "vmsle.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsgtu.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, false, std::greater>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    false, std::greater>,
                 RvvIntegerInsts>(nullptr, "vmsgtu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsgtu.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, false, std::greater>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    false, std::greater>,
                 RvvIntegerInsts>(nullptr, "vmsgtu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmsgtu.vi",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    false, std::greater>,
+                RvvIntegerInsts>(nullptr, "vmsgtu.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmsgt.vv",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VV, true, std::greater>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    true, std::greater>,
                 RvvIntegerInsts>(nullptr, "vmsgt.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsgt.vx",
             atlas::Action::createAction<
-                &RvvIntegerInsts::vmicHandler_<XLEN, OperandMode::VX, true, std::greater>,
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
+                    true, std::greater>,
                 RvvIntegerInsts>(nullptr, "vmsgt.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmsgt.vi",
+            atlas::Action::createAction<
+                &RvvIntegerInsts::vmicHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
+                    true, std::greater>,
+                RvvIntegerInsts>(nullptr, "vmsgt.vi", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -343,10 +571,14 @@ namespace atlas
         const AtlasInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        Elements<Element<opMode.src2 == RvvIntegerInsts::OperandMode::Mode::W ? 2 * elemWidth
+                                                                              : elemWidth>,
+                 false>
+            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+        Elements<Element<opMode.src2 == RvvIntegerInsts::OperandMode::Mode::W ? 2 * elemWidth
+                                                                              : elemWidth>,
+                 false>
+            elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
@@ -354,20 +586,20 @@ namespace atlas
             for (auto iter = begin; iter != end; ++iter)
             {
                 index = iter.getIndex();
-                if constexpr (opMode == RvvIntegerInsts::OperandMode::VV)
+                if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setVal(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal()));
                 }
-                else if (opMode == RvvIntegerInsts::OperandMode::VX)
+                else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setVal(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1()))));
                 }
-                else // OperandMode::VI
+                else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setVal(Functor()(
                         elems_vs2.getElement(index).getVal(),
@@ -389,88 +621,9 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvIntegerInsts::OperandMode opMode,
-              template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viablHandler_(AtlasState* state, Action::ItrType action_it)
-    {
-        VectorConfig* vector_config = state->getVectorConfig();
-        switch (vector_config->getSEW())
-        {
-            case 8:
-                return viablHelper<XLEN, 8, opMode, FunctorTemp<uint8_t>>(state, action_it);
-                break;
-            case 16:
-                return viablHelper<XLEN, 16, opMode, FunctorTemp<uint16_t>>(state, action_it);
-                break;
-            case 32:
-                return viablHelper<XLEN, 32, opMode, FunctorTemp<uint32_t>>(state, action_it);
-                break;
-            case 64:
-                return viablHelper<XLEN, 64, opMode, FunctorTemp<uint64_t>>(state, action_it);
-                break;
-            default:
-                sparta_assert(false, "Unsupported SEW value");
-                break;
-        }
-        return ++action_it;
-    }
-
-    template <typename XLEN, size_t elemWidth, RvvIntegerInsts::OperandMode opMode,
-              typename Functor>
-    Action::ItrType vwiaHelper(AtlasState* state, Action::ItrType action_it)
-    {
-        const AtlasInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
-        constexpr size_t elemWidthVs2 = (opMode == RvvIntegerInsts::OperandMode::WX
-                                         || opMode == RvvIntegerInsts::OperandMode::WV)
-                                            ? 2 * elemWidth
-                                            : elemWidth;
-        Elements<Element<elemWidthVs2>, false> elems_vs2{state, state->getVectorConfig(),
-                                                         inst->getRs2()};
-        Elements<Element<2 * elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                         inst->getRd()};
-
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
-        {
-            size_t index = 0;
-            for (auto iter = begin; iter != end; ++iter)
-            {
-                index = iter.getIndex();
-                if constexpr (opMode == RvvIntegerInsts::OperandMode::VV
-                              || opMode == RvvIntegerInsts::OperandMode::WV)
-                {
-                    elems_vd.getElement(index).setVal(
-                        Functor()(elems_vs2.getElement(index).getVal(),
-                                  elems_vs1.getElement(index).getVal()));
-                }
-                else if constexpr (opMode == RvvIntegerInsts::OperandMode::VX
-                                   || opMode == RvvIntegerInsts::OperandMode::WX)
-                {
-                    elems_vd.getElement(index).setVal(
-                        Functor()(elems_vs2.getElement(index).getVal(),
-                                  static_cast<typename Functor::result_type>(
-                                      READ_INT_REG<XLEN>(state, inst->getRs1()))));
-                }
-            }
-        };
-
-        if (inst->getVM()) // unmasked
-        {
-            execute(elems_vs2.begin(), elems_vs2.end());
-        }
-        else // masked
-        {
-            const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
-            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
-        }
-
-        return ++action_it;
-    }
-
     template <typename XLEN, RvvIntegerInsts::OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::vwiaHandler_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viablHandler_(AtlasState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         if constexpr (isSigned)
@@ -478,13 +631,33 @@ namespace atlas
             switch (vector_config->getSEW())
             {
                 case 8:
-                    return vwiaHelper<XLEN, 8, opMode, FunctorTemp<int16_t>>(state, action_it);
+                    return viablHelper<XLEN, 8, opMode,
+                                       FunctorTemp<typename std::conditional_t<
+                                           opMode.dst == OperandMode::Mode::W, int16_t, int8_t>>>(
+                        state, action_it);
                     break;
                 case 16:
-                    return vwiaHelper<XLEN, 16, opMode, FunctorTemp<int32_t>>(state, action_it);
+                    return viablHelper<XLEN, 16, opMode,
+                                       FunctorTemp<typename std::conditional_t<
+                                           opMode.dst == OperandMode::Mode::W, uint32_t, int16_t>>>(
+                        state, action_it);
                     break;
                 case 32:
-                    return vwiaHelper<XLEN, 32, opMode, FunctorTemp<int64_t>>(state, action_it);
+                    return viablHelper<XLEN, 32, opMode,
+                                       FunctorTemp<typename std::conditional_t<
+                                           opMode.dst == OperandMode::Mode::W, int64_t, int32_t>>>(
+                        state, action_it);
+                    break;
+                case 64:
+                    if constexpr (opMode.dst == OperandMode::Mode::W)
+                    {
+                        sparta_assert(false, "Unsupported SEW value");
+                    }
+                    else
+                    {
+                        return viablHelper<XLEN, 64, opMode, FunctorTemp<int64_t>>(state,
+                                                                                   action_it);
+                    }
                     break;
                 default:
                     sparta_assert(false, "Unsupported SEW value");
@@ -496,13 +669,35 @@ namespace atlas
             switch (vector_config->getSEW())
             {
                 case 8:
-                    return vwiaHelper<XLEN, 8, opMode, FunctorTemp<uint16_t>>(state, action_it);
+                    return viablHelper<XLEN, 8, opMode,
+                                       FunctorTemp<typename std::conditional_t<
+                                           opMode.dst == OperandMode::Mode::W, uint16_t, uint8_t>>>(
+                        state, action_it);
                     break;
                 case 16:
-                    return vwiaHelper<XLEN, 16, opMode, FunctorTemp<uint32_t>>(state, action_it);
+                    return viablHelper<
+                        XLEN, 16, opMode,
+                        FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
+                                                                uint32_t, uint16_t>>>(state,
+                                                                                      action_it);
                     break;
                 case 32:
-                    return vwiaHelper<XLEN, 32, opMode, FunctorTemp<uint64_t>>(state, action_it);
+                    return viablHelper<
+                        XLEN, 32, opMode,
+                        FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
+                                                                uint64_t, uint32_t>>>(state,
+                                                                                      action_it);
+                    break;
+                case 64:
+                    if constexpr (opMode.dst == OperandMode::Mode::W)
+                    {
+                        sparta_assert(false, "Unsupported SEW value");
+                    }
+                    else
+                    {
+                        return viablHelper<XLEN, 64, opMode, FunctorTemp<uint64_t>>(state,
+                                                                                    action_it);
+                    }
                     break;
                 default:
                     sparta_assert(false, "Unsupported SEW value");
@@ -529,18 +724,18 @@ namespace atlas
         {
             auto index = iter.getIndex();
             typename Element<elemWidth>::ValueType value = 0;
-            if constexpr (opMode == RvvIntegerInsts::OperandMode::VV)
+            if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal());
             }
-            else if constexpr (opMode == RvvIntegerInsts::OperandMode::VX)
+            else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1())));
             }
-            else // OperandMode::VI
+            else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(inst->getImmediate()));
@@ -603,15 +798,15 @@ namespace atlas
             auto index = iter.getIndex();
             auto a = elems_vs2.getElement(index).getVal();
             decltype(a) b = 0, c = 0;
-            if constexpr (opMode == RvvIntegerInsts::OperandMode::VV)
+            if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
             {
                 b = elems_vs1.getElement(index).getVal();
             }
-            else if constexpr (opMode == RvvIntegerInsts::OperandMode::VX)
+            else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
             {
                 b = static_cast<decltype(b)>(READ_INT_REG<XLEN>(state, inst->getRs1()));
             }
-            else // OperandMode::VI
+            else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
             {
                 b = static_cast<decltype(b)>(inst->getImmediate());
             }
@@ -667,19 +862,19 @@ namespace atlas
             for (auto iter = begin; iter != end; ++iter)
             {
                 index = iter.getIndex();
-                if constexpr (opMode == RvvIntegerInsts::OperandMode::VV)
+                if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal()));
                 }
-                else if (opMode == RvvIntegerInsts::OperandMode::VX)
+                else if (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
-                else // OperandMode::VI
+                else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(), inst->getImmediate()));
