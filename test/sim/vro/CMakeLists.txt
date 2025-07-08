@@ -12,7 +12,7 @@ target_link_libraries(Vred_test
     atlasinsts
     softfloat
     atlassys
-    ${SPARTA_LIBS}
+    ${ATLAS_LIBS}
     mavis
     boost_json
 )
