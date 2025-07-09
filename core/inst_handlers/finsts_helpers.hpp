@@ -44,4 +44,22 @@ namespace atlas
         updateBitField(FCSR, "NV", softfloat_flag_invalid);
         WRITE_CSR_REG<XLEN>(state, FCSR, (fcsr & ~mask) | value);
     }
+
+    float16_t negate(float16_t f)
+    {
+        constexpr uint16_t sign_mask = 0x8000;
+        return float16_t{static_cast<uint16_t>(f.v ^ sign_mask)};
+    }
+
+    float32_t negate(float32_t f)
+    {
+        constexpr uint32_t sign_mask = 0x80000000;
+        return float32_t{static_cast<uint32_t>(f.v ^ sign_mask)};
+    }
+
+    float64_t negate(float64_t f)
+    {
+        constexpr uint64_t sign_mask = 0x8000000000000000;
+        return float64_t{static_cast<uint64_t>(f.v ^ sign_mask)};
+    }
 } // namespace atlas
