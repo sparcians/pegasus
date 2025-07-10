@@ -285,8 +285,8 @@ namespace atlas
                                                     Action::ItrType action_it)
     {
         const AtlasInstPtr inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
+                                                     load ? inst->getRd() : inst->getRs3()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
@@ -297,11 +297,11 @@ namespace atlas
                     UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr());
                     inst->getTranslationState()->popResult();
-                    elems_vd.getElement(iter.getIndex()).setVal(value);
+                    elems.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
-                    UintType<elemWidth> value = elems_vd.getElement(iter.getIndex()).getVal();
+                    UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
                     state->writeMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr(), value);
                     inst->getTranslationState()->popResult();
@@ -311,7 +311,7 @@ namespace atlas
 
         if (inst->getVM()) // unmasked
         {
-            execute(elems_vd.begin(), elems_vd.end());
+            execute(elems.begin(), elems.end());
         }
         else // masked
         {

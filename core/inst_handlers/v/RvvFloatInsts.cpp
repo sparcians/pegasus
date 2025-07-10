@@ -192,7 +192,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(negate(src2), src1, negate(dst)).v; };
+        { return mulAdd(fnegate(src2), src1, fnegate(dst)).v; };
         inst_handlers.emplace(
             "vfnmacc.vv",
             atlas::Action::createAction<
@@ -211,7 +211,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfnmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto msacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src2, src1, negate(dst)).v; };
+        { return mulAdd(src2, src1, fnegate(dst)).v; };
         inst_handlers.emplace(
             "vfmsac.vv",
             atlas::Action::createAction<
@@ -230,7 +230,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmsac.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(negate(src2), src1, dst).v; };
+        { return mulAdd(fnegate(src2), src1, dst).v; };
         inst_handlers.emplace(
             "vfnmsac.vv",
             atlas::Action::createAction<
@@ -268,7 +268,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaddWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(negate(src1), dst, negate(src2)).v; };
+        { return mulAdd(fnegate(src1), dst, fnegate(src2)).v; };
         inst_handlers.emplace(
             "vfnmadd.vv",
             atlas::Action::createAction<
@@ -287,7 +287,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfnmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto msubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src1, dst, negate(src2)).v; };
+        { return mulAdd(src1, dst, fnegate(src2)).v; };
         inst_handlers.emplace(
             "vfmsub.vv",
             atlas::Action::createAction<
@@ -306,7 +306,7 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmsub.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(negate(src1), dst, src2).v; };
+        { return mulAdd(fnegate(src1), dst, src2).v; };
         inst_handlers.emplace(
             "vfnmsub.vv",
             atlas::Action::createAction<
@@ -391,6 +391,39 @@ namespace atlas
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::F},
                     nmsacWrapper>,
                 RvvFloatInsts>(nullptr, "vfwnmsac.vf", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfmin.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fmin<float16_t>, fmin<float32_t>, fmin<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfmin.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfmin.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fmin<float16_t>, fmin<float32_t>, fmin<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfmin.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfmax.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fmax<float16_t>, fmax<float32_t>, fmax<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfmax.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfmax.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fmax<float16_t>, fmax<float32_t>, fmax<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfmax.vf", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvFloatInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);

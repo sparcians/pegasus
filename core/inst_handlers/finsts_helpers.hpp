@@ -1,5 +1,8 @@
 #pragma once
 
+#include <utility>
+#include <tuple>
+
 #include "core/AtlasState.hpp"
 
 extern "C"
@@ -45,21 +48,42 @@ namespace atlas
         WRITE_CSR_REG<XLEN>(state, FCSR, (fcsr & ~mask) | value);
     }
 
-    float16_t negate(float16_t f)
+    template <typename F> F fnegate(F f)
     {
-        constexpr uint16_t sign_mask = 0x8000;
-        return float16_t{static_cast<uint16_t>(f.v ^ sign_mask)};
+        using U = decltype(std::declval<F>().v);
+        static const U sign_mask{static_cast<U>(1ULL << ((8 * sizeof(U)) - 1))};
+        return F{static_cast<U>(f.v ^ sign_mask)};
     }
 
-    float32_t negate(float32_t f)
+    template <typename F> F fmin(F f1, F f2)
     {
-        constexpr uint32_t sign_mask = 0x80000000;
-        return float32_t{static_cast<uint32_t>(f.v ^ sign_mask)};
+        if constexpr (std::is_same_v<F, float16_t>)
+        {
+            return f16_le_quiet(f1, f2) ? f1 : f2;
+        }
+        else if constexpr (std::is_same_v<F, float32_t>)
+        {
+            return f32_le_quiet(f1, f2) ? f1 : f2;
+        }
+        else
+        {
+            return f64_le_quiet(f1, f2) ? f1 : f2;
+        }
     }
 
-    float64_t negate(float64_t f)
+    template <typename F> F fmax(F f1, F f2)
     {
-        constexpr uint64_t sign_mask = 0x8000000000000000;
-        return float64_t{static_cast<uint64_t>(f.v ^ sign_mask)};
+        if constexpr (std::is_same_v<F, float16_t>)
+        {
+            return f16_le_quiet(f1, f2) ? f2 : f1;
+        }
+        else if constexpr (std::is_same_v<F, float32_t>)
+        {
+            return f32_le_quiet(f1, f2) ? f2 : f1;
+        }
+        else
+        {
+            return f64_le_quiet(f1, f2) ? f2 : f1;
+        }
     }
 } // namespace atlas
