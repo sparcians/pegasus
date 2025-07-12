@@ -16,6 +16,19 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
+        // unary operations
+
+        inst_handlers.emplace(
+            "vfsqrt.v",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfunaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{f16_sqrt, f32_sqrt, f64_sqrt}>,
+                RvvFloatInsts>(nullptr, "vfsqrt.v", ActionTags::EXECUTE_TAG));
+
+        // binary operations
+
         inst_handlers.emplace(
             "vfadd.vv",
             atlas::Action::createAction<
@@ -171,6 +184,138 @@ namespace atlas
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::F},
                     FloatFuncs{f16_sub, f32_sub, f64_sub}>,
                 RvvFloatInsts>(nullptr, "vfwsub.wf", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfsgnj.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fsgnj<float16_t>, fsgnj<float32_t>, fsgnj<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnj.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsgnj.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fsgnj<float16_t>, fsgnj<float32_t>, fsgnj<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnj.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsgnjn.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fsgnjn<float16_t>, fsgnjn<float32_t>, fsgnjn<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnjn.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsgnjn.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fsgnjn<float16_t>, fsgnjn<float32_t>, fsgnjn<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnjn.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsgnjx.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fsgnjx<float16_t>, fsgnjx<float32_t>, fsgnjx<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnjx.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfsgnjx.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fsgnjx<float16_t>, fsgnjx<float32_t>, fsgnjx<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vfsgnjx.vf", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vmfeq.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{f16_eq, f32_eq, f64_eq}>,
+                RvvFloatInsts>(nullptr, "vmfeq.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfeq.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{f16_eq, f32_eq, f64_eq}>,
+                RvvFloatInsts>(nullptr, "vmfeq.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfne.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fne<float16_t>, fne<float32_t>, fne<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vmfne.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfne.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fne<float16_t>, fne<float32_t>, fne<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vmfne.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmflt.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{f16_lt, f32_lt, f64_lt}>,
+                RvvFloatInsts>(nullptr, "vmflt.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmflt.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{f16_lt, f32_lt, f64_lt}>,
+                RvvFloatInsts>(nullptr, "vmflt.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfle.vv",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{f16_le, f32_le, f64_le}>,
+                RvvFloatInsts>(nullptr, "vmfle.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfle.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{f16_le, f32_le, f64_le}>,
+                RvvFloatInsts>(nullptr, "vmfle.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfgt.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fgt<float16_t>, fgt<float32_t>, fgt<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vmfgt.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmfgt.vf",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vmfbinaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
+                    FloatFuncs{fge<float16_t>, fge<float32_t>, fge<float64_t>}>,
+                RvvFloatInsts>(nullptr, "vmfgt.vf", ActionTags::EXECUTE_TAG));
+
+        // ternary operations
 
         auto maccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
         { return mulAdd(src2, src1, dst).v; };
@@ -430,6 +575,134 @@ namespace atlas
     template void RvvFloatInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    Action::ItrType vfunaryHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        Elements<
+            Element<opMode.src2 == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
+            false>
+            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+        Elements<
+            Element<opMode.dst == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
+            false>
+            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
+
+        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        {
+            for (auto iter = begin; iter != end; ++iter)
+            {
+                auto index = iter.getIndex();
+                elems_vd.getElement(index).setVal(func(elems_vs2.getElement(index).getVal()));
+            }
+        };
+
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vs2.begin(), elems_vs2.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
+        }
+
+        updateFloatCsrs<XLEN>(state);
+
+        return ++action_it;
+    }
+
+    /*
+        template <typename XLEN, RvvFloatInsts::FloatFuncs funcs>
+        Action::ItrType RvvFloatInsts::vfunaryHandler_(atlas::AtlasState* state,
+                                                       Action::ItrType action_it)
+        {
+            VectorConfig* vector_config = state->getVectorConfig();
+            switch (vector_config->getSEW())
+            {
+                case 16:
+                    return vfunaryHelper<XLEN, 16, [](auto src2)
+                                         { return funcs.f16(float16_t{src2}).v; }>(state,
+       action_it); break; case 32: return vfunaryHelper<XLEN, 32, [](auto src2) { return
+       funcs.f32(float32_t{src2}).v; }>(state, action_it); break; case 64: return
+       vfunaryHelper<XLEN, 64, [](auto src2) { return funcs.f64(float64_t{src2}).v; }>(state,
+       action_it); break; default: sparta_assert(false, "Unsupported SEW value"); break;
+            }
+            return ++action_it;
+        }
+    */
+
+    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    Action::ItrType RvvFloatInsts::vfunaryHandler_(atlas::AtlasState* state,
+                                                   Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 16:
+                return vfunaryHelper<XLEN, 16, opMode, [](auto src2)
+                                     {
+                                         using Traits = FuncTraits<decltype(funcs.f16)>;
+                                         using ReturnType = typename Traits::ReturnType;
+                                         using ArgType =
+                                             std::tuple_element_t<0, typename Traits::ArgsTuple>;
+                                         if constexpr (std::is_integral_v<ReturnType>)
+                                         {
+                                             return funcs.f16(ArgType{src2});
+                                         }
+                                         else
+                                         {
+                                             return funcs.f16(ArgType{src2}).v;
+                                         }
+                                     }>(state, action_it);
+                break;
+            case 32:
+                return vfunaryHelper<XLEN, 32, opMode, [](auto src2)
+                                     {
+                                         using Traits = FuncTraits<decltype(funcs.f32)>;
+                                         using ReturnType = typename Traits::ReturnType;
+                                         using ArgType =
+                                             std::tuple_element_t<0, typename Traits::ArgsTuple>;
+                                         if constexpr (std::is_integral_v<ReturnType>)
+                                         {
+                                             return funcs.f32(ArgType{src2});
+                                         }
+                                         else
+                                         {
+                                             return funcs.f32(ArgType{src2}).v;
+                                         }
+                                     }>(state, action_it);
+                break;
+            case 64:
+                if constexpr (opMode.dst != OperandMode::Mode::W
+                              && opMode.src2
+                                     != OperandMode::Mode::W) // neither narrowing nor widening
+                {
+                    return vfunaryHelper<XLEN, 64, opMode, [](auto src2)
+                                         {
+                                             using Traits = FuncTraits<decltype(funcs.f64)>;
+                                             using ReturnType = typename Traits::ReturnType;
+                                             using ArgType =
+                                                 std::tuple_element_t<0,
+                                                                      typename Traits::ArgsTuple>;
+                                             if constexpr (std::is_integral_v<ReturnType>)
+                                             {
+                                                 return funcs.f64(ArgType{src2});
+                                             }
+                                             else
+                                             {
+                                                 return funcs.f64(ArgType{src2}).v;
+                                             }
+                                         }>(state, action_it);
+                }
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
     Action::ItrType vfbinaryHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -559,6 +832,81 @@ namespace atlas
                                       [](auto src2, auto src1) {
                                           return funcs.f64(float64_t{src1}, float64_t{src2}).v;
                                       }>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    Action::ItrType vmfbinaryHelper(AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
+                                                      inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
+
+        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        {
+            for (auto iter = begin; iter != end; ++iter)
+            {
+                auto index = iter.getIndex();
+                if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::V)
+                {
+                    elems_vd.getElement(index).setBit(func(elems_vs2.getElement(index).getVal(),
+                                                           elems_vs1.getElement(index).getVal()));
+                }
+                else if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::F)
+                {
+                    elems_vd.getElement(index).setBit(
+                        func(elems_vs2.getElement(index).getVal(),
+                             static_cast<UintType<elemWidth>>(
+                                 READ_FP_REG<RV64>(state, inst->getRs1()))));
+                }
+            }
+        };
+
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vs2.begin(), elems_vs2.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
+        }
+
+        updateFloatCsrs<XLEN>(state);
+
+        return ++action_it;
+    }
+
+    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    Action::ItrType RvvFloatInsts::vmfbinaryHandler_(atlas::AtlasState* state,
+                                                     Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 16:
+                return vfbinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
+                    return funcs.f16(float16_t{src2}, float16_t{src1});
+                }>(state, action_it);
+                break;
+            case 32:
+                return vfbinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
+                    return funcs.f32(float32_t{src2}, float32_t{src1});
+                }>(state, action_it);
+                break;
+            case 64:
+                return vfbinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
+                    return funcs.f64(float64_t{src2}, float64_t{src1});
+                }>(state, action_it);
                 break;
             default:
                 sparta_assert(false, "Unsupported SEW value");

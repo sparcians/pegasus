@@ -55,10 +55,16 @@ namespace atlas
 
       private:
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        Action::ItrType vfunaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
         Action::ItrType vfbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, FloatFuncs funcs>
         Action::ItrType vfrbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        Action::ItrType vmfbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, auto funcWrapper>
         Action::ItrType vfternaryHandler_(atlas::AtlasState* state, Action::ItrType action_it);

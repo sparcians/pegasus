@@ -286,7 +286,7 @@ namespace atlas
     {
         const AtlasInstPtr inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
-                                                     load ? inst->getRd() : inst->getRs3()};
+                                                  load ? inst->getRd() : inst->getRs3()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
