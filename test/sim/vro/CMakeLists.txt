@@ -13,8 +13,6 @@ target_link_libraries(Vred_test
     softfloat
     atlassys
     ${ATLAS_LIBS}
-    mavis
-    boost_json
 )
 
 atlas_named_test(Vred_test_run Vred_test)
