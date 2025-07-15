@@ -8,6 +8,7 @@
 extern "C"
 {
 #include "source/RISCV/specialize.h"
+#include "source/include/internals.h"
 }
 
 namespace atlas
