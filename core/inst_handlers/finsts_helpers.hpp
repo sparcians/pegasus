@@ -266,7 +266,7 @@ namespace atlas
      * @param func Wrapped function.
      * @param args Variadic function arguments of same type.
      */
-    auto func_wrapper = [](auto func, auto... args)
+    inline auto func_wrapper = [](auto func, auto... args)
     {
         using Traits = FuncTraits<decltype(func)>;
         using ReturnType = typename Traits::ReturnType;
