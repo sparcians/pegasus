@@ -171,4 +171,37 @@ namespace atlas
             return !f64_lt(f1, f2);
         }
     }
+
+    /**
+     * @brief Call *func* by adjusting arguments from uint_t and return uint_t as return value.
+     *        Functor can be used instead of lambda.
+     * @param func Wrapped function.
+     * @param args Variadic function arguments of same type.
+     */
+    auto func_wrapper = [](auto func, auto... args)
+    {
+        using Traits = FuncTraits<decltype(func)>;
+        using ReturnType = typename Traits::ReturnType;
+        using ArgType = std::tuple_element_t<0, typename Traits::ArgsTuple>;
+        ReturnType r;
+
+        if constexpr (std::is_integral_v<ArgType>)
+        {
+            r = std::apply(func, std::make_tuple((static_cast<ArgType>(args), ...)));
+        }
+        else
+        {
+            using IntT = decltype(std::declval<ArgType>().v);
+            r = std::apply(func, std::make_tuple((ArgType{static_cast<IntT>(args)}, ...)));
+        }
+
+        if constexpr (std::is_integral_v<ReturnType>)
+        {
+            return r;
+        }
+        else // floatX type
+        {
+            return r.v;
+        }
+    };
 } // namespace atlas

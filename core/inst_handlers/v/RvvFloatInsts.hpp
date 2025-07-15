@@ -54,19 +54,25 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vfunaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType vfmvHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vfbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfUnaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+        Action::ItrType vfFloatToIntHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        Action::ItrType vfBinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, FloatFuncs funcs>
-        Action::ItrType vfrbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfrBinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vmfbinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vmfBinaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, auto funcWrapper>
-        Action::ItrType vfternaryHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType vfTernaryHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
