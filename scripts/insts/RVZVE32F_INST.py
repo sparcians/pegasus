@@ -9,7 +9,7 @@ RVZVE32F_INST = [
     {'mnemonic': 'vfslide1up.vf', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfslide1down.vf', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfmv.s.f', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vfmerge.vfm', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
+    {'mnemonic': 'vfmerge.vfm', 'handler': 'vfmerge.vfm', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfmv.v.f', 'handler': 'vfmv.v.f', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vmfeq.vf', 'handler': 'vmfeq.vf', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vmfle.vf', 'handler': 'vmfle.vf', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
@@ -72,5 +72,5 @@ RVZVE32F_INST = [
     {'mnemonic': 'vfsqrt.v', 'handler': 'vfsqrt.v', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfrsqrt7.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfrec7.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vfclass.v', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False}
+    {'mnemonic': 'vfclass.v', 'handler': 'vfclass.v', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False}
 ]

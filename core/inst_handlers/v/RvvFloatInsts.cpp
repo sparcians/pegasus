@@ -23,6 +23,13 @@ namespace atlas
             atlas::Action::createAction<&RvvFloatInsts::vfmvHandler_<XLEN>, RvvFloatInsts>(
                 nullptr, "vfmv.v.f", ActionTags::EXECUTE_TAG));
 
+        // merge operation
+
+        inst_handlers.emplace(
+            "vfmerge.vfm",
+            atlas::Action::createAction<&RvvFloatInsts::vfmergeHandler_<XLEN>, RvvFloatInsts>(
+                nullptr, "vfmerge.vfm", ActionTags::EXECUTE_TAG));
+
         // unary operations
 
         inst_handlers.emplace(
@@ -140,6 +147,15 @@ namespace atlas
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::W, OperandMode::Mode::V},
                     FloatFuncs{i32_to_f16, i64_to_f32, nullptr}>,
                 RvvFloatInsts>(nullptr, "vfncvt.f.x.w", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfclass.v",
+            atlas::Action::createAction<
+                &RvvFloatInsts::vfUnaryHandler_<
+                    XLEN,
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    FloatFuncs{fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>}>,
+                RvvFloatInsts>(nullptr, "vfclass.v", ActionTags::EXECUTE_TAG));
+
         inst_handlers.emplace(
             "vfncvt.f.f.w",
             atlas::Action::createAction<
@@ -727,6 +743,57 @@ namespace atlas
                 break;
             case 64:
                 return vfmvHelper<XLEN, 64>(state, action_it);
+                break;
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth>
+    Action::ItrType vfmergeHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    {
+        const AtlasInstPtr & inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                     inst->getRd()};
+        const UintType<elemWidth> f =
+            static_cast<UintType<elemWidth>>(READ_FP_REG<XLEN>(state, inst->getRs1()));
+        const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+
+        for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
+        {
+            auto index = iter.getIndex();
+            if (mask_elems.getBit(index))
+            {
+                elems_vd.getElement(index).setVal(f);
+            }
+            else
+            {
+                elems_vd.getElement(index).setVal(elems_vd.getElement(index).getVal());
+            }
+        }
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvvFloatInsts::vfmergeHandler_(atlas::AtlasState* state,
+                                                   Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 16:
+                return vfmergeHelper<XLEN, 16>(state, action_it);
+                break;
+            case 32:
+                return vfmergeHelper<XLEN, 32>(state, action_it);
+                break;
+            case 64:
+                return vfmergeHelper<XLEN, 64>(state, action_it);
                 break;
             default:
                 sparta_assert(false, "Unsupported SEW value");

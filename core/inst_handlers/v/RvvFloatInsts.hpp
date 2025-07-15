@@ -57,6 +57,9 @@ namespace atlas
         template <typename XLEN>
         Action::ItrType vfmvHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
+        template <typename XLEN>
+        Action::ItrType vfmergeHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
         Action::ItrType vfUnaryHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
 
