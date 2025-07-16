@@ -193,7 +193,7 @@ RVZVE32X_INST = [
     {'mnemonic': 'vmsif.m', 'handler': 'vmsif.m', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'viota.m', 'handler': 'viota.m', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vid.v', 'handler': 'vid.v', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vpopc.m', 'handler': 'vpopc.m', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
+    {'mnemonic': 'vcpop.m', 'handler': 'vcpop.m', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfirst.m', 'handler': 'vfirst.m', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vdivu.vv', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vdiv.vv', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
