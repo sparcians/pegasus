@@ -1,5 +1,5 @@
 import os, subprocess, sys
-from backend.atlas_dtypes import JsonConverter
+from backend.pegasus_dtypes import JsonConverter
 from backend.sim_api import BrokenPipeResponse
 
 # This class is to be used as follows:
@@ -21,7 +21,7 @@ class SimWrapper:
     def UnscopedEnter(self):
         riscv_tests_dir = os.path.abspath(self.riscv_tests_dir)
         os.chdir(os.path.dirname(self.sim_exe_path))
-        program_path = "./atlas"
+        program_path = "./pegasus"
         program_args = ["--interactive"]
 
         arch = self.test_name[:4]
@@ -42,7 +42,7 @@ class SimWrapper:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.UnscopedExit()
 
-# This class runs an Atlas simulation in the background and provides basic
+# This class runs an Pegasus simulation in the background and provides basic
 # low-level communication with the simulator.
 class SimEndpoint:
     def __init__(self):
