@@ -58,8 +58,8 @@ namespace atlas
                 RvvMaskInsts>(nullptr, "vmxnor.mm", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vpopc.m", atlas::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
-                           nullptr, "vpopc.m", ActionTags::EXECUTE_TAG));
+            "vcpop.m", atlas::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
+                           nullptr, "vcpop.m", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vfirst.m",
