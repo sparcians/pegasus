@@ -2,12 +2,12 @@
 
 #include <stdint.h>
 
-#include "core/AtlasState.hpp"
+#include "core/PegasusState.hpp"
 #include "core/VecConfig.hpp"
 #include "core/VecNums.hpp"
-#include "include/AtlasUtils.hpp"
+#include "include/PegasusUtils.hpp"
 
-namespace atlas
+namespace pegasus
 {
     /**
      * @class Element
@@ -117,11 +117,11 @@ namespace atlas
         /**
          * @brief Constructor.
          *
-         * @param state Poninter of *AtlasState* object.
+         * @param state Poninter of *PegasusState* object.
          * @param reg_id vector register ID.
          * @param idx Index offset in the Register
          */
-        Element(AtlasState* state, uint32_t reg_id, uint32_t idx) :
+        Element(PegasusState* state, uint32_t reg_id, uint32_t idx) :
             state_(state),
             reg_id_(reg_id),
             idx_(idx)
@@ -137,7 +137,7 @@ namespace atlas
         /**
          * @brief Set *state_*.
          */
-        void setState(AtlasState* state) { state_ = state; }
+        void setState(PegasusState* state) { state_ = state; }
 
         /**
          * @brief Set *reg_id_*.
@@ -226,7 +226,7 @@ namespace atlas
 
       private:
         /**< Needed for vector register access. */
-        AtlasState* state_ = nullptr;
+        PegasusState* state_ = nullptr;
         /**< vector register ID. */
         uint32_t reg_id_ = 0;
         /**< Index offset for vector register. */
@@ -457,11 +457,11 @@ namespace atlas
         /**
          * @brief Constructor for vector register group *Elements*.
          *
-         * @param state Poninter to *AtlasState* object.
+         * @param state Poninter to *PegasusState* object.
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
+        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
         requires EnableIf<!isMaskElems>
             :
             state_(state),
@@ -475,11 +475,11 @@ namespace atlas
         /**
          * @brief Constructor for vector mask *Elements*.
          *
-         * @param state Poninter to *AtlasState* object.
+         * @param state Poninter to *PegasusState* object.
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
+        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
         requires EnableIf<isMaskElems>
             :
             state_(state),
@@ -569,8 +569,8 @@ namespace atlas
         }
 
       private:
-        /**< Pointer to *AtlasState* object. */
-        AtlasState* state_ = nullptr;
+        /**< Pointer to *PegasusState* object. */
+        PegasusState* state_ = nullptr;
         /**< Pointer to *VectorConfig* object. */
         const VectorConfig* config_ = nullptr;
         /**< Starting *Element* position. */
@@ -584,4 +584,4 @@ namespace atlas
     using MaskElement = Element<VLEN_MIN>;
     using MaskElements = Elements<MaskElement, true>;
     using MaskBitIterator = MaskElements::MaskBitIterator<>;
-} // namespace atlas
+} // namespace pegasus

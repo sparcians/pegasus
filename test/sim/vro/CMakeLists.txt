@@ -7,12 +7,12 @@ file(CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../core/inst_handlers/rv64  ${CMAKE
 add_executable(Vred_test Vred_test.cpp)
 
 target_link_libraries(Vred_test 
-    atlassim
-    atlascore
-    atlasinsts
+    pegasussim
+    pegasuscore
+    pegasusinsts
     softfloat
-    atlassys
-    ${ATLAS_LIBS}
+    pegasussys
+    ${PEGASUS_LIBS}
 )
 
-atlas_named_test(Vred_test_run Vred_test)
+pegasus_named_test(Vred_test_run Vred_test)

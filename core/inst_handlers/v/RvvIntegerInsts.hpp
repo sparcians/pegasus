@@ -6,9 +6,9 @@
 
 #include "core/Action.hpp"
 
-namespace atlas
+namespace pegasus
 {
-    class AtlasState;
+    class PegasusState;
 
     class RvvIntegerInsts
     {
@@ -20,10 +20,10 @@ namespace atlas
 
       private:
         template <template <typename> typename OP>
-        Action::ItrType viavvHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType viavvHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, template <typename> typename OP>
-        Action::ItrType viavxHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType viavxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <template <typename> typename OP>
-        Action::ItrType viaviHandler_(atlas::AtlasState* state, Action::ItrType action_it);
+        Action::ItrType viaviHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
-} // namespace atlas
+} // namespace pegasus

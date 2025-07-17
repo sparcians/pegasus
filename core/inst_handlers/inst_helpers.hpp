@@ -53,7 +53,7 @@ inline int64_t mulh(int64_t a, int64_t b)
     return negate ? ~res + ((uint64_t)a * (uint64_t)b == 0) : res;
 }
 
-namespace atlas
+namespace pegasus
 {
     template <uint64_t Mask> struct RegisterBitMask
     {
@@ -87,4 +87,4 @@ namespace atlas
         }
     };
 
-} // namespace atlas
+} // namespace pegasus
