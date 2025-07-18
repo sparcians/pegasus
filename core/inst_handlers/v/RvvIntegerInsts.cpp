@@ -564,20 +564,15 @@ namespace atlas
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t elemWidth, RvvIntegerInsts::OperandMode opMode,
-              typename Functor>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
     Action::ItrType viablHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
-        Elements<Element<opMode.src2 == RvvIntegerInsts::OperandMode::Mode::W ? 2 * elemWidth
-                                                                              : elemWidth>,
-                 false>
+        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        Elements<Element<opMode.src2 == RvvIntegerInsts::OperandMode::Mode::W ? 2 * elemWidth
-                                                                              : elemWidth>,
-                 false>
+        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
@@ -586,20 +581,20 @@ namespace atlas
             for (; iter != end; ++iter)
             {
                 index = iter.getIndex();
-                if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setVal(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal()));
                 }
-                else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
+                else if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setVal(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1()))));
                 }
-                else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
+                else // opMode.src1 == OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setVal(Functor()(
                         elems_vs2.getElement(index).getVal(),
@@ -621,7 +616,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvIntegerInsts::OperandMode opMode, bool isSigned,
+    template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::viablHandler_(AtlasState* state, Action::ItrType action_it)
     {
@@ -707,8 +702,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvIntegerInsts::OperandMode opMode, bool hasMaskOp,
-              typename Functor>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, typename Functor>
     Action::ItrType viacsbHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -724,18 +718,18 @@ namespace atlas
         {
             auto index = iter.getIndex();
             typename Element<elemWidth>::ValueType value = 0;
-            if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
+            if constexpr (opMode.src1 == OperandMode::Mode::V)
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal());
             }
-            else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
+            else if constexpr (opMode.src1 == OperandMode::Mode::X)
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1())));
             }
-            else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
+            else // opMode.src1 == OperandMode::Mode::I
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
                                   static_cast<typename Functor::result_type>(inst->getImmediate()));
@@ -751,7 +745,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvIntegerInsts::OperandMode opMode, bool hasMaskOp,
+    template <typename XLEN, OperandMode opMode, bool hasMaskOp,
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::viacsbHandler_(AtlasState* state, Action::ItrType action_it)
     {
@@ -781,8 +775,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvIntegerInsts::OperandMode opMode, bool hasMaskOp,
-              auto detectFunc>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, auto detectFunc>
     Action::ItrType vmiacsbHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -798,15 +791,15 @@ namespace atlas
             auto index = iter.getIndex();
             auto a = elems_vs2.getElement(index).getVal();
             decltype(a) b = 0, c = 0;
-            if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
+            if constexpr (opMode.src1 == OperandMode::Mode::V)
             {
                 b = elems_vs1.getElement(index).getVal();
             }
-            else if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
+            else if constexpr (opMode.src1 == OperandMode::Mode::X)
             {
                 b = static_cast<decltype(b)>(READ_INT_REG<XLEN>(state, inst->getRs1()));
             }
-            else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
+            else // opMode.src1 == OperandMode::Mode::I
             {
                 b = static_cast<decltype(b)>(inst->getImmediate());
             }
@@ -820,7 +813,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvIntegerInsts::OperandMode opMode, bool hasMaskOp, auto detectFunc>
+    template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFunc>
     Action::ItrType RvvIntegerInsts::vmiacsbHandler_(AtlasState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
@@ -845,8 +838,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvIntegerInsts::OperandMode opMode,
-              typename Functor>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
     Action::ItrType vmicHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -862,19 +854,19 @@ namespace atlas
             for (auto iter = begin; iter != end; ++iter)
             {
                 index = iter.getIndex();
-                if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   elems_vs1.getElement(index).getVal()));
                 }
-                else if (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::X)
+                else if (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(),
                                   READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
-                else // opMode.src1 == RvvIntegerInsts::OperandMode::Mode::I
+                else // opMode.src1 == OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setBit(
                         Functor()(elems_vs2.getElement(index).getVal(), inst->getImmediate()));
@@ -895,7 +887,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvIntegerInsts::OperandMode opMode, bool isSigned,
+    template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::vmicHandler_(AtlasState* state, Action::ItrType action_it)
     {

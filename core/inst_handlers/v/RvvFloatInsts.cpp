@@ -802,17 +802,13 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfUnaryHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
-        Elements<
-            Element<opMode.src2 == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        Elements<
-            Element<opMode.dst == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
@@ -840,7 +836,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(atlas::AtlasState* state,
                                                    Action::ItrType action_it)
     {
@@ -880,7 +876,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfFloatToIntHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         using Traits = FuncTraits<decltype(func)>;
@@ -888,13 +884,9 @@ namespace atlas
         using IntT = decltype(std::declval<ArgType>().v);
 
         const AtlasInstPtr & inst = state->getCurrentInst();
-        Elements<
-            Element<opMode.src2 == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        Elements<
-            Element<opMode.dst == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
@@ -924,7 +916,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
     Action::ItrType RvvFloatInsts::vfFloatToIntHandler_(atlas::AtlasState* state,
                                                         Action::ItrType action_it)
     {
@@ -959,19 +951,15 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfBinaryHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
-        Elements<
-            Element<opMode.src2 == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        Elements<
-            Element<opMode.dst == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
@@ -981,12 +969,12 @@ namespace atlas
             {
                 auto index = iter.getIndex();
                 typename decltype(elems_vd)::ElemType::ValueType value = 0;
-                if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     value = func(elems_vs2.getElement(index).getVal(),
                                  elems_vs1.getElement(index).getVal());
                 }
-                else if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::F)
+                else if constexpr (opMode.src1 == OperandMode::Mode::F)
                 {
                     value = func(
                         elems_vs2.getElement(index).getVal(),
@@ -1011,7 +999,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
     Action::ItrType RvvFloatInsts::vfBinaryHandler_(atlas::AtlasState* state,
                                                     Action::ItrType action_it)
     {
@@ -1097,7 +1085,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vmfbinaryHelper(AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -1113,12 +1101,12 @@ namespace atlas
             for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
-                if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setBit(func(elems_vs2.getElement(index).getVal(),
                                                            elems_vs1.getElement(index).getVal()));
                 }
-                else if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::F)
+                else if constexpr (opMode.src1 == OperandMode::Mode::F)
                 {
                     elems_vd.getElement(index).setBit(
                         func(elems_vs2.getElement(index).getVal(),
@@ -1143,7 +1131,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
     Action::ItrType RvvFloatInsts::vmfBinaryHandler_(atlas::AtlasState* state,
                                                      Action::ItrType action_it)
     {
@@ -1172,7 +1160,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, RvvFloatInsts::OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfTernaryHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
@@ -1180,9 +1168,7 @@ namespace atlas
                                                       inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
-        Elements<
-            Element<opMode.dst == RvvFloatInsts::OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-            false>
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
@@ -1193,12 +1179,12 @@ namespace atlas
                 auto index = iter.getIndex();
                 auto elem_vd = elems_vd.getElement(index);
                 typename Element<elemWidth>::ValueType value = 0;
-                if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     value = func(elems_vs2.getElement(index).getVal(),
                                  elems_vs1.getElement(index).getVal(), elem_vd.getVal());
                 }
-                else if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::F)
+                else if constexpr (opMode.src1 == OperandMode::Mode::F)
                 {
                     value = func(
                         elems_vs2.getElement(index).getVal(),
@@ -1224,7 +1210,7 @@ namespace atlas
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::OperandMode opMode, auto funcWrapper>
+    template <typename XLEN, OperandMode opMode, auto funcWrapper>
     Action::ItrType RvvFloatInsts::vfTernaryHandler_(atlas::AtlasState* state,
                                                      Action::ItrType action_it)
     {

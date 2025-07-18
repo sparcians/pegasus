@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "core/Action.hpp"
+#include "core/inst_handlers/vector_types.hpp"
 
 namespace atlas
 {
@@ -14,23 +15,6 @@ namespace atlas
     {
       public:
         using base_type = RvvIntegerInsts;
-
-        struct OperandMode
-        {
-            enum struct Mode
-            {
-                V, // vector
-                X, // scaler
-                I, // immediate
-                W  // wide
-            };
-
-            const Mode dst, src1, src2;
-
-            constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2)
-            {
-            }
-        };
 
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);

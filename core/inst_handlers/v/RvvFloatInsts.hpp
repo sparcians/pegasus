@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "core/Action.hpp"
+#include "core/inst_handlers/vector_types.hpp"
 
 extern "C"
 {
@@ -23,23 +24,6 @@ namespace atlas
     {
       public:
         using base_type = RvvFloatInsts;
-
-        struct OperandMode
-        {
-            enum struct Mode
-            {
-                V, // vector
-                F, // scaler
-                I, // immediate
-                W  // wide
-            };
-
-            const Mode dst, src1, src2;
-
-            constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2)
-            {
-            }
-        };
 
         template <typename F16, typename F32, typename F64> struct FloatFuncs
         {
