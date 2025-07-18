@@ -746,7 +746,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvvFloatInsts::vfmvHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvvFloatInsts::vfmvHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())

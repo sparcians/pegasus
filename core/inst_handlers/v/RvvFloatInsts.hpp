@@ -42,22 +42,28 @@ namespace pegasus
         Action::ItrType vfmvHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
 
         template <typename XLEN>
-        Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr,
+                                        Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
+                                        Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
-        Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vfBinaryHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfBinaryHandler_(pegasus::PegasusState* state_ptr,
+                                         Action::ItrType action_it);
 
         template <typename XLEN, FloatFuncs funcs>
-        Action::ItrType vfrBinaryHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vfrBinaryHandler_(pegasus::PegasusState* state_ptr,
+                                          Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
-        Action::ItrType vmfBinaryHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vmfBinaryHandler_(pegasus::PegasusState* state_ptr,
+                                          Action::ItrType action_it);
 
         template <typename XLEN, OperandMode opMode, auto funcWrapper>
         Action::ItrType vfTernaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
