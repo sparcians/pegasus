@@ -11,11 +11,11 @@ add_dependencies(pegasussim AutogenArchFiles)
 add_executable(pegasus pegasus.cpp)
 
 target_link_libraries(pegasus
-    pegasussim
     pegasuscore
     pegasusinsts
     softfloat
     pegasussys
+    pegasussim
     ${PEGASUS_LIBS}
 )
 
