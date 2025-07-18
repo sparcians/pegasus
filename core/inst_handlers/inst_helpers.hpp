@@ -21,8 +21,8 @@ template <typename T> inline reg_t zext(T x, uint32_t pos)
 
 inline uint64_t mulhu(uint64_t a, uint64_t b)
 {
-    uint64_t t;
-    uint32_t y1, y2;
+    uint64_t t = 0;
+    uint32_t y1 = 0, y2 = 0;
     uint64_t a0 = (uint32_t)a, a1 = a >> 32;
     uint64_t b0 = (uint32_t)b, b1 = b >> 32;
 

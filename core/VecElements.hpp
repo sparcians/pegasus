@@ -201,7 +201,7 @@ namespace atlas
          */
         void setVal(ValueType value)
         {
-            ValueType mask = getMask();
+            const ValueType mask = getMask();
             val_ = value & mask;
             ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & ~mask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val | val_, idx_);
@@ -212,11 +212,11 @@ namespace atlas
          * @param index The index of requested bit.
          * @return Bit value at *index*.
          */
-        ValueType getBit(size_t index)
+        ValueType getBit(size_t index) const
         {
-            val_ = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & getMask();
-            ValueType bitmask = (ValueType{1} << index) & getMask();
-            return (val_ & bitmask) >> index;
+            return (READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & (ValueType{1} << index)
+                    & getMask())
+                   >> index;
         }
 
         /**
@@ -226,8 +226,8 @@ namespace atlas
         void setBit(size_t index)
         {
             ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_);
-            ValueType mask = getMask();
-            ValueType bitmask = (ValueType{1} << index) & getMask();
+            const ValueType mask = getMask();
+            ValueType bitmask = (ValueType{1} << index) & mask;
             val |= bitmask;
             val_ = val & mask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val, idx_);
@@ -240,8 +240,8 @@ namespace atlas
         void clearBit(size_t index)
         {
             ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_);
-            ValueType mask = getMask();
-            ValueType bitmask = (ValueType{1} << index) & getMask();
+            const ValueType mask = getMask();
+            ValueType bitmask = (ValueType{1} << index) & mask;
             val &= ~bitmask;
             val_ = val & mask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val, idx_);

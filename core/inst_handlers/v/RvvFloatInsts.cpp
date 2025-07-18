@@ -816,9 +816,9 @@ namespace atlas
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
                 elems_vd.getElement(index).setVal(func(elems_vs2.getElement(index).getVal()));
@@ -898,9 +898,9 @@ namespace atlas
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
                 elems_vd.getElement(index).setVal(
@@ -975,9 +975,9 @@ namespace atlas
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
                 typename decltype(elems_vd)::ElemType::ValueType value = 0;
@@ -1108,9 +1108,9 @@ namespace atlas
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
                 if constexpr (opMode.src1 == RvvFloatInsts::OperandMode::Mode::V)
@@ -1186,9 +1186,9 @@ namespace atlas
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 auto index = iter.getIndex();
                 auto elem_vd = elems_vd.getElement(index);

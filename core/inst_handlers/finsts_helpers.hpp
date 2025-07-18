@@ -49,14 +49,6 @@ namespace atlas
         WRITE_CSR_REG<XLEN>(state, FCSR, (fcsr & ~mask) | value);
     }
 
-    template <typename T> struct FuncTraits;
-
-    template <typename R, typename... Args> struct FuncTraits<R (*)(Args...)>
-    {
-        using ReturnType = R;
-        using ArgsTuple = std::tuple<Args...>;
-    };
-
     template <typename U> inline constexpr U usgnmask()
     {
         return static_cast<U>(1ULL << ((8 * sizeof(U)) - 1));
@@ -259,6 +251,14 @@ namespace atlas
         }
         return val;
     }
+
+    template <typename T> struct FuncTraits;
+
+    template <typename R, typename... Args> struct FuncTraits<R (*)(Args...)>
+    {
+        using ReturnType = R;
+        using ArgsTuple = std::tuple<Args...>;
+    };
 
     /**
      * @brief Call *func* by adjusting arguments from uint_t and return uint_t as return value.

@@ -580,10 +580,10 @@ namespace atlas
                  false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
-        auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
+        auto execute = [&](auto iter, const auto & end)
         {
             size_t index = 0;
-            for (auto iter = begin; iter != end; ++iter)
+            for (; iter != end; ++iter)
             {
                 index = iter.getIndex();
                 if constexpr (opMode.src1 == RvvIntegerInsts::OperandMode::Mode::V)

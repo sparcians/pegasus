@@ -34,7 +34,7 @@ namespace atlas
                 W  // wide
             };
 
-            Mode dst, src1, src2;
+            const Mode dst, src1, src2;
 
             constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2)
             {
@@ -43,9 +43,9 @@ namespace atlas
 
         template <typename F16, typename F32, typename F64> struct FloatFuncs
         {
-            F16 f16;
-            F32 f32;
-            F64 f64;
+            const F16 f16;
+            const F32 f32;
+            const F64 f64;
 
             constexpr FloatFuncs(F16 f16, F32 f32, F64 f64) : f16(f16), f32(f32), f64(f64) {}
         };
