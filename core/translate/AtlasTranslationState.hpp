@@ -9,7 +9,7 @@ namespace atlas
     class AtlasTranslationState
     {
       public:
-        static const uint32_t MAX_TRANSLATION = 8;
+        static const uint32_t MAX_TRANSLATION = 64;
 
         struct TranslationRequest
         {

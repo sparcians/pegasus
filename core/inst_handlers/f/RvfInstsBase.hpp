@@ -5,6 +5,7 @@
 #include "include/AtlasUtils.hpp"
 #include "include/CSRBitMasks64.hpp"
 #include "mavis/OpcodeInfo.h"
+#include "core/inst_handlers/finsts_helpers.hpp"
 
 extern "C"
 {

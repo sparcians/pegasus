@@ -14,7 +14,7 @@ namespace atlas
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        using ValueType = UintType<VLEN_MIN>;
+        using ValueType = UintType<MaskElements::ElemType::elem_width>;
 
         inst_handlers.emplace(
             "vmand.mm",
@@ -156,7 +156,8 @@ namespace atlas
             for (auto bit_iter = tmp.begin(); bit_iter != tmp.end(); ++bit_iter)
             {
                 WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                                    elem_iter.getIndex() * VLEN_MIN + bit_iter.getIndex());
+                                    elem_iter.getIndex() * MaskElements::ElemType::elem_width
+                                        + bit_iter.getIndex());
                 return ++action_it;
             }
         }
@@ -231,10 +232,10 @@ namespace atlas
         return ++action_it;
     }
 
-    template <size_t ElemWidth>
+    template <size_t elemWidth>
     Action::ItrType viotaHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        using ElemsType = Elements<Element<ElemWidth>, false>;
+        using ElemsType = Elements<Element<elemWidth>, false>;
 
         const AtlasInstPtr inst = state->getCurrentInst();
         MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
@@ -268,12 +269,14 @@ namespace atlas
                 // update parallel prefix sun for each active element of vd till current index
                 if (!inst->getVM()) // masked
                 {
-                    execute(iter_v0, MaskBitIterator{&elems_v0, VLEN_MIN * index + idx + 1});
+                    execute(iter_v0,
+                            MaskBitIterator{&elems_v0,
+                                            MaskElements::ElemType::elem_width * index + idx + 1});
                 }
                 else
                 {
-                    typename ElemsType::ElementIterator iter_end{&elems_vd,
-                                                                 VLEN_MIN * index + idx + 1};
+                    typename ElemsType::ElementIterator iter_end{
+                        &elems_vd, MaskElements::ElemType::elem_width * index + idx + 1};
                     execute(iter_vd, iter_end);
                 }
                 ++count;
@@ -310,16 +313,16 @@ namespace atlas
                 return viotaHelper<64>(state, action_it);
                 break;
             default:
-                sparta_assert(false, "Invalid SEW value");
+                sparta_assert(false, "Unsupported SEW value");
                 break;
         }
         return ++action_it;
     }
 
-    template <size_t ElemWidth>
+    template <size_t elemWidth>
     Action::ItrType veiHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        using ElemsType = Elements<Element<ElemWidth>, false>;
+        using ElemsType = Elements<Element<elemWidth>, false>;
 
         const AtlasInstPtr inst = state->getCurrentInst();
         ElemsType elems_vd{state, state->getVectorConfig(), inst->getRd()};
@@ -363,7 +366,7 @@ namespace atlas
                 return veiHelper<64>(state, action_it);
                 break;
             default:
-                sparta_assert(false, "Invalid SEW value");
+                sparta_assert(false, "Unsupported SEW value");
                 break;
         }
         return ++action_it;
