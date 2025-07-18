@@ -15,8 +15,6 @@ namespace atlas
 
         const Mode dst, src1, src2;
 
-        constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2)
-        {
-        }
+        constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2) {}
     };
-}
+} // namespace atlas

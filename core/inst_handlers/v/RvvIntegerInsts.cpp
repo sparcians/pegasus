@@ -630,19 +630,19 @@ namespace atlas
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, int16_t, int8_t>>>(
                         state, action_it);
-                    break;
+
                 case 16:
                     return viablHelper<XLEN, 16, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, uint32_t, int16_t>>>(
                         state, action_it);
-                    break;
+
                 case 32:
                     return viablHelper<XLEN, 32, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, int64_t, int32_t>>>(
                         state, action_it);
-                    break;
+
                 case 64:
                     if constexpr (opMode.dst == OperandMode::Mode::W)
                     {
@@ -668,21 +668,21 @@ namespace atlas
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, uint16_t, uint8_t>>>(
                         state, action_it);
-                    break;
+
                 case 16:
                     return viablHelper<
                         XLEN, 16, opMode,
                         FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
                                                                 uint32_t, uint16_t>>>(state,
                                                                                       action_it);
-                    break;
+
                 case 32:
                     return viablHelper<
                         XLEN, 32, opMode,
                         FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
                                                                 uint64_t, uint32_t>>>(state,
                                                                                       action_it);
-                    break;
+
                 case 64:
                     if constexpr (opMode.dst == OperandMode::Mode::W)
                     {
@@ -755,19 +755,19 @@ namespace atlas
             case 8:
                 return viacsbHelper<XLEN, 8, opMode, hasMaskOp, FunctorTemp<uint8_t>>(state,
                                                                                       action_it);
-                break;
+
             case 16:
                 return viacsbHelper<XLEN, 16, opMode, hasMaskOp, FunctorTemp<uint16_t>>(state,
                                                                                         action_it);
-                break;
+
             case 32:
                 return viacsbHelper<XLEN, 32, opMode, hasMaskOp, FunctorTemp<uint32_t>>(state,
                                                                                         action_it);
-                break;
+
             case 64:
                 return viacsbHelper<XLEN, 64, opMode, hasMaskOp, FunctorTemp<uint64_t>>(state,
                                                                                         action_it);
-                break;
+
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -821,16 +821,16 @@ namespace atlas
         {
             case 8:
                 return vmiacsbHelper<XLEN, 8, opMode, hasMaskOp, detectFunc>(state, action_it);
-                break;
+
             case 16:
                 return vmiacsbHelper<XLEN, 16, opMode, hasMaskOp, detectFunc>(state, action_it);
-                break;
+
             case 32:
                 return vmiacsbHelper<XLEN, 32, opMode, hasMaskOp, detectFunc>(state, action_it);
-                break;
+
             case 64:
                 return vmiacsbHelper<XLEN, 64, opMode, hasMaskOp, detectFunc>(state, action_it);
-                break;
+
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -898,16 +898,16 @@ namespace atlas
             {
                 case 8:
                     return vmicHelper<XLEN, 8, opMode, FunctorTemp<int8_t>>(state, action_it);
-                    break;
+
                 case 16:
                     return vmicHelper<XLEN, 16, opMode, FunctorTemp<int16_t>>(state, action_it);
-                    break;
+
                 case 32:
                     return vmicHelper<XLEN, 32, opMode, FunctorTemp<int32_t>>(state, action_it);
-                    break;
+
                 case 64:
                     return vmicHelper<XLEN, 64, opMode, FunctorTemp<int64_t>>(state, action_it);
-                    break;
+
                 default:
                     sparta_assert(false, "Unsupported SEW value");
                     break;
@@ -919,16 +919,16 @@ namespace atlas
             {
                 case 8:
                     return vmicHelper<XLEN, 8, opMode, FunctorTemp<uint8_t>>(state, action_it);
-                    break;
+
                 case 16:
                     return vmicHelper<XLEN, 16, opMode, FunctorTemp<uint16_t>>(state, action_it);
-                    break;
+
                 case 32:
                     return vmicHelper<XLEN, 32, opMode, FunctorTemp<uint32_t>>(state, action_it);
-                    break;
+
                 case 64:
                     return vmicHelper<XLEN, 64, opMode, FunctorTemp<uint64_t>>(state, action_it);
-                    break;
+
                 default:
                     sparta_assert(false, "Unsupported SEW value");
                     break;

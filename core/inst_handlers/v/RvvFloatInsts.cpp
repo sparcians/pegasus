@@ -737,13 +737,10 @@ namespace atlas
         {
             case 16:
                 return vfmvHelper<XLEN, 16>(state, action_it);
-                break;
             case 32:
                 return vfmvHelper<XLEN, 32>(state, action_it);
-                break;
             case 64:
                 return vfmvHelper<XLEN, 64>(state, action_it);
-                break;
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -788,13 +785,13 @@ namespace atlas
         {
             case 16:
                 return vfmergeHelper<XLEN, 16>(state, action_it);
-                break;
+
             case 32:
                 return vfmergeHelper<XLEN, 32>(state, action_it);
-                break;
+
             case 64:
                 return vfmergeHelper<XLEN, 64>(state, action_it);
-                break;
+
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -859,7 +856,7 @@ namespace atlas
             case 32:
                 return vfUnaryHelper<XLEN, 32, opMode, [](auto src2)
                                      { return func_wrapper(funcs.f32, src2); }>(state, action_it);
-                break;
+
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
                 if constexpr (opMode.dst != OperandMode::Mode::W
@@ -936,7 +933,7 @@ namespace atlas
                 break;
             case 32:
                 return vfFloatToIntHelper<XLEN, 32, opMode, funcs.f32>(state, action_it);
-                break;
+
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
                 if constexpr (opMode.dst != OperandMode::Mode::W
@@ -1018,7 +1015,7 @@ namespace atlas
                                               return funcs.f16(float16_t{src2}, float16_t{src1}).v;
                                           }
                                       }>(state, action_it);
-                break;
+
             case 32:
                 return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1)
                                       {
@@ -1031,14 +1028,13 @@ namespace atlas
                                               return funcs.f32(float32_t{src2}, float32_t{src1}).v;
                                           }
                                       }>(state, action_it);
-                break;
+
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
                     return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
                         return funcs.f64(float64_t{src2}, float64_t{src1}).v;
                     }>(state, action_it);
-                    break;
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -1061,7 +1057,7 @@ namespace atlas
                                       [](auto src2, auto src1) {
                                           return funcs.f16(float16_t{src1}, float16_t{src2}).v;
                                       }>(state, action_it);
-                break;
+
             case 32:
                 return vfBinaryHelper<XLEN, 32,
                                       OperandMode{OperandMode::Mode::V, OperandMode::Mode::V,
@@ -1069,7 +1065,7 @@ namespace atlas
                                       [](auto src2, auto src1) {
                                           return funcs.f32(float32_t{src1}, float32_t{src2}).v;
                                       }>(state, action_it);
-                break;
+
             case 64:
                 return vfBinaryHelper<XLEN, 64,
                                       OperandMode{OperandMode::Mode::V, OperandMode::Mode::V,
@@ -1077,7 +1073,7 @@ namespace atlas
                                       [](auto src2, auto src1) {
                                           return funcs.f64(float64_t{src1}, float64_t{src2}).v;
                                       }>(state, action_it);
-                break;
+
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -1142,17 +1138,17 @@ namespace atlas
                 return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
                     return funcs.f16(float16_t{src2}, float16_t{src1});
                 }>(state, action_it);
-                break;
+
             case 32:
                 return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
                     return funcs.f32(float32_t{src2}, float32_t{src1});
                 }>(state, action_it);
-                break;
+
             case 64:
                 return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
                     return funcs.f64(float64_t{src2}, float64_t{src1});
                 }>(state, action_it);
-                break;
+
             default:
                 sparta_assert(false, "Unsupported SEW value");
                 break;
@@ -1234,7 +1230,7 @@ namespace atlas
                                                    float16_t{dst});
                                            }
                                        }>(state, action_it);
-                break;
+
             case 32:
                 return vfTernaryHelper<XLEN, 32, opMode, [](auto src2, auto src1, auto dst)
                                        {
@@ -1251,7 +1247,7 @@ namespace atlas
                                                    float32_t{dst});
                                            }
                                        }>(state, action_it);
-                break;
+
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
@@ -1261,7 +1257,6 @@ namespace atlas
                                                    float64_t{src2}, float64_t{src1},
                                                    float64_t{dst});
                                            }>(state, action_it);
-                    break;
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
