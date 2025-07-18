@@ -39,7 +39,7 @@ namespace pegasus
       public:
         void postInit(PegasusState* state)
         {
-            std::cout << "\nATLAS_IDE_READY\n";
+            std::cout << "\nPEGASUS_IDE_READY\n";
             std::cout.flush();
             enterLoop_(state);
         }
@@ -206,7 +206,7 @@ namespace pegasus
 
         void sendJson_(const std::string & message)
         {
-            std::cout << "ATLAS_IDE_RESPONSE: " << message << "\n";
+            std::cout << "PEGASUS_IDE_RESPONSE: " << message << "\n";
             std::cout.flush();
         }
 

@@ -60,7 +60,7 @@ class SimEndpoint:
         ide_ready = False
         while not ide_ready:
             response = self.__receive().strip()
-            if response == 'ATLAS_IDE_READY':
+            if response == 'PEGASUS_IDE_READY':
                 ide_ready = True
 
         if not ide_ready:
@@ -83,7 +83,7 @@ class SimEndpoint:
             if recvd == '':
                 return ''
 
-            # To parse the response to the request we just asked, get the last ATLAS_IDE_RESPONSE
+            # To parse the response to the request we just asked, get the last PEGASUS_IDE_RESPONSE
             # that we see from the C++ simulator's stdout.
             #
             #        Preparing to run...
@@ -98,11 +98,11 @@ class SimEndpoint:
             #        Scheduler Event Rate (KEPS): 13608.8 KEPS (1k events per second)
             #        Scheduler Events Fired: 272176
             #        Run Successful!
-            #   |--> ATLAS_IDE_RESPONSE: {"response_code":"ok","response_payload":null}
+            #   |--> PEGASUS_IDE_RESPONSE: {"response_code":"ok","response_payload":null}
             #   |
             #   |--- This is all we care about.
-            if recvd.find('ATLAS_IDE_RESPONSE: ') != -1:
-                response = recvd.split('ATLAS_IDE_RESPONSE: ')[1].strip()
+            if recvd.find('PEGASUS_IDE_RESPONSE: ') != -1:
+                response = recvd.split('PEGASUS_IDE_RESPONSE: ')[1].strip()
 
         return JsonConverter.ConvertResponse(response)
 
