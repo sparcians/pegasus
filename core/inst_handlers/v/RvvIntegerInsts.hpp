@@ -23,20 +23,20 @@ namespace pegasus
         // Ingeter Arithmetic / Bitwise Logical
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
-        Action::ItrType viablHandler_(pegasus::PegsusState* state, Action::ItrType action_it);
+        Action::ItrType viablHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,
                   template <typename> typename FunctorTemp>
-        Action::ItrType viacsbHandler_(pegasus::PegsusState* state, Action::ItrType action_it);
+        Action::ItrType viacsbHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // Carry/borrow for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFuc>
-        Action::ItrType vmiacsbHandler_(pegasus::PegsusState* state, Action::ItrType action_it);
+        Action::ItrType vmiacsbHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // Ingeter Compare
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
-        Action::ItrType vmicHandler_(pegasus::PegsusState* state, Action::ItrType action_it);
+        Action::ItrType vmicHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

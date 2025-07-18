@@ -240,7 +240,7 @@ namespace pegasus
     }
 
     template <size_t elemWidth>
-    Action::ItrType viotaHelper(pegasus::PegsusState* state, Action::ItrType action_it)
+    Action::ItrType viotaHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         using ElemsType = Elements<Element<elemWidth>, false>;
 
@@ -327,7 +327,7 @@ namespace pegasus
     }
 
     template <size_t elemWidth>
-    Action::ItrType veiHelper(pegasus::PegsusState* state, Action::ItrType action_it)
+    Action::ItrType veiHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         using ElemsType = Elements<Element<elemWidth>, false>;
 

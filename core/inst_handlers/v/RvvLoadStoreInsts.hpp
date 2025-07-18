@@ -32,13 +32,13 @@ namespace pegasus
 
       private:
         template <typename XLEN, size_t elemWidth, AddressingMode addrMode>
-        Action::ItrType vlseComputeAddressHandler_(pegasus::PegsusState* state,
+        Action::ItrType vlseComputeAddressHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it);
         template <typename XLEN, size_t elemWidth, AddressingMode addrMode>
-        Action::ItrType vlseIdxComputeAddressHandler_(pegasus::PegsusState* state,
+        Action::ItrType vlseIdxComputeAddressHandler_(pegasus::PegasusState* state,
                                                       Action::ItrType action_it);
         template <size_t elemWidth, bool load>
-        Action::ItrType vlseHandler_(pegasus::PegsusState* state, Action::ItrType action_it);
+        Action::ItrType vlseHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <bool load>
         Action::ItrType vlseIdxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };

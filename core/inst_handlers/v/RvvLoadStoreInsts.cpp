@@ -207,7 +207,7 @@ namespace pegasus
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
-    Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegsusState* state,
+    Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegasusState* state,
                                                                   Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
@@ -247,7 +247,7 @@ namespace pegasus
     }
 
     template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
-    Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(pegasus::PegsusState* state,
+    Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(pegasus::PegasusState* state,
                                                                      Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
@@ -281,10 +281,10 @@ namespace pegasus
     }
 
     template <size_t elemWidth, bool load>
-    Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegsusState* state,
+    Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
-        const PegsusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
                                                   load ? inst->getRd() : inst->getRs3()};
 

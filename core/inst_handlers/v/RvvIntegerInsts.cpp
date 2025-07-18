@@ -565,9 +565,9 @@ namespace pegasus
     template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
-    Action::ItrType viablHelper(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType viablHelper(PegasusState* state, Action::ItrType action_it)
     {
-        const PegsusInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
@@ -618,7 +618,7 @@ namespace pegasus
 
     template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viablHandler_(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viablHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         if constexpr (isSigned)
@@ -703,9 +703,9 @@ namespace pegasus
     }
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, typename Functor>
-    Action::ItrType viacsbHelper(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType viacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
-        const PegsusInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
@@ -747,7 +747,7 @@ namespace pegasus
 
     template <typename XLEN, OperandMode opMode, bool hasMaskOp,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viacsbHandler_(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -776,9 +776,9 @@ namespace pegasus
     }
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, auto detectFunc>
-    Action::ItrType vmiacsbHelper(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType vmiacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
-        const PegsusInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
@@ -814,7 +814,7 @@ namespace pegasus
     }
 
     template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFunc>
-    Action::ItrType RvvIntegerInsts::vmiacsbHandler_(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::vmiacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -839,9 +839,9 @@ namespace pegasus
     }
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
-    Action::ItrType vmicHelper(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType vmicHelper(PegasusState* state, Action::ItrType action_it)
     {
-        const PegsusInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
                                                       inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
@@ -889,7 +889,7 @@ namespace pegasus
 
     template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::vmicHandler_(PegsusState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::vmicHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         if constexpr (isSigned)
