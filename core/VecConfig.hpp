@@ -55,7 +55,7 @@ namespace pegasus
         {
             // SEW can only be power of 2, and elememnt should fit into register group.
             sparta_assert(((value & (value - 1)) == 0 && (value <= vlen_ / 8 * lmul_)),
-                          "Invalid SEW value.");
+                          "Unsupported SEW value.");
             sew_ = value;
         }
 

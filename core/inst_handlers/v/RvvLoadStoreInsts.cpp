@@ -206,15 +206,15 @@ namespace pegasus
     template void RvvLoadStoreInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
-    Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegasusState* state,
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegsusState* state,
                                                                   Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
         const PegasusInstPtr inst = state->getCurrentInst();
         VectorConfig* config = state->getVectorConfig();
-        const size_t eewb = ElemWidth / 8;
+        const size_t eewb = elemWidth / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
         Addr stride;
@@ -246,8 +246,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
-    Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(pegasus::PegasusState* state,
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(pegasus::PegsusState* state,
                                                                      Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
@@ -256,7 +256,7 @@ namespace pegasus
         VectorConfig* vector_config = state->getVectorConfig();
         const size_t sewb = vector_config->getSEW() / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
 
         if (inst->getVM())
@@ -280,13 +280,13 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <size_t ElemWidth, bool load>
-    Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegasusState* state,
+    template <size_t elemWidth, bool load>
+    Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegsusState* state,
                                                     Action::ItrType action_it)
     {
-        const PegasusInstPtr inst = state->getCurrentInst();
-        Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        const PegsusInstPtr inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
+                                                  load ? inst->getRd() : inst->getRs3()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
@@ -294,15 +294,15 @@ namespace pegasus
             {
                 if constexpr (load)
                 {
-                    UintType<ElemWidth> value = state->readMemory<UintType<ElemWidth>>(
+                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr());
                     inst->getTranslationState()->popResult();
-                    elems_vd.getElement(iter.getIndex()).setVal(value);
+                    elems.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
-                    UintType<ElemWidth> value = elems_vd.getElement(iter.getIndex()).getVal();
-                    state->writeMemory<UintType<ElemWidth>>(
+                    UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
+                    state->writeMemory<UintType<elemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr(), value);
                     inst->getTranslationState()->popResult();
                 }
@@ -311,7 +311,7 @@ namespace pegasus
 
         if (inst->getVM()) // unmasked
         {
-            execute(elems_vd.begin(), elems_vd.end());
+            execute(elems.begin(), elems.end());
         }
         else // masked
         {
@@ -338,7 +338,7 @@ namespace pegasus
             case 64:
                 return vlseHandler_<64, load>(state, action_it);
             default:
-                sparta_assert(false, "Invalid SEW value");
+                sparta_assert(false, "Unsupported SEW value");
                 break;
         }
         return ++action_it;
