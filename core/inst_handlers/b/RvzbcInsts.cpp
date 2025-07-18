@@ -29,7 +29,8 @@ namespace pegasus
     template void RvzbcInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN>
-    Action::ItrType RvzbcInsts::clmulHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbcInsts::clmulHandler(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -49,7 +50,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzbcInsts::clmulhHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbcInsts::clmulhHandler(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -69,7 +71,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzbcInsts::clmulrHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbcInsts::clmulrHandler(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 

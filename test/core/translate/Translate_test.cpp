@@ -187,17 +187,17 @@ class PegasusTranslateTester
             const uint32_t rsw = 2;
             const uint32_t ppn0 = 123;
             const uint32_t ppn1 = 456;
-            const uint32_t pte_val = (ppn1 << pegasus::translate_types::Sv32::PteFields::ppn1.lsb)
-                                     | (ppn0 << pegasus::translate_types::Sv32::PteFields::ppn0.lsb)
-                                     | (rsw << pegasus::translate_types::Sv32::PteFields::rsw.lsb)
-                                     | (d << pegasus::translate_types::Sv32::PteFields::dirty.lsb)
-                                     | (a << pegasus::translate_types::Sv32::PteFields::accessed.lsb)
-                                     | (g << pegasus::translate_types::Sv32::PteFields::global.lsb)
-                                     | (u << pegasus::translate_types::Sv32::PteFields::user.lsb)
-                                     | (x << pegasus::translate_types::Sv32::PteFields::execute.lsb)
-                                     | (w << pegasus::translate_types::Sv32::PteFields::write.lsb)
-                                     | (r << pegasus::translate_types::Sv32::PteFields::read.lsb)
-                                     | (v);
+            const uint32_t pte_val =
+                (ppn1 << pegasus::translate_types::Sv32::PteFields::ppn1.lsb)
+                | (ppn0 << pegasus::translate_types::Sv32::PteFields::ppn0.lsb)
+                | (rsw << pegasus::translate_types::Sv32::PteFields::rsw.lsb)
+                | (d << pegasus::translate_types::Sv32::PteFields::dirty.lsb)
+                | (a << pegasus::translate_types::Sv32::PteFields::accessed.lsb)
+                | (g << pegasus::translate_types::Sv32::PteFields::global.lsb)
+                | (u << pegasus::translate_types::Sv32::PteFields::user.lsb)
+                | (x << pegasus::translate_types::Sv32::PteFields::execute.lsb)
+                | (w << pegasus::translate_types::Sv32::PteFields::write.lsb)
+                | (r << pegasus::translate_types::Sv32::PteFields::read.lsb) | (v);
 
             std::cout << "Creating sv32 PTE: " << HEX8(pte_val) << std::endl;
             pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte(pte_val);
@@ -228,18 +228,18 @@ class PegasusTranslateTester
             const uint64_t ppn0 = 123;
             const uint64_t ppn1 = 456;
             const uint64_t ppn2 = 789;
-            const uint64_t pte_val = (ppn2 << pegasus::translate_types::Sv39::PteFields::ppn2.lsb)
-                                     | (ppn1 << pegasus::translate_types::Sv39::PteFields::ppn1.lsb)
-                                     | (ppn0 << pegasus::translate_types::Sv39::PteFields::ppn0.lsb)
-                                     | (rsw << pegasus::translate_types::Sv39::PteFields::rsw.lsb)
-                                     | (d << pegasus::translate_types::Sv39::PteFields::dirty.lsb)
-                                     | (a << pegasus::translate_types::Sv39::PteFields::accessed.lsb)
-                                     | (g << pegasus::translate_types::Sv39::PteFields::global.lsb)
-                                     | (u << pegasus::translate_types::Sv39::PteFields::user.lsb)
-                                     | (x << pegasus::translate_types::Sv39::PteFields::execute.lsb)
-                                     | (w << pegasus::translate_types::Sv39::PteFields::write.lsb)
-                                     | (r << pegasus::translate_types::Sv39::PteFields::read.lsb)
-                                     | (v);
+            const uint64_t pte_val =
+                (ppn2 << pegasus::translate_types::Sv39::PteFields::ppn2.lsb)
+                | (ppn1 << pegasus::translate_types::Sv39::PteFields::ppn1.lsb)
+                | (ppn0 << pegasus::translate_types::Sv39::PteFields::ppn0.lsb)
+                | (rsw << pegasus::translate_types::Sv39::PteFields::rsw.lsb)
+                | (d << pegasus::translate_types::Sv39::PteFields::dirty.lsb)
+                | (a << pegasus::translate_types::Sv39::PteFields::accessed.lsb)
+                | (g << pegasus::translate_types::Sv39::PteFields::global.lsb)
+                | (u << pegasus::translate_types::Sv39::PteFields::user.lsb)
+                | (x << pegasus::translate_types::Sv39::PteFields::execute.lsb)
+                | (w << pegasus::translate_types::Sv39::PteFields::write.lsb)
+                | (r << pegasus::translate_types::Sv39::PteFields::read.lsb) | (v);
 
             std::cout << "Creating sv64 PTE: " << HEX16(pte_val) << std::endl;
             pegasus::PageTableEntry<pegasus::RV64, pegasus::MMUMode::SV39> sv39_pte(pte_val);

@@ -22,7 +22,7 @@ namespace pegasus
         using WorkloadAndArguments = std::vector<std::string>;
 
         PegasusSim(sparta::Scheduler* scheduler, const WorkloadAndArguments & workload_and_args,
-                 const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit);
+                   const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit);
         ~PegasusSim();
 
         // Run the simulator
@@ -48,12 +48,15 @@ namespace pegasus
         sparta::ResourceFactory<pegasus::Fetch, pegasus::Fetch::FetchParameters> fetch_factory_;
         sparta::ResourceFactory<pegasus::Translate, pegasus::Translate::TranslateParameters>
             translate_factory_;
-        sparta::ResourceFactory<pegasus::Execute, pegasus::Execute::ExecuteParameters> execute_factory_;
+        sparta::ResourceFactory<pegasus::Execute, pegasus::Execute::ExecuteParameters>
+            execute_factory_;
         sparta::ResourceFactory<pegasus::Exception, pegasus::Exception::ExceptionParameters>
             exception_factory_;
-        sparta::ResourceFactory<pegasus::PegasusState, pegasus::PegasusState::PegasusStateParameters>
+        sparta::ResourceFactory<pegasus::PegasusState,
+                                pegasus::PegasusState::PegasusStateParameters>
             state_factory_;
-        sparta::ResourceFactory<pegasus::PegasusSystem, pegasus::PegasusSystem::PegasusSystemParameters>
+        sparta::ResourceFactory<pegasus::PegasusSystem,
+                                pegasus::PegasusSystem::PegasusSystemParameters>
             system_factory_;
         sparta::ResourceFactory<pegasus::SystemCallEmulator,
                                 pegasus::SystemCallEmulator::SystemCallEmulatorParameters>

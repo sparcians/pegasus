@@ -21,8 +21,8 @@ namespace pegasus
         inst_handlers.emplace(
             "czero.eqz",
             pegasus::Action::createAction<&RvzicondInsts::czeroHandler_<XLEN, std::equal_to<XLEN>>,
-                                        RvzicondInsts>(nullptr, "czero.eqz",
-                                                       ActionTags::EXECUTE_TAG));
+                                          RvzicondInsts>(nullptr, "czero.eqz",
+                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "czero.nez",
             pegasus::Action::createAction<

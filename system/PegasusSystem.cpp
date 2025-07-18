@@ -27,8 +27,8 @@ namespace pegasus
         // Initialize memory
         memory_map_.reset(new sparta::memory::SimpleMemoryMapNode(
             sys_node, "memory_map", sparta::TreeNode::GROUP_NAME_NONE,
-            sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map", PEGASUS_SYSTEM_BLOCK_SIZE,
-            PEGASUS_SYSTEM_TOTAL_MEMORY));
+            sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map",
+            PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
 
         // Create memory objects and add them to the memory map
         createMemoryMappings_(sys_node);

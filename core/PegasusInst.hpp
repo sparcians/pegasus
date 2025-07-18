@@ -21,7 +21,7 @@ namespace pegasus
         using PtrType = sparta::SpartaSharedPointer<PegasusInst>;
 
         PegasusInst(const mavis::OpcodeInfo::PtrType & opcode_info,
-                  const PegasusExtractorPtr & extractor_info, PegasusState* state);
+                    const PegasusExtractorPtr & extractor_info, PegasusState* state);
 
         uint64_t getUid() const { return uid_; }
 

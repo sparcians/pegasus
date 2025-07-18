@@ -13,16 +13,17 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vsetvl", pegasus::Action::createAction<&RvvConfigSettingInsts::vsetvlHandler_<XLEN>,
-                                                  RvvConfigSettingInsts>(nullptr, "vsetvl",
-                                                                         ActionTags::EXECUTE_TAG));
+                                                    RvvConfigSettingInsts>(
+                          nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsetvli", pegasus::Action::createAction<&RvvConfigSettingInsts::vsetvliHandler_<XLEN>,
-                                                   RvvConfigSettingInsts>(nullptr, "vsetvli",
-                                                                          ActionTags::EXECUTE_TAG));
+                                                     RvvConfigSettingInsts>(
+                           nullptr, "vsetvli", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vsetivli", pegasus::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>,
-                                                    RvvConfigSettingInsts>(
-                            nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
+            "vsetivli",
+            pegasus::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>,
+                                          RvvConfigSettingInsts>(nullptr, "vsetivli",
+                                                                 ActionTags::EXECUTE_TAG));
     }
 
     template void RvvConfigSettingInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);

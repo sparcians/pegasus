@@ -15,7 +15,7 @@ namespace pegasus
     }
 
     PegasusExtractor::PegasusExtractor(const boost::json::object & uarch_json,
-                                   const PegasusState* state) :
+                                       const PegasusState* state) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),

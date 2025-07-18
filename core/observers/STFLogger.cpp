@@ -36,7 +36,7 @@ namespace atlas
         if (fault_cause_.isValid() || interrupt_cause_.isValid())
         {
             return;
-        } 
+        }
 
         if (inst->getOpcodeSize() == 2)
         {

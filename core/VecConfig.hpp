@@ -142,9 +142,10 @@ namespace pegasus
             os << config.getLMUL() / 8 << " ";
         }
         os << "SEW: " << config.getSEW() << " ";
-        os << "VTA: " << std::boolalpha << config.getVTA() << " " << "VMA: " << config.getVMA()
-           << std::noboolalpha << " ";
-        os << "VL: " << config.getVL() << " " << "VSTART: " << config.getVSTART() << "; ";
+        os << "VTA: " << std::boolalpha << config.getVTA() << " "
+           << "VMA: " << config.getVMA() << std::noboolalpha << " ";
+        os << "VL: " << config.getVL() << " "
+           << "VSTART: " << config.getVSTART() << "; ";
         return os;
     }
 } // namespace pegasus

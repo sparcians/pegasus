@@ -440,7 +440,8 @@ namespace pegasus
         SimController* sim_controller_ = nullptr;
     };
 
-    template <typename XLEN> static inline XLEN READ_INT_REG(PegasusState* state, uint32_t reg_ident)
+    template <typename XLEN>
+    static inline XLEN READ_INT_REG(PegasusState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         return (reg_ident == 0) ? 0 : state->getIntRegister(reg_ident)->dmiRead<XLEN>();
@@ -469,7 +470,8 @@ namespace pegasus
         state->getFpRegister(reg_ident)->dmiWrite<XLEN>(reg_value);
     }
 
-    template <typename VLEN> static inline VLEN READ_VEC_REG(PegasusState* state, uint32_t reg_ident)
+    template <typename VLEN>
+    static inline VLEN READ_VEC_REG(PegasusState* state, uint32_t reg_ident)
     {
         return state->getVecRegister(reg_ident)->dmiRead<VLEN>();
     }
@@ -493,7 +495,8 @@ namespace pegasus
         state->getVecRegister(reg_ident)->dmiWrite<Elem>(value, idx);
     }
 
-    template <typename XLEN> static inline XLEN READ_CSR_REG(PegasusState* state, uint32_t reg_ident)
+    template <typename XLEN>
+    static inline XLEN READ_CSR_REG(PegasusState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         return state->getCsrRegister(reg_ident)->read<XLEN>();
@@ -517,7 +520,8 @@ namespace pegasus
         }
     }
 
-    template <typename XLEN> static inline XLEN PEEK_CSR_REG(PegasusState* state, uint32_t reg_ident)
+    template <typename XLEN>
+    static inline XLEN PEEK_CSR_REG(PegasusState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         return state->getCsrRegister(reg_ident)->dmiRead<XLEN>();
@@ -531,7 +535,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    static inline XLEN READ_CSR_FIELD(PegasusState* state, uint32_t reg_ident, const char* field_name)
+    static inline XLEN READ_CSR_FIELD(PegasusState* state, uint32_t reg_ident,
+                                      const char* field_name)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);
@@ -579,8 +584,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    static inline void POKE_CSR_FIELD(PegasusState* state, uint32_t reg_ident, const char* field_name,
-                                      uint64_t field_value)
+    static inline void POKE_CSR_FIELD(PegasusState* state, uint32_t reg_ident,
+                                      const char* field_name, uint64_t field_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);

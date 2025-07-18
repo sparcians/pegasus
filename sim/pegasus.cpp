@@ -4,10 +4,10 @@
 #include "sim/PegasusSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] =
-    "Usage:\n"
-    "./pegasus [-i inst limit] [--reg \"name value\"] [--interactive] [--spike-formatting] <workload>"
-    "\n";
+const char USAGE[] = "Usage:\n"
+                     "./pegasus [-i inst limit] [--reg \"name value\"] [--interactive] "
+                     "[--spike-formatting] <workload>"
+                     "\n";
 
 struct RegOverride
 {

@@ -36,38 +36,42 @@ namespace pegasus
             "fcvt_l_s", pegasus::Action::createAction<&RvfInsts::fcvt_l_sHandler_<XLEN>, RvfInsts>(
                             nullptr, "fcvt_l_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt_lu_s", pegasus::Action::createAction<&RvfInsts::fcvt_lu_sHandler_<XLEN>, RvfInsts>(
-                             nullptr, "fcvt_lu_s", ActionTags::EXECUTE_TAG));
+            "fcvt_lu_s",
+            pegasus::Action::createAction<&RvfInsts::fcvt_lu_sHandler_<XLEN>, RvfInsts>(
+                nullptr, "fcvt_lu_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fcvt_s_l", pegasus::Action::createAction<&RvfInsts::fcvt_s_lHandler_<XLEN>, RvfInsts>(
                             nullptr, "fcvt_s_l", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt_s_lu", pegasus::Action::createAction<&RvfInsts::fcvt_s_luHandler_<XLEN>, RvfInsts>(
-                             nullptr, "fcvt_s_lu", ActionTags::EXECUTE_TAG));
+            "fcvt_s_lu",
+            pegasus::Action::createAction<&RvfInsts::fcvt_s_luHandler_<XLEN>, RvfInsts>(
+                nullptr, "fcvt_s_lu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fcvt_s_w", pegasus::Action::createAction<&RvfInsts::fcvt_s_wHandler_<XLEN>, RvfInsts>(
                             nullptr, "fcvt_s_w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt_s_wu", pegasus::Action::createAction<&RvfInsts::fcvt_s_wuHandler_<XLEN>, RvfInsts>(
-                             nullptr, "fcvt_s_wu", ActionTags::EXECUTE_TAG));
+            "fcvt_s_wu",
+            pegasus::Action::createAction<&RvfInsts::fcvt_s_wuHandler_<XLEN>, RvfInsts>(
+                nullptr, "fcvt_s_wu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fcvt_w_s", pegasus::Action::createAction<&RvfInsts::fcvt_w_sHandler_<XLEN>, RvfInsts>(
                             nullptr, "fcvt_w_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fcvt_wu_s", pegasus::Action::createAction<&RvfInsts::fcvt_wu_sHandler_<XLEN>, RvfInsts>(
-                             nullptr, "fcvt_wu_s", ActionTags::EXECUTE_TAG));
+            "fcvt_wu_s",
+            pegasus::Action::createAction<&RvfInsts::fcvt_wu_sHandler_<XLEN>, RvfInsts>(
+                nullptr, "fcvt_wu_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fdiv_s", pegasus::Action::createAction<&RvfInsts::fdiv_sHandler_<XLEN>, RvfInsts>(
                           nullptr, "fdiv_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("feq_s",
-                              pegasus::Action::createAction<&RvfInsts::feq_sHandler_<XLEN>, RvfInsts>(
-                                  nullptr, "feq_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("fle_s",
-                              pegasus::Action::createAction<&RvfInsts::fle_sHandler_<XLEN>, RvfInsts>(
-                                  nullptr, "fle_s", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace("flt_s",
-                              pegasus::Action::createAction<&RvfInsts::flt_sHandler_<XLEN>, RvfInsts>(
-                                  nullptr, "flt_s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "feq_s", pegasus::Action::createAction<&RvfInsts::feq_sHandler_<XLEN>, RvfInsts>(
+                         nullptr, "feq_s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fle_s", pegasus::Action::createAction<&RvfInsts::fle_sHandler_<XLEN>, RvfInsts>(
+                         nullptr, "fle_s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "flt_s", pegasus::Action::createAction<&RvfInsts::flt_sHandler_<XLEN>, RvfInsts>(
+                         nullptr, "flt_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "flw", pegasus::Action::createAction<&RvfInsts::floatLsHandler<SP, true>, RvfInstsBase>(
                        nullptr, "flw", ActionTags::EXECUTE_TAG));
@@ -114,8 +118,9 @@ namespace pegasus
             "fsub_s", pegasus::Action::createAction<&RvfInsts::fsub_sHandler_<XLEN>, RvfInsts>(
                           nullptr, "fsub_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fsw", pegasus::Action::createAction<&RvfInsts::floatLsHandler<SP, false>, RvfInstsBase>(
-                       nullptr, "fsw", ActionTags::EXECUTE_TAG));
+            "fsw",
+            pegasus::Action::createAction<&RvfInsts::floatLsHandler<SP, false>, RvfInstsBase>(
+                nullptr, "fsw", ActionTags::EXECUTE_TAG));
     }
 
     template void RvfInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
@@ -124,7 +129,8 @@ namespace pegasus
     template void RvfInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fsqrt_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fsqrt_sHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -136,7 +142,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fsub_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fsub_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -149,7 +156,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fnmsub_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fnmsub_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -176,7 +184,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fclass_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fclass_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -188,7 +197,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmsub_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmsub_sHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -204,7 +214,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmin_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmin_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -217,7 +228,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmv_w_xHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmv_w_xHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -226,7 +238,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_lu_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_lu_sHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -237,7 +250,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_s_wHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_s_wHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -248,7 +262,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fnmadd_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fnmadd_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -265,7 +280,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_s_lHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_s_lHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -275,7 +291,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fadd_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fadd_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -288,7 +305,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmv_x_wHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmv_x_wHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
@@ -297,7 +315,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmax_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmax_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -310,7 +329,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fsgnjx_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fsgnjx_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -322,7 +342,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmadd_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmadd_sHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -338,7 +359,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fmul_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fmul_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -362,7 +384,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_w_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_w_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -374,7 +397,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_l_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_l_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -385,7 +409,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fsgnjn_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fsgnjn_sHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -397,7 +422,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_s_luHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_s_luHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -407,7 +433,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_wu_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_wu_sHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -420,7 +447,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fdiv_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fdiv_sHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
@@ -433,7 +461,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fsgnj_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fsgnj_sHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -445,7 +474,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvfInsts::fcvt_s_wuHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvfInsts::fcvt_s_wuHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);

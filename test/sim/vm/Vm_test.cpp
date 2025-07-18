@@ -30,7 +30,7 @@ class VmInstructionTester : public PegasusInstructionTester
         WRITE_VEC_REG<VLEN>(state, 2, vs2_val);
         WRITE_VEC_REG<VLEN>(state, 3, v3_val);
         instPtr_ = makePegasusInst(std::string{"vmand.mm"}, mavis::ExtractorIF::RegListType{1, 2},
-                                 mavis::ExtractorIF::RegListType{3}); // vd = 3, vs1 = 1, vs2 = 2
+                                   mavis::ExtractorIF::RegListType{3}); // vd = 3, vs1 = 1, vs2 = 2
         executeInstruction(instPtr_);
 
         auto vd_val = READ_VEC_REG<VLEN>(state, 3);

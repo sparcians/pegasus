@@ -19,22 +19,25 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "csrrc", pegasus::Action::createAction<&RvzicsrInsts::csrrcHandler_<XLEN>, RvzicsrInsts>(
-                         nullptr, "csrrc", ActionTags::EXECUTE_TAG));
+            "csrrc",
+            pegasus::Action::createAction<&RvzicsrInsts::csrrcHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrc", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrci",
             pegasus::Action::createAction<&RvzicsrInsts::csrrciHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "csrrci", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "csrrs", pegasus::Action::createAction<&RvzicsrInsts::csrrsHandler_<XLEN>, RvzicsrInsts>(
-                         nullptr, "csrrs", ActionTags::EXECUTE_TAG));
+            "csrrs",
+            pegasus::Action::createAction<&RvzicsrInsts::csrrsHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrs", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrsi",
             pegasus::Action::createAction<&RvzicsrInsts::csrrsiHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "csrrsi", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "csrrw", pegasus::Action::createAction<&RvzicsrInsts::csrrwHandler_<XLEN>, RvzicsrInsts>(
-                         nullptr, "csrrw", ActionTags::EXECUTE_TAG));
+            "csrrw",
+            pegasus::Action::createAction<&RvzicsrInsts::csrrwHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "csrrw", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "csrrwi",
             pegasus::Action::createAction<&RvzicsrInsts::csrrwiHandler_<XLEN>, RvzicsrInsts>(
@@ -59,8 +62,9 @@ namespace pegasus
             pegasus::Action::createAction<&RvzicsrInsts::fflagsUpdateHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "fflagsUpdate"));
         csrUpdate_actions.emplace(
-            FRM, pegasus::Action::createAction<&RvzicsrInsts::frmUpdateHandler_<XLEN>, RvzicsrInsts>(
-                     nullptr, "frmUpdate"));
+            FRM,
+            pegasus::Action::createAction<&RvzicsrInsts::frmUpdateHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "frmUpdate"));
 
         // Supervisor Trap Setup
         csrUpdate_actions.emplace(
@@ -103,7 +107,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzicsrInsts::csrrcHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzicsrInsts::csrrcHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -165,7 +170,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzicsrInsts::csrrsHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzicsrInsts::csrrsHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -227,7 +233,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzicsrInsts::csrrwHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzicsrInsts::csrrwHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -328,7 +335,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzicsrInsts::fflagsUpdateHandler_(PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzicsrInsts::fflagsUpdateHandler_(PegasusState* state,
+                                                       Action::ItrType action_it)
     {
         // FCSR
         const XLEN nx_val = READ_CSR_FIELD<XLEN>(state, FFLAGS, "NX");

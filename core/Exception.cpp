@@ -39,7 +39,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType Exception::handleException_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType Exception::handleException_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         sparta_assert(fault_cause_.isValid() || interrupt_cause_.isValid(),
                       "Exception cause is not valid!");

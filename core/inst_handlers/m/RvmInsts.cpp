@@ -22,9 +22,9 @@ namespace pegasus
             inst_handlers.emplace(
                 "divuw", pegasus::Action::createAction<&RvmInsts::divuw_64Handler_, RvmInsts>(
                              nullptr, "divuw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("divw",
-                                  pegasus::Action::createAction<&RvmInsts::divw_64Handler_, RvmInsts>(
-                                      nullptr, "divw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "divw", pegasus::Action::createAction<&RvmInsts::divw_64Handler_, RvmInsts>(
+                            nullptr, "divw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "mul", pegasus::Action::createAction<&RvmInsts::mul_64Handler_<RV64>, RvmInsts>(
                            nullptr, "mul", ActionTags::EXECUTE_TAG));
@@ -32,14 +32,15 @@ namespace pegasus
                 "mulh", pegasus::Action::createAction<&RvmInsts::mulh_64Handler_<RV64>, RvmInsts>(
                             nullptr, "mulh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhsu", pegasus::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV64>, RvmInsts>(
-                              nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
+                "mulhsu",
+                pegasus::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV64>, RvmInsts>(
+                    nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "mulhu", pegasus::Action::createAction<&RvmInsts::mulhu_64Handler_<RV64>, RvmInsts>(
                              nullptr, "mulhu", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("mulw",
-                                  pegasus::Action::createAction<&RvmInsts::mulw_64Handler_, RvmInsts>(
-                                      nullptr, "mulw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "mulw", pegasus::Action::createAction<&RvmInsts::mulw_64Handler_, RvmInsts>(
+                            nullptr, "mulw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "rem", pegasus::Action::createAction<&RvmInsts::rem_64Handler_<RV64>, RvmInsts>(
                            nullptr, "rem", ActionTags::EXECUTE_TAG));
@@ -49,9 +50,9 @@ namespace pegasus
             inst_handlers.emplace(
                 "remuw", pegasus::Action::createAction<&RvmInsts::remuw_64Handler_, RvmInsts>(
                              nullptr, "remuw", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("remw",
-                                  pegasus::Action::createAction<&RvmInsts::remw_64Handler_, RvmInsts>(
-                                      nullptr, "remw", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "remw", pegasus::Action::createAction<&RvmInsts::remw_64Handler_, RvmInsts>(
+                            nullptr, "remw", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
@@ -68,8 +69,9 @@ namespace pegasus
                 "mulh", pegasus::Action::createAction<&RvmInsts::mulh_64Handler_<RV32>, RvmInsts>(
                             nullptr, "mulh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "mulhsu", pegasus::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV32>, RvmInsts>(
-                              nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
+                "mulhsu",
+                pegasus::Action::createAction<&RvmInsts::mulhsu_64Handler_<RV32>, RvmInsts>(
+                    nullptr, "mulhsu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "mulhu", pegasus::Action::createAction<&RvmInsts::mulhu_64Handler_<RV32>, RvmInsts>(
                              nullptr, "mulhu", ActionTags::EXECUTE_TAG));
@@ -86,7 +88,8 @@ namespace pegasus
     template void RvmInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::div_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::div_64Handler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -112,7 +115,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::divu_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::divu_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -132,7 +136,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvmInsts::divuw_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::divuw_64Handler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         using XLEN = uint64_t;
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -153,7 +158,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvmInsts::divw_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::divw_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         using XLEN = uint64_t;
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -175,7 +181,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::mul_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::mul_64Handler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -188,7 +195,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::mulh_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::mulh_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -208,7 +216,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::mulhsu_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::mulhsu_64Handler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -228,7 +237,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::mulhu_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::mulhu_64Handler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -248,7 +258,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvmInsts::mulw_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::mulw_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         using XLEN = uint64_t;
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -261,7 +272,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::rem_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::rem_64Handler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -287,7 +299,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvmInsts::remu_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::remu_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -307,7 +320,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvmInsts::remuw_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::remuw_64Handler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         using XLEN = uint64_t;
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -328,7 +342,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvmInsts::remw_64Handler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvmInsts::remw_64Handler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         using XLEN = uint64_t;
         const PegasusInstPtr & inst = state->getCurrentInst();

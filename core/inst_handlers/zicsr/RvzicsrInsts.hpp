@@ -42,18 +42,21 @@ namespace pegasus
         template <typename XLEN>
         Action::ItrType fcsrUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN>
-        Action::ItrType fflagsUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType fflagsUpdateHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType frmUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         template <typename XLEN>
-        Action::ItrType sstatusUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType sstatusUpdateHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it);
 
         template <typename XLEN>
         Action::ItrType satpUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         template <typename XLEN>
-        Action::ItrType mstatusUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType mstatusUpdateHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType misaUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };

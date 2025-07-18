@@ -11,15 +11,15 @@ namespace atlas
     {
       public:
         /*!
-        * \class STFLogger
-        * \brief Description...
-        * \param reg_width Register width (32 or 64)
-        * \param initial_pc Initial program counter
-        * \param filename Name of the file the trace will be written to
-        * \param state AtlasState used to populate initial register values
-        */
+         * \class STFLogger
+         * \brief Description...
+         * \param reg_width Register width (32 or 64)
+         * \param initial_pc Initial program counter
+         * \param filename Name of the file the trace will be written to
+         * \param state AtlasState used to populate initial register values
+         */
         STFLogger(const uint32_t reg_width, uint64_t initial_pc, const std::string & filename,
-                    AtlasState* state);
+                  AtlasState* state);
 
       private:
         stf::STFWriter stf_writer_;

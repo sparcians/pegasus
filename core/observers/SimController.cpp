@@ -808,7 +808,10 @@ namespace pegasus
         return endpoint_->postExecute(state, mem_reads_, mem_writes_);
     }
 
-    void SimController::preException_(PegasusState* state) { return endpoint_->preException(state); }
+    void SimController::preException_(PegasusState* state)
+    {
+        return endpoint_->preException(state);
+    }
 
     void SimController::onSimulationFinished(PegasusState* state)
     {

@@ -7,8 +7,9 @@
 
 namespace pegasus
 {
-    PegasusSim::PegasusSim(sparta::Scheduler* scheduler, const WorkloadAndArguments & workload_and_args,
-                       const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit) :
+    PegasusSim::PegasusSim(sparta::Scheduler* scheduler,
+                           const WorkloadAndArguments & workload_and_args,
+                           const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit) :
         sparta::app::Simulation("PegasusSim", scheduler),
         workload_and_args_(workload_and_args),
         reg_value_overrides_(reg_value_overrides),
@@ -140,7 +141,9 @@ namespace pegasus
         // Pegasus System (shared by all harts)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
         SystemCallEmulator* system_call_emulator =
-            getRoot()->getChild("system_call_emulator")->getResourceAs<pegasus::SystemCallEmulator>();
+            getRoot()
+                ->getChild("system_call_emulator")
+                ->getResourceAs<pegasus::SystemCallEmulator>();
 
         bool system_call_emulator_enabled = false;
         const uint32_t num_harts = 1;

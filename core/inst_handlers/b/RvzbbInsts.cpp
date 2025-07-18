@@ -221,7 +221,8 @@ namespace pegasus
     template void RvzbbInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename OP>
-    Action::ItrType RvzbbInsts::unaryOpHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbbInsts::unaryOpHandler(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -234,7 +235,8 @@ namespace pegasus
     }
 
     template <typename XLEN, typename OP>
-    Action::ItrType RvzbbInsts::binaryOpHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbbInsts::binaryOpHandler(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -248,7 +250,8 @@ namespace pegasus
     }
 
     template <typename XLEN, typename OP>
-    Action::ItrType RvzbbInsts::immOpHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbbInsts::immOpHandler(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -262,7 +265,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvzbbInsts::orc_bHandler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbbInsts::orc_bHandler(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 

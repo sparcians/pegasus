@@ -58,8 +58,9 @@ namespace pegasus
                 RvvMaskInsts>(nullptr, "vmxnor.mm", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vcpop.m", pegasus::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
-                           nullptr, "vcpop.m", ActionTags::EXECUTE_TAG));
+            "vcpop.m",
+            pegasus::Action::createAction<&RvvMaskInsts::vcpHandler_<XLEN>, RvvMaskInsts>(
+                nullptr, "vcpop.m", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vfirst.m",
@@ -69,30 +70,34 @@ namespace pegasus
         inst_handlers.emplace(
             "vmsbf.m",
             pegasus::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::BEFORE>,
-                                        RvvMaskInsts>(nullptr, "vmsbf.m", ActionTags::EXECUTE_TAG));
+                                          RvvMaskInsts>(nullptr, "vmsbf.m",
+                                                        ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsif.m",
             pegasus::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::INCLUDING>,
-                                        RvvMaskInsts>(nullptr, "vmsif.m", ActionTags::EXECUTE_TAG));
+                                          RvvMaskInsts>(nullptr, "vmsif.m",
+                                                        ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmsof.m",
             pegasus::Action::createAction<&RvvMaskInsts::vsxfHandler_<SetFirstMode::ONLY>,
-                                        RvvMaskInsts>(nullptr, "vmsof.m", ActionTags::EXECUTE_TAG));
+                                          RvvMaskInsts>(nullptr, "vmsof.m",
+                                                        ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "viota.m", pegasus::Action::createAction<&RvvMaskInsts::viotaHandler_, RvvMaskInsts>(
                            nullptr, "viota.m", ActionTags::EXECUTE_TAG));
 
-        inst_handlers.emplace("vid.v",
-                              pegasus::Action::createAction<&RvvMaskInsts::veiHandler_, RvvMaskInsts>(
-                                  nullptr, "vid.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vid.v", pegasus::Action::createAction<&RvvMaskInsts::veiHandler_, RvvMaskInsts>(
+                         nullptr, "vid.v", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvMaskInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvMaskInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <auto func>
-    Action::ItrType RvvMaskInsts::vmlHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvvMaskInsts::vmlHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
         MaskElements elems_vs1{state, state->getVectorConfig(), inst->getRs1()};
@@ -110,7 +115,8 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    Action::ItrType RvvMaskInsts::vcpHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvvMaskInsts::vcpHandler_(pegasus::PegasusState* state,
+                                              Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
         MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
@@ -167,7 +173,8 @@ namespace pegasus
     }
 
     template <RvvMaskInsts::SetFirstMode sfMode>
-    Action::ItrType RvvMaskInsts::vsxfHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvvMaskInsts::vsxfHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
         MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};

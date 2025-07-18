@@ -362,7 +362,8 @@ namespace pegasus
         }
     }
 
-    sparta::Register* PegasusState::findRegister(const std::string & reg_name, bool must_exist) const
+    sparta::Register* PegasusState::findRegister(const std::string & reg_name,
+                                                 bool must_exist) const
     {
         auto iter = registers_by_name_.find(reg_name);
         auto reg = (iter != registers_by_name_.end()) ? iter->second : nullptr;

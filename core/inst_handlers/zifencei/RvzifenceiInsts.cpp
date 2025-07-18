@@ -14,15 +14,15 @@ namespace pegasus
         {
             inst_handlers.emplace(
                 "fence_i", pegasus::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV64>,
-                                                       RvzifenceiInsts>(nullptr, "fence_i",
-                                                                        ActionTags::EXECUTE_TAG));
+                                                         RvzifenceiInsts>(nullptr, "fence_i",
+                                                                          ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
                 "fence_i", pegasus::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV32>,
-                                                       RvzifenceiInsts>(nullptr, "fence_i",
-                                                                        ActionTags::EXECUTE_TAG));
+                                                         RvzifenceiInsts>(nullptr, "fence_i",
+                                                                          ActionTags::EXECUTE_TAG));
         }
     }
 

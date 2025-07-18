@@ -66,10 +66,7 @@ namespace pegasus
 
             template <typename TYPE> RegValue(TYPE value) { setValue<TYPE>(value); }
 
-            void setValue(const std::vector<uint8_t> & value)
-            {
-                value_ = value;
-            }
+            void setValue(const std::vector<uint8_t> & value) { value_ = value; }
 
             template <typename TYPE> void setValue(TYPE value)
             {

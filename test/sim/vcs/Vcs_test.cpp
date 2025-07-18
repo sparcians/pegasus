@@ -20,7 +20,7 @@ class VcsInstructionTester : public PegasusInstructionTester
         XLEN vtype = setVtypeCSR<XLEN>(0, 0, 0, 0, 0); // vlmul = 1, sew = 8
         WRITE_INT_REG<XLEN>(state, rs2, vtype);
         instPtr_ = makePegasusInst(std::string{"vsetvl"}, mavis::ExtractorIF::RegListType{rs1, rs2},
-                                 mavis::ExtractorIF::RegListType{rd});
+                                   mavis::ExtractorIF::RegListType{rd});
         executeInstruction(instPtr_);
 
         EXPECT_EQUAL(READ_INT_REG<XLEN>(state, rd), 8);
@@ -37,7 +37,7 @@ class VcsInstructionTester : public PegasusInstructionTester
         WRITE_INT_REG<XLEN>(state, rs1, 8);            // avl = 8
         XLEN vtype = setVtypeCSR<XLEN>(0, 0, 0, 0, 0); // vlmul = 1, sew = 8
         instPtr_ = makePegasusInst(std::string{"vsetvli"}, mavis::ExtractorIF::RegListType{rs1},
-                                 mavis::ExtractorIF::RegListType{rd}, vtype);
+                                   mavis::ExtractorIF::RegListType{rd}, vtype);
         executeInstruction(instPtr_);
 
         EXPECT_EQUAL(READ_INT_REG<XLEN>(state, rd), 8);

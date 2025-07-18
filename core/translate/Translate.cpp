@@ -164,7 +164,8 @@ namespace pegasus
         }
 
         // Get request from the request queue
-        const PegasusTranslationState::TranslationRequest & request = translation_state->getRequest();
+        const PegasusTranslationState::TranslationRequest & request =
+            translation_state->getRequest();
         const XLEN vaddr = request.isMisaligned()
                                ? (request.getVAddr() + request.getMisalignedBytes())
                                : request.getVAddr();

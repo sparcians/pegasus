@@ -44,7 +44,8 @@ namespace pegasus
 
         // compute address for loads and stores
         template <typename XLEN, typename SIZE>
-        Action::ItrType computeAddressHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType computeAddressHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it);
 
         // lb,lbu,lh,lw,ld
         template <typename XLEN, typename SIZE, bool SIGN_EXTEND = false>

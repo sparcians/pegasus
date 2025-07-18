@@ -456,7 +456,9 @@ namespace atlas
         // ternary operations
 
         auto maccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src2, src1, dst).v; };
+        {
+            return mulAdd(src2, src1, dst).v;
+        };
         inst_handlers.emplace(
             "vfmacc.vv",
             atlas::Action::createAction<
@@ -475,7 +477,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(fnegate(src2), src1, fnegate(dst)).v; };
+        {
+            return mulAdd(fnegate(src2), src1, fnegate(dst)).v;
+        };
         inst_handlers.emplace(
             "vfnmacc.vv",
             atlas::Action::createAction<
@@ -494,7 +498,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfnmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto msacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src2, src1, fnegate(dst)).v; };
+        {
+            return mulAdd(src2, src1, fnegate(dst)).v;
+        };
         inst_handlers.emplace(
             "vfmsac.vv",
             atlas::Action::createAction<
@@ -513,7 +519,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmsac.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(fnegate(src2), src1, dst).v; };
+        {
+            return mulAdd(fnegate(src2), src1, dst).v;
+        };
         inst_handlers.emplace(
             "vfnmsac.vv",
             atlas::Action::createAction<
@@ -532,7 +540,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfnmsac.vf", ActionTags::EXECUTE_TAG));
 
         auto maddWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src1, dst, src2).v; };
+        {
+            return mulAdd(src1, dst, src2).v;
+        };
         inst_handlers.emplace(
             "vfmadd.vv",
             atlas::Action::createAction<
@@ -551,7 +561,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaddWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(fnegate(src1), dst, fnegate(src2)).v; };
+        {
+            return mulAdd(fnegate(src1), dst, fnegate(src2)).v;
+        };
         inst_handlers.emplace(
             "vfnmadd.vv",
             atlas::Action::createAction<
@@ -570,7 +582,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfnmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto msubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(src1, dst, fnegate(src2)).v; };
+        {
+            return mulAdd(src1, dst, fnegate(src2)).v;
+        };
         inst_handlers.emplace(
             "vfmsub.vv",
             atlas::Action::createAction<
@@ -589,7 +603,9 @@ namespace atlas
                 RvvFloatInsts>(nullptr, "vfmsub.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        { return mulAdd(fnegate(src1), dst, src2).v; };
+        {
+            return mulAdd(fnegate(src1), dst, src2).v;
+        };
         inst_handlers.emplace(
             "vfnmsub.vv",
             atlas::Action::createAction<
@@ -854,8 +870,9 @@ namespace atlas
                 }
                 break;
             case 32:
-                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2)
-                                     { return func_wrapper(funcs.f32, src2); }>(state, action_it);
+                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2) {
+                    return func_wrapper(funcs.f32, src2);
+                }>(state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
@@ -1004,7 +1021,8 @@ namespace atlas
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 16, opMode,
+                                      [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1017,7 +1035,8 @@ namespace atlas
                                       }>(state, action_it);
 
             case 32:
-                return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 32, opMode,
+                                      [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1215,7 +1234,8 @@ namespace atlas
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfTernaryHelper<XLEN, 16, opMode, [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 16, opMode,
+                                       [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
@@ -1232,7 +1252,8 @@ namespace atlas
                                        }>(state, action_it);
 
             case 32:
-                return vfTernaryHelper<XLEN, 32, opMode, [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 32, opMode,
+                                       [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
@@ -1251,7 +1272,8 @@ namespace atlas
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
-                    return vfTernaryHelper<XLEN, 64, opMode, [](auto src2, auto src1, auto dst)
+                    return vfTernaryHelper<XLEN, 64, opMode,
+                                           [](auto src2, auto src1, auto dst)
                                            {
                                                return funcWrapper.template operator()<f64_mulAdd>(
                                                    float64_t{src2}, float64_t{src1},

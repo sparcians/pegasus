@@ -16,33 +16,36 @@ namespace pegasus
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "add.uw",
-                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 0, true>, RvzbaInsts>(
-                    nullptr, "add.uw", ActionTags::EXECUTE_TAG));
+                "add.uw", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 0, true>,
+                                                        RvzbaInsts>(nullptr, "add.uw",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh1add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, false>,
-                                                      RvzbaInsts>(nullptr, "sh1add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh1add",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh1add.uw",
-                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, true>, RvzbaInsts>(
-                    nullptr, "sh1add.uw", ActionTags::EXECUTE_TAG));
+                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 1, true>,
+                                              RvzbaInsts>(nullptr, "sh1add.uw",
+                                                          ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh2add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, false>,
-                                                      RvzbaInsts>(nullptr, "sh2add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh2add",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh2add.uw",
-                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, true>, RvzbaInsts>(
-                    nullptr, "sh2add.uw", ActionTags::EXECUTE_TAG));
+                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 2, true>,
+                                              RvzbaInsts>(nullptr, "sh2add.uw",
+                                                          ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh3add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, false>,
-                                                      RvzbaInsts>(nullptr, "sh3add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh3add",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh3add.uw",
-                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, true>, RvzbaInsts>(
-                    nullptr, "sh3add.uw", ActionTags::EXECUTE_TAG));
+                pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV64, 3, true>,
+                                              RvzbaInsts>(nullptr, "sh3add.uw",
+                                                          ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slli.uw", pegasus::Action::createAction<&RvzbaInsts::slli_uw_handler, RvzbaInsts>(
                                nullptr, "slli.uw", ActionTags::EXECUTE_TAG));
@@ -51,16 +54,16 @@ namespace pegasus
         {
             inst_handlers.emplace(
                 "sh1add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 1, false>,
-                                                      RvzbaInsts>(nullptr, "sh1add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh1add",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh2add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 2, false>,
-                                                      RvzbaInsts>(nullptr, "sh2add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh2add",
+                                                                    ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sh3add", pegasus::Action::createAction<&RvzbaInsts::shxadd_handler<RV32, 3, false>,
-                                                      RvzbaInsts>(nullptr, "sh3add",
-                                                                  ActionTags::EXECUTE_TAG));
+                                                        RvzbaInsts>(nullptr, "sh3add",
+                                                                    ActionTags::EXECUTE_TAG));
         }
     }
 
@@ -68,7 +71,8 @@ namespace pegasus
     template void RvzbaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, uint32_t SHIFT, bool UW>
-    Action::ItrType RvzbaInsts::shxadd_handler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbaInsts::shxadd_handler(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -87,7 +91,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvzbaInsts::slli_uw_handler(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvzbaInsts::slli_uw_handler(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 

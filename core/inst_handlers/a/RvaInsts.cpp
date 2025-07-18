@@ -67,11 +67,13 @@ namespace pegasus
             pegasus::Action::createAction<&RvaInsts::computeAddressHandler_<XLEN>, RvaInsts>(
                 nullptr, "amoxor_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "lr_w", pegasus::Action::createAction<&RvaInsts::computeAddressHandler_<XLEN>, RvaInsts>(
-                        nullptr, "lr_w", ActionTags::COMPUTE_ADDR_TAG));
+            "lr_w",
+            pegasus::Action::createAction<&RvaInsts::computeAddressHandler_<XLEN>, RvaInsts>(
+                nullptr, "lr_w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "sc_w", pegasus::Action::createAction<&RvaInsts::computeAddressHandler_<XLEN>, RvaInsts>(
-                        nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
+            "sc_w",
+            pegasus::Action::createAction<&RvaInsts::computeAddressHandler_<XLEN>, RvaInsts>(
+                nullptr, "sc_w", ActionTags::COMPUTE_ADDR_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
@@ -131,23 +133,23 @@ namespace pegasus
             inst_handlers.emplace(
                 "amoadd_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, std::plus<D>>,
-                                            RvaInsts>(nullptr, "amoadd_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoadd_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoadd_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::plus<W>>,
-                                            RvaInsts>(nullptr, "amoadd_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoadd_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoand_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, std::bit_and<D>>,
-                                            RvaInsts>(nullptr, "amoand_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoand_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoand_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_and<W>>,
-                                            RvaInsts>(nullptr, "amoand_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoand_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomax_d",
                 pegasus::Action::createAction<
@@ -161,13 +163,13 @@ namespace pegasus
             inst_handlers.emplace(
                 "amomaxu_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, MaxFunctor<D>>,
-                                            RvaInsts>(nullptr, "amomaxu_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amomaxu_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomaxu_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, MaxFunctor<W>>,
-                                            RvaInsts>(nullptr, "amomaxu_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amomaxu_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomin_d",
                 pegasus::Action::createAction<
@@ -181,41 +183,43 @@ namespace pegasus
             inst_handlers.emplace(
                 "amominu_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, MinFunctor<D>>,
-                                            RvaInsts>(nullptr, "amominu_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amominu_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amominu_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, MinFunctor<W>>,
-                                            RvaInsts>(nullptr, "amominu_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amominu_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoor_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, std::bit_or<D>>,
-                                            RvaInsts>(nullptr, "amoor_d", ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoor_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoor_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_or<W>>,
-                                            RvaInsts>(nullptr, "amoor_w", ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoor_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoswap_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, SwapFunctor<D>>,
-                                            RvaInsts>(nullptr, "amoswap_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoswap_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoswap_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, SwapFunctor<W>>,
-                                            RvaInsts>(nullptr, "amoswap_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoswap_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoxor_d",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, D, std::bit_xor<D>>,
-                                            RvaInsts>(nullptr, "amoxor_d",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoxor_d",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoxor_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_xor<W>>,
-                                            RvaInsts>(nullptr, "amoxor_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoxor_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lr_d",
                 pegasus::Action::createAction<&RvaInsts::lr_handler_<RV64, uint64_t>, RvaInsts>(
@@ -238,13 +242,13 @@ namespace pegasus
             inst_handlers.emplace(
                 "amoadd_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::plus<W>>,
-                                            RvaInsts>(nullptr, "amoadd_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoadd_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoand_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_and<W>>,
-                                            RvaInsts>(nullptr, "amoand_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoand_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomax_w",
                 pegasus::Action::createAction<
@@ -253,8 +257,8 @@ namespace pegasus
             inst_handlers.emplace(
                 "amomaxu_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, MaxFunctor<W>>,
-                                            RvaInsts>(nullptr, "amomaxu_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amomaxu_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amomin_w",
                 pegasus::Action::createAction<
@@ -263,22 +267,23 @@ namespace pegasus
             inst_handlers.emplace(
                 "amominu_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, MinFunctor<W>>,
-                                            RvaInsts>(nullptr, "amominu_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amominu_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoor_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_or<W>>,
-                                            RvaInsts>(nullptr, "amoor_w", ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoor_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoswap_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, SwapFunctor<W>>,
-                                            RvaInsts>(nullptr, "amoswap_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoswap_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoxor_w",
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_xor<W>>,
-                                            RvaInsts>(nullptr, "amoxor_w",
-                                                      ActionTags::EXECUTE_TAG));
+                                              RvaInsts>(nullptr, "amoxor_w",
+                                                        ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lr_w",
                 pegasus::Action::createAction<&RvaInsts::lr_handler_<RV32, uint32_t>, RvaInsts>(

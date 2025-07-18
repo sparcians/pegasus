@@ -20,85 +20,101 @@ namespace pegasus
             inst_handlers.emplace(
                 "lb",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
-                                            RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lb",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu", pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
-                                                   RviInsts>(nullptr, "lbu",
-                                                             ActionTags::COMPUTE_ADDR_TAG));
+                "lbu",
+                pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
+                                              RviInsts>(nullptr, "lbu",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "ld",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint64_t>,
-                                            RviInsts>(nullptr, "ld", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "ld",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lh",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint16_t>,
-                                            RviInsts>(nullptr, "lh", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lh",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lhu",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint16_t>,
-                                            RviInsts>(nullptr, "lhu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lhu",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lw",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint32_t>,
-                                            RviInsts>(nullptr, "lw", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lw",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lwu",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint32_t>,
-                                            RviInsts>(nullptr, "lwu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lwu",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sb",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint8_t>,
-                                            RviInsts>(nullptr, "sb", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sb",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sd",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint64_t>,
-                                            RviInsts>(nullptr, "sd", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sd",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sh",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint16_t>,
-                                            RviInsts>(nullptr, "sh", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sh",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sw",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint32_t>,
-                                            RviInsts>(nullptr, "sw", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sw",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
                 "lb",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
-                                            RviInsts>(nullptr, "lb", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lb",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
-                "lbu", pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
-                                                   RviInsts>(nullptr, "lbu",
-                                                             ActionTags::COMPUTE_ADDR_TAG));
+                "lbu",
+                pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
+                                              RviInsts>(nullptr, "lbu",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lh",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint16_t>,
-                                            RviInsts>(nullptr, "lh", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lh",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lhu",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint16_t>,
-                                            RviInsts>(nullptr, "lhu",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lhu",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "lw",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint32_t>,
-                                            RviInsts>(nullptr, "lw", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "lw",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sb",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint8_t>,
-                                            RviInsts>(nullptr, "sb", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sb",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sh",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV32, uint16_t>,
-                                            RviInsts>(nullptr, "sh", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sh",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "sw",
                 pegasus::Action::createAction<&RviInsts::computeAddressHandler_<RV64, uint32_t>,
-                                            RviInsts>(nullptr, "sw", ActionTags::COMPUTE_ADDR_TAG));
+                                              RviInsts>(nullptr, "sw",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         }
     }
 
@@ -138,9 +154,9 @@ namespace pegasus
                 "auipc", pegasus::Action::createAction<&RviInsts::auipcHandler_<RV64>, RviInsts>(
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "beq",
-                pegasus::Action::createAction<&RviInsts::branchHandler_<RV64, std::equal_to<int64_t>>,
-                                            RviInsts>(nullptr, "beq", ActionTags::EXECUTE_TAG));
+                "beq", pegasus::Action::createAction<
+                           &RviInsts::branchHandler_<RV64, std::equal_to<int64_t>>, RviInsts>(
+                           nullptr, "beq", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bge", pegasus::Action::createAction<
                            &RviInsts::branchHandler_<RV64, std::greater_equal<int64_t>>, RviInsts>(
@@ -153,31 +169,32 @@ namespace pegasus
             inst_handlers.emplace(
                 "blt",
                 pegasus::Action::createAction<&RviInsts::branchHandler_<RV64, std::less<int64_t>>,
-                                            RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bltu",
                 pegasus::Action::createAction<&RviInsts::branchHandler_<RV64, std::less<uint64_t>>,
-                                            RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bne", pegasus::Action::createAction<
                            &RviInsts::branchHandler_<RV64, std::not_equal_to<uint64_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ebreak",
-                                  pegasus::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
-                                      nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ebreak", pegasus::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
+                              nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             if (enable_syscall_emulation)
             {
                 inst_handlers.emplace(
                     "ecall",
                     pegasus::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>,
-                                                RviInsts>(nullptr, "ecall",
-                                                          ActionTags::EXECUTE_TAG));
+                                                  RviInsts>(nullptr, "ecall",
+                                                            ActionTags::EXECUTE_TAG));
             }
             else
             {
                 inst_handlers.emplace(
-                    "ecall", pegasus::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
-                                 nullptr, "ecall", ActionTags::EXECUTE_TAG));
+                    "ecall",
+                    pegasus::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
             }
             inst_handlers.emplace("fence",
                                   pegasus::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
@@ -191,7 +208,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "lb",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint8_t, SIGN_EXTEND>,
-                                            RviInsts>(nullptr, "lb", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "lb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lbu",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint8_t>, RviInsts>(
@@ -203,7 +220,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "lh",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint16_t, SIGN_EXTEND>,
-                                            RviInsts>(nullptr, "lh", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "lh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lhu",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint16_t>, RviInsts>(
@@ -217,7 +234,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "lw",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint32_t, SIGN_EXTEND>,
-                                            RviInsts>(nullptr, "lw", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "lw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lwu",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV64, uint32_t>, RviInsts>(
@@ -225,7 +242,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "mret",
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV64, PrivMode::MACHINE>,
-                                            RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "mv", pegasus::Action::createAction<&RviInsts::mvHandler_<RV64>, RviInsts>(
                           nullptr, "mv", ActionTags::EXECUTE_TAG));
@@ -299,7 +316,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "sret",
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV64, PrivMode::SUPERVISOR>,
-                                            RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "srl", pegasus::Action::createAction<&RviInsts::srlHandler_<RV64>, RviInsts>(
                            nullptr, "srl", ActionTags::EXECUTE_TAG));
@@ -357,9 +374,9 @@ namespace pegasus
                 "auipc", pegasus::Action::createAction<&RviInsts::auipcHandler_<RV32>, RviInsts>(
                              nullptr, "auipc", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "beq",
-                pegasus::Action::createAction<&RviInsts::branchHandler_<RV32, std::equal_to<int32_t>>,
-                                            RviInsts>(nullptr, "beq", ActionTags::EXECUTE_TAG));
+                "beq", pegasus::Action::createAction<
+                           &RviInsts::branchHandler_<RV32, std::equal_to<int32_t>>, RviInsts>(
+                           nullptr, "beq", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bge", pegasus::Action::createAction<
                            &RviInsts::branchHandler_<RV32, std::greater_equal<int32_t>>, RviInsts>(
@@ -372,18 +389,18 @@ namespace pegasus
             inst_handlers.emplace(
                 "blt",
                 pegasus::Action::createAction<&RviInsts::branchHandler_<RV32, std::less<int32_t>>,
-                                            RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "blt", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bltu",
                 pegasus::Action::createAction<&RviInsts::branchHandler_<RV32, std::less<uint32_t>>,
-                                            RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "bltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "bne", pegasus::Action::createAction<
                            &RviInsts::branchHandler_<RV32, std::not_equal_to<uint32_t>>, RviInsts>(
                            nullptr, "bne", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("ebreak",
-                                  pegasus::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
-                                      nullptr, "ebreak", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "ebreak", pegasus::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
+                              nullptr, "ebreak", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "ecall", pegasus::Action::createAction<&RviInsts::ecallHandler_<RV32>, RviInsts>(
                              nullptr, "ecall", ActionTags::EXECUTE_TAG));
@@ -399,7 +416,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "lb",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV32, uint8_t, SIGN_EXTEND>,
-                                            RviInsts>(nullptr, "lb", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "lb", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lbu",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV32, uint8_t>, RviInsts>(
@@ -407,7 +424,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "lh",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV32, uint16_t, SIGN_EXTEND>,
-                                            RviInsts>(nullptr, "lh", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "lh", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "lhu",
                 pegasus::Action::createAction<&RviInsts::loadHandler_<RV32, uint16_t>, RviInsts>(
@@ -425,7 +442,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "mret",
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV32, PrivMode::MACHINE>,
-                                            RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "mret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "mv", pegasus::Action::createAction<&RviInsts::mvHandler_<RV32>, RviInsts>(
                           nullptr, "mv", ActionTags::EXECUTE_TAG));
@@ -483,7 +500,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "sret",
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV32, PrivMode::SUPERVISOR>,
-                                            RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
+                                              RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "srl", pegasus::Action::createAction<&RviInsts::srlHandler_<RV32>, RviInsts>(
                            nullptr, "srl", ActionTags::EXECUTE_TAG));
@@ -644,7 +661,8 @@ namespace pegasus
     }
 
     template <typename XLEN, typename OPERATOR>
-    Action::ItrType RviInsts::branchHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RviInsts::branchHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());

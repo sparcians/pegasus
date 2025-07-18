@@ -26,7 +26,8 @@ class FetchUnit : public Unit
   public:
     FetchUnit() : Unit("Fetch") { loadWorkload(); }
 
-    pegasus::Action::ItrType fetch_inst(pegasus::PegasusState* state, pegasus::Action::ItrType action_it)
+    pegasus::Action::ItrType fetch_inst(pegasus::PegasusState* state,
+                                        pegasus::Action::ItrType action_it)
     {
         // Set the current inst, using the PC as an index
         const pegasus::Addr pc = state->getPc();
@@ -70,7 +71,8 @@ class TranslateUnit : public Unit
   public:
     TranslateUnit() : Unit("Translate") {}
 
-    pegasus::Action::ItrType translate_addr(pegasus::PegasusState*, pegasus::Action::ItrType action_it)
+    pegasus::Action::ItrType translate_addr(pegasus::PegasusState*,
+                                            pegasus::Action::ItrType action_it)
     {
         std::cout << "Translating" << std::endl;
 
@@ -102,7 +104,8 @@ class ExecuteUnit : public Unit
     {
     }
 
-    pegasus::Action::ItrType execute_inst(pegasus::PegasusState* state, pegasus::Action::ItrType action_it)
+    pegasus::Action::ItrType execute_inst(pegasus::PegasusState* state,
+                                          pegasus::Action::ItrType action_it)
     {
         // Get current inst
         const pegasus::PegasusInstPtr inst = state->getCurrentInst();
@@ -136,7 +139,8 @@ class ExecuteUnit : public Unit
         return ++action_it;
     }
 
-    pegasus::Action::ItrType inst_handler(pegasus::PegasusState* state, pegasus::Action::ItrType action_it)
+    pegasus::Action::ItrType inst_handler(pegasus::PegasusState* state,
+                                          pegasus::Action::ItrType action_it)
     {
         const pegasus::PegasusInstPtr & inst = state->getCurrentInst();
         std::cout << "Executing "

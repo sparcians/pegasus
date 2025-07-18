@@ -146,8 +146,9 @@ int main()
     std::cout << std::endl;
     TranslateUnit translate_unit;
     pegasus::ActionGroup* translate = translate_unit.getActionGroup();
-    pegasus::Action translate_action = pegasus::Action::createAction<&TranslateUnit::translate_addr>(
-        &translate_unit, translate_unit.getName().c_str());
+    pegasus::Action translate_action =
+        pegasus::Action::createAction<&TranslateUnit::translate_addr>(
+            &translate_unit, translate_unit.getName().c_str());
     translate_action.addTag(pegasus::ActionTags::INST_TRANSLATE_TAG);
     translate->addAction(translate_action);
     // fetch -> translate -> decode

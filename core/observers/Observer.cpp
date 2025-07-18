@@ -209,7 +209,8 @@ namespace pegasus
 
     std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
     {
-        os << "0x" << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
+        os << "0x"
+           << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
         return os;
     }
 } // namespace pegasus

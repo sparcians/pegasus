@@ -54,7 +54,7 @@ namespace pegasus
     }
 
     PegasusInst::PegasusInst(const mavis::OpcodeInfo::PtrType & opcode_info,
-                         const PegasusExtractorPtr & extractor_info, PegasusState* state) :
+                             const PegasusExtractorPtr & extractor_info, PegasusState* state) :
         opcode_info_(opcode_info),
         extractor_info_(extractor_info),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
