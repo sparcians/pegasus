@@ -47,4 +47,40 @@ namespace pegasus
     }
 
     template <std::size_t N> using UintType = typename decltype(get_uint_type<N>())::type;
-} // namespace pegasus
+
+    template <typename T> constexpr auto get_uint_type()
+    {
+        if constexpr (std::is_same_v<T, int8_t>)
+            return std::type_identity<uint8_t>{};
+        else if constexpr (std::is_same_v<T, int16_t>)
+            return std::type_identity<uint16_t>{};
+        else if constexpr (std::is_same_v<T, int32_t>)
+            return std::type_identity<uint32_t>{};
+        else if constexpr (std::is_same_v<T, int64_t>)
+            return std::type_identity<uint64_t>{};
+        else
+            static_assert(std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t>
+                              || std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t>,
+                          "Unsupported unsigned type");
+    }
+
+    template <typename T> using UnsignedType = typename decltype(get_uint_type<T>())::type;
+
+    template <typename T> constexpr auto get_int_type()
+    {
+        if constexpr (std::is_same_v<T, uint8_t>)
+            return std::type_identity<int8_t>{};
+        else if constexpr (std::is_same_v<T, uint16_t>)
+            return std::type_identity<int16_t>{};
+        else if constexpr (std::is_same_v<T, uint32_t>)
+            return std::type_identity<int32_t>{};
+        else if constexpr (std::is_same_v<T, uint64_t>)
+            return std::type_identity<int64_t>{};
+        else
+            static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>
+                              || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t>,
+                          "Unsupported unsigned type");
+    }
+
+    template <typename T> using SignedType = typename decltype(get_int_type<T>())::type;
+} // namespace atlas

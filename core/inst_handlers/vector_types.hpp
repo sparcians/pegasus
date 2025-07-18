@@ -9,8 +9,10 @@ namespace pegasus
             V, // vector
             X, // scaler int
             F, // scaler float
+            S, // single vector element[0]
             I, // immediate
-            W  // wide
+            W, // wide
+            N  // not used
         };
 
         const Mode dst, src1, src2;
