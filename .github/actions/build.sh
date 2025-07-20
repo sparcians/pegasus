@@ -32,6 +32,8 @@ if [ ${BUILD_SPARTA} -ne 0 ]; then
     exit 1
 fi
 
+ccache -C
+
 cd ${GITHUB_WORKSPACE}
 mkdir $PEGASUS_BUILD_TYPE
 cd $PEGASUS_BUILD_TYPE
