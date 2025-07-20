@@ -21,7 +21,7 @@ jobs:
 
     # Set up a global environment variable for build scripts
     env:
-      PEGASUS_BUILD_TYPE:   ${{ matrix.BUILD_TYPE }}
+      PEGASUS_BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       COMPILER:           ${{ matrix.COMPILER }}
 
     steps:
