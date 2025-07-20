@@ -5,6 +5,6 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../mavis/json               ${CMAK
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../core/inst_handlers/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
 
 add_executable(Via_test Via_test.cpp)
-target_link_libraries(Via_test pegasuscore pegasusinsts softfloat pegasussys pegasussim ${PEGASUS_LIBS})
+target_link_libraries(Via_test pegasussim pegasuscore pegasusinsts softfloat pegasussys ${PEGASUS_LIBS})
 
 pegasus_named_test(Via_test_run Via_test)
