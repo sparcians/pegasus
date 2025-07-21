@@ -21,8 +21,8 @@ template <typename T> inline reg_t zext(T x, uint32_t pos)
 
 inline uint64_t mulhu(uint64_t a, uint64_t b)
 {
-    uint64_t t;
-    uint32_t y1, y2, y3;
+    uint64_t t = 0;
+    uint32_t y1 = 0, y2 = 0;
     uint64_t a0 = (uint32_t)a, a1 = a >> 32;
     uint64_t b0 = (uint32_t)b, b1 = b >> 32;
 
@@ -33,10 +33,8 @@ inline uint64_t mulhu(uint64_t a, uint64_t b)
     t = a0 * b1 + y1;
 
     t = a1 * b1 + y2 + (t >> 32);
-    y2 = t;
-    y3 = t >> 32;
 
-    return ((uint64_t)y3 << 32) | y2;
+    return t;
 }
 
 inline int64_t mulhsu(int64_t a, uint64_t b)
@@ -53,7 +51,7 @@ inline int64_t mulh(int64_t a, int64_t b)
     return negate ? ~res + ((uint64_t)a * (uint64_t)b == 0) : res;
 }
 
-namespace atlas
+namespace pegasus
 {
     template <uint64_t Mask> struct RegisterBitMask
     {
@@ -87,4 +85,4 @@ namespace atlas
         }
     };
 
-} // namespace atlas
+} // namespace pegasus

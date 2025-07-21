@@ -2,12 +2,12 @@
 
 #include <stdint.h>
 
-#include "core/AtlasState.hpp"
+#include "core/PegasusState.hpp"
 #include "core/VecConfig.hpp"
 #include "core/VecNums.hpp"
-#include "include/AtlasUtils.hpp"
+#include "include/PegasusUtils.hpp"
 
-namespace atlas
+namespace pegasus
 {
     /**
      * @class Element
@@ -19,12 +19,13 @@ namespace atlas
      * bits in Body part is accessible.
      * Bit Iterator is provided for bit iteration.
      *
-     * @tparam ElemWidth Number of bits for this *Element* type.
+     * @tparam elemWidth Number of bits for this *Element* type.
      */
-    template <size_t ElemWidth> struct Element
+    template <size_t elemWidth> struct Element
     {
       public:
-        using ValueType = UintType<ElemWidth>;
+        using ValueType = UintType<elemWidth>;
+        static constexpr size_t elem_width = elemWidth;
 
         /**
          * @class BitIterator
@@ -42,7 +43,7 @@ namespace atlas
              * @param elem_ptr Poninter to *Element* object upon which this iterator operates.
              * @param index *index_* will be set to the first active bit after this (inclusive).
              */
-            BitIterator(const Element<ElemWidth>* elem_ptr, size_t index) : elem_ptr_(elem_ptr)
+            BitIterator(const Element<elemWidth>* elem_ptr, size_t index) : elem_ptr_(elem_ptr)
             {
                 index_ = getNextIndex(index);
             }
@@ -104,7 +105,7 @@ namespace atlas
 
           private:
             /**< Pointer to *Element* object upon which this iterator operates. */
-            const Element<ElemWidth>* elem_ptr_ = nullptr;
+            const Element<elemWidth>* elem_ptr_ = nullptr;
             /**< Index tracking current pointed bit. */
             size_t index_ = 0;
         }; // class BitIterator
@@ -117,11 +118,11 @@ namespace atlas
         /**
          * @brief Constructor.
          *
-         * @param state Poninter of *AtlasState* object.
+         * @param state Poninter of *PegasusState* object.
          * @param reg_id vector register ID.
          * @param idx Index offset in the Register
          */
-        Element(AtlasState* state, uint32_t reg_id, uint32_t idx) :
+        Element(PegasusState* state, uint32_t reg_id, uint32_t idx) :
             state_(state),
             reg_id_(reg_id),
             idx_(idx)
@@ -129,15 +130,9 @@ namespace atlas
         }
 
         /**
-         * @brief Return number of bits this *Element* type represents.
-         * @return Number of bits.
-         */
-        static constexpr size_t getWidth() { return ElemWidth; }
-
-        /**
          * @brief Set *state_*.
          */
-        void setState(AtlasState* state) { state_ = state; }
+        void setState(PegasusState* state) { state_ = state; }
 
         /**
          * @brief Set *reg_id_*.
@@ -175,7 +170,7 @@ namespace atlas
          */
         ValueType getMask() const
         {
-            return (((ValueType)1 << (end_pos_ - start_pos_)) - 1) << start_pos_;
+            return ((ValueType{1} << (end_pos_ - start_pos_)) - 1) << start_pos_;
         }
 
         /**
@@ -206,10 +201,50 @@ namespace atlas
          */
         void setVal(ValueType value)
         {
-            ValueType bitmask = getMask();
-            val_ = value & bitmask;
-            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & ~bitmask;
+            const ValueType mask = getMask();
+            val_ = value & mask;
+            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & ~mask;
             WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val | val_, idx_);
+        }
+
+        /**
+         * @brief Retrieve bit of *Element* at *index* from vector register.
+         * @param index The index of requested bit.
+         * @return Bit value at *index*.
+         */
+        ValueType getBit(size_t index) const
+        {
+            return (READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_) & (ValueType{1} << index)
+                    & getMask())
+                   >> index;
+        }
+
+        /**
+         * @brief Update bit of *Element* at *index* in vector register to 1.
+         * @param index The index of requested bit.
+         */
+        void setBit(size_t index)
+        {
+            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_);
+            const ValueType mask = getMask();
+            ValueType bitmask = (ValueType{1} << index) & mask;
+            val |= bitmask;
+            val_ = val & mask;
+            WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val, idx_);
+        }
+
+        /**
+         * @brief Update bit of *Element* at *index* in vector register to 0.
+         * @param index The index of requested bit.
+         */
+        void clearBit(size_t index)
+        {
+            ValueType val = READ_VEC_ELEM<ValueType>(state_, reg_id_, idx_);
+            const ValueType mask = getMask();
+            ValueType bitmask = (ValueType{1} << index) & mask;
+            val &= ~bitmask;
+            val_ = val & mask;
+            WRITE_VEC_ELEM<ValueType>(state_, reg_id_, val, idx_);
         }
 
         /**
@@ -226,7 +261,7 @@ namespace atlas
 
       private:
         /**< Needed for vector register access. */
-        AtlasState* state_ = nullptr;
+        PegasusState* state_ = nullptr;
         /**< vector register ID. */
         uint32_t reg_id_ = 0;
         /**< Index offset for vector register. */
@@ -234,7 +269,7 @@ namespace atlas
         /**< Start position of active bits. */
         size_t start_pos_ = 0;
         /**< End position of active bits. */
-        size_t end_pos_ = ElemWidth;
+        size_t end_pos_ = elemWidth;
         /**< Local bits of vector element. */
         ValueType val_ = 0;
     }; // struct Element
@@ -264,9 +299,11 @@ namespace atlas
      * @tparam ElemType Element type for individual element.
      * @tparam isMaskElems true if this *Elements* represents vector mask.
      */
-    template <typename ElemType, bool isMaskElems> class Elements
+    template <typename EType, bool isMaskElems> class Elements
     {
       public:
+        using ElemType = EType;
+
         /**
          * @class ElementIterator
          * @brief Used for *Element* iteration of *Elements*.
@@ -359,13 +396,13 @@ namespace atlas
             size_t index_ = 0;
         }; // class ElementIterator
 
-        template <bool M = isMaskElems>
-        requires EnableIf<M>
-
         /**
          * @class MaskBitIterator
          * @brief Used for bit iteration of *MastElements*.
          */
+        template <bool M = isMaskElems>
+        requires EnableIf<M>
+
         class MaskBitIterator
         {
           public:
@@ -422,7 +459,7 @@ namespace atlas
             size_t getNextIndex(size_t index) const
             {
                 const size_t vl = elems_ptr_->config_->getVL();
-                const size_t elem_offset = index / VLEN_MIN;
+                const size_t elem_offset = index / ElemType::elem_width;
                 index = std::max(index, elems_ptr_->config_->getVSTART());
                 if (index >= vl)
                 {
@@ -437,11 +474,13 @@ namespace atlas
                     // If we don't have a hit in the first Element for this index, then we shall
                     // start from bit 0 of next Element.
                     const size_t bit_offset =
-                        mask_elem_iter.getIndex() == elem_offset ? index % VLEN_MIN : 0;
-                    for (auto bit_iter = Element<VLEN_MIN>::BitIterator{&mask_elem, bit_offset};
+                        mask_elem_iter.getIndex() == elem_offset ? index % ElemType::elem_width : 0;
+                    for (typename Element<ElemType::elem_width>::BitIterator bit_iter{&mask_elem,
+                                                                                      bit_offset};
                          bit_iter != mask_elem.end(); ++bit_iter)
                     {
-                        return mask_elem_iter.getIndex() * VLEN_MIN + bit_iter.getIndex();
+                        return mask_elem_iter.getIndex() * ElemType::elem_width
+                               + bit_iter.getIndex();
                     }
                 }
                 return vl;
@@ -457,13 +496,12 @@ namespace atlas
         /**
          * @brief Constructor for vector register group *Elements*.
          *
-         * @param state Poninter to *AtlasState* object.
+         * @param state Poninter to *PegasusState* object.
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<!isMaskElems>
-            :
+        Elements(PegasusState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<!isMaskElems> :
             state_(state),
             config_(config),
             start_pos_(config_->getVSTART()),
@@ -475,17 +513,16 @@ namespace atlas
         /**
          * @brief Constructor for vector mask *Elements*.
          *
-         * @param state Poninter to *AtlasState* object.
+         * @param state Poninter to *PegasusState* object.
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(AtlasState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<isMaskElems>
-            :
+        Elements(PegasusState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<isMaskElems> :
             state_(state),
             config_(config),
-            start_pos_(config_->getVSTART() / VLEN_MIN),
-            end_pos_((config_->getVL() + VLEN_MIN - 1) / VLEN_MIN),
+            start_pos_(config_->getVSTART() / ElemType::elem_width),
+            end_pos_((config_->getVL() + ElemType::elem_width - 1) / ElemType::elem_width),
             reg_id_(reg_id)
         {
         }
@@ -506,8 +543,7 @@ namespace atlas
          * @brief Return *begin* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the starting bit.
          */
-        auto maskBitIterBegin() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterBegin() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVSTART());
         }
@@ -516,8 +552,7 @@ namespace atlas
          * @brief Return *end* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the ending bit.
          */
-        auto maskBitIterEnd() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterEnd() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVL());
         }
@@ -533,15 +568,15 @@ namespace atlas
          */
         ElemType getElement(size_t index) const
         {
-            uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::getWidth());
-            uint32_t idx = index % (config_->getVLEN() / ElemType::getWidth());
+            uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::elem_width);
+            uint32_t idx = index % (config_->getVLEN() / ElemType::elem_width);
             ElemType elem{state_, reg_id, idx};
             if constexpr (isMaskElems)
             {
                 // Fix *start_pos_* if first element.
                 if (index == start_pos_)
                 {
-                    elem.setStartPos(config_->getVSTART() % VLEN_MIN);
+                    elem.setStartPos(config_->getVSTART() % ElemType::elem_width);
                 }
                 else
                 {
@@ -551,26 +586,57 @@ namespace atlas
                 if (index == end_pos_ - 1)
                 {
                     const size_t vl = config_->getVL();
-                    if (vl && vl % VLEN_MIN == 0)
+                    if (vl && vl % ElemType::elem_width == 0)
                     {
-                        elem.setEndPos(VLEN_MIN);
+                        elem.setEndPos(ElemType::elem_width);
                     }
                     else
                     {
-                        elem.setEndPos(vl % VLEN_MIN);
+                        elem.setEndPos(vl % ElemType::elem_width);
                     }
                 }
                 else
                 {
-                    elem.setEndPos(VLEN_MIN);
+                    elem.setEndPos(ElemType::elem_width);
                 }
             }
             return elem;
         }
 
+        /**
+         * @brief Retrieve bit of *MaskElements* at *index* from vector register.
+         * @param index The index of requested bit.
+         * @return Bit value at *index*.
+         */
+        typename ElemType::ValueType getBit(size_t index) const requires EnableIf<isMaskElems>
+        {
+            auto elem = getElement(index / ElemType::elem_width);
+            return elem.getBit(index % ElemType::elem_width);
+        }
+
+        /**
+         * @brief Update bit of *MaskElements* at *index* in vector register to 1.
+         * @param index The index of requested bit.
+         */
+        void setBit(size_t index) const requires EnableIf<isMaskElems>
+        {
+            auto elem = getElement(index / ElemType::elem_width);
+            return elem.setBit(index % ElemType::elem_width);
+        }
+
+        /**
+         * @brief Update bit of *MaskElements* at *index* in vector register to 0.
+         * @param index The index of requested bit.
+         */
+        void clearBit(size_t index) const requires EnableIf<isMaskElems>
+        {
+            auto elem = getElement(index / ElemType::elem_width);
+            return elem.clearBit(index % ElemType::elem_width);
+        }
+
       private:
-        /**< Pointer to *AtlasState* object. */
-        AtlasState* state_ = nullptr;
+        /**< Pointer to *PegasusState* object. */
+        PegasusState* state_ = nullptr;
         /**< Pointer to *VectorConfig* object. */
         const VectorConfig* config_ = nullptr;
         /**< Starting *Element* position. */
@@ -584,4 +650,4 @@ namespace atlas
     using MaskElement = Element<VLEN_MIN>;
     using MaskElements = Elements<MaskElement, true>;
     using MaskBitIterator = MaskElements::MaskBitIterator<>;
-} // namespace atlas
+} // namespace pegasus
