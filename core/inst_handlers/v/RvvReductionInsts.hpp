@@ -4,9 +4,9 @@
 #include <string>
 #include "core/Action.hpp"
 
-namespace atlas {
+namespace pegasus {
 
-class AtlasState;
+class PegasusState;
 
 class RvvReductionInsts {
  public:
@@ -17,7 +17,7 @@ class RvvReductionInsts {
 
  private:
     template <template <typename> typename OP>
-    Action::ItrType vredsumvsHandler_(AtlasState* state, Action::ItrType action_it);
+    Action::ItrType vredsumvsHandler_(PegasusState* state, Action::ItrType action_it);
 };
 
-} // namespace atlas
+} // namespace pegasus

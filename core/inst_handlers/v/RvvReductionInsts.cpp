@@ -1,10 +1,10 @@
 #include "core/inst_handlers/v/RvvReductionInsts.hpp"
-#include "core/AtlasState.hpp"
+#include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 
-namespace atlas {
+namespace pegasus {
 
     // Register instruction handlers
     template <typename XLEN>
@@ -14,7 +14,7 @@ namespace atlas {
 
         inst_handlers.emplace(
             "vredsum.vs",
-            atlas::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::plus>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::plus>,
                                         RvvReductionInsts>(
                 nullptr,
                 "vredsum.vs",
@@ -25,47 +25,10 @@ namespace atlas {
     template void RvvReductionInsts::getInstHandlers<RV32>(std::map<std::string, Action>&);
     template void RvvReductionInsts::getInstHandlers<RV64>(std::map<std::string, Action>&);
 
-    // Helper function for actual reduction logic
-    // template <size_t ElemWidth, typename Functor>
-    // Action::ItrType vredsumvsHelper(AtlasState* state, Action::ItrType action_it)
-    // {
-    //     const AtlasInstPtr& inst = state->getCurrentInst();
-    //     Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-    //     Elements<Element<ElemWidth>, false> elems_vs1{state, state->getVectorConfig(), inst->getRs1()};
-    //     Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
-
-    //     auto accumulator = elems_vs1.getElement(0).getVal();
-
-    //     if (inst->getVM()) // unmasked
-    //     {
-    //         for (auto iter = elems_vs2.begin(); iter != elems_vs2.end(); ++iter)
-    //         {
-    //             const auto idx = iter.getIndex();
-    //             accumulator = Functor()(accumulator, elems_vs2.getElement(idx).getVal());
-    //         }
-    //     }
-    //     else // masked
-    //     {
-    //         const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
-    //         auto bit_iter = mask_elems.maskBitIterBegin();
-    //         for (auto iter = elems_vs2.begin(); iter != elems_vs2.end() && bit_iter != mask_elems.maskBitIterEnd(); ++iter, ++bit_iter)
-    //         {
-    //             if (*bit_iter)
-    //             {
-    //                 const auto idx = iter.getIndex();
-    //                 accumulator = Functor()(accumulator, elems_vs2.getElement(idx).getVal());
-    //             }
-    //         }
-    //     }
-
-    //     elems_vd.getElement(0).setVal(accumulator);
-    //     return ++action_it;
-    // }
-
 template <size_t ElemWidth, typename Functor>
-Action::ItrType vredsumvsHelper(AtlasState* state, Action::ItrType action_it)
+Action::ItrType vredsumvsHelper(PegasusState* state, Action::ItrType action_it)
 {
-    const AtlasInstPtr& inst = state->getCurrentInst();
+    const PegasusInstPtr& inst = state->getCurrentInst();
     Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
     Elements<Element<ElemWidth>, false> elems_vs1{state, state->getVectorConfig(), inst->getRs1()};
     Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
@@ -87,7 +50,7 @@ Action::ItrType vredsumvsHelper(AtlasState* state, Action::ItrType action_it)
     }
     else // masked
     {
-        const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+        const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
         execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
     }
 
@@ -99,7 +62,7 @@ Action::ItrType vredsumvsHelper(AtlasState* state, Action::ItrType action_it)
 
     // Dispatch SEW-sized implementation of vredsum.vs
     template <template <typename> typename OP>
-    Action::ItrType RvvReductionInsts::vredsumvsHandler_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType RvvReductionInsts::vredsumvsHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -119,4 +82,4 @@ Action::ItrType vredsumvsHelper(AtlasState* state, Action::ItrType action_it)
         return ++action_it;
     }
 
-} // namespace atlas
+} // namespace pegasus
