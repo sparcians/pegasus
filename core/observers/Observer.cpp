@@ -5,11 +5,7 @@
 
 #include "sparta/utils/LogUtils.hpp"
 
-<<<<<<< HEAD
-namespace atlas
-=======
 namespace pegasus
->>>>>>> upstream/main
 {
     void Observer::preExecute(PegasusState* state)
     {
@@ -213,15 +209,8 @@ namespace pegasus
 
     std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
     {
-<<<<<<< HEAD
-        os << "0x" << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
-        return os;
-    }
-} // namespace atlas
-=======
         os << "0x"
            << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
         return os;
     }
 } // namespace pegasus
->>>>>>> upstream/main

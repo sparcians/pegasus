@@ -19,12 +19,7 @@ namespace pegasus
 
       private:
         template <typename XLEN, uint32_t SHIFT, bool WORD>
-<<<<<<< HEAD
-        Action::ItrType shxadd_handler(atlas::AtlasState* state, Action::ItrType action_it);
-        Action::ItrType slli_uw_handler(atlas::AtlasState* state, Action::ItrType action_it);
-=======
         Action::ItrType shxadd_handler(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType slli_uw_handler(pegasus::PegasusState* state, Action::ItrType action_it);
->>>>>>> upstream/main
     };
 } // namespace pegasus

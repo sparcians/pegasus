@@ -48,13 +48,8 @@ class VcsInstructionTester : public PegasusInstructionTester
 
     void testVsetivli()
     {
-<<<<<<< HEAD
-        atlas::AtlasState* state = getAtlasState();
-        const atlas::Addr pc = 0x1000;
-=======
         pegasus::PegasusState* state = getPegasusState();
         const pegasus::Addr pc = 0x1000;
->>>>>>> upstream/main
         const uint32_t rd = 3;
         uint32_t opcode;
 

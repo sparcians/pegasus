@@ -7,11 +7,7 @@
 #include "core/PegasusInst.hpp"
 #include "system/PegasusSystem.hpp"
 
-<<<<<<< HEAD
-namespace atlas
-=======
 namespace pegasus
->>>>>>> upstream/main
 {
     template <typename XLEN>
     void RvzbsInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -19,39 +15,6 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-<<<<<<< HEAD
-            "bclr",
-            atlas::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bclr", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "bclri",
-            atlas::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bclri", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "bext",
-            atlas::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bext<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bext", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "bexti",
-            atlas::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bext<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bexti", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "binv",
-            atlas::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::binv<XLEN>>,
-                                        RvzbsInsts>(nullptr, "binv", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "binvi",
-            atlas::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::binv<XLEN>>,
-                                        RvzbsInsts>(nullptr, "binvi", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "bset",
-            atlas::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bset<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bset", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "bseti",
-            atlas::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bset<XLEN>>,
-                                        RvzbsInsts>(nullptr, "bseti", ActionTags::EXECUTE_TAG));
-=======
             "bclr", pegasus::Action::createAction<
                         &RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>, RvzbsInsts>(
                         nullptr, "bclr", ActionTags::EXECUTE_TAG));
@@ -83,19 +46,14 @@ namespace pegasus
             "bseti",
             pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bset<XLEN>>,
                                           RvzbsInsts>(nullptr, "bseti", ActionTags::EXECUTE_TAG));
->>>>>>> upstream/main
     }
 
     template void RvzbsInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename OP>
-<<<<<<< HEAD
-    Action::ItrType RvzbsInsts::binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it)
-=======
     Action::ItrType RvzbsInsts::binaryOpHandler(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
->>>>>>> upstream/main
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -109,12 +67,8 @@ namespace pegasus
     }
 
     template <typename XLEN, typename OP>
-<<<<<<< HEAD
-    Action::ItrType RvzbsInsts::immOpHandler(atlas::AtlasState* state, Action::ItrType action_it)
-=======
     Action::ItrType RvzbsInsts::immOpHandler(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
->>>>>>> upstream/main
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -126,8 +80,4 @@ namespace pegasus
 
         return ++action_it;
     }
-<<<<<<< HEAD
-} // namespace atlas
-=======
 } // namespace pegasus
->>>>>>> upstream/main

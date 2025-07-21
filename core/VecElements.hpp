@@ -545,12 +545,8 @@ namespace pegasus
          * @brief Return *begin* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the starting bit.
          */
-<<<<<<< HEAD
-        auto maskBitIterBegin() const
-        requires EnableIf<isMaskElems>
-=======
         auto maskBitIterBegin() const requires EnableIf<isMaskElems>
->>>>>>> upstream/main
+
         {
             return MaskBitIterator<>(this, config_->getVSTART());
         }
@@ -559,12 +555,7 @@ namespace pegasus
          * @brief Return *end* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the ending bit.
          */
-<<<<<<< HEAD
-        auto maskBitIterEnd() const
-        requires EnableIf<isMaskElems>
-=======
         auto maskBitIterEnd() const requires EnableIf<isMaskElems>
->>>>>>> upstream/main
         {
             return MaskBitIterator<>(this, config_->getVL());
         }
@@ -580,24 +571,15 @@ namespace pegasus
          */
         ElemType getElement(size_t index) const
         {
-<<<<<<< HEAD
-            uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::getWidth());
-            uint32_t idx = index % (config_->getVLEN() / ElemType::getWidth());
-=======
             uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::elem_width);
             uint32_t idx = index % (config_->getVLEN() / ElemType::elem_width);
->>>>>>> upstream/main
             ElemType elem{state_, reg_id, idx};
             if constexpr (isMaskElems)
             {
                 // Fix *start_pos_* if first element.
                 if (index == start_pos_)
                 {
-<<<<<<< HEAD
-                    elem.setStartPos(config_->getVSTART() % VLEN_MIN);
-=======
                     elem.setStartPos(config_->getVSTART() % ElemType::elem_width);
->>>>>>> upstream/main
                 }
                 else
                 {
@@ -607,15 +589,6 @@ namespace pegasus
                 if (index == end_pos_ - 1)
                 {
                     const size_t vl = config_->getVL();
-<<<<<<< HEAD
-                    if (vl && vl % VLEN_MIN == 0)
-                    {
-                        elem.setEndPos(VLEN_MIN);
-                    }
-                    else
-                    {
-                        elem.setEndPos(vl % VLEN_MIN);
-=======
                     if (vl && vl % ElemType::elem_width == 0)
                     {
                         elem.setEndPos(ElemType::elem_width);
@@ -623,26 +596,16 @@ namespace pegasus
                     else
                     {
                         elem.setEndPos(vl % ElemType::elem_width);
->>>>>>> upstream/main
                     }
                 }
                 else
                 {
-<<<<<<< HEAD
-                    elem.setEndPos(VLEN_MIN);
-=======
                     elem.setEndPos(ElemType::elem_width);
->>>>>>> upstream/main
                 }
             }
             return elem;
         }
 
-<<<<<<< HEAD
-      private:
-        /**< Pointer to *AtlasState* object. */
-        AtlasState* state_ = nullptr;
-=======
         /**
          * @brief Retrieve bit of *MaskElements* at *index* from vector register.
          * @param index The index of requested bit.
@@ -677,7 +640,6 @@ namespace pegasus
       private:
         /**< Pointer to *PegasusState* object. */
         PegasusState* state_ = nullptr;
->>>>>>> upstream/main
         /**< Pointer to *VectorConfig* object. */
         const VectorConfig* config_ = nullptr;
         /**< Starting *Element* position. */
@@ -691,8 +653,4 @@ namespace pegasus
     using MaskElement = Element<VLEN_MIN>;
     using MaskElements = Elements<MaskElement, true>;
     using MaskBitIterator = MaskElements::MaskBitIterator<>;
-<<<<<<< HEAD
-} // namespace atlas
-=======
 } // namespace pegasus
->>>>>>> upstream/main

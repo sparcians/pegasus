@@ -127,15 +127,6 @@ namespace pegasus
         };
 
         template <typename XLEN, typename OP>
-<<<<<<< HEAD
-        Action::ItrType unaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
-        template <typename XLEN, typename OP>
-        Action::ItrType binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
-        template <typename XLEN, typename OP>
-        Action::ItrType immOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType orc_bHandler(atlas::AtlasState* state, Action::ItrType action_it);
-=======
         Action::ItrType unaryOpHandler(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, typename OP>
         Action::ItrType binaryOpHandler(pegasus::PegasusState* state, Action::ItrType action_it);
@@ -143,6 +134,5 @@ namespace pegasus
         Action::ItrType immOpHandler(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType orc_bHandler(pegasus::PegasusState* state, Action::ItrType action_it);
->>>>>>> upstream/main
     };
 } // namespace pegasus

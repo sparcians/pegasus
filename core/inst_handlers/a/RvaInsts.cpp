@@ -217,26 +217,6 @@ namespace pegasus
                                                         ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoxor_w",
-<<<<<<< HEAD
-                atlas::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_xor<W>>,
-                                            RvaInsts>(nullptr, "amoxor_w",
-                                                      ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "lr_d",
-                atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint64_t>, RvaInsts>(
-                    nullptr, "lr_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "lr_w",
-                atlas::Action::createAction<&RvaInsts::lr_handler_<RV64, uint32_t>, RvaInsts>(
-                    nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "sc_d",
-                atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint64_t>, RvaInsts>(
-                    nullptr, "sc_d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "sc_w",
-                atlas::Action::createAction<&RvaInsts::sc_handler_<RV64, uint32_t>, RvaInsts>(
-=======
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV64, W, std::bit_xor<W>>,
                                               RvaInsts>(nullptr, "amoxor_w",
                                                         ActionTags::EXECUTE_TAG));
@@ -255,7 +235,6 @@ namespace pegasus
             inst_handlers.emplace(
                 "sc_w",
                 pegasus::Action::createAction<&RvaInsts::sc_handler_<RV64, uint32_t>, RvaInsts>(
->>>>>>> upstream/main
                     nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
@@ -302,18 +281,6 @@ namespace pegasus
                                                         ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "amoxor_w",
-<<<<<<< HEAD
-                atlas::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_xor<W>>,
-                                            RvaInsts>(nullptr, "amoxor_w",
-                                                      ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "lr_w",
-                atlas::Action::createAction<&RvaInsts::lr_handler_<RV32, uint32_t>, RvaInsts>(
-                    nullptr, "lr_w", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "sc_w",
-                atlas::Action::createAction<&RvaInsts::sc_handler_<RV32, uint32_t>, RvaInsts>(
-=======
                 pegasus::Action::createAction<&RvaInsts::amoHandler_<RV32, W, std::bit_xor<W>>,
                                               RvaInsts>(nullptr, "amoxor_w",
                                                         ActionTags::EXECUTE_TAG));
@@ -324,7 +291,6 @@ namespace pegasus
             inst_handlers.emplace(
                 "sc_w",
                 pegasus::Action::createAction<&RvaInsts::sc_handler_<RV32, uint32_t>, RvaInsts>(
->>>>>>> upstream/main
                     nullptr, "sc_w", ActionTags::EXECUTE_TAG));
         }
     }
@@ -348,21 +314,13 @@ namespace pegasus
     }
 
     template <typename XLEN, typename SIZE, typename OP, bool U>
-<<<<<<< HEAD
-    Action::ItrType RvaInsts::amoHandler_(atlas::AtlasState* state, Action::ItrType action_it)
-=======
     Action::ItrType RvaInsts::amoHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
->>>>>>> upstream/main
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         static_assert(std::is_same_v<SIZE, W> || std::is_same_v<SIZE, D>);
         static_assert(sizeof(XLEN) >= sizeof(SIZE));
 
-<<<<<<< HEAD
-        const AtlasInstPtr & inst = state->getCurrentInst();
-=======
         const PegasusInstPtr & inst = state->getCurrentInst();
->>>>>>> upstream/main
         const XLEN paddr = inst->getTranslationState()->getResult().getPAddr();
         inst->getTranslationState()->popResult();
 
@@ -384,11 +342,7 @@ namespace pegasus
     }
 
     template <typename XLEN, typename SIZE>
-<<<<<<< HEAD
-    Action::ItrType RvaInsts::lr_handler_(atlas::AtlasState* state, Action::ItrType action_it)
-=======
     Action::ItrType RvaInsts::lr_handler_(pegasus::PegasusState* state, Action::ItrType action_it)
->>>>>>> upstream/main
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
@@ -413,11 +367,7 @@ namespace pegasus
     }
 
     template <typename XLEN, typename SIZE>
-<<<<<<< HEAD
-    Action::ItrType RvaInsts::sc_handler_(atlas::AtlasState* state, Action::ItrType action_it)
-=======
     Action::ItrType RvaInsts::sc_handler_(pegasus::PegasusState* state, Action::ItrType action_it)
->>>>>>> upstream/main
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();

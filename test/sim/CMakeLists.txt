@@ -12,10 +12,7 @@ add_subdirectory(vcs)
 add_subdirectory(via)
 add_subdirectory(vls)
 add_subdirectory(vm)
-<<<<<<< HEAD
-=======
 # add_subdirectory(vro)     #TODO: Uncomment when handler support added
->>>>>>> upstream/main
 
 # ASM Tests
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
@@ -27,15 +24,9 @@ set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000"
                       --reg "tp 0x7d000" -p top.core0.execute.params.enable_syscall_emulation true)
 
 set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
-<<<<<<< HEAD
-atlas_named_test(atlas_dhry_test atlas ${LINUX_ARCH_SETUP} workloads/dhry.elf)
-atlas_named_test(atlas_fstatat_test atlas ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
-atlas_named_test(atlas_syscall_test atlas ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
-=======
 pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/dhry.elf)
 pegasus_named_test(pegasus_fstatat_test pegasus ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
 pegasus_named_test(pegasus_syscall_test pegasus ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
->>>>>>> upstream/main
 
 # Logging tests
 pegasus_named_test(pegasus_inst_logger_test pegasus -l top inst nop.instlog workloads/nop.elf)

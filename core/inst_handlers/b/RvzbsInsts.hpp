@@ -51,14 +51,8 @@ namespace pegasus
         };
 
         template <typename XLEN, typename OP>
-<<<<<<< HEAD
-        Action::ItrType binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
-        template <typename XLEN, typename OP>
-        Action::ItrType immOpHandler(atlas::AtlasState* state, Action::ItrType action_it);
-=======
         Action::ItrType binaryOpHandler(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, typename OP>
         Action::ItrType immOpHandler(pegasus::PegasusState* state, Action::ItrType action_it);
->>>>>>> upstream/main
     };
 } // namespace pegasus

@@ -185,27 +185,16 @@ namespace pegasus
             {
                 inst_handlers.emplace(
                     "ecall",
-<<<<<<< HEAD
-                    atlas::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>,
-                                                RviInsts>(nullptr, "ecall",
-                                                          ActionTags::EXECUTE_TAG));
-=======
                     pegasus::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV64>,
                                                   RviInsts>(nullptr, "ecall",
                                                             ActionTags::EXECUTE_TAG));
->>>>>>> upstream/main
             }
             else
             {
                 inst_handlers.emplace(
-<<<<<<< HEAD
-                    "ecall", atlas::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
-                                 nullptr, "ecall", ActionTags::EXECUTE_TAG));
-=======
                     "ecall",
                     pegasus::Action::createAction<&RviInsts::ecallHandler_<RV64>, RviInsts>(
                         nullptr, "ecall", ActionTags::EXECUTE_TAG));
->>>>>>> upstream/main
             }
             inst_handlers.emplace("fence",
                                   pegasus::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
@@ -1021,11 +1010,7 @@ namespace pegasus
     }
 
     template <typename XLEN>
-<<<<<<< HEAD
-    Action::ItrType RviInsts::ecallHandlerSystemEmulation_(atlas::AtlasState* state,
-=======
     Action::ItrType RviInsts::ecallHandlerSystemEmulation_(pegasus::PegasusState* state,
->>>>>>> upstream/main
                                                            Action::ItrType action_it)
     {
         // x10 -> x16 are the function arguments.

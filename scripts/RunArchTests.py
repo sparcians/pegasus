@@ -59,10 +59,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
     tests = []
     base_dir = "bare_metal"
-<<<<<<< HEAD
-=======
     
->>>>>>> upstream/main
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
@@ -82,11 +79,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
     isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
-<<<<<<< HEAD
-    atlas_cmd = ["./atlas",
-=======
     pegasus_cmd = ["./pegasus",
->>>>>>> upstream/main
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, wkld]
 
@@ -194,11 +187,7 @@ def main():
         tests.extend(get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.tenstorrent))
 
     skip_tests = [
-<<<<<<< HEAD
-        "rv64mi-p-breakpoint", # Atlas does not support external debug support
-=======
         "rv64mi-p-breakpoint", # Pegasus does not support external debug support
->>>>>>> upstream/main
         "rv64mi-v-breakpoint",
         "rv32mi-p-breakpoint",
         "rv32mi-v-breakpoint",

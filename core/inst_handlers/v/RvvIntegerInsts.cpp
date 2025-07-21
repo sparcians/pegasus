@@ -1,22 +1,13 @@
-<<<<<<< HEAD
-#include "core/inst_handlers/v/RvvIntegerInsts.hpp"
-#include "core/AtlasState.hpp"
-=======
 #include <limits>
 #include <functional>
 
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/PegasusState.hpp"
->>>>>>> upstream/main
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 
-<<<<<<< HEAD
-namespace atlas
-=======
 namespace pegasus
->>>>>>> upstream/main
 {
     template <typename XLEN>
     void RvvIntegerInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -24,19 +15,6 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-<<<<<<< HEAD
-            "vadd.vv", atlas::Action::createAction<&RvvIntegerInsts::viavvHandler_<std::plus>,
-                                                   RvvIntegerInsts>(nullptr, "vadd.vv",
-                                                                    ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vadd.vx", atlas::Action::createAction<&RvvIntegerInsts::viavxHandler_<XLEN, std::plus>,
-                                                   RvvIntegerInsts>(nullptr, "vadd.vx",
-                                                                    ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vadd.vi", atlas::Action::createAction<&RvvIntegerInsts::viaviHandler_<std::plus>,
-                                                   RvvIntegerInsts>(nullptr, "vadd.vi",
-                                                                    ActionTags::EXECUTE_TAG));
-=======
             "vadd.vv",
             pegasus::Action::createAction<
                 &RvvIntegerInsts::viablHandler_<
@@ -581,25 +559,11 @@ namespace pegasus
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
                     true, std::greater>,
                 RvvIntegerInsts>(nullptr, "vmsgt.vi", ActionTags::EXECUTE_TAG));
->>>>>>> upstream/main
     }
 
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-<<<<<<< HEAD
-    template <size_t ElemWidth, typename Functor>
-    Action::ItrType viavvHelper(AtlasState* state, Action::ItrType action_it)
-    {
-        const AtlasInstPtr & inst = state->getCurrentInst();
-        Elements<Element<ElemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
-        Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
-
-=======
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
     Action::ItrType viablHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -884,26 +848,12 @@ namespace pegasus
                                                       inst->getRs2()};
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
->>>>>>> upstream/main
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
             size_t index = 0;
             for (auto iter = begin; iter != end; ++iter)
             {
                 index = iter.getIndex();
-<<<<<<< HEAD
-                elems_vd.getElement(index).setVal(Functor()(elems_vs1.getElement(index).getVal(),
-                                                            elems_vs2.getElement(index).getVal()));
-            }
-        };
-        if (inst->getVM()) // unmasked
-        {
-            execute(elems_vs1.begin(), elems_vs1.end());
-        }
-        else // masked
-        {
-            const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
-=======
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setBit(
@@ -931,36 +881,12 @@ namespace pegasus
         else // masked
         {
             const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
->>>>>>> upstream/main
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
         return ++action_it;
     }
 
-<<<<<<< HEAD
-    template <template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viavvHandler_(AtlasState* state, Action::ItrType action_it)
-    {
-        VectorConfig* vector_config = state->getVectorConfig();
-        switch (vector_config->getSEW())
-        {
-            case 8:
-                return viavvHelper<8, FunctorTemp<uint8_t>>(state, action_it);
-                break;
-            case 16:
-                return viavvHelper<16, FunctorTemp<uint16_t>>(state, action_it);
-                break;
-            case 32:
-                return viavvHelper<32, FunctorTemp<uint32_t>>(state, action_it);
-                break;
-            case 64:
-                return viavvHelper<64, FunctorTemp<uint64_t>>(state, action_it);
-                break;
-            default:
-                sparta_assert(false, "Invalid SEW value");
-                break;
-=======
     template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::vmicHandler_(PegasusState* state, Action::ItrType action_it)
@@ -1007,27 +933,8 @@ namespace pegasus
                     sparta_assert(false, "Unsupported SEW value");
                     break;
             }
->>>>>>> upstream/main
         }
         return ++action_it;
     }
 
-<<<<<<< HEAD
-    template <typename XLEN, template <typename> typename OP>
-    Action::ItrType RvvIntegerInsts::viavxHandler_(AtlasState* state, Action::ItrType action_it)
-    {
-        (void)state;
-        return ++action_it;
-    }
-
-    template <template <typename> typename OP>
-    Action::ItrType RvvIntegerInsts::viaviHandler_(AtlasState* state, Action::ItrType action_it)
-    {
-        (void)state;
-        return ++action_it;
-    }
-
-} // namespace atlas
-=======
 } // namespace pegasus
->>>>>>> upstream/main

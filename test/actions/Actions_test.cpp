@@ -40,11 +40,7 @@ int main()
     // Create the simulator
     sparta::Scheduler scheduler_;
     const uint64_t ilimit = 0;
-<<<<<<< HEAD
-    atlas::AtlasSim atlas_sim{&scheduler_, {}, {}, ilimit};
-=======
     pegasus::PegasusSim pegasus_sim{&scheduler_, {}, {}, ilimit};
->>>>>>> upstream/main
 
     pegasus_sim.buildTree();
     pegasus_sim.configureTree();
@@ -82,15 +78,9 @@ int main()
     // Dummy Action
     const std::string dummy_action_name = "Dummy";
     dummyClass dummy_class;
-<<<<<<< HEAD
-    atlas::Action dummy_action = atlas::Action::createAction<&dummyClass::dummyAction>(
-        &dummy_class, dummy_action_name.c_str());
-    const atlas::ActionTagType DUMMY_TAG = atlas::ActionTagFactory::createTag("DUMMY_TAG");
-=======
     pegasus::Action dummy_action = pegasus::Action::createAction<&dummyClass::dummyAction>(
         &dummy_class, dummy_action_name.c_str());
     const pegasus::ActionTagType DUMMY_TAG = pegasus::ActionTagFactory::createTag("DUMMY_TAG");
->>>>>>> upstream/main
     dummy_action.addTag(DUMMY_TAG);
 
     //

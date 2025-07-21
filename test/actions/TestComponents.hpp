@@ -71,12 +71,8 @@ class TranslateUnit : public Unit
   public:
     TranslateUnit() : Unit("Translate") {}
 
-<<<<<<< HEAD
-    atlas::Action::ItrType translate_addr(atlas::AtlasState*, atlas::Action::ItrType action_it)
-=======
     pegasus::Action::ItrType translate_addr(pegasus::PegasusState*,
                                             pegasus::Action::ItrType action_it)
->>>>>>> upstream/main
     {
         std::cout << "Translating" << std::endl;
 
@@ -146,11 +142,7 @@ class ExecuteUnit : public Unit
     pegasus::Action::ItrType inst_handler(pegasus::PegasusState* state,
                                           pegasus::Action::ItrType action_it)
     {
-<<<<<<< HEAD
-        const atlas::AtlasInstPtr & inst = state->getCurrentInst();
-=======
         const pegasus::PegasusInstPtr & inst = state->getCurrentInst();
->>>>>>> upstream/main
         std::cout << "Executing "
                   << "uid: " << std::dec << inst->getUid() << " " << inst->dasmString()
                   << std::endl;

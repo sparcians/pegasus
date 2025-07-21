@@ -66,14 +66,7 @@ namespace pegasus
 
             template <typename TYPE> RegValue(TYPE value) { setValue<TYPE>(value); }
 
-<<<<<<< HEAD
-            void setValue(const std::vector<uint8_t> & value)
-            {
-                value_ = value;
-            }
-=======
             void setValue(const std::vector<uint8_t> & value) { value_ = value; }
->>>>>>> upstream/main
 
             template <typename TYPE> void setValue(TYPE value)
             {
@@ -256,8 +249,4 @@ namespace pegasus
 
     std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value);
 
-<<<<<<< HEAD
-} // namespace atlas
-=======
 } // namespace pegasus
->>>>>>> upstream/main

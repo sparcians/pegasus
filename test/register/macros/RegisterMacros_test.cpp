@@ -100,24 +100,15 @@ void testVecRegs()
 void testVecElems()
 {
     RegisterTester tester;
-<<<<<<< HEAD
-    atlas::AtlasState* state = tester.getAtlasState();
-=======
     pegasus::PegasusState* state = tester.getPegasusState();
->>>>>>> upstream/main
 
     for (uint8_t elem_val = 0; elem_val < 255; ++elem_val)
     {
         for (uint8_t elem_idx = 0; elem_idx < 8; ++elem_idx)
         {
             // Verify the v0 register
-<<<<<<< HEAD
-            WRITE_VEC_ELEM<uint8_t>(state, atlas::V0, elem_val, elem_idx);
-            auto v0_reg_val = READ_VEC_ELEM<uint8_t>(state, atlas::V0, elem_idx);
-=======
             WRITE_VEC_ELEM<uint8_t>(state, pegasus::V0, elem_val, elem_idx);
             auto v0_reg_val = READ_VEC_ELEM<uint8_t>(state, pegasus::V0, elem_idx);
->>>>>>> upstream/main
             EXPECT_EQUAL(v0_reg_val, elem_val);
         }
     }

@@ -4,11 +4,7 @@
 
 constexpr uint64_t dp_sign_mask = 1UL << 63;
 
-<<<<<<< HEAD
-namespace atlas
-=======
 namespace pegasus
->>>>>>> upstream/main
 {
     template <typename XLEN>
     void RvdInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
@@ -365,88 +361,11 @@ namespace pegasus
     Action::ItrType RvdInsts::fclass_dHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
-<<<<<<< HEAD
-        const AtlasInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<XLEN>(state);
-        const uint64_t rs1_val = checkNanBoxing<RV64, DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-
-        const uint16_t infOrNaN = expF64UI(rs1_val) == 0x7FF;
-        const uint16_t subnormalOrZero = expF64UI(rs1_val) == 0;
-        const bool sign = signF64UI(rs1_val);
-        const bool fracZero = fracF64UI(rs1_val) == 0;
-        const bool isNaN = isNaNF64UI(rs1_val);
-        const bool isSNaN = softfloat_isSigNaNF64UI(rs1_val);
-
-        XLEN rd_val = 0;
-
-        // Negative infinity
-        if (sign && infOrNaN && fracZero)
-        {
-            rd_val |= 1 << 0;
-        }
-
-        // Negative normal number
-        if (sign && !infOrNaN && !subnormalOrZero)
-        {
-            rd_val |= 1 << 1;
-        }
-
-        // Negative subnormal number
-        if (sign && subnormalOrZero && !fracZero)
-        {
-            rd_val |= 1 << 2;
-        }
-
-        // Negative zero
-        if (sign && subnormalOrZero && fracZero)
-        {
-            rd_val |= 1 << 3;
-        }
-
-        // Positive infinity
-        if (!sign && infOrNaN && fracZero)
-        {
-            rd_val |= 1 << 7;
-        }
-
-        // Positive normal number
-        if (!sign && !infOrNaN && !subnormalOrZero)
-        {
-            rd_val |= 1 << 6;
-        }
-
-        // Positive subnormal number
-        if (!sign && subnormalOrZero && !fracZero)
-        {
-            rd_val |= 1 << 5;
-        }
-
-        // Positive zero
-        if (!sign && subnormalOrZero && fracZero)
-        {
-            rd_val |= 1 << 4;
-        }
-
-        // Signaling NaN
-        if (isNaN && isSNaN)
-        {
-            rd_val |= 1 << 8;
-        }
-
-        // Quiet NaN
-        if (isNaN && !isSNaN)
-        {
-            rd_val |= 1 << 9;
-        }
-
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-=======
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = checkNanBoxing<RV64, DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fclass(rs1_val));
->>>>>>> upstream/main
 
         return ++action_it;
     }

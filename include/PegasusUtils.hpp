@@ -47,8 +47,4 @@ namespace pegasus
     }
 
     template <std::size_t N> using UintType = typename decltype(get_uint_type<N>())::type;
-<<<<<<< HEAD:include/AtlasUtils.hpp
-} // namespace atlas
-=======
 } // namespace pegasus
->>>>>>> upstream/main:include/PegasusUtils.hpp

@@ -529,12 +529,8 @@ namespace pegasus
         auto ret = ::unlinkat(dirfd, pathname_str.c_str(), flags);
 
         SYSCALL_LOG(__func__ << "(" << dirfd << "," << HEX16(pathname_addr) << "['" << pathname_str
-<<<<<<< HEAD
-                             << "']" << "-> " << ret);
-=======
                              << "']"
                              << "-> " << ret);
->>>>>>> upstream/main
         return ret;
     }
 
