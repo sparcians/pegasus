@@ -6,9 +6,15 @@
 
 #include "core/Action.hpp"
 
+<<<<<<< HEAD
 namespace atlas
 {
     class AtlasState;
+=======
+namespace pegasus
+{
+    class PegasusState;
+>>>>>>> upstream/main
 
     class RvvConfigSettingInsts
     {
@@ -20,6 +26,7 @@ namespace atlas
 
       private:
         template <typename XLEN>
+<<<<<<< HEAD
         Action::ItrType vsetvlHandler_(atlas::AtlasState* state, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType vsetvliHandler_(atlas::AtlasState* state, Action::ItrType action_it);
@@ -27,3 +34,12 @@ namespace atlas
         Action::ItrType vsetivliHandler_(atlas::AtlasState* state, Action::ItrType action_it);
     };
 } // namespace atlas
+=======
+        Action::ItrType vsetvlHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType vsetvliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType vsetivliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+    };
+} // namespace pegasus
+>>>>>>> upstream/main

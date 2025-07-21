@@ -1,13 +1,17 @@
 #include "core/inst_handlers/b/RvzbsInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
-#include "include/AtlasUtils.hpp"
+#include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
-#include "core/AtlasState.hpp"
-#include "core/AtlasInst.hpp"
-#include "system/AtlasSystem.hpp"
+#include "core/PegasusState.hpp"
+#include "core/PegasusInst.hpp"
+#include "system/PegasusSystem.hpp"
 
+<<<<<<< HEAD
 namespace atlas
+=======
+namespace pegasus
+>>>>>>> upstream/main
 {
     template <typename XLEN>
     void RvzbsInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -15,6 +19,7 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
+<<<<<<< HEAD
             "bclr",
             atlas::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>,
                                         RvzbsInsts>(nullptr, "bclr", ActionTags::EXECUTE_TAG));
@@ -46,15 +51,53 @@ namespace atlas
             "bseti",
             atlas::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bset<XLEN>>,
                                         RvzbsInsts>(nullptr, "bseti", ActionTags::EXECUTE_TAG));
+=======
+            "bclr", pegasus::Action::createAction<
+                        &RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>, RvzbsInsts>(
+                        nullptr, "bclr", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "bclri",
+            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bclr<XLEN>>,
+                                          RvzbsInsts>(nullptr, "bclri", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "bext", pegasus::Action::createAction<
+                        &RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bext<XLEN>>, RvzbsInsts>(
+                        nullptr, "bext", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "bexti",
+            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bext<XLEN>>,
+                                          RvzbsInsts>(nullptr, "bexti", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "binv", pegasus::Action::createAction<
+                        &RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::binv<XLEN>>, RvzbsInsts>(
+                        nullptr, "binv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "binvi",
+            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::binv<XLEN>>,
+                                          RvzbsInsts>(nullptr, "binvi", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "bset", pegasus::Action::createAction<
+                        &RvzbsInsts::binaryOpHandler<XLEN, RvzbsInsts::bset<XLEN>>, RvzbsInsts>(
+                        nullptr, "bset", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "bseti",
+            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, RvzbsInsts::bset<XLEN>>,
+                                          RvzbsInsts>(nullptr, "bseti", ActionTags::EXECUTE_TAG));
+>>>>>>> upstream/main
     }
 
     template void RvzbsInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, typename OP>
+<<<<<<< HEAD
     Action::ItrType RvzbsInsts::binaryOpHandler(atlas::AtlasState* state, Action::ItrType action_it)
+=======
+    Action::ItrType RvzbsInsts::binaryOpHandler(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
+>>>>>>> upstream/main
     {
-        const AtlasInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
@@ -66,9 +109,14 @@ namespace atlas
     }
 
     template <typename XLEN, typename OP>
+<<<<<<< HEAD
     Action::ItrType RvzbsInsts::immOpHandler(atlas::AtlasState* state, Action::ItrType action_it)
+=======
+    Action::ItrType RvzbsInsts::immOpHandler(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
+>>>>>>> upstream/main
     {
-        const AtlasInstPtr & inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN imm_val = inst->getImmediate();
@@ -78,4 +126,8 @@ namespace atlas
 
         return ++action_it;
     }
+<<<<<<< HEAD
 } // namespace atlas
+=======
+} // namespace pegasus
+>>>>>>> upstream/main

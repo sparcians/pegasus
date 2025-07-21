@@ -1,10 +1,18 @@
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
+<<<<<<< HEAD
 #include "core/AtlasState.hpp"
+=======
+#include "core/PegasusState.hpp"
+>>>>>>> upstream/main
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 
+<<<<<<< HEAD
 namespace atlas
+=======
+namespace pegasus
+>>>>>>> upstream/main
 {
     template <typename XLEN>
     void
@@ -14,70 +22,119 @@ namespace atlas
 
         inst_handlers.emplace(
             "vle8.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vle8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vle16.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vle16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vle32.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vle32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vse8.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vse8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vse16.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vse16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vse32.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vse32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vlse8.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vlse8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vlse16.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vlse16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vlse32.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vlse32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vsse8.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vsse8.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vsse16.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 16, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vsse16.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vsse32.v",
+<<<<<<< HEAD
             atlas::Action::createAction<
+=======
+            pegasus::Action::createAction<
+>>>>>>> upstream/main
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vsse32.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vloxei8.v",
+<<<<<<< HEAD
             atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
                                             XLEN, 8, AddressingMode::IDX_ORDERED>,
                                         RvvLoadStoreInsts>(nullptr, "vloxei8.v",
@@ -113,6 +170,43 @@ namespace atlas
                                             XLEN, 32, AddressingMode::IDX_ORDERED>,
                                         RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
                                                            ActionTags::COMPUTE_ADDR_TAG));
+=======
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 8, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vloxei8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vloxei16.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 16, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vloxei16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vloxei32.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 32, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vloxei32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+
+        inst_handlers.emplace(
+            "vsoxei8.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 8, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vsoxei8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vsoxei16.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 16, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vsoxei16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vsoxei32.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 32, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+>>>>>>> upstream/main
     }
 
     template <typename XLEN>
@@ -121,6 +215,7 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
+<<<<<<< HEAD
             "vle8.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>,
                                                   RvvLoadStoreInsts>(nullptr, "vle8.v",
                                                                      ActionTags::EXECUTE_TAG));
@@ -197,6 +292,84 @@ namespace atlas
             "vsoxei32.v", atlas::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
                                                       RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
                                                                          ActionTags::EXECUTE_TAG));
+=======
+            "vle8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>,
+                                                    RvvLoadStoreInsts>(nullptr, "vle8.v",
+                                                                       ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>,
+                                                     RvvLoadStoreInsts>(nullptr, "vle16.v",
+                                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
+                                                     RvvLoadStoreInsts>(nullptr, "vle32.v",
+                                                                        ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vse8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
+                                                    RvvLoadStoreInsts>(nullptr, "vse8.v",
+                                                                       ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vse16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>,
+                                                     RvvLoadStoreInsts>(nullptr, "vse16.v",
+                                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
+                                                     RvvLoadStoreInsts>(nullptr, "vse32.v",
+                                                                        ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vlse8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true>,
+                                                     RvvLoadStoreInsts>(nullptr, "vlse8.v",
+                                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vlse16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true>,
+                                                      RvvLoadStoreInsts>(nullptr, "vlse16.v",
+                                                                         ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vlse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
+                                                      RvvLoadStoreInsts>(nullptr, "vlse32.v",
+                                                                         ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vsse8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
+                                                     RvvLoadStoreInsts>(nullptr, "vsse8.v",
+                                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsse16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, false>,
+                                                      RvvLoadStoreInsts>(nullptr, "vsse16.v",
+                                                                         ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
+                                                      RvvLoadStoreInsts>(nullptr, "vsse32.v",
+                                                                         ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vloxei8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vloxei8.v",
+                                                                          ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vloxei16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vloxei16.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vloxei32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vloxei32.v", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vsoxei8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                       RvvLoadStoreInsts>(nullptr, "vsoxei8.v",
+                                                                          ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsoxei16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vsoxei16.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsoxei32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vsoxei32.v", ActionTags::EXECUTE_TAG));
+>>>>>>> upstream/main
     }
 
     template void
@@ -206,15 +379,26 @@ namespace atlas
     template void RvvLoadStoreInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+<<<<<<< HEAD
     template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(atlas::AtlasState* state,
+=======
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegasusState* state,
+>>>>>>> upstream/main
                                                                   Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
+<<<<<<< HEAD
         const AtlasInstPtr inst = state->getCurrentInst();
         VectorConfig* config = state->getVectorConfig();
         const size_t eewb = ElemWidth / 8;
+=======
+        const PegasusInstPtr inst = state->getCurrentInst();
+        VectorConfig* config = state->getVectorConfig();
+        const size_t eewb = elemWidth / 8;
+>>>>>>> upstream/main
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
         Addr stride;
@@ -235,7 +419,11 @@ namespace atlas
         }
         else // masked
         {
+<<<<<<< HEAD
             const MaskElements mask_elems{state, config, atlas::V0};
+=======
+            const MaskElements mask_elems{state, config, pegasus::V0};
+>>>>>>> upstream/main
             for (auto mask_iter = mask_elems.maskBitIterBegin();
                  mask_iter != mask_elems.maskBitIterEnd(); ++mask_iter)
             {
@@ -246,17 +434,30 @@ namespace atlas
         return ++action_it;
     }
 
+<<<<<<< HEAD
     template <typename XLEN, size_t ElemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
     Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(atlas::AtlasState* state,
+=======
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    Action::ItrType RvvLoadStoreInsts::vlseIdxComputeAddressHandler_(pegasus::PegasusState* state,
+>>>>>>> upstream/main
                                                                      Action::ItrType action_it)
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
+<<<<<<< HEAD
         const AtlasInstPtr inst = state->getCurrentInst();
         VectorConfig* vector_config = state->getVectorConfig();
         const size_t sewb = vector_config->getSEW() / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+=======
+        const PegasusInstPtr inst = state->getCurrentInst();
+        VectorConfig* vector_config = state->getVectorConfig();
+        const size_t sewb = vector_config->getSEW() / 8;
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+>>>>>>> upstream/main
                                                       inst->getRs2()};
 
         if (inst->getVM())
@@ -268,7 +469,11 @@ namespace atlas
         }
         else
         {
+<<<<<<< HEAD
             const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+=======
+            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+>>>>>>> upstream/main
             for (auto mask_iter = mask_elems.maskBitIterBegin();
                  mask_iter != mask_elems.maskBitIterEnd(); ++mask_iter)
             {
@@ -280,6 +485,7 @@ namespace atlas
         return ++action_it;
     }
 
+<<<<<<< HEAD
     template <size_t ElemWidth, bool load>
     Action::ItrType RvvLoadStoreInsts::vlseHandler_(atlas::AtlasState* state,
                                                     Action::ItrType action_it)
@@ -287,6 +493,15 @@ namespace atlas
         const AtlasInstPtr inst = state->getCurrentInst();
         Elements<Element<ElemWidth>, false> elems_vd{state, state->getVectorConfig(),
                                                      inst->getRd()};
+=======
+    template <size_t elemWidth, bool load>
+    Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegasusState* state,
+                                                    Action::ItrType action_it)
+    {
+        const PegasusInstPtr inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
+                                                  load ? inst->getRd() : inst->getRs3()};
+>>>>>>> upstream/main
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
@@ -294,6 +509,7 @@ namespace atlas
             {
                 if constexpr (load)
                 {
+<<<<<<< HEAD
                     UintType<ElemWidth> value = state->readMemory<UintType<ElemWidth>>(
                         inst->getTranslationState()->getResult().getPAddr());
                     inst->getTranslationState()->popResult();
@@ -303,6 +519,17 @@ namespace atlas
                 {
                     UintType<ElemWidth> value = elems_vd.getElement(iter.getIndex()).getVal();
                     state->writeMemory<UintType<ElemWidth>>(
+=======
+                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
+                        inst->getTranslationState()->getResult().getPAddr());
+                    inst->getTranslationState()->popResult();
+                    elems.getElement(iter.getIndex()).setVal(value);
+                }
+                else
+                {
+                    UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
+                    state->writeMemory<UintType<elemWidth>>(
+>>>>>>> upstream/main
                         inst->getTranslationState()->getResult().getPAddr(), value);
                     inst->getTranslationState()->popResult();
                 }
@@ -311,11 +538,19 @@ namespace atlas
 
         if (inst->getVM()) // unmasked
         {
+<<<<<<< HEAD
             execute(elems_vd.begin(), elems_vd.end());
         }
         else // masked
         {
             const MaskElements mask_elems{state, state->getVectorConfig(), atlas::V0};
+=======
+            execute(elems.begin(), elems.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+>>>>>>> upstream/main
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -323,7 +558,11 @@ namespace atlas
     }
 
     template <bool load>
+<<<<<<< HEAD
     Action::ItrType RvvLoadStoreInsts::vlseIdxHandler_(atlas::AtlasState* state,
+=======
+    Action::ItrType RvvLoadStoreInsts::vlseIdxHandler_(pegasus::PegasusState* state,
+>>>>>>> upstream/main
                                                        Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
@@ -338,10 +577,18 @@ namespace atlas
             case 64:
                 return vlseHandler_<64, load>(state, action_it);
             default:
+<<<<<<< HEAD
                 sparta_assert(false, "Invalid SEW value");
+=======
+                sparta_assert(false, "Unsupported SEW value");
+>>>>>>> upstream/main
                 break;
         }
         return ++action_it;
     }
 
+<<<<<<< HEAD
 } // namespace atlas
+=======
+} // namespace pegasus
+>>>>>>> upstream/main

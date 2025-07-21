@@ -1,10 +1,18 @@
 #include "core/inst_handlers/v/RvvConfigSettingInsts.hpp"
+<<<<<<< HEAD
 #include "core/AtlasState.hpp"
+=======
+#include "core/PegasusState.hpp"
+>>>>>>> upstream/main
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 
+<<<<<<< HEAD
 namespace atlas
+=======
+namespace pegasus
+>>>>>>> upstream/main
 {
     template <typename XLEN>
     void RvvConfigSettingInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -12,6 +20,7 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
+<<<<<<< HEAD
             "vsetvl", atlas::Action::createAction<&RvvConfigSettingInsts::vsetvlHandler_<XLEN>,
                                                   RvvConfigSettingInsts>(nullptr, "vsetvl",
                                                                          ActionTags::EXECUTE_TAG));
@@ -23,16 +32,37 @@ namespace atlas
             "vsetivli", atlas::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>,
                                                     RvvConfigSettingInsts>(
                             nullptr, "vsetivli", ActionTags::EXECUTE_TAG));
+=======
+            "vsetvl", pegasus::Action::createAction<&RvvConfigSettingInsts::vsetvlHandler_<XLEN>,
+                                                    RvvConfigSettingInsts>(
+                          nullptr, "vsetvl", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsetvli", pegasus::Action::createAction<&RvvConfigSettingInsts::vsetvliHandler_<XLEN>,
+                                                     RvvConfigSettingInsts>(
+                           nullptr, "vsetvli", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsetivli",
+            pegasus::Action::createAction<&RvvConfigSettingInsts::vsetivliHandler_<XLEN>,
+                                          RvvConfigSettingInsts>(nullptr, "vsetivli",
+                                                                 ActionTags::EXECUTE_TAG));
+>>>>>>> upstream/main
     }
 
     template void RvvConfigSettingInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvConfigSettingInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN>
+<<<<<<< HEAD
     Action::ItrType RvvConfigSettingInsts::vsetvlHandler_(atlas::AtlasState* state,
                                                           Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+=======
+    Action::ItrType RvvConfigSettingInsts::vsetvlHandler_(pegasus::PegasusState* state,
+                                                          Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+>>>>>>> upstream/main
         const XLEN vtype_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         VectorConfig* vector_config = state->getVectorConfig();
         vector_config->vsetVTYPE<XLEN>(state, vtype_val);
@@ -53,10 +83,17 @@ namespace atlas
     }
 
     template <typename XLEN>
+<<<<<<< HEAD
     Action::ItrType RvvConfigSettingInsts::vsetvliHandler_(atlas::AtlasState* state,
                                                            Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+=======
+    Action::ItrType RvvConfigSettingInsts::vsetvliHandler_(pegasus::PegasusState* state,
+                                                           Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+>>>>>>> upstream/main
         const XLEN vtype_val = inst->getImmediate();
         VectorConfig* vector_config = state->getVectorConfig();
         vector_config->vsetVTYPE<XLEN>(state, vtype_val);
@@ -77,10 +114,17 @@ namespace atlas
     }
 
     template <typename XLEN>
+<<<<<<< HEAD
     Action::ItrType RvvConfigSettingInsts::vsetivliHandler_(atlas::AtlasState* state,
                                                             Action::ItrType action_it)
     {
         const AtlasInstPtr & inst = state->getCurrentInst();
+=======
+    Action::ItrType RvvConfigSettingInsts::vsetivliHandler_(pegasus::PegasusState* state,
+                                                            Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+>>>>>>> upstream/main
         const XLEN vtype_val = inst->getImmediate();
         VectorConfig* vector_config = state->getVectorConfig();
         vector_config->vsetVTYPE<XLEN>(state, vtype_val);
@@ -89,4 +133,8 @@ namespace atlas
         return ++action_it;
     }
 
+<<<<<<< HEAD
 } // namespace atlas
+=======
+} // namespace pegasus
+>>>>>>> upstream/main
