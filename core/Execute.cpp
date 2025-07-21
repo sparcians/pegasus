@@ -1,6 +1,6 @@
 #include "core/Execute.hpp"
-#include "core/AtlasInst.hpp"
-#include "core/AtlasState.hpp"
+#include "core/PegasusInst.hpp"
+#include "core/PegasusState.hpp"
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
 
@@ -22,14 +22,15 @@
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
 #include "core/inst_handlers/v/RvvMaskInsts.hpp"
+#include "core/inst_handlers/v/RvvFloatInsts.hpp"
 
-namespace atlas
+namespace pegasus
 {
     Execute::Execute(sparta::TreeNode* execute_node, const ExecuteParameters* p) :
         sparta::Unit(execute_node),
         enable_syscall_emulation_(p->enable_syscall_emulation)
     {
-        Action execute_action = atlas::Action::createAction<&Execute::execute_>(this, "Execute");
+        Action execute_action = pegasus::Action::createAction<&Execute::execute_>(this, "Execute");
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
 
@@ -50,6 +51,7 @@ namespace atlas
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -68,6 +70,7 @@ namespace atlas
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
@@ -95,7 +98,7 @@ namespace atlas
     template const Execute::InstHandlersMap*
     Execute::getInstComputeAddressHandlersMap<RV32>() const;
 
-    Action::ItrType Execute::execute_(AtlasState* state, Action::ItrType action_it)
+    Action::ItrType Execute::execute_(PegasusState* state, Action::ItrType action_it)
     {
         // Connect instruction to Fetch
         const auto inst = state->getCurrentInst();
@@ -138,4 +141,4 @@ namespace atlas
         execute_action_group_.setNextActionGroup(inst_action_group);
         return ++action_it;
     }
-} // namespace atlas
+} // namespace pegasus
