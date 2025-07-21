@@ -7,9 +7,9 @@
 #include "core/Action.hpp"
 #include "core/inst_handlers/vector_types.hpp"
 
-namespace atlas
+namespace pegasus
 {
-    class AtlasState;
+    class PegasusState;
     class Action;
     class ActionGroup;
 
@@ -23,6 +23,6 @@ namespace atlas
 
       private:
         template <typename XLEN, OperandMode opMode>
-        Action::ItrType vmvHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        Action::ItrType vmvHandler_(pegasus::PegasusState* state_ptr, Action::ItrType action_it);
     };
-} // namespace atlas
+} // namespace pegasus

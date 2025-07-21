@@ -1,12 +1,12 @@
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
-#include "core/AtlasState.hpp"
+#include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
-#include "include/AtlasUtils.hpp"
+#include "include/PegasusUtils.hpp"
 
-namespace atlas
+namespace pegasus
 {
     template <typename XLEN>
     void RvvPermuteInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
@@ -14,26 +14,26 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vmv.s.x", atlas::Action::createAction<
+            "vmv.s.x", pegasus::Action::createAction<
                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
                                                                            OperandMode::Mode::N,
                                                                            OperandMode::Mode::X}>,
                            RvvPermuteInsts>(nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vmv.x.s", atlas::Action::createAction<
+            "vmv.x.s", pegasus::Action::createAction<
                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::X,
                                                                            OperandMode::Mode::V,
                                                                            OperandMode::Mode::N}>,
                            RvvPermuteInsts>(nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vfmv.s.f", atlas::Action::createAction<
+            "vfmv.s.f", pegasus::Action::createAction<
                             &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
                                                                             OperandMode::Mode::N,
                                                                             OperandMode::Mode::F}>,
                             RvvPermuteInsts>(nullptr, "vfmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfmv.f.s", atlas::Action::createAction<
+            "vfmv.f.s", pegasus::Action::createAction<
                             &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::F,
                                                                             OperandMode::Mode::V,
                                                                             OperandMode::Mode::N}>,
@@ -44,9 +44,9 @@ namespace atlas
     template void RvvPermuteInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
-    Action::ItrType vmvHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    Action::ItrType vmvHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
-        const AtlasInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr inst = state->getCurrentInst();
         VectorConfig* vector_config = state->getVectorConfig();
 
         if constexpr ((opMode.dst == OperandMode::Mode::F || opMode.dst == OperandMode::Mode::X)
@@ -88,7 +88,7 @@ namespace atlas
     }
 
     template <typename XLEN, OperandMode opMode>
-    Action::ItrType RvvPermuteInsts::vmvHandler_(atlas::AtlasState* state,
+    Action::ItrType RvvPermuteInsts::vmvHandler_(pegasus::PegasusState* state,
                                                  Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
@@ -118,4 +118,4 @@ namespace atlas
         return ++action_it;
     }
 
-} // namespace atlas
+} // namespace pegasus

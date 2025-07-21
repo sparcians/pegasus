@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/AtlasUtils.hpp"
+#include "include/PegasusUtils.hpp"
 
 #include <stdint.h>
 
@@ -25,7 +25,7 @@ template <typename T2, typename T1> inline T2 sextu(T1 x)
     else
     {
         return static_cast<T2>(
-            (static_cast<atlas::SignedType<T2>>(static_cast<atlas::SignedType<T1>>(x))));
+            (static_cast<pegasus::SignedType<T2>>(static_cast<pegasus::SignedType<T1>>(x))));
     }
 }
 

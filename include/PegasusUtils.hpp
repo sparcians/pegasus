@@ -83,4 +83,4 @@ namespace pegasus
     }
 
     template <typename T> using SignedType = typename decltype(get_int_type<T>())::type;
-} // namespace atlas
+} // namespace pegasus
