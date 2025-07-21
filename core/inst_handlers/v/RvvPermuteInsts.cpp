@@ -14,87 +14,102 @@ namespace atlas
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vmv.s.x",
-            atlas::Action::createAction<&RvvPermuteInsts::vmvsxHandler_<XLEN>, RvvPermuteInsts>(
-                nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
+            "vmv.s.x", atlas::Action::createAction<
+                           &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
+                                                                           OperandMode::Mode::N,
+                                                                           OperandMode::Mode::X}>,
+                           RvvPermuteInsts>(nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vmv.x.s",
-            atlas::Action::createAction<&RvvPermuteInsts::vmvxsHandler_<XLEN>, RvvPermuteInsts>(
-                nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
+            "vmv.x.s", atlas::Action::createAction<
+                           &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::X,
+                                                                           OperandMode::Mode::V,
+                                                                           OperandMode::Mode::N}>,
+                           RvvPermuteInsts>(nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfmv.s.f", atlas::Action::createAction<
+                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
+                                                                            OperandMode::Mode::N,
+                                                                            OperandMode::Mode::F}>,
+                            RvvPermuteInsts>(nullptr, "vfmv.s.x", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfmv.f.s", atlas::Action::createAction<
+                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::F,
+                                                                            OperandMode::Mode::V,
+                                                                            OperandMode::Mode::N}>,
+                            RvvPermuteInsts>(nullptr, "vfmv.x.s", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvPermuteInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvPermuteInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t elemWidth>
-    Action::ItrType vmvsxHelper(atlas::AtlasState* state, Action::ItrType action_it)
+    template <typename XLEN, size_t elemWidth, OperandMode opMode>
+    Action::ItrType vmvHelper(atlas::AtlasState* state, Action::ItrType action_it)
     {
-        using ValueType = typename Element<elemWidth>::ValueType;
-
         const AtlasInstPtr inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
-        elems_vd.getElement(0).setVal(sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RvvPermuteInsts::vmvsxHandler_(atlas::AtlasState* state,
-                                                   Action::ItrType action_it)
-    {
         VectorConfig* vector_config = state->getVectorConfig();
-        if (vector_config->getVSTART() < vector_config->getVL())
+
+        if constexpr ((opMode.dst == OperandMode::Mode::F || opMode.dst == OperandMode::Mode::X)
+                      && opMode.src2 == OperandMode::Mode::V)
         {
-            switch (vector_config->getSEW())
+            Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                          inst->getRs2()};
+            if constexpr (opMode.dst == OperandMode::Mode::X)
             {
-                case 8:
-                    return vmvsxHelper<XLEN, 8>(state, action_it);
-
-                case 16:
-                    return vmvsxHelper<XLEN, 16>(state, action_it);
-
-                case 32:
-                    return vmvsxHelper<XLEN, 32>(state, action_it);
-
-                case 64:
-                    return vmvsxHelper<XLEN, 64>(state, action_it);
-
-                default:
-                    sparta_assert(false, "Unsupported SEW value");
-                    break;
+                WRITE_INT_REG<XLEN>(state, inst->getRd(),
+                                    sextu<XLEN>(elems_vs2.getElement(0).getVal()));
+            }
+            else
+            {
+                WRITE_FP_REG<RV64>(state, inst->getRd(), elems_vs2.getElement(0).getVal());
+            }
+        }
+        else if constexpr ((opMode.src1 == OperandMode::Mode::F
+                            || opMode.src1 == OperandMode::Mode::X)
+                           && opMode.dst == OperandMode::Mode::V)
+        {
+            if (vector_config->getVSTART() < vector_config->getVL())
+            {
+                using ValueType = typename Element<elemWidth>::ValueType;
+                Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                             inst->getRd()};
+                if constexpr (opMode.src1 == OperandMode::Mode::X)
+                {
+                    elems_vd.getElement(0).setVal(
+                        sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                }
+                else
+                {
+                    elems_vd.getElement(0).setVal(READ_FP_REG<RV64>(state, inst->getRs1()));
+                }
             }
         }
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth>
-    Action::ItrType vmvxsHelper(atlas::AtlasState* state, Action::ItrType action_it)
-    {
-        const AtlasInstPtr inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), sextu<XLEN>(elems_vs2.getElement(0).getVal()));
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RvvPermuteInsts::vmvxsHandler_(atlas::AtlasState* state,
-                                                   Action::ItrType action_it)
+    template <typename XLEN, OperandMode opMode>
+    Action::ItrType RvvPermuteInsts::vmvHandler_(atlas::AtlasState* state,
+                                                 Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
-                return vmvxsHelper<XLEN, 8>(state, action_it);
+                if constexpr (opMode.dst == OperandMode::Mode::F
+                              || opMode.src1 == OperandMode::Mode::F)
+                {
+                    break;
+                }
+                return vmvHelper<XLEN, 8, opMode>(state, action_it);
 
             case 16:
-                return vmvxsHelper<XLEN, 16>(state, action_it);
+                return vmvHelper<XLEN, 16, opMode>(state, action_it);
 
             case 32:
-                return vmvxsHelper<XLEN, 32>(state, action_it);
+                return vmvHelper<XLEN, 32, opMode>(state, action_it);
 
             case 64:
-                return vmvxsHelper<XLEN, 64>(state, action_it);
+                return vmvHelper<XLEN, 64, opMode>(state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");

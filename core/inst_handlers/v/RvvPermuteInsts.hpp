@@ -22,9 +22,7 @@ namespace atlas
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN>
-        Action::ItrType vmvxsHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType vmvsxHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vmvHandler_(atlas::AtlasState* state_ptr, Action::ItrType action_it);
     };
 } // namespace atlas
