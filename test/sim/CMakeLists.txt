@@ -12,7 +12,7 @@ add_subdirectory(vcs)
 add_subdirectory(via)
 add_subdirectory(vls)
 add_subdirectory(vm)
-# add_subdirectory(vro)     #TODO: Uncomment when handler support added
+add_subdirectory(vro)
 
 # ASM Tests
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)

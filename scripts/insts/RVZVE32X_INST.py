@@ -160,7 +160,7 @@ RVZVE32X_INST = [
     {'mnemonic': 'vnsra.wi', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vnclipu.wi', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vnclip.wi', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vredsum.vs', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
+    {'mnemonic': 'vredsum.vs', 'handler': 'vredsum.vs', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vredand.vs', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vredor.vs', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vredxor.vs', 'handler': 'nop', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
