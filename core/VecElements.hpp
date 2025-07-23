@@ -494,6 +494,11 @@ namespace pegasus
         }; // class MaskBitIterator
 
         /**
+         * @brief Explicit defaulted constructor.
+         */
+        explicit Elements() = default;
+
+        /**
          * @brief Constructor for vector register group *Elements*.
          *
          * @param state Poninter to *PegasusState* object.

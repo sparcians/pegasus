@@ -568,8 +568,10 @@ namespace pegasus
     Action::ItrType viablHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 == OperandMode::Mode::I
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
@@ -707,8 +709,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 == OperandMode::Mode::I
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
@@ -780,8 +784,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 == OperandMode::Mode::I
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
@@ -842,8 +848,10 @@ namespace pegasus
     Action::ItrType vmicHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 == OperandMode::Mode::I
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};

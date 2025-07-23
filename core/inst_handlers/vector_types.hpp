@@ -7,8 +7,8 @@ namespace pegasus
         enum struct Mode
         {
             V, // vector
-            X, // scaler int
-            F, // scaler float
+            X, // scalar int
+            F, // scalar float
             S, // single vector element[0]
             I, // immediate
             W, // wide

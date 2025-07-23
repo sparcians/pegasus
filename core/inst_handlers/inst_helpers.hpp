@@ -25,7 +25,7 @@ template <typename T2, typename T1> inline T2 sextu(T1 x)
     else
     {
         return static_cast<T2>(
-            (static_cast<pegasus::SignedType<T2>>(static_cast<pegasus::SignedType<T1>>(x))));
+            (static_cast<std::make_signed_t<T2>>(static_cast<std::make_signed_t<T1>>(x))));
     }
 }
 

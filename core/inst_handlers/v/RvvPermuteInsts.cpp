@@ -167,7 +167,7 @@ namespace pegasus
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType vmvHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
-        const PegasusInstPtr& inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         VectorConfig* vector_config = state->getVectorConfig();
 
         if constexpr ((opMode.dst == OperandMode::Mode::F || opMode.dst == OperandMode::Mode::X)

@@ -50,6 +50,7 @@ namespace pegasus
             vector_config->vsetAVL<XLEN>(state, false, READ_INT_REG<XLEN>(state, inst->getRs1()));
             WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_config->getVL());
         }
+        vector_config->checkConfig();
         return ++action_it;
     }
 
@@ -74,6 +75,7 @@ namespace pegasus
             vector_config->vsetAVL<XLEN>(state, false, READ_INT_REG<XLEN>(state, inst->getRs1()));
             WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_config->getVL());
         }
+        vector_config->checkConfig();
         return ++action_it;
     }
 
@@ -87,6 +89,7 @@ namespace pegasus
         vector_config->vsetVTYPE<XLEN>(state, vtype_val);
         vector_config->vsetAVL<XLEN>(state, false, inst->getAVL());
         WRITE_INT_REG<XLEN>(state, inst->getRd(), vector_config->getVL());
+        vector_config->checkConfig();
         return ++action_it;
     }
 
