@@ -23,8 +23,7 @@ namespace pegasus
             stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
         }
 
-        // Is there a parameter for the user to enable page tables and physical memory tracing?
-        stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PTE);
+        // TODO: add support for memory records
 
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setHeaderPC(inital_pc);
@@ -53,19 +52,19 @@ namespace pegasus
                 case RegType::INTEGER:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                         READ_INT_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 case RegType::FLOATING_POINT:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                         READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 case RegType::CSR:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                         READ_CSR_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 default:
@@ -103,7 +102,6 @@ namespace pegasus
 
     void STFLogger::recordRegState_(PegasusState* state)
     {
-        // TODO: add an inital register state record
-        (void)state;
+        
     }
 } // namespace pegasus
