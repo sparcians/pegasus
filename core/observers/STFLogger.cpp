@@ -71,7 +71,7 @@ namespace pegasus
                     stf_writer_ << stf::InstRegRecord(
                         dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
                         stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num)); // dst_reg.reg_value
+                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
                     break;
                 case RegType::FLOATING_POINT:
                     stf_writer_ << stf::InstRegRecord(
