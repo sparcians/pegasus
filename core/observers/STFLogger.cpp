@@ -35,15 +35,6 @@ namespace pegasus
     void STFLogger::postExecute_(PegasusState* state)
     {
         if(fault_cause_.isValid() || interrupt_cause_.isValid()) { return; }
-        
-        if (state->getCurrentInst()->getOpcodeSize() == 2)
-        {
-            stf_writer_ << stf::InstOpcode16Record(state->getCurrentInst()->getOpcode());
-        }
-        else
-        {
-            stf_writer_ << stf::InstOpcode32Record(state->getCurrentInst()->getOpcode());
-        }
 
         for (const auto & src_reg : src_regs_)
         {
@@ -97,6 +88,15 @@ namespace pegasus
                 default:
                     sparta_assert(false, "Invalid register type!");
             }
+        }
+
+        if (state->getCurrentInst()->getOpcodeSize() == 2)
+        {
+            stf_writer_ << stf::InstOpcode16Record(state->getCurrentInst()->getOpcode());
+        }
+        else
+        {
+            stf_writer_ << stf::InstOpcode32Record(state->getCurrentInst()->getOpcode());
         }
     }
 
