@@ -35,6 +35,8 @@ namespace pegasus
     // METHODS
     void STFLogger::postExecute_(PegasusState* state)
     {
+        if(fault_cause_.isValid() || interrupt_cause_.isValid()) { return; }
+        
         if (state->getCurrentInst()->getOpcodeSize() == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(state->getCurrentInst()->getOpcode());
