@@ -34,6 +34,16 @@ namespace pegasus
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
 
+        // Handler for unsupported instructions
+        rv64_inst_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::EXECUTE_TAG));
+        rv32_inst_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::EXECUTE_TAG));
+
         // Get RV64 instruction handlers
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -139,6 +149,14 @@ namespace pegasus
 
         // Execute the instruction
         execute_action_group_.setNextActionGroup(inst_action_group);
+        return ++action_it;
+    }
+
+    Action::ItrType Execute::unsupportedInstHandler_(pegasus::PegasusState* state,
+                                                     Action::ItrType action_it)
+    {
+        sparta_assert(false,
+                      "Failed to execute. Instruction is unsupported: " << state->getCurrentInst());
         return ++action_it;
     }
 } // namespace pegasus
