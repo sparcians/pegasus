@@ -51,11 +51,16 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
                 validator.validate();
                 validation_attempted_ = true;
             }
+        }
 
-            // Kick out the oldest third (or cap to 1500)
+        // Sometimes trim the validators
+        if (rand() % 50 == 0)
+        {
+            // Sort by oldest to newest and toss the oldest half
             std::sort(event_validators_.begin(), event_validators_.end(),
                       std::greater<EventValidator>{});
-            const size_t target_size = std::min(1500ul, event_validators_.size() / 3);
+
+            const size_t target_size = event_validators_.size() / 2;
             while (event_validators_.size() > target_size)
             {
                 event_validators_.pop_back();

@@ -78,6 +78,7 @@ namespace pegasus
         uint32_t reg_num;
         std::string reg_name;
 
+        /// Called to/from char buffer (boost::serialization)
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             ar & reg_type;

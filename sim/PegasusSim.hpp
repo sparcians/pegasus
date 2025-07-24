@@ -40,12 +40,11 @@ namespace pegasus
 
         void endSimulation(int64_t exit_code);
 
-      protected:
+      private:
         void buildTree_() override;
         void configureTree_() override;
         void bindTree_() override;
 
-      private:
         sparta::ResourceFactory<pegasus::Fetch, pegasus::Fetch::FetchParameters> fetch_factory_;
         sparta::ResourceFactory<pegasus::Translate, pegasus::Translate::TranslateParameters>
             translate_factory_;

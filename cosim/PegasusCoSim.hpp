@@ -89,19 +89,6 @@ namespace pegasus::cosim
 
         void finish();
 
-      protected:
-        // CoSim pipeline for retrieving events and checkpoints
-        CoSimPipeline* cosim_pipeline_ = nullptr;
-
-        // SimDB instance to hold all events and checkpoints
-        std::shared_ptr<simdb::DatabaseManager> db_mgr_;
-
-        // SimDB app manager to manage the CoSimPipeline
-        std::shared_ptr<simdb::AppManager> app_mgr_;
-
-        // CoSim Observer for capturing Events from each hart
-        std::vector<CoSimObserver*> cosim_observers_;
-
       private:
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
@@ -123,5 +110,17 @@ namespace pegasus::cosim
 
         // Sim config for sparta::app::Simulation base class
         sparta::app::SimulationConfiguration sim_config_;
+
+        // CoSim pipeline for retrieving events and checkpoints
+        CoSimPipeline* cosim_pipeline_ = nullptr;
+
+        // SimDB instance to hold all events and checkpoints
+        std::shared_ptr<simdb::DatabaseManager> db_mgr_;
+
+        // SimDB app manager to manage the CoSimPipeline
+        std::shared_ptr<simdb::AppManager> app_mgr_;
+
+        // CoSim Observer for capturing Events from each hart
+        std::vector<CoSimObserver*> cosim_observers_;
     };
 } // namespace pegasus::cosim
