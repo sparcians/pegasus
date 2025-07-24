@@ -53,7 +53,8 @@ namespace pegasus::cosim
 
             sim_stopped_.emplace_back(false);
 
-            // Asynchronously read the oldest event from our std::deque and send it down the pipeline.
+            // Asynchronously read the oldest event from our std::deque and send it down the
+            // pipeline.
             using EventProducerFunction = simdb::pipeline::Function<void, Event>;
 
             auto async_source = simdb::pipeline::createTask<EventProducerFunction>(
@@ -82,7 +83,7 @@ namespace pegasus::cosim
                     {
                         if (evts[i].getEuid() != euid + 1)
                         {
-                            throw sparta::SpartaException("Could not validate event UIDs");
+                            throw simdb::DBException("Could not validate event UIDs");
                         }
                         ++euid;
                     }
@@ -132,8 +133,8 @@ namespace pegasus::cosim
             // Write the compressed event ranges to disk
             auto async_writer =
                 db_accessor->createAsyncWriter<CoSimPipeline, EventsRangeAsBytes, EuidRange>(
-                    [this](EventsRangeAsBytes && evts, simdb::ConcurrentQueue<EuidRange> & out,
-                           simdb::pipeline::AppPreparedINSERTs* tables)
+                    [](EventsRangeAsBytes && evts, simdb::ConcurrentQueue<EuidRange> & out,
+                       simdb::pipeline::AppPreparedINSERTs* tables)
                     {
                         auto inserter = tables->getPreparedINSERT("CompressedEvents");
                         inserter->setColumnValue(0, evts.euid_range.first);
@@ -167,17 +168,19 @@ namespace pegasus::cosim
 
             // Assign threads (task groups)
             // ------------------------------------------------------------
-            pipeline
-                ->createTaskGroup("DataProcessing (hart " + std::to_string(hart_id) + ")")
-                // Tasks to send data to the database thread:
-                ->addTask(std::move(async_source))
-                ->addTask(std::move(source_buffer))
-                ->addTask(std::move(convert_to_range))
-                ->addTask(std::move(to_bytes))
-                ->addTask(std::move(zlib))
-                // Tasks to process eviction notices from the database thread:
-                ->addTask(std::move(eviction_ring))
-                ->addTask(std::move(eviction_task));
+            auto task_group =
+                pipeline->createTaskGroup("DataProcessing (hart " + std::to_string(hart_id) + ")");
+
+            // Tasks to send data to the database thread:
+            task_group->addTask(std::move(async_source));
+            task_group->addTask(std::move(source_buffer));
+            task_group->addTask(std::move(convert_to_range));
+            task_group->addTask(std::move(to_bytes));
+            task_group->addTask(std::move(zlib));
+
+            // Tasks to process eviction notices from the database thread:
+            task_group->addTask(std::move(eviction_ring));
+            task_group->addTask(std::move(eviction_task));
 
             // Note the async writer was not added to a task group. SimDB enforces
             // that database writes/reads all occur on the same shared thread, so
@@ -198,7 +201,7 @@ namespace pegasus::cosim
 
         if (simStopped(hart_id))
         {
-            throw sparta::SpartaException("Cannot add events to pipeline - sim has stopped");
+            throw simdb::DBException("Cannot add events to pipeline - sim has stopped");
         }
 
         hart_pipelines_.at(hart_id)->addToCache(evt);
@@ -295,7 +298,7 @@ namespace pegasus::cosim
             return recreated_evt_.get();
         }
 
-        throw sparta::SpartaException("Unable to find the event with euid ") << euid_;
+        throw simdb::DBException("Unable to find the event with euid ") << euid_;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -378,14 +381,14 @@ namespace pegasus::cosim
         // If we got this far, the event uid must be within the range.
         if (euid < evts_range.euid_range.first)
         {
-            throw sparta::SpartaException("Internal error occurred. Cannot find event with uid ")
+            throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
                 << euid << ".";
         }
 
         auto index = euid - evts_range.euid_range.first;
         if (index >= evts_range.events.size())
         {
-            throw sparta::SpartaException("Internal error occurred. Cannot find event with uid ")
+            throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
                 << euid << ".";
         }
 
@@ -408,15 +411,15 @@ namespace pegasus::cosim
         std::lock_guard<std::mutex> lock(mutex_);
 
         // Verify we are always evicting from the back of the cache.
+        if (evt_cache_.front().getEuid() != euid_range.first)
+        {
+            throw simdb::DBException("Invalid event uid range");
+        }
+
         auto num_evictions = euid_range.second - euid_range.first + 1;
         if (num_evictions > evt_cache_.size())
         {
-            throw sparta::SpartaException("Invalid event uid range");
-        }
-
-        if (evt_cache_.front().getEuid() != euid_range.first)
-        {
-            throw sparta::SpartaException("Invalid event uid range");
+            throw simdb::DBException("Invalid event uid range");
         }
 
         auto first = evt_cache_.cbegin();
