@@ -38,7 +38,7 @@ namespace pegasus
             }
             catch (const std::out_of_range & excp)
             {
-                sparta_assert(inst_handler_name_ == "nop",
+                sparta_assert(inst_handler_name_ == "unsupported",
                               "Missing key in rv"
                                   << std::to_string(xlen)
                                   << " inst compute address handler map: " << inst_handler_name_);
