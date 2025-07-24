@@ -21,6 +21,8 @@ namespace pegasus
         // Required by Mavis
         const std::string & getName() const { return mnemonic_; }
 
+        bool isUnimplemented() const { return is_unimplemented_; }
+
         bool isMemoryInst() const { return is_memory_inst_; }
 
         bool isChangeOfFlowInst() const { return is_cof_inst_; }
@@ -28,6 +30,7 @@ namespace pegasus
       private:
         const std::string mnemonic_;
         const std::string inst_handler_name_;
+        const bool is_unimplemented_;
         const bool is_memory_inst_;
         const bool is_cof_inst_;
 

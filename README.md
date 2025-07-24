@@ -4,6 +4,39 @@ RISC-V Functional Model
 ![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/riscv-arch.json)
 ![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/tenstorrent.json)
 
+                                   ,
+                                   |`\
+                                  /'_/_
+                                ,'_/\_/\_                       ,
+                              ,'_/\'_\_,/_                    ,'|
+                            ,'_/\_'_ \_ \_/                _,-'_/
+                          ,'_/'\_'_ \_ \'_,\           _,-'_,-/ \,
+                        ,' /_\ _'_ \_ \'_,/       __,-'<_,' _,\_,/
+                       ( (' )\/(_ \_ \'_,\   __--' _,-_/_,-',_/ _\
+                        \_`\> 6` 7  \'_,/ ,-' _,-,'\,_'_ \,_/'_,\
+                          \/-  _/ 7 '/ _,' _/'\_  \,_'_ \_ \'_,/
+                           \_'/>   7'_/' _/' \_ '\,_'_ \_ \'_,\
+                             >/  _ ,V  ,<  \__ '\,_'_ \_ \'_,/
+                           /'_  ( )_)\/-,',__ '\,_'_,\_,\'_\
+                          ( ) \_ \|_  `\_    \_,/'\,_'_,/'
+                           \\_  \_\_)    `\_
+                            \_)   >        `\_
+                                 /  `,      |`\_
+                                /    \     / \ `\
+                               /   __/|   /  /  `\
+                              (`  (   (` (_  \   /
+                              /  ,/    |  /  /   \
+                             / ,/      | /   \   `\_
+                           _/_/        |/    /__/,_/
+                          /_(         /_(
+
+                     ____
+                    |  _ \ ___  __ _  __ _ ___ _   _ ___
+                    | |_) / _ \/ _` |/ _` / __| | | / __|
+                    |  __/  __/ (_| | (_| \__ \ |_| \__ \
+                    |_|   \___|\__, |\__,_|___/\__,_|___/
+                               |___/
+
 ## Install Prerequisites
 
 Install the following packages (tested with Ubuntu 24.04):

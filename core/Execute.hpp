@@ -81,6 +81,10 @@ namespace pegasus
 
         ActionGroup execute_action_group_{"Execute"};
 
+        // Instruction handler for unsupported instructions
+        Action::ItrType unsupportedInstHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it);
+
         // Instruction handlers
         InstHandlersMap rv64_inst_actions_;
         InstHandlersMap rv32_inst_actions_;
