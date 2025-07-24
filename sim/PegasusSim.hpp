@@ -40,11 +40,12 @@ namespace pegasus
 
         void endSimulation(int64_t exit_code);
 
-      private:
+      protected:
         void buildTree_() override;
         void configureTree_() override;
         void bindTree_() override;
 
+      private:
         sparta::ResourceFactory<pegasus::Fetch, pegasus::Fetch::FetchParameters> fetch_factory_;
         sparta::ResourceFactory<pegasus::Translate, pegasus::Translate::TranslateParameters>
             translate_factory_;
@@ -73,7 +74,6 @@ namespace pegasus
         const WorkloadAndArguments workload_and_args_;
         const RegValueOverridePairs reg_value_overrides_;
         const uint64_t ilimit_;
-        std::shared_ptr<CoSimQuery> cosim_query_;
 
         friend class PegasusCoSim;
     };
