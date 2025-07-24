@@ -2,8 +2,6 @@
 #include "arch/RegisterSet.hpp"
 #include "core/PegasusState.hpp"
 
-#define STF_DLOG(msg) SPARTA_LOG(state->getDebugLogger(), msg); // include STFLogger in debug log 
-
 namespace pegasus
 {
     STFLogger::STFLogger(const uint32_t reg_width, uint64_t inital_pc, const std::string & filename,
@@ -61,12 +59,6 @@ namespace pegasus
                                     stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                                     READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                                     break;
-                case RegType::VECTOR:
-                    stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num,
-                                    stf::Registers::STF_REG_TYPE::VECTOR,
-                                    stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                    READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
-                                    break;
                 case RegType::CSR:
                     stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num,
                                     stf::Registers::STF_REG_TYPE::CSR,
@@ -90,12 +82,6 @@ namespace pegasus
                 case RegType::FLOATING_POINT:
                     stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num,
                                     stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                                    stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                    READ_FP_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
-                                    break;
-                case RegType::VECTOR:
-                    stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num,
-                                    stf::Registers::STF_REG_TYPE::VECTOR,
                                     stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                                     READ_FP_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
                                     break;
