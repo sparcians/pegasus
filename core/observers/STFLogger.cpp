@@ -1,4 +1,4 @@
-#include "core/observers/STFLogger.hpp"
+#include "STFLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "core/PegasusState.hpp"
 #include "sparta/utils/LogUtils.hpp"

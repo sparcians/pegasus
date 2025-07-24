@@ -1,4 +1,3 @@
-
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/VecElements.hpp"

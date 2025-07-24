@@ -22,7 +22,6 @@
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
 #include "core/inst_handlers/v/RvvMaskInsts.hpp"
-
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
 
 namespace pegasus

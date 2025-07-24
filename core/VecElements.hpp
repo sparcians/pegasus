@@ -299,7 +299,6 @@ namespace pegasus
      * @tparam ElemType Element type for individual element.
      * @tparam isMaskElems true if this *Elements* represents vector mask.
      */
-
     template <typename EType, bool isMaskElems> class Elements
     {
       public:
@@ -401,7 +400,6 @@ namespace pegasus
          * @class MaskBitIterator
          * @brief Used for bit iteration of *MastElements*.
          */
-
         template <bool M = isMaskElems>
         requires EnableIf<M>
 
@@ -546,7 +544,6 @@ namespace pegasus
          * @return *MaskBitIterator* object pointitng to the starting bit.
          */
         auto maskBitIterBegin() const requires EnableIf<isMaskElems>
-
         {
             return MaskBitIterator<>(this, config_->getVSTART());
         }
