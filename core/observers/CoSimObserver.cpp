@@ -8,10 +8,9 @@
 
 namespace pegasus::cosim
 {
-    CoSimObserver::CoSimObserver(
-        sparta::log::MessageSource& cosim_logger,
-        CoSimPipeline* cosim_pipeline,
-        HartId hart_id)
+    CoSimObserver::CoSimObserver(sparta::log::MessageSource& cosim_logger,
+                                 CoSimPipeline* cosim_pipeline,
+                                 HartId hart_id)
       : Observer(ObserverMode::RV64)
       , cosim_logger_(cosim_logger)
       , cosim_pipeline_(cosim_pipeline)
