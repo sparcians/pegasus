@@ -16,6 +16,7 @@
 namespace pegasus::cosim
 {
 
+    ////////////////////////////////////////////////////////////////////////////////////////
     void CoSimPipeline::defineSchema(simdb::Schema & schema)
     {
         using dt = simdb::SqlDataType;
@@ -31,8 +32,10 @@ namespace pegasus::cosim
         // tbl.disableAutoIncPrimaryKey();
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////
     void CoSimPipeline::setNumHarts(size_t num_harts) { hart_pipelines_.reserve(num_harts); }
 
+    ////////////////////////////////////////////////////////////////////////////////////////
     std::unique_ptr<simdb::pipeline::Pipeline>
     CoSimPipeline::createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor)
     {
@@ -50,9 +53,7 @@ namespace pegasus::cosim
 
             sim_stopped_.emplace_back(false);
 
-            // Asynchronously read the oldest event from our std::deque and send it down the
-            // pipeline Note the different std::function signature is due to this being a source
-            // function, i.e. <void,T> (different compared to most of the other Functions below)
+            // Asynchronously read the oldest event from our std::deque and send it down the pipeline.
             using EventProducerFunction = simdb::pipeline::Function<void, Event>;
 
             auto async_source = simdb::pipeline::createTask<EventProducerFunction>(

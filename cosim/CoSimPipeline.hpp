@@ -11,7 +11,6 @@
 
 namespace pegasus::cosim
 {
-
     using EuidRange = std::pair<uint64_t, uint64_t>;
     using EventBuffer = std::vector<Event>;
 
@@ -30,7 +29,7 @@ namespace pegasus::cosim
     };
 
     /// This struct holds an EventsRange as a char buffer. This is used in
-    /// the pipeline when for zlib as well as boost::serialization.
+    /// the pipeline for zlib and boost::serialization.
     struct EventsRangeAsBytes
     {
         EuidRange euid_range;
