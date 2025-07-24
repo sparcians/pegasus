@@ -101,7 +101,7 @@ class VredInstructionTester : public PegasusInstructionTester
         offset += 5;
         if (isWideningEnabled){
             opcode |= 0 << offset; // funct3 = 000
-        else
+        } else{
             opcode |= 2 << offset; // funct3 = 010
         }
         offset += 3;
@@ -113,7 +113,7 @@ class VredInstructionTester : public PegasusInstructionTester
         offset += 1;
         if (isWideningEnabled){
             opcode |= 0x20 << offset; // funct6 = 110000 for vwredsum.vs
-        else
+        } else{
             opcode |= 0x00 << offset; // funct6 = 00 for vredsum.vs
         }
         offset += 6;
