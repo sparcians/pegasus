@@ -15,9 +15,28 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
+            "vmv.v.v", pegasus::Action::createAction<
+                          &RvvIntegerInsts::vimvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
+                                                                           OperandMode::Mode::N,
+                                                                           OperandMode::Mode::V}>,
+                          RvvIntegerInsts>(nullptr, "vmv.v.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmv.v.x", pegasus::Action::createAction<
+                          &RvvIntegerInsts::vimvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
+                                                                           OperandMode::Mode::N,
+                                                                           OperandMode::Mode::X}>,
+                          RvvIntegerInsts>(nullptr, "vmv.v.x", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmv.v.i", pegasus::Action::createAction<
+                          &RvvIntegerInsts::vimvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
+                                                                           OperandMode::Mode::N,
+                                                                           OperandMode::Mode::I}>,
+                          RvvIntegerInsts>(nullptr, "vmv.v.i", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
             "vadd.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::plus>,
@@ -25,7 +44,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vadd.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::plus>,
@@ -33,7 +52,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vadd.vi",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
                     false, std::plus>,
@@ -42,7 +61,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vand.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::bit_and>,
@@ -50,7 +69,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vand.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::bit_and>,
@@ -58,7 +77,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vand.vi",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
                     false, std::bit_and>,
@@ -67,7 +86,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vor.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::bit_or>,
@@ -75,7 +94,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vor.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::bit_or>,
@@ -83,7 +102,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vor.vi",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
                     false, std::bit_or>,
@@ -92,7 +111,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vxor.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::bit_xor>,
@@ -100,7 +119,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vxor.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::bit_xor>,
@@ -108,7 +127,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vxor.vi",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
                     false, std::bit_xor>,
@@ -117,7 +136,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vsub.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::minus>,
@@ -125,7 +144,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vsub.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::minus>,
@@ -134,7 +153,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwadd.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
                     true, std::plus>,
@@ -142,7 +161,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwadd.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
                     true, std::plus>,
@@ -150,7 +169,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwadd.wv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
                     true, std::plus>,
@@ -158,7 +177,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwadd.wx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
                     true, std::plus>,
@@ -167,7 +186,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwaddu.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::plus>,
@@ -175,7 +194,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwaddu.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::plus>,
@@ -183,7 +202,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwaddu.wv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
                     false, std::plus>,
@@ -191,7 +210,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwaddu.wx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
                     false, std::plus>,
@@ -200,7 +219,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsub.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
                     true, std::plus>,
@@ -208,7 +227,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsub.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
                     true, std::plus>,
@@ -216,7 +235,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsub.wv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
                     true, std::plus>,
@@ -224,7 +243,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsub.wx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
                     true, std::plus>,
@@ -233,7 +252,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsubu.vv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::V},
                     false, std::plus>,
@@ -241,7 +260,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsubu.vx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::V, OperandMode::Mode::X},
                     false, std::plus>,
@@ -249,7 +268,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsubu.wv",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::V},
                     false, std::plus>,
@@ -257,7 +276,7 @@ namespace pegasus
         inst_handlers.emplace(
             "vwsubu.wx",
             pegasus::Action::createAction<
-                &RvvIntegerInsts::viablHandler_<
+                &RvvIntegerInsts::viBinaryHandler_<
                     XLEN,
                     OperandMode{OperandMode::Mode::W, OperandMode::Mode::W, OperandMode::Mode::X},
                     false, std::plus>,
@@ -564,19 +583,80 @@ namespace pegasus
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
-    Action::ItrType viablHelper(PegasusState* state, Action::ItrType action_it)
+    template <typename XLEN, size_t elemWidth, OperandMode opMode>
+    Action::ItrType vimvlHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                     inst->getRd()};
+        using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
+        for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
+        {
+            auto index = iter.getIndex();
+            if constexpr (opMode.src1 == OperandMode::Mode::V)
+            {
+                elems_vd.getElement(index).setVal(elems_vs1.getElement(index).getVal());
+            }
+            else if constexpr (opMode.src1 == OperandMode::Mode::X)
+            {
+                elems_vd.getElement(index).setVal(
+                    static_cast<ValueType>(
+                        READ_INT_REG<XLEN>(state, inst->getRs1())));
+            }
+            else // opMode.src1 == OperandMode::Mode::I
+            {
+                elems_vd.getElement(index).setVal(
+                    static_cast<ValueType>(inst->getImmediate()));
+            }
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, OperandMode opMode>
+    Action::ItrType RvvIntegerInsts::vimvHandler_(PegasusState* state, Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return vimvlHelper<XLEN, 8, opMode>(state, action_it);
+
+            case 16:
+                return vimvlHelper<XLEN, 16, opMode>(state, action_it);
+
+            case 32:
+                return vimvlHelper<XLEN, 32, opMode>(state, action_it);
+
+            case 64:
+                return vimvlHelper<XLEN, 64, opMode>(state, action_it);
+
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
+    Action::ItrType viBinaryHelper(PegasusState* state, Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
         {
+            using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
             size_t index = 0;
             for (; iter != end; ++iter)
             {
@@ -591,14 +671,14 @@ namespace pegasus
                 {
                     elems_vd.getElement(index).setVal(
                         Functor()(elems_vs2.getElement(index).getVal(),
-                                  static_cast<typename Functor::result_type>(
+                                  static_cast<ValueType>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1()))));
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setVal(Functor()(
                         elems_vs2.getElement(index).getVal(),
-                        static_cast<typename Functor::result_type>(inst->getImmediate())));
+                        static_cast<ValueType>(inst->getImmediate())));
                 }
             }
         };
@@ -618,7 +698,7 @@ namespace pegasus
 
     template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viablHandler_(PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viBinaryHandler_(PegasusState* state, Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         if constexpr (isSigned)
@@ -626,19 +706,19 @@ namespace pegasus
             switch (vector_config->getSEW())
             {
                 case 8:
-                    return viablHelper<XLEN, 8, opMode,
+                    return viBinaryHelper<XLEN, 8, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, int16_t, int8_t>>>(
                         state, action_it);
 
                 case 16:
-                    return viablHelper<XLEN, 16, opMode,
+                    return viBinaryHelper<XLEN, 16, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, uint32_t, int16_t>>>(
                         state, action_it);
 
                 case 32:
-                    return viablHelper<XLEN, 32, opMode,
+                    return viBinaryHelper<XLEN, 32, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, int64_t, int32_t>>>(
                         state, action_it);
@@ -650,7 +730,7 @@ namespace pegasus
                     }
                     else
                     {
-                        return viablHelper<XLEN, 64, opMode, FunctorTemp<int64_t>>(state,
+                        return viBinaryHelper<XLEN, 64, opMode, FunctorTemp<int64_t>>(state,
                                                                                    action_it);
                     }
                     break;
@@ -664,20 +744,20 @@ namespace pegasus
             switch (vector_config->getSEW())
             {
                 case 8:
-                    return viablHelper<XLEN, 8, opMode,
+                    return viBinaryHelper<XLEN, 8, opMode,
                                        FunctorTemp<typename std::conditional_t<
                                            opMode.dst == OperandMode::Mode::W, uint16_t, uint8_t>>>(
                         state, action_it);
 
                 case 16:
-                    return viablHelper<
+                    return viBinaryHelper<
                         XLEN, 16, opMode,
                         FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
                                                                 uint32_t, uint16_t>>>(state,
                                                                                       action_it);
 
                 case 32:
-                    return viablHelper<
+                    return viBinaryHelper<
                         XLEN, 32, opMode,
                         FunctorTemp<typename std::conditional_t<opMode.dst == OperandMode::Mode::W,
                                                                 uint64_t, uint32_t>>>(state,
@@ -690,7 +770,7 @@ namespace pegasus
                     }
                     else
                     {
-                        return viablHelper<XLEN, 64, opMode, FunctorTemp<uint64_t>>(state,
+                        return viBinaryHelper<XLEN, 64, opMode, FunctorTemp<uint64_t>>(state,
                                                                                     action_it);
                     }
                     break;
@@ -707,12 +787,15 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
                                                      inst->getRd()};
+        using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
 
         for (auto iter = elems_vs2.begin(); iter != elems_vs2.end(); ++iter)
         {
@@ -726,18 +809,18 @@ namespace pegasus
             else if constexpr (opMode.src1 == OperandMode::Mode::X)
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
-                                  static_cast<typename Functor::result_type>(
+                                  static_cast<ValueType>(
                                       READ_INT_REG<XLEN>(state, inst->getRs1())));
             }
             else // opMode.src1 == OperandMode::Mode::I
             {
                 value = Functor()(elems_vs2.getElement(index).getVal(),
-                                  static_cast<typename Functor::result_type>(inst->getImmediate()));
+                                  static_cast<ValueType>(inst->getImmediate()));
             }
             if constexpr (hasMaskOp)
             {
                 value = Functor()(
-                    value, static_cast<typename Functor::result_type>(elems_v0.getBit(index)));
+                    value, static_cast<ValueType>(elems_v0.getBit(index)));
             }
             elems_vd.getElement(index).setVal(value);
         }
@@ -780,8 +863,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
@@ -842,8 +927,10 @@ namespace pegasus
     Action::ItrType vmicHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                       inst->getRs2()};
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};

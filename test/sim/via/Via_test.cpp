@@ -19,6 +19,7 @@ class ViaInstructionTester : public PegasusInstructionTester
         const uint32_t vd = 3, vs1 = 1, vs2 = 2;
         uint32_t opcode;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8);   // avl = 8
         state->getVectorConfig()->setLMUL(8); // vlmul = 1
@@ -48,6 +49,7 @@ class ViaInstructionTester : public PegasusInstructionTester
         const pegasus::Addr pc = 0x1000;
         uint32_t opcode;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(16);   // avl = 16
         state->getVectorConfig()->setLMUL(16); // vlmul = 2
@@ -87,6 +89,7 @@ class ViaInstructionTester : public PegasusInstructionTester
         const pegasus::Addr pc = 0x1000;
         uint32_t opcode;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(2); // vstart = 2
         state->getVectorConfig()->setVL(14);    // avl = 14
         state->getVectorConfig()->setLMUL(16);  // vlmul = 2
@@ -139,6 +142,7 @@ class ViaInstructionTester : public PegasusInstructionTester
         const pegasus::Addr pc = 0x1000;
         uint32_t opcode;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(2); // vstart = 2
         state->getVectorConfig()->setVL(14);    // avl = 14
         state->getVectorConfig()->setLMUL(16);  // vlmul = 2

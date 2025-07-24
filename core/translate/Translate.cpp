@@ -163,6 +163,12 @@ namespace pegasus
             translation_state = inst->getTranslationState();
         }
 
+        // If there is no request, nothing to be done here
+        if (!translation_state->getNumRequests())
+        {
+            return ++action_it;
+        }
+
         // Get request from the request queue
         const PegasusTranslationState::TranslationRequest & request =
             translation_state->getRequest();

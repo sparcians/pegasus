@@ -37,7 +37,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{f16_sqrt, f32_sqrt, f64_sqrt}>,
                 RvvFloatInsts>(nullptr, "vfsqrt.v", ActionTags::EXECUTE_TAG));
 
@@ -46,7 +46,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -54,7 +54,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, f32_to_i32, f64_to_i64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -62,7 +62,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, ui32_to_f32, ui64_to_f64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.xu.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -70,7 +70,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, i32_to_f32, i64_to_f64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.x.v", ActionTags::EXECUTE_TAG));
 
@@ -152,7 +152,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>}>,
                 RvvFloatInsts>(nullptr, "vfclass.v", ActionTags::EXECUTE_TAG));
 
@@ -456,9 +456,7 @@ namespace pegasus
         // ternary operations
 
         auto maccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(src2, src1, dst).v;
-        };
+        { return mulAdd(src2, src1, dst).v; };
         inst_handlers.emplace(
             "vfmacc.vv",
             pegasus::Action::createAction<
@@ -477,9 +475,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaccWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(fnegate(src2), src1, fnegate(dst)).v;
-        };
+        { return mulAdd(fnegate(src2), src1, fnegate(dst)).v; };
         inst_handlers.emplace(
             "vfnmacc.vv",
             pegasus::Action::createAction<
@@ -498,9 +494,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfnmacc.vf", ActionTags::EXECUTE_TAG));
 
         auto msacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(src2, src1, fnegate(dst)).v;
-        };
+        { return mulAdd(src2, src1, fnegate(dst)).v; };
         inst_handlers.emplace(
             "vfmsac.vv",
             pegasus::Action::createAction<
@@ -519,9 +513,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfmsac.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsacWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(fnegate(src2), src1, dst).v;
-        };
+        { return mulAdd(fnegate(src2), src1, dst).v; };
         inst_handlers.emplace(
             "vfnmsac.vv",
             pegasus::Action::createAction<
@@ -540,9 +532,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfnmsac.vf", ActionTags::EXECUTE_TAG));
 
         auto maddWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(src1, dst, src2).v;
-        };
+        { return mulAdd(src1, dst, src2).v; };
         inst_handlers.emplace(
             "vfmadd.vv",
             pegasus::Action::createAction<
@@ -561,9 +551,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto nmaddWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(fnegate(src1), dst, fnegate(src2)).v;
-        };
+        { return mulAdd(fnegate(src1), dst, fnegate(src2)).v; };
         inst_handlers.emplace(
             "vfnmadd.vv",
             pegasus::Action::createAction<
@@ -582,9 +570,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfnmadd.vf", ActionTags::EXECUTE_TAG));
 
         auto msubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(src1, dst, fnegate(src2)).v;
-        };
+        { return mulAdd(src1, dst, fnegate(src2)).v; };
         inst_handlers.emplace(
             "vfmsub.vv",
             pegasus::Action::createAction<
@@ -603,9 +589,7 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfmsub.vf", ActionTags::EXECUTE_TAG));
 
         auto nmsubWrapper = []<auto mulAdd>(auto src2, auto src1, auto dst)
-        {
-            return mulAdd(fnegate(src1), dst, src2).v;
-        };
+        { return mulAdd(fnegate(src1), dst, src2).v; };
         inst_handlers.emplace(
             "vfnmsub.vv",
             pegasus::Action::createAction<
@@ -786,7 +770,7 @@ namespace pegasus
             }
             else
             {
-                elems_vd.getElement(index).setVal(elems_vd.getElement(index).getVal());
+                elems_vd.getElement(index).setVal(elems_vs2.getElement(index).getVal());
             }
         }
 
@@ -871,9 +855,8 @@ namespace pegasus
                 }
                 break;
             case 32:
-                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2) {
-                    return func_wrapper(funcs.f32, src2);
-                }>(state, action_it);
+                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2)
+                                     { return func_wrapper(funcs.f32, src2); }>(state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
@@ -1022,8 +1005,7 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfBinaryHelper<XLEN, 16, opMode,
-                                      [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1036,8 +1018,7 @@ namespace pegasus
                                       }>(state, action_it);
 
             case 32:
-                return vfBinaryHelper<XLEN, 32, opMode,
-                                      [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1235,8 +1216,7 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfTernaryHelper<XLEN, 16, opMode,
-                                       [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 16, opMode, [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
@@ -1253,8 +1233,7 @@ namespace pegasus
                                        }>(state, action_it);
 
             case 32:
-                return vfTernaryHelper<XLEN, 32, opMode,
-                                       [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 32, opMode, [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
@@ -1273,8 +1252,7 @@ namespace pegasus
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
-                    return vfTernaryHelper<XLEN, 64, opMode,
-                                           [](auto src2, auto src1, auto dst)
+                    return vfTernaryHelper<XLEN, 64, opMode, [](auto src2, auto src1, auto dst)
                                            {
                                                return funcWrapper.template operator()<f64_mulAdd>(
                                                    float64_t{src2}, float64_t{src1},

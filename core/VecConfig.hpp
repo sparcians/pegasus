@@ -43,9 +43,8 @@ namespace pegasus
 
         void setLMUL(size_t value)
         {
-            // LMUL can only be power of 2, and elememnt should fit into register group.
-            sparta_assert(((value & (value - 1)) == 0 && (sew_ <= vlen_ / 8 * value)),
-                          "Invalid LMUL value.");
+            // LMUL can only be power of 2.
+            sparta_assert(((value & (value - 1)) == 0), "Invalid LMUL value.");
             lmul_ = value;
         }
 
@@ -53,10 +52,16 @@ namespace pegasus
 
         void setSEW(size_t value)
         {
-            // SEW can only be power of 2, and elememnt should fit into register group.
-            sparta_assert(((value & (value - 1)) == 0 && (value <= vlen_ / 8 * lmul_)),
-                          "Unsupported SEW value.");
+            // SEW can only be power of 2.
+            sparta_assert(((value & (value - 1)) == 0), "Unsupported SEW value.");
             sew_ = value;
+        }
+
+        bool checkConfig()
+        {
+            // Elememnt should fit into register group.
+            sparta_assert(sew_ <= vlen_ / 8 * lmul_, "Invalid SEW, VLEN, LMUL configuration.");
+            return true;
         }
 
         bool getVTA() const { return vta_; }
@@ -142,10 +147,9 @@ namespace pegasus
             os << config.getLMUL() / 8 << " ";
         }
         os << "SEW: " << config.getSEW() << " ";
-        os << "VTA: " << std::boolalpha << config.getVTA() << " "
-           << "VMA: " << config.getVMA() << std::noboolalpha << " ";
-        os << "VL: " << config.getVL() << " "
-           << "VSTART: " << config.getVSTART() << "; ";
+        os << "VTA: " << std::boolalpha << config.getVTA() << " " << "VMA: " << config.getVMA()
+           << std::noboolalpha << " ";
+        os << "VL: " << config.getVL() << " " << "VSTART: " << config.getVSTART() << "; ";
         return os;
     }
 } // namespace pegasus

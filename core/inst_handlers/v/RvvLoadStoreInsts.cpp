@@ -27,6 +27,11 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vle32.v", ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vle64.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 64, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vle64.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vse8.v",
@@ -43,6 +48,11 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::UNIT>,
                 RvvLoadStoreInsts>(nullptr, "vse32.v", ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vse64.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 64, AddressingMode::UNIT>,
+                RvvLoadStoreInsts>(nullptr, "vse64.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vlse8.v",
@@ -59,6 +69,11 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vlse32.v", ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vlse64.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 64, AddressingMode::STRIDED>,
+                RvvLoadStoreInsts>(nullptr, "vlse64.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vsse8.v",
@@ -75,6 +90,11 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 32, AddressingMode::STRIDED>,
                 RvvLoadStoreInsts>(nullptr, "vsse32.v", ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vsse64.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 64, AddressingMode::STRIDED>,
+                RvvLoadStoreInsts>(nullptr, "vsse64.v", ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vloxei8.v",
@@ -93,6 +113,12 @@ namespace pegasus
             pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
                                               XLEN, 32, AddressingMode::IDX_ORDERED>,
                                           RvvLoadStoreInsts>(nullptr, "vloxei32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vloxei64.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 64, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vloxei64.v",
                                                              ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
@@ -113,6 +139,12 @@ namespace pegasus
                                               XLEN, 32, AddressingMode::IDX_ORDERED>,
                                           RvvLoadStoreInsts>(nullptr, "vsoxei32.v",
                                                              ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vsoxei64.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
+                                              XLEN, 64, AddressingMode::IDX_ORDERED>,
+                                          RvvLoadStoreInsts>(nullptr, "vsoxei64.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -132,6 +164,10 @@ namespace pegasus
             "vle32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
                                                      RvvLoadStoreInsts>(nullptr, "vle32.v",
                                                                         ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<64, true>,
+                                                     RvvLoadStoreInsts>(nullptr, "vle64.v",
+                                                                        ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vse8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
@@ -144,6 +180,10 @@ namespace pegasus
         inst_handlers.emplace(
             "vse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
                                                      RvvLoadStoreInsts>(nullptr, "vse32.v",
+                                                                        ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vse64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<64, false>,
+                                                     RvvLoadStoreInsts>(nullptr, "vse64.v",
                                                                         ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -158,6 +198,10 @@ namespace pegasus
             "vlse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true>,
                                                       RvvLoadStoreInsts>(nullptr, "vlse32.v",
                                                                          ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vlse64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<64, true>,
+                                                      RvvLoadStoreInsts>(nullptr, "vlse64.v",
+                                                                         ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vsse8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, false>,
@@ -170,6 +214,10 @@ namespace pegasus
         inst_handlers.emplace(
             "vsse32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, false>,
                                                       RvvLoadStoreInsts>(nullptr, "vsse32.v",
+                                                                         ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsse64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<64, false>,
+                                                      RvvLoadStoreInsts>(nullptr, "vsse64.v",
                                                                          ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -184,6 +232,10 @@ namespace pegasus
             "vloxei32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
                                                         RvvLoadStoreInsts>(
                               nullptr, "vloxei32.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vloxei64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<true>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vloxei64.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vsoxei8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
@@ -197,6 +249,10 @@ namespace pegasus
             "vsoxei32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
                                                         RvvLoadStoreInsts>(
                               nullptr, "vsoxei32.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsoxei64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
+                                                        RvvLoadStoreInsts>(
+                              nullptr, "vsoxei64.v", ActionTags::EXECUTE_TAG));
     }
 
     template void

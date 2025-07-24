@@ -23,6 +23,7 @@
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
 #include "core/inst_handlers/v/RvvMaskInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
+#include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 
 namespace pegasus
 {
@@ -62,6 +63,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -81,6 +83,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
