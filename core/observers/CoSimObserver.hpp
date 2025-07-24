@@ -18,10 +18,8 @@ namespace pegasus::cosim
       public:
         using base_type = CoSimObserver;
 
-        CoSimObserver(
-          sparta::log::MessageSource& cosim_logger,
-          CoSimPipeline* cosim_pipeline,
-          HartId hart_id);
+        CoSimObserver(sparta::log::MessageSource & cosim_logger, CoSimPipeline* cosim_pipeline,
+                      HartId hart_id);
 
       private:
         void preExecute_(PegasusState*) override;
@@ -31,7 +29,7 @@ namespace pegasus::cosim
         void sendLastEvent_();
         void stopSim() override;
 
-        sparta::log::MessageSource& cosim_logger_;
+        sparta::log::MessageSource & cosim_logger_;
         CoSimPipeline* cosim_pipeline_ = nullptr;
         HartId hart_id_;
         uint64_t event_uid_ = 0;

@@ -12,9 +12,9 @@
 /// cache or not, and verify all of them against the original.
 class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
 {
-public:
-    PipelineEventValidator(pegasus::cosim::CoSimPipeline* cosim_pipeline)
-        : cosim_pipeline_(cosim_pipeline)
+  public:
+    PipelineEventValidator(pegasus::cosim::CoSimPipeline* cosim_pipeline) :
+        cosim_pipeline_(cosim_pipeline)
     {
         cosim_pipeline->setSnooper(this);
     }
@@ -25,7 +25,7 @@ public:
         EXPECT_TRUE(validation_attempted_);
     }
 
-    void onNewEvent(pegasus::cosim::EventAccessor&& event) override
+    void onNewEvent(pegasus::cosim::EventAccessor && event) override
     {
         // Sometimes add a new validator
         if (rand() % 5 == 0)
@@ -46,14 +46,15 @@ public:
 
             // Sleep a bit to get some cache misses
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            for (auto& validator : event_validators_)
+            for (auto & validator : event_validators_)
             {
                 validator.validate();
                 validation_attempted_ = true;
             }
 
             // Kick out the oldest third (or cap to 1500)
-            std::sort(event_validators_.begin(), event_validators_.end(), std::greater<EventValidator>{});
+            std::sort(event_validators_.begin(), event_validators_.end(),
+                      std::greater<EventValidator>{});
             const size_t target_size = std::min(1500ul, event_validators_.size() / 3);
             while (event_validators_.size() > target_size)
             {
@@ -62,22 +63,21 @@ public:
         }
     }
 
-private:
+  private:
     class EventValidator
     {
-    public:
-        EventValidator(pegasus::cosim::Event&& event, pegasus::cosim::CoSimPipeline* cosim_pipeline)
-            : event_truth_(std::move(event))
-            , cosim_pipeline_(cosim_pipeline)
-        {}
-
-        uint64_t getEuid() const
+      public:
+        EventValidator(pegasus::cosim::Event && event,
+                       pegasus::cosim::CoSimPipeline* cosim_pipeline) :
+            event_truth_(std::move(event)),
+            cosim_pipeline_(cosim_pipeline)
         {
-            return event_truth_.getEuid();
         }
 
+        uint64_t getEuid() const { return event_truth_.getEuid(); }
+
         /// Compare euids. Used for std::sort / std::greater.
-        bool operator>(const EventValidator& other) const
+        bool operator>(const EventValidator & other) const
         {
             return event_truth_.getEuid() > other.event_truth_.getEuid();
         }
@@ -86,12 +86,13 @@ private:
         /// and verify against the original event given to our constructor.
         void validate()
         {
-            auto accessor = cosim_pipeline_->getEvent(event_truth_.getEuid(), event_truth_.getHartId());
+            auto accessor =
+                cosim_pipeline_->getEvent(event_truth_.getEuid(), event_truth_.getHartId());
             auto event = *accessor.get();
             EXPECT_EQUAL(event, event_truth_);
         }
 
-    private:
+      private:
         pegasus::cosim::Event event_truth_;
         pegasus::cosim::CoSimPipeline* cosim_pipeline_ = nullptr;
     };
@@ -101,7 +102,7 @@ private:
     bool validation_attempted_ = false;
 };
 
-void stepCoSimWorkload(const std::string& workload)
+void stepCoSimWorkload(const std::string & workload)
 {
     const uint64_t ilimit = 0;
     sparta::Scheduler scheduler;
@@ -126,7 +127,7 @@ void stepCoSimWorkload(const std::string& workload)
                 break;
             }
         }
-        catch (const std::exception& ex)
+        catch (const std::exception & ex)
         {
             exception_str = ex.what();
             break;

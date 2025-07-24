@@ -3,7 +3,7 @@
 #include "simdb/apps/AppManager.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
-void runCoSimWorkload(const std::string& workload)
+void runCoSimWorkload(const std::string & workload)
 {
     const uint64_t ilimit = 0;
     sparta::Scheduler scheduler;
@@ -16,7 +16,7 @@ void runCoSimWorkload(const std::string& workload)
         cosim.enableLogger("run.log");
         cosim.run(sparta::Scheduler::INDEFINITE);
     }
-    catch (const std::exception& ex)
+    catch (const std::exception & ex)
     {
         exception_str = ex.what();
     }

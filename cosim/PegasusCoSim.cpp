@@ -45,9 +45,10 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit, const std::string& workload)
-        : PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit)
-        , cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
+    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
+                               const std::string & workload) :
+        PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
+        cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
         configure(0, nullptr, &sim_config_);
         buildTree();
@@ -82,7 +83,8 @@ namespace pegasus::cosim
             auto state = getPegasusState(hart_id);
 
             // Create and attach CoSimObserver to PegasusState for each hart
-            auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_id);
+            auto cosim_obs =
+                std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_id);
             cosim_observers_.emplace_back(cosim_obs.get());
             state->addObserver(std::move(cosim_obs));
         }
@@ -91,10 +93,7 @@ namespace pegasus::cosim
         cosim_memory_if_ = new CoSimMemoryInterface(getPegasusSystem()->getSystemMemory());
     }
 
-    PegasusCoSim::~PegasusCoSim() noexcept
-    {
-        getRoot()->enterTeardown();
-    }
+    PegasusCoSim::~PegasusCoSim() noexcept { getRoot()->enterTeardown(); }
 
     void PegasusCoSim::enableLogger(const std::string & filename)
     {
@@ -234,10 +233,7 @@ namespace pegasus::cosim
         getPegasusState(hart_id)->setPc(addr);
     }
 
-    Addr PegasusCoSim::getPc(HartId hart_id) const
-    {
-        return getPegasusState(hart_id)->getPc();
-    }
+    Addr PegasusCoSim::getPc(HartId hart_id) const { return getPegasusState(hart_id)->getPc(); }
 
     void PegasusCoSim::setPrivilegeMode(HartId, PrivMode)
     {
@@ -272,7 +268,8 @@ namespace pegasus::cosim
 
     uint64_t PegasusCoSim::getNumCommittedEvents(HartId hart_id) const
     {
-        return getPegasusState(hart_id)->getSimState()->inst_count - getNumUncommittedEvents(hart_id);
+        return getPegasusState(hart_id)->getSimState()->inst_count
+               - getNumUncommittedEvents(hart_id);
     }
 
     const cosim::Event & PegasusCoSim::getLastCommittedEvent(HartId hart_id) const
@@ -295,7 +292,7 @@ namespace pegasus::cosim
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string& workload)
+    std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
     {
         std::vector<std::string> workload_args;
         sparta::utils::tokenize_on_whitespace(workload, workload_args);
@@ -305,7 +302,8 @@ namespace pegasus::cosim
     void PegasusCoSim::finish()
     {
         const auto euid = cosim_pipeline_->getLastEventUID();
-        std::cout << "Pegasus co-sim finished after processing " << euid << " events. " << std::endl;
+        std::cout << "Pegasus co-sim finished after processing " << euid << " events. "
+                  << std::endl;
         app_mgr_->postSimLoopTeardown();
     }
 } // namespace pegasus::cosim

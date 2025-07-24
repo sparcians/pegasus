@@ -13,11 +13,11 @@ namespace simdb
 {
     class AppManager;
     class DatabaseManager;
-}
+} // namespace simdb
 
 namespace pegasus::cosim
 {
-  class CoSimMemoryInterface : public cosim::MemoryInterface
+    class CoSimMemoryInterface : public cosim::MemoryInterface
     {
       public:
         CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode* memory_map);
@@ -41,11 +41,13 @@ namespace pegasus::cosim
     class PegasusCoSim : public PegasusSim, public pegasus::cosim::CoSim
     {
       public:
-        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0, const std::string& workload = "");
+        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0,
+                     const std::string & workload = "");
 
         ~PegasusCoSim() noexcept;
 
         void enableLogger(const std::string & filename = "");
+
         CoSimPipeline* getCoSimPipeline() const { return cosim_pipeline_; }
 
         EventAccessor step(HartId hart) override final;
@@ -101,7 +103,7 @@ namespace pegasus::cosim
         std::vector<CoSimObserver*> cosim_observers_;
 
       private:
-        static std::vector<std::string> getWorkloadArgs_(const std::string& workload);
+        static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger
         sparta::log::MessageSource cosim_logger_;

@@ -56,14 +56,13 @@ namespace pegasus::cosim
             RegReadAccess() = default;
 
             /// Called to/from char buffer (boost::serialization)
-            template <typename Archive>
-            void serialize(Archive& ar, const unsigned int /*version*/)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
             {
                 ar & reg_id;
                 ar & value;
             }
 
-            bool operator==(const RegReadAccess& other) const = default;
+            bool operator==(const RegReadAccess & other) const = default;
         };
 
         struct RegWriteAccess : public RegReadAccess
@@ -86,14 +85,13 @@ namespace pegasus::cosim
             RegWriteAccess() = default;
 
             /// Called to/from char buffer (boost::serialization)
-            template <typename Archive>
-            void serialize(Archive& ar, const unsigned int version)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int version)
             {
                 RegReadAccess::serialize(ar, version);
                 ar & prev_value;
             }
 
-            bool operator==(const RegWriteAccess& other) const = default;
+            bool operator==(const RegWriteAccess & other) const = default;
         };
 
         struct MemReadAccess
@@ -105,8 +103,7 @@ namespace pegasus::cosim
             std::vector<uint8_t> value;
 
             /// Called to/from char buffer (boost::serialization)
-            template <typename Archive>
-            void serialize(Archive& ar, const unsigned int /*version*/)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
             {
                 ar & source;
                 ar & paddr;
@@ -115,7 +112,7 @@ namespace pegasus::cosim
                 ar & value;
             }
 
-            bool operator==(const MemReadAccess& other) const = default;
+            bool operator==(const MemReadAccess & other) const = default;
         };
 
         struct MemWriteAccess : public MemReadAccess
@@ -123,14 +120,13 @@ namespace pegasus::cosim
             std::vector<uint8_t> prev_value;
 
             /// Called to/from char buffer (boost::serialization)
-            template <typename Archive>
-            void serialize(Archive& ar, const unsigned int version)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int version)
             {
                 MemReadAccess::serialize(ar, version);
                 ar & prev_value;
             }
 
-            bool operator==(const MemWriteAccess& other) const = default;
+            bool operator==(const MemWriteAccess & other) const = default;
         };
 
         static inline constexpr auto INVALID_EVENT_UID = std::numeric_limits<uint64_t>::max();
@@ -187,35 +183,26 @@ namespace pegasus::cosim
 
         const std::vector<MemWriteAccess> & getMemoryWrites() const { return memory_writes_; }
 
-        const std::string& getDisassemblyStr() const { return dasm_string_; }
+        const std::string & getDisassemblyStr() const { return dasm_string_; }
 
-        bool operator==(const Event& other) const
+        bool operator==(const Event & other) const
         {
-            return event_uid_.getValue() == other.event_uid_.getValue() &&
-                type_ == other.type_ &&
-                hart_id_ == other.hart_id_ &&
-                done_ == other.done_ &&
-                event_ends_sim_ == other.event_ends_sim_ &&
-                is_in_region_of_interest_ == other.is_in_region_of_interest_ &&
-                is_entering_region_of_interest_ == other.is_entering_region_of_interest_ &&
-                is_exiting_region_of_interest_ == other.is_exiting_region_of_interest_ &&
-                arch_id_ == other.arch_id_ &&
-                opcode_ == other.opcode_ &&
-                opcode_size_ == other.opcode_size_ &&
-                inst_type_ == other.inst_type_ &&
-                is_change_of_flow_ == other.is_change_of_flow_ &&
-                curr_pc_ == other.curr_pc_ &&
-                next_pc_ == other.next_pc_ &&
-                alternate_next_pc_ == other.alternate_next_pc_ &&
-                curr_priv_ == other.curr_priv_ &&
-                next_priv_ == other.next_priv_ &&
-                excp_type_ == other.excp_type_ &&
-                excp_code_ == other.excp_code_ &&
-                register_reads_ == other.register_reads_ &&
-                register_writes_ == other.register_writes_ &&
-                memory_reads_ == other.memory_reads_ &&
-                memory_writes_ == other.memory_writes_ &&
-                dasm_string_ == other.dasm_string_;
+            return event_uid_.getValue() == other.event_uid_.getValue() && type_ == other.type_
+                   && hart_id_ == other.hart_id_ && done_ == other.done_
+                   && event_ends_sim_ == other.event_ends_sim_
+                   && is_in_region_of_interest_ == other.is_in_region_of_interest_
+                   && is_entering_region_of_interest_ == other.is_entering_region_of_interest_
+                   && is_exiting_region_of_interest_ == other.is_exiting_region_of_interest_
+                   && arch_id_ == other.arch_id_ && opcode_ == other.opcode_
+                   && opcode_size_ == other.opcode_size_ && inst_type_ == other.inst_type_
+                   && is_change_of_flow_ == other.is_change_of_flow_ && curr_pc_ == other.curr_pc_
+                   && next_pc_ == other.next_pc_ && alternate_next_pc_ == other.alternate_next_pc_
+                   && curr_priv_ == other.curr_priv_ && next_priv_ == other.next_priv_
+                   && excp_type_ == other.excp_type_ && excp_code_ == other.excp_code_
+                   && register_reads_ == other.register_reads_
+                   && register_writes_ == other.register_writes_
+                   && memory_reads_ == other.memory_reads_ && memory_writes_ == other.memory_writes_
+                   && dasm_string_ == other.dasm_string_;
         }
 
       private:
@@ -224,11 +211,11 @@ namespace pegasus::cosim
         //! @{
 
         // Event info
-        sparta::utils::ValidValue<uint64_t> event_uid_;             //!< Unique ID of Event
-        Type type_ = Type::INVALID;                                 //!< Type of Event
-        HartId hart_id_ = std::numeric_limits<HartId>::max();       //!< Hart ID of Event
-        bool done_{false};                                  //!< Is the Event finished executing?
-        bool event_ends_sim_{false};                        //!< Will committing this Event end simulation?
+        sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
+        Type type_ = Type::INVALID;                           //!< Type of Event
+        HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
+        bool done_{false};                                    //!< Is the Event finished executing?
+        bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
 
         // Region of interest
         bool is_in_region_of_interest_{
@@ -300,8 +287,7 @@ namespace pegasus::cosim
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         /// Called to/from char buffer (boost::serialization)
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int /*version*/)
+        template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             // TODO cnyce: Add serialize() method to ValidValue.
             if (!event_uid_.isValid())
@@ -352,15 +338,15 @@ namespace pegasus::cosim
     /// since it is a private class inside CoSimPipeline.
     class StopEvent
     {
-    public:
-        void stopSim(Event& event)
+      public:
+        void stopSim(Event & event)
         {
             // Friend access needed here.
             event.event_ends_sim_ = true;
             event.done_ = true;
         }
 
-    private:
+      private:
         StopEvent() = default;
         friend class CoSimPipeline;
     };
