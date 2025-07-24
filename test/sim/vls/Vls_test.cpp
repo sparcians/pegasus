@@ -20,6 +20,7 @@ class VlsInstructionTester : public PegasusInstructionTester
         const uint64_t v1_val = 0x0807060504030201;
         const uint32_t vd = 1, rs1 = 1;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8); // avl = 8
         state->writeMemory<uint64_t>(addr, v1_val);
@@ -47,6 +48,7 @@ class VlsInstructionTester : public PegasusInstructionTester
         const uint32_t vd = 1, rs1 = 1, rs2 = 2;
         VLEN vd_val;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8); // avl = 8
         for (size_t i = 0; i < vd_val.size(); ++i)
@@ -78,6 +80,7 @@ class VlsInstructionTester : public PegasusInstructionTester
         const VLEN vs2_val = {0, 2, 4, 6, 8, 10, 12, 14};
         VLEN vd_val1, vd_val2;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8);    // avl = 8
         state->getVectorConfig()->setSEW(16);  // sew = 16

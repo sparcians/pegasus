@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <limits>
 
 #include "core/PegasusState.hpp"
 #include "core/VecConfig.hpp"
@@ -170,7 +171,14 @@ namespace pegasus
          */
         ValueType getMask() const
         {
-            return ((ValueType{1} << (end_pos_ - start_pos_)) - 1) << start_pos_;
+            if (end_pos_ - start_pos_ == sizeof(ValueType) * CHAR_BIT)
+            {
+                return std::numeric_limits<ValueType>::max();
+            }
+            else
+            {
+                return ((ValueType{1} << (end_pos_ - start_pos_)) - 1) << start_pos_;
+            }
         }
 
         /**
