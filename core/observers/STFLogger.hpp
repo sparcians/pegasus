@@ -24,9 +24,6 @@ namespace pegasus
       private:
         stf::STFWriter stf_writer_;
         void postExecute_(PegasusState* state) override;
-        // TODO: Add exception support
-        void preException_(PegasusState* state) override;
-        void preExecute_(PegasusState* state) override;
         void recordRegState_(PegasusState* state);
         void writeInstruction_(const PegasusInst* inst);
         void exceptionCodeRecord (PegasusState* state);
