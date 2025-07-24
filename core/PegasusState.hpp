@@ -93,8 +93,6 @@ namespace pegasus
 
         uint64_t getXlen() const { return xlen_; }
 
-        sparta::log::MessageSource& getDebugLogger() { return debug_logger_; }
-
         mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
         {
             return extension_manager_;
