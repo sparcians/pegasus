@@ -3,7 +3,10 @@ project(PegasusCoSim)
 add_library(pegasuscosimlib
     STATIC
     PegasusCoSim.cpp
+    CoSimPipeline.cpp
 )
+
+find_package(Boost REQUIRED COMPONENTS serialization)
 
 target_link_libraries(pegasuscosimlib
     pegasussim
@@ -12,6 +15,7 @@ target_link_libraries(pegasuscosimlib
     softfloat
     pegasussys
     ${PEGASUS_LIBS}
+    Boost::serialization
 )
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/arch          ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)

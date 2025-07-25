@@ -12,13 +12,15 @@ add_library(pegasuscore
     PegasusInst.cpp
     translate/Translate.cpp
     observers/Observer.cpp
-    observers/CoSimObserver.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp
     observers/STFLogger.cpp
     ../arch/RegisterDefnsJSON.cpp
-
 )
+
+if(BUILD_COSIM)
+    target_sources(pegasuscore PRIVATE observers/CoSimObserver.cpp)
+endif()
 
 target_include_directories(pegasuscore PUBLIC ${CMAKE_BINARY_DIR})
 

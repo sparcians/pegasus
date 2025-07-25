@@ -3,18 +3,18 @@
 #include "include/PegasusTypes.hpp"
 #include "include/PegasusUtils.hpp"
 #include "mavis/OpcodeInfo.h"
+#include "sparta/utils/ValidValue.hpp"
 
 #include <vector>
 #include <algorithm>
 #include <iomanip>
-
-namespace pegasus
-{
-    class CoSimObserver;
-}
+#include <boost/serialization/access.hpp>
 
 namespace pegasus::cosim
 {
+    class CoSimPipeline;
+    class CoSimObserver;
+
     /*!
      * \class Event
      *
@@ -24,7 +24,7 @@ namespace pegasus::cosim
      * instruction execution, interrupts, injected behaviors and register/memory writes.
      *
      * The Event class supports copy construction and assignment, and it provides friend access
-     * to the pegasus::CoSimObserver class for detailed observation of events.
+     * to the CoSimObserver class for detailed observation of events.
      */
     class Event
     {
@@ -52,6 +52,17 @@ namespace pegasus::cosim
                 value(convertToByteVector(val))
             {
             }
+
+            RegReadAccess() = default;
+
+            /// Called to/from char buffer (boost::serialization)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & reg_id;
+                ar & value;
+            }
+
+            bool operator==(const RegReadAccess & other) const = default;
         };
 
         struct RegWriteAccess : public RegReadAccess
@@ -70,6 +81,17 @@ namespace pegasus::cosim
                 prev_value(convertToByteVector(prev_val))
             {
             }
+
+            RegWriteAccess() = default;
+
+            /// Called to/from char buffer (boost::serialization)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int version)
+            {
+                RegReadAccess::serialize(ar, version);
+                ar & prev_value;
+            }
+
+            bool operator==(const RegWriteAccess & other) const = default;
         };
 
         struct MemReadAccess
@@ -79,91 +101,39 @@ namespace pegasus::cosim
             Addr vaddr;
             size_t size;
             std::vector<uint8_t> value;
+
+            /// Called to/from char buffer (boost::serialization)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & source;
+                ar & paddr;
+                ar & vaddr;
+                ar & size;
+                ar & value;
+            }
+
+            bool operator==(const MemReadAccess & other) const = default;
         };
 
         struct MemWriteAccess : public MemReadAccess
         {
             std::vector<uint8_t> prev_value;
-        };
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        //! \name Constructors
-        //! @{
-
-        Event(uint64_t euid, Type etype = Type::INVALID) : event_uid_(euid), type_(etype) {}
-
-        Event(const Event & other) : event_uid_(other.event_uid_), type_(other.type_)
-        {
-            // Copy all members
-            hart_id_ = other.hart_id_;
-            done_ = other.done_;
-            event_ends_sim_ = other.event_ends_sim_;
-            is_in_region_of_interest_ = other.is_in_region_of_interest_;
-            is_entering_region_of_interest_ = other.is_entering_region_of_interest_;
-            is_exiting_region_of_interest_ = other.is_exiting_region_of_interest_;
-            arch_id_ = other.arch_id_;
-            opcode_ = other.opcode_;
-            opcode_size_ = other.opcode_size_;
-            inst_type_ = other.inst_type_;
-            is_change_of_flow_ = other.is_change_of_flow_;
-            curr_pc_ = other.curr_pc_;
-            next_pc_ = other.next_pc_;
-            alternate_next_pc_ = other.alternate_next_pc_;
-            curr_priv_ = other.curr_priv_;
-            next_priv_ = other.next_priv_;
-            excp_type_ = other.excp_type_;
-            excp_code_ = other.excp_code_;
-            register_reads_ = other.register_reads_;
-            register_writes_ = other.register_writes_;
-            memory_reads_ = other.memory_reads_;
-            memory_writes_ = other.memory_writes_;
-            mavis_opcode_info_ = other.mavis_opcode_info_;
-        }
-
-        Event & operator=(const Event & other)
-        {
-            // Self-assignment check
-            if (this == &other)
+            /// Called to/from char buffer (boost::serialization)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int version)
             {
-                return *this;
+                MemReadAccess::serialize(ar, version);
+                ar & prev_value;
             }
 
-            // Copy all members
-            const_cast<uint64_t &>(event_uid_) = other.event_uid_;
-            const_cast<Type &>(type_) = other.type_;
-            hart_id_ = other.hart_id_;
-            done_ = other.done_;
-            event_ends_sim_ = other.event_ends_sim_;
-            is_in_region_of_interest_ = other.is_in_region_of_interest_;
-            is_entering_region_of_interest_ = other.is_entering_region_of_interest_;
-            is_exiting_region_of_interest_ = other.is_exiting_region_of_interest_;
-            arch_id_ = other.arch_id_;
-            opcode_ = other.opcode_;
-            opcode_size_ = other.opcode_size_;
-            inst_type_ = other.inst_type_;
-            is_change_of_flow_ = other.is_change_of_flow_;
-            curr_pc_ = other.curr_pc_;
-            next_pc_ = other.next_pc_;
-            alternate_next_pc_ = other.alternate_next_pc_;
-            curr_priv_ = other.curr_priv_;
-            next_priv_ = other.next_priv_;
-            excp_type_ = other.excp_type_;
-            excp_code_ = other.excp_code_;
-            register_reads_ = other.register_reads_;
-            register_writes_ = other.register_writes_;
-            memory_reads_ = other.memory_reads_;
-            memory_writes_ = other.memory_writes_;
-            mavis_opcode_info_ = other.mavis_opcode_info_;
+            bool operator==(const MemWriteAccess & other) const = default;
+        };
 
-            return *this;
-        }
+        static inline constexpr auto INVALID_EVENT_UID = std::numeric_limits<uint64_t>::max();
 
-        //! @}
-        ////////////////////////////////////////////////////////////////////////////////////////////
+        Event() = default;
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        //! \name Methods
-        //! @{
+        Event(Type type) : type_(type) {}
 
         uint64_t getEuid() const { return event_uid_; }
 
@@ -213,10 +183,9 @@ namespace pegasus::cosim
 
         const std::vector<MemWriteAccess> & getMemoryWrites() const { return memory_writes_; }
 
-        const std::string getDisassemblyStr() const { return mavis_opcode_info_->dasmString(); }
+        const std::string & getDisassemblyStr() const { return dasm_string_; }
 
-        //! @}
-        ////////////////////////////////////////////////////////////////////////////////////////////
+        bool operator==(const Event & other) const = default;
 
       private:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,8 +193,8 @@ namespace pegasus::cosim
         //! @{
 
         // Event info
-        const uint64_t event_uid_;                            //!< Unique ID of Event
-        const Type type_;                                     //!< Type of Event
+        sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
+        Type type_ = Type::INVALID;                           //!< Type of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
         bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
@@ -294,12 +263,63 @@ namespace pegasus::cosim
         //! \name Mavis Opcode Information
         //! @{
 
-        mavis::OpcodeInfo::PtrType mavis_opcode_info_;
+        std::string dasm_string_;
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        friend class pegasus::CoSimObserver;
+        /// Called to/from char buffer (boost::serialization)
+        template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+        {
+            ar & event_uid_;
+            ar & type_;
+            ar & hart_id_;
+            ar & done_;
+            ar & event_ends_sim_;
+            ar & is_in_region_of_interest_;
+            ar & is_entering_region_of_interest_;
+            ar & is_exiting_region_of_interest_;
+            ar & arch_id_;
+            ar & opcode_;
+            ar & opcode_size_;
+            ar & inst_type_;
+            ar & is_change_of_flow_;
+            ar & curr_pc_;
+            ar & next_pc_;
+            ar & alternate_next_pc_;
+            ar & curr_priv_;
+            ar & next_priv_;
+            ar & excp_type_;
+            ar & excp_code_;
+            ar & register_reads_;
+            ar & register_writes_;
+            ar & memory_reads_;
+            ar & memory_writes_;
+            ar & dasm_string_;
+        }
+
+        friend class boost::serialization::access;
+        friend class CoSimObserver;
+        friend class CoSimPipeline;
+        friend class StopEvent;
+    };
+
+    /// This helper is used in order to get around the
+    /// fact that we can't "friend" CoSimHartPipeline
+    /// since it is a private class inside CoSimPipeline.
+    class StopEvent
+    {
+      public:
+        void stopSim(Event & event)
+        {
+            // Friend access needed here.
+            event.event_ends_sim_ = true;
+            event.done_ = true;
+        }
+
+      private:
+        StopEvent() = default;
+        friend class CoSimPipeline;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)
