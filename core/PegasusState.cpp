@@ -101,6 +101,9 @@ namespace pegasus
         stop_action_ = pegasus::Action::createAction<&PegasusState::stopSim_>(this, "stop sim");
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
+
+        // Update VectorConfig vlen
+        vector_config_->setVLEN(vlen_);
     }
 
     // Not default -- defined in source file to reduce massive inlining

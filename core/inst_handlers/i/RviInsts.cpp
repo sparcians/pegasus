@@ -1072,7 +1072,6 @@ namespace pegasus
 
     Action::ItrType RviInsts::fenceHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
-        state->getCurrentInst()->markUnimplemented();
         (void)state;
         return ++action_it;
     }

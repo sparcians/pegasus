@@ -1,5 +1,7 @@
 #pragma once
 
+#include "include/PegasusUtils.hpp"
+
 #include <stdint.h>
 
 typedef int64_t sreg_t;
@@ -12,6 +14,19 @@ template <typename T> inline reg_t zext32(T x) { return (reg_t)(uint32_t)(x); }
 template <typename T> inline sreg_t sext(T x, uint32_t pos)
 {
     return (((sreg_t)(x) << (64 - (pos))) >> (64 - (pos)));
+}
+
+template <typename T2, typename T1> inline T2 sextu(T1 x)
+{
+    if constexpr (sizeof(T1) >= sizeof(T2))
+    {
+        return static_cast<T2>(x);
+    }
+    else
+    {
+        return static_cast<T2>(
+            (static_cast<std::make_signed_t<T2>>(static_cast<std::make_signed_t<T1>>(x))));
+    }
 }
 
 template <typename T> inline reg_t zext(T x, uint32_t pos)

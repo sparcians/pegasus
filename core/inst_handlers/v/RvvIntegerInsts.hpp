@@ -20,10 +20,14 @@ namespace pegasus
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        // Ingeter Arithmetic / Bitwise Logical
+        // Integer Move
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vimvHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Binary: Ingeter Arithmetic / Bitwise Logical
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
-        Action::ItrType viablHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType viBinaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,

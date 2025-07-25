@@ -23,6 +23,7 @@
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
 #include "core/inst_handlers/v/RvvMaskInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
+#include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 
 namespace pegasus
 {
@@ -33,6 +34,16 @@ namespace pegasus
         Action execute_action = pegasus::Action::createAction<&Execute::execute_>(this, "Execute");
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
+
+        // Handler for unsupported instructions
+        rv64_inst_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::EXECUTE_TAG));
+        rv32_inst_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::EXECUTE_TAG));
 
         // Get RV64 instruction handlers
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -52,6 +63,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -71,6 +83,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
@@ -139,6 +152,14 @@ namespace pegasus
 
         // Execute the instruction
         execute_action_group_.setNextActionGroup(inst_action_group);
+        return ++action_it;
+    }
+
+    Action::ItrType Execute::unsupportedInstHandler_(pegasus::PegasusState* state,
+                                                     Action::ItrType action_it)
+    {
+        sparta_assert(false,
+                      "Failed to execute. Instruction is unsupported: " << state->getCurrentInst());
         return ++action_it;
     }
 } // namespace pegasus
