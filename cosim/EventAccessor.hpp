@@ -42,7 +42,7 @@ namespace pegasus::cosim
         ///   Event* evt = accessor.operator->();
         ///   auto done = evt->isDone();                   // could be alive
         ///   auto type = evt->getEventType();             // could be dead!
-        const Event* operator->() { return get(); }
+        const Event* operator->();
 
         /// Same as operator->().
         const Event* get();

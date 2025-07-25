@@ -25,11 +25,7 @@ namespace pegasus::cosim
         tbl.addColumn("StartEuid", dt::int64_t);
         tbl.addColumn("EndEuid", dt::int64_t);
         tbl.addColumn("ZlibBlob", dt::blob_t);
-
-        // TODO cnyce: Put this back when the bug in SimDB is fixed.
-        // SqlQuery cannot assume ORDER BY Id.
-        //
-        // tbl.disableAutoIncPrimaryKey();
+        tbl.disableAutoIncPrimaryKey();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -245,10 +241,9 @@ namespace pegasus::cosim
     ////////////////////////////////////////////////////////////////////////////////////////
     void CoSimPipeline::stopSim(HartId hart_id)
     {
-        sim_stopped_.at(hart_id) = true;
-
         StopEvent stop_event;
         hart_pipelines_.at(hart_id)->stopSim(stop_event);
+        sim_stopped_.at(hart_id) = true;
     }
 
     bool CoSimPipeline::simStopped(HartId hart_id) const { return sim_stopped_.at(hart_id); }
@@ -264,7 +259,7 @@ namespace pegasus::cosim
 
     void CoSimPipeline::CoSimHartPipeline::postTeardown()
     {
-        std::cout << "Event accesses:\n";
+        std::cout << "Event accesses for hart " << hart_id_ << ":\n";
         std::cout << "    From cache: " << num_evts_retrieved_from_cache_ << "\n";
 
         if (avg_microseconds_recreating_evts_.count())
@@ -280,6 +275,11 @@ namespace pegasus::cosim
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
+    const Event* EventAccessor::operator->()
+    {
+        return get();
+    }
+
     const Event* EventAccessor::get()
     {
         if (recreated_evt_)

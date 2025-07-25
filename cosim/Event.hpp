@@ -185,25 +185,7 @@ namespace pegasus::cosim
 
         const std::string & getDisassemblyStr() const { return dasm_string_; }
 
-        bool operator==(const Event & other) const
-        {
-            return event_uid_.getValue() == other.event_uid_.getValue() && type_ == other.type_
-                   && hart_id_ == other.hart_id_ && done_ == other.done_
-                   && event_ends_sim_ == other.event_ends_sim_
-                   && is_in_region_of_interest_ == other.is_in_region_of_interest_
-                   && is_entering_region_of_interest_ == other.is_entering_region_of_interest_
-                   && is_exiting_region_of_interest_ == other.is_exiting_region_of_interest_
-                   && arch_id_ == other.arch_id_ && opcode_ == other.opcode_
-                   && opcode_size_ == other.opcode_size_ && inst_type_ == other.inst_type_
-                   && is_change_of_flow_ == other.is_change_of_flow_ && curr_pc_ == other.curr_pc_
-                   && next_pc_ == other.next_pc_ && alternate_next_pc_ == other.alternate_next_pc_
-                   && curr_priv_ == other.curr_priv_ && next_priv_ == other.next_priv_
-                   && excp_type_ == other.excp_type_ && excp_code_ == other.excp_code_
-                   && register_reads_ == other.register_reads_
-                   && register_writes_ == other.register_writes_
-                   && memory_reads_ == other.memory_reads_ && memory_writes_ == other.memory_writes_
-                   && dasm_string_ == other.dasm_string_;
-        }
+        bool operator==(const Event & other) const = default;
 
       private:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,18 +271,7 @@ namespace pegasus::cosim
         /// Called to/from char buffer (boost::serialization)
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
-            // TODO cnyce: Add serialize() method to ValidValue.
-            if (!event_uid_.isValid())
-            {
-                event_uid_ = INVALID_EVENT_UID;
-            }
-
-            ar & event_uid_.getValue();
-            if (event_uid_.getValue() == INVALID_EVENT_UID)
-            {
-                throw sparta::SpartaException("Invalid event uid");
-            }
-
+            ar & event_uid_;
             ar & type_;
             ar & hart_id_;
             ar & done_;
