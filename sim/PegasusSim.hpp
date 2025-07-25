@@ -73,7 +73,6 @@ namespace pegasus
         const WorkloadAndArguments workload_and_args_;
         const RegValueOverridePairs reg_value_overrides_;
         const uint64_t ilimit_;
-        std::shared_ptr<CoSimQuery> cosim_query_;
 
         friend class PegasusCoSim;
     };

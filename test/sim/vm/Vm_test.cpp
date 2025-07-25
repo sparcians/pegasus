@@ -19,6 +19,7 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vl = 4 * 8;
 
         state->getVectorConfig()->setVLEN(64);
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -58,6 +59,7 @@ class VmInstructionTester : public PegasusInstructionTester
         uint32_t rd = 1, vs2 = 2;
 
         state->getVectorConfig()->setVLEN(64);
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -85,6 +87,7 @@ class VmInstructionTester : public PegasusInstructionTester
         uint32_t rd = 1, vs2 = 2;
 
         state->getVectorConfig()->setVLEN(64);
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -110,6 +113,7 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vstart = 1 * 8;
         size_t vl = 6 * 8;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
@@ -144,6 +148,7 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vl = 8;
 
         state->getVectorConfig()->setVLEN(64);
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -176,6 +181,7 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vstart = 2;
         size_t vl = 8;
 
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);

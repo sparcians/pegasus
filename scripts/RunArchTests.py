@@ -143,7 +143,7 @@ def main():
 
     ###########################################################################
     # Process arguments
-    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs"]
+    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v"]
     SUPPORTED_XLEN = ["rv32", "rv64"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"

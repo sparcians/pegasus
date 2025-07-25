@@ -5,14 +5,13 @@
 
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/SpartaAssert.hpp"
-#include "sparta/utils/LogUtils.hpp"
 
-namespace pegasus
+#include "cosim/CoSimPipeline.hpp"
+#include "simdb/sqlite/DatabaseManager.hpp"
+#include "simdb/apps/AppManager.hpp"
+
+namespace pegasus::cosim
 {
-#ifndef COSIMLOG
-#define COSIMLOG(msg) SPARTA_LOG(cosim_logger_, msg)
-#endif
-
     CoSimMemoryInterface::CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode* memory) :
         memory_(memory)
     {
@@ -46,22 +45,34 @@ namespace pegasus
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit) :
-        PegasusSim(scheduler, {}, {}, ilimit),
+    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
+                               const std::string & workload) :
+        PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
-        buildTree();     // Calls PegasusSim::buildTree_
-        configureTree(); // Calls PegasusSim::configureTree_
-        finalizeTree();  // Calls PegasusCoSim::bindTree_
-    }
-
-    PegasusCoSim::~PegasusCoSim() { getRoot()->enterTeardown(); }
-
-    void PegasusCoSim::bindTree_()
-    {
-        PegasusSim::bindTree_();
+        configure(0, nullptr, &sim_config_);
+        buildTree();
+        configureTree();
+        finalizeTree();
+        finalizeFramework();
 
         const uint32_t num_harts = 1;
+
+        event_list_.resize(num_harts);
+        last_committed_event_.resize(num_harts, cosim::Event(cosim::Event::Type::INVALID));
+
+        db_mgr_ = std::make_shared<simdb::DatabaseManager>("pegasus-cosim.db", true);
+        app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
+
+        app_mgr_->enableApp(CoSimPipeline::NAME);
+        app_mgr_->createEnabledApps();
+        app_mgr_->createSchemas();
+        app_mgr_->postInit(0, nullptr);
+
+        cosim_pipeline_ = app_mgr_->getApp<CoSimPipeline>();
+        cosim_pipeline_->setNumHarts(num_harts);
+        app_mgr_->openPipelines();
+
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
         {
             // Get Fetch for each hart
@@ -69,59 +80,68 @@ namespace pegasus
             fetch_.emplace_back(
                 getRoot()->getChild(core_name + ".fetch")->getResourceAs<pegasus::Fetch>());
 
-            // Create and attach CoSimObserver to PegasusState for each hart
-            auto cosim_obs = std::make_unique<CoSimObserver>();
-            cosim_observer_.emplace_back(cosim_obs.get());
-            state_.at(hart_id)->addObserver(std::move(cosim_obs));
-        }
+            auto state = getPegasusState(hart_id);
 
-        event_list_.resize(num_harts);
-        last_committed_event_.resize(num_harts, cosim::Event(-1, cosim::Event::Type::INVALID));
+            // Create and attach CoSimObserver to PegasusState for each hart
+            auto cosim_obs =
+                std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_id);
+            cosim_observers_.emplace_back(cosim_obs.get());
+            state->addObserver(std::move(cosim_obs));
+        }
 
         // Single memory IF for all harts
         cosim_memory_if_ = new CoSimMemoryInterface(getPegasusSystem()->getSystemMemory());
     }
 
-    cosim::Event PegasusCoSim::step(HartId hart_id)
+    PegasusCoSim::~PegasusCoSim() noexcept { getRoot()->enterTeardown(); }
+
+    void PegasusCoSim::enableLogger(const std::string & filename)
+    {
+        if (!filename.empty())
+        {
+            sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", filename));
+        }
+        else
+        {
+            sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", std::cout));
+        }
+    }
+
+    EventAccessor PegasusCoSim::step(HartId hart_id)
     {
         ActionGroup* next_action_group = fetch_.at(hart_id)->getActionGroup();
         do
         {
-            next_action_group = next_action_group->execute(state_.at(hart_id));
+            next_action_group = next_action_group->execute(getPegasusState(hart_id));
         } while (next_action_group && (next_action_group->hasTag(ActionTags::FETCH_TAG) == false));
 
-        const cosim::Event event = cosim_observer_.at(hart_id)->getLastEvent();
+        return cosim_pipeline_->getLastEvent(hart_id);
+
+#if 0
         event_list_.at(hart_id).emplace_back(event);
-        COSIMLOG(event);
-        if (event.getRegisterReads().empty() == false)
-        {
-            COSIMLOG("    " << event.getRegisterReads());
-        }
-        if (event.getRegisterWrites().empty() == false)
-        {
-            COSIMLOG("    " << event.getRegisterWrites());
-        }
         return event_list_.at(hart_id).back();
+#endif
     }
 
-    cosim::Event PegasusCoSim::step(HartId hart_id, Addr addr)
+    EventAccessor PegasusCoSim::step(HartId hart_id, Addr addr)
     {
         setPc(hart_id, addr);
         return step(hart_id);
     }
 
-    cosim::Event PegasusCoSim::stepOperation(HartId)
+    EventAccessor PegasusCoSim::stepOperation(HartId)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    cosim::Event PegasusCoSim::stepOperation(HartId, Addr)
+    EventAccessor PegasusCoSim::stepOperation(HartId, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
     void PegasusCoSim::commit(HartId hart_id)
     {
+#if 0
         const cosim::Event & event = event_list_.at(hart_id).front();
         // COSIMLOG(event);
         sparta_assert(event.isDone(), "Cannot commit an event that isn't done! " << event);
@@ -129,16 +149,18 @@ namespace pegasus
         last_committed_event_.at(hart_id) = event;
         event_list_.at(hart_id).pop_front();
         // TODO: commit store writes
+#endif
+        (void)hart_id;
     }
 
     void PegasusCoSim::commit(const cosim::Event* event)
     {
+#if 0
         const HartId hart_id = event->getHartId();
 
         // Find event in the event list
         const cosim::EventList & event_list = event_list_.at(hart_id);
-        auto it = std::find_if(event_list.begin(), event_list.end(),
-                               [event](const cosim::Event & e)
+        auto it = std::find_if(event_list.begin(), event_list.end(), [event](const cosim::Event & e)
                                { return e.getEuid() == event->getEuid(); });
         sparta_assert(it != event_list.end(), "Event not found in event list!");
 
@@ -149,6 +171,8 @@ namespace pegasus
             commit(hart_id);
         }
         COSIMLOG("Number of events committed: " << num_events_to_commit);
+#endif
+        (void)event;
     }
 
     void PegasusCoSim::commitStoreWrite(const cosim::Event*)
@@ -206,10 +230,10 @@ namespace pegasus
     void PegasusCoSim::setPc(HartId hart_id, Addr addr)
     {
         // TODO: Create Event for PC override
-        state_.at(hart_id)->setPc(addr);
+        getPegasusState(hart_id)->setPc(addr);
     }
 
-    Addr PegasusCoSim::getPc(HartId hart_id) const { return state_.at(hart_id)->getPc(); }
+    Addr PegasusCoSim::getPc(HartId hart_id) const { return getPegasusState(hart_id)->getPc(); }
 
     void PegasusCoSim::setPrivilegeMode(HartId, PrivMode)
     {
@@ -223,28 +247,29 @@ namespace pegasus
 
     bool PegasusCoSim::isSimulationFinished(HartId hart_id) const
     {
-        const PegasusState::SimState* sim_state = state_[hart_id]->getSimState();
+        const PegasusState::SimState* sim_state = getPegasusState(hart_id)->getSimState();
         return sim_state->sim_stopped;
     }
 
-    cosim::Event PegasusCoSim::injectInstruction(HartId, Opcode)
+    EventAccessor PegasusCoSim::injectInstruction(HartId, Opcode)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    cosim::Event PegasusCoSim::injectInterrupt(HartId, uint64_t)
+    EventAccessor PegasusCoSim::injectInterrupt(HartId, uint64_t)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    cosim::Event PegasusCoSim::injectReset(HartId)
+    EventAccessor PegasusCoSim::injectReset(HartId)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
     uint64_t PegasusCoSim::getNumCommittedEvents(HartId hart_id) const
     {
-        return state_.at(hart_id)->getSimState()->inst_count - getNumUncommittedEvents(hart_id);
+        return getPegasusState(hart_id)->getSimState()->inst_count
+               - getNumUncommittedEvents(hart_id);
     }
 
     const cosim::Event & PegasusCoSim::getLastCommittedEvent(HartId hart_id) const
@@ -266,4 +291,19 @@ namespace pegasus
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
-} // namespace pegasus
+
+    std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
+    {
+        std::vector<std::string> workload_args;
+        sparta::utils::tokenize_on_whitespace(workload, workload_args);
+        return workload_args;
+    }
+
+    void PegasusCoSim::finish()
+    {
+        const auto euid = cosim_pipeline_->getLastEventUID();
+        std::cout << "Pegasus co-sim finished after processing " << euid << " events. "
+                  << std::endl;
+        app_mgr_->postSimLoopTeardown();
+    }
+} // namespace pegasus::cosim

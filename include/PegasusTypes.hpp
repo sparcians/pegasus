@@ -77,6 +77,16 @@ namespace pegasus
         RegType reg_type;
         uint32_t reg_num;
         std::string reg_name;
+
+        /// Called to/from char buffer (boost::serialization)
+        template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+        {
+            ar & reg_type;
+            ar & reg_num;
+            ar & reg_name;
+        }
+
+        bool operator==(const RegId & other) const = default;
     };
 
     enum class MMUMode : uint32_t

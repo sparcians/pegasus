@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cosim/Event.hpp"
+#include "cosim/EventAccessor.hpp"
 #include "cosim/MemoryInterface.hpp"
 
 #include <list>
@@ -44,7 +44,7 @@ namespace pegasus::cosim
          *
          * \note The event returned is a copy of what is appended to the event list.
          */
-        virtual cosim::Event step(HartId hart) = 0;
+        virtual EventAccessor step(HartId hart) = 0;
 
         /**
          * \brief Step the simulator after overriding the current pc
@@ -54,7 +54,7 @@ namespace pegasus::cosim
          *
          * \note The event returned is a copy of what is appended to the event list.
          */
-        virtual cosim::Event step(HartId hart, Addr override_pc) = 0;
+        virtual EventAccessor step(HartId hart, Addr override_pc) = 0;
 
         /**
          * \brief Step the simulator to the next Action at the current pc
@@ -64,7 +64,7 @@ namespace pegasus::cosim
          * \note The generated event may represent an incomplete step of
          *       the simulator and be only partially initialized.
          */
-        virtual cosim::Event stepOperation(HartId hart) = 0;
+        virtual EventAccessor stepOperation(HartId hart) = 0;
 
         /**
          * \brief Step the simulator to the next Action after overriding the current pc
@@ -75,7 +75,7 @@ namespace pegasus::cosim
          * \note The generated event may represent an incomplete step of the simulator and be only
          *       partially initialized.
          */
-        virtual cosim::Event stepOperation(HartId hart, Addr override_pc) = 0;
+        virtual EventAccessor stepOperation(HartId hart, Addr override_pc) = 0;
 
         /**
          * \brief Commit the oldest uncommitted Event in the event list
@@ -179,9 +179,9 @@ namespace pegasus::cosim
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Injection
 
-        virtual cosim::Event injectInstruction(HartId hart, Opcode opcode) = 0;
-        virtual cosim::Event injectInterrupt(HartId hart, uint64_t interrupt_code) = 0;
-        virtual cosim::Event injectReset(HartId hart) = 0;
+        virtual EventAccessor injectInstruction(HartId hart, Opcode opcode) = 0;
+        virtual EventAccessor injectInterrupt(HartId hart, uint64_t interrupt_code) = 0;
+        virtual EventAccessor injectReset(HartId hart) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Checkpointing (TODO: is this necessary?)
