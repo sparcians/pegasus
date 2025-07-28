@@ -18,6 +18,24 @@ namespace pegasus
             pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::plus>,
                                           RvvReductionInsts>(nullptr, "vredsum.vs",
                                                              ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vredand.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_and>, 
+                                        RvvReductionInsts>(nullptr, "vredand.vs", 
+                                                            ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vredor.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_or>, 
+                                        RvvReductionInsts>(nullptr, "vredor.vs", 
+                                                            ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vredxor.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_xor>,
+                                        RvvReductionInsts>(nullptr, "vredxor.vs",
+                                                            ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64
