@@ -3,6 +3,9 @@
 #include "include/PegasusUtils.hpp"
 
 #include <stdint.h>
+#include <bit>
+#include <algorithm>
+#include <functional>
 
 typedef int64_t sreg_t;
 typedef uint64_t reg_t;
@@ -16,7 +19,7 @@ template <typename T> inline sreg_t sext(T x, uint32_t pos)
     return (((sreg_t)(x) << (64 - (pos))) >> (64 - (pos)));
 }
 
-template <typename T2, typename T1> inline T2 sextu(T1 x)
+template <typename T2, typename T1> inline T2 sext(T1 x)
 {
     if constexpr (sizeof(T1) >= sizeof(T2))
     {
@@ -65,6 +68,41 @@ inline int64_t mulh(int64_t a, int64_t b)
     uint64_t res = mulhu(a < 0 ? -a : a, b < 0 ? -b : b);
     return negate ? ~res + ((uint64_t)a * (uint64_t)b == 0) : res;
 }
+
+template <typename T> struct max
+{
+    inline const T & operator()(const T & lhs, const T & rhs) const { return std::max(lhs, rhs); }
+};
+
+template <typename T> struct min
+{
+    inline const T & operator()(const T & lhs, const T & rhs) const { return std::min(lhs, rhs); }
+};
+
+template <typename T> struct sll
+{
+    inline T operator()(const T & lhs, const T & rhs) const
+    {
+        return static_cast<T>(lhs << (rhs & (sizeof(T) * 8 - 1)));
+    }
+};
+
+template <typename T> struct srl
+{
+    inline T operator()(const T & lhs, const T & rhs) const
+    {
+        return static_cast<T>(lhs >> (rhs & (sizeof(T) * 8 - 1)));
+    }
+};
+
+template <typename T> struct sra
+{
+    inline T operator()(const T & lhs, const T & rhs) const
+    {
+        return static_cast<T>(static_cast<std::make_signed_t<T>>(lhs)
+                              >> (rhs & (sizeof(T) * 8 - 1)));
+    }
+};
 
 namespace pegasus
 {

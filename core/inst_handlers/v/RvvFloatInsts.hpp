@@ -49,6 +49,8 @@ namespace pegasus
         Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
+        // FloatToInt is implemented seperately from Unary becuase functions in softfloat have 3
+        // arguments instead of 1.
         template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
         Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it);

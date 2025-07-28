@@ -38,9 +38,17 @@ namespace pegasus
         template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFuc>
         Action::ItrType vmiacsbHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        // Ingeter Compare
+        // Integer Compare
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
         Action::ItrType vmicHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Merge
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vimergeHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Extension
+        template <size_t fracVal, bool isSigned>
+        Action::ItrType viextHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

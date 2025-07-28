@@ -47,4 +47,12 @@ namespace pegasus
     }
 
     template <std::size_t N> using UintType = typename decltype(get_uint_type<N>())::type;
+
+    template <typename T> struct FuncTraits;
+
+    template <typename R, typename... Args> struct FuncTraits<R (*)(Args...)>
+    {
+        using ReturnType = R;
+        using ArgsTuple = std::tuple<Args...>;
+    };
 } // namespace pegasus
