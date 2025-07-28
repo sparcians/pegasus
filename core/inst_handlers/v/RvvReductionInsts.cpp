@@ -15,25 +15,25 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vredsum.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::plus>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::plus>,
                                           RvvReductionInsts>(nullptr, "vredsum.vs",
                                                              ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredand.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_and>, 
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_and>, 
                                         RvvReductionInsts>(nullptr, "vredand.vs", 
                                                             ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredor.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_or>, 
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_or>, 
                                         RvvReductionInsts>(nullptr, "vredor.vs", 
                                                             ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredxor.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredsumvsHandler_<std::bit_xor>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_xor>,
                                         RvvReductionInsts>(nullptr, "vredxor.vs",
                                                             ActionTags::EXECUTE_TAG));
     }
@@ -43,7 +43,7 @@ namespace pegasus
     template void RvvReductionInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
     template <size_t ElemWidth, typename Functor>
-    Action::ItrType vredsumvsHelper(PegasusState* state, Action::ItrType action_it)
+    Action::ItrType vredopHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<ElemWidth>, false> elems_vs2{state, state->getVectorConfig(),
@@ -78,22 +78,22 @@ namespace pegasus
         return ++action_it;
     }
 
-    // Dispatch SEW-sized implementation of vredsum.vs
+    // Dispatch SEW-sized implementation of vector reduction operations
     template <template <typename> typename OP>
-    Action::ItrType RvvReductionInsts::vredsumvsHandler_(PegasusState* state,
+    Action::ItrType RvvReductionInsts::vredopHandler_(PegasusState* state,
                                                          Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
-                return vredsumvsHelper<8, OP<uint8_t>>(state, action_it);
+                return vredopHelper<8, OP<uint8_t>>(state, action_it);
             case 16:
-                return vredsumvsHelper<16, OP<uint16_t>>(state, action_it);
+                return vredopHelper<16, OP<uint16_t>>(state, action_it);
             case 32:
-                return vredsumvsHelper<32, OP<uint32_t>>(state, action_it);
+                return vredopHelper<32, OP<uint32_t>>(state, action_it);
             case 64:
-                return vredsumvsHelper<64, OP<uint64_t>>(state, action_it);
+                return vredopHelper<64, OP<uint64_t>>(state, action_it);
             default:
                 sparta_assert(false, "Invalid SEW in vredsum.vs");
         }
