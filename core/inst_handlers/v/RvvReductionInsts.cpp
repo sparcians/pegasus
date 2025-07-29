@@ -3,6 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
+#include "core/inst_handlers/inst_helpers.hpp"
 
 namespace pegasus
 {
@@ -15,27 +16,48 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vredsum.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::plus>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<std::plus>,
                                           RvvReductionInsts>(nullptr, "vredsum.vs",
                                                              ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredand.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_and>, 
-                                        RvvReductionInsts>(nullptr, "vredand.vs", 
-                                                            ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<std::bit_and>,
+                                          RvvReductionInsts>(nullptr, "vredand.vs",
+                                                             ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredor.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_or>, 
-                                        RvvReductionInsts>(nullptr, "vredor.vs", 
-                                                            ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<std::bit_or>,
+                                          RvvReductionInsts>(nullptr, "vredor.vs",
+                                                             ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vredxor.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandler_<std::bit_xor>,
-                                        RvvReductionInsts>(nullptr, "vredxor.vs",
-                                                            ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<std::bit_xor>,
+                                          RvvReductionInsts>(nullptr, "vredxor.vs",
+                                                             ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vredmaxu.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<max_op>,
+                                          RvvReductionInsts>(nullptr, "vredmaxu.vs",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vredmax.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<max_op>,
+                                          RvvReductionInsts>(nullptr, "vredmax.vs",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vredminu.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<min_op>,
+                                          RvvReductionInsts>(nullptr, "vredminu.vs",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vredmin.vs",
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<min_op>,
+                                          RvvReductionInsts>(nullptr, "vredmin.vs",
+                                                             ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64
@@ -80,8 +102,8 @@ namespace pegasus
 
     // Dispatch SEW-sized implementation of vector reduction operations
     template <template <typename> typename OP>
-    Action::ItrType RvvReductionInsts::vredopHandler_(PegasusState* state,
-                                                         Action::ItrType action_it)
+    Action::ItrType RvvReductionInsts::vredopHandlerUnsigned_(PegasusState* state,
+                                                              Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -95,7 +117,29 @@ namespace pegasus
             case 64:
                 return vredopHelper<64, OP<uint64_t>>(state, action_it);
             default:
-                sparta_assert(false, "Invalid SEW in vredsum.vs");
+                sparta_assert(false, "Unsupported SEW value");
+        }
+
+        return ++action_it;
+    }
+
+    template <template <typename> typename OP>
+    Action::ItrType RvvReductionInsts::vredopHandlerSigned_(PegasusState* state,
+                                                            Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return vredopHelper<8, OP<int8_t>>(state, action_it);
+            case 16:
+                return vredopHelper<16, OP<int16_t>>(state, action_it);
+            case 32:
+                return vredopHelper<32, OP<int32_t>>(state, action_it);
+            case 64:
+                return vredopHelper<64, OP<int64_t>>(state, action_it);
+            default:
+                sparta_assert(false, "Unsupported SEW value");
         }
 
         return ++action_it;

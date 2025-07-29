@@ -19,7 +19,10 @@ namespace pegasus
 
       private:
         template <template <typename> typename OP>
-        Action::ItrType vredopHandler_(PegasusState* state, Action::ItrType action_it);
+        Action::ItrType vredopHandlerUnsigned_(PegasusState* state, Action::ItrType action_it);
+
+        template <template <typename> typename OP>
+        Action::ItrType vredopHandlerSigned_(PegasusState* state, Action::ItrType action_it);
     };
 
 } // namespace pegasus

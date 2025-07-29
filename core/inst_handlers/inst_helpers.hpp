@@ -85,4 +85,14 @@ namespace pegasus
         }
     };
 
+    template <typename T> struct max_op
+    {
+        T operator()(T a, T b) const { return a > b ? a : b; }
+    };
+
+    template <typename T> struct min_op
+    {
+        T operator()(T a, T b) const { return a < b ? a : b; }
+    };
+
 } // namespace pegasus
