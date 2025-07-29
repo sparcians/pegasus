@@ -45,7 +45,7 @@ namespace pegasus
         vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
         supported_isa_string_(
-            std::string("rv" + std::to_string(xlen_) + "gcbv_zicsr_zifencei_zicond_zcb")),
+            std::string("rv" + std::to_string(xlen_) + "gbv_zicsr_zifencei_zca_zcd_zcb_zicond")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
