@@ -1699,7 +1699,7 @@ namespace pegasus
                                                      inst->getRd()};
         const UintType<elemWidth> x =
             opMode.src1 == OperandMode::Mode::X
-                ? static_cast<UintType<elemWidth>>(READ_FP_REG<XLEN>(state, inst->getRs1()))
+                ? static_cast<UintType<elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1()))
             : opMode.src1 == OperandMode::Mode::I
                 ? static_cast<UintType<elemWidth>>(inst->getImmediate())
                 : 0;

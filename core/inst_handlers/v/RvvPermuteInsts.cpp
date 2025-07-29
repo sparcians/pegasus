@@ -422,16 +422,16 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vslideHelper<XLEN, 8, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 8, opMode, isUp>(state, action_it);
 
             case 16:
-                return vslideHelper<XLEN, 16, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 16, opMode, isUp>(state, action_it);
 
             case 32:
-                return vslideHelper<XLEN, 32, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 32, opMode, isUp>(state, action_it);
 
             case 64:
-                return vslideHelper<XLEN, 64, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 64, opMode, isUp>(state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");
