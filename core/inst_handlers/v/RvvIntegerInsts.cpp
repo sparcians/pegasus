@@ -1598,26 +1598,31 @@ namespace pegasus
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
-            size_t index = 0;
             for (auto iter = begin; iter != end; ++iter)
             {
-                index = iter.getIndex();
+                size_t index = iter.getIndex();
+                bool result = false;
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
-                    elems_vd.getElement(index).setBit(
-                        Functor()(elems_vs2.getElement(index).getVal(),
-                                  elems_vs1.getElement(index).getVal()));
+                    result = Functor()(elems_vs2.getElement(index).getVal(),
+                                       elems_vs1.getElement(index).getVal());
                 }
                 else if (opMode.src1 == OperandMode::Mode::X)
                 {
-                    elems_vd.getElement(index).setBit(
-                        Functor()(elems_vs2.getElement(index).getVal(),
-                                  READ_INT_REG<XLEN>(state, inst->getRs1())));
+                    result = Functor()(elems_vs2.getElement(index).getVal(),
+                                       READ_INT_REG<XLEN>(state, inst->getRs1()));
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {
-                    elems_vd.getElement(index).setBit(
-                        Functor()(elems_vs2.getElement(index).getVal(), inst->getImmediate()));
+                    result = Functor()(elems_vs2.getElement(index).getVal(), inst->getImmediate());
+                }
+                if (result)
+                {
+                    elems_vd.setBit(index);
+                }
+                else
+                {
+                    elems_vd.clearBit(index);
                 }
             }
         };
@@ -1896,6 +1901,9 @@ namespace pegasus
 
         switch (vector_config->getSEW())
         {
+            case 8:
+                return viTernaryHelper<XLEN, 8, opMode, func>(state, action_it);
+
             case 16:
                 return viTernaryHelper<XLEN, 16, opMode, func>(state, action_it);
 
