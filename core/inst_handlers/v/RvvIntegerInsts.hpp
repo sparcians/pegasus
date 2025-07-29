@@ -50,5 +50,9 @@ namespace pegasus
         // Integer Extension
         template <size_t fracVal, bool isSigned>
         Action::ItrType viextHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Multiply-add
+        template <typename XLEN, OperandMode opMode, auto func>
+        Action::ItrType viTernaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

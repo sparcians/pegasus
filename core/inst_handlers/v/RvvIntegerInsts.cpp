@@ -470,7 +470,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, sll>,
+                                                   false, Sll>,
                 RvvIntegerInsts>(nullptr, "vsll.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsll.vx",
@@ -479,7 +479,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, sll>,
+                                                   false, Sll>,
                 RvvIntegerInsts>(nullptr, "vsll.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsll.vi",
@@ -488,7 +488,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::I},
-                                                   false, sll>,
+                                                   false, Sll>,
                 RvvIntegerInsts>(nullptr, "vsll.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -498,7 +498,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vsrl.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsrl.vx",
@@ -507,7 +507,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vsrl.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsrl.vi",
@@ -516,7 +516,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::I},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vsrl.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -526,7 +526,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vsra.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsra.vx",
@@ -535,7 +535,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vsra.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsra.vi",
@@ -544,7 +544,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::I},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vsra.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -554,7 +554,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vnsrl.wv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vnsrl.wx",
@@ -563,7 +563,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vnsrl.wx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vnsrl.wi",
@@ -572,7 +572,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::I},
-                                                   false, srl>,
+                                                   false, Srl>,
                 RvvIntegerInsts>(nullptr, "vnsrl.wi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -582,7 +582,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vnsra.wv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vnsra.wx",
@@ -591,7 +591,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vnsra.wx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vnsra.wi",
@@ -600,7 +600,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::W,
                                                                .src1 = OperandMode::Mode::I},
-                                                   false, sra>,
+                                                   false, Sra>,
                 RvvIntegerInsts>(nullptr, "vnsra.wi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -816,7 +816,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   true, max>,
+                                                   true, Max>,
                 RvvIntegerInsts>(nullptr, "vmax.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmax.vx",
@@ -825,7 +825,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   true, max>,
+                                                   true, Max>,
                 RvvIntegerInsts>(nullptr, "vmax.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmaxu.vv",
@@ -834,7 +834,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, max>,
+                                                   false, Max>,
                 RvvIntegerInsts>(nullptr, "vmaxu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmaxu.vx",
@@ -843,7 +843,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, max>,
+                                                   false, Max>,
                 RvvIntegerInsts>(nullptr, "vmaxu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmin.vv",
@@ -852,7 +852,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   true, min>,
+                                                   true, Min>,
                 RvvIntegerInsts>(nullptr, "vmin.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmin.vx",
@@ -861,7 +861,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   true, min>,
+                                                   true, Min>,
                 RvvIntegerInsts>(nullptr, "vmin.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vminu.vv",
@@ -870,7 +870,7 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, min>,
+                                                   false, Min>,
                 RvvIntegerInsts>(nullptr, "vminu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vminu.vx",
@@ -879,8 +879,312 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, min>,
+                                                   false, Min>,
                 RvvIntegerInsts>(nullptr, "vminu.vx", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vmul.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vmul.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmul.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vmul.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulh.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, Mulh>,
+                RvvIntegerInsts>(nullptr, "vmulh.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulh.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, Mulh>,
+                RvvIntegerInsts>(nullptr, "vmulh.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulhu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, Mulhu>,
+                RvvIntegerInsts>(nullptr, "vmulhu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulhu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, Mulhu>,
+                RvvIntegerInsts>(nullptr, "vmulhu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulhsu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, Mulhsu>,
+                RvvIntegerInsts>(nullptr, "vmulhsu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmulhsu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, Mulhsu>,
+                RvvIntegerInsts>(nullptr, "vmulhsu.vx", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vdivu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, std::divides>,
+                RvvIntegerInsts>(nullptr, "vdivu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vdivu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, std::divides>,
+                RvvIntegerInsts>(nullptr, "vdivu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vdiv.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   true, std::divides>,
+                RvvIntegerInsts>(nullptr, "vdiv.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vdiv.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   true, std::divides>,
+                RvvIntegerInsts>(nullptr, "vdiv.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vremu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, std::modulus>,
+                RvvIntegerInsts>(nullptr, "vremu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vremu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, std::modulus>,
+                RvvIntegerInsts>(nullptr, "vremu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vrem.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   true, std::modulus>,
+                RvvIntegerInsts>(nullptr, "vrem.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vrem.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   true, std::modulus>,
+                RvvIntegerInsts>(nullptr, "vrem.vx", ActionTags::EXECUTE_TAG));
+
+        auto macc = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return sext<T2, T1>(src2) * sext<T2, T1>(src1) + dst; };
+
+        auto maccu = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return zext<T2, T1>(src2) * zext<T2, T1>(src1) + dst; };
+
+        auto maccsu = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return zext<T2, T1>(src2) * sext<T2, T1>(src1) + dst; };
+
+        auto maccus = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return sext<T2, T1>(src2) * zext<T2, T1>(src1) + dst; };
+
+        auto nmsac = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return -(sext<T2, T1>(src2) * sext<T2, T1>(src1)) + dst; };
+
+        auto madd = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return sext<T2, T1>(src1) * dst + sext<T2, T1>(src2); };
+
+        auto nmsub = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
+        { return -(sext<T2, T1>(src1) * dst) + sext<T2, T1>(src2); };
+
+        inst_handlers.emplace(
+            "vmacc.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    macc>,
+                RvvIntegerInsts>(nullptr, "vmacc.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmacc.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    macc>,
+                RvvIntegerInsts>(nullptr, "vmacc.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vnmsac.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    nmsac>,
+                RvvIntegerInsts>(nullptr, "vnmsac.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vnmsac.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    nmsac>,
+                RvvIntegerInsts>(nullptr, "vnmsac.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmadd.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    madd>,
+                RvvIntegerInsts>(nullptr, "vmadd.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vmadd.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    madd>,
+                RvvIntegerInsts>(nullptr, "vmadd.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vnmsub.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    nmsub>,
+                RvvIntegerInsts>(nullptr, "vnmsub.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vnmsub.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    nmsub>,
+                RvvIntegerInsts>(nullptr, "vnmsub.vx", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vwmaccu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    maccu>,
+                RvvIntegerInsts>(nullptr, "vwmaccu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmaccu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    maccu>,
+                RvvIntegerInsts>(nullptr, "vwmaccu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmacc.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    macc>,
+                RvvIntegerInsts>(nullptr, "vwmacc.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmacc.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    macc>,
+                RvvIntegerInsts>(nullptr, "vwmacc.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmaccsu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::V},
+                                                    maccsu>,
+                RvvIntegerInsts>(nullptr, "vwmaccsu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmaccsu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    maccsu>,
+                RvvIntegerInsts>(nullptr, "vwmaccsu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmaccus.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viTernaryHandler_<XLEN,
+                                                    OperandMode{.dst = OperandMode::Mode::W,
+                                                                .src2 = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X},
+                                                    maccus>,
+                RvvIntegerInsts>(nullptr, "vwmaccus.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vmerge.vvm",
@@ -977,8 +1281,8 @@ namespace pegasus
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        auto functor = FunctorT<T>();
-        using ValueTypeRd = typename decltype(elems_vd)::ElemType::ValueType;
+        FunctorT<T> functor{};
+        using R = typename decltype(elems_vd)::ElemType::ValueType;
 
         auto execute = [&](auto iter, const auto & end)
         {
@@ -988,21 +1292,48 @@ namespace pegasus
                 index = iter.getIndex();
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
-                    elems_vd.getElement(index).setVal(static_cast<ValueTypeRd>(
-                        functor(sext<T>(elems_vs2.getElement(index).getVal()),
-                                sext<T>(elems_vs1.getElement(index).getVal()))));
+                    if constexpr (std::is_signed_v<T>)
+                    {
+                        elems_vd.getElement(index).setVal(
+                            static_cast<R>(functor(sext<T>(elems_vs2.getElement(index).getVal()),
+                                                   sext<T>(elems_vs1.getElement(index).getVal()))));
+                    }
+                    else
+                    {
+                        elems_vd.getElement(index).setVal(
+                            static_cast<R>(functor(zext<T>(elems_vs2.getElement(index).getVal()),
+                                                   zext<T>(elems_vs1.getElement(index).getVal()))));
+                    }
                 }
                 else if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
-                    elems_vd.getElement(index).setVal(static_cast<ValueTypeRd>(
-                        functor(sext<T>(elems_vs2.getElement(index).getVal()),
-                                sext<T>(READ_INT_REG<XLEN>(state, inst->getRs1())))));
+                    if constexpr (std::is_signed_v<T>)
+                    {
+                        elems_vd.getElement(index).setVal(static_cast<R>(
+                            functor(sext<T>(elems_vs2.getElement(index).getVal()),
+                                    sext<T>(READ_INT_REG<XLEN>(state, inst->getRs1())))));
+                    }
+                    else
+                    {
+                        elems_vd.getElement(index).setVal(static_cast<R>(
+                            functor(zext<T>(elems_vs2.getElement(index).getVal()),
+                                    zext<T>(READ_INT_REG<XLEN>(state, inst->getRs1())))));
+                    }
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {
-                    elems_vd.getElement(index).setVal(static_cast<ValueTypeRd>(
-                        functor(sext<T>(elems_vs2.getElement(index).getVal()),
-                                sext<T>(inst->getImmediate()))));
+                    if constexpr (std::is_signed_v<T>)
+                    {
+                        elems_vd.getElement(index).setVal(
+                            static_cast<R>(functor(sext<T>(elems_vs2.getElement(index).getVal()),
+                                                   sext<T>(inst->getImmediate()))));
+                    }
+                    else
+                    {
+                        elems_vd.getElement(index).setVal(
+                            static_cast<R>(functor(zext<T>(elems_vs2.getElement(index).getVal()),
+                                                   zext<T>(inst->getImmediate()))));
+                    }
                 }
             }
         };
@@ -1504,6 +1835,83 @@ namespace pegasus
                 sparta_assert(false, "Unsupported SEW value");
                 break;
         }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
+    Action::ItrType viTernaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
+            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
+
+        auto execute = [&](auto iter, const auto & end)
+        {
+            for (; iter != end; ++iter)
+            {
+                auto index = iter.getIndex();
+                auto elem_vd = elems_vd.getElement(index);
+                ValueType value = 0;
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
+                {
+                    value = func(elems_vs2.getElement(index).getVal(),
+                                 elems_vs1.getElement(index).getVal(), elem_vd.getVal());
+                }
+                else if constexpr (opMode.src1 == OperandMode::Mode::X)
+                {
+                    value = func(
+                        elems_vs2.getElement(index).getVal(),
+                        static_cast<UintType<elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1())),
+                        elem_vd.getVal());
+                }
+                elem_vd.setVal(value);
+            }
+        };
+
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vd.begin(), elems_vd.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
+        }
+
+        return ++action_it;
+    }
+
+    template <typename XLEN, OperandMode opMode, auto func>
+    Action::ItrType RvvIntegerInsts::viTernaryHandler_(pegasus::PegasusState* state,
+                                                       Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+
+        switch (vector_config->getSEW())
+        {
+            case 16:
+                return viTernaryHelper<XLEN, 16, opMode, func>(state, action_it);
+
+            case 32:
+                return viTernaryHelper<XLEN, 32, opMode, func>(state, action_it);
+
+            case 64:
+                if constexpr (opMode.dst != OperandMode::Mode::W)
+                {
+                    return viTernaryHelper<XLEN, 64, opMode, func>(state, action_it);
+                }
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+
         return ++action_it;
     }
 } // namespace pegasus
