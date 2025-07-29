@@ -1,4 +1,6 @@
 #include "core/inst_handlers/zcmp/RvzcmpInsts.hpp"
+#include "core/PegasusState.hpp"
+#include "core/Trap.hpp"
 #include "include/ActionTags.hpp"
 
 namespace pegasus
@@ -35,12 +37,15 @@ namespace pegasus
     template void RvzcmpInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
     template <typename XLEN>
+    void pop_(pegasus::PegasusState* state)
+    {
+        (void)state;
+    }
+
+    template <typename XLEN>
     Action::ItrType RvzcmpInsts::pushHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-
         (void)state;
         return ++action_it;
     }
@@ -49,10 +54,7 @@ namespace pegasus
     Action::ItrType RvzcmpInsts::popHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-
-        (void)state;
+        pop_<XLEN>(state);
         return ++action_it;
     }
 
@@ -60,10 +62,12 @@ namespace pegasus
     Action::ItrType RvzcmpInsts::popretHandler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        pop_<XLEN>(state);
 
-        (void)state;
+        // Set PC to RA (1)
+        const XLEN ra_val = READ_INT_REG<XLEN>(state, 1);
+        state->setNextPc(ra_val);
+
         return ++action_it;
     }
 
@@ -71,10 +75,15 @@ namespace pegasus
     Action::ItrType RvzcmpInsts::popretzHandler_(pegasus::PegasusState* state,
                                                  Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        pop_<XLEN>(state);
 
-        (void)state;
+        // Set PC to RA (1)
+        const XLEN ra_val = READ_INT_REG<XLEN>(state, 1);
+        state->setNextPc(ra_val);
+
+        // Set A0 (10) to zero
+        WRITE_INT_REG<XLEN>(state, 10, 0);
+
         return ++action_it;
     }
 
@@ -82,10 +91,15 @@ namespace pegasus
     Action::ItrType RvzcmpInsts::mva01sHandler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
-        (void)state;
+        // Write RS1 to A0 (10)
+        WRITE_INT_REG<XLEN>(state, 10, rs1_val);
+        // Write RS2 to A1 (11)
+        WRITE_INT_REG<XLEN>(state, 11, rs2_val);
+
         return ++action_it;
     }
 
@@ -93,10 +107,21 @@ namespace pegasus
     Action::ItrType RvzcmpInsts::mvsa01Handler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
-        // const PegasusInstPtr & inst = state->getCurrentInst();
-        // const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const XLEN a0_val = READ_INT_REG<XLEN>(state, 10);
+        const XLEN a1_val = READ_INT_REG<XLEN>(state, 11);
 
-        (void)state;
+        // FIXME: Does Mavis handle this?
+        if (inst->getRs1() == inst->getRs2())
+        {
+            THROW_ILLEGAL_INST;
+        }
+
+        // Write A0 (10) to RS1
+        WRITE_INT_REG<XLEN>(state, inst->getRs1(), a0_val);
+        // Write A1 (11) to RS2
+        WRITE_INT_REG<XLEN>(state, inst->getRs2(), a1_val);
+
         return ++action_it;
     }
 } // namespace pegasus

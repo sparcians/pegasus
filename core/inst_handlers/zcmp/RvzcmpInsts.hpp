@@ -14,11 +14,15 @@ namespace pegasus
         template <typename XLEN> static void getInstHandlers(Execute::InstHandlersMap &);
 
       private:
+        // Pop implementation
+        template <typename XLEN>
+        void pop_(pegasus::PegasusState* state);
+
         // cm.push
         template <typename XLEN>
         Action::ItrType pushHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        // cm.push
+        // cm.pop
         template <typename XLEN>
         Action::ItrType popHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
