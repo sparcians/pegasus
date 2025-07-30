@@ -36,8 +36,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sparcians/map
+          submodules: recursive
           path: map
-          ref: map_v2.0.22
+          ref: map_v2.1.0
 
       # Setup CCache to cache builds
       - name: ccache

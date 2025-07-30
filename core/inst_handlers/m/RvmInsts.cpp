@@ -202,15 +202,7 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulh(rs1_val, rs2_val));
-        }
-        else
-        {
-            WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                                sext32((sext32(rs1_val) * sext32(rs2_val)) >> 32));
-        }
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), Mulh<XLEN>{}(rs1_val, rs2_val));
 
         return ++action_it;
     }
@@ -223,15 +215,7 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulhsu(rs1_val, rs2_val));
-        }
-        else
-        {
-            WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                                sext32((sext32(rs1_val) * reg_t((uint32_t)rs2_val)) >> 32));
-        }
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), Mulhsu<XLEN>{}(rs1_val, rs2_val));
 
         return ++action_it;
     }
@@ -244,16 +228,7 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
 
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), mulhu(rs1_val, rs2_val));
-        }
-        else
-        {
-            WRITE_INT_REG<XLEN>(
-                state, inst->getRd(),
-                sext32(((uint64_t)(uint32_t)rs1_val * (uint64_t)(uint32_t)rs2_val) >> 32));
-        }
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), Mulhu<XLEN>{}(rs1_val, rs2_val));
 
         return ++action_it;
     }

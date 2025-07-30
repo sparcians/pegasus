@@ -4,6 +4,39 @@ RISC-V Functional Model
 ![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/riscv-arch.json)
 ![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/tenstorrent.json)
 
+                                   ,
+                                   |`\
+                                  /'_/_
+                                ,'_/\_/\_                       ,
+                              ,'_/\'_\_,/_                    ,'|
+                            ,'_/\_'_ \_ \_/                _,-'_/
+                          ,'_/'\_'_ \_ \'_,\           _,-'_,-/ \,
+                        ,' /_\ _'_ \_ \'_,/       __,-'<_,' _,\_,/
+                       ( (' )\/(_ \_ \'_,\   __--' _,-_/_,-',_/ _\
+                        \_`\> 6` 7  \'_,/ ,-' _,-,'\,_'_ \,_/'_,\
+                          \/-  _/ 7 '/ _,' _/'\_  \,_'_ \_ \'_,/
+                           \_'/>   7'_/' _/' \_ '\,_'_ \_ \'_,\
+                             >/  _ ,V  ,<  \__ '\,_'_ \_ \'_,/
+                           /'_  ( )_)\/-,',__ '\,_'_,\_,\'_\
+                          ( ) \_ \|_  `\_    \_,/'\,_'_,/'
+                           \\_  \_\_)    `\_
+                            \_)   >        `\_
+                                 /  `,      |`\_
+                                /    \     / \ `\
+                               /   __/|   /  /  `\
+                              (`  (   (` (_  \   /
+                              /  ,/    |  /  /   \
+                             / ,/      | /   \   `\_
+                           _/_/        |/    /__/,_/
+                          /_(         /_(
+
+                     ____
+                    |  _ \ ___  __ _  __ _ ___ _   _ ___
+                    | |_) / _ \/ _` |/ _` / __| | | / __|
+                    |  __/  __/ (_| | (_| \__ \ |_| \__ \
+                    |_|   \___|\__, |\__,_|___/\__,_|___/
+                               |___/
+
 ## Install Prerequisites
 
 Install the following packages (tested with Ubuntu 24.04):
@@ -16,16 +49,16 @@ Install the following packages (tested with Ubuntu 24.04):
 - (apt-get install libsqlite3-dev) SQLite3 3.37.2
 - (apt-get install libhdf5-dev) HDF5 1.10.7
 
-An Pegasus Conda environment is also available:
+A Pegasus Conda environment is also available:
 ```
 conda env create -f conda/pegasus_env.yaml
 conda activate pegasus
 ```
 
 ## Install Sparta
-Download and build sparta, map_v2:
+Download and build sparta, map_v2.1:
 ```
-git clone git@github.com:sparcians/map
+git clone git@github.com:sparcians/map --recursive --branch map_v2.1
 cd map/sparta
 mkdir release
 cd release
@@ -41,7 +74,7 @@ cmake --install . --prefix $CONDA_PREFIX
 
 ## Clone Pegasus and Build/Regress
 ```
-git clone --recursive git@github.com:sparcians/pegasus.git
+git clone git@github.com:sparcians/pegasus.git --recursive
 cd pegasus
 mkdir release
 cd release

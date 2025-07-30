@@ -20,10 +20,22 @@ namespace pegasus
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        // Ingeter Arithmetic / Bitwise Logical
+        // Integer Move
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vimvHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Binary: Ingeter Arithmetic / Bitwise Logical
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
-        Action::ItrType viablHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType viBinaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Reverse Subtraction
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType virsubHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Widening Signed Unsigned Multiplication
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType viwmulsuHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,
@@ -34,9 +46,21 @@ namespace pegasus
         template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFuc>
         Action::ItrType vmiacsbHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        // Ingeter Compare
+        // Integer Compare
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
         Action::ItrType vmicHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Merge
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType vimergeHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Extension
+        template <size_t fracVal, bool isSigned>
+        Action::ItrType viextHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // Integer Multiply-add
+        template <typename XLEN, OperandMode opMode, auto func>
+        Action::ItrType viTernaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

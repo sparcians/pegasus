@@ -55,6 +55,8 @@ namespace pegasus
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
         }
 
+        bool unimplemented() const { return extractor_info_->isUnimplemented(); }
+
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
 
         bool writesCsr() const;
@@ -160,10 +162,6 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        void markUnimplemented() { unimplemented_ = true; }
-
-        bool unimplemented() const { return unimplemented_; }
-
         // Translation information.  Specifically, this is for data
         // accesses
         PegasusTranslationState* getTranslationState() { return &translation_state_; }
@@ -200,7 +198,6 @@ namespace pegasus
         PegasusTranslationState translation_state_;
 
         ActionGroup inst_action_group_;
-        bool unimplemented_ = false;
 
         friend std::ostream & operator<<(std::ostream & os, const PegasusInst & inst);
     };

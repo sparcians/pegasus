@@ -96,14 +96,19 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        elems_vd.getElement(0).setVal(accumulator);
+        elems_vd.getElement(0).setVal(
+            accumulator); // TODO: Support tail agnostic/undisturbed policy as a parameter.
+                          // Currently assuming undisturbed (requires vd as a source).
+                          // For tail-agnostic, we'll likely write all 1's or some deterministic
+                          // pattern to tail elements. This should be configurable via vector policy
+                          // (vta).
         return ++action_it;
     }
 
-    // Dispatch SEW-sized implementation of vector reduction operations
+    // Dispatch SEW-sized implementation of vredsum.vs
     template <template <typename> typename OP>
-    Action::ItrType RvvReductionInsts::vredopHandlerUnsigned_(PegasusState* state,
-                                                              Action::ItrType action_it)
+    Action::ItrType RvvReductionInsts::vredsumvsHandler_(PegasusState* state,
+                                                         Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
