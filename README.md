@@ -49,7 +49,7 @@ Install the following packages (tested with Ubuntu 24.04):
 - (apt-get install libsqlite3-dev) SQLite3 3.37.2
 - (apt-get install libhdf5-dev) HDF5 1.10.7
 
-An Pegasus Conda environment is also available:
+A Pegasus Conda environment is also available:
 ```
 conda env create -f conda/pegasus_env.yaml
 conda activate pegasus
