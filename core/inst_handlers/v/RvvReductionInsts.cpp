@@ -107,7 +107,7 @@ namespace pegasus
 
     // Dispatch SEW-sized implementation of vredsum.vs
     template <template <typename> typename OP>
-    Action::ItrType RvvReductionInsts::vredsumvsHandler_(PegasusState* state,
+    Action::ItrType RvvReductionInsts::vredopHandlerUnsigned_(PegasusState* state,
                                                          Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
