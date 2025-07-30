@@ -287,7 +287,8 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicsr.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zifencei.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json"};
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json"};
         return uarch_files;
     }
 

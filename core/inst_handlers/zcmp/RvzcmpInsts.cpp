@@ -37,7 +37,7 @@ namespace pegasus
     template void RvzcmpInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
     template <typename XLEN>
-    void pop_(pegasus::PegasusState* state)
+    void RvzcmpInsts::pop_(pegasus::PegasusState* state)
     {
         (void)state;
     }
