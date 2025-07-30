@@ -33,6 +33,10 @@ namespace pegasus
         template <typename XLEN, OperandMode opMode>
         Action::ItrType virsubHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
+        // Integer Widening Signed Unsigned Multiplication
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType viwmulsuHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,
                   template <typename> typename FunctorTemp>

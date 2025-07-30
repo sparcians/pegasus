@@ -1043,6 +1043,57 @@ namespace pegasus
                                                    true, std::modulus>,
                 RvvIntegerInsts>(nullptr, "vrem.vx", ActionTags::EXECUTE_TAG));
 
+        inst_handlers.emplace(
+            "vwmul.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::W,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   true, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vwmul.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmul.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::W,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   true, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vwmul.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmulu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::W,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vwmulu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmulu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viBinaryHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::W,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false, std::multiplies>,
+                RvvIntegerInsts>(nullptr, "vwmulu.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmulsu.vv",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viwmulsuHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::W,
+                                                                     .src2 = OperandMode::Mode::V,
+                                                                     .src1 = OperandMode::Mode::V}>,
+                RvvIntegerInsts>(nullptr, "vwmulsu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vwmulsu.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viwmulsuHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::W,
+                                                                     .src2 = OperandMode::Mode::V,
+                                                                     .src1 = OperandMode::Mode::X}>,
+                RvvIntegerInsts>(nullptr, "vwmulsu.vx", ActionTags::EXECUTE_TAG));
+
         auto macc = []<typename T2, typename T1>(T1 src2, T1 src1, T2 dst) -> T2
         { return sext<T2, T1>(src2) * sext<T2, T1>(src1) + dst; };
 
@@ -1519,6 +1570,76 @@ namespace pegasus
 
             case 64:
                 return virsubHelper<XLEN, 64, opMode>(state, action_it);
+
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, OperandMode opMode>
+    Action::ItrType viwmulsuHelper(PegasusState* state, Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
+                                                                   inst->getRs1()};
+        Elements<Element<2 * elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                         inst->getRd()};
+
+        auto execute = [&](auto iter, const auto & end)
+        {
+            size_t index = 0;
+            for (; iter != end; ++iter)
+            {
+                index = iter.getIndex();
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
+                {
+                    elems_vd.getElement(index).setVal(
+                        sext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
+                        * zext<UintType<2 * elemWidth>>(elems_vs1.getElement(index).getVal()));
+                }
+                else // opMode.src1 == OperandMode::Mode::X)
+                {
+                    elems_vd.getElement(index).setVal(
+                        sext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
+                        * zext<UintType<2 * elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                }
+            }
+        };
+
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vd.begin(), elems_vd.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
+        }
+
+        return ++action_it;
+    }
+
+    template <typename XLEN, OperandMode opMode>
+    Action::ItrType RvvIntegerInsts::viwmulsuHandler_(PegasusState* state,
+                                                      Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return viwmulsuHelper<XLEN, 8, opMode>(state, action_it);
+
+            case 16:
+                return viwmulsuHelper<XLEN, 16, opMode>(state, action_it);
+
+            case 32:
+                return viwmulsuHelper<XLEN, 32, opMode>(state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");
