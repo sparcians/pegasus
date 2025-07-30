@@ -90,7 +90,7 @@ regression make target is renamed to `pegasus_regress`.
 ```
 mkdir release
 cd release
-cmake .. -CMAKE_BUILD_TYPE=Release -DSPARTA_SEARCH_DIR=<full path to map/sparta>
+cmake .. -DCMAKE_BUILD_TYPE=Release -DSPARTA_SEARCH_DIR=<full path to map/sparta>
 make
 make pegasus_regress
 ```
