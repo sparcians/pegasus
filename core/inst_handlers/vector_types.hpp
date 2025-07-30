@@ -15,8 +15,8 @@ namespace pegasus
             N  // not used
         };
 
-        const Mode dst, src1, src2;
-
-        constexpr OperandMode(Mode dst, Mode src2, Mode src1) : dst(dst), src1(src1), src2(src2) {}
+        const Mode dst = Mode::N;
+        const Mode src2 = Mode::N;
+        const Mode src1 = Mode::N;
     };
 } // namespace pegasus

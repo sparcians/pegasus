@@ -45,6 +45,14 @@ namespace pegasus
             "unsupported",
             pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
                 nullptr, "unsupported", ActionTags::EXECUTE_TAG));
+        rv64_inst_compute_address_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
+        rv32_inst_compute_address_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
 
         // Get RV64 instruction handlers
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);

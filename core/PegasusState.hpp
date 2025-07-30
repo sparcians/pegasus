@@ -65,7 +65,7 @@ namespace pegasus
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
             PARAMETER(std::string, isa_string, "rv64gcbv_zicsr_zifencei_zicond_zcb", "ISA string")
-            PARAMETER(uint32_t, vlen, 128, "Vector register size in bits")
+            PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
