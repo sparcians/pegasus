@@ -36,41 +36,6 @@ template <typename T2, typename T1> inline T2 zext(T1 x)
         (static_cast<std::make_unsigned_t<T2>>(static_cast<std::make_unsigned_t<T1>>(x))));
 }
 
-template <typename T> struct Max
-{
-    inline const T & operator()(const T & lhs, const T & rhs) const { return std::max(lhs, rhs); }
-};
-
-template <typename T> struct Min
-{
-    inline const T & operator()(const T & lhs, const T & rhs) const { return std::min(lhs, rhs); }
-};
-
-template <typename T> struct Sll
-{
-    inline T operator()(const T & lhs, const T & rhs) const
-    {
-        return static_cast<T>(lhs << (rhs & (sizeof(T) * 8 - 1)));
-    }
-};
-
-template <typename T> struct Srl
-{
-    inline T operator()(const T & lhs, const T & rhs) const
-    {
-        return static_cast<T>(lhs >> (rhs & (sizeof(T) * 8 - 1)));
-    }
-};
-
-template <typename T> struct Sra
-{
-    inline T operator()(const T & lhs, const T & rhs) const
-    {
-        return static_cast<T>(static_cast<std::make_signed_t<T>>(lhs)
-                              >> (rhs & (sizeof(T) * 8 - 1)));
-    }
-};
-
 namespace pegasus
 {
     template <uint64_t Mask> struct RegisterBitMask

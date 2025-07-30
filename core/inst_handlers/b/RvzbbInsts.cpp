@@ -1,5 +1,6 @@
 #include "core/inst_handlers/b/RvzbbInsts.hpp"
 #include "core/inst_handlers/b/RvbFunctors.hpp"
+#include "core/inst_handlers/CommonFunctors.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"

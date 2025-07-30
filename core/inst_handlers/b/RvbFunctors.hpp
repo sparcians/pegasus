@@ -39,22 +39,6 @@ namespace pegasus
         }
     };
 
-    template <typename S_XLEN> struct Max
-    {
-        S_XLEN operator()(S_XLEN rs1_val, S_XLEN rs2_val) const
-        {
-            return std::max(rs1_val, rs2_val);
-        }
-    };
-
-    template <typename S_XLEN> struct Min
-    {
-        S_XLEN operator()(S_XLEN rs1_val, S_XLEN rs2_val) const
-        {
-            return std::min(rs1_val, rs2_val);
-        }
-    };
-
     template <typename XLEN> struct Orn
     {
         XLEN operator()(XLEN rs1_val, XLEN rs2_val) const { return rs1_val | (~rs2_val); }
