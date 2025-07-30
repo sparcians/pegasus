@@ -143,9 +143,8 @@ class ExecuteUnit : public Unit
                                           pegasus::Action::ItrType action_it)
     {
         const pegasus::PegasusInstPtr & inst = state->getCurrentInst();
-        std::cout << "Executing "
-                  << "uid: " << std::dec << inst->getUid() << " " << inst->dasmString()
-                  << std::endl;
+        std::cout << "Executing " << "uid: " << std::dec << inst->getUid() << " "
+                  << inst->dasmString() << std::endl;
         state->getSimState()->inst_count++;
 
         // Determine if the inst handler needs to be called again
