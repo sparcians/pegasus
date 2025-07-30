@@ -56,7 +56,12 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        elems_vd.getElement(0).setVal(accumulator);
+        elems_vd.getElement(0).setVal(
+            accumulator); // TODO: Support tail agnostic/undisturbed policy as a parameter.
+                          // Currently assuming undisturbed (requires vd as a source).
+                          // For tail-agnostic, we'll likely write all 1's or some deterministic
+                          // pattern to tail elements. This should be configurable via vector policy
+                          // (vta).
         return ++action_it;
     }
 
