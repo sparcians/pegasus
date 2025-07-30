@@ -113,7 +113,6 @@ void stepCoSimWorkload(const std::string & workload)
     sparta::Scheduler scheduler;
     pegasus::cosim::PegasusCoSim cosim(&scheduler, ilimit, workload);
 
-    const pegasus::HartId num_harts = 1;
     const pegasus::HartId hart_id = 0;
     std::string exception_str;
 

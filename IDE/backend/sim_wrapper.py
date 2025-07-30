@@ -42,7 +42,7 @@ class SimWrapper:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.UnscopedExit()
 
-# This class runs an Pegasus simulation in the background and provides basic
+# This class runs a Pegasus simulation in the background and provides basic
 # low-level communication with the simulator.
 class SimEndpoint:
     def __init__(self):
