@@ -1,4 +1,5 @@
 #include "core/inst_handlers/m/RvmInsts.hpp"
+#include "core/inst_handlers/m/RvmFunctors.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
