@@ -92,7 +92,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvIntegerInsts::virsubHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
                                                                    .src2 = OperandMode::Mode::V,
-                                                                   .src1 = OperandMode::Mode::X}>,
+                                                                   .src1 = OperandMode::Mode::I}>,
                 RvvIntegerInsts>(nullptr, "vrsub.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -1482,7 +1482,6 @@ namespace pegasus
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {
-
                     elems_vd.getElement(index).setVal(
                         static_cast<UintType<elemWidth>>(inst->getImmediate())
                         - elems_vs2.getElement(index).getVal());
