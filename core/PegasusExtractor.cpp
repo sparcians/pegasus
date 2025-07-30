@@ -18,6 +18,7 @@ namespace pegasus
                                        const PegasusState* state) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
+        is_unimplemented_(inst_handler_name_ == "unsupported"),
         is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),
         is_cof_inst_(getUarchJsonValue<bool>(uarch_json, "cof")),
         inst_action_group_(mnemonic_)
@@ -38,7 +39,7 @@ namespace pegasus
             }
             catch (const std::out_of_range & excp)
             {
-                sparta_assert(inst_handler_name_ == "nop",
+                sparta_assert(is_unimplemented_,
                               "Missing key in rv"
                                   << std::to_string(xlen)
                                   << " inst compute address handler map: " << inst_handler_name_);

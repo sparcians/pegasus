@@ -37,7 +37,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{f16_sqrt, f32_sqrt, f64_sqrt}>,
                 RvvFloatInsts>(nullptr, "vfsqrt.v", ActionTags::EXECUTE_TAG));
 
@@ -46,7 +46,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -54,7 +54,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, f32_to_i32, f64_to_i64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -62,7 +62,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, ui32_to_f32, ui64_to_f64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.xu.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
@@ -70,7 +70,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{nullptr, i32_to_f32, i64_to_f64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.x.v", ActionTags::EXECUTE_TAG));
 
@@ -152,7 +152,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
+                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::N},
                     FloatFuncs{fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>}>,
                 RvvFloatInsts>(nullptr, "vfclass.v", ActionTags::EXECUTE_TAG));
 
@@ -770,7 +770,7 @@ namespace pegasus
             }
             else
             {
-                elems_vd.getElement(index).setVal(elems_vd.getElement(index).getVal());
+                elems_vd.getElement(index).setVal(elems_vs2.getElement(index).getVal());
             }
         }
 

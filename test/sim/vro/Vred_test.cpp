@@ -22,6 +22,7 @@ class VredInstructionTester : public PegasusInstructionTester
         uint32_t opcode;
 
         // Configure vector unit
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8);   // VL = 8 elements
         state->getVectorConfig()->setLMUL(1); // LMUL = 1
@@ -61,6 +62,7 @@ class VredInstructionTester : public PegasusInstructionTester
         uint32_t opcode;
 
         // Configure vector unit
+        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(8);   // VL = 8 elements
         state->getVectorConfig()->setLMUL(1); // LMUL = 1

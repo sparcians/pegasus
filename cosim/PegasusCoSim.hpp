@@ -1,7 +1,21 @@
+#pragma once
+
 #include "sim/PegasusSim.hpp"
 #include "cosim/CoSimApi.hpp"
+#include "sparta/app/SimulationConfiguration.hpp"
 
 namespace pegasus
+{
+    class Fetch;
+}
+
+namespace simdb
+{
+    class AppManager;
+    class DatabaseManager;
+} // namespace simdb
+
+namespace pegasus::cosim
 {
     class CoSimMemoryInterface : public cosim::MemoryInterface
     {
@@ -21,33 +35,27 @@ namespace pegasus
         sparta::memory::SimpleMemoryMapNode* memory_ = nullptr;
     };
 
-    class Fetch;
     class CoSimObserver;
+    class CoSimPipeline;
 
     class PegasusCoSim : public PegasusSim, public pegasus::cosim::CoSim
     {
       public:
-        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit);
-        ~PegasusCoSim();
+        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0,
+                     const std::string & workload = "");
 
-        void enableLogger(const std::string & filename = "")
-        {
-            if (!filename.empty())
-            {
-                sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", filename));
-            }
-            else
-            {
-                sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", std::cout));
-            }
-        }
+        ~PegasusCoSim() noexcept;
 
-        cosim::Event step(HartId hart) override final;
-        cosim::Event step(HartId hart, Addr override_pc) override final;
+        void enableLogger(const std::string & filename = "");
+
+        CoSimPipeline* getCoSimPipeline() const { return cosim_pipeline_; }
+
+        EventAccessor step(HartId hart) override final;
+        EventAccessor step(HartId hart, Addr override_pc) override final;
 
         // Unimplemented methods
-        cosim::Event stepOperation(HartId hart) override final;
-        cosim::Event stepOperation(HartId hart, Addr override_pc) override final;
+        EventAccessor stepOperation(HartId hart) override final;
+        EventAccessor stepOperation(HartId hart, Addr override_pc) override final;
         void commit(HartId hart) override final;
         void commit(const cosim::Event* event) override final;
         void commitStoreWrite(const cosim::Event* event) override final;
@@ -70,17 +78,19 @@ namespace pegasus
         void setPrivilegeMode(HartId hart, PrivMode priv_mode) override final;
         PrivMode getPrivilegeMode(HartId hart) const override final;
         bool isSimulationFinished(HartId hart) const override final;
-        cosim::Event injectInstruction(HartId hart, Opcode opcode) override final;
-        cosim::Event injectInterrupt(HartId hart, uint64_t interrupt_code) override final;
-        cosim::Event injectReset(HartId hart) override final;
+        EventAccessor injectInstruction(HartId hart, Opcode opcode) override final;
+        EventAccessor injectInterrupt(HartId hart, uint64_t interrupt_code) override final;
+        EventAccessor injectReset(HartId hart) override final;
         uint64_t getNumCommittedEvents(HartId hart) const override final;
         const cosim::Event & getLastCommittedEvent(HartId hart) const override final;
         const cosim::EventList & getUncommittedEvents(HartId hart) const override final;
         uint64_t getNumUncommittedEvents(HartId hart) const override final;
         uint64_t getNumUncommittedWrites(HartId hart) const override final;
 
+        void finish();
+
       private:
-        void bindTree_() override;
+        static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger
         sparta::log::MessageSource cosim_logger_;
@@ -93,12 +103,24 @@ namespace pegasus
         CoSimMemoryInterface* cosim_memory_if_ = nullptr;
 
         // Event List for each hart
-        std::vector<cosim::EventList> event_list_;
+        std::vector<EventList> event_list_;
 
         // Last committed event for each hart
-        std::vector<cosim::Event> last_committed_event_;
+        std::vector<Event> last_committed_event_;
+
+        // Sim config for sparta::app::Simulation base class
+        sparta::app::SimulationConfiguration sim_config_;
+
+        // CoSim pipeline for retrieving events and checkpoints
+        CoSimPipeline* cosim_pipeline_ = nullptr;
+
+        // SimDB instance to hold all events and checkpoints
+        std::shared_ptr<simdb::DatabaseManager> db_mgr_;
+
+        // SimDB app manager to manage the CoSimPipeline
+        std::shared_ptr<simdb::AppManager> app_mgr_;
 
         // CoSim Observer for capturing Events from each hart
-        std::vector<CoSimObserver*> cosim_observer_;
+        std::vector<CoSimObserver*> cosim_observers_;
     };
-} // namespace pegasus
+} // namespace pegasus::cosim
