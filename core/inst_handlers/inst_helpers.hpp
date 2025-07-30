@@ -95,7 +95,7 @@ template <typename T> struct Mulh
             int64_t r{static_cast<std::make_signed_t<T>>(rhs)};
             return static_cast<T>((l * r) >> sizeof(T) * 8);
         }
-        else //
+        else
         {
             return mulh(lhs, rhs);
         }
@@ -112,7 +112,7 @@ template <typename T> struct Mulhsu
             uint64_t r{rhs};
             return static_cast<T>((l * r) >> sizeof(T) * 8);
         }
-        else //
+        else
         {
             return mulhsu(lhs, rhs);
         }
