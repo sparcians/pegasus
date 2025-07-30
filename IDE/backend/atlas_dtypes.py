@@ -12,7 +12,7 @@ def pegasus_current_inst(endpoint):
     inst = PegasusInst(endpoint)
     return inst if isinstance(inst.getUid(), int) else None
 
-# Wrap an PegasusState C++ object.
+# Wrap a PegasusState C++ object.
 class PegasusState:
     def __init__(self, endpoint):
         self.endpoint = endpoint
@@ -50,7 +50,7 @@ class PegasusState:
     def getCsrRegisterSet(self):
         return PegasusCsrRegisterSet(self.endpoint)
 
-    # Wrap an PegasusState::SimState C++ object.
+    # Wrap a PegasusState::SimState C++ object.
     class SimState:
         def __init__(self, endpoint):
             self.endpoint = endpoint
@@ -75,7 +75,7 @@ class PegasusState:
         def workload_exit_code(self):
             return pegasus_exit_code(self.endpoint)
 
-# Wrap an PegasusInst C++ object.
+# Wrap a PegasusInst C++ object.
 class PegasusInst:
     def __init__(self, endpoint):
         self.endpoint = endpoint
@@ -223,7 +223,7 @@ class SpartaRegisterDeepCopy:
     def deepCopy(self):
         return SpartaRegisterDeepCopy(self)
 
-# Wrap an pegasus::RegisterSet C++ object.
+# Wrap a pegasus::RegisterSet C++ object.
 class PegasusRegisterSet:
     def __init__(self, endpoint, group_num):
         self.endpoint = endpoint
