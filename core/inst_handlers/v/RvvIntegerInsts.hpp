@@ -29,6 +29,10 @@ namespace pegasus
                   template <typename> typename FunctorTemp>
         Action::ItrType viBinaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
+        // Integer Reverse Subtraction
+        template <typename XLEN, OperandMode opMode>
+        Action::ItrType virsubHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
         // Result for Integer Add-with-carry Subtract-with-borrow
         template <typename XLEN, OperandMode opMode, bool hasMaskOp,
                   template <typename> typename FunctorTemp>

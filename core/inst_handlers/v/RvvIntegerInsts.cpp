@@ -81,6 +81,21 @@ namespace pegasus
                 RvvIntegerInsts>(nullptr, "vsub.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
+            "vrsub.vx",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::virsubHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                                                                   .src2 = OperandMode::Mode::V,
+                                                                   .src1 = OperandMode::Mode::X}>,
+                RvvIntegerInsts>(nullptr, "vrsub.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vrsub.vi",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::virsubHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                                                                   .src2 = OperandMode::Mode::V,
+                                                                   .src1 = OperandMode::Mode::X}>,
+                RvvIntegerInsts>(nullptr, "vrsub.vi", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
             "vwadd.vv",
             pegasus::Action::createAction<
                 &RvvIntegerInsts::viBinaryHandler_<XLEN,
@@ -1440,6 +1455,75 @@ namespace pegasus
                     sparta_assert(false, "Unsupported SEW value");
                     break;
             }
+        }
+        return ++action_it;
+    }
+
+    template <typename XLEN, size_t elemWidth, OperandMode opMode>
+    Action::ItrType virsubHelper(PegasusState* state, Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+                                                     inst->getRd()};
+
+        auto execute = [&](auto iter, const auto & end)
+        {
+            size_t index = 0;
+            for (; iter != end; ++iter)
+            {
+                index = iter.getIndex();
+                if constexpr (opMode.src1 == OperandMode::Mode::X)
+                {
+                    elems_vd.getElement(index).setVal(
+                        static_cast<UintType<elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1()))
+                        - elems_vs2.getElement(index).getVal());
+                }
+                else // opMode.src1 == OperandMode::Mode::I
+                {
+
+                    elems_vd.getElement(index).setVal(
+                        static_cast<UintType<elemWidth>>(inst->getImmediate())
+                        - elems_vs2.getElement(index).getVal());
+                }
+            }
+        };
+
+        if (inst->getVM()) // unmasked
+        {
+            execute(elems_vd.begin(), elems_vd.end());
+        }
+        else // masked
+        {
+            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
+        }
+
+        return ++action_it;
+    }
+
+    template <typename XLEN, OperandMode opMode>
+    Action::ItrType RvvIntegerInsts::virsubHandler_(PegasusState* state, Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 8:
+                return virsubHelper<XLEN, 8, opMode>(state, action_it);
+
+            case 16:
+                return virsubHelper<XLEN, 16, opMode>(state, action_it);
+
+            case 32:
+                return virsubHelper<XLEN, 32, opMode>(state, action_it);
+
+            case 64:
+                return virsubHelper<XLEN, 64, opMode>(state, action_it);
+
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+                break;
         }
         return ++action_it;
     }
