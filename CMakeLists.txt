@@ -120,9 +120,6 @@ include(stf_lib/cmake/stf_linker_setup.cmake)
 setup_stf_linker(false)
 add_subdirectory(stf_lib)
 
-# TODO cnyce: Remove this when map_v2.1+ is released (new SimDB required)
-option(BUILD_COSIM "Build targets and tests for cosim" OFF)
-
 # 32-bit register JSON directory
 add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
 add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
@@ -136,9 +133,7 @@ add_subdirectory(core)
 add_subdirectory(core/inst_handlers)
 add_subdirectory(system)
 add_subdirectory(sim)
-if(BUILD_COSIM)
-  add_subdirectory(cosim)
-endif()
+add_subdirectory(cosim)
 add_subdirectory(test)
 
 include(FetchContent)
