@@ -4,7 +4,6 @@
 #include "core/PegasusAllocatorWrapper.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/observers/Observer.hpp"
-#include "core/CoSimQuery.hpp"
 
 #include "arch/RegisterSet.hpp"
 #include "include/PegasusTypes.hpp"
@@ -435,7 +434,6 @@ namespace pegasus
         ActionGroup stop_sim_action_group_;
 
         // Co-simulation debug utils
-        std::shared_ptr<CoSimQuery> cosim_query_;
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
     };

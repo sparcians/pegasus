@@ -13,50 +13,122 @@ namespace pegasus
         stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
                                                       0, "Trace from Pegasus"));
 
-        if (reg_width == 64)
+        if (state->getXlen() == 32)
+        {
+            stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
+        }
+        else
         {
             stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV64);
             stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
         }
-        else
-        {
-            stf_writer_.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV32);
-        }
+
+        // TODO: add support for memory records
 
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setHeaderPC(inital_pc);
         stf_writer_.finalizeHeader();
-        (void)state; // Unused parameter, but will be implemented when recording inital state of
-                     // registers
-        // recordRegState_(state); record inital state of registers
+        recordRegState_(state);
     }
 
-    void STFLogger::writeInstruction_(const PegasusInst* inst)
+    // METHODS
+    void STFLogger::postExecute_(PegasusState* state)
     {
-        if (fault_cause_.isValid() || interrupt_cause_.isValid())
+        if(fault_cause_.isValid() || interrupt_cause_.isValid()) { return; }
+
+        for (const auto & src_reg : src_regs_)
         {
-            return;
+            switch (src_reg.reg_id.reg_type)
+            {
+                case RegType::INTEGER:
+                    stf_writer_ << stf::InstRegRecord(
+                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        READ_INT_REG<uint64_t>(state, src_reg.reg_id.reg_num));
+                    break;
+                case RegType::FLOATING_POINT:
+                    stf_writer_ << stf::InstRegRecord(
+                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
+                    break;
+                case RegType::CSR:
+                    stf_writer_ << stf::InstRegRecord(
+                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        READ_CSR_REG<uint64_t>(state, src_reg.reg_id.reg_num));
+                    break;
+                default:
+                    sparta_assert(false, "Invalid register type!");
+            }
         }
 
-        if (inst->getOpcodeSize() == 2)
+        for (const auto & dst_reg : dst_regs_)
         {
-            stf_writer_ << stf::InstOpcode16Record(inst->getOpcode());
+            switch (dst_reg.reg_id.reg_type)
+            {
+                case RegType::INTEGER:
+                    stf_writer_ << stf::InstRegRecord(
+                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
+                    break;
+                case RegType::FLOATING_POINT:
+                    stf_writer_ << stf::InstRegRecord(
+                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        READ_FP_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
+                    break;
+                case RegType::CSR:
+                    stf_writer_ << stf::InstRegRecord(
+                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        READ_CSR_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
+                    break;
+                default:
+                    sparta_assert(false, "Invalid register type!");
+            }
+        }
+
+        if (state->getCurrentInst()->getOpcodeSize() == 2)
+        {
+            stf_writer_ << stf::InstOpcode16Record(state->getCurrentInst()->getOpcode());
         }
         else
         {
-            stf_writer_ << stf::InstOpcode32Record(inst->getOpcode());
+            stf_writer_ << stf::InstOpcode32Record(state->getCurrentInst()->getOpcode());
         }
     }
 
-    void STFLogger::postExecute_(PegasusState* state)
+    void STFLogger::recordRegState_(PegasusState* state)
     {
-        // write opcode record
-        writeInstruction_(state->getCurrentInst().get());
+        //Recording int registers
+        for (uint64_t i = 0; i < 32; ++i)
+        {
+            stf_writer_ << stf::InstRegRecord(i,
+                                stf::Registers::STF_REG_TYPE::INTEGER,
+                                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                                READ_INT_REG<uint64_t>(state, i));
+
+        }
+        //Recording fp registers
+        for (uint64_t i = 0; i < state->getFpRegisterSet()->getNumRegisters(); ++i)
+        {
+            stf_writer_ << stf::InstRegRecord(i,
+                                stf::Registers::STF_REG_TYPE::FLOATING_POINT,
+                                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                                READ_FP_REG<uint64_t>(state, i));
+
+        }
+        //Recording csr Registers
+        auto csr_rset = state->getCsrRegisterSet();
+        for (size_t i = 0; i < csr_rset->getNumRegisters(); ++i) {
+            if (auto reg = csr_rset->getRegister(i)) {
+                stf_writer_ << stf::InstRegRecord(i,
+                            stf::Registers::STF_REG_TYPE::CSR,
+                            stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                            reg->dmiRead<uint64_t>());
+            }
+        }
     }
-
-    void STFLogger::preExecute_(PegasusState* state) { (void)state; }
-
-    void STFLogger::preException_(PegasusState* state) { (void)state; }
-
-    void STFLogger::recordRegState_(PegasusState* state) { (void)state; }
 } // namespace pegasus
