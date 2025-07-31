@@ -4,10 +4,11 @@
 #include "sim/PegasusSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] = "Usage:\n"
-                     "./pegasus [-i inst limit] [--reg \"name value\"] [--interactive] "
-                     "[--spike-formatting] <workload>"
-                     "\n";
+const char USAGE[] =
+    "Usage:\n"
+    "./pegasus [-i inst limit] [--reg \"name value\"] [--opcode opcode] [--interactive] "
+    "[--spike-formatting] <workload>"
+    "\n";
 
 struct RegOverride
 {
@@ -28,6 +29,7 @@ static inline std::istream & operator>>(std::istream & is, RegOverride & into)
 int main(int argc, char** argv)
 {
     uint64_t ilimit = 0;
+    std::string opcode = "";
     std::string workload;
     std::string eot_mode;
 
@@ -59,6 +61,7 @@ int main(int argc, char** argv)
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
             ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register")
+            ("opcode", po::value<std::string>(&opcode), "Executes a single opcode")
             ("interactive", "Enable interactive mode (IDE)")
             ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
@@ -80,14 +83,21 @@ int main(int argc, char** argv)
 
         if (0 == vm.count("no-run"))
         {
-            if (workload.empty())
+            if (workload.empty() && (0 == vm.count("opcode")))
             {
-                std::cout << "ERROR: Missing a workload to run. Provide an ELF or JSON to run"
-                          << std::endl;
+                std::cout
+                    << "ERROR: Missing a workload or opcode to run. Provide an ELF or opcode to run"
+                    << std::endl;
                 std::cout << USAGE;
                 return 1;
             }
         }
+
+        if (vm.count("opcode"))
+        {
+            ilimit = 1;
+        }
+
         // Workload command line arguments
         std::vector<std::string> workload_args;
         sparta::utils::tokenize_on_whitespace(workload, workload_args);
@@ -109,6 +119,17 @@ int main(int argc, char** argv)
         pegasus::PegasusSim sim(&scheduler, workload_args, reg_value_overrides, ilimit);
 
         cls.populateSimulation(&sim);
+
+        if (vm.count("opcode"))
+        {
+            const pegasus::HartId hart_id = 0;
+            const uint64_t pc = 0x1000;
+            // Assume opcode is a hex string
+            const uint64_t opcode_val = std::stoull(opcode, nullptr, 16);
+            pegasus::PegasusState* state = sim.getPegasusState(hart_id);
+            state->writeMemory(pc, opcode_val);
+            state->setPc(pc);
+        }
 
         if (vm.count("interactive"))
         {

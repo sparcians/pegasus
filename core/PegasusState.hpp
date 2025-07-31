@@ -71,6 +71,7 @@ namespace pegasus
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
+            PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
@@ -337,6 +338,9 @@ namespace pegasus
         // Mavis list of included extension tags
         std::set<std::string> inclusions_;
 
+        // Instruction limit to end simulation
+        const uint64_t ilimit_ = 0;
+
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
 
@@ -388,6 +392,7 @@ namespace pegasus
         std::unique_ptr<VectorConfig> vector_config_;
 
         // Increment PC Action
+        template <bool CHECK_ILIMIT>
         Action::ItrType incrementPc_(PegasusState* state, Action::ItrType action_it);
         pegasus::Action increment_pc_action_;
 
