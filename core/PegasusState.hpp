@@ -213,6 +213,8 @@ namespace pegasus
 
         Translate* getTranslateUnit() const { return translate_unit_; }
 
+        sparta::Register* getSpartaRegister(const mavis::OperandInfo::Element* operand);
+
         pegasus::RegisterSet* getIntRegisterSet() { return int_rset_.get(); }
 
         pegasus::RegisterSet* getFpRegisterSet() { return fp_rset_.get(); }

@@ -309,6 +309,29 @@ namespace pegasus
                                                         pegasus_system_->getSystemMemory());
     }
 
+    sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
+    {
+        if (operand)
+        {
+            switch (operand->operand_type)
+            {
+                case mavis::InstMetaData::OperandTypes::WORD:
+                case mavis::InstMetaData::OperandTypes::LONG:
+                    return getIntRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::SINGLE:
+                case mavis::InstMetaData::OperandTypes::DOUBLE:
+                case mavis::InstMetaData::OperandTypes::QUAD:
+                    return getFpRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::VECTOR:
+                    return getVecRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::NONE:
+                    sparta_assert(false, "Invalid Mavis Operand Type!");
+            }
+        }
+
+        return nullptr;
+    }
+
     Action::ItrType PegasusState::preExecute_(PegasusState* state, Action::ItrType action_it)
     {
         for (const auto & observer : observers_)
