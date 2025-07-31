@@ -56,9 +56,9 @@ conda activate pegasus
 ```
 
 ## Install Sparta
-Download and build sparta, map_v2:
+Download and build sparta, map_v2.1:
 ```
-git clone git@github.com:sparcians/map
+git clone git@github.com:sparcians/map --recursive --branch map_v2.1
 cd map/sparta
 mkdir release
 cd release
@@ -74,7 +74,7 @@ cmake --install . --prefix $CONDA_PREFIX
 
 ## Clone Pegasus and Build/Regress
 ```
-git clone --recursive git@github.com:sparcians/pegasus.git
+git clone git@github.com:sparcians/pegasus.git --recursive
 cd pegasus
 mkdir release
 cd release
