@@ -36,17 +36,49 @@ namespace pegasus
     template void RvzcmpInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
     template void RvzcmpInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
 
-    template <typename XLEN>
-    void RvzcmpInsts::pop_(pegasus::PegasusState* state)
+    template <typename XLEN> void RvzcmpInsts::pop_(pegasus::PegasusState* state)
     {
-        (void)state;
+        const PegasusInstPtr & inst = state->getCurrentInst();
+
+        // Load RA (1) and 0-12 saved registers (8-9, 18-27) from the stack frame
+        // Have to start at idx 1 since Mavis includes the SP in the list of dests
+        XLEN addr = READ_INT_REG<XLEN>(state, 2);
+        const XLEN new_sp_val = addr + inst->getStackAdjustment();
+        const auto & dst_reg_list = inst->getMavisOpcodeInfo()->getDestOpInfoList();
+        for (uint32_t idx = 1; idx < dst_reg_list.size(); ++idx)
+        {
+            const auto dst = dst_reg_list.at(idx);
+            addr -= sizeof(XLEN);
+            const XLEN dst_reg_val = state->readMemory<XLEN>(addr);
+            WRITE_INT_REG<XLEN>(state, dst.field_value, dst_reg_val);
+        }
+
+        // Update stack pointer
+        WRITE_INT_REG<XLEN>(state, 2, new_sp_val);
     }
 
     template <typename XLEN>
     Action::ItrType RvzcmpInsts::pushHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
-        (void)state;
+        const PegasusInstPtr & inst = state->getCurrentInst();
+
+        // Store RA (1) and 0-12 saved registers (8-9, 18-27) to the stack frame
+        // Have to start at idx 1 since Mavis includes the SP in the list of sources
+        XLEN addr = READ_INT_REG<XLEN>(state, 2);
+        const XLEN new_sp_val = addr + inst->getStackAdjustment();
+        const auto & src_reg_list = inst->getMavisOpcodeInfo()->getSourceOpInfoList();
+        for (uint32_t idx = 1; idx < src_reg_list.size(); ++idx)
+        {
+            const auto src = src_reg_list.at(idx);
+            addr -= sizeof(XLEN);
+            const XLEN src_reg_val = READ_INT_REG<XLEN>(state, src.field_value);
+            state->writeMemory<XLEN>(addr, src_reg_val);
+        }
+
+        // Update stack pointer
+        WRITE_INT_REG<XLEN>(state, 2, new_sp_val);
+
         return ++action_it;
     }
 

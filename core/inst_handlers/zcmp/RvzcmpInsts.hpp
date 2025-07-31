@@ -15,8 +15,7 @@ namespace pegasus
 
       private:
         // Pop implementation
-        template <typename XLEN>
-        void pop_(pegasus::PegasusState* state);
+        template <typename XLEN> void pop_(pegasus::PegasusState* state);
 
         // cm.push
         template <typename XLEN>
