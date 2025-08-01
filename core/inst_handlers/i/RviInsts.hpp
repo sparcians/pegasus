@@ -73,21 +73,19 @@ namespace pegasus
         template <typename XLEN>
         Action::ItrType auipcHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        // shifts,
-        Action::ItrType sllHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        Action::ItrType slliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        // sll, sra, srl
+        template <typename XLEN, typename OPERATOR>
+        Action::ItrType shiftHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // slli, srai, srli
+        template <typename XLEN, typename OPERATOR>
+        Action::ItrType shiftImmHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // shift (RV64 only)
         Action::ItrType slliwHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType sllwHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType sraHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType sraiHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType sraiwHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType srawHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType srlHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN>
-        Action::ItrType srliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType srliwHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         Action::ItrType srlwHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 

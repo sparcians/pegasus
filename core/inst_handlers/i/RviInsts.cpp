@@ -1,4 +1,5 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
+#include "core/inst_handlers/i/RviFunctors.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"
@@ -273,12 +274,14 @@ namespace pegasus
                 "sh",
                 pegasus::Action::createAction<&RviInsts::storeHandler_<RV64, uint16_t>, RviInsts>(
                     nullptr, "sh", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sll",
-                                  pegasus::Action::createAction<&RviInsts::sllHandler_, RviInsts>(
-                                      nullptr, "sll", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("slli",
-                                  pegasus::Action::createAction<&RviInsts::slliHandler_, RviInsts>(
-                                      nullptr, "slli", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sll",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV64, Sll<RV64>>, RviInsts>(
+                    nullptr, "sll", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "slli",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV64, Sll<RV64>>,
+                                              RviInsts>(nullptr, "slli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("slliw",
                                   pegasus::Action::createAction<&RviInsts::slliwHandler_, RviInsts>(
                                       nullptr, "slliw", ActionTags::EXECUTE_TAG));
@@ -302,11 +305,13 @@ namespace pegasus
                             &RviInsts::integer_reg_regHandler_<RV64, std::less<RV64>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sra", pegasus::Action::createAction<&RviInsts::sraHandler_<RV64>, RviInsts>(
-                           nullptr, "sra", ActionTags::EXECUTE_TAG));
+                "sra",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV64, Sra<RV64>>, RviInsts>(
+                    nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srai", pegasus::Action::createAction<&RviInsts::sraiHandler_<RV64>, RviInsts>(
-                            nullptr, "srai", ActionTags::EXECUTE_TAG));
+                "srai",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV64, Sra<RV64>>,
+                                              RviInsts>(nullptr, "srai", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("sraiw",
                                   pegasus::Action::createAction<&RviInsts::sraiwHandler_, RviInsts>(
                                       nullptr, "sraiw", ActionTags::EXECUTE_TAG));
@@ -318,11 +323,13 @@ namespace pegasus
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV64, PrivMode::SUPERVISOR>,
                                               RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srl", pegasus::Action::createAction<&RviInsts::srlHandler_<RV64>, RviInsts>(
-                           nullptr, "srl", ActionTags::EXECUTE_TAG));
+                "srl",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV64, Srl<RV64>>, RviInsts>(
+                    nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srli", pegasus::Action::createAction<&RviInsts::srliHandler_<RV64>, RviInsts>(
-                            nullptr, "srli", ActionTags::EXECUTE_TAG));
+                "srli",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV64, Srl<RV64>>,
+                                              RviInsts>(nullptr, "srli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace("srliw",
                                   pegasus::Action::createAction<&RviInsts::srliwHandler_, RviInsts>(
                                       nullptr, "srliw", ActionTags::EXECUTE_TAG));
@@ -469,12 +476,14 @@ namespace pegasus
                 "sh",
                 pegasus::Action::createAction<&RviInsts::storeHandler_<RV32, uint16_t>, RviInsts>(
                     nullptr, "sh", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("sll",
-                                  pegasus::Action::createAction<&RviInsts::sllHandler_, RviInsts>(
-                                      nullptr, "sll", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace("slli",
-                                  pegasus::Action::createAction<&RviInsts::slliHandler_, RviInsts>(
-                                      nullptr, "slli", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "sll",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV32, Sll<RV32>>, RviInsts>(
+                    nullptr, "sll", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "slli",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV32, Sll<RV32>>,
+                                              RviInsts>(nullptr, "slli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "slt", pegasus::Action::createAction<
                            &RviInsts::integer_reg_regHandler_<RV32, std::less<int32_t>>, RviInsts>(
@@ -492,21 +501,25 @@ namespace pegasus
                             &RviInsts::integer_reg_regHandler_<RV32, std::less<RV32>>, RviInsts>(
                             nullptr, "sltu", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "sra", pegasus::Action::createAction<&RviInsts::sraHandler_<RV32>, RviInsts>(
-                           nullptr, "sra", ActionTags::EXECUTE_TAG));
+                "sra",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV32, Sra<RV32>>, RviInsts>(
+                    nullptr, "sra", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srai", pegasus::Action::createAction<&RviInsts::sraiHandler_<RV32>, RviInsts>(
-                            nullptr, "srai", ActionTags::EXECUTE_TAG));
+                "srai",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV32, Sra<RV32>>,
+                                              RviInsts>(nullptr, "srai", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sret",
                 pegasus::Action::createAction<&RviInsts::xretHandler_<RV32, PrivMode::SUPERVISOR>,
                                               RviInsts>(nullptr, "sret", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srl", pegasus::Action::createAction<&RviInsts::srlHandler_<RV32>, RviInsts>(
-                           nullptr, "srl", ActionTags::EXECUTE_TAG));
+                "srl",
+                pegasus::Action::createAction<&RviInsts::shiftHandler_<RV32, Srl<RV32>>, RviInsts>(
+                    nullptr, "srl", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "srli", pegasus::Action::createAction<&RviInsts::srliHandler_<RV32>, RviInsts>(
-                            nullptr, "srli", ActionTags::EXECUTE_TAG));
+                "srli",
+                pegasus::Action::createAction<&RviInsts::shiftImmHandler_<RV32, Srl<RV32>>,
+                                              RviInsts>(nullptr, "srli", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "sub", pegasus::Action::createAction<
                            &RviInsts::integer_reg_regHandler_<RV32, std::minus<RV32>>, RviInsts>(
@@ -744,18 +757,6 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN>
-    Action::ItrType RviInsts::srlHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
-    {
-        const PegasusInstPtr & inst = state->getCurrentInst();
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-        const XLEN rd_val = (XLEN)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
-
     Action::ItrType RviInsts::srliwHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -769,28 +770,28 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RviInsts::sllHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    template <typename XLEN, typename OPERATOR>
+    Action::ItrType RviInsts::shiftHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
-        const uint64_t rs2_val = READ_INT_REG<uint64_t>(state, inst->getRs2());
-        const uint64_t rd_val = rs1_val << (rs2_val & (state->getXlen() - 1));
-        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        const XLEN rd_val = OPERATOR()(rs1_val, rs2_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
     }
 
-    template <typename XLEN>
-    Action::ItrType RviInsts::sraiHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    template <typename XLEN, typename OPERATOR>
+    Action::ItrType RviInsts::shiftImmHandler_(pegasus::PegasusState* state,
+                                               Action::ItrType action_it)
     {
-        using SXLEN = std::make_signed_t<XLEN>;
         const PegasusInstPtr & inst = state->getCurrentInst();
 
-        // require(SHAMT < state->getXlen());
-        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN shift_amount = inst->getImmediate() & (state->getXlen() - 1);
-        const SXLEN rd_val = (SXLEN)(rs1_val >> shift_amount);
+        const XLEN rd_val = OPERATOR()(rs1_val, shift_amount);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
@@ -805,20 +806,6 @@ namespace pegasus
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> (rs2_val & 0x1F));
         WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RviInsts::srliHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
-    {
-        const PegasusInstPtr & inst = state->getCurrentInst();
-
-        // require(SHAMT < state->getXlen());
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        const XLEN shift_amount = inst->getImmediate() & (state->getXlen() - 1);
-        const XLEN rd_val = (XLEN)(rs1_val >> shift_amount);
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
     }
@@ -857,33 +844,6 @@ namespace pegasus
         const uint64_t shift_amount = inst->getImmediate() & (state->getXlen() - 1);
         // Casting from int32_t to int64_t will sign extend the value
         const uint64_t rd_val = (int64_t)(int32_t)(rs1_val >> shift_amount);
-        WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
-
-    template <typename XLEN>
-    Action::ItrType RviInsts::sraHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
-    {
-        using SXLEN = std::make_signed_t<XLEN>;
-        const PegasusInstPtr & inst = state->getCurrentInst();
-
-        const SXLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-        const XLEN rd_val = (int64_t)(rs1_val >> (rs2_val & (state->getXlen() - 1)));
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
-
-    Action::ItrType RviInsts::slliHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
-    {
-        const PegasusInstPtr & inst = state->getCurrentInst();
-
-        // require(SHAMT < state->getXlen());
-        const uint64_t rs1_val = READ_INT_REG<uint64_t>(state, inst->getRs1());
-        const uint64_t shift_amount = inst->getImmediate() & (state->getXlen() - 1);
-        const uint64_t rd_val = rs1_val << shift_amount;
         WRITE_INT_REG<uint64_t>(state, inst->getRd(), rd_val);
 
         return ++action_it;
