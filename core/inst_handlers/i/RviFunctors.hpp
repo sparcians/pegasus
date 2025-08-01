@@ -11,12 +11,18 @@ namespace pegasus
 {
     template <typename T> struct Max
     {
-        inline const T & operator()(const T & lhs, const T & rhs) const { return std::max(lhs, rhs); }
+        inline const T & operator()(const T & lhs, const T & rhs) const
+        {
+            return std::max(lhs, rhs);
+        }
     };
 
     template <typename T> struct Min
     {
-        inline const T & operator()(const T & lhs, const T & rhs) const { return std::min(lhs, rhs); }
+        inline const T & operator()(const T & lhs, const T & rhs) const
+        {
+            return std::min(lhs, rhs);
+        }
     };
 
     template <typename T> struct Sll

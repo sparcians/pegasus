@@ -275,10 +275,7 @@ namespace pegasus::cosim
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
-    const Event* EventAccessor::operator->()
-    {
-        return get();
-    }
+    const Event* EventAccessor::operator->() { return get(); }
 
     const Event* EventAccessor::get()
     {

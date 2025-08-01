@@ -57,8 +57,9 @@ namespace pegasus
             "feq_d", pegasus::Action::createAction<&RvdInsts::feq_dHandler_<XLEN>, RvdInsts>(
                          nullptr, "feq_d", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fld", pegasus::Action::createAction<&RvdInsts::floatLsHandler<FLOAT_DP, true>, RvfInstsBase>(
-                       nullptr, "fld", ActionTags::EXECUTE_TAG));
+            "fld",
+            pegasus::Action::createAction<&RvdInsts::floatLsHandler<FLOAT_DP, true>, RvfInstsBase>(
+                nullptr, "fld", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fle_d", pegasus::Action::createAction<&RvdInsts::fle_dHandler_<XLEN>, RvdInsts>(
                          nullptr, "fle_d", ActionTags::EXECUTE_TAG));
@@ -363,7 +364,8 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint64_t rs1_val = checkNanBoxing<RV64, FLOAT_DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint64_t rs1_val =
+            checkNanBoxing<RV64, FLOAT_DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fclass(rs1_val));
 

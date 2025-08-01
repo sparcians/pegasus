@@ -39,7 +39,8 @@ namespace pegasus
         template <typename SIZE>
         static void fmaxFminNanZeroCheck(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
         {
-            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value
+                          || std::is_same<SIZE, FLOAT_DP>::value);
 
             const Constants<SIZE> & cons = getConst<SIZE>();
 
@@ -152,7 +153,8 @@ namespace pegasus
         template <typename SIZE, bool LOAD>
         Action::ItrType floatLsHandler(PegasusState* state, Action::ItrType action_it)
         {
-            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value
+                          || std::is_same<SIZE, FLOAT_DP>::value);
 
             const PegasusInstPtr & inst = state->getCurrentInst();
             const Addr paddr = inst->getTranslationState()->getResult().getPAddr();
@@ -174,7 +176,8 @@ namespace pegasus
       private:
         template <typename SIZE> struct Constants
         {
-            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value
+                          || std::is_same<SIZE, FLOAT_DP>::value);
 
             static constexpr uint8_t SGN_BIT = sizeof(SIZE) * 8 - 1;
             static constexpr uint8_t EXP_MSB = SGN_BIT - 1;
@@ -194,7 +197,8 @@ namespace pegasus
 
         template <typename SIZE> static constexpr Constants<SIZE> getConst()
         {
-            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value
+                          || std::is_same<SIZE, FLOAT_DP>::value);
             if constexpr (std::is_same<SIZE, FLOAT_SP>::value)
             {
                 return const_sp;
