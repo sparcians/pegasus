@@ -1,4 +1,5 @@
 #include "core/inst_handlers/d/RvdInsts.hpp"
+#include "core/inst_handlers/f/RvfFunctors.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 
@@ -196,7 +197,7 @@ namespace pegasus
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
         const uint64_t result =
-            f64_mulAdd(float64_t{rs1_val ^ dp_sign_mask}, float64_t{rs2_val}, float64_t{rs3_val}).v;
+            Fnmsub<float64_t>{}(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v;
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -249,7 +250,7 @@ namespace pegasus
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v);
+            Fmadd<float64_t>{}(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -263,9 +264,8 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
-        const uint64_t result = f64_mulAdd(float64_t{rs1_val ^ dp_sign_mask}, float64_t{rs2_val},
-                                           float64_t{rs3_val ^ dp_sign_mask})
-                                    .v;
+        const uint64_t result =
+            Fnmadd<float64_t>{}(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v;
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -394,8 +394,7 @@ namespace pegasus
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            f64_mulAdd(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val ^ dp_sign_mask})
-                .v);
+            Fmsub<float64_t>{}(float64_t{rs1_val}, float64_t{rs2_val}, float64_t{rs3_val}).v);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
