@@ -57,7 +57,7 @@ namespace pegasus
             "feq_d", pegasus::Action::createAction<&RvdInsts::feq_dHandler_<XLEN>, RvdInsts>(
                          nullptr, "feq_d", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "fld", pegasus::Action::createAction<&RvdInsts::floatLsHandler<DP, true>, RvfInstsBase>(
+            "fld", pegasus::Action::createAction<&RvdInsts::floatLsHandler<FLOAT_DP, true>, RvfInstsBase>(
                        nullptr, "fld", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fle_d", pegasus::Action::createAction<&RvdInsts::fle_dHandler_<XLEN>, RvdInsts>(
@@ -88,7 +88,7 @@ namespace pegasus
                             nullptr, "fnmsub_d", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fsd",
-            pegasus::Action::createAction<&RvdInsts::floatLsHandler<DP, false>, RvfInstsBase>(
+            pegasus::Action::createAction<&RvdInsts::floatLsHandler<FLOAT_DP, false>, RvfInstsBase>(
                 nullptr, "fsd", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fsgnj_d", pegasus::Action::createAction<&RvdInsts::fsgnj_dHandler_<XLEN>, RvdInsts>(
@@ -105,7 +105,7 @@ namespace pegasus
         inst_handlers.emplace(
             "fsub_d", pegasus::Action::createAction<&RvdInsts::fsub_dHandler_<XLEN>, RvdInsts>(
                           nullptr, "fsub_d", ActionTags::EXECUTE_TAG));
-        if constexpr (sizeof(XLEN) >= sizeof(DP))
+        if constexpr (sizeof(XLEN) >= sizeof(FLOAT_DP))
         {
             inst_handlers.emplace(
                 "fcvt_d_l",
@@ -279,7 +279,7 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         uint64_t rd_val = f64_le_quiet(float64_t{rs1_val}, float64_t{rs2_val}) ? rs1_val : rs2_val;
-        fmaxFminNanZeroCheck<DP>(rs1_val, rs2_val, rd_val, false);
+        fmaxFminNanZeroCheck<FLOAT_DP>(rs1_val, rs2_val, rd_val, false);
         WRITE_FP_REG<RV64>(state, inst->getRd(), rd_val);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -363,7 +363,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint64_t rs1_val = checkNanBoxing<RV64, DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint64_t rs1_val = checkNanBoxing<RV64, FLOAT_DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fclass(rs1_val));
 
@@ -419,7 +419,7 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         uint64_t rd_val = f64_le_quiet(float64_t{rs1_val}, float64_t{rs2_val}) ? rs2_val : rs1_val;
-        fmaxFminNanZeroCheck<DP>(rs1_val, rs2_val, rd_val, true);
+        fmaxFminNanZeroCheck<FLOAT_DP>(rs1_val, rs2_val, rd_val, true);
         WRITE_FP_REG<RV64>(state, inst->getRd(), rd_val);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -433,7 +433,7 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         softfloat_roundingMode = getRM<RV64>(state);
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f64_to_f32(float64_t{rs1_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f64_to_f32(float64_t{rs1_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }

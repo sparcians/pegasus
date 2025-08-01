@@ -39,7 +39,7 @@ namespace pegasus
         template <typename SIZE>
         static void fmaxFminNanZeroCheck(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
         {
-            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
 
             const Constants<SIZE> & cons = getConst<SIZE>();
 
@@ -152,7 +152,7 @@ namespace pegasus
         template <typename SIZE, bool LOAD>
         Action::ItrType floatLsHandler(PegasusState* state, Action::ItrType action_it)
         {
-            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
 
             const PegasusInstPtr & inst = state->getCurrentInst();
             const Addr paddr = inst->getTranslationState()->getResult().getPAddr();
@@ -174,11 +174,11 @@ namespace pegasus
       private:
         template <typename SIZE> struct Constants
         {
-            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
 
             static constexpr uint8_t SGN_BIT = sizeof(SIZE) * 8 - 1;
             static constexpr uint8_t EXP_MSB = SGN_BIT - 1;
-            static constexpr uint8_t EXP_LSB = std::is_same<SIZE, DP>::value ? 52 : 23;
+            static constexpr uint8_t EXP_LSB = std::is_same<SIZE, FLOAT_DP>::value ? 52 : 23;
             static constexpr uint8_t SIG_MSB = EXP_LSB - 1;
 
             static constexpr SIZE EXP_MASK = (((SIZE)1 << (EXP_MSB - EXP_LSB + 1)) - 1) << EXP_LSB;
@@ -189,13 +189,13 @@ namespace pegasus
             static constexpr SIZE POS_ZERO = 0;
         }; // struct Constants
 
-        static constexpr Constants<SP> const_sp{};
-        static constexpr Constants<DP> const_dp{};
+        static constexpr Constants<FLOAT_SP> const_sp{};
+        static constexpr Constants<FLOAT_DP> const_dp{};
 
         template <typename SIZE> static constexpr Constants<SIZE> getConst()
         {
-            static_assert(std::is_same<SIZE, SP>::value || std::is_same<SIZE, DP>::value);
-            if constexpr (std::is_same<SIZE, SP>::value)
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+            if constexpr (std::is_same<SIZE, FLOAT_SP>::value)
             {
                 return const_sp;
             }

@@ -73,7 +73,7 @@ namespace pegasus
             "flt_s", pegasus::Action::createAction<&RvfInsts::flt_sHandler_<XLEN>, RvfInsts>(
                          nullptr, "flt_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "flw", pegasus::Action::createAction<&RvfInsts::floatLsHandler<SP, true>, RvfInstsBase>(
+            "flw", pegasus::Action::createAction<&RvfInsts::floatLsHandler<FLOAT_SP, true>, RvfInstsBase>(
                        nullptr, "flw", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fmadd_s", pegasus::Action::createAction<&RvfInsts::fmadd_sHandler_<XLEN>, RvfInsts>(
@@ -119,7 +119,7 @@ namespace pegasus
                           nullptr, "fsub_s", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fsw",
-            pegasus::Action::createAction<&RvfInsts::floatLsHandler<SP, false>, RvfInstsBase>(
+            pegasus::Action::createAction<&RvfInsts::floatLsHandler<FLOAT_SP, false>, RvfInstsBase>(
                 nullptr, "fsw", ActionTags::EXECUTE_TAG));
     }
 
@@ -134,9 +134,9 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f32_sqrt(float32_t{rs1_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f32_sqrt(float32_t{rs1_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -147,10 +147,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f32_sub(float32_t{rs1_val}, float32_t{rs2_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f32_sub(float32_t{rs1_val}, float32_t{rs2_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -161,10 +161,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        const RV64 result = nanBoxing<RV64, SP>(
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const RV64 result = nanBoxing<RV64, FLOAT_SP>(
             f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val}, float32_t{rs3_val})
                 .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
@@ -176,8 +176,8 @@ namespace pegasus
     Action::ItrType RvfInsts::feq_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(), f32_eq(float32_t{rs1_val}, float32_t{rs2_val}));
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -189,7 +189,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fclass(rs1_val));
 
@@ -202,10 +202,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        const RV64 result = nanBoxing<RV64, SP>(
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const RV64 result = nanBoxing<RV64, FLOAT_SP>(
             f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val ^ sp_sign_mask})
                 .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
@@ -218,11 +218,11 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs1_val : rs2_val;
-        fmaxFminNanZeroCheck<SP>(rs1_val, rs2_val, rd_val, false);
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rd_val));
+        fmaxFminNanZeroCheck<FLOAT_SP>(rs1_val, rs2_val, rd_val, false);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(rd_val));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -233,7 +233,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rs1_val));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(rs1_val));
         return ++action_it;
     }
 
@@ -242,7 +242,7 @@ namespace pegasus
                                                 Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             f32_to_ui64(float32_t{rs1_val}, getRM<XLEN>(state), true));
         updateCsr<XLEN>(state);
@@ -256,7 +256,7 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(i32_to_f32(rs1_val).v));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(i32_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -267,11 +267,11 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         const RV64 result =
-            nanBoxing<RV64, SP>(f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val},
+            nanBoxing<RV64, FLOAT_SP>(f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val},
                                            float32_t{rs3_val ^ sp_sign_mask})
                                     .v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
@@ -285,7 +285,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(i64_to_f32(rs1_val).v));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(i64_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -296,10 +296,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f32_add(float32_t{rs1_val}, float32_t{rs2_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f32_add(float32_t{rs1_val}, float32_t{rs2_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -319,11 +319,11 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         uint32_t rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val : rs1_val;
-        fmaxFminNanZeroCheck<SP>(rs1_val, rs2_val, rd_val, true);
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(rd_val));
+        fmaxFminNanZeroCheck<FLOAT_SP>(rs1_val, rs2_val, rd_val, true);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(rd_val));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -333,11 +333,11 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask) | ((rs1_val ^ rs2_val) & sp_sign_mask)));
+            nanBoxing<RV64, FLOAT_SP>((rs1_val & ~sp_sign_mask) | ((rs1_val ^ rs2_val) & sp_sign_mask)));
         return ++action_it;
     }
 
@@ -347,12 +347,12 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
-        const uint32_t rs3_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs3_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nanBoxing<RV64, SP>(
+            nanBoxing<RV64, FLOAT_SP>(
                 f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -364,10 +364,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f32_mul(float32_t{rs1_val}, float32_t{rs2_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -376,8 +376,8 @@ namespace pegasus
     Action::ItrType RvfInsts::flt_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(), f32_lt(float32_t{rs1_val}, float32_t{rs2_val}));
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -388,7 +388,7 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
                                 f32_to_i32(float32_t{rs1_val}, getRM<XLEN>(state), true)));
@@ -401,7 +401,7 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             f32_to_i64(float32_t{rs1_val}, getRM<XLEN>(state), true));
         updateCsr<XLEN>(state);
@@ -413,10 +413,10 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask)
+                           nanBoxing<RV64, FLOAT_SP>((rs1_val & ~sp_sign_mask)
                                                | ((rs2_val & sp_sign_mask) ^ sp_sign_mask)));
         return ++action_it;
     }
@@ -427,7 +427,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(ui64_to_f32(rs1_val).v));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(ui64_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -438,7 +438,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
                                 f32_to_ui32(float32_t{rs1_val}, getRM<XLEN>(state), true)));
@@ -452,10 +452,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
-                           nanBoxing<RV64, SP>(f32_div(float32_t{rs1_val}, float32_t{rs2_val}).v));
+                           nanBoxing<RV64, FLOAT_SP>(f32_div(float32_t{rs1_val}, float32_t{rs2_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -465,11 +465,11 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
-            nanBoxing<RV64, SP>((rs1_val & ~sp_sign_mask) | (rs2_val & sp_sign_mask)));
+            nanBoxing<RV64, FLOAT_SP>((rs1_val & ~sp_sign_mask) | (rs2_val & sp_sign_mask)));
         return ++action_it;
     }
 
@@ -480,7 +480,7 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         softfloat_roundingMode = getRM<XLEN>(state);
         const uint32_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, SP>(ui32_to_f32(rs1_val).v));
+        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<RV64, FLOAT_SP>(ui32_to_f32(rs1_val).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -489,8 +489,8 @@ namespace pegasus
     Action::ItrType RvfInsts::fle_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const uint32_t rs2_val = checkNanBoxing<RV64, SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
+        const uint32_t rs1_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val = checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         WRITE_INT_REG<XLEN>(state, inst->getRd(), f32_le(float32_t{rs1_val}, float32_t{rs2_val}));
         updateCsr<XLEN>(state);
         return ++action_it;

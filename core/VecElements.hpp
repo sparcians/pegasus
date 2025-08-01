@@ -5,7 +5,7 @@
 
 #include "core/PegasusState.hpp"
 #include "core/VecConfig.hpp"
-#include "core/VecNums.hpp"
+#include "include/VecNums.hpp"
 #include "include/PegasusUtils.hpp"
 
 namespace pegasus

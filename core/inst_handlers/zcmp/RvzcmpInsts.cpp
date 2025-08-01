@@ -2,6 +2,7 @@
 #include "core/PegasusState.hpp"
 #include "core/Trap.hpp"
 #include "include/ActionTags.hpp"
+#include "include/IntNums.hpp"
 
 namespace pegasus
 {
@@ -42,7 +43,7 @@ namespace pegasus
 
         // Load RA (1) and 0-12 saved registers (8-9, 18-27) from the stack frame
         // Have to start at idx 1 since Mavis includes the SP in the list of dests
-        XLEN addr = READ_INT_REG<XLEN>(state, 2);
+        XLEN addr = READ_INT_REG<XLEN>(state, SP);
         const XLEN new_sp_val = addr + inst->getStackAdjustment();
         const auto & dst_reg_list = inst->getMavisOpcodeInfo()->getDestOpInfoList();
         for (uint32_t idx = 1; idx < dst_reg_list.size(); ++idx)
@@ -54,7 +55,7 @@ namespace pegasus
         }
 
         // Update stack pointer
-        WRITE_INT_REG<XLEN>(state, 2, new_sp_val);
+        WRITE_INT_REG<XLEN>(state, SP, new_sp_val);
     }
 
     template <typename XLEN>
@@ -65,7 +66,7 @@ namespace pegasus
 
         // Store RA (1) and 0-12 saved registers (8-9, 18-27) to the stack frame
         // Have to start at idx 1 since Mavis includes the SP in the list of sources
-        XLEN addr = READ_INT_REG<XLEN>(state, 2);
+        XLEN addr = READ_INT_REG<XLEN>(state, SP);
         const XLEN new_sp_val = addr + inst->getStackAdjustment();
         const auto & src_reg_list = inst->getMavisOpcodeInfo()->getSourceOpInfoList();
         for (uint32_t idx = 1; idx < src_reg_list.size(); ++idx)
@@ -77,7 +78,7 @@ namespace pegasus
         }
 
         // Update stack pointer
-        WRITE_INT_REG<XLEN>(state, 2, new_sp_val);
+        WRITE_INT_REG<XLEN>(state, SP, new_sp_val);
 
         return ++action_it;
     }
