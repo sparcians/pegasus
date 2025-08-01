@@ -10,20 +10,11 @@ namespace pegasus
     void RvzifenceiInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            inst_handlers.emplace(
-                "fence_i", pegasus::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV64>,
-                                                         RvzifenceiInsts>(nullptr, "fence_i",
-                                                                          ActionTags::EXECUTE_TAG));
-        }
-        else if constexpr (std::is_same_v<XLEN, RV32>)
-        {
-            inst_handlers.emplace(
-                "fence_i", pegasus::Action::createAction<&RvzifenceiInsts::fence_iHandler_<RV32>,
-                                                         RvzifenceiInsts>(nullptr, "fence_i",
-                                                                          ActionTags::EXECUTE_TAG));
-        }
+
+        inst_handlers.emplace(
+            "fence_i",
+            pegasus::Action::createAction<&RvzifenceiInsts::fence_iHandler_<XLEN>, RvzifenceiInsts>(
+                nullptr, "fence_i", ActionTags::EXECUTE_TAG));
     }
 
     template void RvzifenceiInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);

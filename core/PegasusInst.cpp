@@ -23,29 +23,6 @@ namespace pegasus
         }
     }
 
-    sparta::Register* getSpartaReg(PegasusState* state, const mavis::OperandInfo::Element* operand)
-    {
-        if (operand)
-        {
-            switch (operand->operand_type)
-            {
-                case mavis::InstMetaData::OperandTypes::WORD:
-                case mavis::InstMetaData::OperandTypes::LONG:
-                    return state->getIntRegister(operand->field_value);
-                case mavis::InstMetaData::OperandTypes::SINGLE:
-                case mavis::InstMetaData::OperandTypes::DOUBLE:
-                case mavis::InstMetaData::OperandTypes::QUAD:
-                    return state->getFpRegister(operand->field_value);
-                case mavis::InstMetaData::OperandTypes::VECTOR:
-                    return state->getVecRegister(operand->field_value);
-                case mavis::InstMetaData::OperandTypes::NONE:
-                    sparta_assert(false, "Invalid Mavis Operand Type!");
-            }
-        }
-
-        return nullptr;
-    }
-
     uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)
     {
         return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED
@@ -70,11 +47,11 @@ namespace pegasus
             getOperand<mavis::InstMetaData::OperandFieldID::RD>(opcode_info->getDestOpInfoList())),
         rd2_info_(
             getOperand<mavis::InstMetaData::OperandFieldID::RD2>(opcode_info->getDestOpInfoList())),
-        rs1_reg_(getSpartaReg(state, rs1_info_)),
-        rs2_reg_(getSpartaReg(state, rs2_info_)),
-        rs3_reg_(getSpartaReg(state, rs3_info_)),
-        rd_reg_(getSpartaReg(state, rd_info_)),
-        rd2_reg_(getSpartaReg(state, rd2_info_)),
+        rs1_reg_(state->getSpartaRegister(rs1_info_)),
+        rs2_reg_(state->getSpartaRegister(rs2_info_)),
+        rs3_reg_(state->getSpartaRegister(rs3_info_)),
+        rd_reg_(state->getSpartaRegister(rd_info_)),
+        rd2_reg_(state->getSpartaRegister(rd2_info_)),
         inst_action_group_(extractor_info_->inst_action_group_)
     {
     }

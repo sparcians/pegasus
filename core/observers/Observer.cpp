@@ -88,35 +88,17 @@ namespace pegasus
             if (arch_.isValid())
             {
                 // Get value of source registers
-                if (inst->hasRs1())
+                for (auto & src_reg : inst->getMavisOpcodeInfo()->getSourceOpInfoList())
                 {
-                    const auto rs1_reg = inst->getRs1Reg();
-                    src_regs_.emplace_back(getRegId(rs1_reg), readRegister_(rs1_reg));
+                    const auto reg = state->getSpartaRegister(&src_reg);
+                    src_regs_.emplace_back(getRegId(reg), readRegister_(reg));
                 }
 
-                if (inst->hasRs2())
+                // Get value of destination registers
+                for (auto & dst_reg : inst->getMavisOpcodeInfo()->getDestOpInfoList())
                 {
-                    const auto rs2_reg = inst->getRs2Reg();
-                    src_regs_.emplace_back(getRegId(rs2_reg), readRegister_(rs2_reg));
-                }
-
-                if (inst->hasRs3())
-                {
-                    const auto rs3_reg = inst->getRs3Reg();
-                    src_regs_.emplace_back(getRegId(rs3_reg), readRegister_(rs3_reg));
-                }
-
-                // Get initial value of destination registers
-                if (inst->hasRd())
-                {
-                    const auto rd_reg = inst->getRdReg();
-                    dst_regs_.emplace_back(getRegId(rd_reg), readRegister_(rd_reg));
-                }
-
-                if (inst->hasRd2())
-                {
-                    const auto rd2_reg = inst->getRd2Reg();
-                    dst_regs_.emplace_back(getRegId(rd2_reg), readRegister_(rd2_reg));
+                    const auto reg = state->getSpartaRegister(&dst_reg);
+                    dst_regs_.emplace_back(getRegId(reg), readRegister_(reg));
                 }
             }
         }
