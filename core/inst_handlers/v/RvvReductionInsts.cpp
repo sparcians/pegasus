@@ -3,7 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
-#include "core/inst_handlers/inst_helpers.hpp"
+#include "core/inst_handlers/i/RviFunctors.hpp"
 
 namespace pegasus
 {
@@ -40,22 +40,22 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vredmaxu.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<max_op>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<Max>,
                                           RvvReductionInsts>(nullptr, "vredmaxu.vs",
                                                              ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vredmax.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<max_op>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<Max>,
                                           RvvReductionInsts>(nullptr, "vredmax.vs",
                                                              ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vredminu.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<min_op>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerUnsigned_<Min>,
                                           RvvReductionInsts>(nullptr, "vredminu.vs",
                                                              ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vredmin.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<min_op>,
+            pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<Min>,
                                           RvvReductionInsts>(nullptr, "vredmin.vs",
                                                              ActionTags::EXECUTE_TAG));
     }
