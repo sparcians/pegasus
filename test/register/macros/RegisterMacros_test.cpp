@@ -2,9 +2,9 @@
 #include "core/PegasusState.hpp"
 #include "include/PegasusTypes.hpp"
 #include "include/CSRNums.hpp"
-#include "core/IntNums.hpp"
-#include "core/FpNums.hpp"
-#include "core/VecNums.hpp"
+#include "include/IntNums.hpp"
+#include "include/FpNums.hpp"
+#include "include/VecNums.hpp"
 
 #include "sparta/utils/SpartaTester.hpp"
 #include <bitset>
