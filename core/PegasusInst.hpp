@@ -118,6 +118,11 @@ namespace pegasus
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::VM);
         }
 
+        uint64_t getStackAdjustment() const
+        {
+            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::STACK_ADJ);
+        }
+
         sparta::Register* getRs1Reg() const
         {
             sparta_assert(rs1_reg_, "Operand RS1 is a nullptr! " << *this);

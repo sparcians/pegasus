@@ -45,13 +45,14 @@ namespace pegasus
         vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
         supported_isa_string_(
-            std::string("rv" + std::to_string(xlen_) + "gcbv_zicsr_zifencei_zicond_zcb")),
+            std::string("rv" + std::to_string(xlen_) + "gbv_zicsr_zifencei_zca_zcd_zcb_zicond")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
             isa_file_path_)),
+        ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
@@ -91,8 +92,18 @@ namespace pegasus
         add_registers(csr_rset_);
 
         // Increment PC Action
-        increment_pc_action_ =
-            pegasus::Action::createAction<&PegasusState::incrementPc_>(this, "increment pc");
+        const bool CHECK_ILIMIT = ilimit_ > 0;
+        if (CHECK_ILIMIT)
+        {
+            increment_pc_action_ = pegasus::Action::createAction<&PegasusState::incrementPc_<true>>(
+                this, "increment pc");
+        }
+        else
+        {
+            increment_pc_action_ =
+                pegasus::Action::createAction<&PegasusState::incrementPc_<false>>(this,
+                                                                                  "increment pc");
+        }
 
         // Add increment PC Action to finish ActionGroup
         finish_action_group_.addAction(increment_pc_action_);
@@ -287,7 +298,8 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve32f.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicsr.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zifencei.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json"};
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json"};
         return uarch_files;
     }
 
@@ -295,6 +307,29 @@ namespace pegasus
     {
         return system_call_emulator_->emulateSystemCall(call_stack,
                                                         pegasus_system_->getSystemMemory());
+    }
+
+    sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
+    {
+        if (operand)
+        {
+            switch (operand->operand_type)
+            {
+                case mavis::InstMetaData::OperandTypes::WORD:
+                case mavis::InstMetaData::OperandTypes::LONG:
+                    return getIntRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::SINGLE:
+                case mavis::InstMetaData::OperandTypes::DOUBLE:
+                case mavis::InstMetaData::OperandTypes::QUAD:
+                    return getFpRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::VECTOR:
+                    return getVecRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::NONE:
+                    sparta_assert(false, "Invalid Mavis Operand Type!");
+            }
+        }
+
+        return nullptr;
     }
 
     Action::ItrType PegasusState::preExecute_(PegasusState* state, Action::ItrType action_it)
@@ -447,6 +482,7 @@ namespace pegasus
         }
     }
 
+    template <bool CHECK_ILIMIT>
     Action::ItrType PegasusState::incrementPc_(PegasusState*, Action::ItrType action_it)
     {
         // Set PC
@@ -456,6 +492,17 @@ namespace pegasus
 
         // Increment instruction count
         ++sim_state_.inst_count;
+
+        if constexpr (CHECK_ILIMIT)
+        {
+            if (sim_state_.inst_count == ilimit_)
+            {
+                std::cout << "Reached instruction limit (" << std::dec << ilimit_
+                          << "), stopping simulation." << std::endl;
+                const uint64_t exit_code = 0;
+                stopSim(exit_code);
+            }
+        }
 
         return ++action_it;
     }
