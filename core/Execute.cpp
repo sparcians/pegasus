@@ -23,6 +23,7 @@
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
 #include "core/inst_handlers/v/RvvMaskInsts.hpp"
+#include "core/inst_handlers/v/RvvReductionInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 
@@ -45,6 +46,14 @@ namespace pegasus
             "unsupported",
             pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
                 nullptr, "unsupported", ActionTags::EXECUTE_TAG));
+        rv64_inst_compute_address_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
+        rv32_inst_compute_address_actions_.emplace(
+            "unsupported",
+            pegasus::Action::createAction<&Execute::unsupportedInstHandler_, Execute>(
+                nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
 
         // Get RV64 instruction handlers
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -64,6 +73,7 @@ namespace pegasus
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvReductionInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
@@ -85,6 +95,7 @@ namespace pegasus
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvMaskInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvReductionInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 

@@ -14,128 +14,140 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "vmv.s.x", pegasus::Action::createAction<
-                           &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
-                                                                           OperandMode::Mode::N,
-                                                                           OperandMode::Mode::X}>,
-                           RvvPermuteInsts>(nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
+            "vmv.s.x",
+            pegasus::Action::createAction<
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::X}>,
+                RvvPermuteInsts>(nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vmv.x.s", pegasus::Action::createAction<
-                           &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::X,
-                                                                           OperandMode::Mode::V,
-                                                                           OperandMode::Mode::N}>,
-                           RvvPermuteInsts>(nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
+            "vmv.x.s",
+            pegasus::Action::createAction<
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::X,
+                                                                .src2 = OperandMode::Mode::V}>,
+                RvvPermuteInsts>(nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vfmv.s.f", pegasus::Action::createAction<
-                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::V,
-                                                                            OperandMode::Mode::N,
-                                                                            OperandMode::Mode::F}>,
-                            RvvPermuteInsts>(nullptr, "vfmv.s.x", ActionTags::EXECUTE_TAG));
+            "vfmv.s.f",
+            pegasus::Action::createAction<
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                                                                .src1 = OperandMode::Mode::F}>,
+                RvvPermuteInsts>(nullptr, "vfmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfmv.f.s", pegasus::Action::createAction<
-                            &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{OperandMode::Mode::F,
-                                                                            OperandMode::Mode::V,
-                                                                            OperandMode::Mode::N}>,
-                            RvvPermuteInsts>(nullptr, "vfmv.x.s", ActionTags::EXECUTE_TAG));
+            "vfmv.f.s",
+            pegasus::Action::createAction<
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::F,
+                                                                .src2 = OperandMode::Mode::V}>,
+                RvvPermuteInsts>(nullptr, "vfmv.x.s", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vslideup.vx",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslideHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
-                    true>,
+                &RvvPermuteInsts::vslideHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::X},
+                                                 true>,
                 RvvPermuteInsts>(nullptr, "vslideup.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vslideup.vi",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslideHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
-                    true>,
+                &RvvPermuteInsts::vslideHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::I},
+                                                 true>,
                 RvvPermuteInsts>(nullptr, "vslideup.vi", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vslidedown.vx",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslideHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
-                    false>,
+                &RvvPermuteInsts::vslideHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::X},
+                                                 false>,
                 RvvPermuteInsts>(nullptr, "vslidedown.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vslidedown.vi",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslideHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
-                    false>,
+                &RvvPermuteInsts::vslideHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::I},
+                                                 false>,
                 RvvPermuteInsts>(nullptr, "vslidedown.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vslide1up.vx",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslide1Handler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
-                    true>,
+                &RvvPermuteInsts::vslide1Handler_<XLEN,
+                                                  OperandMode{.dst = OperandMode::Mode::V,
+                                                              .src2 = OperandMode::Mode::V,
+                                                              .src1 = OperandMode::Mode::X},
+                                                  true>,
                 RvvPermuteInsts>(nullptr, "vslide1up.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfslide1up.vf",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslide1Handler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
-                    true>,
+                &RvvPermuteInsts::vslide1Handler_<XLEN,
+                                                  OperandMode{.dst = OperandMode::Mode::V,
+                                                              .src2 = OperandMode::Mode::V,
+                                                              .src1 = OperandMode::Mode::F},
+                                                  true>,
                 RvvPermuteInsts>(nullptr, "vfslide1up.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vslide1down.vx",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslide1Handler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
-                    false>,
+                &RvvPermuteInsts::vslide1Handler_<XLEN,
+                                                  OperandMode{.dst = OperandMode::Mode::V,
+                                                              .src2 = OperandMode::Mode::V,
+                                                              .src1 = OperandMode::Mode::X},
+                                                  false>,
                 RvvPermuteInsts>(nullptr, "vslide1down.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfslide1down.vf",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vslide1Handler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::F},
-                    false>,
+                &RvvPermuteInsts::vslide1Handler_<XLEN,
+                                                  OperandMode{.dst = OperandMode::Mode::V,
+                                                              .src2 = OperandMode::Mode::V,
+                                                              .src1 = OperandMode::Mode::F},
+                                                  false>,
                 RvvPermuteInsts>(nullptr, "vfslide1down.vf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vrgather.vv",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vrgatherHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
-                    false>,
+                &RvvPermuteInsts::vrgatherHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   false>,
                 RvvPermuteInsts>(nullptr, "vrgather.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vrgather.vx",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vrgatherHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::X},
-                    false>,
+                &RvvPermuteInsts::vrgatherHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::X},
+                                                   false>,
                 RvvPermuteInsts>(nullptr, "vrgather.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vrgather.vi",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vrgatherHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::I},
-                    false>,
+                &RvvPermuteInsts::vrgatherHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::I},
+                                                   false>,
                 RvvPermuteInsts>(nullptr, "vrgather.vi", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vrgatherei16.vv",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vrgatherHandler_<
-                    XLEN,
-                    OperandMode{OperandMode::Mode::V, OperandMode::Mode::V, OperandMode::Mode::V},
-                    true>,
+                &RvvPermuteInsts::vrgatherHandler_<XLEN,
+                                                   OperandMode{.dst = OperandMode::Mode::V,
+                                                               .src2 = OperandMode::Mode::V,
+                                                               .src1 = OperandMode::Mode::V},
+                                                   true>,
                 RvvPermuteInsts>(nullptr, "vrgatherei16.vv", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -178,7 +190,7 @@ namespace pegasus
             if constexpr (opMode.dst == OperandMode::Mode::X)
             {
                 WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                                    sextu<XLEN>(elems_vs2.getElement(0).getVal()));
+                                    sext<XLEN>(elems_vs2.getElement(0).getVal()));
             }
             else
             {
@@ -197,7 +209,7 @@ namespace pegasus
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(0).setVal(
-                        sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                        sext<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
                 else
                 {
@@ -352,7 +364,7 @@ namespace pegasus
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setVal(
-                        sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                        sext<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
                 else
                 {
@@ -368,7 +380,7 @@ namespace pegasus
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(0).setVal(
-                        sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                        sext<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
                 else
                 {
@@ -387,7 +399,7 @@ namespace pegasus
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(0).setVal(
-                        sextu<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                        sext<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
                 else
                 {
@@ -410,16 +422,16 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vslideHelper<XLEN, 8, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 8, opMode, isUp>(state, action_it);
 
             case 16:
-                return vslideHelper<XLEN, 16, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 16, opMode, isUp>(state, action_it);
 
             case 32:
-                return vslideHelper<XLEN, 32, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 32, opMode, isUp>(state, action_it);
 
             case 64:
-                return vslideHelper<XLEN, 64, opMode, isUp>(state, action_it);
+                return vslide1Helper<XLEN, 64, opMode, isUp>(state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");

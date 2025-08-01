@@ -200,7 +200,7 @@ class SanityCheckObserver(Observer):
     def __del__(self):
         self.close()
 
-## Utility class which runs an observer on an Pegasus simulation running in the background.
+## Utility class which runs an observer on a Pegasus simulation running in the background.
 class ObserverSim:
     def __init__(self, riscv_tests_dir, sim_exe_path, test_name):
         self.riscv_tests_dir = riscv_tests_dir

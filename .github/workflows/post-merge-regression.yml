@@ -38,7 +38,7 @@ jobs:
         with:
           repository: sparcians/map
           path: map
-          ref: map_v2.0.22
+          ref: map_v2.1.0
 
       # Get RISC-V Arch Tests
       - name: Checkout RISC-V Arch Tests

@@ -5,6 +5,7 @@
 #include "cosim/PegasusCoSim.hpp"
 #include "include/PegasusUtils.hpp"
 #include "system/PegasusSystem.hpp"
+#include "simdb/pipeline/Pipeline.hpp"
 
 namespace pegasus::cosim
 {

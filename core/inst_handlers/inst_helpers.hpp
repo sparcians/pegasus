@@ -3,6 +3,9 @@
 #include "include/PegasusUtils.hpp"
 
 #include <stdint.h>
+#include <bit>
+#include <algorithm>
+#include <functional>
 
 typedef int64_t sreg_t;
 typedef uint64_t reg_t;
@@ -16,54 +19,21 @@ template <typename T> inline sreg_t sext(T x, uint32_t pos)
     return (((sreg_t)(x) << (64 - (pos))) >> (64 - (pos)));
 }
 
-template <typename T2, typename T1> inline T2 sextu(T1 x)
-{
-    if constexpr (sizeof(T1) >= sizeof(T2))
-    {
-        return static_cast<T2>(x);
-    }
-    else
-    {
-        return static_cast<T2>(
-            (static_cast<std::make_signed_t<T2>>(static_cast<std::make_signed_t<T1>>(x))));
-    }
-}
-
 template <typename T> inline reg_t zext(T x, uint32_t pos)
 {
     return (((reg_t)(x) << (64 - (pos))) >> (64 - (pos)));
 }
 
-inline uint64_t mulhu(uint64_t a, uint64_t b)
+template <typename T2, typename T1> inline T2 sext(T1 x)
 {
-    uint64_t t = 0;
-    uint32_t y1 = 0, y2 = 0;
-    uint64_t a0 = (uint32_t)a, a1 = a >> 32;
-    uint64_t b0 = (uint32_t)b, b1 = b >> 32;
-
-    t = a1 * b0 + ((a0 * b0) >> 32);
-    y1 = t;
-    y2 = t >> 32;
-
-    t = a0 * b1 + y1;
-
-    t = a1 * b1 + y2 + (t >> 32);
-
-    return t;
+    return static_cast<T2>(
+        (static_cast<std::make_signed_t<T2>>(static_cast<std::make_signed_t<T1>>(x))));
 }
 
-inline int64_t mulhsu(int64_t a, uint64_t b)
+template <typename T2, typename T1> inline T2 zext(T1 x)
 {
-    int negate = a < 0;
-    uint64_t res = mulhu(a < 0 ? -a : a, b);
-    return negate ? ~res + (a * b == 0) : res;
-}
-
-inline int64_t mulh(int64_t a, int64_t b)
-{
-    int negate = (a < 0) != (b < 0);
-    uint64_t res = mulhu(a < 0 ? -a : a, b < 0 ? -b : b);
-    return negate ? ~res + ((uint64_t)a * (uint64_t)b == 0) : res;
+    return static_cast<T2>(
+        (static_cast<std::make_unsigned_t<T2>>(static_cast<std::make_unsigned_t<T1>>(x))));
 }
 
 namespace pegasus
