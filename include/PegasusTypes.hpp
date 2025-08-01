@@ -21,8 +21,8 @@ namespace pegasus
     using W = uint32_t;
     using D = uint64_t;
 
-    using SP = uint32_t;
-    using DP = uint64_t;
+    using FLOAT_SP = uint32_t;
+    using FLOAT_DP = uint64_t;
 
     enum class InstType
     {

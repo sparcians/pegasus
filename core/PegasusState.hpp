@@ -64,12 +64,14 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64gcbv_zicsr_zifencei_zicond_zcb", "ISA string")
+            PARAMETER(std::string, isa_string, "rv64gbv_zicsr_zifencei_zca_zcd_zcb_zicond",
+                      "ISA string")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
+            PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
@@ -211,6 +213,8 @@ namespace pegasus
 
         Translate* getTranslateUnit() const { return translate_unit_; }
 
+        sparta::Register* getSpartaRegister(const mavis::OperandInfo::Element* operand);
+
         pegasus::RegisterSet* getIntRegisterSet() { return int_rset_.get(); }
 
         pegasus::RegisterSet* getFpRegisterSet() { return fp_rset_.get(); }
@@ -336,6 +340,9 @@ namespace pegasus
         // Mavis list of included extension tags
         std::set<std::string> inclusions_;
 
+        // Instruction limit to end simulation
+        const uint64_t ilimit_ = 0;
+
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
 
@@ -387,6 +394,7 @@ namespace pegasus
         std::unique_ptr<VectorConfig> vector_config_;
 
         // Increment PC Action
+        template <bool CHECK_ILIMIT>
         Action::ItrType incrementPc_(PegasusState* state, Action::ItrType action_it);
         pegasus::Action increment_pc_action_;
 
