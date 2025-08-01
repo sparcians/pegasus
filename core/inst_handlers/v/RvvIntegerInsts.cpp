@@ -1,7 +1,7 @@
 #include <limits>
 
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
-#include "core/inst_handlers/CommonFunctors.hpp"
+#include "core/inst_handlers/i/RviFunctors.hpp"
 #include "core/inst_handlers/m/RvmFunctors.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "core/PegasusState.hpp"

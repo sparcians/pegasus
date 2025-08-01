@@ -1,6 +1,6 @@
 #include "core/inst_handlers/a/RvaInsts.hpp"
 #include "core/inst_handlers/a/RvaFunctors.hpp"
-#include "core/inst_handlers/CommonFunctors.hpp"
+#include "core/inst_handlers/i/RviFunctors.hpp"
 #include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"

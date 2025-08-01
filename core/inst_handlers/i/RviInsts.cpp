@@ -1,5 +1,5 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
-#include "core/inst_handlers/CommonFunctors.hpp"
+#include "core/inst_handlers/i/RviFunctors.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 #include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"
