@@ -334,8 +334,8 @@ namespace pegasus::cosim
         auto query_func = [&](simdb::DatabaseManager* db_mgr)
         {
             auto query = db_mgr->createQuery("CompressedEvents");
-            query->addConstraintForInt("StartEuid", simdb::Constraints::LESS_EQUAL, euid);
-            query->addConstraintForInt("EndEuid", simdb::Constraints::GREATER_EQUAL, euid);
+            query->addConstraintForUInt64("StartEuid", simdb::Constraints::LESS_EQUAL, euid);
+            query->addConstraintForUInt64("EndEuid", simdb::Constraints::GREATER_EQUAL, euid);
 
             int64_t start, end;
             query->select("StartEuid", start);
