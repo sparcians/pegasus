@@ -48,7 +48,7 @@ namespace pegasus
         const auto & dst_reg_list = inst->getMavisOpcodeInfo()->getDestOpInfoList();
         for (uint32_t idx = 1; idx < dst_reg_list.size(); ++idx)
         {
-            const auto dst = dst_reg_list.at(idx);
+            const auto dst = dst_reg_list[idx];
             addr -= sizeof(XLEN);
             const XLEN dst_reg_val = state->readMemory<XLEN>(addr);
             WRITE_INT_REG<XLEN>(state, dst.field_value, dst_reg_val);
@@ -71,7 +71,7 @@ namespace pegasus
         const auto & src_reg_list = inst->getMavisOpcodeInfo()->getSourceOpInfoList();
         for (uint32_t idx = 1; idx < src_reg_list.size(); ++idx)
         {
-            const auto src = src_reg_list.at(idx);
+            const auto src = src_reg_list[idx];
             addr -= sizeof(XLEN);
             const XLEN src_reg_val = READ_INT_REG<XLEN>(state, src.field_value);
             state->writeMemory<XLEN>(addr, src_reg_val);
