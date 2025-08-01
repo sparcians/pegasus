@@ -34,7 +34,10 @@ namespace pegasus
     // METHODS
     void STFLogger::postExecute_(PegasusState* state)
     {
-        if(fault_cause_.isValid() || interrupt_cause_.isValid()) { return; }
+        if (fault_cause_.isValid() || interrupt_cause_.isValid())
+        {
+            return;
+        }
 
         for (const auto & src_reg : src_regs_)
         {
@@ -102,32 +105,29 @@ namespace pegasus
 
     void STFLogger::recordRegState_(PegasusState* state)
     {
-        //Recording int registers
+        // Recording int registers
         for (uint64_t i = 0; i < 32; ++i)
         {
-            stf_writer_ << stf::InstRegRecord(i,
-                                stf::Registers::STF_REG_TYPE::INTEGER,
-                                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                                READ_INT_REG<uint64_t>(state, i));
-
+            stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::INTEGER,
+                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                                              READ_INT_REG<uint64_t>(state, i));
         }
-        //Recording fp registers
+        // Recording fp registers
         for (uint64_t i = 0; i < state->getFpRegisterSet()->getNumRegisters(); ++i)
         {
-            stf_writer_ << stf::InstRegRecord(i,
-                                stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                                READ_FP_REG<uint64_t>(state, i));
-
+            stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
+                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                                              READ_FP_REG<uint64_t>(state, i));
         }
-        //Recording csr Registers
+        // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();
-        for (size_t i = 0; i < csr_rset->getNumRegisters(); ++i) {
-            if (auto reg = csr_rset->getRegister(i)) {
-                stf_writer_ << stf::InstRegRecord(i,
-                            stf::Registers::STF_REG_TYPE::CSR,
-                            stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                            reg->dmiRead<uint64_t>());
+        for (size_t i = 0; i < csr_rset->getNumRegisters(); ++i)
+        {
+            if (auto reg = csr_rset->getRegister(i))
+            {
+                stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::CSR,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                                                  reg->dmiRead<uint64_t>());
             }
         }
     }

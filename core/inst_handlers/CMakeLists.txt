@@ -10,6 +10,7 @@ add_subdirectory(v)
 add_subdirectory(zicsr)
 add_subdirectory(zifencei)
 add_subdirectory(zicond)
+add_subdirectory(zcmp)
 
 add_library(pegasusinsts)
 target_link_libraries(pegasusinsts
@@ -22,6 +23,7 @@ target_link_libraries(pegasusinsts
     rvzicsr
     rvzifencei
     rvzicond
+    rvzcmp
     rvv
 )
 add_dependencies(pegasusinsts AutogenArchFiles)
