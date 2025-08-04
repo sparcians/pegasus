@@ -2,6 +2,7 @@
 #include "core/VecElements.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 #include "mavis/Mavis.h"
+#include <typeinfo>
 
 class VredInstructionTester : public PegasusInstructionTester
 {
@@ -29,11 +30,15 @@ class VredInstructionTester : public PegasusInstructionTester
         state->getVectorConfig()->setSEW(8);  // SEW = 8 bits
 
         // Initial values
-        VLEN vs1_val = {10, 0, 0, 0, 0, 0, 0, 0}; // Start with scalar accumulator = 10
+        VLEN vs1_val = {255, 0, 0, 0, 0, 0, 0, 0}; // Start with scalar accumulator = 10
         VLEN vs2_val = {1, 2, 3, 4, 5, 6, 7, 8};
         XLEN expected_sum = vs1_val[0];
         for (auto val : vs2_val)
+        {
+            if(expected_sum >= 256)
+                expected_sum = expected_sum - 256;  //to handle to wrap around
             expected_sum += val;
+        }
 
         // Write input values
         WRITE_VEC_REG<VLEN>(state, vs1, vs1_val); // vector register
@@ -45,7 +50,7 @@ class VredInstructionTester : public PegasusInstructionTester
 
         // Read result
         auto vd_val = READ_VEC_REG<VLEN>(state, vd);
-        EXPECT_EQUAL(vd_val[0], expected_sum);
+        EXPECT_EQUAL(vd_val[0], expected_sum);  //expected_sum --> 35 (0010 0011)
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
@@ -70,7 +75,7 @@ class VredInstructionTester : public PegasusInstructionTester
 
         // Set input values
         VLEN vs2_val = {1, 2, 3, 4, 5, 6, 7, 8};  // vector of int8_t
-        VLEN vs1_val = {10, 0, 0, 0, 0, 0, 0, 0}; // initial accumulator
+        VLEN vs1_val = {255, 0, 0, 0, 0, 0, 0, 0}; // initial accumulator
         WLEN expected_sum = vs1_val[0];
         for (auto val : vs2_val)
             expected_sum += static_cast<WLEN>(val);
@@ -85,11 +90,11 @@ class VredInstructionTester : public PegasusInstructionTester
 
         // Validate result
         auto vd_val = READ_VEC_REG<VLEN>(state, vd);
-        EXPECT_EQUAL(vd_val[0], expected_sum);
+        EXPECT_EQUAL(vd_val[0], expected_sum);  //final expected sum should be 291 (0001 0010 0011)
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 1);
+        EXPECT_EQUAL(sim_state->inst_count, 2);
     }
 
     // vredsum.vs encoding helper
@@ -118,7 +123,7 @@ class VredInstructionTester : public PegasusInstructionTester
         offset += 1;
         if (isWideningEnabled)
         {
-            opcode |= 0x20 << offset; // funct6 = 110000 for vwredsum.vs
+            opcode |= 0x31 << offset; // funct6 = 110001 for vwredsum.vs
         }
         else
         {
@@ -137,8 +142,7 @@ int main()
 {
     VredInstructionTester tester;
     tester.testVredsumvs1();
-    // tester.testVwredsumvs1();    //TODO: uncomment when the corresponding instruction handler is
-    // supported.
+    tester.testVwredsumvs1();
 
     REPORT_ERROR;
     return ERROR_CODE;
