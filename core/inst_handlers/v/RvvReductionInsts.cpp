@@ -61,34 +61,33 @@ namespace pegasus
             pegasus::Action::createAction<&RvvReductionInsts::vredopHandlerSigned_<Min>,
                                           RvvReductionInsts>(nullptr, "vredmin.vs",
                                                              ActionTags::EXECUTE_TAG));
-                                                             
+
         inst_handlers.emplace(
             "vwredsumu.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredWideningopHandlerUnsigned_<std::plus>,
-                                          RvvReductionInsts>(nullptr, "vwredsumu.vs",
-                                                             ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<
+                &RvvReductionInsts::vredWideningopHandlerUnsigned_<std::plus>, RvvReductionInsts>(
+                nullptr, "vwredsumu.vs", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vwredsum.vs",
-            pegasus::Action::createAction<&RvvReductionInsts::vredWideningopHandlerSigned_<std::plus>,
-                                          RvvReductionInsts>(nullptr, "vwredsum.vs",
-                                                             ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<
+                &RvvReductionInsts::vredWideningopHandlerSigned_<std::plus>, RvvReductionInsts>(
+                nullptr, "vwredsum.vs", ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64
     template void RvvReductionInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvReductionInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-        template <size_t inWidth, size_t outWidth, typename inType, typename outType, typename Functor>
+    template <size_t inWidth, size_t outWidth, typename inType, typename outType, typename Functor>
     Action::ItrType vredopHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<inWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
+                                                    inst->getRs2()};
         Elements<Element<inWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
-        Elements<Element<outWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+                                                    inst->getRs1()};
+        Elements<Element<outWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
         outType accumulator = static_cast<outType>(elems_vs1.getElement(0).getVal());
 
@@ -97,7 +96,8 @@ namespace pegasus
             for (auto iter = begin; iter != end; ++iter)
             {
                 const auto idx = iter.getIndex();
-                accumulator = Functor{}(accumulator, static_cast<outType>(elems_vs2.getElement(idx).getVal()));
+                accumulator = Functor{}(accumulator,
+                                        static_cast<outType>(elems_vs2.getElement(idx).getVal()));
             }
         };
 
@@ -167,7 +167,7 @@ namespace pegasus
 
     template <template <typename> typename OP>
     Action::ItrType RvvReductionInsts::vredWideningopHandlerUnsigned_(PegasusState* state,
-                                                              Action::ItrType action_it)
+                                                                      Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -179,9 +179,9 @@ namespace pegasus
             case 32:
                 return vredopHelper<32, 64, uint32_t, uint64_t, OP<uint64_t>>(state, action_it);
             case 64:
-                sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > 64 bits are not supported")
-            default:
-                sparta_assert(false, "Unsupported SEW value");
+                sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
+                                     "64 bits are not supported") default :
+                    sparta_assert(false, "Unsupported SEW value");
         }
 
         return ++action_it;
@@ -189,7 +189,7 @@ namespace pegasus
 
     template <template <typename> typename OP>
     Action::ItrType RvvReductionInsts::vredWideningopHandlerSigned_(PegasusState* state,
-                                                            Action::ItrType action_it)
+                                                                    Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -201,9 +201,9 @@ namespace pegasus
             case 32:
                 return vredopHelper<32, 64, int32_t, int64_t, OP<int64_t>>(state, action_it);
             case 64:
-                sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > 64 bits are not supported")
-            default:
-                sparta_assert(false, "Unsupported SEW value");
+                sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
+                                     "64 bits are not supported") default :
+                    sparta_assert(false, "Unsupported SEW value");
         }
 
         return ++action_it;
