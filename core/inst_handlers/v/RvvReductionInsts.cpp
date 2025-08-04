@@ -180,8 +180,9 @@ namespace pegasus
                 return vredopHelper<32, 64, uint32_t, uint64_t, OP<uint64_t>>(state, action_it);
             case 64:
                 sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
-                                     "64 bits are not supported") default :
-                    sparta_assert(false, "Unsupported SEW value");
+                                     "64 bits are not supported");
+            default:
+                sparta_assert(false, "Unsupported SEW value");
         }
 
         return ++action_it;
@@ -202,8 +203,9 @@ namespace pegasus
                 return vredopHelper<32, 64, int32_t, int64_t, OP<int64_t>>(state, action_it);
             case 64:
                 sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
-                                     "64 bits are not supported") default :
-                    sparta_assert(false, "Unsupported SEW value");
+                                     "64 bits are not supported");
+            default:
+                sparta_assert(false, "Unsupported SEW value");
         }
 
         return ++action_it;
