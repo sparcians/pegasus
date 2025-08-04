@@ -8,12 +8,6 @@
 #include "core/Action.hpp"
 #include "core/inst_handlers/vector_types.hpp"
 
-extern "C"
-{
-#include "source/RISCV/specialize.h"
-#include "source/include/internals.h"
-}
-
 namespace pegasus
 {
     class PegasusState;
@@ -67,7 +61,7 @@ namespace pegasus
         Action::ItrType vmfBinaryHandler_(pegasus::PegasusState* state_ptr,
                                           Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, auto funcWrapper>
+        template <typename XLEN, OperandMode opMode, template <typename> typename FuncT>
         Action::ItrType vfTernaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus
