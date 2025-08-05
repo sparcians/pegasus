@@ -39,10 +39,10 @@ A RISC-V Functional Model, but different...
 
 ## What is Pegasus?
 
-Pegasus is an open-source functional simulator built using the Sparta
-Modeling Platform designed and built for the purpose of co-simulation,
-STF trace generation, and application development.  The main drivers
-or use cases are Design Verification and Execution-Driven Mode (EDM)
+Pegasus is an open-source functional simulator, built using the Sparta
+Modeling Framework, designed for the purpose of co-simulation, STF
+trace generation, and application development.  The main drivers or
+use cases are Design Verification and Execution-Driven Mode (EDM)
 performance simulators like Olympia.
 
 Pegasus can be used to execute instructions in a holistic fashion or
