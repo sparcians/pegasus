@@ -4,6 +4,7 @@
 #include "core/VecElements.hpp"
 #include "include/ActionTags.hpp"
 #include "core/inst_handlers/i/RviFunctors.hpp"
+#include <climits>
 
 namespace pegasus
 {
@@ -79,9 +80,12 @@ namespace pegasus
     template void RvvReductionInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvReductionInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <size_t inWidth, size_t outWidth, typename inType, typename outType, typename Functor>
+    template <typename inType, typename outType, typename Functor>
     Action::ItrType vredopHelper(PegasusState* state, Action::ItrType action_it)
     {
+        static constexpr auto inWidth = sizeof(inType) * CHAR_BIT;
+        static constexpr auto outWidth = sizeof(outType) * CHAR_BIT;
+
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<inWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                     inst->getRs2()};
@@ -129,13 +133,13 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vredopHelper<8, 8, uint8_t, uint8_t, OP<uint8_t>>(state, action_it);
+                return vredopHelper<uint8_t, uint8_t, OP<uint8_t>>(state, action_it);
             case 16:
-                return vredopHelper<16, 16, uint16_t, uint16_t, OP<uint16_t>>(state, action_it);
+                return vredopHelper<uint16_t, uint16_t, OP<uint16_t>>(state, action_it);
             case 32:
-                return vredopHelper<32, 32, uint32_t, uint32_t, OP<uint32_t>>(state, action_it);
+                return vredopHelper<uint32_t, uint32_t, OP<uint32_t>>(state, action_it);
             case 64:
-                return vredopHelper<64, 64, uint64_t, uint64_t, OP<uint64_t>>(state, action_it);
+                return vredopHelper<uint64_t, uint64_t, OP<uint64_t>>(state, action_it);
             default:
                 sparta_assert(false, "Unsupported SEW value");
         }
@@ -151,13 +155,13 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vredopHelper<8, 8, int8_t, int8_t, OP<int8_t>>(state, action_it);
+                return vredopHelper<int8_t, int8_t, OP<int8_t>>(state, action_it);
             case 16:
-                return vredopHelper<16, 16, int16_t, int16_t, OP<int16_t>>(state, action_it);
+                return vredopHelper<int16_t, int16_t, OP<int16_t>>(state, action_it);
             case 32:
-                return vredopHelper<32, 32, int32_t, int32_t, OP<int32_t>>(state, action_it);
+                return vredopHelper<int32_t, int32_t, OP<int32_t>>(state, action_it);
             case 64:
-                return vredopHelper<64, 64, int64_t, int64_t, OP<int64_t>>(state, action_it);
+                return vredopHelper<int64_t, int64_t, OP<int64_t>>(state, action_it);
             default:
                 sparta_assert(false, "Unsupported SEW value");
         }
@@ -173,11 +177,11 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vredopHelper<8, 16, uint8_t, uint16_t, OP<uint16_t>>(state, action_it);
+                return vredopHelper<uint8_t, uint16_t, OP<uint16_t>>(state, action_it);
             case 16:
-                return vredopHelper<16, 32, uint16_t, uint32_t, OP<uint32_t>>(state, action_it);
+                return vredopHelper<uint16_t, uint32_t, OP<uint32_t>>(state, action_it);
             case 32:
-                return vredopHelper<32, 64, uint32_t, uint64_t, OP<uint64_t>>(state, action_it);
+                return vredopHelper<uint32_t, uint64_t, OP<uint64_t>>(state, action_it);
             case 64:
                 sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
                                      "64 bits are not supported");
@@ -196,11 +200,11 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 8:
-                return vredopHelper<8, 16, int8_t, int16_t, OP<int16_t>>(state, action_it);
+                return vredopHelper<int8_t, int16_t, OP<int16_t>>(state, action_it);
             case 16:
-                return vredopHelper<16, 32, int16_t, int32_t, OP<int32_t>>(state, action_it);
+                return vredopHelper<int16_t, int32_t, OP<int32_t>>(state, action_it);
             case 32:
-                return vredopHelper<32, 64, int32_t, int64_t, OP<int64_t>>(state, action_it);
+                return vredopHelper<int32_t, int64_t, OP<int64_t>>(state, action_it);
             case 64:
                 sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
                                      "64 bits are not supported");
