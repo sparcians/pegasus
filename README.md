@@ -74,14 +74,14 @@ the user can advance Pegasus until that point and then stop.
 "Continuing" the simulator re-enters that access point.
 
 In addition, with each full step of an instruction, an Event object is
-returned detailing what the instruction did on it’s journey through
+returned detailing what the instruction did on its journey through
 the stages.  This event can be used to “undo” or backup the simulator
 as need be.  This allows out-of-order simulators like Olympia to have
 multiple paths of execution through a binary (think branch
 mispredictions).
 
 Pegasus is still under development and more documentation and support
-will come; stayed tuned!
+will come; stay tuned!
 
 ## Install Prerequisites
 
