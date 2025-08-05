@@ -65,13 +65,13 @@ for memory operations:
    - Instruction execution itself: can take an exception
    - Redirection or sequential PC
 
-In most, if not all functional simulators, developed in the industry
+In most, if not all, functional simulators developed in the industry
 perform all of the operations above during a single call to `step()`.
 Pegasus is different.  Pegasus can stop at any point in the flow above
 and return control back to the caller.  For example, if the user wants
 to run simulation until a load instruction is about to access memory,
 the user can advance Pegasus until that point and then stop.
-"Continuing" the simulator re-enter that access point.
+"Continuing" the simulator re-enters that access point.
 
 In addition, with each full step of an instruction, an Event object is
 returned detailing what the instruction did on it’s journey through
