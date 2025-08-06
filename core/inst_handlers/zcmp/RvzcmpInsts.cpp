@@ -151,9 +151,9 @@ namespace pegasus
         }
 
         // Write A0 (10) to RS1
-        WRITE_INT_REG<XLEN>(state, inst->getRs1(), a0_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), a0_val);
         // Write A1 (11) to RS2
-        WRITE_INT_REG<XLEN>(state, inst->getRs2(), a1_val);
+        WRITE_INT_REG<XLEN>(state, inst->getRd2(), a1_val);
 
         return ++action_it;
     }

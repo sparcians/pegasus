@@ -1,4 +1,5 @@
 #include "core/inst_handlers/f/RvfInsts.hpp"
+#include "core/inst_handlers/f/RvfFunctors.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/PegasusState.hpp"
@@ -173,8 +174,7 @@ namespace pegasus
         const uint32_t rs3_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         const RV64 result = nanBoxing<RV64, FLOAT_SP>(
-            f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask}, float32_t{rs2_val}, float32_t{rs3_val})
-                .v);
+            Fnmsub<float32_t>{}(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -220,8 +220,7 @@ namespace pegasus
         const uint32_t rs3_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
         const RV64 result = nanBoxing<RV64, FLOAT_SP>(
-            f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val ^ sp_sign_mask})
-                .v);
+            Fmsub<float32_t>{}(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -290,10 +289,8 @@ namespace pegasus
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs2()));
         const uint32_t rs3_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs3()));
-        const RV64 result = nanBoxing<RV64, FLOAT_SP>(f32_mulAdd(float32_t{rs1_val ^ sp_sign_mask},
-                                                                 float32_t{rs2_val},
-                                                                 float32_t{rs3_val ^ sp_sign_mask})
-                                                          .v);
+        const RV64 result = nanBoxing<RV64, FLOAT_SP>(
+            Fnmadd<float32_t>{}(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v);
         WRITE_FP_REG<RV64>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
@@ -383,7 +380,7 @@ namespace pegasus
         WRITE_FP_REG<RV64>(
             state, inst->getRd(),
             nanBoxing<RV64, FLOAT_SP>(
-                f32_mulAdd(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v));
+                Fmadd<float32_t>{}(float32_t{rs1_val}, float32_t{rs2_val}, float32_t{rs3_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }

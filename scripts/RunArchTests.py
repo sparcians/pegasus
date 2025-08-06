@@ -10,7 +10,7 @@ import functools
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [243, 243]
 PASSING_STATUS_RISCV_ARCH_RV64 = [323, 323]
-PASSING_STATUS_TENSTORRENT_RV64 = [3999, 3999]
+PASSING_STATUS_TENSTORRENT_RV64 = [4383, 4383]
 
 # Verbosity
 be_noisy = False
@@ -78,7 +78,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gbv_zicsr_zifencei_zca_zcf_zcd_zcb_zicond" if rv32_test else "rv64gbv_zicsr_zifencei_zca_zcd_zcb_zicond"
+    isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
     pegasus_cmd = ["./pegasus",
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa_string", isa_string, wkld]

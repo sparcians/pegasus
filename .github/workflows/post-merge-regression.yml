@@ -39,7 +39,7 @@ jobs:
           repository: sparcians/map
           submodules: recursive
           path: map
-          ref: map_v2.1.0
+          ref: map_v2.1.1
 
       # Get RISC-V Arch Tests
       - name: Checkout RISC-V Arch Tests
