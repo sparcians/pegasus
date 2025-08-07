@@ -8,19 +8,14 @@ namespace pegasus
                          PegasusState* state) :
         Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
     {
-        if (filename.find(".stf", filename.length() - 5)
-            || filename.find(".zstf", filename.length() - 6)
-            || filename.find(".STF", filename.length() - 5)
-            || filename.find(".ZSTF", filename.length() - 6))
-        {
-            std::cout << "STF Trace filename inputted does not end with .stf or .zstf, appending "
-                         ".zstf to the filename."
-                      << std::endl;
-            stf_writer_.open(filename + ".zstf");
-        }
-        else
+        try
         {
             stf_writer_.open(filename);
+        }
+        catch(...)
+        {
+            std::cerr << "STF Filename formatted incorrectly: does the file have a STF file extension" << std::endl;
+            throw;
         }
 
         stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
@@ -47,11 +42,6 @@ namespace pegasus
 
     void STFLogger::postExecute_(PegasusState* state)
     {
-        if (state->getNextPc() != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
-        {
-            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
-        }
-
         for (const auto & mem_write : mem_writes_)
         {
             stf_writer_ << stf::InstMemAccessRecord(mem_write.addr, mem_write.size, 0,
@@ -119,7 +109,11 @@ namespace pegasus
         }
 
         if (fault_cause_.isValid() || interrupt_cause_.isValid()) { return; } // TODO: Add support for exceptions
-        
+        else if (state->getNextPc() != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
+        {
+            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
+        }
+
         if (state->getCurrentInst()->getOpcodeSize() == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(state->getCurrentInst()->getOpcode());
