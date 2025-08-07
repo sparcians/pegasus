@@ -25,12 +25,21 @@ namespace pegasus
         Action::ItrType vredopHandlerSigned_(PegasusState* state, Action::ItrType action_it);
 
         template <template <typename> typename OP>
-        Action::ItrType vredWideningopHandlerUnsigned_(PegasusState* state,
+        Action::ItrType vwredopHandlerUnsigned_(PegasusState* state,
                                                        Action::ItrType action_it);
 
         template <template <typename> typename OP>
-        Action::ItrType vredWideningopHandlerSigned_(PegasusState* state,
+        Action::ItrType vwredopHandlerSigned_(PegasusState* state,
                                                      Action::ItrType action_it);
-    };
+
+        template <template <typename> typename OP>
+        Action::ItrType vfredopHandler_(PegasusState* state,
+                                                     Action::ItrType action_it);
+
+                                                     
+        template <template <typename> typename OP>
+        Action::ItrType vfwredopHandler_(PegasusState* state,
+                                                     Action::ItrType action_it);
+      };
 
 } // namespace pegasus

@@ -32,7 +32,7 @@ RVZVE32F_INST = [
     {'mnemonic': 'vfadd.vv', 'handler': 'vfadd.vv', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfredusum.vs', 'handler': 'unsupported', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfsub.vv', 'handler': 'vfsub.vv', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
-    {'mnemonic': 'vfredosum.vs', 'handler': 'unsupported', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
+    {'mnemonic': 'vfredosum.vs', 'handler': 'vfredosum.vs', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfmin.vv', 'handler': 'vfmin.vv', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfredmin.vs', 'handler': 'unsupported', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
     {'mnemonic': 'vfmax.vv', 'handler': 'vfmax.vv', 'cost': 1, 'tags': '.json', 'memory': False, 'cof': False},
