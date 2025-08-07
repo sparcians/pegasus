@@ -97,7 +97,6 @@ class VredInstructionTester : public PegasusInstructionTester
         EXPECT_EQUAL(sim_state->inst_count, 2);
     }
 
-
     void testVfredosumvs()
     {
         // using FLEN = float;
@@ -113,9 +112,9 @@ class VredInstructionTester : public PegasusInstructionTester
         // Configure vector unit
         state->getVectorConfig()->setVLEN(256); // large enough for 8 floats
         state->getVectorConfig()->setVSTART(0);
-        state->getVectorConfig()->setVL(4);     // process 4 elements
+        state->getVectorConfig()->setVL(4); // process 4 elements
         state->getVectorConfig()->setLMUL(1);
-        state->getVectorConfig()->setSEW(32);   // 32-bit float
+        state->getVectorConfig()->setSEW(32); // 32-bit float
 
         VF32 vs1_val = {1.0f};                   // Initial accumulator = 1.0
         VF32 vs2_val = {2.0f, 3.0f, 4.0f, 5.0f}; // Values to sum
@@ -201,7 +200,7 @@ class VredInstructionTester : public PegasusInstructionTester
         return opcode;
     }
 
-    private:
+  private:
     pegasus::PegasusInst::PtrType instPtr_ = nullptr;
 };
 

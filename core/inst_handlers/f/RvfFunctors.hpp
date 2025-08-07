@@ -125,9 +125,9 @@ namespace pegasus
         }
     };
 
-    template <typename F> struct Fadd 
+    template <typename F> struct Fadd
     {
-        F operator()(const F& a, const F& b) const 
+        F operator()(const F & a, const F & b) const
         {
             constexpr auto add = getAdd<F>();
             return add(a, b);

@@ -66,22 +66,25 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vwredsumu.vs",
-            pegasus::Action::createAction<
-                &RvvReductionInsts::vwredopHandlerUnsigned_<std::plus>, RvvReductionInsts>(
-                nullptr, "vwredsumu.vs", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvReductionInsts::vwredopHandlerUnsigned_<std::plus>,
+                                          RvvReductionInsts>(nullptr, "vwredsumu.vs",
+                                                             ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vwredsum.vs",
-            pegasus::Action::createAction<
-                &RvvReductionInsts::vwredopHandlerSigned_<std::plus>, RvvReductionInsts>(
-                nullptr, "vwredsum.vs", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvReductionInsts::vwredopHandlerSigned_<std::plus>,
+                                          RvvReductionInsts>(nullptr, "vwredsum.vs",
+                                                             ActionTags::EXECUTE_TAG));
 
-        inst_handlers.emplace("vfredosum.vs", Action::createAction<&RvvReductionInsts::vfredopHandler_<Fadd>,
-                                                               RvvReductionInsts>(nullptr, "vfredosum.vs", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfredosum.vs",
+            Action::createAction<&RvvReductionInsts::vfredopHandler_<Fadd>, RvvReductionInsts>(
+                nullptr, "vfredosum.vs", ActionTags::EXECUTE_TAG));
 
-        inst_handlers.emplace("vfredusum.vs", Action::createAction<&RvvReductionInsts::vfredopHandler_<Fadd>,
-                                                                RvvReductionInsts>(nullptr, "vfredusum.vs", ActionTags::EXECUTE_TAG));
-
+        inst_handlers.emplace(
+            "vfredusum.vs",
+            Action::createAction<&RvvReductionInsts::vfredopHandler_<Fadd>, RvvReductionInsts>(
+                nullptr, "vfredusum.vs", ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64
@@ -152,8 +155,9 @@ namespace pegasus
             for (auto iter = begin; iter != end; ++iter)
             {
                 const auto idx = iter.getIndex();
-                accumulator = Functor(accumulator,
-                                        (static_cast<UintType<outWidth>>(elems_vs2.getElement(idx).getVal())));
+                accumulator =
+                    Functor(accumulator,
+                            (static_cast<UintType<outWidth>>(elems_vs2.getElement(idx).getVal())));
             }
         };
 
@@ -223,7 +227,7 @@ namespace pegasus
 
     template <template <typename> typename OP>
     Action::ItrType RvvReductionInsts::vwredopHandlerUnsigned_(PegasusState* state,
-                                                                      Action::ItrType action_it)
+                                                               Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -246,7 +250,7 @@ namespace pegasus
 
     template <template <typename> typename OP>
     Action::ItrType RvvReductionInsts::vwredopHandlerSigned_(PegasusState* state,
-                                                                    Action::ItrType action_it)
+                                                             Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
@@ -269,29 +273,23 @@ namespace pegasus
 
     template <template <typename> typename OP>
     Action::ItrType RvvReductionInsts::vfredopHandler_(PegasusState* state,
-                                                              Action::ItrType action_it)
+                                                       Action::ItrType action_it)
     {
         VectorConfig* vector_config = state->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfredopHelper<float16_t, float16_t, [](auto src1, auto src2)
-                                                            {
-                                                                return OP<float16_t>{}(float16_t{src1}, float16_t{src2}).v;
-                                                            }
-                                        >(state, action_it);
+                return vfredopHelper<float16_t, float16_t, [](auto src1, auto src2) {
+                    return OP<float16_t>{}(float16_t{src1}, float16_t{src2}).v;
+                }>(state, action_it);
             case 32:
-                return vfredopHelper<float32_t, float32_t, [](auto src1, auto src2)
-                                                            {
-                                                                return OP<float32_t>{}(float32_t{src1}, float32_t{src2}).v;
-                                                            }
-                                        >(state, action_it);
+                return vfredopHelper<float32_t, float32_t, [](auto src1, auto src2) {
+                    return OP<float32_t>{}(float32_t{src1}, float32_t{src2}).v;
+                }>(state, action_it);
             case 64:
-                return vfredopHelper<float64_t, float64_t, [](auto src1, auto src2)
-                                                            {
-                                                                return OP<float64_t>{}(float64_t{src1}, float64_t{src2}).v;
-                                                            }
-                                        >(state, action_it);
+                return vfredopHelper<float64_t, float64_t, [](auto src1, auto src2) {
+                    return OP<float64_t>{}(float64_t{src1}, float64_t{src2}).v;
+                }>(state, action_it);
             default:
                 sparta_assert(false, "Unsupported SEW value");
         }
