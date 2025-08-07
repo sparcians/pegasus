@@ -54,8 +54,8 @@ namespace pegasus::cosim
             using EventProducerFunction = simdb::pipeline::Function<void, Event>;
 
             auto async_source = simdb::pipeline::createTask<EventProducerFunction>(
-                [pipeline_input_queue,
-                 send_evt = Event()](simdb::ConcurrentQueue<Event> & out) mutable -> bool
+                [pipeline_input_queue, send_evt = Event()]
+                (simdb::ConcurrentQueue<Event> & out, bool /*simulation_terminating*/) mutable -> bool
                 {
                     if (pipeline_input_queue->try_pop(send_evt))
                     {
@@ -72,7 +72,9 @@ namespace pegasus::cosim
             using ConvertToRangeFunction = simdb::pipeline::Function<EventBuffer, EventsRange>;
 
             auto convert_to_range = simdb::pipeline::createTask<ConvertToRangeFunction>(
-                [](EventBuffer && evts, simdb::ConcurrentQueue<EventsRange> & out)
+                [](EventBuffer && evts,
+                   simdb::ConcurrentQueue<EventsRange> & out,
+                   bool /*simulation_terminating*/)
                 {
                     auto euid = evts.front().getEuid();
                     for (size_t i = 1; i < evts.size(); ++i)
@@ -96,7 +98,9 @@ namespace pegasus::cosim
                 simdb::pipeline::Function<EventsRange, EventsRangeAsBytes>;
 
             auto to_bytes = simdb::pipeline::createTask<BoostSerializerFunction>(
-                [](EventsRange && evts, simdb::ConcurrentQueue<EventsRangeAsBytes> & out)
+                [](EventsRange && evts,
+                   simdb::ConcurrentQueue<EventsRangeAsBytes> & out,
+                   bool /*simulation_terminating*/)
                 {
                     EventsRangeAsBytes range_as_bytes;
                     range_as_bytes.euid_range = evts.euid_range;
@@ -118,7 +122,8 @@ namespace pegasus::cosim
 
             auto zlib = simdb::pipeline::createTask<ZlibFunction>(
                 [](EventsRangeAsBytes && uncompressed,
-                   simdb::ConcurrentQueue<EventsRangeAsBytes> & out)
+                   simdb::ConcurrentQueue<EventsRangeAsBytes> & out,
+                   bool /*simulation_terminating*/)
                 {
                     EventsRangeAsBytes compressed;
                     compressed.euid_range = uncompressed.euid_range;
@@ -129,8 +134,10 @@ namespace pegasus::cosim
             // Write the compressed event ranges to disk
             auto async_writer =
                 db_accessor->createAsyncWriter<CoSimPipeline, EventsRangeAsBytes, EuidRange>(
-                    [](EventsRangeAsBytes && evts, simdb::ConcurrentQueue<EuidRange> & out,
-                       simdb::pipeline::AppPreparedINSERTs* tables)
+                    [](EventsRangeAsBytes && evts,
+                       simdb::ConcurrentQueue<EuidRange> & out,
+                       simdb::pipeline::AppPreparedINSERTs* tables,
+                       bool /*simulation_terminating*/)
                     {
                         auto inserter = tables->getPreparedINSERT("CompressedEvents");
                         inserter->setColumnValue(0, evts.euid_range.first);
@@ -154,7 +161,8 @@ namespace pegasus::cosim
             using EvictionFunction = simdb::pipeline::Function<EuidRange, void>;
 
             auto eviction_task = simdb::pipeline::createTask<EvictionFunction>(
-                [hart_pipeline](EuidRange && eviction_euid_range) mutable
+                [hart_pipeline]
+                (EuidRange && eviction_euid_range, bool /*simulation_terminating*/) mutable
                 { hart_pipeline->evict(eviction_euid_range); });
 
             // Connect tasks
