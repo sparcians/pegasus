@@ -470,7 +470,7 @@ namespace pegasus
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
-        const PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         VectorConfig* config = state->getVectorConfig();
         const size_t eewb = elemWidth / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -510,7 +510,7 @@ namespace pegasus
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
-        const PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         VectorConfig* vector_config = state->getVectorConfig();
         const size_t sewb = vector_config->getSEW() / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
@@ -544,7 +544,7 @@ namespace pegasus
     {
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
-        const PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         VectorConfig config{*state->getVectorConfig()};
         config.setLMUL(nReg * 8);
         config.setVL(config.getVLMAX());
@@ -564,7 +564,7 @@ namespace pegasus
     Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
-        const PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
                                                   isLoad ? inst->getRd() : inst->getRs3()};
 
