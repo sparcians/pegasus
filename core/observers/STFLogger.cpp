@@ -8,8 +8,18 @@ namespace pegasus
                          PegasusState* state) :
         Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
     {
-        // set up version and stf generation type
-        stf_writer_.open(filename);
+        try
+        {
+            stf_writer_.open(filename);
+        }
+        catch (...)
+        {
+            std::cerr
+                << "STF Filename formatted incorrectly: does the file have a STF file extension"
+                << std::endl;
+            throw;
+        }
+
         stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
                                                       0, "Trace from Pegasus"));
 
@@ -23,7 +33,8 @@ namespace pegasus
             stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
         }
 
-        // TODO: add support for memory records
+        // TODO: Add support for PTE
+        // stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PTE);
 
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setHeaderPC(inital_pc);
@@ -31,12 +42,20 @@ namespace pegasus
         recordRegState_(state);
     }
 
-    // METHODS
     void STFLogger::postExecute_(PegasusState* state)
     {
-        if (fault_cause_.isValid() || interrupt_cause_.isValid())
+        for (const auto & mem_write : mem_writes_)
         {
-            return;
+            stf_writer_ << stf::InstMemAccessRecord(mem_write.addr, mem_write.size, 0,
+                                                    stf::INST_MEM_ACCESS::WRITE);
+            stf_writer_ << stf::InstMemContentRecord(mem_write.value);
+        }
+
+        for (const auto & mem_read : mem_reads_)
+        {
+            stf_writer_ << stf::InstMemAccessRecord(mem_read.addr, mem_read.size, 0,
+                                                    stf::INST_MEM_ACCESS::READ);
+            stf_writer_ << stf::InstMemContentRecord(mem_read.value);
         }
 
         for (const auto & src_reg : src_regs_)
@@ -46,19 +65,19 @@ namespace pegasus
                 case RegType::INTEGER:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                         READ_INT_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 case RegType::FLOATING_POINT:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                         READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 case RegType::CSR:
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                         READ_CSR_REG<uint64_t>(state, src_reg.reg_id.reg_num));
                     break;
                 default:
@@ -74,7 +93,7 @@ namespace pegasus
                     stf_writer_ << stf::InstRegRecord(
                         dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
                         stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
+                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num)); // dst_reg.reg_value
                     break;
                 case RegType::FLOATING_POINT:
                     stf_writer_ << stf::InstRegRecord(
@@ -91,6 +110,21 @@ namespace pegasus
                 default:
                     sparta_assert(false, "Invalid register type!");
             }
+        }
+
+        if (fault_cause_.isValid()
+            || interrupt_cause_.isValid()) // TODO: Add support for exceptions
+        {
+            if (fault_cause_.getValue() == FaultCause::INST_ACCESS
+                || fault_cause_.getValue() == FaultCause::ILLEGAL_INST)
+            {
+                return;
+            }
+        }
+        else if (state->getNextPc()
+                 != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
+        {
+            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
         }
 
         if (state->getCurrentInst()->getOpcodeSize() == 2)
