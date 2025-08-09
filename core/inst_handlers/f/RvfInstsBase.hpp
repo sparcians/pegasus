@@ -68,6 +68,28 @@ namespace pegasus
             }
         }
 
+        template <typename SIZE>
+        static void fmaxFminNanCheck(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
+        {
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value);
+
+            const Constants<SIZE> & cons = getConst<SIZE>();
+
+            bool rs1_nan =
+                ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);
+            bool rs2_nan =
+                ((rs2_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs2_val & cons.SIG_MASK);
+            if (rs1_nan || rs2_nan)
+            {
+                rd_val = cons.CAN_NAN;
+            }
+            if (((rs1_val == cons.NEG_ZERO) && (rs2_val == cons.POS_ZERO))
+                || ((rs2_val == cons.NEG_ZERO) && (rs1_val == cons.POS_ZERO)))
+            {
+                rd_val = max ? cons.POS_ZERO : cons.NEG_ZERO;
+            }
+        }
+
         template <typename XLEN> static void updateCsr(PegasusState* state)
         {
             // TODO: it would be nice to have field shift, then a single combined CSR write will

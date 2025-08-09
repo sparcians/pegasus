@@ -68,13 +68,13 @@ file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicond_zcmp
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicond_zcmp_zfa
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicond_zcmp
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicond_zcmp_zfa
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
