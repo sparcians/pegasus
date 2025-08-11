@@ -85,6 +85,16 @@ namespace pegasus
             "vfredusum.vs",
             Action::createAction<&RvvReductionInsts::vfredopHandler_<Fadd>, RvvReductionInsts>(
                 nullptr, "vfredusum.vs", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfredmax.vs",
+            Action::createAction<&RvvReductionInsts::vfredopHandler_<FPMax>, RvvReductionInsts>(
+                nullptr, "vfredmax.vs", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfredmin.vs",
+            Action::createAction<&RvvReductionInsts::vfredopHandler_<FPMin>, RvvReductionInsts>(
+                nullptr, "vfredmin.vs", ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64

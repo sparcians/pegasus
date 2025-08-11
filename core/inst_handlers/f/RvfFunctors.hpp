@@ -133,4 +133,43 @@ namespace pegasus
             return add(a, b);
         }
     };
+
+    template <typename F> struct FPMax
+    {
+        F operator()(F f1, F f2) const
+        {
+            if constexpr (std::is_same_v<F, float16_t>)
+            {
+                return f16_le_quiet(f1, f2) ? f2 : f1;
+            }
+            else if constexpr (std::is_same_v<F, float32_t>)
+            {
+                return f32_le_quiet(f1, f2) ? f2 : f1;
+            }
+            else
+            {
+                return f64_le_quiet(f1, f2) ? f2 : f1;
+            }
+        }
+    };
+
+    template <typename F> struct FPMin
+    {
+        F operator()(F f1, F f2) const
+        {
+            if constexpr (std::is_same_v<F, float16_t>)
+            {
+                return f16_le_quiet(f1, f2) ? f1 : f2;
+            }
+            else if constexpr (std::is_same_v<F, float32_t>)
+            {
+                return f32_le_quiet(f1, f2) ? f1 : f2;
+            }
+            else
+            {
+                return f64_le_quiet(f1, f2) ? f1 : f2;
+            }
+        }
+    };
+
 } // namespace pegasus
