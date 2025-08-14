@@ -44,6 +44,13 @@ namespace pegasus
 
     void STFLogger::postExecute_(PegasusState* state)
     {
+        if (state->getCurrentInst() == nullptr) { return; }
+
+        if (state->getNextPc() != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
+        {
+            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
+        }
+
         for (const auto & mem_write : mem_writes_)
         {
             stf_writer_ << stf::InstMemAccessRecord(mem_write.addr, mem_write.size, 0,
