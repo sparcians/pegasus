@@ -6,6 +6,7 @@
 #include "core/inst_handlers/i/RviFunctors.hpp"
 #include "core/inst_handlers/f/RvfFunctors.hpp"
 #include <climits>
+#include <bit>
 
 namespace pegasus
 {
@@ -95,6 +96,16 @@ namespace pegasus
             "vfredmin.vs",
             Action::createAction<&RvvReductionInsts::vfredopHandler_<FPMin>, RvvReductionInsts>(
                 nullptr, "vfredmin.vs", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfwredosum.vs",
+            Action::createAction<&RvvReductionInsts::vfwredopHandler_<Fadd>, RvvReductionInsts>(
+                nullptr, "vfwredosum.vs", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfwredusum.vs",
+            Action::createAction<&RvvReductionInsts::vfwredopHandler_<Fadd>, RvvReductionInsts>(
+                nullptr, "vfwredusum.vs", ActionTags::EXECUTE_TAG));
     }
 
     // Template instantiations for both RV32 and RV64
@@ -145,12 +156,59 @@ namespace pegasus
         return ++action_it;
     }
 
+    template <typename InType, typename OutType>
+    OutType softFloatConverter(typename Element<sizeof(InType) * CHAR_BIT>::ValueType val)
+    {
+        if constexpr (std::is_same_v<InType, float16_t> && std::is_same_v<OutType, float32_t>)
+        {
+            return f16_to_f32(float16_t{val});
+        }
+        else if constexpr (std::is_same_v<InType, float32_t> && std::is_same_v<OutType, float64_t>)
+        {
+            return f32_to_f64(float32_t{val});
+        }
+        else if constexpr (std::is_same_v<InType, OutType>)
+        {
+            return OutType{val};
+        }
+        else
+        {
+            sparta_assert(false, "Unsupported float conversion");
+        }
+    }
+
+    template <typename FloatType> void printSoftFloat(const FloatType & val)
+    {
+        if constexpr (std::is_same_v<FloatType, float16_t>)
+        {
+            float32_t f32 = f16_to_f32(val);
+            float f_val;
+            std::memcpy(&f_val, &f32.v, sizeof(f_val));
+            std::cout << "accumulator (f16 as float): " << f_val << std::endl;
+        }
+        else if constexpr (std::is_same_v<FloatType, float32_t>)
+        {
+            float f_val;
+            std::memcpy(&f_val, &val.v, sizeof(f_val));
+            std::cout << "accumulator (float32): " << f_val << std::endl;
+        }
+        else if constexpr (std::is_same_v<FloatType, float64_t>)
+        {
+            double d_val;
+            std::memcpy(&d_val, &val.v, sizeof(d_val));
+            std::cout << "accumulator (float64): " << d_val << std::endl;
+        }
+        else
+        {
+            static_assert(!std::is_same_v<FloatType, FloatType>, "Unsupported float type");
+        }
+    }
+
     template <typename inType, typename outType, auto Functor>
     Action::ItrType vfredopHelper(PegasusState* state, Action::ItrType action_it)
     {
         static constexpr auto inWidth = sizeof(inType) * CHAR_BIT;
         static constexpr auto outWidth = sizeof(outType) * CHAR_BIT;
-
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<inWidth>, false> elems_vs2{state, state->getVectorConfig(),
                                                     inst->getRs2()};
@@ -158,16 +216,15 @@ namespace pegasus
                                                     inst->getRs1()};
         Elements<Element<outWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
 
-        typename Element<inWidth>::ValueType accumulator = elems_vs1.getElement(0).getVal();
+        outType accumulator = softFloatConverter<inType, outType>(elems_vs1.getElement(0).getVal());
 
         auto execute = [&]<typename Iterator>(Iterator begin, Iterator end)
         {
             for (auto iter = begin; iter != end; ++iter)
             {
                 const auto idx = iter.getIndex();
-                accumulator =
-                    Functor(accumulator,
-                            (static_cast<UintType<outWidth>>(elems_vs2.getElement(idx).getVal())));
+                accumulator = Functor(accumulator, softFloatConverter<inType, outType>(
+                                                       elems_vs2.getElement(idx).getVal()));
             }
         };
 
@@ -180,13 +237,12 @@ namespace pegasus
             const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
-
         elems_vd.getElement(0).setVal(
-            accumulator); // TODO: Support tail agnostic/undisturbed policy as a parameter.
-                          // Currently assuming undisturbed (requires vd as a source).
-                          // For tail-agnostic, we'll likely write all 1's or some deterministic
-                          // pattern to tail elements. This should be configurable via vector policy
-                          // (vta).
+            accumulator.v); // TODO: Support tail agnostic/undisturbed policy as a parameter.
+                            // Currently assuming undisturbed (requires vd as a source).
+                            // For tail-agnostic, we'll likely write all 1's or some deterministic
+                            // pattern to tail elements. This should be configurable via vector
+                            // policy (vta).
         return ++action_it;
     }
 
@@ -289,17 +345,32 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfredopHelper<float16_t, float16_t, [](auto src1, auto src2) {
-                    return OP<float16_t>{}(float16_t{src1}, float16_t{src2}).v;
-                }>(state, action_it);
+                return vfredopHelper<float16_t, float16_t, OP<float16_t>{}>(state, action_it);
             case 32:
-                return vfredopHelper<float32_t, float32_t, [](auto src1, auto src2) {
-                    return OP<float32_t>{}(float32_t{src1}, float32_t{src2}).v;
-                }>(state, action_it);
+                return vfredopHelper<float32_t, float32_t, OP<float32_t>{}>(state, action_it);
             case 64:
-                return vfredopHelper<float64_t, float64_t, [](auto src1, auto src2) {
-                    return OP<float64_t>{}(float64_t{src1}, float64_t{src2}).v;
-                }>(state, action_it);
+                return vfredopHelper<float64_t, float64_t, OP<float64_t>{}>(state, action_it);
+            default:
+                sparta_assert(false, "Unsupported SEW value");
+        }
+
+        return ++action_it;
+    }
+
+    template <template <typename> typename OP>
+    Action::ItrType RvvReductionInsts::vfwredopHandler_(PegasusState* state,
+                                                        Action::ItrType action_it)
+    {
+        VectorConfig* vector_config = state->getVectorConfig();
+        switch (vector_config->getSEW())
+        {
+            case 16:
+                return vfredopHelper<float16_t, float32_t, OP<float32_t>{}>(state, action_it);
+            case 32:
+                return vfredopHelper<float32_t, float64_t, OP<float64_t>{}>(state, action_it);
+            case 64:
+                sparta_assert(false, "Widening from SEW=64 to 128 bits is invalid: element sizes > "
+                                     "64 bits are not supported");
             default:
                 sparta_assert(false, "Unsupported SEW value");
         }

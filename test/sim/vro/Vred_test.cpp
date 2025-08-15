@@ -116,8 +116,12 @@ class VredInstructionTester : public PegasusInstructionTester
         state->getVectorConfig()->setLMUL(1);
         state->getVectorConfig()->setSEW(32); // 32-bit float
 
-        VF32 vs1_val = {1.0f};                   // Initial accumulator = 1.0
-        VF32 vs2_val = {2.0f, 3.0f, 4.0f, 5.0f}; // Values to sum
+        // VF32 vs1_val = {1.5f};                   // Initial accumulator = 1.0
+        // VF32 vs2_val = {2.0f, 3.0f, 4.0f, 5.0f}; // Values to sum
+
+        VF32 vs2_val = {1.5f, 2.25f, 3.125f, 4.5f}; // float vector
+        VF32 vs1_val = {5.0};                       // initial double accumulator
+
         float expected_sum = vs1_val[0];
         for (int i = 0; i < 4; ++i)
         {
@@ -139,6 +143,57 @@ class VredInstructionTester : public PegasusInstructionTester
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
         EXPECT_EQUAL(sim_state->inst_count, 3); // third instruction
+    }
+
+    void testVfwredsumvs()
+    {
+        using VF32 = std::array<float, 8>;  // SEW = 32-bit float input
+        using VF64 = std::array<double, 8>; // Widened accumulator/result
+
+        pegasus::PegasusState* state = getPegasusState();
+        const pegasus::Addr pc = 0x1000;
+        const uint32_t vd = 10; // scalar destination (double)
+        const uint32_t vs1 = 1; // wide scalar accumulator (double)
+        const uint32_t vs2 = 2; // narrow vector input (float)
+        uint32_t opcode;
+
+        // Configure vector unit for floating-point 32-bit input, widened to 64-bit
+        state->getVectorConfig()->setVLEN(256);
+        state->getVectorConfig()->setVSTART(0);
+        state->getVectorConfig()->setVL(4); // Only 4 elements to keep it simple
+        state->getVectorConfig()->setLMUL(1);
+        state->getVectorConfig()->setSEW(32); // Input element is 32-bit float
+
+        // Inputs
+        VF32 vs2_val = {1.5f, 2.25f, 3.125f, 4.5f}; // float vector
+        // VF64 vs1_val = {5.0};                      // initial double accumulator
+        VF32 vs1_val = {5.0f};
+        double expected_sum = static_cast<double>(vs1_val[0]);
+        for (int i = 0; i < 4; ++i)
+        {
+            expected_sum += static_cast<double>(vs2_val[i]); // Widen and accumulate
+        }
+
+        // Write values to registers
+        WRITE_VEC_REG<VF32>(state, vs1, vs1_val); // wide accumulator
+        WRITE_VEC_REG<VF32>(state, vs2, vs2_val); // narrow float vector input
+
+        // Encode instruction: vfwredsum.vs
+        opcode = vfwredosumvsOp(vd, vs1, vs2, 1); // vm = 1 (unmasked)
+        injectInstruction(pc, opcode);
+
+        // Read result from vector register
+        auto vd_val = READ_VEC_REG<VF64>(state, vd);
+        EXPECT_EQUAL(vd_val[0], expected_sum); // Should be 5.0 + 11.375 = 16.375
+
+        uint64_t actual_bits;
+        std::memcpy(&actual_bits, &vd_val[0], sizeof(actual_bits));
+
+        EXPECT_EQUAL(actual_bits, 0x4030600000000000ULL);
+
+        const pegasus::PegasusState::SimState* sim_state = state->getSimState();
+        std::cout << sim_state->current_inst << std::endl;
+        EXPECT_EQUAL(sim_state->inst_count, 4); // fourth instruction
     }
 
     // vredsum.vs encoding helper
@@ -200,6 +255,28 @@ class VredInstructionTester : public PegasusInstructionTester
         return opcode;
     }
 
+    uint32_t vfwredosumvsOp(uint8_t rd, uint8_t rs1, uint8_t rs2, uint8_t vm)
+    {
+        uint32_t opcode = 0;
+        uint8_t offset = 0;
+        opcode |= 0x57 << offset; // base opcode
+        offset += 7;
+        opcode |= rd << offset;
+        offset += 5;
+        opcode |= 1 << offset; // funct3 = 001 for float reductions
+        offset += 3;
+        opcode |= rs1 << offset;
+        offset += 5;
+        opcode |= rs2 << offset;
+        offset += 5;
+        opcode |= vm << offset;
+        offset += 1;
+        opcode |= 0x33 << offset; // funct6 = 110011 (vfredosum)
+        offset += 6;
+        EXPECT_EQUAL(offset, 32);
+        return opcode;
+    }
+
   private:
     pegasus::PegasusInst::PtrType instPtr_ = nullptr;
 };
@@ -210,6 +287,7 @@ int main()
     tester.testVredsumvs1();
     tester.testVwredsumvs1();
     tester.testVfredosumvs();
+    tester.testVfwredsumvs();
 
     REPORT_ERROR;
     return ERROR_CODE;

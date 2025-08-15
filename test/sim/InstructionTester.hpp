@@ -36,6 +36,7 @@ class PegasusInstructionTester
         pegasus::ActionGroup* next_action_group = fetch_unit_->getActionGroup();
         do
         {
+            std::cout << "next_action_group: " << next_action_group << std::endl;
             next_action_group = next_action_group->execute(state_);
         } while (next_action_group
                  && (next_action_group->hasTag(pegasus::ActionTags::FETCH_TAG) == false));
