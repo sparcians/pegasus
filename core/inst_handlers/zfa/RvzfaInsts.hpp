@@ -21,18 +21,48 @@ namespace pegasus
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, typename SIZE>
+        template <typename XLEN, typename FMT>
         Action::ItrType fliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, typename SIZE, bool ISMAX>
         Action::ItrType fminmaxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, typename SIZE, bool EXACT>
         Action::ItrType froundHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN, typename FMT>
+        Action::ItrType fmvh_x_Handler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         inline static const std::array<uint32_t, 32> fli_table_ = {
-            0xBF800000, 0x00800000, 0x37800000, 0x38000000, 0x3B800000, 0x3C000000, 0x3D800000,
-            0x3E000000, 0x3E800000, 0x3EA00000, 0x3EC00000, 0x3EE00000, 0x3F000000, 0x3F200000,
-            0x3F400000, 0x3F600000, 0X3F800000, 0X3FA00000, 0X3FC00000, 0X3FE00000, 0X40000000,
-            0X40200000, 0X40400000, 0X40800000, 0X41000000, 0X41800000, 0X43000000, 0X43800000,
-            0X47000000, 0X47800000, 0X7F800000, 0x7FC00000};
+            0xBF800000, // -1.0
+            0x00800000, // Minimum positive normal
+            0x37800000, // 1.0 * 2^-16
+            0x38000000, // 1.0 * 2^-15
+            0x3B800000, // 1.0 * 2^-8
+            0x3C000000, // 1.0 * 2^-7
+            0x3D800000, // 0.0625 (2^-4)
+            0x3E000000, // 0.125 (2^-3)
+            0x3E800000, // 0.25
+            0x3EA00000, // 0.3125
+            0x3EC00000, // 0.375
+            0x3EE00000, // 0.4375
+            0x3F000000, // 0.5
+            0x3F200000, // 0.625
+            0x3F400000, // 0.75
+            0x3F600000, // 0.875
+            0X3F800000, // 1.0
+            0X3FA00000, // 1.25
+            0X3FC00000, // 1.5
+            0X3FE00000, // 1.75
+            0X40000000, // 2.0
+            0X40200000, // 2.5
+            0X40400000, // 3
+            0X40800000, // 4
+            0X41000000, // 8
+            0X41800000, // 16
+            0X43000000, // 128 (2^7)
+            0X43800000, // 256 (2^8)
+            0X47000000, // 2^15
+            0X47800000, // 2^16
+            0X7F800000, // +infinity
+            0x7FC00000  // Canonical NaN
+        };
     };
 } // namespace pegasus

@@ -15,22 +15,26 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         {
             inst_handlers.emplace(
+                "fleq.s",
+                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
+                    nullptr, "fleq.s", ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
                 "fli.s",
                 pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
                     nullptr, "fli.s", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "fli.d",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_DP>, RvzfaInsts>(
-                    nullptr, "fli.d", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fminm.s",
-                pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<RV64, FLOAT_SP, false>,
-                                              RvzfaInsts>(nullptr, "fminm.s",
-                                                          ActionTags::EXECUTE_TAG));
+                "fltq.s",
+                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
+                    nullptr, "fltq.s", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "fmaxm.s",
                 pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<RV64, FLOAT_SP, true>,
                                               RvzfaInsts>(nullptr, "fmaxm.s",
+                                                          ActionTags::EXECUTE_TAG));
+            inst_handlers.emplace(
+                "fminm.s",
+                pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<RV64, FLOAT_SP, false>,
+                                              RvzfaInsts>(nullptr, "fminm.s",
                                                           ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "fround.s",
@@ -48,16 +52,14 @@ namespace pegasus
     template void RvzfaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzfaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    // TO DO: Add specific fflag set functions for all handlers
-
-    template <typename XLEN, typename SIZE>
+    template <typename XLEN, typename FMT>
     Action::ItrType RvzfaInsts::fliHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1();
 
-        const SIZE rd_val = fli_table_.at(rs1_val);
-        WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
+        const FMT rd_val = fli_table_.at(rs1_val);
+        WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, FMT>(rd_val));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -120,5 +122,4 @@ namespace pegasus
         updateCsr<XLEN>(state);
         return ++action_it;
     }
-
 } // namespace pegasus
