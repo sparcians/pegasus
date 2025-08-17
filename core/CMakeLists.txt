@@ -15,6 +15,7 @@ add_library(pegasuscore
     observers/InstructionLogger.cpp
     observers/SimController.cpp
     observers/STFLogger.cpp
+    observers/STFValidator.cpp
     observers/CoSimObserver.cpp
     ../arch/RegisterDefnsJSON.cpp
 )
