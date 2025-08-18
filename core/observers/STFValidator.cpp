@@ -26,8 +26,10 @@ namespace pegasus
         uint64_t stf_pc = stf_reader_->getInitialPC();
         if (initial_pc != stf_pc)
         {
+            // Traces from Spike have 5 instructions of boot code before entering the actual
+            // workload
             uint64_t skip_count = 0;
-            while (skip_count < 10)
+            while (skip_count < 5)
             {
                 ++next_it_;
                 stf_pc = next_it_->pc();
@@ -37,6 +39,7 @@ namespace pegasus
                 }
                 ++skip_count;
             }
+            sparta_assert(initial_pc == stf_pc, "Failed to find initial PC in validation trace!");
         }
     }
 
@@ -53,10 +56,11 @@ namespace pegasus
         if (pc != stf_pc)
         {
             std::cout << std::hex << "PC: 0x" << pc << ", STF PC: 0x" << stf_pc << std::endl;
+            std::cout << "Opcode: 0x" << state->getSimState()->current_opcode << ", STF Opcode: 0x"
+                      << next_it_->opcode() << std::endl;
             std::cout << state->getCurrentInst() << std::endl;
             sparta_assert(false, "PCs have diverged!");
         }
-        std::cout << "0x" << std::hex << next_it_->opcode() << std::endl;
         ++next_it_;
     }
 } // namespace pegasus
