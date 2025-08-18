@@ -50,6 +50,7 @@ namespace pegasus
         const bool is_interrupt = interrupt_cause_.isValid();
         const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
                                                 : static_cast<XLEN>(fault_cause_.getValue());
+        DLOG("Exception code: " << excp_code);
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
