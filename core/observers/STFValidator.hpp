@@ -10,11 +10,10 @@ namespace pegasus
       public:
         /*!
          * \class STFValidator
-         * \brief Description...
-         * \param reg_width Register width (32 or 64)
+         * \brief Observer for validating Pegasus with an STF trace
+         * \param xlen Either 32 or 64 bit
          * \param initial_pc Initial program counter
-         * \param filename Name of the file the trace will be written to
-         * \param state PegasusState used to populate initial register values
+         * \param filename File name of the validation trace
          */
         STFValidator(const uint64_t xlen, const uint64_t initial_pc, const std::string & filename);
 
