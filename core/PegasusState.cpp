@@ -154,6 +154,15 @@ namespace pegasus
         }
         inclusions_.erase("g");
 
+        if (isCompressionEnabled())
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
@@ -248,8 +257,7 @@ namespace pegasus
         DLOG("Changing Mavis context: " << context_name);
         mavis_->switchContext(context_name);
 
-        const bool compression_enabled = inclusions_.contains("c");
-        if (compression_enabled)
+        if (isCompressionEnabled())
         {
             setPcAlignment_(2);
         }

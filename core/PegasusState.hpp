@@ -117,6 +117,11 @@ namespace pegasus
 
         std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
+        bool isCompressionEnabled() const
+        {
+            return inclusions_.contains("c") || inclusions_.contains("zca");
+        }
+
         void changeMavisContext();
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
