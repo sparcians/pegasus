@@ -177,33 +177,6 @@ namespace pegasus
         }
     }
 
-    template <typename FloatType> void printSoftFloat(const FloatType & val)
-    {
-        if constexpr (std::is_same_v<FloatType, float16_t>)
-        {
-            float32_t f32 = f16_to_f32(val);
-            float f_val;
-            std::memcpy(&f_val, &f32.v, sizeof(f_val));
-            std::cout << "accumulator (f16 as float): " << f_val << std::endl;
-        }
-        else if constexpr (std::is_same_v<FloatType, float32_t>)
-        {
-            float f_val;
-            std::memcpy(&f_val, &val.v, sizeof(f_val));
-            std::cout << "accumulator (float32): " << f_val << std::endl;
-        }
-        else if constexpr (std::is_same_v<FloatType, float64_t>)
-        {
-            double d_val;
-            std::memcpy(&d_val, &val.v, sizeof(d_val));
-            std::cout << "accumulator (float64): " << d_val << std::endl;
-        }
-        else
-        {
-            static_assert(!std::is_same_v<FloatType, FloatType>, "Unsupported float type");
-        }
-    }
-
     template <typename inType, typename outType, auto Functor>
     Action::ItrType vfredopHelper(PegasusState* state, Action::ItrType action_it)
     {
