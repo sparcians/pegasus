@@ -110,7 +110,7 @@ class VredInstructionTester : public PegasusInstructionTester
         uint32_t opcode;
 
         // Configure vector unit
-        state->getVectorConfig()->setVLEN(256); // large enough for 8 floats
+        state->getVectorConfig()->setVLEN(1024); // large enough for 8 floats
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(4); // process 4 elements
         state->getVectorConfig()->setLMUL(1);
@@ -158,7 +158,7 @@ class VredInstructionTester : public PegasusInstructionTester
         uint32_t opcode;
 
         // Configure vector unit for floating-point 32-bit input, widened to 64-bit
-        state->getVectorConfig()->setVLEN(256);
+        state->getVectorConfig()->setVLEN(1024);
         state->getVectorConfig()->setVSTART(0);
         state->getVectorConfig()->setVL(4); // Only 4 elements to keep it simple
         state->getVectorConfig()->setLMUL(1);
