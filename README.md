@@ -1,5 +1,5 @@
 # Pegasus
-RISC-V Functional Model
+A RISC-V Functional Model, but different...
 
 ![riscv-arch](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/riscv-arch.json)
 ![tenstorrent](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/kathlenemagnus/257907f4095b77a22da35df05f543a4a/raw/tenstorrent.json)
@@ -36,6 +36,52 @@ RISC-V Functional Model
                     |  __/  __/ (_| | (_| \__ \ |_| \__ \
                     |_|   \___|\__, |\__,_|___/\__,_|___/
                                |___/
+
+## What is Pegasus?
+
+Pegasus is an open-source functional simulator, built using the Sparta
+Modeling Framework, designed for the purpose of co-simulation, STF
+trace generation, and application development.  The main drivers or
+use cases are Design Verification and Execution-Driven Mode (EDM)
+performance simulators like Olympia.
+
+Pegasus can be used to execute instructions in a holistic fashion or
+in partial stages.  For example, setting Pegasus to execute an
+instruction at address 0x1000 actually entails many steps, especially
+for memory operations:
+
+1. Instruction Translation
+   - Can take an exception: access permission, miss in the MMU, etc
+   - Can invoke a TLB walk
+1. Data fetch for the instruction
+   - Can encounter an external exception
+   - Can miss in cache
+1. Decode
+   - Can take an exception: illop, invalid opcode
+1. Execute
+   - Instruction address generation for memory accesses
+   - Instruction translation for memory accesses: can take an exception
+   - Instruction data access: can miss in the cache
+   - Instruction execution itself: can take an exception
+   - Redirection or sequential PC
+
+In most, if not all, functional simulators developed in the industry
+perform all of the operations above during a single call to `step()`.
+Pegasus is different.  Pegasus can stop at any point in the flow above
+and return control back to the caller.  For example, if the user wants
+to run simulation until a load instruction is about to access memory,
+the user can advance Pegasus until that point and then stop.
+"Continuing" the simulator re-enters that access point.
+
+In addition, with each full step of an instruction, an Event object is
+returned detailing what the instruction did on its journey through
+the stages.  This event can be used to “undo” or backup the simulator
+as need be.  This allows out-of-order simulators like Olympia to have
+multiple paths of execution through a binary (think branch
+mispredictions).
+
+Pegasus is still under development and more documentation and support
+will come; stay tuned!
 
 ## Install Prerequisites
 
@@ -148,9 +194,9 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Za64rs** Reservation sets are contiguous, naturally aligned, and a maximum of 64 bytes. | :x: |
 | **Zihintpause** Pause hint. | :x: |
 | **Zic64b** Cache blocks must be 64 bytes in size, naturally aligned in the address space. | :x: |
-| **Zicbom** Cache-block management instructions. | :x: |
-| **Zicbop** Cache-block prefetch instructions. | :x: |
-| **Zicboz** Cache-Block Zero Instructions. | :x: |
+| **Zicbom** Cache-block management instructions. | :white_check_mark: |
+| **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
+| **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
 | **Zfhmin** Half-precision floating-point. | :x: |
 | **Zkt** Data-independent execution latency. | :x: |
 | **V** Vector extension. | :x: |
