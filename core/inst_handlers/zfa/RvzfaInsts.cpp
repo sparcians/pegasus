@@ -79,18 +79,18 @@ namespace pegasus
                                                       ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fcvtmod.w.d",
-            pegasus::Action::createAction<&RvzfaInsts::fliHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+            pegasus::Action::createAction<&RvzfaInsts::fcvtmodHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
                 nullptr, "fcvtmod.w.d", ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
                 "fmvh.x.d",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV32, FLOAT_DP>, RvzfaInsts>(
+                pegasus::Action::createAction<&RvzfaInsts::fmvh_x_dHandler_, RvzfaInsts>(
                     nullptr, "fmvh.x.d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "fmvh.d.x",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV32, FLOAT_DP>, RvzfaInsts>(
+                pegasus::Action::createAction<&RvzfaInsts::fmvh_d_xHandler_, RvzfaInsts>(
                     nullptr, "fmvh.d.x", ActionTags::EXECUTE_TAG));
         }
     }
@@ -180,19 +180,25 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, typename FMT>
     Action::ItrType RvzfaInsts::fmvh_x_dHandler_(pegasus::PegasusState* state,
                                                  Action::ItrType action_it)
     {
-        updateCsr<XLEN>(state);
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        // Move bits 63:32 of FP source to 32-bit INT dest
+        const RV64 rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+        WRITE_INT_REG<RV32>(state, inst->getRd(), (rs1_val >> 32));
         return ++action_it;
     }
 
-    template <typename XLEN, typename FMT>
     Action::ItrType RvzfaInsts::fmvh_d_xHandler_(pegasus::PegasusState* state,
                                                  Action::ItrType action_it)
     {
-        updateCsr<XLEN>(state);
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        // Move 32-bit INT source to bits 31:0 of FP dest
+        const uint64_t rs1_val = READ_INT_REG<RV32>(state, inst->getRs1());
+        // Move 32-bit INT source to bits 63:32 of FP dest
+        const uint64_t rs2_val = READ_INT_REG<RV32>(state, inst->getRs1());
+        WRITE_FP_REG<RV64>(state, inst->getRd(), ((rs2_val << 32) & rs1_val));
         return ++action_it;
     }
 
