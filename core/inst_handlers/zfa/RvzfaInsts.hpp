@@ -21,14 +21,9 @@ namespace pegasus
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
+        // fli
         template <typename XLEN, typename FMT>
         Action::ItrType fliHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN, typename SIZE, bool ISMAX>
-        Action::ItrType fminmaxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN, typename SIZE, bool EXACT>
-        Action::ItrType froundHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <typename XLEN, typename FMT>
-        Action::ItrType fmvh_x_Handler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         inline static const std::array<uint32_t, 32> fli_table_ = {
             0xBF800000, // -1.0
@@ -64,5 +59,29 @@ namespace pegasus
             0X7F800000, // +infinity
             0x7FC00000  // Canonical NaN
         };
+
+        // fminm, fmaxm
+        template <typename XLEN, typename SIZE, bool ISMAX>
+        Action::ItrType fminmaxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // fround, froundnx
+        template <typename XLEN, typename SIZE, bool EXACT>
+        Action::ItrType froundHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // fcvtmod
+        template <typename XLEN, typename FMT>
+        Action::ItrType fcvtmodHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // fmvh.x.d, fmvh.d.x (RV32 only)
+        template <typename XLEN, typename FMT>
+        Action::ItrType fmvh_x_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN, typename FMT>
+        Action::ItrType fmvh_d_xHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        // fleq, fltq
+        template <typename XLEN, typename FMT>
+        Action::ItrType fleqHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN, typename FMT>
+        Action::ItrType fltqHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

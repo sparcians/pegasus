@@ -13,53 +13,99 @@ namespace pegasus
     void RvzfaInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+
+        // Single precision
+        inst_handlers.emplace(
+            "fleq.s",
+            pegasus::Action::createAction<&RvzfaInsts::fleqHandler_<XLEN, FLOAT_SP>, RvzfaInsts>(
+                nullptr, "fleq.s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fli.s",
+            pegasus::Action::createAction<&RvzfaInsts::fliHandler_<XLEN, FLOAT_SP>, RvzfaInsts>(
+                nullptr, "fli.s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fltq.s",
+            pegasus::Action::createAction<&RvzfaInsts::fltqHandler_<XLEN, FLOAT_SP>, RvzfaInsts>(
+                nullptr, "fltq.s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fmaxm.s",
+            pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<XLEN, FLOAT_SP, true>,
+                                          RvzfaInsts>(nullptr, "fmaxm.s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fminm.s",
+            pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<XLEN, FLOAT_SP, false>,
+                                          RvzfaInsts>(nullptr, "fminm.s", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fround.s",
+            pegasus::Action::createAction<&RvzfaInsts::froundHandler_<XLEN, FLOAT_SP, false>,
+                                          RvzfaInsts>(nullptr, "fround.s",
+                                                      ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "froundnx.s",
+            pegasus::Action::createAction<&RvzfaInsts::froundHandler_<XLEN, FLOAT_SP, true>,
+                                          RvzfaInsts>(nullptr, "froundnx.s",
+                                                      ActionTags::EXECUTE_TAG));
+
+        // Double precision
+        inst_handlers.emplace(
+            "fleq.d",
+            pegasus::Action::createAction<&RvzfaInsts::fleqHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+                nullptr, "fleq.d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fli.d",
+            pegasus::Action::createAction<&RvzfaInsts::fliHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+                nullptr, "fli.d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fltq.d",
+            pegasus::Action::createAction<&RvzfaInsts::fltqHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+                nullptr, "fltq.d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fmaxm.d",
+            pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<XLEN, FLOAT_DP, true>,
+                                          RvzfaInsts>(nullptr, "fmaxm.d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fminm.d",
+            pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<XLEN, FLOAT_DP, false>,
+                                          RvzfaInsts>(nullptr, "fminm.d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fround.d",
+            pegasus::Action::createAction<&RvzfaInsts::froundHandler_<XLEN, FLOAT_DP, false>,
+                                          RvzfaInsts>(nullptr, "fround.d",
+                                                      ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "froundnx.d",
+            pegasus::Action::createAction<&RvzfaInsts::froundHandler_<XLEN, FLOAT_DP, true>,
+                                          RvzfaInsts>(nullptr, "froundnx.d",
+                                                      ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fcvtmod.w.d",
+            pegasus::Action::createAction<&RvzfaInsts::fliHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+                nullptr, "fcvtmod.w.d", ActionTags::EXECUTE_TAG));
+
+        if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "fleq.s",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
-                    nullptr, "fleq.s", ActionTags::EXECUTE_TAG));
+                "fmvh.x.d",
+                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV32, FLOAT_DP>, RvzfaInsts>(
+                    nullptr, "fmvh.x.d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "fli.s",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
-                    nullptr, "fli.s", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fltq.s",
-                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV64, FLOAT_SP>, RvzfaInsts>(
-                    nullptr, "fltq.s", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fmaxm.s",
-                pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<RV64, FLOAT_SP, true>,
-                                              RvzfaInsts>(nullptr, "fmaxm.s",
-                                                          ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fminm.s",
-                pegasus::Action::createAction<&RvzfaInsts::fminmaxHandler_<RV64, FLOAT_SP, false>,
-                                              RvzfaInsts>(nullptr, "fminm.s",
-                                                          ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "fround.s",
-                pegasus::Action::createAction<&RvzfaInsts::froundHandler_<RV64, FLOAT_SP, false>,
-                                              RvzfaInsts>(nullptr, "fround.s",
-                                                          ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "froundnx.s",
-                pegasus::Action::createAction<&RvzfaInsts::froundHandler_<RV64, FLOAT_SP, true>,
-                                              RvzfaInsts>(nullptr, "froundnx.s",
-                                                          ActionTags::EXECUTE_TAG));
+                "fmvh.d.x",
+                pegasus::Action::createAction<&RvzfaInsts::fliHandler_<RV32, FLOAT_DP>, RvzfaInsts>(
+                    nullptr, "fmvh.d.x", ActionTags::EXECUTE_TAG));
         }
     }
 
     template void RvzfaInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzfaInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, typename FMT>
+    template <typename XLEN, typename SIZE>
     Action::ItrType RvzfaInsts::fliHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val = inst->getRs1();
 
-        const FMT rd_val = fli_table_.at(rs1_val);
-        WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, FMT>(rd_val));
+        const SIZE rd_val = fli_table_.at(rs1_val);
+        WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -83,6 +129,10 @@ namespace pegasus
         {
             rd_val = f64_le_quiet(float64_t{rs1_val}, float64_t{rs2_val}) ? rs2_val : rs1_val;
         }
+        else
+        {
+            static_assert(true, "unsupported floating point size");
+        }
 
         fmaxFminNanCheck<SIZE>(rs1_val, rs2_val, rd_val, ISMAX);
         WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
@@ -90,7 +140,6 @@ namespace pegasus
         return ++action_it;
     }
 
-    // Currently only designed to support SP and DP
     template <typename XLEN, typename SIZE, bool EXACT>
     Action::ItrType RvzfaInsts::froundHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
@@ -113,6 +162,88 @@ namespace pegasus
                 state, inst->getRd(),
                 nanBoxing<FLOAT_DP, SIZE>(
                     f64_roundToInt(float64_t{rs1_val}, softfloat_roundingMode, EXACT).v));
+        }
+        else
+        {
+            static_assert(true, "unsupported floating point size");
+        }
+
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN, typename FMT>
+    Action::ItrType RvzfaInsts::fcvtmodHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
+    {
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN, typename FMT>
+    Action::ItrType RvzfaInsts::fmvh_x_dHandler_(pegasus::PegasusState* state,
+                                                 Action::ItrType action_it)
+    {
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN, typename FMT>
+    Action::ItrType RvzfaInsts::fmvh_d_xHandler_(pegasus::PegasusState* state,
+                                                 Action::ItrType action_it)
+    {
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN, typename SIZE>
+    Action::ItrType RvzfaInsts::fleqHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const uint32_t rs1_val =
+            checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val =
+            checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs2()));
+
+        if constexpr (std::is_same_v<SIZE, FLOAT_SP>)
+        {
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
+                                f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}));
+        }
+        else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
+        {
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
+                                f64_le_quiet(float64_t{rs1_val}, float64_t{rs2_val}));
+        }
+        else
+        {
+            static_assert(true, "unsupported floating point size");
+        }
+
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN, typename SIZE>
+    Action::ItrType RvzfaInsts::fltqHandler_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const uint32_t rs1_val =
+            checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        const uint32_t rs2_val =
+            checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs2()));
+
+        if constexpr (std::is_same_v<SIZE, FLOAT_SP>)
+        {
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
+                                f32_lt_quiet(float32_t{rs1_val}, float32_t{rs2_val}));
+        }
+        else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
+        {
+            WRITE_INT_REG<XLEN>(state, inst->getRd(),
+                                f64_lt_quiet(float64_t{rs1_val}, float64_t{rs2_val}));
         }
         else
         {
