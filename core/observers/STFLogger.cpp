@@ -86,17 +86,14 @@ namespace pegasus
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            std::cout << "STFLogger: Reading CSR " << csr_read.reg_id.reg_name << std::endl;
-            std::cout << "STFLogger: Reading CSR " << csr_num << std::endl;
-
-            stf_writer_ << stf::InstRegRecord(csr_num + 0x2BA, stf::Registers::STF_REG_TYPE::CSR,
+            stf_writer_ << stf::InstRegRecord(csr_read.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                                               csr_read.getRegValue<uint32_t>());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            stf_writer_ << stf::InstRegRecord(csr_num + 0x2BA, stf::Registers::STF_REG_TYPE::CSR,
+            stf_writer_ << stf::InstRegRecord(csr_write.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                                               csr_write.getRegValue<uint32_t>());
         }
