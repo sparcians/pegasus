@@ -86,16 +86,16 @@ namespace pegasus
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            stf_writer_ << stf::InstRegRecord(csr_read.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                              csr_read.getRegValue<uint32_t>());
+            stf_writer_ << stf::InstRegRecord(
+                csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE, csr_read.getRegValue<uint32_t>());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            stf_writer_ << stf::InstRegRecord(csr_write.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                              csr_write.getRegValue<uint32_t>());
+            stf_writer_ << stf::InstRegRecord(
+                csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST, csr_write.getRegValue<uint32_t>());
         }
 
         for (const auto & dst_reg : dst_regs_)
