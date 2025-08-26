@@ -76,6 +76,7 @@ namespace pegasus
                  {214, {"brk", cfp(&SysCallHandlers::brk_)}},
                  {222, {"mmap", cfp(&SysCallHandlers::mmap_)}},
                  {226, {"mprotect", cfp(&SysCallHandlers::mprotect_)}},
+                 {258, {"hwprobe", cfp(&SysCallHandlers::hwprobe_)}},
                  {261, {"prlimit", cfp(&SysCallHandlers::prlimit_)}},
                  {278, {"getrandom", cfp(&SysCallHandlers::getrandom_)}},
                  {291, {"statx", cfp(&SysCallHandlers::statx_)}},
@@ -206,6 +207,7 @@ namespace pegasus
         int64_t open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t lstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getmainvars_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
 
         // The parent emulator
         SystemCallEmulator* emulator_ = nullptr;
@@ -967,5 +969,12 @@ namespace pegasus
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
+    }
+
+    int64_t SysCallHandlers::hwprobe_(const SystemCallStack &,
+                                          sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
 } // namespace pegasus
