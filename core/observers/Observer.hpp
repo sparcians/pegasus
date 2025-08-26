@@ -204,6 +204,25 @@ namespace pegasus
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
+        template<typename T>
+        T readScalarRegister_(PegasusState* state, RegId reg_id) const
+        {
+            switch (reg_id.reg_type)
+            {
+                case RegType::INTEGER:
+                    return READ_INT_REG<T>(state, reg_id.reg_num);
+                    break;
+                case RegType::FLOATING_POINT:
+                    return READ_FP_REG<T>(state, reg_id.reg_num);
+                    break;
+                case RegType::CSR:
+                    return READ_CSR_REG<T>(state, reg_id.reg_num);
+                    break;
+                default:
+                    sparta_assert(false, "Invalid register type!");
+            }
+        }
+
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;
 

@@ -61,6 +61,47 @@ namespace pegasus
             std::cout << state->getCurrentInst() << std::endl;
             sparta_assert(false, "PCs have diverged!");
         }
+
+        auto get_stf_reg_type = [](const stf::Operand& stf_reg)
+        {
+            if (stf_reg.isInt()) {
+                return RegType::INTEGER;
+            }
+            else if (stf_reg.isFP()) {
+                return RegType::FLOATING_POINT;
+            }
+            else if (stf_reg.isVector()) {
+                return RegType::VECTOR;
+            }
+            else {
+                return RegType::CSR;
+            }
+        };
+
+        for (const auto & dst_reg : dst_regs_)
+        {
+            const RegType reg_type = dst_reg.reg_id.reg_type;
+            const uint32_t reg_num = dst_reg.reg_id.reg_num;
+            for (const auto& stf_dst_reg : next_it_->getDestOperands())
+            {
+                const RegType stf_reg_type = get_stf_reg_type(stf_dst_reg);
+                const uint32_t stf_reg_num = stf::Registers::getArchRegIndex(stf_dst_reg.getReg());
+                if ((reg_type == stf_reg_type) && (reg_num == stf_reg_num))
+                {
+                    if (reg_type != RegType::VECTOR) {
+                        uint64_t reg_val = readScalarRegister_<uint64_t>(state, dst_reg.reg_id);
+                        uint64_t stf_reg_val = stf_dst_reg.getScalarValue();
+                        if (reg_val != stf_reg_val)
+                        {
+                            std::cout << "dst " << std::dec << dst_reg.reg_id.reg_name << " 0x" << std::hex << reg_val << " != 0x" << stf_reg_val << std::endl;
+                        }
+                    }
+                    break;
+                }
+            }
+
+        }
+
         ++next_it_;
     }
 } // namespace pegasus
