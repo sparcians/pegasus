@@ -444,6 +444,9 @@ namespace pegasus
         // MessageSource used for InstructionLogger
         sparta::log::MessageSource inst_logger_;
 
+        // MessageSource used for STFValidator
+        sparta::log::MessageSource stf_valid_logger_;
+
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;
 
