@@ -40,6 +40,7 @@ namespace pegasus
     class SimController;
     class VectorState;
     class STFLogger;
+    class STFValidator;
     class SystemCallEmulator;
     class VectorConfig;
 
@@ -75,6 +76,8 @@ namespace pegasus
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
+                      "STF Trace file name (when not given, STF tracing is disabled)")
+            PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
 
           private:
@@ -113,6 +116,11 @@ namespace pegasus
         };
 
         std::set<std::string> & getMavisInclusions() { return inclusions_; }
+
+        bool isCompressionEnabled() const
+        {
+            return inclusions_.contains("c") || inclusions_.contains("zca");
+        }
 
         void changeMavisContext();
 
@@ -349,6 +357,7 @@ namespace pegasus
 
         // STF Trace Filename
         const std::string stf_filename_;
+        const std::string validation_stf_filename_;
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
