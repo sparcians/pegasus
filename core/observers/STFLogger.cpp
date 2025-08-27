@@ -1,6 +1,7 @@
 #include "STFLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "core/PegasusState.hpp"
+#include "core/VecElements.hpp"
 
 namespace pegasus
 {
@@ -36,6 +37,9 @@ namespace pegasus
         // TODO: Add support for PTE
         // stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PTE);
 
+        // STF_VLEN_CONFIG 
+
+        stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setHeaderPC(inital_pc);
         stf_writer_.finalizeHeader();
