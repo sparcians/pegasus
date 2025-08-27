@@ -545,14 +545,13 @@ namespace pegasus
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig config{*state->getVectorConfig()};
-        config.setLMUL(nReg * 8);
-        config.setVL(config.getVLMAX());
+        const VectorConfig* vector_config = state->getVectorConfig();
+        const size_t vl = vector_config->getVLEN() / vector_config->getSEW() * nReg;
         const size_t eewb = elemWidth / 8;
         const Addr stride = elemWidth / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
 
-        for (size_t i = config.getVSTART(); i < config.getVL(); ++i)
+        for (size_t i = vector_config->getVSTART(); i < vl; ++i)
         {
             inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb);
         }
@@ -632,7 +631,7 @@ namespace pegasus
         VectorConfig config{*state->getVectorConfig()};
         config.setLMUL(nReg * 8);
         config.setVL(config.getVLMAX());
-        Elements<Element<elemWidth>, false> elems{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems{state, &config,
                                                   isLoad ? inst->getRd() : inst->getRs3()};
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
