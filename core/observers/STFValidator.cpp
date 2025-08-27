@@ -61,10 +61,12 @@ namespace pegasus
         if (pc != stf_pc)
         {
             STFVALIDLOG("PCs have diverged!");
-            STFVALIDLOG("PC: 0x" << std::hex << pc << ", STF PC: 0x" << stf_pc);
-            STFVALIDLOG("Opcode: 0x" << state->getSimState()->current_opcode << ", STF Opcode: 0x"
-                                     << next_it_->opcode());
             STFVALIDLOG(state->getCurrentInst());
+            STFVALIDLOG("    Pegasus PC: 0x" << std::hex << pc);
+            STFVALIDLOG("        STF PC: 0x" << std::hex << stf_pc);
+            STFVALIDLOG("Pegasus Opcode: 0x" << state->getSimState()->current_opcode)
+            STFVALIDLOG("    STF Opcode: 0x" << next_it_->opcode());
+            STFVALIDLOG("");
             sparta_assert(false, "PCs have diverged!");
         }
 
@@ -99,10 +101,11 @@ namespace pegasus
                         uint64_t stf_reg_val = stf_dst_reg.getScalarValue();
                         if (reg_val != stf_reg_val)
                         {
-                            STFVALIDLOG(state->getCurrentInst());
                             STFVALIDLOG("Register writes do not match for dst " << std::dec << dst_reg.reg_id.reg_name);
+                            STFVALIDLOG(state->getCurrentInst());
                             STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
                             STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);
+                            STFVALIDLOG("");
                         }
                     }
                     break;
