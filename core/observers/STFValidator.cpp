@@ -1,26 +1,31 @@
 #include "STFValidator.hpp"
 #include "core/PegasusState.hpp"
-
+#include "sparta/utils/LogUtils.hpp"
 namespace pegasus
 {
-    STFValidator::STFValidator(const uint64_t xlen, const uint64_t initial_pc,
-                               const std::string & filename) :
-        Observer((xlen == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
+#ifndef STFVALIDLOG
+#define STFVALIDLOG(msg) SPARTA_LOG(stf_valid_logger_, msg)
+#endif
+
+    STFValidator::STFValidator(sparta::log::MessageSource & stf_valid_logger, const ObserverMode arch, const uint64_t initial_pc,
+                               const std::string & stf_filename) :
+        Observer(arch),
+        stf_valid_logger_(stf_valid_logger)
     {
-        std::ifstream fs;
-        std::ios_base::iostate exceptionMask = fs.exceptions() | std::ios::failbit;
-        fs.exceptions(exceptionMask);
+        std::ifstream fs_stf;
+        std::ios_base::iostate exceptionMask = fs_stf.exceptions() | std::ios::failbit;
+        fs_stf.exceptions(exceptionMask);
 
         try
         {
-            fs.open(filename);
+            fs_stf.open(stf_filename);
         }
         catch (const std::ifstream::failure & e)
         {
-            throw sparta::SpartaException("ERROR: Issues opening ") << filename << ": " << e.what();
+            throw sparta::SpartaException("ERROR: Issues opening ") << stf_filename << ": " << e.what();
         }
 
-        stf_reader_.reset(new stf::STFInstReader(filename));
+        stf_reader_.reset(new stf::STFInstReader(stf_filename));
         next_it_ = stf_reader_->begin();
 
         uint64_t stf_pc = stf_reader_->getInitialPC();
@@ -55,10 +60,11 @@ namespace pegasus
 
         if (pc != stf_pc)
         {
-            std::cout << std::hex << "PC: 0x" << pc << ", STF PC: 0x" << stf_pc << std::endl;
-            std::cout << "Opcode: 0x" << state->getSimState()->current_opcode << ", STF Opcode: 0x"
-                      << next_it_->opcode() << std::endl;
-            std::cout << state->getCurrentInst() << std::endl;
+            STFVALIDLOG("PCs have diverged!");
+            STFVALIDLOG("PC: 0x" << std::hex << pc << ", STF PC: 0x" << stf_pc);
+            STFVALIDLOG("Opcode: 0x" << state->getSimState()->current_opcode << ", STF Opcode: 0x"
+                                     << next_it_->opcode());
+            STFVALIDLOG(state->getCurrentInst());
             sparta_assert(false, "PCs have diverged!");
         }
 
@@ -93,7 +99,10 @@ namespace pegasus
                         uint64_t stf_reg_val = stf_dst_reg.getScalarValue();
                         if (reg_val != stf_reg_val)
                         {
-                            std::cout << "dst " << std::dec << dst_reg.reg_id.reg_name << " 0x" << std::hex << reg_val << " != 0x" << stf_reg_val << std::endl;
+                            STFVALIDLOG(state->getCurrentInst());
+                            STFVALIDLOG("Register writes do not match for dst " << std::dec << dst_reg.reg_id.reg_name);
+                            STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
+                            STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);
                         }
                     }
                     break;
