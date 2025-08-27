@@ -223,6 +223,8 @@ namespace pegasus
             }
         }
 
+        // TODO: readVectorRegister_
+
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;
 

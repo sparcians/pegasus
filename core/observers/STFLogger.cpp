@@ -68,57 +68,52 @@ namespace pegasus
             stf_writer_ << stf::InstMemContentRecord(mem_read.value);
         }
 
+        auto get_stf_reg_type = [](const RegType reg_type)
+        {
+            if (reg_type == RegType::INTEGER) {
+                return stf::Registers::STF_REG_TYPE::INTEGER;
+            }
+            else if (reg_type == RegType::FLOATING_POINT) {
+                return stf::Registers::STF_REG_TYPE::FLOATING_POINT;
+            }
+            else if (reg_type == RegType::VECTOR) {
+                return stf::Registers::STF_REG_TYPE::VECTOR;
+            }
+            else if (reg_type == RegType::CSR) {
+                return stf::Registers::STF_REG_TYPE::CSR;
+            }
+            else {
+                sparta_assert(false, "Invalid register type!");
+            }
+        };
+
         for (const auto & src_reg : src_regs_)
         {
-            switch (src_reg.reg_id.reg_type)
+            const auto stf_reg_type = get_stf_reg_type(src_reg.reg_id.reg_type);
+            if (src_reg.reg_id.reg_type != RegType::VECTOR)
             {
-                case RegType::INTEGER:
-                    stf_writer_ << stf::InstRegRecord(
-                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_INT_REG<uint64_t>(state, src_reg.reg_id.reg_num));
-                    break;
-                case RegType::FLOATING_POINT:
-                    stf_writer_ << stf::InstRegRecord(
-                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_FP_REG<uint64_t>(state, src_reg.reg_id.reg_num));
-                    break;
-                case RegType::CSR:
-                    stf_writer_ << stf::InstRegRecord(
-                        src_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_CSR_REG<uint64_t>(state, src_reg.reg_id.reg_num));
-                    break;
-                default:
-                    sparta_assert(false, "Invalid register type!");
+                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                                                  src_reg.reg_value.getValue<uint64_t>());
+            }
+            else
+            {
+                sparta_assert(false, "STF trace generation does not support vector yet!");
             }
         }
 
         for (const auto & dst_reg : dst_regs_)
         {
-            switch (dst_reg.reg_id.reg_type)
+            const auto stf_reg_type = get_stf_reg_type(dst_reg.reg_id.reg_type);
+            if (dst_reg.reg_id.reg_type != RegType::VECTOR)
             {
-                case RegType::INTEGER:
-                    stf_writer_ << stf::InstRegRecord(
-                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::INTEGER,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_INT_REG<uint64_t>(state, dst_reg.reg_id.reg_num)); // dst_reg.reg_value
-                    break;
-                case RegType::FLOATING_POINT:
-                    stf_writer_ << stf::InstRegRecord(
-                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_FP_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
-                    break;
-                case RegType::CSR:
-                    stf_writer_ << stf::InstRegRecord(
-                        dst_reg.reg_id.reg_num, stf::Registers::STF_REG_TYPE::CSR,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        READ_CSR_REG<uint64_t>(state, dst_reg.reg_id.reg_num));
-                    break;
-                default:
-                    sparta_assert(false, "Invalid register type!");
+                stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                  readScalarRegister_<uint64_t>(state, dst_reg.reg_id));
+            }
+            else
+            {
+                sparta_assert(false, "STF trace generation does not support vector yet!");
             }
         }
 
