@@ -39,10 +39,10 @@ namespace pegasus
 
     enum class RegType
     {
-        INTEGER,
-        FLOATING_POINT,
-        VECTOR,
-        CSR,
+        INTEGER = 1,
+        FLOATING_POINT = 2,
+        VECTOR = 3,
+        CSR = 4,
         INVALID
     };
 

@@ -47,7 +47,7 @@ namespace pegasus
         xlen_(getXlenFromIsaString_(isa_string_)),
         supported_isa_string_(
             std::string("rv" + std::to_string(xlen_)
-                        + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond")),
+                        + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond_zihintntl_zihintpause")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -61,6 +61,7 @@ namespace pegasus
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Pegasus Instruction Logger"),
+        stf_valid_logger_(core_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -230,7 +231,14 @@ namespace pegasus
 
         if (!validation_stf_filename_.empty())
         {
-            addObserver(std::make_unique<STFValidator>(xlen_, pc_, validation_stf_filename_));
+            if (xlen_ == 64)
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64, pc_, validation_stf_filename_));
+            }
+            else
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32, pc_, validation_stf_filename_));
+            }
         }
 
         for (auto & obs : observers_)
