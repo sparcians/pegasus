@@ -531,7 +531,8 @@ namespace pegasus
         auto ret = ::unlinkat(dirfd, pathname_str.c_str(), flags);
 
         SYSCALL_LOG(__func__ << "(" << dirfd << "," << HEX16(pathname_addr) << "['" << pathname_str
-                             << "']" << "-> " << ret);
+                             << "']"
+                             << "-> " << ret);
         return ret;
     }
 
@@ -971,8 +972,7 @@ namespace pegasus
         return ret;
     }
 
-    int64_t SysCallHandlers::hwprobe_(const SystemCallStack &,
-                                          sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
