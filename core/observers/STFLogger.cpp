@@ -49,11 +49,6 @@ namespace pegasus
             return;
         }
 
-        if (state->getNextPc() != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
-        {
-            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
-        }
-
         for (const auto & mem_write : mem_writes_)
         {
             stf_writer_ << stf::InstMemAccessRecord(mem_write.addr, mem_write.size, 0,
@@ -93,7 +88,7 @@ namespace pegasus
             if (src_reg.reg_id.reg_type != RegType::VECTOR)
             {
                 stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
-                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                                                   src_reg.reg_value.getValue<uint64_t>());
             }
             else
@@ -102,13 +97,27 @@ namespace pegasus
             }
         }
 
+        for (const auto & [csr_num, csr_read] : csr_reads_)
+        {
+            stf_writer_ << stf::InstRegRecord(
+                csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE, csr_read.getRegValue<uint32_t>());
+        }
+
+        for (const auto & [csr_num, csr_write] : csr_writes_)
+        {
+            stf_writer_ << stf::InstRegRecord(
+                csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST, csr_write.getRegValue<uint32_t>());
+        }
+
         for (const auto & dst_reg : dst_regs_)
         {
             const auto stf_reg_type = get_stf_reg_type(dst_reg.reg_id.reg_type);
             if (dst_reg.reg_id.reg_type != RegType::VECTOR)
             {
                 stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
-                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                                                   readScalarRegister_<uint64_t>(state, dst_reg.reg_id));
             }
             else
