@@ -12,13 +12,13 @@ namespace pegasus
         Observer(arch),
         stf_valid_logger_(stf_valid_logger)
     {
-        std::ifstream fs_stf;
-        std::ios_base::iostate exceptionMask = fs_stf.exceptions() | std::ios::failbit;
-        fs_stf.exceptions(exceptionMask);
+        std::ifstream fs;
+        std::ios_base::iostate exceptionMask = fs.exceptions() | std::ios::failbit;
+        fs.exceptions(exceptionMask);
 
         try
         {
-            fs_stf.open(stf_filename);
+            fs.open(stf_filename);
         }
         catch (const std::ifstream::failure & e)
         {
