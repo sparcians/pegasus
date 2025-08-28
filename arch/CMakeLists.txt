@@ -68,14 +68,31 @@ file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
-add_custom_target(AutogenArchFiles ALL DEPENDS ${AUTOGEN_REGISTER_FILES} ${AUTOGEN_INST_FILES})
+# Supported ISA header
+set(AUTOGEN_SUPPORTED_ISA_HEADER
+  ${SIM_BASE}/arch/supportedISA.hpp
+)
+
+set(DEPENDS_SUPPORTED_ISA_HEADER
+  ${DEPENDS_INST_JSON_FILES}
+  ${SIM_BASE}/scripts/GenInstructionJSON.py
+)
+
+add_custom_command(
+  OUTPUT ${AUTOGEN_SUPPORTED_ISA_HEADER}
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py -supported-isa rv32
+  DEPENDS ${DEPENDS_SUPPORTED_ISA_HEADER}
+)
+
+
+add_custom_target(AutogenArchFiles ALL DEPENDS ${AUTOGEN_REGISTER_FILES} ${AUTOGEN_INST_FILES} ${AUTOGEN_SUPPORTED_ISA_HEADER})

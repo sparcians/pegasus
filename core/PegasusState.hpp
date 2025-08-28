@@ -6,6 +6,7 @@
 #include "core/observers/Observer.hpp"
 
 #include "arch/RegisterSet.hpp"
+#include "arch/supportedISA.hpp"
 #include "include/PegasusTypes.hpp"
 #include "include/CSRBitMasks64.hpp"
 #include "include/CSRHelpers.hpp"
@@ -65,7 +66,7 @@ namespace pegasus
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
             PARAMETER(std::string, isa_string,
-                      "rv64gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond",
+                      "rv64" + DEFAULT_ISA_STR,
                       "ISA string")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
