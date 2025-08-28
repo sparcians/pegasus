@@ -94,7 +94,7 @@ set(DEPENDS_SUPPORTED_ISA_HEADER
 
 add_custom_command(
   OUTPUT ${AUTOGEN_SUPPORTED_ISA_HEADER}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py -supported-isa rv32
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --supported-isa rv32
   DEPENDS ${DEPENDS_SUPPORTED_ISA_HEADER}
 )
 

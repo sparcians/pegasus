@@ -150,7 +150,7 @@ def main():
     
     parser.add_argument("xlen", choices=SUPPORTED_XLEN, metavar='xlen',
                         help=f"XLEN ({', '.join(SUPPORTED_XLEN)})")
-    parser.add_argument("-supported-isa", action="store_true",
+    parser.add_argument("--supported-isa", action="store_true",
                         help="Only generates the supported/default ISA header files")
     args = parser.parse_args()
 
