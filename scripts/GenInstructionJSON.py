@@ -51,6 +51,11 @@ from insts.RVZVE64D_INST import RVZVE64D_INST
 from insts.RVZVE32X_INST import RVZVE32X_INST
 from insts.RVZVE32F_INST import RVZVE32F_INST
 
+from insts.RVZIHINTNTL_INST import RV32ZIHINTNTL_INST         # Zihintntl
+from insts.RVZIHINTNTL_INST import RV64ZIHINTNTL_INST         # Zihintntl
+from insts.RVZIHINTPAUSE_INST import RV32ZIHINTPAUSE_INST     # Zihintpause
+from insts.RVZIHINTPAUSE_INST import RV64ZIHINTPAUSE_INST     # Zihintpause
+
 class InstJSONGenerator():
     """Generates instruction definition JSON files.
 

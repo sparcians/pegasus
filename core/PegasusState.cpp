@@ -11,6 +11,7 @@
 #include "core/observers/SimController.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
+#include "core/observers/STFValidator.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
@@ -56,9 +57,11 @@ namespace pegasus
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
+        validation_stf_filename_(p->validate_with_stf),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Pegasus Instruction Logger"),
+        stf_valid_logger_(core_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -152,6 +155,15 @@ namespace pegasus
         }
         inclusions_.erase("g");
 
+        if (isCompressionEnabled())
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
@@ -217,6 +229,18 @@ namespace pegasus
             addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
         }
 
+        if (!validation_stf_filename_.empty())
+        {
+            if (xlen_ == 64)
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64, pc_, validation_stf_filename_));
+            }
+            else
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32, pc_, validation_stf_filename_));
+            }
+        }
+
         for (auto & obs : observers_)
         {
             obs->registerReadWriteMemCallbacks(pegasus_system_->getSystemMemory());
@@ -241,8 +265,7 @@ namespace pegasus
         DLOG("Changing Mavis context: " << context_name);
         mavis_->switchContext(context_name);
 
-        const bool compression_enabled = inclusions_.contains("c");
-        if (compression_enabled)
+        if (isCompressionEnabled())
         {
             setPcAlignment_(2);
         }
