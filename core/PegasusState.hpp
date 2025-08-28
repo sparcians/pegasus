@@ -66,7 +66,13 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
+<<<<<<< HEAD
             PARAMETER(std::string, isa_string, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
+=======
+            PARAMETER(std::string, isa_string,
+                      std::string("rv64") + DEFAULT_ISA_STR,
+                      "ISA string")
+>>>>>>> 2fab5e7 (Fix typo and moved header funtion out of main())
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
