@@ -194,9 +194,9 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Za64rs** Reservation sets are contiguous, naturally aligned, and a maximum of 64 bytes. | :x: |
 | **Zihintpause** Pause hint. | :x: |
 | **Zic64b** Cache blocks must be 64 bytes in size, naturally aligned in the address space. | :x: |
-| **Zicbom** Cache-block management instructions. | :x: |
-| **Zicbop** Cache-block prefetch instructions. | :x: |
-| **Zicboz** Cache-Block Zero Instructions. | :x: |
+| **Zicbom** Cache-block management instructions. | :white_check_mark: |
+| **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
+| **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
 | **Zfhmin** Half-precision floating-point. | :x: |
 | **Zkt** Data-independent execution latency. | :x: |
 | **V** Vector extension. | :x: |

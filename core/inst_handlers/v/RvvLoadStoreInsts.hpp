@@ -37,9 +37,15 @@ namespace pegasus
         template <typename XLEN, size_t elemWidth, AddressingMode addrMode>
         Action::ItrType vlseIdxComputeAddressHandler_(pegasus::PegasusState* state,
                                                       Action::ItrType action_it);
-        template <size_t elemWidth, bool load>
+        template <typename XLEN, size_t elemWidth, size_t nReg>
+        Action::ItrType vlsreComputeAddressHandler_(pegasus::PegasusState* state,
+                                                    Action::ItrType action_it);
+
+        template <size_t elemWidth, bool isLoad>
         Action::ItrType vlseHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        template <bool load>
+        template <bool isLoad>
         Action::ItrType vlseIdxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <size_t elemWidth, size_t nReg, bool isLoad>
+        Action::ItrType vlsreHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

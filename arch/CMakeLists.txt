@@ -54,6 +54,8 @@ set(AUTOGEN_RV32_INST_JSON_FILES
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zbs.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zcmp.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zfa.json
+  ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zihintntl.json
+  ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zihintpause.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve32f.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve32x.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve64d.json
@@ -75,6 +77,8 @@ set(AUTOGEN_RV64_INST_JSON_FILES
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zbs.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zcmp.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zfa.json
+  ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zihintntl.json
+  ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zihintpause.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve32f.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve32x.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve64d.json
@@ -90,13 +94,13 @@ file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicond_zcmp_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicond_zcmp_zfa_zihintntl_zihintpause
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicond_zcmp_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicond_zcmp_zfa_zihintntl_zihintpause
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 

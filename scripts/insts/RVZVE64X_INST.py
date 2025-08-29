@@ -8,8 +8,8 @@ RVZVE64X_INST = [
     {'mnemonic': 'vsoxei64.v', 'handler': 'vsoxei64.v', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'vsuxei64.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'vle64ff.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
-    {'mnemonic': 'vl1re64.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
-    {'mnemonic': 'vl2re64.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
-    {'mnemonic': 'vl4re64.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
-    {'mnemonic': 'vl8re64.v', 'handler': 'unsupported', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'vl1re64.v', 'handler': 'vl1re64.v', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'vl2re64.v', 'handler': 'vl2re64.v', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'vl4re64.v', 'handler': 'vl4re64.v', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'vl8re64.v', 'handler': 'vl8re64.v', 'cost': 1, 'tags': 'V_EXT_64', 'memory': True, 'cof': False},
 ]

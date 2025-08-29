@@ -10,8 +10,9 @@
 namespace pegasus
 {
 
-    Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters*) :
-        sparta::Unit(exception_node)
+    Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters * except_params) :
+        sparta::Unit(exception_node),
+        unexpected_faults_(except_params->unexpected_faults)
     {
         rv32_exception_action_ = pegasus::Action::createAction<&Exception::handleException_<RV32>>(
             this, "exception", ActionTags::EXCEPTION_TAG);
@@ -50,6 +51,12 @@ namespace pegasus
         const bool is_interrupt = interrupt_cause_.isValid();
         const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
                                                 : static_cast<XLEN>(fault_cause_.getValue());
+        DLOG("Exception code: " << excp_code);
+
+        if (false == is_interrupt) {
+            sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
+                          "Unexpected fault: " << fault_cause_.getValue());
+        }
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;

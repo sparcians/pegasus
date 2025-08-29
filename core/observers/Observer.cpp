@@ -108,7 +108,7 @@ namespace pegasus
                                  const sparta::Register::PostWriteAccess & data)
     {
         const auto csr_reg = data.reg;
-        const auto csr_num = csr_reg->getGroupIdx();
+        const auto csr_num = csr_reg->getID();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
 
         const uint64_t final_value = (csr_reg->getNumBits() == 64) ? data.final->read<uint64_t>()
@@ -135,7 +135,7 @@ namespace pegasus
                                 const sparta::Register::ReadAccess & data)
     {
         const auto csr_reg = data.reg;
-        const auto csr_num = csr_reg->getGroupIdx();
+        const auto csr_num = csr_reg->getID();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
         if ((csr_reads_.find(csr_num) == csr_reads_.end())
             && (csr_writes_.find(csr_num) == csr_writes_.end()))
