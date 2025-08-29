@@ -162,9 +162,10 @@ def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts
         fh.write( rv32_json_files_str )
         fh.write( ' }\n' )
 
-def gen_supported_isa_header(isa_string):
+def gen_supported_isa_header(supported_isa):
     ''' Writes header file with ISA defines '''
-    default_isa = fix_isa_str(isa_string)
+    isa_string = '_'.join(supported_isa)
+    default_isa = fix_isa_str(supported_isa)
 
     with open( 'supportedISA.hpp', 'w' ) as fh:
         fh.write( '#pragma once\n\n' )
