@@ -115,7 +115,7 @@ class InstJSONGenerator():
             with open(filename,"w") as fh:
                 json.dump(self.isa_map[ext], fh, indent=4)
 
-def get_isa_str(xlen):
+def get_isa(xlen):
     ''' Generates a string with all of the available extensions imported.
         The format of the returned string is xlen_extension1_extension2_...'''
     exts = list()
@@ -123,18 +123,20 @@ def get_isa_str(xlen):
 
     for var in globals().keys():
         if 'ZVE' in var:
-            exts.append( var.replace('RV','').replace('_INST','') )
+            exts.append( var.replace('RV','').replace('_INST','').lower() )
         elif XLEN in var:
-            exts.append( var.replace(XLEN,'').replace('_INST','') )
-    return '_'.join(exts).lower()
+            exts.append( var.replace(XLEN,'').replace('_INST','').lower() )
+
+    return exts
 
 def fix_isa_str(isa):
     ''' Modify the supported ISA string to generate a defalt ISA string, e.g. fix incompatible extensions'''
-    return isa
+    return 'imafdcbv_zicsr_zifencei'
 
-def gen_supported_isa_header(isa_string):
+def gen_supported_isa_header(supported_isa):
     ''' Writes header file with ISA defines '''
-    default_isa = fix_isa_str(isa_string)
+    isa_string = '_'.join(supported_isa)
+    default_isa = fix_isa_str(supported_isa)
 
     with open( 'supportedISA.hpp', 'w' ) as fh:
         fh.write( '#pragma once\n\n' )
@@ -159,12 +161,13 @@ def main():
 
     os.chdir(arch_root)
 
-    isa_string = get_isa_str(args.xlen)
+    supported_isa = get_isa(args.xlen)
 
     if args.supported_isa:
-        gen_supported_isa_header(isa_string)
+        gen_supported_isa_header(supported_isa)
         return
 
+    isa_string = "_".join(supported_isa)
     inst_handler_gen = InstJSONGenerator(args.xlen + isa_string)
 
     # Instruction uarch jsons
