@@ -79,7 +79,7 @@ namespace pegasus
                                                       ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "fcvtmod.w.d",
-            pegasus::Action::createAction<&RvzfaInsts::fcvtmodHandler_<XLEN, FLOAT_DP>, RvzfaInsts>(
+            pegasus::Action::createAction<&RvzfaInsts::fcvtmodHandler_<XLEN>, RvzfaInsts>(
                 nullptr, "fcvtmod.w.d", ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV32>)
@@ -172,10 +172,25 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, typename FMT>
+    template <typename XLEN>
     Action::ItrType RvzfaInsts::fcvtmodHandler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const FLOAT_DP rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
+
+        // Always round towards zero, rm field is required to beset to 1
+        softfloat_roundingMode = getRM<XLEN>(state);
+        sparta_assert(softfloat_roundingMode == softfloat_round_minMag);
+
+        // +/- infinity and NaN are converted to zero.
+        XLEN result = 0;
+        if (expF64UI(rs1_val) != 0x7FF)
+        {
+            result = signExtend<uint32_t, uint64_t>(
+                f64_to_i32(float64_t{rs1_val}, getRM<RV64>(state), true));
+        }
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), result);
         updateCsr<XLEN>(state);
         return ++action_it;
     }

@@ -44,9 +44,9 @@ namespace pegasus
 
             const Constants<SIZE> & cons = getConst<SIZE>();
 
-            bool rs1_nan =
+            const bool rs1_nan =
                 ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);
-            bool rs2_nan =
+            const bool rs2_nan =
                 ((rs2_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs2_val & cons.SIG_MASK);
             if (rs1_nan && rs2_nan)
             {
@@ -75,9 +75,9 @@ namespace pegasus
 
             const Constants<SIZE> & cons = getConst<SIZE>();
 
-            bool rs1_nan =
+            const bool rs1_nan =
                 ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);
-            bool rs2_nan =
+            const bool rs2_nan =
                 ((rs2_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs2_val & cons.SIG_MASK);
             if (rs1_nan || rs2_nan)
             {
