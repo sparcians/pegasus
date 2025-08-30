@@ -326,7 +326,8 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicbom.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicboz.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json"};
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json"};
         return uarch_files;
     }
 
