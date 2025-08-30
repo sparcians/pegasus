@@ -47,8 +47,6 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         PegasusTranslationState* translation_state = inst->getTranslationState();
 
-        // TODO: Do we need to check that the rd register number is valid?
-
         const RV32 rs1_val = READ_INT_REG<RV32>(state, inst->getRs1());
         const RV32 imm = inst->getImmediate();
 
@@ -71,7 +69,6 @@ namespace pegasus
         // Write bits 31:0 to the lower-numbered register
         const RV32 rd1_val = ((1ull << 33) - 1) & result;
         WRITE_INT_REG<RV32>(state, inst->getRd(), rd1_val);
-
 
         // Write bits 63:32 to the higher-numbered register
         const RV32 rd2_val = result >> 32;
