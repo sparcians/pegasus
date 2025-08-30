@@ -75,7 +75,7 @@ namespace pegasus
 
         // Write bits 63:32 to the higher-numbered register
         const RV32 rd2_val = result >> 32;
-        WRITE_INT_REG<RV32>(state, inst->getRd() + 1, rd2_val);
+        WRITE_INT_REG<RV32>(state, inst->getRd2(), rd2_val);
 
         return ++action_it;
     }
@@ -87,11 +87,11 @@ namespace pegasus
         PegasusTranslationState* translation_state = inst->getTranslationState();
 
         const RV32 rs2_val = READ_INT_REG<RV32>(state, inst->getRs2());
-        const RV32 rs3_val = READ_INT_REG<RV32>(state, inst->getRs2() + 1);
+        const RV32 rs3_val = READ_INT_REG<RV32>(state, inst->getRs3());
         
         // lower-numbered register holds bits 31:0
         // higher-numbered register holds bits 63:32
-        uint64_t value = ((uint64_t)rs3_val << 32) & rs2_val;
+        const uint64_t value = ((uint64_t)rs3_val << 32) | rs2_val;
 
         const uint64_t paddr = translation_state->getResult().getPAddr();
         translation_state->popResult();
