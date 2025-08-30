@@ -124,6 +124,7 @@ namespace pegasus
         if constexpr (std::is_same_v<SIZE, FLOAT_SP>)
         {
             rd_val = f32_le_quiet(float32_t{rs1_val}, float32_t{rs2_val}) ? rs2_val : rs1_val;
+            rd_val = nanBoxing<FLOAT_DP, SIZE>(rd_val);
         }
         else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
         {
@@ -134,8 +135,8 @@ namespace pegasus
             static_assert(true, "unsupported floating point size");
         }
 
-        fmaxFminNanCheck<SIZE>(rs1_val, rs2_val, rd_val, ISMAX);
-        WRITE_FP_REG<RV64>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
+        fmaxFminNanCheck_<SIZE>(rs1_val, rs2_val, rd_val, ISMAX);
+        WRITE_FP_REG<RV64>(state, inst->getRd(), rd_val);
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -160,8 +161,7 @@ namespace pegasus
         {
             WRITE_FP_REG<RV64>(
                 state, inst->getRd(),
-                nanBoxing<FLOAT_DP, SIZE>(
-                    f64_roundToInt(float64_t{rs1_val}, softfloat_roundingMode, EXACT).v));
+                    f64_roundToInt(float64_t{rs1_val}, softfloat_roundingMode, EXACT).v);
         }
         else
         {
