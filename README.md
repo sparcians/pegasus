@@ -192,7 +192,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Ziccamoa** Main memory regions with both the cacheability and coherence PMAs must support all atomics in A. | :x: |
 | **Zicclsm** Misaligned loads and stores to main memory regions with both the cacheability and coherence PMAs must be supported. | :x: |
 | **Za64rs** Reservation sets are contiguous, naturally aligned, and a maximum of 64 bytes. | :x: |
-| **Zihintpause** Pause hint. | :x: |
+| **Zihintpause** Pause hint. | :white_check_mark: |
 | **Zic64b** Cache blocks must be 64 bytes in size, naturally aligned in the address space. | :x: |
 | **Zicbom** Cache-block management instructions. | :white_check_mark: |
 | **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
@@ -203,12 +203,12 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
 | **Zvbb** Vector basic bit-manipulation instructions. | :x: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
-| **Zihintntl** Non-temporal locality hints. | :x: |
+| **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
 | **Zicond** Integer conditional operations. | :white_check_mark: |
 | **Zimop** may-be-operations. | :x: |
 | **Zcmop** Compressed may-be-operations. | :x: |
 | **Zcb** Additional compressed instructions. | :white_check_mark: |
-| **Zfa** Additional floating-Point instructions. | :x: |
+| **Zfa** Additional floating-Point instructions. | :white_check_mark: |
 | **Zawrs** Wait-on-reservation-set instructions. | :x: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
