@@ -16,10 +16,10 @@ namespace pegasus
         using base_type = RvaInstsBase;
 
       protected:
-        template <typename T>
+        template <typename XLEN>
         Action::ItrType computeAddressHandler_(PegasusState* state, Action::ItrType action_it);
 
-        template <typename RV, typename SIZE, typename OP, bool U = true>
+        template <typename XLEN, typename SIZE, typename OP, bool U = true>
         Action::ItrType amoHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         template <typename XLEN, typename SIZE>

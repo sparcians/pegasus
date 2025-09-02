@@ -188,19 +188,19 @@ namespace pegasus
                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "lr_h",
-            pegasus::Action::createAction<&RvzabhaInsts::lr_handler_<XLEN, uint64_t>, RvaInstsBase>(
+            pegasus::Action::createAction<&RvzabhaInsts::lr_handler_<XLEN, uint16_t>, RvaInstsBase>(
                 nullptr, "lr_h", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "lr_b",
-            pegasus::Action::createAction<&RvzabhaInsts::lr_handler_<XLEN, uint32_t>, RvaInstsBase>(
+            pegasus::Action::createAction<&RvzabhaInsts::lr_handler_<XLEN, uint8_t>, RvaInstsBase>(
                 nullptr, "lr_b", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "sc_h",
-            pegasus::Action::createAction<&RvzabhaInsts::sc_handler_<XLEN, uint64_t>, RvaInstsBase>(
+            pegasus::Action::createAction<&RvzabhaInsts::sc_handler_<XLEN, uint16_t>, RvaInstsBase>(
                 nullptr, "sc_h", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "sc_b",
-            pegasus::Action::createAction<&RvzabhaInsts::sc_handler_<XLEN, uint32_t>, RvaInstsBase>(
+            pegasus::Action::createAction<&RvzabhaInsts::sc_handler_<XLEN, uint8_t>, RvaInstsBase>(
                 nullptr, "sc_b", ActionTags::EXECUTE_TAG));
     }
 
