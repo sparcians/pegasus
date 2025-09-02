@@ -240,7 +240,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Svade** Page-fault exceptions are raised when a page is accessed when A bit is clear, or written when D bit is clear. | :x: |
 | **Ssccptr** Main memory regions with both the cacheability and coherence PMAs must support hardware page-table reads. | :x: |
 | **Sstvecd** stvec.MODE must be capable of holding the value 0 (Direct). When stvec.MODE=Direct, stvec.BASE must be capable of holding any valid four-byte-aligned address. | :x: |
-| **Sstvala** stval must be written with the faulting virtual address for load, store, and instruction page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other than those caused by execution of the EBREAK or C.EBREAK instructions. For virtual-instruction and illegal-instruction exceptions, stval must be written with the faulting instruction. | :x: |
+| **Sstvala** stval must be written with the faulting virtual address for load, store, and instruction page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other than those caused by execution of the EBREAK or C.EBREAK instructions. For virtual-instruction and illegal-instruction exceptions, stval must be written with the faulting instruction. | :white_check_mark: |
 | **Sscounterenw** For any hpmcounter that is not read-only zero, the corresponding bit in scounteren must be writable. | :x: |
 | **Svpbmt** Page-based memory types
 | **Svinval** Fine-grained address-translation cache invalidation. | :x: |

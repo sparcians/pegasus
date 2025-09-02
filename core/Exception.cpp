@@ -151,6 +151,10 @@ namespace pegasus
 
     uint64_t Exception::determineTrapValue_(const FaultCause & cause, PegasusState* state)
     {
+        // stval must be written with the faulting virtual address for load, store, and instruction
+        // page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other
+        // than those caused by execution of the ebreak or c.ebreak instructions.
+        // For illegal-instruction exceptions, stval must be written with the faulting instruction.
         switch (cause)
         {
             case FaultCause::INST_ADDR_MISALIGNED:
