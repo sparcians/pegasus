@@ -18,6 +18,8 @@ namespace pegasus
     using RV32 = uint32_t;
     using RV64 = uint64_t;
 
+    using B = uint8_t;
+    using H = uint16_t;
     using W = uint32_t;
     using D = uint64_t;
 
