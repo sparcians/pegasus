@@ -217,7 +217,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | :---------------------------- | :----: |
 | **Zvkng** Vector crypto NIST algorithms with GCM. | :x: |
 | **Zvksg** Vector crypto ShangMi algorithms with GCM. | :x: |
-| **Zabha** Byte and halfword atomic memory operations. | :x: |
+| **Zabha** Byte and halfword atomic memory operations. | :white_check_mark: |
 | **Zacas** Compare-and-Swap instructions. | :x: |
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
 | **Zvbc** Vector carryless multiplication. | :x: |
