@@ -55,6 +55,9 @@ from insts.RVZILSD_INST import RV32ZILSD_INST
 from insts.RVZFA_INST import RV32ZFA_INST
 from insts.RVZFA_INST import RV64ZFA_INST
 
+from insts.RVZILSD_INST import RV32ZILSD_INST
+from insts.RVZILSD_INST import RV64ZILSD_INST
+
 from insts.RVZVE64X_INST import RVZVE64X_INST
 from insts.RVZVE64D_INST import RVZVE64D_INST
 from insts.RVZVE64F_INST import RVZVE64F_INST
