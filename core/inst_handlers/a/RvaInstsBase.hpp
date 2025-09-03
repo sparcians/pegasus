@@ -43,8 +43,10 @@ namespace pegasus
     Action::ItrType RvaInstsBase::amoHandler_(PegasusState* state, Action::ItrType action_it)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        static_assert(std::is_same_v<SIZE, B> || std::is_same_v<SIZE, H> || std::is_same_v<SIZE, W>
-                      || std::is_same_v<SIZE, D>);
+        static_assert(std::is_same_v<SIZE, B> ||
+                      std::is_same_v<SIZE, H> ||
+                      std::is_same_v<SIZE, W> ||
+                      std::is_same_v<SIZE, D>);
         static_assert(sizeof(XLEN) >= sizeof(SIZE));
 
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -72,8 +74,10 @@ namespace pegasus
     Action::ItrType RvaInstsBase::lr_handler_(PegasusState* state, Action::ItrType action_it)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        static_assert(std::is_same_v<SIZE, B> || std::is_same_v<SIZE, H> || std::is_same_v<SIZE, W>
-                      || std::is_same_v<SIZE, D>);
+        static_assert(std::is_same_v<SIZE, B> ||
+                      std::is_same_v<SIZE, H> ||
+                      std::is_same_v<SIZE, W> ||
+                      std::is_same_v<SIZE, D>);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
@@ -101,8 +105,10 @@ namespace pegasus
     Action::ItrType RvaInstsBase::sc_handler_(PegasusState* state, Action::ItrType action_it)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        static_assert(std::is_same_v<SIZE, B> || std::is_same_v<SIZE, H> || std::is_same_v<SIZE, W>
-                      || std::is_same_v<SIZE, D>);
+        static_assert(std::is_same_v<SIZE, B> ||
+                      std::is_same_v<SIZE, H> ||
+                      std::is_same_v<SIZE, W> ||
+                      std::is_same_v<SIZE, D>);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
