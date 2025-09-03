@@ -16,7 +16,6 @@ target_link_libraries(pegasusinsts
     rvzabha
     rvzilsd
     rvzfa
-    rvv
 )
 
 add_subdirectory(i)
