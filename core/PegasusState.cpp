@@ -46,8 +46,7 @@ namespace pegasus
         vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
         supported_isa_string_(
-            std::string("rv" + std::to_string(xlen_)
-                        + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond_zihintntl_zihintpause")),
+            std::string("rv" + std::to_string(xlen_) + "gbv_zicsr_zifencei_zca_zcd_zcb_zicond_zfa_zihintntl_zihintpause")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -327,7 +326,8 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicboz.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json"};
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zfa.json"};
         return uarch_files;
     }
 
