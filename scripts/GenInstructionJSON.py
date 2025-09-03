@@ -28,11 +28,6 @@ from insts.RVZBC_INST import RV64ZBC_INST
 from insts.RVZBS_INST import RV32ZBS_INST
 from insts.RVZBS_INST import RV64ZBS_INST
 
-from insts.RVZVE64X_INST import RVZVE64X_INST
-from insts.RVZVE64D_INST import RVZVE64D_INST
-from insts.RVZVE32X_INST import RVZVE32X_INST
-from insts.RVZVE32F_INST import RVZVE32F_INST
-
 from insts.RVZICSR_INST import RV32ZICSR_INST
 from insts.RVZICSR_INST import RV64ZICSR_INST
 from insts.RVZIFENCEI_INST import RV32ZIFENCEI_INST
@@ -49,9 +44,15 @@ from insts.RVZICOND_INST import RV32ZICOND_INST
 from insts.RVZICOND_INST import RV64ZICOND_INST
 from insts.RVZCMP_INST import RV32ZCMP_INST
 from insts.RVZCMP_INST import RV64ZCMP_INST
+from insts.RVZILSD_INST import RV32ZILSD_INST
+from insts.RVZILSD_INST import RV64ZILSD_INST
 from insts.RVZFA_INST import RV32ZFA_INST
 from insts.RVZFA_INST import RV64ZFA_INST
 
+from insts.RVZVE64X_INST import RVZVE64X_INST
+from insts.RVZVE64D_INST import RVZVE64D_INST
+from insts.RVZVE32X_INST import RVZVE32X_INST
+from insts.RVZVE32F_INST import RVZVE32F_INST
 
 from insts.RVZIHINTNTL_INST import RV32ZIHINTNTL_INST         # Zihintntl
 from insts.RVZIHINTNTL_INST import RV64ZIHINTNTL_INST         # Zihintntl

@@ -19,6 +19,7 @@
 #include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
 #include "core/inst_handlers/zicond/RvzicondInsts.hpp"
 #include "core/inst_handlers/zcmp/RvzcmpInsts.hpp"
+#include "core/inst_handlers/zilsd/RvzilsdInsts.hpp"
 #include "core/inst_handlers/zfa/RvzfaInsts.hpp"
 #include "core/inst_handlers/v/RvvConfigSettingInsts.hpp"
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
@@ -94,6 +95,7 @@ namespace pegasus
         RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicondInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzfaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -116,6 +118,7 @@ namespace pegasus
         RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 
         // Get CSR update handlers
