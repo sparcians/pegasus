@@ -223,7 +223,6 @@ namespace pegasus
             }
         }
 
-        // TODO: readVectorRegister_
         std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
 
       private:
