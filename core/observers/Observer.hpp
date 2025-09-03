@@ -83,7 +83,7 @@ namespace pegasus
                 static_assert(std::is_standard_layout_v<TYPE>);
                 static_assert(std::is_integral_v<TYPE>);
                 const size_t num_bytes = sizeof(TYPE);
-                assert((offset + num_bytes) < value_.size());
+                assert((offset + num_bytes) <= value_.size());
                 TYPE val = 0;
                 for (size_t i = offset; i < num_bytes; ++i)
                 {
@@ -224,6 +224,7 @@ namespace pegasus
         }
 
         // TODO: readVectorRegister_
+        std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
 
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;
