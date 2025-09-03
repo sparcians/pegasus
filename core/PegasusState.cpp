@@ -148,13 +148,6 @@ namespace pegasus
                     sparta::notNull(PegasusAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        // FIXME: Extension manager should maintain inclusions
-        for (auto & ext : extension_manager_.getEnabledExtensions())
-        {
-            inclusions_.emplace(ext.first);
-        }
-        inclusions_.erase("g");
-
         if (isCompressionEnabled())
         {
             setPcAlignment_(2);
@@ -253,9 +246,15 @@ namespace pegasus
 
     void PegasusState::changeMavisContext()
     {
-        const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
+        std::vector<std::string> enabled_exts;
+        for (auto & ext : extension_manager_.getEnabledExtensions())
+        {
+            enabled_exts.emplace_back(ext.first);
+        }
+
+        const mavis::MatchSet<mavis::Pattern> inclusions{enabled_exts};
         const std::string context_name =
-            std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
+            std::accumulate(enabled_exts.begin(), enabled_exts.end(), std::string(""));
         if (mavis_->hasContext(context_name) == false)
         {
             DLOG("Creating new Mavis context: " << context_name);
@@ -395,7 +394,7 @@ namespace pegasus
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if (inclusions_.contains(ext_str))
+            if (extension_manager_.isEnabled(ext_str))
             {
                 ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
             }

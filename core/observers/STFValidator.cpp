@@ -111,7 +111,6 @@ namespace pegasus
                     break;
                 }
             }
-
         }
 
         ++next_it_;

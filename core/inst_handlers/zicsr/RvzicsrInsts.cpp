@@ -430,25 +430,39 @@ namespace pegasus
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
 
+        auto & ext_manager = state->getExtensionManager();
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
-        auto & inclusions = state->getMavisInclusions();
         if (fs_val == 0)
         {
-            inclusions.erase("f");
-            inclusions.erase("d");
+            ext_manager.disableExtensions({"f", "zcf", "zve32f"});
+            ext_manager.disableExtensions({"d", "zcd", "zve64d"});
         }
         else
         {
-            const bool f_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1;
-            const bool d_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1;
-            if (f_ext_enabled)
+            if (READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1)
             {
-                inclusions.emplace("f");
+                ext_manager.enableExtension("f");
+                if (state->isCompressionEnabled())
+                {
+                    ext_manager.enableExtension("zcf");
+                }
+                if (ext_manager.isEnabled("v"))
+                {
+                    ext_manager.enableExtension("zve32f");
+                }
             }
-            if (d_ext_enabled)
+            if (READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1)
             {
-                inclusions.emplace("d");
+                ext_manager.enableExtension("d");
+                if (state->isCompressionEnabled())
+                {
+                    ext_manager.enableExtension("zcd");
+                }
+                if (ext_manager.isEnabled("v"))
+                {
+                    ext_manager.enableExtension("zve64d");
+                }
             }
         }
 
@@ -463,16 +477,21 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        const auto & ext_manager = state->getExtensionManager();
+        auto & ext_manager = state->getExtensionManager();
 
-        // FIXME: Extension manager should maintain inclusions
-        auto & inclusions = state->getMavisInclusions();
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if ((misa_val & (1 << (ext - 'a'))) && ext_manager.isEnabled(ext_str))
+            if (misa_val & (1 << (ext - 'a')))
             {
-                inclusions.emplace(ext_str);
+                try
+                {
+                    ext_manager.enableExtension(ext_str);
+                }
+                catch (mavis::extension_manager::riscv::UnknownRISCVExtensionException&)
+                {
+                    continue;
+                }
             }
             else
             {
@@ -484,7 +503,14 @@ namespace pegasus
                 }
                 else
                 {
-                    inclusions.erase(ext_str);
+                    try
+                    {
+                        ext_manager.disableExtension(ext_str);
+                    }
+                    catch (mavis::extension_manager::riscv::UnknownRISCVExtensionException&)
+                    {
+                        continue;
+                    }
                 }
             }
         }
