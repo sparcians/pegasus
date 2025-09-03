@@ -13,14 +13,12 @@ namespace pegasus
 
         inst_handlers.emplace(
             "ld",
-            pegasus::Action::createAction<&RvzilsdInsts::computeAddressHandler_,
-                                          RvzilsdInsts>(nullptr, "ld",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvzilsdInsts::computeAddressHandler_, RvzilsdInsts>(
+                nullptr, "ld", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "sd",
-            pegasus::Action::createAction<&RvzilsdInsts::computeAddressHandler_,
-                                          RvzilsdInsts>(nullptr, "sd",
-                                                      ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvzilsdInsts::computeAddressHandler_, RvzilsdInsts>(
+                nullptr, "sd", ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -29,20 +27,19 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "ld",
-            pegasus::Action::createAction<&RvzilsdInsts::ldHandler_,
-                                          RvzilsdInsts>(nullptr, "ld", ActionTags::EXECUTE_TAG));
+            "ld", pegasus::Action::createAction<&RvzilsdInsts::ldHandler_, RvzilsdInsts>(
+                      nullptr, "ld", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "sd",
-            pegasus::Action::createAction<&RvzilsdInsts::sdHandler_,
-                                          RvzilsdInsts>(nullptr, "sd", ActionTags::EXECUTE_TAG));
+            "sd", pegasus::Action::createAction<&RvzilsdInsts::sdHandler_, RvzilsdInsts>(
+                      nullptr, "sd", ActionTags::EXECUTE_TAG));
     }
 
-    template void RvzilsdInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
+    template void
+    RvzilsdInsts::getInstComputeAddressHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzilsdInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
 
     Action::ItrType RvzilsdInsts::computeAddressHandler_(pegasus::PegasusState* state,
-                                                       Action::ItrType action_it)
+                                                         Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         PegasusTranslationState* translation_state = inst->getTranslationState();
@@ -57,7 +54,7 @@ namespace pegasus
     }
 
     Action::ItrType RvzilsdInsts::ldHandler_(pegasus::PegasusState* state,
-                                                 Action::ItrType action_it)
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         PegasusTranslationState* translation_state = inst->getTranslationState();
@@ -78,14 +75,14 @@ namespace pegasus
     }
 
     Action::ItrType RvzilsdInsts::sdHandler_(pegasus::PegasusState* state,
-                                                  Action::ItrType action_it)
+                                             Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         PegasusTranslationState* translation_state = inst->getTranslationState();
 
         const RV32 rs2_val = READ_INT_REG<RV32>(state, inst->getRs2());
         const RV32 rs3_val = READ_INT_REG<RV32>(state, inst->getRs3());
-        
+
         // lower-numbered register holds bits 31:0
         // higher-numbered register holds bits 63:32
         const uint64_t value = ((uint64_t)rs3_val << 32) | rs2_val;
