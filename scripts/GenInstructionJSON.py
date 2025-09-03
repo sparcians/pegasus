@@ -44,6 +44,8 @@ from insts.RVZICOND_INST import RV32ZICOND_INST
 from insts.RVZICOND_INST import RV64ZICOND_INST
 from insts.RVZCMP_INST import RV32ZCMP_INST
 from insts.RVZCMP_INST import RV64ZCMP_INST
+from insts.RVZABHA_INST import RV32ZABHA_INST
+from insts.RVZABHA_INST import RV64ZABHA_INST
 from insts.RVZILSD_INST import RV32ZILSD_INST
 from insts.RVZILSD_INST import RV64ZILSD_INST
 from insts.RVZFA_INST import RV32ZFA_INST

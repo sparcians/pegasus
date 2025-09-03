@@ -53,10 +53,11 @@ set(AUTOGEN_RV32_INST_JSON_FILES
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zbc.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zbs.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zcmp.json
-  ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zfa.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zilsd.json
+  ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zabha.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zihintntl.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zihintpause.json
+  ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zfa.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve32f.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve32x.json
   ${SIM_BASE}/arch/rv32/pegasus_uarch_rv32zve64d.json
@@ -77,10 +78,11 @@ set(AUTOGEN_RV64_INST_JSON_FILES
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zbc.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zbs.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zcmp.json
-  ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zfa.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zilsd.json
+  ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zabha.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zihintntl.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zihintpause.json
+  ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zfa.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve32f.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve32x.json
   ${SIM_BASE}/arch/rv64/pegasus_uarch_rv64zve64d.json
@@ -96,13 +98,13 @@ file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zihintntl_zihintpause_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zabha_zihintntl_zihintpause_zfa
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zihintntl_zihintpause_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zabha_zihintntl_zihintpause_zfa
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
