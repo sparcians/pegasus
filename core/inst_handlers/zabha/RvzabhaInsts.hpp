@@ -6,7 +6,7 @@ namespace pegasus
 {
     class PegasusState;
 
-    class RvaInsts : public RvaInstsBase
+    class RvzabhaInsts : public RvaInstsBase
     {
       public:
         template <typename XLEN>
