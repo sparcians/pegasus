@@ -443,7 +443,8 @@ namespace pegasus
             if (READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1)
             {
                 ext_manager.enableExtension("f");
-                if (state->isCompressionEnabled())
+                constexpr bool is_rv32 = std::is_same_v<XLEN, RV32>;
+                if (is_rv32 && state->isCompressionEnabled())
                 {
                     ext_manager.enableExtension("zcf");
                 }
