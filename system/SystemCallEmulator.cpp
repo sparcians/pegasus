@@ -74,6 +74,7 @@ namespace pegasus
                  {177, {"gettid", cfp(&SysCallHandlers::gettid_)}},
                  {178, {"getegid", cfp(&SysCallHandlers::getegid_)}},
                  {214, {"brk", cfp(&SysCallHandlers::brk_)}},
+                 {215, {"munmap", cfp(&SysCallHandlers::munmap_)}},
                  {222, {"mmap", cfp(&SysCallHandlers::mmap_)}},
                  {226, {"mprotect", cfp(&SysCallHandlers::mprotect_)}},
                  {258, {"hwprobe", cfp(&SysCallHandlers::hwprobe_)}},
@@ -200,6 +201,7 @@ namespace pegasus
         int64_t getegid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t brk_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t munmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getrandom_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -469,6 +471,18 @@ namespace pegasus
                             << ") -> " << guest_addr);
 
         return guest_addr;
+    }
+
+    int64_t SysCallHandlers::munmap_(const SystemCallStack & call_stack,
+                                   sparta::memory::BlockingMemoryIF*)
+    {
+        const auto guest_addr = call_stack[1];
+        const auto size = call_stack[2];
+        const auto host_addr = memory_map_manager_.deallocate(guest_addr, size);
+
+        SYSCALL_LOG("munmap(" << HEX16(guest_addr) << ", " << HEX16(size) << ") -> " << host_addr);
+
+        return 0;
     }
 
     int64_t SysCallHandlers::mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
