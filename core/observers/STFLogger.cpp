@@ -102,7 +102,7 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                                  readVectorRegister_(state, src_reg.reg_id));
+                                                  src_reg.reg_value.getValueVector<uint64_t>());
             }
         }
 
