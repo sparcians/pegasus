@@ -197,6 +197,13 @@ namespace pegasus
         std::vector<uint64_t> raw(vlen_bits / sew_bits);
         switch (vlen_bits)
         {
+            case 128:
+                {
+                    using VLEN = std::array<uint64_t, 2>;
+                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    raw.assign(vec.begin(), vec.end());
+                    break;
+                }
             case 256:
                 {
                     using VLEN = std::array<uint64_t, 4>;

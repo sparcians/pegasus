@@ -299,7 +299,6 @@ namespace pegasus
         // Recording vector registers
         for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
         {
-
             stf_writer_ << stf::InstRegRecord(
                 i, stf::Registers::STF_REG_TYPE::VECTOR,
                 stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
