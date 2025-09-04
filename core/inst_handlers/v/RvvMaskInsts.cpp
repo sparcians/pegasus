@@ -159,6 +159,10 @@ namespace pegasus
                 tmp.pokeVal(elems_vs2.getElement(index).getVal()
                             & elems_v0.getElement(index).getVal());
             }
+            else
+            {
+                tmp.getVal();
+            }
             for (auto bit_iter = tmp.begin(); bit_iter != tmp.end(); ++bit_iter)
             {
                 WRITE_INT_REG<XLEN>(state, inst->getRd(),
