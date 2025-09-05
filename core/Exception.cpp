@@ -10,7 +10,8 @@
 namespace pegasus
 {
 
-    Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters * except_params) :
+    Exception::Exception(sparta::TreeNode* exception_node,
+                         const ExceptionParameters* except_params) :
         sparta::Unit(exception_node),
         unexpected_faults_(except_params->unexpected_faults)
     {
@@ -53,7 +54,8 @@ namespace pegasus
                                                 : static_cast<XLEN>(fault_cause_.getValue());
         DLOG("Exception code: " << excp_code);
 
-        if (false == is_interrupt) {
+        if (false == is_interrupt)
+        {
             sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
                           "Unexpected fault: " << fault_cause_.getValue());
         }

@@ -1,13 +1,15 @@
 #include "STFValidator.hpp"
 #include "core/PegasusState.hpp"
 #include "sparta/utils/LogUtils.hpp"
+
 namespace pegasus
 {
 #ifndef STFVALIDLOG
 #define STFVALIDLOG(msg) SPARTA_LOG(stf_valid_logger_, msg)
 #endif
 
-    STFValidator::STFValidator(sparta::log::MessageSource & stf_valid_logger, const ObserverMode arch, const uint64_t initial_pc,
+    STFValidator::STFValidator(sparta::log::MessageSource & stf_valid_logger,
+                               const ObserverMode arch, const uint64_t initial_pc,
                                const std::string & stf_filename) :
         Observer(arch),
         stf_valid_logger_(stf_valid_logger)
@@ -22,7 +24,8 @@ namespace pegasus
         }
         catch (const std::ifstream::failure & e)
         {
-            throw sparta::SpartaException("ERROR: Issues opening ") << stf_filename << ": " << e.what();
+            throw sparta::SpartaException("ERROR: Issues opening ")
+                << stf_filename << ": " << e.what();
         }
 
         stf_reader_.reset(new stf::STFInstReader(stf_filename));
@@ -70,18 +73,22 @@ namespace pegasus
             sparta_assert(false, "PCs have diverged!");
         }
 
-        auto get_stf_reg_type = [](const stf::Operand& stf_reg)
+        auto get_stf_reg_type = [](const stf::Operand & stf_reg)
         {
-            if (stf_reg.isInt()) {
+            if (stf_reg.isInt())
+            {
                 return RegType::INTEGER;
             }
-            else if (stf_reg.isFP()) {
+            else if (stf_reg.isFP())
+            {
                 return RegType::FLOATING_POINT;
             }
-            else if (stf_reg.isVector()) {
+            else if (stf_reg.isVector())
+            {
                 return RegType::VECTOR;
             }
-            else {
+            else
+            {
                 return RegType::CSR;
             }
         };
@@ -90,18 +97,20 @@ namespace pegasus
         {
             const RegType reg_type = dst_reg.reg_id.reg_type;
             const uint32_t reg_num = dst_reg.reg_id.reg_num;
-            for (const auto& stf_dst_reg : next_it_->getDestOperands())
+            for (const auto & stf_dst_reg : next_it_->getDestOperands())
             {
                 const RegType stf_reg_type = get_stf_reg_type(stf_dst_reg);
                 const uint32_t stf_reg_num = stf::Registers::getArchRegIndex(stf_dst_reg.getReg());
                 if ((reg_type == stf_reg_type) && (reg_num == stf_reg_num))
                 {
-                    if (reg_type != RegType::VECTOR) {
+                    if (reg_type != RegType::VECTOR)
+                    {
                         uint64_t reg_val = readScalarRegister_<uint64_t>(state, dst_reg.reg_id);
                         uint64_t stf_reg_val = stf_dst_reg.getScalarValue();
                         if (reg_val != stf_reg_val)
                         {
-                            STFVALIDLOG("Register writes do not match for dst " << std::dec << dst_reg.reg_id.reg_name);
+                            STFVALIDLOG("Register writes do not match for dst "
+                                        << std::dec << dst_reg.reg_id.reg_name);
                             STFVALIDLOG(state->getCurrentInst());
                             STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
                             STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);

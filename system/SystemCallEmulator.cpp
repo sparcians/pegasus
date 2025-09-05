@@ -474,7 +474,7 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::munmap_(const SystemCallStack & call_stack,
-                                   sparta::memory::BlockingMemoryIF*)
+                                     sparta::memory::BlockingMemoryIF*)
     {
         const auto guest_addr = call_stack[1];
         const auto size = call_stack[2];
@@ -545,8 +545,7 @@ namespace pegasus
         auto ret = ::unlinkat(dirfd, pathname_str.c_str(), flags);
 
         SYSCALL_LOG(__func__ << "(" << dirfd << "," << HEX16(pathname_addr) << "['" << pathname_str
-                             << "']"
-                             << "-> " << ret);
+                             << "']" << "-> " << ret);
         return ret;
     }
 
