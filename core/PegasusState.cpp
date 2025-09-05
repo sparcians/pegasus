@@ -246,23 +246,7 @@ namespace pegasus
 
     void PegasusState::changeMavisContext()
     {
-        std::vector<std::string> enabled_exts;
-        for (auto & ext : extension_manager_.getEnabledExtensions())
-        {
-            enabled_exts.emplace_back(ext.first);
-        }
-
-        const mavis::MatchSet<mavis::Pattern> inclusions{enabled_exts};
-        const std::string context_name =
-            std::accumulate(enabled_exts.begin(), enabled_exts.end(), std::string(""));
-        if (mavis_->hasContext(context_name) == false)
-        {
-            DLOG("Creating new Mavis context: " << context_name);
-            mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
-                                mavis_uid_list_, {}, inclusions, {});
-        }
-        DLOG("Changing Mavis context: " << context_name);
-        mavis_->switchContext(context_name);
+        extension_manager_.switchMavisContext(*mavis_.get());
 
         if (isCompressionEnabled())
         {
