@@ -435,35 +435,17 @@ namespace pegasus
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
         if (fs_val == 0)
         {
-            ext_manager.disableExtensions({"f", "zcf", "zve32f"});
-            ext_manager.disableExtensions({"d", "zcd", "zve64d"});
+            ext_manager.disableExtensions({"f", "d"});
         }
         else
         {
             if (READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1)
             {
                 ext_manager.enableExtension("f");
-                constexpr bool is_rv32 = std::is_same_v<XLEN, RV32>;
-                if (is_rv32 && state->isCompressionEnabled())
-                {
-                    ext_manager.enableExtension("zcf");
-                }
-                if (ext_manager.isEnabled("v"))
-                {
-                    ext_manager.enableExtension("zve32f");
-                }
             }
             if (READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1)
             {
                 ext_manager.enableExtension("d");
-                if (state->isCompressionEnabled())
-                {
-                    ext_manager.enableExtension("zcd");
-                }
-                if (ext_manager.isEnabled("v"))
-                {
-                    ext_manager.enableExtension("zve64d");
-                }
             }
         }
 
@@ -480,42 +462,35 @@ namespace pegasus
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
         auto & ext_manager = state->getExtensionManager();
 
+        std::vector<std::string> exts_to_enable;
+        std::vector<std::string> exts_to_disable;
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if (misa_val & (1 << (ext - 'a')))
+            if (ext_manager.isExtensionSupported(ext_str))
             {
-                try
+                if (misa_val & (1 << (ext - 'a')))
                 {
-                    ext_manager.enableExtension(ext_str);
-                }
-                catch (mavis::extension_manager::riscv::UnknownRISCVExtensionException&)
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                // Disabling compression will fail if doing so would cause an instruction
-                // misalignment exception. Check if the next PC is not 32-bit aligned.
-                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
-                {
-                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                    exts_to_enable.emplace_back(ext_str);
                 }
                 else
                 {
-                    try
+                    // Disabling compression will fail if doing so would cause an instruction
+                    // misalignment exception. Check if the next PC is not 32-bit aligned.
+                    if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
                     {
-                        ext_manager.disableExtension(ext_str);
+                        WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
                     }
-                    catch (mavis::extension_manager::riscv::UnknownRISCVExtensionException&)
+                    else
                     {
-                        continue;
+                        exts_to_disable.emplace_back(ext_str);
                     }
                 }
             }
         }
 
+        ext_manager.disableExtensions(exts_to_disable);
+        ext_manager.enableExtensions(exts_to_enable);
         state->changeMavisContext();
 
         return ++action_it;
