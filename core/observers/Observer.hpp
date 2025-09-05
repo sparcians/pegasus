@@ -92,8 +92,7 @@ namespace pegasus
                 return val;
             }
 
-            template <typename TYPE>
-            std::vector<TYPE> getValueVector() const
+            template <typename TYPE> std::vector<TYPE> getValueVector() const
             {
                 static_assert(std::is_trivial_v<TYPE>);
                 static_assert(std::is_standard_layout_v<TYPE>);
