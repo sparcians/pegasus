@@ -254,6 +254,34 @@ namespace pegasus
         WRITE_CSR_REG<XLEN>(state, FCSR, (fcsr & ~mask) | value);
     }
 
+    template <typename XLEN> void updateFixedCsrs(PegasusState* state, const bool sat)
+    {
+
+        XLEN mask = 0;
+        XLEN value = 0;
+
+        auto updateBitField = [&mask, &value](uint32_t csr_num, const char* field_name, XLEN val)
+        {
+            const auto & csr_bit_range = getCsrBitRange<XLEN>(csr_num, field_name);
+            const auto lsb = csr_bit_range.first;
+            const auto msb = csr_bit_range.second;
+            value |= val << lsb;
+            mask |= ((XLEN{1} << (msb - lsb + 1)) - 1) << lsb;
+        };
+
+        // VXSAT
+        auto vxsat = READ_CSR_REG<XLEN>(state, VXSAT);
+        updateBitField(VXSAT, "VXSAT", sat);
+        WRITE_CSR_REG<XLEN>(state, VXSAT, (vxsat & ~mask) | value);
+
+        mask = 0;
+        value = 0;
+        // VCSR
+        auto vcsr = READ_CSR_REG<XLEN>(state, VCSR);
+        updateBitField(VCSR, "VXSAT", sat);
+        WRITE_CSR_REG<XLEN>(state, VCSR, (vcsr & ~mask) | value);
+    }
+
     /**
      * @brief Call *func* by adjusting arguments from uint_t and return uint_t as return value.
      *        Functor can be used instead of lambda.
