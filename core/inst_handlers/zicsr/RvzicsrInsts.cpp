@@ -430,25 +430,22 @@ namespace pegasus
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
 
+        auto & ext_manager = state->getExtensionManager();
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
-        auto & inclusions = state->getMavisInclusions();
         if (fs_val == 0)
         {
-            inclusions.erase("f");
-            inclusions.erase("d");
+            ext_manager.disableExtensions({"f", "d"});
         }
         else
         {
-            const bool f_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1;
-            const bool d_ext_enabled = READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1;
-            if (f_ext_enabled)
+            if (READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1)
             {
-                inclusions.emplace("f");
+                ext_manager.enableExtension("f");
             }
-            if (d_ext_enabled)
+            if (READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1)
             {
-                inclusions.emplace("d");
+                ext_manager.enableExtension("d");
             }
         }
 
@@ -463,32 +460,37 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        const auto & ext_manager = state->getExtensionManager();
+        auto & ext_manager = state->getExtensionManager();
 
-        // FIXME: Extension manager should maintain inclusions
-        auto & inclusions = state->getMavisInclusions();
+        std::vector<std::string> exts_to_enable;
+        std::vector<std::string> exts_to_disable;
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if ((misa_val & (1 << (ext - 'a'))) && ext_manager.isEnabled(ext_str))
+            if (ext_manager.isExtensionSupported(ext_str))
             {
-                inclusions.emplace(ext_str);
-            }
-            else
-            {
-                // Disabling compression will fail if doing so would cause an instruction
-                // misalignment exception. Check if the next PC is not 32-bit aligned.
-                if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
+                if (misa_val & (1 << (ext - 'a')))
                 {
-                    WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                    exts_to_enable.emplace_back(ext_str);
                 }
                 else
                 {
-                    inclusions.erase(ext_str);
+                    // Disabling compression will fail if doing so would cause an instruction
+                    // misalignment exception. Check if the next PC is not 32-bit aligned.
+                    if ((ext == 'c') && ((state->getNextPc() & 0x3) != 0))
+                    {
+                        WRITE_CSR_FIELD<XLEN>(state, MISA, "c", 0x1);
+                    }
+                    else
+                    {
+                        exts_to_disable.emplace_back(ext_str);
+                    }
                 }
             }
         }
 
+        ext_manager.disableExtensions(exts_to_disable);
+        ext_manager.enableExtensions(exts_to_enable);
         state->changeMavisContext();
 
         return ++action_it;

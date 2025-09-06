@@ -89,9 +89,9 @@ namespace pegasus
                 pegasus::Action::createAction<&RvzfaInsts::fmvh_x_dHandler_, RvzfaInsts>(
                     nullptr, "fmvh.x.d", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "fmvh.d.x",
-                pegasus::Action::createAction<&RvzfaInsts::fmvh_d_xHandler_, RvzfaInsts>(
-                    nullptr, "fmvh.d.x", ActionTags::EXECUTE_TAG));
+                "fmvp.d.x",
+                pegasus::Action::createAction<&RvzfaInsts::fmvp_d_xHandler_, RvzfaInsts>(
+                    nullptr, "fmvp.d.x", ActionTags::EXECUTE_TAG));
         }
     }
 
@@ -204,7 +204,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    Action::ItrType RvzfaInsts::fmvh_d_xHandler_(pegasus::PegasusState* state,
+    Action::ItrType RvzfaInsts::fmvp_d_xHandler_(pegasus::PegasusState* state,
                                                  Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
