@@ -49,6 +49,10 @@ jobs:
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache
 
       # Build
+      - name: Build
+        run: ./.github/actions/build.sh
+
+      # Regress
       - name: Run Clangformat Check
         run: ./.github/actions/clangformat-check.sh
 
