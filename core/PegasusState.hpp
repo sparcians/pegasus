@@ -101,10 +101,7 @@ namespace pegasus
             return extension_manager_;
         }
 
-        bool isCompressionEnabled() const
-        {
-            return extension_manager_.isEnabled("zca");
-        }
+        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 
         MavisType* getMavis() { return mavis_.get(); }
 

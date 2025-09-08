@@ -513,9 +513,8 @@ namespace pegasus
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<!isMaskElems>
-            :
+        Elements(PegasusState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<!isMaskElems> :
             state_(state),
             config_(config),
             start_pos_(config_->getVSTART()),
@@ -531,9 +530,8 @@ namespace pegasus
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
-        requires EnableIf<isMaskElems>
-            :
+        Elements(PegasusState* state, VectorConfig* config,
+                 uint32_t reg_id) requires EnableIf<isMaskElems> :
             state_(state),
             config_(config),
             start_pos_(config_->getVSTART() / ElemType::elem_width),
@@ -558,8 +556,7 @@ namespace pegasus
          * @brief Return *begin* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the starting bit.
          */
-        auto maskBitIterBegin() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterBegin() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVSTART());
         }
@@ -568,8 +565,7 @@ namespace pegasus
          * @brief Return *end* *MaskBitIterator* object.
          * @return *MaskBitIterator* object pointitng to the ending bit.
          */
-        auto maskBitIterEnd() const
-        requires EnableIf<isMaskElems>
+        auto maskBitIterEnd() const requires EnableIf<isMaskElems>
         {
             return MaskBitIterator<>(this, config_->getVL());
         }
@@ -625,8 +621,7 @@ namespace pegasus
          * @param index The index of requested bit.
          * @return Bit value at *index*.
          */
-        typename ElemType::ValueType getBit(size_t index) const
-        requires EnableIf<isMaskElems>
+        typename ElemType::ValueType getBit(size_t index) const requires EnableIf<isMaskElems>
         {
             auto elem = getElement(index / ElemType::elem_width);
             return elem.getBit(index % ElemType::elem_width);
@@ -636,8 +631,7 @@ namespace pegasus
          * @brief Update bit of *MaskElements* at *index* in vector register to 1.
          * @param index The index of requested bit.
          */
-        void setBit(size_t index) const
-        requires EnableIf<isMaskElems>
+        void setBit(size_t index) const requires EnableIf<isMaskElems>
         {
             auto elem = getElement(index / ElemType::elem_width);
             return elem.setBit(index % ElemType::elem_width);
@@ -647,8 +641,7 @@ namespace pegasus
          * @brief Update bit of *MaskElements* at *index* in vector register to 0.
          * @param index The index of requested bit.
          */
-        void clearBit(size_t index) const
-        requires EnableIf<isMaskElems>
+        void clearBit(size_t index) const requires EnableIf<isMaskElems>
         {
             auto elem = getElement(index / ElemType::elem_width);
             return elem.clearBit(index % ElemType::elem_width);
