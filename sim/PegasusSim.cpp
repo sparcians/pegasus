@@ -1,6 +1,6 @@
 #include "PegasusSim.hpp"
 #include "include/ActionTags.hpp"
-#include "include/CSRFieldIdxs64.hpp"
+#include "include/gen/CSRFieldIdxs64.hpp"
 #include <filesystem>
 
 #include "sparta/utils/LogUtils.hpp"

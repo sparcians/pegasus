@@ -12,7 +12,7 @@ class StateSerializer(Observer):
         self.csr_names = None
         self.infinite_loop_pc = None
 
-        arch_json = os.path.join(os.path.dirname(__file__), '..', '..', 'arch', rv, 'reg_csr.json')
+        arch_json = os.path.join(os.path.dirname(__file__), '..', '..', 'arch', rv, 'gen', 'reg_csr.json')
         with open(arch_json) as fin:
             self.csr_num_to_name = {}
             for info in json.load(fin):

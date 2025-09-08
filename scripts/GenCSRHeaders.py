@@ -11,18 +11,18 @@ from RV32_CSR import CSR32_DEFS
 from REG_CONSTS import CSR_CONSTS
 from REG_CONSTS import PEGASUS_INTERNAL_REGISTERS
 
-CSR_BF_HEADER_FILE_NAME = "CSRBitMasks{reg_size}.hpp"
-CSR_FI_HEADER_FILE_NAME = "CSRFieldIdxs{reg_size}.hpp"
+CSR_BF_HEADER_FILE_NAME = "gen/CSRBitMasks{reg_size}.hpp"
+CSR_FI_HEADER_FILE_NAME = "gen/CSRFieldIdxs{reg_size}.hpp"
 
-CSR_HEADER_FILE_NAME = "CSRNums.hpp"
-CSR_HELPER_FILE_NAME = "CSRHelpers.hpp"
+CSR_HEADER_FILE_NAME = "gen/CSRNums.hpp"
+CSR_HELPER_FILE_NAME = "gen/CSRHelpers.hpp"
 
 def GetCsrNumFileHeader(reg_size):
     header = '#pragma once\n'
     header += '\n'
     header += '#include <cinttypes>\n'
     if reg_size > 0:
-        header += '#include "include/CSRFieldIdxs{reg_size}.hpp"\n'.format(reg_size=reg_size)
+        header += '#include "include/gen/CSRFieldIdxs{reg_size}.hpp"\n'.format(reg_size=reg_size)
     header += '\n'
     header += '//\n'
     header += '// This is generated file from scripts/GenRegisterJSON.py\n'
@@ -174,7 +174,7 @@ def gen_csr_helpers_header():
 // DO NOT MODIFY THIS FILE
 
 #include "sparta/utils/SpartaAssert.hpp"
-#include "include/CSRNums.hpp"
+#include "include/gen/CSRNums.hpp"
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -255,9 +255,9 @@ def gen_csr_field_idxs_header(reg_size):
     csr_fi_header_file.write(GetCsrNumFileHeader(-1))
 
     if data_width == 32:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv32"))
+        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv32", 'gen'))
     elif data_width == 64:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv64"))
+        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv64", 'gen'))
 
     reg_csr_json_filename = os.path.join(json_dir, "reg_csr.json")
     reg_fp_json_filename  = os.path.join(json_dir, "reg_fp.json")

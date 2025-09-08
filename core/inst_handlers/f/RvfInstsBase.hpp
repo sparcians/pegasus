@@ -3,7 +3,7 @@
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "include/PegasusUtils.hpp"
-#include "include/CSRBitMasks64.hpp"
+#include "include/gen/CSRBitMasks64.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "core/inst_handlers/finsts_helpers.hpp"
 

@@ -4,7 +4,7 @@
 #include "include/ActionTags.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
-#include "include/CSRFieldIdxs64.hpp"
+#include "include/gen/CSRFieldIdxs64.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
 
 namespace pegasus

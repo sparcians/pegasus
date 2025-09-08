@@ -4,16 +4,6 @@ profile/**
 compile_commands.json
 scripts/__pycache__/**
 scripts/insts/__pycache__/**
-include/CSRBitMasks32.hpp
-include/CSRBitMasks64.hpp
-include/CSRNums.hpp
-include/CSRFieldIdxs32.hpp
-include/CSRFieldIdxs64.hpp
-include/CSRHelpers.hpp
-arch/CSRNums.hpp
-arch/CSRFieldIdxs32.hpp
-arch/rv32/**
-arch/rv64/**
 spike
 .vscode/**
 mavis_json
@@ -22,3 +12,4 @@ IDE/backend/__pycache__/**
 IDE/editor/__pycache__/**
 .spike_commit_log
 clang-format-files.out
+gen/

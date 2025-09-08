@@ -121,8 +121,8 @@ setup_stf_linker(false)
 add_subdirectory(stf_lib)
 
 # 32-bit register JSON directory
-add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
-add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
+add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32/gen")
+add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64/gen")
 
 # Pegasus dependencies
 find_package (Boost REQUIRED COMPONENTS json)
