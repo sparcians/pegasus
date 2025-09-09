@@ -10,16 +10,25 @@ namespace pegasus
     template <typename T>
     concept IsSigned = std::is_signed_v<T>;
 
-    template <typename T> struct AddSat
+    bool sat = false; // Global flag for saturation
+
+    enum class Xrm
     {
-        inline T operator()(const T & x, const T & y, bool & sat) const
+        RNU, // round-to-nearest-up
+        RNE, // round-to-nearest-even
+        RDN, // round-down (truncate)
+        ROD  // round-to-odd (OR bits into LSB, aka "jam")
+    } xrm;   // Glocal flag for fixed-point rounding mode
+
+    template <typename T> struct SatAdd
+    {
+        inline T operator()(const T & x, const T & y) const
         requires IsSigned<T>
         {
             using UT = std::make_unsigned_t<T>;
             UT ux = x;
             UT uy = y;
             UT res = ux + uy;
-            sat = false;
             constexpr size_t sh = sizeof(T) * 8 - 1;
 
             ux = (ux >> sh) + ((UT{0x1} << sh) - 1);
@@ -32,29 +41,27 @@ namespace pegasus
             return res;
         }
 
-        inline T operator()(const T & x, const T & y, bool & sat) const
+        inline T operator()(const T & x, const T & y) const
         requires(!IsSigned<T>)
         {
-            sat = false;
             T res = x + y;
 
-            sat = res < x;
+            sat |= res < x;
             res |= -(res < x);
 
             return res;
         }
     };
 
-    template <typename T> struct SubSat
+    template <typename T> struct SatSub
     {
-        inline T operator()(const T & x, const T & y, bool & sat) const
+        inline T operator()(const T & x, const T & y) const
         requires IsSigned<T>
         {
             using UT = std::make_unsigned_t<T>;
             UT ux = x;
             UT uy = y;
-            UT res = ux + uy;
-            sat = false;
+            UT res = ux - uy;
             constexpr size_t sh = sizeof(T) * 8 - 1;
 
             ux = (ux >> sh) + ((UT{0x1} << sh) - 1);
@@ -67,16 +74,70 @@ namespace pegasus
             return res;
         }
 
-        inline T operator()(const T & x, const T & y, bool & sat) const
+        inline T operator()(const T & x, const T & y) const
         requires(!IsSigned<T>)
         {
-            sat = false;
             T res = x - y;
 
-            sat = res > x;
+            sat |= res > x;
             res &= -(res <= x);
 
             return res;
+        }
+    };
+
+    template <typename T> T intRounding(T result, bool & carry, Xrm xrm, size_t gb)
+    {
+        const T lsb = T{1} << (gb);
+        const T lsb_half = lsb >> 1;
+        T res = result;
+        switch (xrm)
+        {
+            case Xrm::RNU:
+                res = result + lsb_half;
+                break;
+            case Xrm::RNE:
+                if ((result & lsb_half) && ((result & (lsb_half - 1)) || (result & lsb)))
+                {
+                    res = result + lsb;
+                }
+                break;
+            case Xrm::RDN:
+                break;
+            case Xrm::ROD:
+                if (result & (lsb - 1))
+                {
+                    res = result | lsb;
+                }
+                break;
+            default:
+                break;
+        }
+        carry ^= res < result;
+        return res;
+    }
+
+    template <typename T> struct AveAdd
+    {
+        inline T operator()(const T & x, const T & y) const
+        {
+            using UT = std::make_unsigned_t<T>;
+            T res = x + y;
+            bool c = (x < 0) ^ (y < 0) ^ (static_cast<UT>(res) < static_cast<UT>(x));
+            res = intRounding(res, c, xrm, 1);
+            return (res >> 1) | (T{c} << (sizeof(T) * 8 - 1));
+        }
+    };
+
+    template <typename T> struct AveSub
+    {
+        inline T operator()(const T & x, const T & y) const
+        {
+            using UT = std::make_unsigned_t<T>;
+            T res = x - y;
+            bool c = (x < 0) ^ (y < 0) ^ (static_cast<UT>(res) > static_cast<UT>(x));
+            res = intRounding(res, c, xrm, 1);
+            return (res >> 1) | (T{c} << (sizeof(T) * 8 - 1));
         }
     };
 } // namespace pegasus

@@ -1,7 +1,6 @@
 #include <limits>
 
 #include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
-#include "core/inst_handlers/finsts_helpers.hpp"
 #include "core/inst_handlers/v/RvvFunctors.hpp"
 #include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
@@ -23,7 +22,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::V},
-                                                      false, AddSat>,
+                                                      false, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsaddu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsaddu.vx",
@@ -32,7 +31,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::X},
-                                                      false, AddSat>,
+                                                      false, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsaddu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsaddu.vi",
@@ -41,7 +40,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::I},
-                                                      false, AddSat>,
+                                                      false, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsaddu.vi", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -51,7 +50,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::V},
-                                                      true, AddSat>,
+                                                      true, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsadd.vx",
@@ -60,7 +59,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::X},
-                                                      true, AddSat>,
+                                                      true, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsadd.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vsadd.vi",
@@ -69,7 +68,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::I},
-                                                      true, AddSat>,
+                                                      true, SatAdd>,
                 RvvFixedPointInsts>(nullptr, "vsadd.vi", ActionTags::EXECUTE_TAG));
 
         // Saturating Sub
@@ -80,7 +79,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::V},
-                                                      false, SubSat>,
+                                                      false, SatSub>,
                 RvvFixedPointInsts>(nullptr, "vssubu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vssubu.vx",
@@ -89,7 +88,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::X},
-                                                      false, SubSat>,
+                                                      false, SatSub>,
                 RvvFixedPointInsts>(nullptr, "vssubu.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -99,7 +98,7 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::V},
-                                                      true, SubSat>,
+                                                      true, SatSub>,
                 RvvFixedPointInsts>(nullptr, "vssub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vssub.vx",
@@ -108,8 +107,86 @@ namespace pegasus
                                                       OperandMode{.dst = OperandMode::Mode::V,
                                                                   .src2 = OperandMode::Mode::V,
                                                                   .src1 = OperandMode::Mode::X},
-                                                      true, SubSat>,
+                                                      true, SatSub>,
                 RvvFixedPointInsts>(nullptr, "vssub.vx", ActionTags::EXECUTE_TAG));
+
+        // Averaging Add
+        inst_handlers.emplace(
+            "vaaddu.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      false, AveAdd>,
+                RvvFixedPointInsts>(nullptr, "vaaddu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vaaddu.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      false, AveAdd>,
+                RvvFixedPointInsts>(nullptr, "vaaddu.vx", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vaadd.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      true, AveAdd>,
+                RvvFixedPointInsts>(nullptr, "vaadd.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vaadd.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      true, AveAdd>,
+                RvvFixedPointInsts>(nullptr, "vaadd.vx", ActionTags::EXECUTE_TAG));
+
+        // Averaging Sub
+        inst_handlers.emplace(
+            "vasubu.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      false, AveSub>,
+                RvvFixedPointInsts>(nullptr, "vasubu.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vasubu.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      false, AveSub>,
+                RvvFixedPointInsts>(nullptr, "vasubu.vx", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vasub.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      true, AveSub>,
+                RvvFixedPointInsts>(nullptr, "vasub.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vasub.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      true, AveSub>,
+                RvvFixedPointInsts>(nullptr, "vasub.vx", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvFixedPointInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -127,36 +204,35 @@ namespace pegasus
                                                                    inst->getRs1()};
         auto elems_vd =
             Elements<Element<elemWidth>, false>{state, state->getVectorConfig(), inst->getRd()};
-        bool saturation = false;
-        Functor functor{};
         using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
+        Functor functor{};
+        sat = READ_CSR_FIELD<XLEN>(state, VXSAT, "VXSAT");
+        xrm = static_cast<Xrm>(READ_CSR_FIELD<XLEN>(state, VXRM, "VXRM"));
 
         auto execute = [&](auto iter, const auto & end)
         {
             size_t index = 0;
             for (; iter != end; ++iter)
             {
-                bool sat = false;
                 index = iter.getIndex();
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
-                    elems_vd.getElement(index).setVal(functor(elems_vs2.getElement(index).getVal(),
-                                                              elems_vs1.getElement(index).getVal(),
-                                                              sat));
+                    elems_vd.getElement(index).setVal(
+                        functor(elems_vs2.getElement(index).getVal(),
+                                elems_vs1.getElement(index).getVal()));
                 }
                 else if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
-                    elems_vd.getElement(index).setVal(functor(
-                        elems_vs2.getElement(index).getVal(),
-                        static_cast<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())), sat));
+                    elems_vd.getElement(index).setVal(
+                        functor(elems_vs2.getElement(index).getVal(),
+                                static_cast<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1()))));
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {
                     elems_vd.getElement(index).setVal(
                         functor(elems_vs2.getElement(index).getVal(),
-                                static_cast<ValueType>(inst->getImmediate()), sat));
+                                static_cast<ValueType>(inst->getImmediate())));
                 }
-                saturation |= sat;
             }
         };
 
@@ -169,7 +245,8 @@ namespace pegasus
             const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
-        updateFixedCsrs<XLEN>(state, saturation);
+        WRITE_CSR_FIELD<XLEN>(state, VXSAT, "VXSAT", sat);
+        WRITE_CSR_FIELD<XLEN>(state, VCSR, "VXSAT", sat);
 
         return ++action_it;
     }
