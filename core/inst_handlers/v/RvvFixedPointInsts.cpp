@@ -207,6 +207,64 @@ namespace pegasus
                                                                   .src1 = OperandMode::Mode::X},
                                                       true, SatMul>,
                 RvvFixedPointInsts>(nullptr, "vsmul.vx", ActionTags::EXECUTE_TAG));
+
+        // Scaling shift right logical
+        inst_handlers.emplace(
+            "vssrl.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      false, SclSrl>,
+                RvvFixedPointInsts>(nullptr, "vssrl.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vssrl.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      false, SclSrl>,
+                RvvFixedPointInsts>(nullptr, "vssrl.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vssrl.vi",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::I},
+                                                      false, SclSrl>,
+                RvvFixedPointInsts>(nullptr, "vssrl.vi", ActionTags::EXECUTE_TAG));
+
+        // Scaling shift right arithmetic
+        inst_handlers.emplace(
+            "vssra.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      false, SclSra>,
+                RvvFixedPointInsts>(nullptr, "vssra.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vssra.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      false, SclSra>,
+                RvvFixedPointInsts>(nullptr, "vssra.vx", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vssra.vi",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::I},
+                                                      false, SclSra>,
+                RvvFixedPointInsts>(nullptr, "vssra.vi", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvFixedPointInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);

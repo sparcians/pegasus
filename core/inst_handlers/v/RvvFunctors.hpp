@@ -165,4 +165,28 @@ namespace pegasus
             return (static_cast<UT>(res_l) >> (sizeof(T) * 8 - 1)) | (res_h << 1);
         }
     };
+
+    template <typename T> struct SclSrl
+    {
+        inline T operator()(const T & x, const T & y) const
+        {
+            using UT = std::make_unsigned_t<T>;
+            const size_t sh = y & (sizeof(T) * 8 - 1);
+            bool c = false;
+            T res = intRounding(x, c, sh);
+            return (static_cast<UT>(res) >> sh) | (T{c} << (sizeof(T) * 8 - sh));
+        }
+    };
+
+    template <typename T> struct SclSra
+    {
+        inline T operator()(const T & x, const T & y) const
+        {
+            using UT = std::make_unsigned_t<T>;
+            const size_t sh = y & (sizeof(T) * 8 - 1);
+            bool c = false;
+            T res = intRounding(x, c, sh);
+            return (static_cast<UT>(res) >> sh) | (-T{c} << (sizeof(T) * 8 - sh));
+        }
+    };
 } // namespace pegasus
