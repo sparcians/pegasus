@@ -900,9 +900,8 @@ namespace pegasus
                 }
                 break;
             case 32:
-                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2) {
-                    return func_wrapper(funcs.f32, src2);
-                }>(state, action_it);
+                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2)
+                                     { return func_wrapper(funcs.f32, src2); }>(state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
@@ -1051,8 +1050,7 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfBinaryHelper<XLEN, 16, opMode,
-                                      [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1078,8 +1076,7 @@ namespace pegasus
                                       }>(state, action_it);
 
             case 32:
-                return vfBinaryHelper<XLEN, 32, opMode,
-                                      [](auto src2, auto src1)
+                return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1)
                                       {
                                           if constexpr (opMode.dst == OperandMode::Mode::W)
                                           {
@@ -1293,8 +1290,7 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfTernaryHelper<XLEN, 16, opMode,
-                                       [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 16, opMode, [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
@@ -1314,8 +1310,7 @@ namespace pegasus
                                        }>(state, action_it);
 
             case 32:
-                return vfTernaryHelper<XLEN, 32, opMode,
-                                       [](auto src2, auto src1, auto dst)
+                return vfTernaryHelper<XLEN, 32, opMode, [](auto src2, auto src1, auto dst)
                                        {
                                            if constexpr (opMode.dst == OperandMode::Mode::W)
                                            {
