@@ -187,6 +187,26 @@ namespace pegasus
                                                                   .src1 = OperandMode::Mode::X},
                                                       true, AveSub>,
                 RvvFixedPointInsts>(nullptr, "vasub.vx", ActionTags::EXECUTE_TAG));
+
+        // Saturating Mul
+        inst_handlers.emplace(
+            "vsmul.vv",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::V},
+                                                      true, SatMul>,
+                RvvFixedPointInsts>(nullptr, "vsmul.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsmul.vx",
+            pegasus::Action::createAction<
+                &RvvFixedPointInsts::vxBinaryHandler_<XLEN,
+                                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                                  .src2 = OperandMode::Mode::V,
+                                                                  .src1 = OperandMode::Mode::X},
+                                                      true, SatMul>,
+                RvvFixedPointInsts>(nullptr, "vsmul.vx", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvFixedPointInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
