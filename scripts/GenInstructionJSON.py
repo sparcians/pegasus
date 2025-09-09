@@ -117,7 +117,7 @@ class InstJSONGenerator():
             with open(filename,"w") as fh:
                 json.dump(self.isa_map[ext], fh, indent=4)
 
-def get_isa(xlen):
+def get_supported_isa(xlen):
     ''' Generates a string with all of the available extensions imported.
         The format of the returned string is xlen_extension1_extension2_...'''
     exts = list()
@@ -131,14 +131,14 @@ def get_isa(xlen):
 
     return exts
 
-def fix_isa_str(isa):
+def get_default_isa(isa):
     ''' Modify the supported ISA string to generate a defalt ISA string, e.g. fix incompatible extensions'''
     return 'imafdcbv_zicsr_zifencei'
 
 def gen_supported_isa_header(supported_isa):
     ''' Writes header file with ISA defines '''
     isa_string = '_'.join(supported_isa)
-    default_isa = fix_isa_str(supported_isa)
+    default_isa = get_default_isa(supported_isa)
 
     with open( 'supportedISA.hpp', 'w' ) as fh:
         fh.write( '#pragma once\n\n' )
@@ -163,7 +163,7 @@ def main():
 
     os.chdir(arch_root)
 
-    supported_isa = get_isa(args.xlen)
+    supported_isa = get_supported_isa(args.xlen)
 
     if args.supported_isa:
         gen_supported_isa_header(supported_isa)
