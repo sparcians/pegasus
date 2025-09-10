@@ -149,7 +149,7 @@ FetchContent_MakeAvailable(spike)
 
 ################################################################################
 
-find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-14 clang-format)
+find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format)
 
 execute_process (
   COMMAND
@@ -158,7 +158,7 @@ execute_process (
      CLANGFORMAT_VERSION_OUTPUT
 )
 
-set(REQUIRED_CLANGFORMAT_VERSION "14")
+set(REQUIRED_CLANGFORMAT_VERSION "15")
 
 # Extract the version number from the output
 string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})

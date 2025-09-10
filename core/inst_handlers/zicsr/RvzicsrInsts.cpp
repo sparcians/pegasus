@@ -470,7 +470,10 @@ namespace pegasus
             if (ext_manager.isExtensionSupported(ext_str))
             {
                 // G bit is reserved
-                if (ext == 'g') { continue; }
+                if (ext == 'g')
+                {
+                    continue;
+                }
 
                 if (misa_val & (1 << (ext - 'a')))
                 {
