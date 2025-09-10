@@ -23,5 +23,9 @@ namespace pegasus
         template <typename XLEN, OperandMode opMode, bool isSigned,
                   template <typename> typename FunctorTemp>
         Action::ItrType vxBinaryHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        template <typename XLEN, OperandMode opMode, bool isSigned,
+                  template <typename> typename FunctorTemp>
+        Action::ItrType vxNClipHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus
