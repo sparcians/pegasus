@@ -469,6 +469,12 @@ namespace pegasus
             const std::string ext_str = std::string(1, ext);
             if (ext_manager.isExtensionSupported(ext_str))
             {
+                // G bit is reserved
+                if (ext == 'g')
+                {
+                    continue;
+                }
+
                 if (misa_val & (1 << (ext - 'a')))
                 {
                     exts_to_enable.emplace_back(ext_str);
