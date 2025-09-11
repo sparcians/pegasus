@@ -11,7 +11,7 @@ namespace pegasus
     // Global flag for saturation
     bool sat = false;
 
-    // Glocal flag for fixed-point rounding mode
+    // Global flag for fixed-point rounding mode
     enum class Xrm
     {
         RNU, // round-to-nearest-up
@@ -140,7 +140,7 @@ namespace pegasus
     {
         inline T operator()(const T & x, const T & y) const
         {
-            sparta_assert(std::is_signed_v<T>, "Saturating Mul only supports signed integer.");
+            static_assert(std::is_signed_v<T>, "Saturating Mul only supports signed integer.");
             using UT = std::make_unsigned_t<T>;
 
             if ((x == y) && (x == std::numeric_limits<T>::min()))
