@@ -1,6 +1,7 @@
 #include "STFLogger.hpp"
 #include "arch/RegisterSet.hpp"
 #include "core/PegasusState.hpp"
+#include "core/VecElements.hpp"
 
 namespace pegasus
 {
@@ -36,6 +37,7 @@ namespace pegasus
         // TODO: Add support for PTE
         // stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PTE);
 
+        stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setHeaderPC(inital_pc);
         stf_writer_.finalizeHeader();
@@ -98,7 +100,9 @@ namespace pegasus
             }
             else
             {
-                sparta_assert(false, "STF trace generation does not support vector yet!");
+                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                  src_reg.reg_value.getValueVector<uint64_t>());
             }
         }
 
@@ -128,7 +132,9 @@ namespace pegasus
             }
             else
             {
-                sparta_assert(false, "STF trace generation does not support vector yet!");
+                stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                                                  readVectorRegister_(state, dst_reg.reg_id));
             }
         }
 
@@ -289,6 +295,14 @@ namespace pegasus
             stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::FLOATING_POINT,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
                                               READ_FP_REG<uint64_t>(state, i));
+        }
+        // Recording vector registers
+        for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
+        {
+            stf_writer_ << stf::InstRegRecord(
+                i, stf::Registers::STF_REG_TYPE::VECTOR,
+                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
         }
         // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();

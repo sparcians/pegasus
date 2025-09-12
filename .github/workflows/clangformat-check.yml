@@ -36,8 +36,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: sparcians/map
+          submodules: recursive
           path: map
-          ref: 05ba8532be5d90fcebf28e7a7a7aa799a7b4d29e
+          ref: map_v2.1.2
 
       # Setup CCache to cache builds
       - name: ccache
@@ -48,7 +49,17 @@ jobs:
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache-main
             ${{ matrix.os }}-${{ matrix.BUILD_TYPE }}-${{ matrix.COMPILER }}-ccache
 
+      # Install missing packages to make everything build
+      - name: Install packages needed for sparta/pegasus
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
+
       # Build
+      - name: Build
+        run: ./.github/actions/build.sh
+
+      # Regress
       - name: Run Clangformat Check
         run: ./.github/actions/clangformat-check.sh
 

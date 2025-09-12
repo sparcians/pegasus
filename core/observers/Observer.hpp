@@ -83,13 +83,33 @@ namespace pegasus
                 static_assert(std::is_standard_layout_v<TYPE>);
                 static_assert(std::is_integral_v<TYPE>);
                 const size_t num_bytes = sizeof(TYPE);
-                assert((offset + num_bytes) < value_.size());
+                assert((offset + num_bytes) <= value_.size());
                 TYPE val = 0;
                 for (size_t i = offset; i < num_bytes; ++i)
                 {
                     val |= static_cast<TYPE>(value_[i]) << (i * 8);
                 }
                 return val;
+            }
+
+            template <typename TYPE> std::vector<TYPE> getValueVector() const
+            {
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
+
+                const size_t type_size = sizeof(TYPE);
+                assert(value_.size() % type_size == 0);
+
+                std::vector<TYPE> result;
+                result.reserve(value_.size() / type_size);
+
+                for (size_t offset = 0; offset < value_.size(); offset += type_size)
+                {
+                    result.push_back(getValue<TYPE>(offset));
+                }
+
+                return result;
             }
 
             size_t size() const { return value_.size(); }
@@ -222,7 +242,7 @@ namespace pegasus
             }
         }
 
-        // TODO: readVectorRegister_
+        std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
 
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;

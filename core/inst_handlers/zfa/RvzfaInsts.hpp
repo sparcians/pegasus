@@ -72,9 +72,9 @@ namespace pegasus
         template <typename XLEN>
         Action::ItrType fcvtmodHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        // fmvh.x.d, fmvh.d.x (RV32 only, DP only)
+        // fmvh.x.d, fmvp.d.x (RV32 only, DP only)
         Action::ItrType fmvh_x_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-        Action::ItrType fmvh_d_xHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType fmvp_d_xHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         // fleq, fltq
         template <typename XLEN, typename FMT>
