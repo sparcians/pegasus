@@ -65,19 +65,24 @@ namespace pegasus
 
         auto get_stf_reg_type = [](const RegType reg_type)
         {
-            if (reg_type == RegType::INTEGER) {
+            if (reg_type == RegType::INTEGER)
+            {
                 return stf::Registers::STF_REG_TYPE::INTEGER;
             }
-            else if (reg_type == RegType::FLOATING_POINT) {
+            else if (reg_type == RegType::FLOATING_POINT)
+            {
                 return stf::Registers::STF_REG_TYPE::FLOATING_POINT;
             }
-            else if (reg_type == RegType::VECTOR) {
+            else if (reg_type == RegType::VECTOR)
+            {
                 return stf::Registers::STF_REG_TYPE::VECTOR;
             }
-            else if (reg_type == RegType::CSR) {
+            else if (reg_type == RegType::CSR)
+            {
                 return stf::Registers::STF_REG_TYPE::CSR;
             }
-            else {
+            else
+            {
                 sparta_assert(false, "Invalid register type!");
             }
         };
@@ -99,16 +104,16 @@ namespace pegasus
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            stf_writer_ << stf::InstRegRecord(
-                csr_num, stf::Registers::STF_REG_TYPE::CSR,
-                stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE, csr_read.getRegValue<uint32_t>());
+            stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                              csr_read.getRegValue<uint32_t>());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            stf_writer_ << stf::InstRegRecord(
-                csr_num, stf::Registers::STF_REG_TYPE::CSR,
-                stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST, csr_write.getRegValue<uint32_t>());
+            stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
+                                              stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                                              csr_write.getRegValue<uint32_t>());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -116,9 +121,10 @@ namespace pegasus
             const auto stf_reg_type = get_stf_reg_type(dst_reg.reg_id.reg_type);
             if (dst_reg.reg_id.reg_type != RegType::VECTOR)
             {
-                stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
-                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                                  readScalarRegister_<uint64_t>(state, dst_reg.reg_id));
+                stf_writer_ << stf::InstRegRecord(
+                    dst_reg.reg_id.reg_num, stf_reg_type,
+                    stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                    readScalarRegister_<uint64_t>(state, dst_reg.reg_id));
             }
             else
             {

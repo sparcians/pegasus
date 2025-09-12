@@ -159,9 +159,8 @@ namespace pegasus
         }
         else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
         {
-            WRITE_FP_REG<RV64>(
-                state, inst->getRd(),
-                    f64_roundToInt(float64_t{rs1_val}, softfloat_roundingMode, EXACT).v);
+            WRITE_FP_REG<RV64>(state, inst->getRd(),
+                               f64_roundToInt(float64_t{rs1_val}, softfloat_roundingMode, EXACT).v);
         }
         else
         {

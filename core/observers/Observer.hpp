@@ -204,8 +204,7 @@ namespace pegasus
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
 
-        template<typename T>
-        T readScalarRegister_(PegasusState* state, RegId reg_id) const
+        template <typename T> T readScalarRegister_(PegasusState* state, RegId reg_id) const
         {
             switch (reg_id.reg_type)
             {
