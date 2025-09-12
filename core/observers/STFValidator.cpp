@@ -51,6 +51,14 @@ namespace pegasus
         }
     }
 
+    std::string formatVectorHex(const std::vector<uint64_t>& vec) {
+        std::ostringstream oss;
+        for (const auto& val : vec) {
+            oss << std::hex << val;
+        }
+        return oss.str();
+    }
+
     void STFValidator::postExecute_(PegasusState* state)
     {
         if (next_it_ == stf_reader_->end())
@@ -71,6 +79,17 @@ namespace pegasus
             STFVALIDLOG("    STF Opcode: 0x" << next_it_->opcode());
             STFVALIDLOG("");
             sparta_assert(false, "PCs have diverged!");
+        }
+
+        if(state->getSimState()->current_opcode != next_it_->opcode()){
+            STFVALIDLOG("OPCODEs do not match!");
+            STFVALIDLOG(state->getCurrentInst());
+            STFVALIDLOG("    Pegasus PC: 0x" << std::hex << pc);
+            STFVALIDLOG("        STF PC: 0x" << std::hex << stf_pc);
+            STFVALIDLOG("Pegasus Opcode: 0x" << state->getSimState()->current_opcode)
+            STFVALIDLOG("    STF Opcode: 0x" << next_it_->opcode());
+            STFVALIDLOG("");
+            sparta_assert(false, "OPCODEs do not match!");
         }
 
         auto get_stf_reg_type = [](const stf::Operand & stf_reg)
@@ -111,9 +130,24 @@ namespace pegasus
                         {
                             STFVALIDLOG("Register writes do not match for dst "
                                         << std::dec << dst_reg.reg_id.reg_name);
-                            STFVALIDLOG(state->getCurrentInst());
+                            STFVALIDLOG(pc << ":\t" << state->getCurrentInst());
                             STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
                             STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);
+                            STFVALIDLOG("");
+                        }
+                    }
+                    else
+                    {
+                        std::vector<uint64_t> reg_val = readVectorRegister_(state, dst_reg.reg_id);
+                        stf::InstRegRecord::VectorType stf_reg_val_temp = stf_dst_reg.getVectorValue();
+                        std::vector<uint64_t> stf_reg_val(stf_reg_val_temp.begin(), stf_reg_val_temp.end());
+                        if (reg_val != stf_reg_val)
+                        {
+                            STFVALIDLOG("Register writes do not match for vector dst "
+                                        << std::dec << dst_reg.reg_id.reg_name);
+                            STFVALIDLOG(pc << ":\t" << state->getCurrentInst());
+                            STFVALIDLOG("    Pegasus value: 0x" << formatVectorHex(reg_val));
+                            STFVALIDLOG("        STF value: 0x" << formatVectorHex(stf_reg_val));
                             STFVALIDLOG("");
                         }
                     }
