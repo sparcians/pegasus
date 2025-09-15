@@ -855,6 +855,8 @@ namespace pegasus
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -874,7 +876,7 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        updateFloatCsrs<XLEN>(state);
+        saveFloatCsrs<XLEN>(state);
 
         return ++action_it;
     }
@@ -934,6 +936,8 @@ namespace pegasus
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -955,7 +959,7 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        updateFloatCsrs<XLEN>(state);
+        saveFloatCsrs<XLEN>(state);
 
         return ++action_it;
     }
@@ -1007,6 +1011,8 @@ namespace pegasus
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -1038,7 +1044,7 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        updateFloatCsrs<XLEN>(state);
+        saveFloatCsrs<XLEN>(state);
 
         return ++action_it;
     }
@@ -1170,6 +1176,8 @@ namespace pegasus
         MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -1200,7 +1208,7 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        updateFloatCsrs<XLEN>(state);
+        saveFloatCsrs<XLEN>(state);
 
         return ++action_it;
     }
@@ -1246,6 +1254,8 @@ namespace pegasus
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -1279,7 +1289,7 @@ namespace pegasus
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
-        updateFloatCsrs<XLEN>(state);
+        saveFloatCsrs<XLEN>(state);
 
         return ++action_it;
     }
