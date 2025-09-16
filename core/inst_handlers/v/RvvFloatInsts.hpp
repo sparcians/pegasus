@@ -28,6 +28,13 @@ namespace pegasus
             constexpr FloatFuncs(F16 f16, F32 f32, F64 f64) : f16(f16), f32(f32), f64(f64) {}
         };
 
+        enum class Rm
+        {
+            normal,
+            rtz,
+            rod
+        };
+
         template <typename XLEN>
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
@@ -39,13 +46,15 @@ namespace pegasus
         Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, FloatFuncs funcs,
+                  RvvFloatInsts::Rm rm = Rm::normal>
         Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
         // FloatToInt is implemented seperately from Unary becuase functions in softfloat have 3
         // arguments instead of 1.
-        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
+                  RvvFloatInsts::Rm rm = Rm::normal>
         Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it);
 

@@ -56,6 +56,20 @@ namespace pegasus
                     FloatFuncs{nullptr, f32_to_i32, f64_to_i64}>,
                 RvvFloatInsts>(nullptr, "vfcvt.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
+            "vfcvt.rtz.xu.f.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfcvt.rtz.x.f.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{nullptr, f32_to_i32, f64_to_i64}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
             "vfcvt.f.xu.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
@@ -84,6 +98,20 @@ namespace pegasus
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
                     FloatFuncs{f16_to_i32, f32_to_i64, nullptr}>,
                 RvvFloatInsts>(nullptr, "vfwcvt.x.f.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfwcvt.rtz.xu.f.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{f16_to_ui32, f32_to_ui64, nullptr}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfwcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfwcvt.rtz.x.f.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{f16_to_i32, f32_to_i64, nullptr}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfwcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.f.xu.v",
             pegasus::Action::createAction<
@@ -121,6 +149,20 @@ namespace pegasus
                     FloatFuncs{nullptr, f64_to_i32, nullptr}>,
                 RvvFloatInsts>(nullptr, "vfncvt.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
+            "vfncvt.rtz.xu.f.w",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
+                    FloatFuncs{nullptr, f64_to_ui32, nullptr}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfncvt.rtz.xu.f.w", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfncvt.rtz.x.f.w",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfFloatToIntHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
+                    FloatFuncs{nullptr, f64_to_i32, nullptr}, Rm::rtz>,
+                RvvFloatInsts>(nullptr, "vfncvt.rtz.x.f.w", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
             "vfncvt.f.xu.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
@@ -141,6 +183,13 @@ namespace pegasus
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
                     FloatFuncs{f32_to_f16, f64_to_f32, nullptr}>,
                 RvvFloatInsts>(nullptr, "vfncvt.f.f.w", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfncvt.rod.f.f.w",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfUnaryHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
+                    FloatFuncs{f32_to_f16, f64_to_f32, nullptr}, Rm::rod>,
+                RvvFloatInsts>(nullptr, "vfncvt.rod.f.f.w", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vfclass.v",
@@ -149,6 +198,21 @@ namespace pegasus
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
                     FloatFuncs{fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>}>,
                 RvvFloatInsts>(nullptr, "vfclass.v", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
+            "vfrec7.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfUnaryHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{frecip7<uint16_t>, frecip7<uint32_t>, frecip7<uint64_t>}>,
+                RvvFloatInsts>(nullptr, "vfrec7.v", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vfrsqrt7.v",
+            pegasus::Action::createAction<
+                &RvvFloatInsts::vfUnaryHandler_<
+                    XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
+                    FloatFuncs{frsqrt7<uint16_t>, frsqrt7<uint32_t>, frsqrt7<uint64_t>}>,
+                RvvFloatInsts>(nullptr, "vfrsqrt7.v", ActionTags::EXECUTE_TAG));
 
         // binary operations
 
@@ -845,7 +909,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RvvFloatInsts::Rm rm>
     Action::ItrType vfUnaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -853,7 +917,8 @@ namespace pegasus
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
+        softfloat_roundingMode =
+            (rm == RvvFloatInsts::Rm::rod) ? softfloat_round_odd : READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
 
@@ -881,7 +946,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
+              RvvFloatInsts::Rm rm>
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
@@ -896,24 +962,24 @@ namespace pegasus
                 }
                 else
                 {
-                    return vfUnaryHelper<XLEN, 16, opMode, [](auto src2) {
-                        return func_wrapper(funcs.f16, src2);
-                    }>(state, action_it);
+                    return vfUnaryHelper<XLEN, 16, opMode,
+                                         [](auto src2) { return func_wrapper(funcs.f16, src2); },
+                                         rm>(state, action_it);
                 }
                 break;
             case 32:
-                return vfUnaryHelper<XLEN, 32, opMode, [](auto src2) {
-                    return func_wrapper(funcs.f32, src2);
-                }>(state, action_it);
+                return vfUnaryHelper<XLEN, 32, opMode,
+                                     [](auto src2) { return func_wrapper(funcs.f32, src2); }, rm>(
+                    state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
                 if constexpr (opMode.dst != OperandMode::Mode::W
                               && opMode.src2 != OperandMode::Mode::W)
                 {
-                    return vfUnaryHelper<XLEN, 64, opMode, [](auto src2) {
-                        return func_wrapper(funcs.f64, src2);
-                    }>(state, action_it);
+                    return vfUnaryHelper<XLEN, 64, opMode,
+                                         [](auto src2) { return func_wrapper(funcs.f64, src2); },
+                                         rm>(state, action_it);
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -922,7 +988,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RvvFloatInsts::Rm rm>
     Action::ItrType vfFloatToIntHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         using Traits = FuncTraits<decltype(func)>;
@@ -934,7 +1000,8 @@ namespace pegasus
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
+        softfloat_roundingMode = (rm == RvvFloatInsts::Rm::rtz) ? softfloat_round_minMag
+                                                                : READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
 
@@ -964,7 +1031,8 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
+              RvvFloatInsts::Rm rm>
     Action::ItrType RvvFloatInsts::vfFloatToIntHandler_(pegasus::PegasusState* state,
                                                         Action::ItrType action_it)
     {
@@ -979,18 +1047,18 @@ namespace pegasus
                 }
                 else
                 {
-                    return vfFloatToIntHelper<XLEN, 16, opMode, funcs.f16>(state, action_it);
+                    return vfFloatToIntHelper<XLEN, 16, opMode, funcs.f16, rm>(state, action_it);
                 }
                 break;
             case 32:
-                return vfFloatToIntHelper<XLEN, 32, opMode, funcs.f32>(state, action_it);
+                return vfFloatToIntHelper<XLEN, 32, opMode, funcs.f32, rm>(state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
                 if constexpr (opMode.dst != OperandMode::Mode::W
                               && opMode.src2 != OperandMode::Mode::W)
                 {
-                    return vfFloatToIntHelper<XLEN, 64, opMode, funcs.f64>(state, action_it);
+                    return vfFloatToIntHelper<XLEN, 64, opMode, funcs.f64, rm>(state, action_it);
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
