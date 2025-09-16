@@ -51,16 +51,6 @@ namespace pegasus
         }
     }
 
-    std::string formatVectorHex(const std::vector<uint64_t> & vec)
-    {
-        std::ostringstream oss;
-        for (const auto & val : vec)
-        {
-            oss << std::hex << val;
-        }
-        return oss.str();
-    }
-
     void STFValidator::postExecute_(PegasusState* state)
     {
         if (next_it_ == stf_reader_->end())
@@ -142,7 +132,7 @@ namespace pegasus
                     else
                     {
                         std::vector<uint64_t> reg_val = readVectorRegister_(state, dst_reg.reg_id);
-                        stf::InstRegRecord::VectorType stf_reg_val_temp =
+                        const stf::InstRegRecord::VectorType & stf_reg_val_temp =
                             stf_dst_reg.getVectorValue();
                         std::vector<uint64_t> stf_reg_val(stf_reg_val_temp.begin(),
                                                           stf_reg_val_temp.end());
