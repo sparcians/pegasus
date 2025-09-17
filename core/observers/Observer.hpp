@@ -244,6 +244,8 @@ namespace pegasus
 
         std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
 
+        std::string formatVectorHex(const std::vector<uint64_t> & vec);
+
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;
 
