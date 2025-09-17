@@ -67,8 +67,8 @@ namespace pegasus
             STFVALIDLOG(state->getCurrentInst());
             STFVALIDLOG("    Pegasus PC: 0x" << std::hex << pc);
             STFVALIDLOG("        STF PC: 0x" << std::hex << stf_pc);
-            STFVALIDLOG("Pegasus Opcode: 0x" << state->getSimState()->current_opcode)
-            STFVALIDLOG("    STF Opcode: 0x" << next_it_->opcode());
+            STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
+            STFVALIDLOG("    STF Opcode: 0x" << std::hex << next_it_->opcode());
             STFVALIDLOG("");
             sparta_assert(false, "PCs have diverged!");
         }
@@ -78,8 +78,8 @@ namespace pegasus
             STFVALIDLOG("OPCODEs do not match!");
             STFVALIDLOG(state->getCurrentInst());
             STFVALIDLOG("    PC: 0x" << std::hex << pc);
-            STFVALIDLOG("Pegasus Opcode: 0x" << state->getSimState()->current_opcode)
-            STFVALIDLOG("    STF Opcode: 0x" << next_it_->opcode());
+            STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
+            STFVALIDLOG("    STF Opcode: 0x" << std::hex << next_it_->opcode());
             STFVALIDLOG("");
             sparta_assert(false, "OPCODEs do not match!");
         }
