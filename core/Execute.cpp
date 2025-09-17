@@ -29,6 +29,7 @@
 #include "core/inst_handlers/v/RvvReductionInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
+#include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
 
 namespace pegasus
 {
@@ -82,6 +83,7 @@ namespace pegasus
         RvvReductionInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -107,6 +109,7 @@ namespace pegasus
         RvvReductionInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // RV32 only
         RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
