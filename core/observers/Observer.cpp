@@ -232,6 +232,16 @@ namespace pegasus
         return raw;
     }
 
+    std::string Observer::formatVectorHex(const std::vector<uint64_t> & vec)
+    {
+        std::ostringstream oss;
+        for (const auto & val : vec)
+        {
+            oss << std::hex << val;
+        }
+        return oss.str();
+    }
+
     std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
     {
         os << "0x"

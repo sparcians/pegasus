@@ -922,6 +922,8 @@ namespace pegasus
 
         restoreFloatCsrs<XLEN>(state);
 
+        restoreFloatCsrs<XLEN>(state);
+
         auto execute = [&](auto iter, const auto & end)
         {
             for (; iter != end; ++iter)
@@ -1002,6 +1004,8 @@ namespace pegasus
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode = (rm == RvvFloatInsts::Rm::rtz) ? softfloat_round_minMag
                                                                 : READ_CSR_REG<XLEN>(state, FRM);
+
+        restoreFloatCsrs<XLEN>(state);
 
         restoreFloatCsrs<XLEN>(state);
 
