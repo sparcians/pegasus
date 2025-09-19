@@ -298,6 +298,25 @@ namespace pegasus
                                                  true, std::plus>,
                 RvvIntegerInsts>(nullptr, "vadc.vim", ActionTags::EXECUTE_TAG));
 
+        inst_handlers.emplace(
+            "vsbc.vvm",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viacsbHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::V},
+                                                 true, std::minus>,
+                RvvIntegerInsts>(nullptr, "vsbc.vvm", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vsbc.vxm",
+            pegasus::Action::createAction<
+                &RvvIntegerInsts::viacsbHandler_<XLEN,
+                                                 OperandMode{.dst = OperandMode::Mode::V,
+                                                             .src2 = OperandMode::Mode::V,
+                                                             .src1 = OperandMode::Mode::X},
+                                                 true, std::minus>,
+                RvvIntegerInsts>(nullptr, "vsbc.vxm", ActionTags::EXECUTE_TAG));
+
         auto carryFn = []<typename T>(T a, T b, T c)
         { return a >= std::numeric_limits<T>::max() - b - c; };
 
