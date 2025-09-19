@@ -10,7 +10,7 @@ add_dependencies(pegasussim AutogenArchFiles)
 # Pegasus simulator
 add_executable(pegasus pegasus.cpp)
 
-target_link_libraries(pegasus pegasussim pegasuscore pegasusinsts softfloat pegasussys ${PEGASUS_LIBS})
+target_link_libraries(pegasus pegasuslibs)
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../arch                    ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json              ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)

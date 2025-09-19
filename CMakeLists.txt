@@ -100,6 +100,7 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR})
 
 # Boost
+find_package (Boost REQUIRED COMPONENTS json)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Mavis
@@ -125,9 +126,6 @@ add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
 add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
 
 # Pegasus dependencies
-find_package (Boost REQUIRED COMPONENTS json)
-set (PEGASUS_LIBS ${SPARTA_LIBS} ${STF_LINK_LIBS} mavis Boost::json)
-
 add_subdirectory(arch)
 add_subdirectory(core)
 add_subdirectory(core/inst_handlers)
@@ -135,6 +133,10 @@ add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
 add_subdirectory(test)
+
+add_library(pegasuslibs INTERFACE)
+set (PEGASUS_LIBS ${SPARTA_LIBS} ${STF_LINK_LIBS} mavis Boost::json)
+target_link_libraries(pegasuslibs INTERFACE pegasussim pegasuscore pegasusinsts softfloat pegasussys ${PEGASUS_LIBS})
 
 include(FetchContent)
 
