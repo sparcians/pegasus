@@ -918,7 +918,9 @@ namespace pegasus
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode =
-            (rm == RvvFloatInsts::Rm::rod) ? softfloat_round_odd : READ_CSR_REG<XLEN>(state, FRM);
+            (rm == RvvFloatInsts::Rm::rod)
+                ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_odd)
+                : READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
 
@@ -1002,8 +1004,10 @@ namespace pegasus
             elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        softfloat_roundingMode = (rm == RvvFloatInsts::Rm::rtz) ? softfloat_round_minMag
-                                                                : READ_CSR_REG<XLEN>(state, FRM);
+        softfloat_roundingMode =
+            (rm == RvvFloatInsts::Rm::rtz)
+                ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_minMag)
+                : READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
 

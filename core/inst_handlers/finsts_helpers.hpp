@@ -365,6 +365,7 @@ namespace pegasus
             sig = (sig << 1) & make_mask64(0, s);
         }
 
+        // even exp: sig >> 1, odd exp: sig >> 2
         int idx = ((exp & 1) << (p - 1)) | (sig >> (s - p + 1));
         uint64_t out_sig = (uint64_t)(table[idx]) << (s - p);
         uint64_t out_exp = (3 * make_mask64(0, e - 1) + ~exp) / 2;
