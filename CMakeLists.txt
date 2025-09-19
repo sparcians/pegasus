@@ -172,7 +172,7 @@ execute_process (
   COMMAND
      find core system sim arch include cosim test -name "*.[ch]pp"
   OUTPUT_FILE
-     ${SIM_BASE}/clang-format-files.out
+     ${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
      ${SIM_BASE}
 )
@@ -182,7 +182,7 @@ execute_process (
 # there yet
 add_custom_target(clangformat
   COMMAND
-     ${CLANGFORMAT_EXECUTABLE} -i --files=clang-format-files.out
+     ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
      ${SIM_BASE}
   COMMENT
@@ -191,7 +191,7 @@ add_custom_target(clangformat
 
 add_custom_target(clangformat-check
   COMMAND
-     ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=clang-format-files.out
+     ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
      ${SIM_BASE}
   COMMENT
