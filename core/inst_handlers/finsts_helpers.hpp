@@ -316,14 +316,17 @@ namespace pegasus
                 break;
             case 0x100: // sNaN
                 softfloat_exceptionFlags |= softfloat_flag_invalid;
+                [[fallthrough]];
             case 0x200: // qNaN
                 ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? defaultNaNF16UI
                                      : std::is_same_v<U, uint32_t> ? defaultNaNF32UI
                                                                    : defaultNaNF64UI);
                 break;
             case 0x004: // -subnormal
+                [[fallthrough]];
             case 0x020: //+ sub
                 sub = true;
+                [[fallthrough]];
             default: // +- normal
                 ret = static_cast<U>(
                     std::is_same_v<U, uint16_t>
@@ -386,6 +389,7 @@ namespace pegasus
             case 0x004: // -subnormal
             case 0x100: // sNaN
                 softfloat_exceptionFlags |= softfloat_flag_invalid;
+                [[fallthrough]];
             case 0x200: // qNaN
                 ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? defaultNaNF16UI
                                      : std::is_same_v<U, uint32_t> ? defaultNaNF32UI
@@ -408,6 +412,7 @@ namespace pegasus
                 break;
             case 0x020: //+ sub
                 sub = true;
+                [[fallthrough]];
             default: // +num
                 ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? rsqrt7(ret, 5, 10, sub)
                                      : std::is_same_v<U, uint32_t> ? rsqrt7(ret, 8, 23, sub)
