@@ -18,11 +18,20 @@ namespace pegasus
 
             TranslationRequest(Addr vaddr, size_t size) : vaddr_(vaddr), size_(size) {}
 
+            TranslationRequest(Addr vaddr, size_t size, bool nothrow) :
+                vaddr_(vaddr),
+                size_(size),
+                nothrow_(nothrow)
+            {
+            }
+
             Addr getVAddr() const { return vaddr_; }
 
             size_t getSize() const { return size_; }
 
             bool isValid() const { return size_ != 0; }
+
+            bool isNoThrow() const { return nothrow_; }
 
             void setMisaligned(const size_t misaligned_bytes)
             {
@@ -41,6 +50,7 @@ namespace pegasus
             size_t size_ = 0;
             bool misaligned_ = false;
             size_t misaligned_bytes_ = 0;
+            bool nothrow_ = false;
         };
 
         struct TranslationResult
@@ -78,6 +88,14 @@ namespace pegasus
             requests_[requests_cnt_++] = {vaddr, size};
         }
 
+        void makeRequest(const Addr vaddr, const size_t size, bool nothrow)
+        {
+            sparta_assert(size > 0);
+            sparta_assert(results_cnt_ == 0);
+            sparta_assert(requests_cnt_ < requests_.size());
+            requests_[requests_cnt_++] = {vaddr, size, nothrow};
+        }
+
         uint32_t getNumRequests() const { return requests_cnt_; }
 
         TranslationRequest & getRequest()
@@ -90,6 +108,12 @@ namespace pegasus
         {
             sparta_assert(requests_cnt_ > 0);
             --requests_cnt_;
+        }
+
+        void clearRequest()
+        {
+            sparta_assert(requests_cnt_ > 0);
+            requests_cnt_ = 0;
         }
 
         void setResult(const Addr vaddr, const Addr paddr, const size_t size)
