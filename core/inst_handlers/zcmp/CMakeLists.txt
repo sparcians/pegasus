@@ -6,3 +6,4 @@ add_library(rvzcmp
     ${SOURCES}
 )
 add_dependencies(rvzcmp AutogenArchFiles)
+target_link_libraries(rvzcmp pegasuslibs)

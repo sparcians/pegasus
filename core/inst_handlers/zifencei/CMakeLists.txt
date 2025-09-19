@@ -6,3 +6,4 @@ add_library(rvzifencei
     ${SOURCES}
 )
 add_dependencies(rvzifencei AutogenArchFiles)
+target_link_libraries(rvzifencei pegasuslibs)

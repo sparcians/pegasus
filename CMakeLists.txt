@@ -15,6 +15,7 @@ message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
 project(Pegasus CXX)
+add_library(pegasuslibs INTERFACE)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
 
 # Profile build flags
@@ -67,8 +68,8 @@ set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 if(BUILD_SPARTA_FROM_SOURCE)
   message (STATUS "Building SPARTA from source in ${SPARTA_SEARCH_DIR}")
   add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta")
-  include_directories(SYSTEM ${SPARTA_SEARCH_DIR})
-  include_directories(SYSTEM ${SPARTA_SEARCH_DIR}/simdb/include)
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR})
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR}/simdb/include)
   include(${SPARTA_SEARCH_DIR}/cmake/SpartaTestingMacros.cmake)
   include(${SPARTA_SEARCH_DIR}/cmake/sparta-config.cmake)
   set(SPARTA_LIBS ${Sparta_LIBS})
@@ -92,31 +93,31 @@ else()
     message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
   endif()
 
-  include_directories(SYSTEM ${SPARTA_INCLUDE_DIRS})
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_INCLUDE_DIRS})
 endif()
 
 ################################################################################
 
-include_directories(${CMAKE_SOURCE_DIR})
+target_include_directories(pegasuslibs INTERFACE ${SIM_BASE})
 
 # Boost
 find_package (Boost REQUIRED COMPONENTS json)
-include_directories(${Boost_INCLUDE_DIRS})
+target_include_directories(pegasuslibs INTERFACE ${Boost_INCLUDE_DIRS})
 
 # Mavis
-include_directories(SYSTEM mavis)
-include_directories(SYSTEM mavis/elfio)
+target_include_directories(pegasuslibs SYSTEM INTERFACE mavis)
+target_include_directories(pegasuslibs SYSTEM INTERFACE mavis/elfio)
 add_subdirectory(mavis)
 
 # SoftFloat
-include_directories(SYSTEM softfloat)
-include_directories(SYSTEM softfloat/source/include)
+target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)
+target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat/source/include)
 add_subdirectory(softfloat)
 
 # STF Library
 set(DISABLE_STF_DOXYGEN 1)
 set(DISABLE_STF_TESTS 1)
-include_directories(SYSTEM stf_lib)
+target_include_directories(pegasuslibs SYSTEM INTERFACE stf_lib)
 include(stf_lib/cmake/stf_linker_setup.cmake)
 setup_stf_linker(false)
 add_subdirectory(stf_lib)
@@ -128,15 +129,10 @@ add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
 # Pegasus dependencies
 add_subdirectory(arch)
 add_subdirectory(core)
-add_subdirectory(core/inst_handlers)
 add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
 add_subdirectory(test)
-
-add_library(pegasuslibs INTERFACE)
-set (PEGASUS_LIBS ${SPARTA_LIBS} ${STF_LINK_LIBS} mavis Boost::json)
-target_link_libraries(pegasuslibs INTERFACE pegasussim pegasuscore pegasusinsts softfloat pegasussys ${PEGASUS_LIBS})
 
 include(FetchContent)
 
@@ -176,9 +172,9 @@ execute_process (
   COMMAND
      find core system sim arch include cosim test -name "*.[ch]pp"
   OUTPUT_FILE
-     ${CMAKE_SOURCE_DIR}/clang-format-files.out
+     ${SIM_BASE}/clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
 )
 
 # CPUTopology is pretty clean as it is.  There's an option to NOT
@@ -188,7 +184,7 @@ add_custom_target(clangformat
   COMMAND
      ${CLANGFORMAT_EXECUTABLE} -i --files=clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )
@@ -197,7 +193,7 @@ add_custom_target(clangformat-check
   COMMAND
      ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )

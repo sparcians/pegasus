@@ -9,7 +9,7 @@ add_library(pegasuscosimlib
 find_package(Boost REQUIRED COMPONENTS serialization)
 
 target_link_libraries(pegasuscosimlib
-    pegasuslibs
+    pegasussim
     Boost::serialization
 )
 

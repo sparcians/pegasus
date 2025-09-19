@@ -1,7 +1,7 @@
 project(PegasusRegisterMacros_Test)
 
 add_executable(PegasusRegisterMacros_test RegisterMacros_test.cpp)
-target_link_libraries(PegasusRegisterMacros_test pegasuslibs)
+target_link_libraries(PegasusRegisterMacros_test pegasussim)
 
 pegasus_named_test(RegisterMacros_test_run PegasusRegisterMacros_test)
 

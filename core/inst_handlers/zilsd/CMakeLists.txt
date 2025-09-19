@@ -6,3 +6,4 @@ add_library(rvzilsd
     ${SOURCES}
 )
 add_dependencies(rvzilsd AutogenArchFiles)
+target_link_libraries(rvzilsd pegasuslibs)

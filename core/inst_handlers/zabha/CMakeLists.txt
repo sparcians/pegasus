@@ -6,3 +6,4 @@ add_library(rvzabha
     ${SOURCES}
 )
 add_dependencies(rvzabha AutogenArchFiles)
+target_link_libraries(rvzabha pegasuslibs)
