@@ -319,7 +319,13 @@ namespace pegasus
         }
 
         // If we got here, then Pegasus could not translate the address
-        // at any level.  We throw at this point.
+        // at any level.
+        if (request.isNoThrow())
+        {
+            translation_state->clearRequest();
+            return ++action_it;
+        }
+        // We throw at this point.
         switch (TYPE)
         {
             case AccessType::INSTRUCTION:

@@ -158,6 +158,30 @@ namespace pegasus
                                                              ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
+            "vle8ff.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlseComputeAddressHandler_<XLEN, 8, AddressingMode::UNIT, true>,
+                RvvLoadStoreInsts>(nullptr, "vle8ff.v", ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vle16ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseComputeAddressHandler_<
+                                              XLEN, 16, AddressingMode::UNIT, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle16ff.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vle32ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseComputeAddressHandler_<
+                                              XLEN, 32, AddressingMode::UNIT, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle32ff.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+        inst_handlers.emplace(
+            "vle64ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseComputeAddressHandler_<
+                                              XLEN, 64, AddressingMode::UNIT, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle64ff.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
+
+        inst_handlers.emplace(
             "vsoxei8.v",
             pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxComputeAddressHandler_<
                                               XLEN, 8, AddressingMode::IDX_ORDERED>,
@@ -426,6 +450,27 @@ namespace pegasus
                               nullptr, "vluxei64.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
+            "vle8ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<8, true, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle8ff.v",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle16ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<16, true, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle16ff.v",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle32ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<32, true, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle32ff.v",
+                                                             ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "vle64ff.v",
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlseHandler_<64, true, true>,
+                                          RvvLoadStoreInsts>(nullptr, "vle64ff.v",
+                                                             ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
             "vsoxei8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlseIdxHandler_<false>,
                                                        RvvLoadStoreInsts>(nullptr, "vsoxei8.v",
                                                                           ActionTags::EXECUTE_TAG));
@@ -568,7 +613,8 @@ namespace pegasus
     template void RvvLoadStoreInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvLoadStoreInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode>
+    template <typename XLEN, size_t elemWidth, RvvLoadStoreInsts::AddressingMode addrMode,
+              bool ffirst>
     Action::ItrType RvvLoadStoreInsts::vlseComputeAddressHandler_(pegasus::PegasusState* state,
                                                                   Action::ItrType action_it)
     {
@@ -592,7 +638,14 @@ namespace pegasus
         {
             for (size_t i = config->getVSTART(); i < config->getVL(); ++i)
             {
-                inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb);
+                if (ffirst && i == 0)
+                {
+                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb, true);
+                }
+                else
+                {
+                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb);
+                }
             }
         }
         else // masked
@@ -601,8 +654,15 @@ namespace pegasus
             for (auto mask_iter = mask_elems.maskBitIterBegin();
                  mask_iter != mask_elems.maskBitIterEnd(); ++mask_iter)
             {
-                inst->getTranslationState()->makeRequest(rs1_val + mask_iter.getIndex() * stride,
-                                                         eewb);
+                const auto i = mask_iter.getIndex();
+                if (ffirst && i == 0)
+                {
+                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb, true);
+                }
+                else
+                {
+                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb);
+                }
             }
         }
         return ++action_it;
@@ -683,7 +743,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <size_t elemWidth, bool isLoad>
+    template <size_t elemWidth, bool isLoad, bool ffirst>
     Action::ItrType RvvLoadStoreInsts::vlseHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
@@ -695,19 +755,26 @@ namespace pegasus
         {
             for (auto iter = begin; iter != end; ++iter)
             {
+                auto transtate = inst->getTranslationState();
+                if (ffirst && !transtate->getNumResults())
+                {
+                    sparta_assert(!iter.getIndex(), "fault first should take trap on element 0.");
+                    state->getVectorConfig()->setVL(iter.getIndex());
+                    return;
+                }
                 if constexpr (isLoad)
                 {
-                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
-                        inst->getTranslationState()->getResult().getPAddr());
-                    inst->getTranslationState()->popResult();
+                    UintType<elemWidth> value =
+                        state->readMemory<UintType<elemWidth>>(transtate->getResult().getPAddr());
+                    transtate->popResult();
                     elems.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
                     UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
-                    state->writeMemory<UintType<elemWidth>>(
-                        inst->getTranslationState()->getResult().getPAddr(), value);
-                    inst->getTranslationState()->popResult();
+                    state->writeMemory<UintType<elemWidth>>(transtate->getResult().getPAddr(),
+                                                            value);
+                    transtate->popResult();
                 }
             }
         };
