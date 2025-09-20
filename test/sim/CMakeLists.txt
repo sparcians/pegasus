@@ -7,13 +7,6 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../arch                     ${CMAKE_C
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../mavis/json               ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_CURRENT_BINARY_DIR}/workloads SYMBOLIC)
 
-# Tests
-add_subdirectory(vcs)
-add_subdirectory(via)
-add_subdirectory(vls)
-add_subdirectory(vm)
-add_subdirectory(vro)
-
 # ASM Tests
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.params.stop_sim_on_wfi true workloads/nop.elf)
 pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart true workloads/uart.elf)

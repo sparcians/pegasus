@@ -1,10 +1,10 @@
-project(Vcs_Test)
+project(Via_Test)
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../arch                     ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../mavis/json               ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../../core/inst_handlers/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
 
-add_executable(Vcs_test Vcs_test.cpp)
-target_link_libraries(Vcs_test pegasussim pegasuscore pegasusinsts softfloat pegasussys ${PEGASUS_LIBS})
+add_executable(Via_test Via_test.cpp)
+target_link_libraries(Via_test pegasussim)
 
-pegasus_named_test(Vcs_test_run Vcs_test)
+pegasus_named_test(Via_test_run Via_test)
