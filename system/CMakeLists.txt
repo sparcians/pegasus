@@ -8,3 +8,5 @@ add_library(pegasussys
     SystemCallEmulator.cpp
 )
 target_link_libraries(pegasussys pegasuslibs)
+
+add_dependencies(pegasusinsts AutogenArchFiles)
