@@ -107,7 +107,7 @@ target_include_directories(pegasuslibs INTERFACE ${Boost_INCLUDE_DIRS})
 # Mavis
 target_include_directories(pegasuslibs SYSTEM INTERFACE mavis)
 target_include_directories(pegasuslibs SYSTEM INTERFACE mavis/elfio)
-add_subdirectory(mavis)
+add_subdirectory(mavis SYSTEM)
 
 # SoftFloat
 target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)
