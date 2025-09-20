@@ -6,4 +6,4 @@ add_library(rvzfa
     ${SOURCES}
 )
 add_dependencies(rvzfa AutogenArchFiles)
-target_link_libraries(rvzfa pegasuslibs)
+target_link_libraries(rvzfa PUBLIC pegasuslibs)

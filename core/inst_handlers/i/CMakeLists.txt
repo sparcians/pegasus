@@ -6,4 +6,4 @@ add_library(rvi
     ${SOURCES}
 )
 add_dependencies(rvi AutogenArchFiles)
-target_link_libraries(rvi pegasuslibs)
+target_link_libraries(rvi PUBLIC pegasuslibs)

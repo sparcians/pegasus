@@ -6,4 +6,4 @@ add_library(rvzicond
     ${SOURCES}
 )
 add_dependencies(rvzicond AutogenArchFiles)
-target_link_libraries(rvzicond pegasuslibs)
+target_link_libraries(rvzicond PUBLIC pegasuslibs)

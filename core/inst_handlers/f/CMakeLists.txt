@@ -6,4 +6,4 @@ add_library(rvf
     ${SOURCES}
 )
 add_dependencies(rvf AutogenArchFiles)
-target_link_libraries(rvf pegasuslibs)
+target_link_libraries(rvf PUBLIC pegasuslibs)

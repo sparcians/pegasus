@@ -7,6 +7,6 @@ add_library(pegasussys
     MagicMemory.cpp
     SystemCallEmulator.cpp
 )
-target_link_libraries(pegasussys pegasuslibs)
+target_link_libraries(pegasussys PUBLIC pegasuslibs)
 
 add_dependencies(pegasussys AutogenArchFiles)
