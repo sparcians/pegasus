@@ -9,4 +9,4 @@ add_library(pegasussys
 )
 target_link_libraries(pegasussys pegasuslibs)
 
-add_dependencies(pegasusinsts AutogenArchFiles)
+add_dependencies(pegasussys AutogenArchFiles)
