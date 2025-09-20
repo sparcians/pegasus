@@ -32,17 +32,10 @@ else()
   set(BUILD_SPARTA_FROM_SOURCE FALSE)
 endif()
 
-if(NOT BUILD_SPARTA_FROM_SOURCE)
-  add_compile_options ( -Werror
+target_compile_options (pegasuslibs INTERFACE -Werror
     -Wall -Wextra -Winline -Winit-self -Wunused-function
     -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
-else()
-  add_compile_options (
-    -Winline -Winit-self -Wunused-function
-    -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
-    -Woverloaded-virtual -Wmissing-field-initializers -pipe)
-endif()
 
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
