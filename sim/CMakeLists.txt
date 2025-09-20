@@ -1,7 +1,6 @@
 project(Pegasus)
 
 add_library(pegasussim
-    STATIC
     PegasusSim.cpp
 )
 
