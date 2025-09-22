@@ -10,7 +10,7 @@ echo "PWD:" `pwd`
 
 cd ${GITHUB_WORKSPACE}
 cd $PEGASUS_BUILD_TYPE
-VERBOSE=1 make -j$(nproc --all) pegasus_regress
+make -j$(nproc --all) pegasus_regress
 REGRESS_PEGASUS=$?
 if [ ${REGRESS_PEGASUS} -ne 0 ]; then
     echo "ERROR: regress of Pegasus FAILED!!!"
