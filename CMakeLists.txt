@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT DEFINED ENV{CC})
-    set(CMAKE_C_COMPILER "clang")
+    find_program(CMAKE_C_COMPILER "clang")
 endif()
 
 if(NOT DEFINED ENV{CXX})
-    set(CMAKE_CXX_COMPILER "clang++")
+    find_program(CMAKE_CXX_COMPILER "clang++")
 endif()
 
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
