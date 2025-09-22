@@ -92,6 +92,7 @@ endif()
 ################################################################################
 
 target_include_directories(pegasuslibs INTERFACE ${SIM_BASE})
+target_include_directories(pegasuslibs INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
 # Boost
 find_package (Boost REQUIRED COMPONENTS json)
