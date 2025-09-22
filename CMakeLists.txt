@@ -16,7 +16,6 @@ endif()
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
-add_library(pegasuslibs INTERFACE)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
 
 # Profile build flags
@@ -27,16 +26,16 @@ if(DEFINED SPARTA_SEARCH_DIR AND "${SPARTA_SEARCH_DIR}" MATCHES "~")
   message(FATAL_ERROR "Error: SPARTA_SEARCH_DIR should not contain a tilde (~).")
 endif()
 
-if(EXISTS ${SPARTA_SEARCH_DIR}/CMakeLists.txt)
-  set(BUILD_SPARTA_FROM_SOURCE TRUE)
-else()
-  set(BUILD_SPARTA_FROM_SOURCE FALSE)
-endif()
+# Pegasus header-only library
+add_library(pegasuslibs INTERFACE)
 
 target_compile_options (pegasuslibs INTERFACE -Werror
     -Wall -Wextra -Winline -Winit-self -Wunused-function
     -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
+
+# Use lld for linking clang and gcc builds
+target_link_options(pegasuslibs INTERFACE -fuse-ld=lld)
 
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
@@ -47,6 +46,12 @@ endif ()
 
 ################################################################################
 # Set up Sparta
+
+if(EXISTS ${SPARTA_SEARCH_DIR}/CMakeLists.txt)
+  set(BUILD_SPARTA_FROM_SOURCE TRUE)
+else()
+  set(BUILD_SPARTA_FROM_SOURCE FALSE)
+endif()
 
 set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 
