@@ -46,6 +46,7 @@ namespace pegasus
 
     void STFLogger::postExecute_(PegasusState* state)
     {
+        bool uses_vector = false;
         if (state->getCurrentInst() == nullptr)
         {
             return;
@@ -100,6 +101,7 @@ namespace pegasus
             }
             else
             {
+                uses_vector = true;
                 stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                                                   src_reg.reg_value.getValueVector<uint64_t>());
@@ -132,10 +134,24 @@ namespace pegasus
             }
             else
             {
+                uses_vector = true;
                 stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
                                                   readVectorRegister_(state, dst_reg.reg_id));
             }
+        }
+
+        if (uses_vector)
+        {
+            stf_writer_ << stf::InstRegRecord(VL,
+                                            stf::Registers::STF_REG_TYPE::CSR,
+                                            stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                            READ_CSR_REG<uint64_t>(state, VL));
+
+            stf_writer_ << stf::InstRegRecord(VTYPE,
+                                            stf::Registers::STF_REG_TYPE::CSR,
+                                            stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                            READ_CSR_REG<uint64_t>(state, VTYPE));
         }
 
         bool invalid_opcode = false;
