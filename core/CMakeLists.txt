@@ -23,7 +23,7 @@ add_library(pegasuscore
 # This suppresses warnings from the stf_lib headers
 target_include_directories(pegasuscore SYSTEM PUBLIC stf_lib)
 
-target_link_libraries(pegasuscore PUBLIC pegasusinsts)
+target_link_libraries(pegasuscore PUBLIC pegasusinsts pegasussys)
 add_subdirectory(inst_handlers)
 
 add_dependencies(pegasuscore AutogenArchFiles)
