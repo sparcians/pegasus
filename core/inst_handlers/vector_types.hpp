@@ -19,6 +19,6 @@ namespace pegasus
         const Mode src2 = Mode::N;
         const Mode src1 = Mode::N;
 
-	constexpr bool operator==(const OperandMode&) const = default;
+        constexpr bool operator==(const OperandMode &) const = default;
     };
 } // namespace pegasus
