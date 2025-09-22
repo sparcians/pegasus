@@ -40,7 +40,7 @@ if [ $? -ne 0 ]; then
     echo "ERROR: CMake for pegasus failed"
     exit 1
 fi
-make -j$(nproc --all) pegasus
+VERBOSE=1 make -j$(nproc --all) pegasus
 BUILD_PEGASUS=$?
 if [ ${BUILD_PEGASUS} -ne 0 ]; then
     echo "ERROR: build of Pegasus FAILED!!!"
