@@ -4,7 +4,7 @@ namespace pegasus
 {
     struct OperandMode
     {
-        enum struct Mode
+        enum Mode
         {
             V, // vector
             X, // scalar int
@@ -18,5 +18,7 @@ namespace pegasus
         const Mode dst = Mode::N;
         const Mode src2 = Mode::N;
         const Mode src1 = Mode::N;
+
+	constexpr bool operator==(const OperandMode&) const = default;
     };
 } // namespace pegasus
