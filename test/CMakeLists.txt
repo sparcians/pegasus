@@ -1,4 +1,4 @@
-project(Pegasus_Tests)
+project(Pegasus_Tests CXX)
 
 # Enable testing
 include(CTest)

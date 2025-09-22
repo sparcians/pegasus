@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.30)
 
+project(Pegasus C CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED CMAKE_C_COMPILER)
+if(NOT DEFINED ENV{CC})
     set(CMAKE_C_COMPILER "clang")
 endif()
 
-if(NOT DEFINED CMAKE_CXX_COMPILER)
+if(NOT DEFINED ENV{CXX})
     set(CMAKE_CXX_COMPILER "clang++")
 endif()
 
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
-project(Pegasus CXX)
 add_library(pegasuslibs INTERFACE)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
 
