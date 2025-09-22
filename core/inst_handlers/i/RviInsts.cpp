@@ -7,6 +7,8 @@
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "system/PegasusSystem.hpp"
+#include "system/SystemCallEmulator.hpp"
+#include "sparta/memory/SimpleMemoryMapNode.hpp"
 
 #include <functional>
 
@@ -980,7 +982,9 @@ namespace pegasus
                                       READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
                                       READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
 
-        auto ret_code = static_cast<XLEN>(state->emulateSystemCall(call_stack));
+        auto mem = state->getPegasusSystem()->getSystemMemory();
+        auto emulator = state->getSystemCallEmulator();
+        auto ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
         WRITE_INT_REG<XLEN>(state, 10, ret_code);
 
         return ++action_it;
