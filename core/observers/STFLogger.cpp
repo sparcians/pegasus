@@ -257,8 +257,7 @@ namespace pegasus
             }
             stf_writer_ << stf::EventPCTargetRecord(READ_CSR_REG<uint64_t>(state, MTVEC));
         }
-        else if (state->getNextPc()
-                 != state->getPrevPc() + state->getCurrentInst()->getOpcodeSize())
+        else if (state->getCurrentInst()->isChangeOfFlowInst())
         {
             stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
         }
