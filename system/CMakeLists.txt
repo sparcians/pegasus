@@ -1,11 +1,11 @@
 project(Pegasus)
 
-add_library(pegasussys
+add_library(pegasussys OBJECT
     PegasusSystem.cpp
     SimpleUART.cpp
     MagicMemory.cpp
     SystemCallEmulator.cpp
 )
-target_link_libraries(pegasussys PUBLIC pegasuslibs pegasussim)
+target_link_libraries(pegasussys PUBLIC pegasuslibs)
 
 add_dependencies(pegasussys AutogenArchFiles)

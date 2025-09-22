@@ -1,6 +1,7 @@
 project(Pegasus)
 
 add_library(pegasuscore
+    OBJECT
     ActionGroup.cpp
     PegasusState.cpp
     ActionTags.cpp
@@ -18,12 +19,11 @@ add_library(pegasuscore
     observers/CoSimObserver.cpp
     ../arch/RegisterDefnsJSON.cpp
 )
+target_link_libraries(pegasuscore PUBLIC pegasuslibs)
+add_dependencies(pegasuscore AutogenArchFiles)
 
 # Tell cmake that stf_lib is a system include directory
 # This suppresses warnings from the stf_lib headers
 target_include_directories(pegasuscore SYSTEM PUBLIC stf_lib)
 
-target_link_libraries(pegasuscore PUBLIC pegasusinsts)
 add_subdirectory(inst_handlers)
-
-add_dependencies(pegasuscore AutogenArchFiles)

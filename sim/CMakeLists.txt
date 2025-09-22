@@ -7,8 +7,9 @@ add_library(pegasussim
 add_dependencies(pegasussim AutogenArchFiles)
 target_link_libraries(pegasussim
     pegasuscore
-    softfloat
+    pegasusinsts
     pegasussys
+    softfloat
     ${SPARTA_LIBS}
     ${STF_LINK_LIBS}
     mavis Boost::json
