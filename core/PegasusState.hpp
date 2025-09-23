@@ -204,10 +204,7 @@ namespace pegasus
             system_call_emulator_ = emulator;
         }
 
-        // Emulate ecall.  This function will determine the route to
-        // send the emulation.  The return value is the return code
-        // from the call.
-        int64_t emulateSystemCall(const SystemCallStack &);
+        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 

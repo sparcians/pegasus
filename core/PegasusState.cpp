@@ -19,8 +19,6 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
-#include "system/SystemCallEmulator.hpp"
-
 namespace pegasus
 {
     uint32_t getXlenFromIsaString_(const std::string & isa_string)
@@ -316,12 +314,6 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zfa.json"};
         return uarch_files;
-    }
-
-    int64_t PegasusState::emulateSystemCall(const SystemCallStack & call_stack)
-    {
-        return system_call_emulator_->emulateSystemCall(call_stack,
-                                                        pegasus_system_->getSystemMemory());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
