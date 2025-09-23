@@ -71,7 +71,7 @@ jobs:
       - name: Install packages needed for sparta/pegasus
         run: |
           sudo apt-get update --fix-missing
-          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm lld
 
       # Build
       - name: Build

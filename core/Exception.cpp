@@ -10,7 +10,8 @@
 namespace pegasus
 {
 
-    Exception::Exception(sparta::TreeNode* exception_node, const ExceptionParameters * except_params) :
+    Exception::Exception(sparta::TreeNode* exception_node,
+                         const ExceptionParameters* except_params) :
         sparta::Unit(exception_node),
         unexpected_faults_(except_params->unexpected_faults)
     {
@@ -53,7 +54,8 @@ namespace pegasus
                                                 : static_cast<XLEN>(fault_cause_.getValue());
         DLOG("Exception code: " << excp_code);
 
-        if (false == is_interrupt) {
+        if (false == is_interrupt)
+        {
             sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
                           "Unexpected fault: " << fault_cause_.getValue());
         }
@@ -151,6 +153,10 @@ namespace pegasus
 
     uint64_t Exception::determineTrapValue_(const FaultCause & cause, PegasusState* state)
     {
+        // stval must be written with the faulting virtual address for load, store, and instruction
+        // page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other
+        // than those caused by execution of the ebreak or c.ebreak instructions.
+        // For illegal-instruction exceptions, stval must be written with the faulting instruction.
         switch (cause)
         {
             case FaultCause::INST_ADDR_MISALIGNED:

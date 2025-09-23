@@ -19,6 +19,9 @@
 #include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
 #include "core/inst_handlers/zicond/RvzicondInsts.hpp"
 #include "core/inst_handlers/zcmp/RvzcmpInsts.hpp"
+#include "core/inst_handlers/zabha/RvzabhaInsts.hpp"
+#include "core/inst_handlers/zilsd/RvzilsdInsts.hpp"
+#include "core/inst_handlers/zfa/RvzfaInsts.hpp"
 #include "core/inst_handlers/v/RvvConfigSettingInsts.hpp"
 #include "core/inst_handlers/v/RvvIntegerInsts.hpp"
 #include "core/inst_handlers/v/RvvLoadStoreInsts.hpp"
@@ -26,6 +29,7 @@
 #include "core/inst_handlers/v/RvvReductionInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
+#include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
 
 namespace pegasus
 {
@@ -69,6 +73,9 @@ namespace pegasus
         RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzicondInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzabhaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzfaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        // Vector
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -76,6 +83,7 @@ namespace pegasus
         RvvReductionInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -91,6 +99,9 @@ namespace pegasus
         RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicondInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzabhaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzfaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        // Vector
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvLoadStoreInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -98,12 +109,16 @@ namespace pegasus
         RvvReductionInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        // RV32 only
+        RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvaInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvfInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvdInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvzabhaInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
 
         // Get RV32 instruction compute address handlers
@@ -111,7 +126,10 @@ namespace pegasus
         RvaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvfInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        RvzabhaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        // RV32 only
+        RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 
         // Get CSR update handlers
         RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);

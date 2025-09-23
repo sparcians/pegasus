@@ -218,7 +218,30 @@ namespace pegasus
         return val;
     }
 
-    template <typename XLEN> void updateFloatCsrs(PegasusState* state)
+    template <typename XLEN> void restoreFloatCsrs(PegasusState* state)
+    {
+        decltype(softfloat_exceptionFlags) value = 0;
+        auto csr = READ_CSR_REG<XLEN>(state, FFLAGS);
+
+        auto syncBitField =
+            [&csr, &value](uint32_t csr_num, const char* field_name, exceptionFlag_t flag)
+        {
+            const auto & csr_bit_range = getCsrBitRange<XLEN>(csr_num, field_name);
+            const auto lsb = csr_bit_range.first;
+            const auto msb = csr_bit_range.second;
+            const XLEN mask = ((XLEN{1} << (msb - lsb + 1)) - 1) << lsb;
+            value |= ((csr & mask) != 0) * flag;
+        };
+
+        syncBitField(FFLAGS, "NX", softfloat_flag_inexact);
+        syncBitField(FFLAGS, "UF", softfloat_flag_underflow);
+        syncBitField(FFLAGS, "OF", softfloat_flag_overflow);
+        syncBitField(FFLAGS, "DZ", softfloat_flag_infinite);
+        syncBitField(FFLAGS, "NV", softfloat_flag_invalid);
+        softfloat_exceptionFlags = value;
+    }
+
+    template <typename XLEN> void saveFloatCsrs(PegasusState* state)
     {
         XLEN mask = 0;
         XLEN value = 0;

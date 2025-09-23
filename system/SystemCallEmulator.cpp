@@ -474,7 +474,7 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::munmap_(const SystemCallStack & call_stack,
-                                   sparta::memory::BlockingMemoryIF*)
+                                     sparta::memory::BlockingMemoryIF*)
     {
         const auto guest_addr = call_stack[1];
         const auto size = call_stack[2];

@@ -104,6 +104,8 @@ namespace pegasus
             return extension_manager_;
         }
 
+        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
+
         MavisType* getMavis() { return mavis_.get(); }
 
         enum MavisUIDs : mavis::InstructionUniqueID
@@ -115,13 +117,6 @@ namespace pegasus
             MAVIS_UID_CSRRSI,
             MAVIS_UID_CSRRCI
         };
-
-        std::set<std::string> & getMavisInclusions() { return inclusions_; }
-
-        bool isCompressionEnabled() const
-        {
-            return inclusions_.contains("c") || inclusions_.contains("zca");
-        }
 
         void changeMavisContext();
 
@@ -212,10 +207,7 @@ namespace pegasus
             system_call_emulator_ = emulator;
         }
 
-        // Emulate ecall.  This function will determine the route to
-        // send the emulation.  The return value is the return code
-        // from the call.
-        int64_t emulateSystemCall(const SystemCallStack &);
+        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -346,9 +338,6 @@ namespace pegasus
             {"csrrw", MAVIS_UID_CSRRW},   {"csrrs", MAVIS_UID_CSRRS},
             {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
             {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
-
-        // Mavis list of included extension tags
-        std::set<std::string> inclusions_;
 
         // Instruction limit to end simulation
         const uint64_t ilimit_ = 0;

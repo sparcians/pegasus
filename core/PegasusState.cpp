@@ -19,8 +19,6 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
-#include "system/SystemCallEmulator.hpp"
-
 namespace pegasus
 {
     uint32_t getXlenFromIsaString_(const std::string & isa_string)
@@ -148,13 +146,6 @@ namespace pegasus
                     sparta::notNull(PegasusAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        // FIXME: Extension manager should maintain inclusions
-        for (auto & ext : extension_manager_.getEnabledExtensions())
-        {
-            inclusions_.emplace(ext.first);
-        }
-        inclusions_.erase("g");
-
         if (isCompressionEnabled())
         {
             setPcAlignment_(2);
@@ -233,11 +224,13 @@ namespace pegasus
         {
             if (xlen_ == 64)
             {
-                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64, pc_, validation_stf_filename_));
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64,
+                                                           pc_, validation_stf_filename_));
             }
             else
             {
-                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32, pc_, validation_stf_filename_));
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32,
+                                                           pc_, validation_stf_filename_));
             }
         }
 
@@ -253,17 +246,7 @@ namespace pegasus
 
     void PegasusState::changeMavisContext()
     {
-        const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-        const std::string context_name =
-            std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
-        if (mavis_->hasContext(context_name) == false)
-        {
-            DLOG("Creating new Mavis context: " << context_name);
-            mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
-                                mavis_uid_list_, {}, inclusions, {});
-        }
-        DLOG("Changing Mavis context: " << context_name);
-        mavis_->switchContext(context_name);
+        extension_manager_.switchMavisContext(*mavis_.get());
 
         if (isCompressionEnabled())
         {
@@ -326,14 +309,11 @@ namespace pegasus
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicbom.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicboz.json",
             xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json"};
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zabha.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json",
+            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zfa.json"};
         return uarch_files;
-    }
-
-    int64_t PegasusState::emulateSystemCall(const SystemCallStack & call_stack)
-    {
-        return system_call_emulator_->emulateSystemCall(call_stack,
-                                                        pegasus_system_->getSystemMemory());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -395,7 +375,7 @@ namespace pegasus
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if (inclusions_.contains(ext_str))
+            if (extension_manager_.isEnabled(ext_str))
             {
                 ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
             }

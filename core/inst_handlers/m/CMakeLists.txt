@@ -6,3 +6,4 @@ add_library(rvm
     ${SOURCES}
 )
 add_dependencies(rvm AutogenArchFiles)
+target_link_libraries(rvm PUBLIC pegasuslibs)
