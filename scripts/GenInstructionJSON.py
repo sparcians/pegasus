@@ -176,7 +176,7 @@ def main():
     
     parser.add_argument("xlen", choices=SUPPORTED_XLEN, metavar='xlen',
                         help=f"XLEN ({', '.join(SUPPORTED_XLEN)})")
-    parser.add_argument("--supported-isa", action="store_true",
+    parser.add_argument("--gen-supported-isa-header", action="store_true",
                         help="Only generates the supported/default ISA header files")
     args = parser.parse_args()
 
@@ -187,12 +187,11 @@ def main():
 
     supported_rv64_exts, supported_rv32_exts = get_supported_exts()
 
-    if args.supported_isa:
+    if args.gen_supported_isa_header:
         gen_supported_isa_header(args.xlen, supported_rv64_exts, supported_rv32_exts)
         return
 
     isa_string = "_".join(supported_rv64_exts) if args.xlen == "64" else "_".join(supported_rv32_exts)
-    print(isa_string)
     inst_handler_gen = InstJSONGenerator(args.xlen + isa_string)
 
     # Instruction uarch jsons
