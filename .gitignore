@@ -12,6 +12,7 @@ include/CSRFieldIdxs64.hpp
 include/CSRHelpers.hpp
 arch/CSRNums.hpp
 arch/CSRFieldIdxs32.hpp
+arch/supportedISA.hpp
 arch/rv32/**
 arch/rv64/**
 spike
