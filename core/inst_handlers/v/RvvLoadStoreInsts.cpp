@@ -752,10 +752,11 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig config{*state->getVectorConfig()};
-        config.setLMUL(nReg * 8);
-        config.setVL(config.getVLMAX());
-        Elements<Element<elemWidth>, false> elems{state, &config,
+        auto configPtr = inst->getVecConfig();
+        configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
+        configPtr->setLMUL(nReg * 8);
+        configPtr->setVL(configPtr->getVLMAX());
+        Elements<Element<elemWidth>, false> elems{state, configPtr.get(),
                                                   isLoad ? inst->getRd() : inst->getRs3()};
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
@@ -785,10 +786,11 @@ namespace pegasus
     {
         constexpr size_t BYTESIZE = 8;
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig config{*state->getVectorConfig()};
-        config.setLMUL(1 * 8);
-        config.setVL((config.getVL() + BYTESIZE - 1) / BYTESIZE);
-        Elements<Element<BYTESIZE>, false> elems{state, &config,
+        auto configPtr = inst->getVecConfig();
+        configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
+        configPtr->setLMUL(1 * 8);
+        configPtr->setVL((configPtr->getVL() + BYTESIZE - 1) / BYTESIZE);
+        Elements<Element<BYTESIZE>, false> elems{state, configPtr.get(),
                                                  isLoad ? inst->getRd() : inst->getRs3()};
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
