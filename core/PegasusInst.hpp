@@ -59,6 +59,8 @@ namespace pegasus
 
         bool isMemoryInst() const { return extractor_info_->isMemoryInst(); }
 
+        bool isChangeOfFlowInst() const { return extractor_info_->isChangeOfFlowInst(); }
+
         bool writesCsr() const;
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
