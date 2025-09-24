@@ -16,8 +16,8 @@ from GenCSRHeaders import gen_csr_field_idxs_header
 def main():
     pegasus_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     arch_root = os.path.join(pegasus_root, 'arch')
-    rv32_root = os.path.join(arch_root, 'rv32', 'gen')
-    rv64_root = os.path.join(arch_root, 'rv64', 'gen')
+    rv32_root = os.path.join(arch_root, 'gen', 'rv32')
+    rv64_root = os.path.join(arch_root, 'gen', 'rv64')
     inc_root = os.path.join(pegasus_root, 'include')
 
     os.chdir(arch_root)
@@ -80,30 +80,18 @@ def main():
         regs.write_json(filename)
 
     # Generate Pegasus header files
-    os.chdir("..")
+    if not os.path.exists(inc_root):
+        os.makedirs(inc_root)
+    if not os.path.exists(os.path.join(inc_root, 'gen')):
+        os.makedirs(os.path.join(inc_root, 'gen'))
+
+    os.chdir(inc_root)
     csr_num_hpp = gen_csr_num_header()
     csr_helpers_hpp = gen_csr_helpers_header()
     csr_field_idxs32_hpp = gen_csr_field_idxs_header(4)
     csr_field_idxs64_hpp = gen_csr_field_idxs_header(8)
     csr_bitmasks32_hpp = gen_csr_bitmask_header(4)
     csr_bitmasks64_hpp = gen_csr_bitmask_header(8)
-
-    if not os.path.exists(inc_root):
-        os.makedirs(inc_root)
-    if not os.path.exists(os.path.join(inc_root, 'gen')):
-        os.makedirs(os.path.join(inc_root, 'gen'))
-
-    shutil.copyfile(csr_num_hpp, os.path.join(inc_root, csr_num_hpp))
-    os.remove(csr_num_hpp)
-
-    shutil.copyfile(csr_helpers_hpp, os.path.join(inc_root, csr_helpers_hpp))
-    os.remove(csr_helpers_hpp)
-
-    os.rename(csr_field_idxs32_hpp, os.path.join(inc_root, csr_field_idxs32_hpp))
-    os.rename(csr_field_idxs64_hpp, os.path.join(inc_root, csr_field_idxs64_hpp))
-
-    os.rename(csr_bitmasks32_hpp, os.path.join(inc_root, csr_bitmasks32_hpp))
-    os.rename(csr_bitmasks64_hpp, os.path.join(inc_root, csr_bitmasks64_hpp))
 
 if __name__ == "__main__":
     main()
