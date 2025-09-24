@@ -314,20 +314,17 @@ namespace pegasus
     mavis::FileNameListType PegasusState::getUArchFiles_() const
     {
         const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str;
-        const auto & supported_exts =
-            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
-        mavis::FileNameListType uarch_files;
-        for (const std::string & ext : supported_exts)
+        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str + "/gen";
+        if (xlen_ == 64)
         {
-            if (ext == "c")
-            {
-                continue;
-            }
-            uarch_files.emplace_back(xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + ext
-                                     + ".json");
+            const mavis::FileNameListType uarch_files = RV64_UARCH_JSON_LIST;
+            return uarch_files;
         }
-        return uarch_files;
+        else
+        {
+            const mavis::FileNameListType uarch_files = RV32_UARCH_JSON_LIST;
+            return uarch_files;
+        }
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)

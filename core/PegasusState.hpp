@@ -6,10 +6,10 @@
 #include "core/observers/Observer.hpp"
 
 #include "arch/RegisterSet.hpp"
-#include "arch/supportedISA.hpp"
+#include "arch/gen/supportedISA.hpp"
 #include "include/PegasusTypes.hpp"
-#include "include/CSRBitMasks64.hpp"
-#include "include/CSRHelpers.hpp"
+#include "include/gen/CSRBitMasks64.hpp"
+#include "include/gen/CSRHelpers.hpp"
 
 #include "sim/PegasusAllocators.hpp"
 
