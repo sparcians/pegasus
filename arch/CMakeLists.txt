@@ -106,13 +106,13 @@ file(GLOB DEPENDS_INST_JSON_FILES ${SIM_BASE}/scripts/insts/RV*.py)
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV32_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zabha_zihintntl_zihintpause_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
 add_custom_command(
   OUTPUT ${AUTOGEN_RV64_INST_JSON_FILES}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64imafdbv_zicsr_zifencei_zicbop_zicbom_zicboz_zicond_zcmp_zilsd_zabha_zihintntl_zihintpause_zfa
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64
   DEPENDS ${DEPENDS_INST_JSON_FILES}
 )
 
@@ -128,7 +128,7 @@ set(DEPENDS_SUPPORTED_ISA_HEADER
 
 add_custom_command(
   OUTPUT ${AUTOGEN_SUPPORTED_ISA_HEADER}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --supported-isa rv32
+  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --gen-supported-isa-header rv32
   DEPENDS ${DEPENDS_SUPPORTED_ISA_HEADER}
 )
 
