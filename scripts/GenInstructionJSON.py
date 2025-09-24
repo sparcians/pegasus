@@ -65,40 +65,14 @@ class InstJSONGenerator():
     """Generates instruction definition JSON files.
 
     Args:
-        isa_str (str): RISC-V ISA string (e.g. rv64imafd)
+        xlen (str): RISC-V XLEN string (e.g. "32" or "64")
+        extensions (list): List of supported extensions (e.g. "i", "v", "zicsr")
     """
-    def __init__(self, isa_str):
-        self.isa_str = isa_str
-
-        # Get xlen (32 or 64)
-        if "rv32" in isa_str:
-            self.xlen = 32
-            self.xlen_str = "rv32"
-        elif "rv64" in isa_str:
-            self.xlen = 64
-            self.xlen_str = "rv64"
-        else:
-            print("Invalid ISA string:", isa_str)
-            return
-
-        # Parse ISA string
-        self.extensions = []
-        isa_str = isa_str.removeprefix("rv32").removeprefix("rv64")
-        for ext in isa_str.split('_'):
-            if len(ext) == 1 or "Z" == ext[0] or "z" == ext[0]:
-                self.extensions.append(ext)
-            else:
-                for x in ext:
-                    if "g" == x:
-                        self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
-                    elif "b" == x:
-                        self.extensions.extend(['zba', 'zbb', 'zbc', 'zbs'])
-                    elif "v" == x:
-                        self.extensions.extend(['zve64x', 'zve64d', 'zve32x', 'zve32f'])
-                    else:
-                        self.extensions.append(x)
-
+    def __init__(self, xlen, extensions):
+        self.xlen = xlen
+        self.extensions = extensions
         self.isa_map = {}
+
         for ext in self.extensions:
             xlen_str = "" if "zve" in ext else str(self.xlen)
             global_str = "RV" + xlen_str + ext.upper() + "_INST"
@@ -112,11 +86,12 @@ class InstJSONGenerator():
     def write_jsons(self):
         """Write register definitions to a JSON file in the given directory"""
 
-        if not os.path.isdir(self.xlen_str):
-            os.makedirs(self.xlen_str)
+        dir_name = "rv" + self.xlen
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
 
         for ext in self.extensions:
-            filename = self.xlen_str + "/pegasus_uarch_" + self.xlen_str + ext.lower() + ".json"
+            filename = dir_name + "/pegasus_uarch_" + dir_name + ext.lower() + ".json"
             with open(filename,"w") as fh:
                 json.dump(self.isa_map[ext], fh, indent=4)
 
@@ -191,11 +166,13 @@ def main():
         gen_supported_isa_header(args.xlen, supported_rv64_exts, supported_rv32_exts)
         return
 
-    isa_string = "_".join(supported_rv64_exts) if args.xlen == "64" else "_".join(supported_rv32_exts)
-    inst_handler_gen = InstJSONGenerator(args.xlen + isa_string)
-
     # Instruction uarch jsons
-    inst_handler_gen.write_jsons()
+    if (args.xlen == "rv64"):
+        inst_handler_gen = InstJSONGenerator("64", supported_rv64_exts)
+        inst_handler_gen.write_jsons()
+    else:
+        inst_handler_gen = InstJSONGenerator("32", supported_rv32_exts)
+        inst_handler_gen.write_jsons()
 
 
 if __name__ == "__main__":
