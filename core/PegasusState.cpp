@@ -315,8 +315,16 @@ namespace pegasus
     {
         const std::string xlen_str = std::to_string(xlen_);
         const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str + "/gen";
-        const mavis::FileNameListType uarch_files = {EXTENSION_JSON_LIST};
-        return uarch_files;
+        if (xlen_ == 64)
+        {
+            const mavis::FileNameListType uarch_files = RV64_UARCH_JSON_LIST;
+            return uarch_files;
+        }
+        else
+        {
+            const mavis::FileNameListType uarch_files = RV32_UARCH_JSON_LIST;
+            return uarch_files;
+        }
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
