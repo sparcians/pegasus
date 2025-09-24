@@ -21,7 +21,7 @@
 
 namespace pegasus
 {
-    uint32_t getXlenFromIsaString_(const std::string & isa_string)
+    uint32_t getXlenFromIsaString(const std::string & isa_string)
     {
         if (isa_string.find("32") != std::string::npos)
         {
@@ -37,15 +37,41 @@ namespace pegasus
         }
     }
 
+    std::string getSupportedIsaString(uint64_t xlen, const std::string isa_string,
+                                      const std::vector<std::string> & supported_rv64_exts,
+                                      const std::vector<std::string> & supported_rv32_exts)
+    {
+        const bool enable_zcmp = isa_string.find("zcmp") != std::string::npos;
+        std::string supported_exts_str = "rv" + std::to_string(xlen);
+        const auto & supported_exts = (xlen == 64) ? supported_rv64_exts : supported_rv32_exts;
+        for (auto & ext : supported_exts)
+        {
+            if (enable_zcmp && (ext == "c"))
+            {
+                continue;
+            }
+            else if (!enable_zcmp && (ext == "zcmp"))
+            {
+                continue;
+            }
+            else
+            {
+                supported_exts_str += ext + "_";
+            }
+        }
+        return supported_exts_str;
+    }
+
     PegasusState::PegasusState(sparta::TreeNode* core_tn, const PegasusStateParameters* p) :
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
         isa_string_(p->isa_string),
         vlen_(p->vlen),
-        xlen_(getXlenFromIsaString_(isa_string_)),
-        supported_isa_string_(std::string("rv" + std::to_string(xlen_)
-                                          + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_"
-                                            "zicond_zabha_zfa_zihintntl_zihintpause")),
+        xlen_(getXlenFromIsaString(isa_string_)),
+        supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
+        supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
+        supported_isa_string_(getSupportedIsaString(xlen_, isa_string_, supported_rv64_extensions_,
+                                                    supported_rv32_extensions_)),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -289,30 +315,18 @@ namespace pegasus
     {
         const std::string xlen_str = std::to_string(xlen_);
         const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str;
-        const mavis::FileNameListType uarch_files = {
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "i.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "m.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "a.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "f.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "d.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zba.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zbb.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zbc.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zbs.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve64x.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve64d.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve32x.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zve32f.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicsr.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zifencei.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicbop.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicbom.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicboz.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zicond.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zcmp.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zabha.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zilsd.json",
-            xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + "zfa.json"};
+        const auto & supported_exts =
+            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
+        mavis::FileNameListType uarch_files;
+        for (const std::string & ext : supported_exts)
+        {
+            if (ext == "c")
+            {
+                continue;
+            }
+            uarch_files.emplace_back(xlen_uarch_file_path + "/pegasus_uarch_rv" + xlen_str + ext
+                                     + ".json");
+        }
         return uarch_files;
     }
 
