@@ -41,6 +41,7 @@ namespace pegasus
     class SimController;
     class VectorState;
     class STFLogger;
+    class STFValidator;
     class SystemCallEmulator;
     class VectorConfig;
 
@@ -65,9 +66,7 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string,
-                      "rv64gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond",
-                      "ISA string")
+            PARAMETER(std::string, isa_string, "rv64imafdcbv_zicsr_zifencei", "ISA string")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
@@ -76,6 +75,8 @@ namespace pegasus
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
+                      "STF Trace file name (when not given, STF tracing is disabled)")
+            PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
 
           private:
@@ -101,6 +102,8 @@ namespace pegasus
             return extension_manager_;
         }
 
+        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
+
         MavisType* getMavis() { return mavis_.get(); }
 
         enum MavisUIDs : mavis::InstructionUniqueID
@@ -112,8 +115,6 @@ namespace pegasus
             MAVIS_UID_CSRRSI,
             MAVIS_UID_CSRRCI
         };
-
-        std::set<std::string> & getMavisInclusions() { return inclusions_; }
 
         void changeMavisContext();
 
@@ -204,10 +205,7 @@ namespace pegasus
             system_call_emulator_ = emulator;
         }
 
-        // Emulate ecall.  This function will determine the route to
-        // send the emulation.  The return value is the return code
-        // from the call.
-        int64_t emulateSystemCall(const SystemCallStack &);
+        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -339,9 +337,6 @@ namespace pegasus
             {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
             {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
 
-        // Mavis list of included extension tags
-        std::set<std::string> inclusions_;
-
         // Instruction limit to end simulation
         const uint64_t ilimit_ = 0;
 
@@ -350,6 +345,7 @@ namespace pegasus
 
         // STF Trace Filename
         const std::string stf_filename_;
+        const std::string validation_stf_filename_;
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
@@ -435,6 +431,9 @@ namespace pegasus
 
         // MessageSource used for InstructionLogger
         sparta::log::MessageSource inst_logger_;
+
+        // MessageSource used for STFValidator
+        sparta::log::MessageSource stf_valid_logger_;
 
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;

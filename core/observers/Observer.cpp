@@ -2,7 +2,7 @@
 #include "include/PegasusUtils.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
-
+#include "core/VecConfig.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
@@ -108,7 +108,7 @@ namespace pegasus
                                  const sparta::Register::PostWriteAccess & data)
     {
         const auto csr_reg = data.reg;
-        const auto csr_num = csr_reg->getGroupIdx();
+        const auto csr_num = csr_reg->getID();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
 
         const uint64_t final_value = (csr_reg->getNumBits() == 64) ? data.final->read<uint64_t>()
@@ -135,7 +135,7 @@ namespace pegasus
                                 const sparta::Register::ReadAccess & data)
     {
         const auto csr_reg = data.reg;
-        const auto csr_num = csr_reg->getGroupIdx();
+        const auto csr_num = csr_reg->getID();
         const RegId reg_id{(RegType)csr_reg->getGroupNum(), csr_num, csr_reg->getName()};
         if ((csr_reads_.find(csr_num) == csr_reads_.end())
             && (csr_writes_.find(csr_num) == csr_writes_.end()))
@@ -189,10 +189,64 @@ namespace pegasus
         mem_reads_.push_back(mem_read);
     }
 
+    std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state, RegId reg_id) const
+    {
+        const uint32_t vlen_bits = state->getVectorConfig()->getVLEN();
+        const uint32_t sew_bits = state->getVectorConfig()->getSEW();
+
+        std::vector<uint64_t> raw(vlen_bits / sew_bits);
+        switch (vlen_bits)
+        {
+            case 128:
+                {
+                    using VLEN = std::array<uint64_t, 2>;
+                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    raw.assign(vec.begin(), vec.end());
+                    break;
+                }
+            case 256:
+                {
+                    using VLEN = std::array<uint64_t, 4>;
+                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    raw.assign(vec.begin(), vec.end());
+                    break;
+                }
+            case 512:
+                {
+                    using VLEN = std::array<uint64_t, 8>;
+                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    raw.assign(vec.begin(), vec.end());
+                    break;
+                }
+            case 1024:
+                {
+                    using VLEN = std::array<uint64_t, 16>;
+                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    raw.assign(vec.begin(), vec.end());
+                    break;
+                }
+            default:
+                sparta_assert(false, "Unsupported VLEN size: " + std::to_string(vlen_bits));
+        }
+
+        return raw;
+    }
+
+    std::string Observer::formatVectorHex(const std::vector<uint64_t> & vec)
+    {
+        std::ostringstream oss;
+        for (const auto & val : vec)
+        {
+            oss << std::hex << val;
+        }
+        return oss.str();
+    }
+
     std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
     {
         os << "0x"
            << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
         return os;
     }
+
 } // namespace pegasus

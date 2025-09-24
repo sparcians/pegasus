@@ -18,6 +18,8 @@ namespace pegasus
     using RV32 = uint32_t;
     using RV64 = uint64_t;
 
+    using B = uint8_t;
+    using H = uint16_t;
     using W = uint32_t;
     using D = uint64_t;
 
@@ -39,10 +41,10 @@ namespace pegasus
 
     enum class RegType
     {
-        INTEGER,
-        FLOATING_POINT,
-        VECTOR,
-        CSR,
+        INTEGER = 1,
+        FLOATING_POINT = 2,
+        VECTOR = 3,
+        CSR = 4,
         INVALID
     };
 

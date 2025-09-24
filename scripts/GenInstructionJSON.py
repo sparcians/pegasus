@@ -46,12 +46,23 @@ from insts.RVZCMP_INST import RV32ZCMP_INST
 from insts.RVZCMP_INST import RV64ZCMP_INST
 from insts.RVZCA_INST import RV32ZCA_INST
 from insts.RVZCA_INST import RV64ZCA_INST
+from insts.RVZABHA_INST import RV32ZABHA_INST
+from insts.RVZABHA_INST import RV64ZABHA_INST
+from insts.RVZILSD_INST import RV32ZILSD_INST
+from insts.RVZILSD_INST import RV64ZILSD_INST
+from insts.RVZFA_INST import RV32ZFA_INST
+from insts.RVZFA_INST import RV64ZFA_INST
 
 from insts.RVZVE64X_INST import RVZVE64X_INST
 from insts.RVZVE64D_INST import RVZVE64D_INST
 from insts.RVZVE64F_INST import RVZVE64F_INST
 from insts.RVZVE32X_INST import RVZVE32X_INST
 from insts.RVZVE32F_INST import RVZVE32F_INST
+
+from insts.RVZIHINTNTL_INST import RV32ZIHINTNTL_INST         # Zihintntl
+from insts.RVZIHINTNTL_INST import RV64ZIHINTNTL_INST         # Zihintntl
+from insts.RVZIHINTPAUSE_INST import RV32ZIHINTPAUSE_INST     # Zihintpause
+from insts.RVZIHINTPAUSE_INST import RV64ZIHINTPAUSE_INST     # Zihintpause
 
 class InstJSONGenerator():
     """Generates instruction definition JSON files.

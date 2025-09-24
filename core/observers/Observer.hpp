@@ -83,13 +83,33 @@ namespace pegasus
                 static_assert(std::is_standard_layout_v<TYPE>);
                 static_assert(std::is_integral_v<TYPE>);
                 const size_t num_bytes = sizeof(TYPE);
-                assert((offset + num_bytes) < value_.size());
+                assert((offset + num_bytes) <= value_.size());
                 TYPE val = 0;
                 for (size_t i = offset; i < num_bytes; ++i)
                 {
                     val |= static_cast<TYPE>(value_[i]) << (i * 8);
                 }
                 return val;
+            }
+
+            template <typename TYPE> std::vector<TYPE> getValueVector() const
+            {
+                static_assert(std::is_trivial_v<TYPE>);
+                static_assert(std::is_standard_layout_v<TYPE>);
+                static_assert(std::is_integral_v<TYPE>);
+
+                const size_t type_size = sizeof(TYPE);
+                assert(value_.size() % type_size == 0);
+
+                std::vector<TYPE> result;
+                result.reserve(value_.size() / type_size);
+
+                for (size_t offset = 0; offset < value_.size(); offset += type_size)
+                {
+                    result.push_back(getValue<TYPE>(offset));
+                }
+
+                return result;
             }
 
             size_t size() const { return value_.size(); }
@@ -203,6 +223,28 @@ namespace pegasus
         // Exception cause
         sparta::utils::ValidValue<FaultCause> fault_cause_;
         sparta::utils::ValidValue<InterruptCause> interrupt_cause_;
+
+        template <typename T> T readScalarRegister_(PegasusState* state, RegId reg_id) const
+        {
+            switch (reg_id.reg_type)
+            {
+                case RegType::INTEGER:
+                    return READ_INT_REG<T>(state, reg_id.reg_num);
+                    break;
+                case RegType::FLOATING_POINT:
+                    return READ_FP_REG<T>(state, reg_id.reg_num);
+                    break;
+                case RegType::CSR:
+                    return READ_CSR_REG<T>(state, reg_id.reg_num);
+                    break;
+                default:
+                    sparta_assert(false, "Invalid register type!");
+            }
+        }
+
+        std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
+
+        std::string formatVectorHex(const std::vector<uint64_t> & vec);
 
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;

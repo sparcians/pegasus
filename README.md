@@ -89,6 +89,7 @@ Install the following packages (tested with Ubuntu 24.04):
 
 - (apt-get install cmake) cmake v3.22
 - (apt-get install clang) Clang, Version: 14.0.0
+- (apt-get install lld) LLD 18.1.8
 - (apt-get install libboost-all-dev) boost 1.74.0
 - (apt-get install libyaml-cpp-dev) YAML CPP 0.7.0
 - (apt-get install rapidjson-dev) RapidJSON CPP 1.1.0
@@ -192,7 +193,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Ziccamoa** Main memory regions with both the cacheability and coherence PMAs must support all atomics in A. | :x: |
 | **Zicclsm** Misaligned loads and stores to main memory regions with both the cacheability and coherence PMAs must be supported. | :x: |
 | **Za64rs** Reservation sets are contiguous, naturally aligned, and a maximum of 64 bytes. | :x: |
-| **Zihintpause** Pause hint. | :x: |
+| **Zihintpause** Pause hint. | :white_check_mark: |
 | **Zic64b** Cache blocks must be 64 bytes in size, naturally aligned in the address space. | :x: |
 | **Zicbom** Cache-block management instructions. | :white_check_mark: |
 | **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
@@ -203,12 +204,12 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
 | **Zvbb** Vector basic bit-manipulation instructions. | :x: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
-| **Zihintntl** Non-temporal locality hints. | :x: |
+| **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
 | **Zicond** Integer conditional operations. | :white_check_mark: |
 | **Zimop** may-be-operations. | :x: |
 | **Zcmop** Compressed may-be-operations. | :x: |
 | **Zcb** Additional compressed instructions. | :white_check_mark: |
-| **Zfa** Additional floating-Point instructions. | :x: |
+| **Zfa** Additional floating-Point instructions. | :white_check_mark: |
 | **Zawrs** Wait-on-reservation-set instructions. | :x: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
@@ -217,7 +218,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | :---------------------------- | :----: |
 | **Zvkng** Vector crypto NIST algorithms with GCM. | :x: |
 | **Zvksg** Vector crypto ShangMi algorithms with GCM. | :x: |
-| **Zabha** Byte and halfword atomic memory operations. | :x: |
+| **Zabha** Byte and halfword atomic memory operations. | :white_check_mark: |
 | **Zacas** Compare-and-Swap instructions. | :x: |
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
 | **Zvbc** Vector carryless multiplication. | :x: |
@@ -240,7 +241,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Svade** Page-fault exceptions are raised when a page is accessed when A bit is clear, or written when D bit is clear. | :x: |
 | **Ssccptr** Main memory regions with both the cacheability and coherence PMAs must support hardware page-table reads. | :x: |
 | **Sstvecd** stvec.MODE must be capable of holding the value 0 (Direct). When stvec.MODE=Direct, stvec.BASE must be capable of holding any valid four-byte-aligned address. | :x: |
-| **Sstvala** stval must be written with the faulting virtual address for load, store, and instruction page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other than those caused by execution of the EBREAK or C.EBREAK instructions. For virtual-instruction and illegal-instruction exceptions, stval must be written with the faulting instruction. | :x: |
+| **Sstvala** stval must be written with the faulting virtual address for load, store, and instruction page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other than those caused by execution of the EBREAK or C.EBREAK instructions. For virtual-instruction and illegal-instruction exceptions, stval must be written with the faulting instruction. | :white_check_mark: |
 | **Sscounterenw** For any hpmcounter that is not read-only zero, the corresponding bit in scounteren must be writable. | :x: |
 | **Svpbmt** Page-based memory types
 | **Svinval** Fine-grained address-translation cache invalidation. | :x: |

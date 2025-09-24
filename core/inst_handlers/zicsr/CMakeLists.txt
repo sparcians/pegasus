@@ -6,3 +6,4 @@ add_library(rvzicsr
     ${SOURCES}
 )
 add_dependencies(rvzicsr AutogenArchFiles)
+target_link_libraries(rvzicsr PUBLIC pegasuslibs)

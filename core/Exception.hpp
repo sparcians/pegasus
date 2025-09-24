@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bitset>
+
 #include "core/ActionGroup.hpp"
 #include "core/Trap.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
@@ -24,6 +26,29 @@ namespace pegasus
         {
           public:
             ExceptionParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+
+            PARAMETER(uint64_t, unexpected_faults, 0x0, R"(Unexpected faults bitmask.
+            Mask to set for the given code:
+
+                 Exception (Code)                 |  Mask
+                 ---------------------------------|--------
+                 INST_ADDR_MISALIGNED      (0)        0x000001
+                 INST_ACCESS               (1)        0x000002
+                 ILLEGAL_INST              (2)        0x000004
+                 BREAKPOINT                (3)        0x000008
+                 LOAD_ADDR_MISALIGNED      (4)        0x000010
+                 LOAD_ACCESS               (5)        0x000020
+                 STORE_AMO_ADDR_MISALIGNED (6)        0x000040
+                 STORE_AMO_ACCESS          (7)        0x000080
+                 USER_ECALL                (8)        0x000100
+                 SUPERVISOR_ECALL          (9)        0x000200
+                 MACHINE_ECALL             (11)       0x000800
+                 INST_PAGE_FAULT           (12)       0x001000
+                 LOAD_PAGE_FAULT           (13)       0x002000
+                 STORE_AMO_PAGE_FAULT      (15)       0x008000
+                 SOFTWARE_CHECK            (18)       0x040000
+                 HARDWARE_ERROR            (19)       0x080000
+)")
         };
 
         Exception(sparta::TreeNode* exception_node, const ExceptionParameters* p);
@@ -46,6 +71,8 @@ namespace pegasus
 
       private:
         void onBindTreeEarly_() override;
+
+        const std::bitset<sizeof(uint64_t) * 8> unexpected_faults_;
 
         template <typename XLEN>
         Action::ItrType handleException_(pegasus::PegasusState* state, Action::ItrType action_it);

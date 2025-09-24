@@ -11,14 +11,13 @@
 #include "core/observers/SimController.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
+#include "core/observers/STFValidator.hpp"
 
 #include "mavis/mavis/Mavis.h"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
-
-#include "system/SystemCallEmulator.hpp"
 
 namespace pegasus
 {
@@ -44,9 +43,9 @@ namespace pegasus
         isa_string_(p->isa_string),
         vlen_(p->vlen),
         xlen_(getXlenFromIsaString_(isa_string_)),
-        supported_isa_string_(
-            std::string("rv" + std::to_string(xlen_)
-                        + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_zicond")),
+        supported_isa_string_(std::string("rv" + std::to_string(xlen_)
+                                          + "gbv_zicsr_zifencei_zca_zcd_zcb_zicbop_zicbom_zicboz_"
+                                            "zicond_zabha_zfa_zihintntl_zihintpause")),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
@@ -56,9 +55,11 @@ namespace pegasus
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
+        validation_stf_filename_(p->validate_with_stf),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Pegasus Instruction Logger"),
+        stf_valid_logger_(core_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -145,12 +146,14 @@ namespace pegasus
                     sparta::notNull(PegasusAllocators::getAllocators(core_tn))->extractor_allocator,
                     this)));
 
-        // FIXME: Extension manager should maintain inclusions
-        for (auto & ext : extension_manager_.getEnabledExtensions())
+        if (isCompressionEnabled())
         {
-            inclusions_.emplace(ext.first);
+            setPcAlignment_(2);
         }
-        inclusions_.erase("g");
+        else
+        {
+            setPcAlignment_(4);
+        }
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
@@ -217,6 +220,20 @@ namespace pegasus
             addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
         }
 
+        if (!validation_stf_filename_.empty())
+        {
+            if (xlen_ == 64)
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64,
+                                                           pc_, validation_stf_filename_));
+            }
+            else
+            {
+                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32,
+                                                           pc_, validation_stf_filename_));
+            }
+        }
+
         for (auto & obs : observers_)
         {
             obs->registerReadWriteMemCallbacks(pegasus_system_->getSystemMemory());
@@ -229,20 +246,9 @@ namespace pegasus
 
     void PegasusState::changeMavisContext()
     {
-        const mavis::MatchSet<mavis::Pattern> inclusions{inclusions_};
-        const std::string context_name =
-            std::accumulate(inclusions_.begin(), inclusions_.end(), std::string(""));
-        if (mavis_->hasContext(context_name) == false)
-        {
-            DLOG("Creating new Mavis context: " << context_name);
-            mavis_->makeContext(context_name, extension_manager_.getJSONs(), getUArchFiles_(),
-                                mavis_uid_list_, {}, inclusions, {});
-        }
-        DLOG("Changing Mavis context: " << context_name);
-        mavis_->switchContext(context_name);
+        extension_manager_.switchMavisContext(*mavis_.get());
 
-        const bool compression_enabled = inclusions_.contains("c");
-        if (compression_enabled)
+        if (isCompressionEnabled())
         {
             setPcAlignment_(2);
         }
@@ -287,12 +293,6 @@ namespace pegasus
               EXTENSION_JSON_LIST
             };
         return uarch_files;
-    }
-
-    int64_t PegasusState::emulateSystemCall(const SystemCallStack & call_stack)
-    {
-        return system_call_emulator_->emulateSystemCall(call_stack,
-                                                        pegasus_system_->getSystemMemory());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -354,7 +354,7 @@ namespace pegasus
         for (char ext = 'a'; ext <= 'z'; ++ext)
         {
             const std::string ext_str = std::string(1, ext);
-            if (inclusions_.contains(ext_str))
+            if (extension_manager_.isEnabled(ext_str))
             {
                 ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
             }

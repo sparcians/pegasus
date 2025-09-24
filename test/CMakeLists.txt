@@ -1,4 +1,4 @@
-project(Pegasus_Tests)
+project(Pegasus_Tests CXX)
 
 # Enable testing
 include(CTest)
@@ -31,6 +31,7 @@ add_custom_command(TARGET pegasus_regress_valgrind POST_BUILD COMMAND ctest -R $
 # Tests
 add_subdirectory(actions)
 add_subdirectory(core)
+add_subdirectory(vector)
 add_subdirectory(sim)
 add_subdirectory(register)
 add_subdirectory(cosim)

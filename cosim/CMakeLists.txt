@@ -10,11 +10,6 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 
 target_link_libraries(pegasuscosimlib
     pegasussim
-    pegasuscore
-    pegasusinsts
-    softfloat
-    pegasussys
-    ${PEGASUS_LIBS}
     Boost::serialization
 )
 
