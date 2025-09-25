@@ -60,14 +60,14 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}, Rm::rtz>,
+                    FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.rtz.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_i32, f64_to_i64}, Rm::rtz>,
+                    FloatFuncs{nullptr, f32_to_i32, f64_to_i64}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.f.xu.v",
@@ -103,14 +103,14 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_ui32, f32_to_ui64, nullptr}, Rm::rtz>,
+                    FloatFuncs{f16_to_ui32, f32_to_ui64, nullptr}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfwcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.rtz.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_i32, f32_to_i64, nullptr}, Rm::rtz>,
+                    FloatFuncs{f16_to_i32, f32_to_i64, nullptr}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfwcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.f.xu.v",
@@ -153,14 +153,14 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_ui32, nullptr}, Rm::rtz>,
+                    FloatFuncs{nullptr, f64_to_ui32, nullptr}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_i32, nullptr}, Rm::rtz>,
+                    FloatFuncs{nullptr, f64_to_i32, nullptr}, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.xu.w",
@@ -188,7 +188,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{f32_to_f16, f64_to_f32, nullptr}, Rm::rod>,
+                    FloatFuncs{f32_to_f16, f64_to_f32, nullptr}, RoundingMode::ODD>,
                 RvvFloatInsts>(nullptr, "vfncvt.rod.f.f.w", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -909,7 +909,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RvvFloatInsts::Rm rm>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RoundingMode rm>
     Action::ItrType vfUnaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
@@ -918,7 +918,7 @@ namespace pegasus
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode =
-            (rm == RvvFloatInsts::Rm::rod)
+            (rm == RoundingMode::ODD)
                 ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_odd)
                 : READ_CSR_REG<XLEN>(state, FRM);
 
@@ -950,8 +950,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
-              RvvFloatInsts::Rm rm>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs, RoundingMode rm>
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
@@ -992,7 +991,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RvvFloatInsts::Rm rm>
+    template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RoundingMode rm>
     Action::ItrType vfFloatToIntHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         using Traits = FuncTraits<decltype(func)>;
@@ -1005,7 +1004,7 @@ namespace pegasus
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
             elems_vd{state, state->getVectorConfig(), inst->getRd()};
         softfloat_roundingMode =
-            (rm == RvvFloatInsts::Rm::rtz)
+            (rm == RoundingMode::MINMAG)
                 ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_minMag)
                 : READ_CSR_REG<XLEN>(state, FRM);
 
@@ -1039,8 +1038,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
-              RvvFloatInsts::Rm rm>
+    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs, RoundingMode rm>
     Action::ItrType RvvFloatInsts::vfFloatToIntHandler_(pegasus::PegasusState* state,
                                                         Action::ItrType action_it)
     {

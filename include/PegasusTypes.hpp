@@ -112,6 +112,17 @@ namespace pegasus
         INVALID
     };
 
+    enum class RoundingMode
+    {
+        EVEN = 0,
+        MINMAG = 1,
+        MIN = 2,
+        MAX = 3,
+        MAXMAG = 4,
+        ODD = 6,
+        DYN
+    };
+
     static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
 
     inline std::ostream & operator<<(std::ostream & os, const MMUMode mode)
