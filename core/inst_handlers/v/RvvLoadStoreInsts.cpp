@@ -752,7 +752,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto configPtr = inst->getVecConfig();
+        auto & configPtr = inst->getVecConfig();
         configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
         configPtr->setLMUL(nReg * 8);
         configPtr->setVL(configPtr->getVLMAX());
@@ -786,7 +786,7 @@ namespace pegasus
     {
         constexpr size_t BYTESIZE = 8;
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto configPtr = inst->getVecConfig();
+        auto & configPtr = inst->getVecConfig();
         configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
         configPtr->setLMUL(1 * 8);
         configPtr->setVL((configPtr->getVL() + BYTESIZE - 1) / BYTESIZE);

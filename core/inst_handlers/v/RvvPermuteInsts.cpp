@@ -563,7 +563,7 @@ namespace pegasus
     Action::ItrType vmvrHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto configPtr = inst->getVecConfig();
+        auto & configPtr = inst->getVecConfig();
         configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
         configPtr->setLMUL(nReg * 8);
         configPtr->setVL(configPtr->getVLMAX());
