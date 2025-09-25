@@ -39,13 +39,15 @@ namespace pegasus
         Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, FloatFuncs funcs,
+                  RoundingMode rm = RoundingMode::DYN>
         Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
         // FloatToInt is implemented seperately from Unary becuase functions in softfloat have 3
         // arguments instead of 1.
-        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
+                  RoundingMode rm = RoundingMode::DYN>
         Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it);
 

@@ -28,6 +28,8 @@ namespace pegasus
 
         explicit VectorConfig(const VectorConfig &) = default;
 
+        VectorConfig & operator=(const VectorConfig &) = default;
+
         // member accessors
 
         size_t getVLEN() const { return vlen_; }

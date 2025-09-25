@@ -1,5 +1,6 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusState.hpp"
+#include "core/VecConfig.hpp"
 
 namespace pegasus
 {
@@ -55,6 +56,8 @@ namespace pegasus
         inst_action_group_(extractor_info_->inst_action_group_)
     {
     }
+
+    PegasusInst::~PegasusInst() = default;
 
     bool PegasusInst::writesCsr() const
     {
