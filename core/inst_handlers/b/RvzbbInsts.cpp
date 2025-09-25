@@ -36,7 +36,7 @@ namespace pegasus
                        nullptr, "ctz", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "max",
-            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV64, Max<SXLEN>>,
+            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Max<SXLEN>>,
                                           RvzbInstsBase>(nullptr, "max", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "maxu",
@@ -45,7 +45,7 @@ namespace pegasus
                                                       ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "min",
-            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV64, Min<SXLEN>>,
+            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV32, Min<SXLEN>>,
                                           RvzbInstsBase>(nullptr, "min", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "minu",
