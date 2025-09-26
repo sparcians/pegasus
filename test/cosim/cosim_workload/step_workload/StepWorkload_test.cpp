@@ -46,11 +46,7 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
 
             // Sleep a bit to get some cache misses
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            for (auto & validator : event_validators_)
-            {
-                validator.validate();
-                validation_attempted_ = true;
-            }
+            runValidators_();
         }
 
         // Sometimes trim the validators
@@ -66,6 +62,13 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
                 event_validators_.pop_back();
             }
         }
+    }
+
+    void postFinish()
+    {
+        // Validate any remaining events. At minimum, this will force the
+        // events to be retrieved from disk.
+        runValidators_(true);
     }
 
   private:
@@ -89,18 +92,31 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
 
         /// Request our event from the pipeline while threads are running,
         /// and verify against the original event given to our constructor.
-        void validate()
+        void validate(bool ensure_db_validation = false)
         {
             auto accessor =
                 cosim_pipeline_->getEvent(event_truth_.getEuid(), event_truth_.getHartId());
             auto event = *accessor.get();
             EXPECT_EQUAL(event, event_truth_);
+
+            if (ensure_db_validation) {
+                EXPECT_TRUE(accessor.getNumFromDisk() > 0);
+            }
         }
 
       private:
         pegasus::cosim::Event event_truth_;
         pegasus::cosim::CoSimPipeline* cosim_pipeline_ = nullptr;
     };
+
+    void runValidators_(bool ensure_db_validation = false)
+    {
+        validation_attempted_ = true;
+        for (auto & validator : event_validators_)
+        {
+            validator.validate(ensure_db_validation);
+        }
+    }
 
     std::vector<EventValidator> event_validators_;
     pegasus::cosim::CoSimPipeline* cosim_pipeline_ = nullptr;
@@ -138,7 +154,13 @@ void stepCoSimWorkload(const std::string & workload)
         }
     }
 
+    // Shutdown pipeline
     cosim.finish();
+    EXPECT_EQUAL(cosim.getCoSimPipeline()->getNumCached(hart_id), 0);
+
+    // Force validation of DB-recreated events (test is not guaranteed to
+    // have done this yet if the test runs too fast or has too few events).
+    evt_validator.postFinish();
 
     auto state = cosim.getPegasusState(hart_id);
     auto sim_state = state->getSimState();

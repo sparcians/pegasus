@@ -12,3 +12,11 @@ IDE/backend/__pycache__/**
 IDE/editor/__pycache__/**
 .spike_commit_log
 gen/
+include/CSRBitMasks32.hpp
+include/CSRBitMasks64.hpp
+include/CSRFieldIdxs32.hpp
+include/CSRFieldIdxs64.hpp
+CSRHelpers.hpp
+CSRNums.hpp
+arch/rv32/**
+arch/rv64/**

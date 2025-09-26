@@ -97,6 +97,10 @@ namespace pegasus::cosim
         /// Called after the pipeline threads have been flushed and destroyed.
         void postTeardown() override;
 
+        /// Check if the given hart's pipeline has any events cached.
+        /// Used for testing only.
+        size_t getNumCached(HartId hart_id = 0) const;
+
       private:
         friend class EventAccessor;
 
@@ -111,7 +115,10 @@ namespace pegasus::cosim
         class CoSimHartPipeline
         {
           public:
-            CoSimHartPipeline(simdb::pipeline::AsyncDatabaseAccessor* async_eval, HartId hart_id) :
+            CoSimHartPipeline(simdb::DatabaseManager* db_mgr,
+                              simdb::pipeline::AsyncDatabaseAccessor* async_eval,
+                              HartId hart_id) :
+                db_mgr_(db_mgr),
                 async_eval_(async_eval),
                 hart_id_(hart_id)
             {
@@ -145,7 +152,14 @@ namespace pegasus::cosim
             /// Prints metrics about cache/disk retrieval to stdout.
             void postTeardown();
 
+            /// Check if the given hart's pipeline has any events cached.
+            /// Used for testing only.
+            size_t getNumCached() const;
+
           private:
+            /// SimDB instance.
+            simdb::DatabaseManager* db_mgr_ = nullptr;
+
             /// Async DB query object.
             simdb::pipeline::AsyncDatabaseAccessor* async_eval_ = nullptr;
 
@@ -167,6 +181,9 @@ namespace pegasus::cosim
             /// Metrics to print out usage and performance to stdout.
             mutable size_t num_evts_retrieved_from_cache_ = 0;
             simdb::RunningMean avg_microseconds_recreating_evts_;
+
+            /// Flag to let us know if the AsyncDatabaseAccessor can be used.
+            bool torn_down_ = false;
 
             friend class CoSimPipeline;
         };
