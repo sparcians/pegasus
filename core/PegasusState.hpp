@@ -6,9 +6,10 @@
 #include "core/observers/Observer.hpp"
 
 #include "arch/RegisterSet.hpp"
+#include "arch/gen/supportedISA.hpp"
 #include "include/PegasusTypes.hpp"
-#include "include/CSRBitMasks64.hpp"
-#include "include/CSRHelpers.hpp"
+#include "include/gen/CSRBitMasks64.hpp"
+#include "include/gen/CSRHelpers.hpp"
 
 #include "sim/PegasusAllocators.hpp"
 
@@ -65,7 +66,7 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, "rv64imafdcbv_zicsr_zifencei", "ISA string")
+            PARAMETER(std::string, isa_string, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
@@ -204,10 +205,7 @@ namespace pegasus
             system_call_emulator_ = emulator;
         }
 
-        // Emulate ecall.  This function will determine the route to
-        // send the emulation.  The return value is the return code
-        // from the call.
-        int64_t emulateSystemCall(const SystemCallStack &);
+        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -312,6 +310,8 @@ namespace pegasus
         uint64_t xlen_ = 64;
 
         // Supported ISA string
+        const std::vector<std::string> supported_rv64_extensions_;
+        const std::vector<std::string> supported_rv32_extensions_;
         const std::string supported_isa_string_;
 
         template <typename XLEN> uint32_t getMisaExtFieldValue_() const;

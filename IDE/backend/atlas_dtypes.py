@@ -263,7 +263,7 @@ class CSR:
         assert isinstance(self.csr_value, uint64_t), f"Invalid type for CSR value: {type(csr_val)}"
 
         pegasus_root = os.path.join(os.path.dirname(__file__), '..', '..')
-        csr_json = os.path.join(pegasus_root, 'arch', 'rv'+str(xlen), 'reg_csr.json')
+        csr_json = os.path.join(pegasus_root, 'arch', 'rv'+str(xlen), 'gen', 'reg_csr.json')
 
         csr_defn = None
         with open(csr_json, 'r') as fin:

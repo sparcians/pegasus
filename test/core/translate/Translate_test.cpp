@@ -4,7 +4,7 @@
 #include "core/translate/PageTable.hpp"
 
 #include "include/PegasusTypes.hpp"
-#include "include/CSRNums.hpp"
+#include "include/gen/CSRNums.hpp"
 
 #include <bitset>
 #include "sparta/utils/SpartaTester.hpp"

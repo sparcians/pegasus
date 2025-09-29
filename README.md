@@ -89,6 +89,7 @@ Install the following packages (tested with Ubuntu 24.04):
 
 - (apt-get install cmake) cmake v3.22
 - (apt-get install clang) Clang, Version: 14.0.0
+- (apt-get install lld) LLD 18.1.8
 - (apt-get install libboost-all-dev) boost 1.74.0
 - (apt-get install libyaml-cpp-dev) YAML CPP 0.7.0
 - (apt-get install rapidjson-dev) RapidJSON CPP 1.1.0
