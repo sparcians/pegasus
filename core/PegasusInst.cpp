@@ -3,7 +3,8 @@
 
 namespace pegasus
 {
-    const PegasusExtractorPtr testExtractorPointer(const PegasusExtractorPtr& extractor_info, const std::string& mnemonic)
+    const PegasusExtractorPtr testExtractorPointer(const PegasusExtractorPtr & extractor_info,
+                                                   const std::string & mnemonic)
     {
         sparta_assert(extractor_info, "Invalid PegasusExtractor pointer! " << mnemonic);
         return extractor_info;
