@@ -3,6 +3,19 @@
 
 namespace pegasus
 {
+    const PegasusExtractorPtr testExtractorPointer(const PegasusExtractorPtr & extractor_info,
+                                                   const std::string & mnemonic)
+    {
+        sparta_assert(extractor_info, "Invalid PegasusExtractor pointer! " << mnemonic);
+        return extractor_info;
+    }
+
+    uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)
+    {
+        return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED
+                   ? opcode_info->getSignedOffset()
+                   : opcode_info->getImmediate();
+    }
 
     template <mavis::InstMetaData::OperandFieldID OperandFieldId>
     const mavis::OperandInfo::Element*
@@ -23,17 +36,10 @@ namespace pegasus
         }
     }
 
-    uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)
-    {
-        return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED
-                   ? opcode_info->getSignedOffset()
-                   : opcode_info->getImmediate();
-    }
-
     PegasusInst::PegasusInst(const mavis::OpcodeInfo::PtrType & opcode_info,
                              const PegasusExtractorPtr & extractor_info, PegasusState* state) :
         opcode_info_(opcode_info),
-        extractor_info_(extractor_info),
+        extractor_info_(testExtractorPointer(extractor_info, getMnemonic())),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
         is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
         immediate_value_(getImmediateValue(opcode_info)),
