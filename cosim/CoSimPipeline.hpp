@@ -116,8 +116,7 @@ namespace pegasus::cosim
         {
           public:
             CoSimHartPipeline(simdb::DatabaseManager* db_mgr,
-                              simdb::pipeline::AsyncDatabaseAccessor* async_eval,
-                              HartId hart_id) :
+                              simdb::pipeline::AsyncDatabaseAccessor* async_eval, HartId hart_id) :
                 db_mgr_(db_mgr),
                 async_eval_(async_eval),
                 hart_id_(hart_id)

@@ -41,7 +41,8 @@ namespace pegasus::cosim
 
         for (HartId hart_id = 0; hart_id < hart_pipelines_.capacity(); ++hart_id)
         {
-            hart_pipelines_.emplace_back(std::make_unique<CoSimHartPipeline>(db_mgr_, db_accessor, hart_id));
+            hart_pipelines_.emplace_back(
+                std::make_unique<CoSimHartPipeline>(db_mgr_, db_accessor, hart_id));
             auto hart_pipeline = hart_pipelines_.at(hart_id).get();
 
             pipeline_input_queues_.emplace_back(std::make_unique<simdb::ConcurrentQueue<Event>>());
@@ -68,7 +69,8 @@ namespace pegasus::cosim
 
             // Run the events through a 100-to-1 buffer
             constexpr bool flush_partial = true;
-            auto source_buffer = simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(100, flush_partial);
+            auto source_buffer =
+                simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(100, flush_partial);
 
             // Pre-validated "range" of events (euid auto-inc by 1 in the event vector)
             using ConvertToRangeFunction = simdb::pipeline::Function<EventBuffer, EventsRange>;

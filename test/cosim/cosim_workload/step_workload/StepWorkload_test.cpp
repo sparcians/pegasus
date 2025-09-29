@@ -99,7 +99,8 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
             auto event = *accessor.get();
             EXPECT_EQUAL(event, event_truth_);
 
-            if (ensure_db_validation) {
+            if (ensure_db_validation)
+            {
                 EXPECT_TRUE(accessor.getNumFromDisk() > 0);
             }
         }
