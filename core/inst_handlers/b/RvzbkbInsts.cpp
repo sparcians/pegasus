@@ -30,7 +30,7 @@ namespace pegasus
         {
             inst_handlers.emplace(
                 "packw", pegasus::Action::createAction<
-                           &RvzbkbInsts::binaryOpHandler_<RV64, Packw<XLEN>>, RvzbInstsBase>(
+                           &RvzbkbInsts::binaryOpHandler_<XLEN, Packw<XLEN>>, RvzbInstsBase>(
                            nullptr, "packw", ActionTags::EXECUTE_TAG));
         }
 
@@ -43,12 +43,12 @@ namespace pegasus
         {
             inst_handlers.emplace(
                 "unzip", pegasus::Action::createAction<
-                           &RvzbkbInsts::unaryOpHandler_<RV32, Unzip<XLEN>>, RvzbInstsBase>(
+                           &RvzbkbInsts::unaryOpHandler_<XLEN, Unzip<XLEN>>, RvzbInstsBase>(
                            nullptr, "unzip", ActionTags::EXECUTE_TAG));
 
             inst_handlers.emplace(
                 "zip", pegasus::Action::createAction<
-                           &RvzbkbInsts::unaryOpHandler_<RV32, Zip<XLEN>>, RvzbInstsBase>(
+                           &RvzbkbInsts::unaryOpHandler_<XLEN, Zip<XLEN>>, RvzbInstsBase>(
                            nullptr, "zip", ActionTags::EXECUTE_TAG));
         }
 
