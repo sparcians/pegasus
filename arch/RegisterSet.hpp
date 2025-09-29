@@ -3,7 +3,7 @@
 #include "sparta/functional/RegisterSet.hpp"
 #include "arch/RegisterDefnsJSON.hpp"
 #include "include/PegasusTypes.hpp"
-#include "include/CSRBitMasks64.hpp"
+#include "include/gen/CSRBitMasks64.hpp"
 
 namespace pegasus
 {

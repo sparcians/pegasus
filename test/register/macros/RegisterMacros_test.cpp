@@ -1,7 +1,7 @@
 #include "sim/PegasusSim.hpp"
 #include "core/PegasusState.hpp"
 #include "include/PegasusTypes.hpp"
-#include "include/CSRNums.hpp"
+#include "include/gen/CSRNums.hpp"
 #include "include/IntNums.hpp"
 #include "include/FpNums.hpp"
 #include "include/VecNums.hpp"

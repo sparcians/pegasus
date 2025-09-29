@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.30)
 
+project(Pegasus C CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT DEFINED CMAKE_C_COMPILER)
-    set(CMAKE_C_COMPILER "clang")
+if(NOT DEFINED ENV{CC})
+    find_program(CMAKE_C_COMPILER "clang")
 endif()
 
-if(NOT DEFINED CMAKE_CXX_COMPILER)
-    set(CMAKE_CXX_COMPILER "clang++")
+if(NOT DEFINED ENV{CXX})
+    find_program(CMAKE_CXX_COMPILER "clang++")
 endif()
 
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
-project(Pegasus CXX)
 set (SIM_BASE ${PROJECT_SOURCE_DIR})
 
 # Profile build flags
@@ -25,23 +26,19 @@ if(DEFINED SPARTA_SEARCH_DIR AND "${SPARTA_SEARCH_DIR}" MATCHES "~")
   message(FATAL_ERROR "Error: SPARTA_SEARCH_DIR should not contain a tilde (~).")
 endif()
 
-if(EXISTS ${SPARTA_SEARCH_DIR}/CMakeLists.txt)
-  set(BUILD_SPARTA_FROM_SOURCE TRUE)
-else()
-  set(BUILD_SPARTA_FROM_SOURCE FALSE)
-endif()
+# Pegasus header-only library
+add_library(pegasuslibs INTERFACE)
 
-if(NOT BUILD_SPARTA_FROM_SOURCE)
-  add_compile_options ( -Werror
+target_compile_options (pegasuslibs INTERFACE -Werror
     -Wall -Wextra -Winline -Winit-self -Wunused-function
     -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
-else()
-  add_compile_options (
-    -Winline -Winit-self -Wunused-function
-    -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
-    -Woverloaded-virtual -Wmissing-field-initializers -pipe)
-endif()
+
+# Use lld for linking clang and gcc builds
+# Use lld for linking clang and gcc builds
+if (NOT APPLE)
+  target_link_options(pegasuslibs INTERFACE -fuse-ld=lld)
+endif ()
 
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
@@ -52,6 +49,12 @@ endif ()
 
 ################################################################################
 # Set up Sparta
+
+if(EXISTS ${SPARTA_SEARCH_DIR}/CMakeLists.txt)
+  set(BUILD_SPARTA_FROM_SOURCE TRUE)
+else()
+  set(BUILD_SPARTA_FROM_SOURCE FALSE)
+endif()
 
 set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 
@@ -67,8 +70,8 @@ set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 if(BUILD_SPARTA_FROM_SOURCE)
   message (STATUS "Building SPARTA from source in ${SPARTA_SEARCH_DIR}")
   add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta")
-  include_directories(SYSTEM ${SPARTA_SEARCH_DIR})
-  include_directories(SYSTEM ${SPARTA_SEARCH_DIR}/simdb/include)
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR})
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR}/simdb/include)
   include(${SPARTA_SEARCH_DIR}/cmake/SpartaTestingMacros.cmake)
   include(${SPARTA_SEARCH_DIR}/cmake/sparta-config.cmake)
   set(SPARTA_LIBS ${Sparta_LIBS})
@@ -92,45 +95,43 @@ else()
     message (STATUS "Sparta was found in ${SPARTA_SEARCH_DIR}")
   endif()
 
-  include_directories(SYSTEM ${SPARTA_INCLUDE_DIRS})
+  target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_INCLUDE_DIRS})
 endif()
 
 ################################################################################
 
-include_directories(${CMAKE_SOURCE_DIR})
+target_include_directories(pegasuslibs INTERFACE ${SIM_BASE})
+target_include_directories(pegasuslibs INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
 # Boost
-include_directories(${Boost_INCLUDE_DIRS})
+find_package (Boost REQUIRED COMPONENTS json)
+target_include_directories(pegasuslibs INTERFACE ${Boost_INCLUDE_DIRS})
 
 # Mavis
-include_directories(SYSTEM mavis)
-include_directories(SYSTEM mavis/elfio)
-add_subdirectory(mavis)
+target_include_directories(pegasuslibs SYSTEM INTERFACE mavis)
+target_include_directories(pegasuslibs SYSTEM INTERFACE mavis/elfio)
+add_subdirectory(mavis SYSTEM)
 
 # SoftFloat
-include_directories(SYSTEM softfloat)
-include_directories(SYSTEM softfloat/source/include)
+target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)
+target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat/source/include)
 add_subdirectory(softfloat)
 
 # STF Library
 set(DISABLE_STF_DOXYGEN 1)
 set(DISABLE_STF_TESTS 1)
-include_directories(SYSTEM stf_lib)
+target_include_directories(pegasuslibs SYSTEM INTERFACE stf_lib)
 include(stf_lib/cmake/stf_linker_setup.cmake)
 setup_stf_linker(false)
 add_subdirectory(stf_lib)
 
 # 32-bit register JSON directory
-add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32")
-add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64")
+add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/gen/rv32")
+add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/gen/rv64")
 
 # Pegasus dependencies
-find_package (Boost REQUIRED COMPONENTS json)
-set (PEGASUS_LIBS ${SPARTA_LIBS} ${STF_LINK_LIBS} mavis Boost::json)
-
 add_subdirectory(arch)
 add_subdirectory(core)
-add_subdirectory(core/inst_handlers)
 add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
@@ -174,9 +175,9 @@ execute_process (
   COMMAND
      find core system sim arch include cosim test -name "*.[ch]pp"
   OUTPUT_FILE
-     ${CMAKE_SOURCE_DIR}/clang-format-files.out
+     ${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
 )
 
 # CPUTopology is pretty clean as it is.  There's an option to NOT
@@ -184,18 +185,18 @@ execute_process (
 # there yet
 add_custom_target(clangformat
   COMMAND
-     ${CLANGFORMAT_EXECUTABLE} -i --files=clang-format-files.out
+     ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )
 
 add_custom_target(clangformat-check
   COMMAND
-     ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=clang-format-files.out
+     ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
   WORKING_DIRECTORY
-     ${CMAKE_SOURCE_DIR}
+     ${SIM_BASE}
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )
