@@ -69,6 +69,9 @@ namespace pegasus::cosim
         /// Tell us how many internal pipelines to create (one per hart).
         void setNumHarts(size_t num_harts);
 
+        /// Tell us the max number of events to hold in the event cache.
+        void setEventCacheSize(size_t event_window_size);
+
         /// Returns a pipeline configured for fast event processing and retrieval.
         std::unique_ptr<simdb::pipeline::Pipeline>
         createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor) override;
@@ -198,6 +201,9 @@ namespace pegasus::cosim
 
         /// One "sim stopped" flag per hart.
         std::vector<bool> sim_stopped_;
+
+        /// Max number of events to hold in the event cache.
+        size_t event_window_size_ = DEFAULT_EVENT_WINDOW_SIZE;
 
         /// Snooper which inspects events as they come through the pipeline.
         CoSimPipelineSnooper* snooper_ = nullptr;

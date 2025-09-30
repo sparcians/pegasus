@@ -2,6 +2,10 @@
 
 #include "include/PegasusTypes.hpp"
 
+/// Events go into the pipeline one at a time, and are buffered for
+/// performance reasons (more zlib compression, fewer DB writes).
+#define DEFAULT_EVENT_WINDOW_SIZE 100
+
 namespace pegasus::cosim
 {
 

@@ -32,6 +32,10 @@ namespace pegasus::cosim
     void CoSimPipeline::setNumHarts(size_t num_harts) { hart_pipelines_.reserve(num_harts); }
 
     ////////////////////////////////////////////////////////////////////////////////////////
+    void CoSimPipeline::setEventCacheSize(size_t event_window_size)
+    { event_window_size_ = event_window_size; }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
     std::unique_ptr<simdb::pipeline::Pipeline>
     CoSimPipeline::createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor)
     {
@@ -67,10 +71,10 @@ namespace pegasus::cosim
                     return false;
                 });
 
-            // Run the events through a 100-to-1 buffer
+            // Run the events through a buffer
             constexpr bool flush_partial = true;
             auto source_buffer =
-                simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(100, flush_partial);
+                simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(event_window_size_, flush_partial);
 
             // Pre-validated "range" of events (euid auto-inc by 1 in the event vector)
             using ConvertToRangeFunction = simdb::pipeline::Function<EventBuffer, EventsRange>;
@@ -281,6 +285,7 @@ namespace pegasus::cosim
             std::cout << "    From disk:  0\n\n";
         }
 
+        //TODO cnyce: Remove this flag when map_v2.1.3 is available
         torn_down_ = true;
     }
 
