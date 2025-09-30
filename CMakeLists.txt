@@ -35,7 +35,6 @@ target_compile_options (pegasuslibs INTERFACE -Werror
     -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
 
 # Use lld for linking clang and gcc builds
-# Use lld for linking clang and gcc builds
 if (NOT APPLE)
   target_link_options(pegasuslibs INTERFACE -fuse-ld=lld)
 endif ()

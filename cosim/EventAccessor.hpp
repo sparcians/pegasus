@@ -2,6 +2,10 @@
 
 #include "include/PegasusTypes.hpp"
 
+/// Events go into the pipeline one at a time, and are buffered for
+/// performance reasons (more zlib compression, fewer DB writes).
+#define DEFAULT_EVENT_WINDOW_SIZE 100
+
 namespace pegasus::cosim
 {
 
@@ -47,11 +51,19 @@ namespace pegasus::cosim
         /// Same as operator->().
         const Event* get();
 
+        /// How many times did we have to go to disk to get this event?
+        size_t getNumFromDisk() const { return num_from_disk_; }
+
+        /// How many times did we get this event from the cache?
+        size_t getNumFromCache() const { return num_from_cache_; }
+
       private:
         uint64_t euid_;
         HartId hart_id_;
         CoSimPipeline* cosim_pipeline_ = nullptr;
         std::shared_ptr<Event> recreated_evt_;
+        size_t num_from_disk_ = 0;
+        size_t num_from_cache_ = 0;
     };
 
 } // namespace pegasus::cosim
