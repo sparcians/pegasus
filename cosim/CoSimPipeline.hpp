@@ -70,7 +70,7 @@ namespace pegasus::cosim
         void setNumHarts(size_t num_harts);
 
         /// Tell us the max number of events to hold in the event cache.
-        void setEventCacheSize(size_t event_window_size);
+        void setEventWindowSize(size_t event_window_size);
 
         /// Returns a pipeline configured for fast event processing and retrieval.
         std::unique_ptr<simdb::pipeline::Pipeline>

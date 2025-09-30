@@ -32,7 +32,7 @@ namespace pegasus::cosim
     void CoSimPipeline::setNumHarts(size_t num_harts) { hart_pipelines_.reserve(num_harts); }
 
     ////////////////////////////////////////////////////////////////////////////////////////
-    void CoSimPipeline::setEventCacheSize(size_t event_window_size)
+    void CoSimPipeline::setEventWindowSize(size_t event_window_size)
     {
         event_window_size_ = event_window_size;
     }

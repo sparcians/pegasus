@@ -71,7 +71,7 @@ namespace pegasus::cosim
 
         cosim_pipeline_ = app_mgr_->getApp<CoSimPipeline>();
         cosim_pipeline_->setNumHarts(num_harts);
-        cosim_pipeline_->setEventCacheSize(event_window_size);
+        cosim_pipeline_->setEventWindowSize(event_window_size);
         app_mgr_->openPipelines();
 
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
