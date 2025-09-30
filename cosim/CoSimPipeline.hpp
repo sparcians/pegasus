@@ -69,6 +69,9 @@ namespace pegasus::cosim
         /// Tell us how many internal pipelines to create (one per hart).
         void setNumHarts(size_t num_harts);
 
+        /// Tell us the max number of events to hold in the event cache.
+        void setEventWindowSize(size_t event_window_size);
+
         /// Returns a pipeline configured for fast event processing and retrieval.
         std::unique_ptr<simdb::pipeline::Pipeline>
         createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor) override;
@@ -97,6 +100,10 @@ namespace pegasus::cosim
         /// Called after the pipeline threads have been flushed and destroyed.
         void postTeardown() override;
 
+        /// Check if the given hart's pipeline has any events cached.
+        /// Used for testing only.
+        size_t getNumCached(HartId hart_id = 0) const;
+
       private:
         friend class EventAccessor;
 
@@ -111,7 +118,9 @@ namespace pegasus::cosim
         class CoSimHartPipeline
         {
           public:
-            CoSimHartPipeline(simdb::pipeline::AsyncDatabaseAccessor* async_eval, HartId hart_id) :
+            CoSimHartPipeline(simdb::DatabaseManager* db_mgr,
+                              simdb::pipeline::AsyncDatabaseAccessor* async_eval, HartId hart_id) :
+                db_mgr_(db_mgr),
                 async_eval_(async_eval),
                 hart_id_(hart_id)
             {
@@ -145,7 +154,14 @@ namespace pegasus::cosim
             /// Prints metrics about cache/disk retrieval to stdout.
             void postTeardown();
 
+            /// Check if the given hart's pipeline has any events cached.
+            /// Used for testing only.
+            size_t getNumCached() const;
+
           private:
+            /// SimDB instance.
+            simdb::DatabaseManager* db_mgr_ = nullptr;
+
             /// Async DB query object.
             simdb::pipeline::AsyncDatabaseAccessor* async_eval_ = nullptr;
 
@@ -168,6 +184,9 @@ namespace pegasus::cosim
             mutable size_t num_evts_retrieved_from_cache_ = 0;
             simdb::RunningMean avg_microseconds_recreating_evts_;
 
+            /// Flag to let us know if the AsyncDatabaseAccessor can be used.
+            bool torn_down_ = false;
+
             friend class CoSimPipeline;
         };
 
@@ -182,6 +201,9 @@ namespace pegasus::cosim
 
         /// One "sim stopped" flag per hart.
         std::vector<bool> sim_stopped_;
+
+        /// Max number of events to hold in the event cache.
+        size_t event_window_size_ = DEFAULT_EVENT_WINDOW_SIZE;
 
         /// Snooper which inspects events as they come through the pipeline.
         CoSimPipelineSnooper* snooper_ = nullptr;
