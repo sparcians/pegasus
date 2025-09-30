@@ -17,68 +17,39 @@ namespace pegasus
 
         inst_handlers.emplace(
             "bclr",
-            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, Bclr<XLEN>>,
-                                          RvzbsInsts>(nullptr, "bclr", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler_<XLEN, Bclr<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "bclr", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "bclri",
-            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, Bclr<XLEN>>, RvzbsInsts>(
-                nullptr, "bclri", ActionTags::EXECUTE_TAG));
+            "bclri", pegasus::Action::createAction<&RvzbsInsts::immOpHandler_<XLEN, Bclr<XLEN>>,
+                                                   RvzbInstsBase>(nullptr, "bclri",
+                                                                  ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "bext",
-            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, Bext<XLEN>>,
-                                          RvzbsInsts>(nullptr, "bext", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler_<XLEN, Bext<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "bext", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "bexti",
-            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, Bext<XLEN>>, RvzbsInsts>(
-                nullptr, "bexti", ActionTags::EXECUTE_TAG));
+            "bexti", pegasus::Action::createAction<&RvzbsInsts::immOpHandler_<XLEN, Bext<XLEN>>,
+                                                   RvzbInstsBase>(nullptr, "bexti",
+                                                                  ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "binv",
-            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, Binv<XLEN>>,
-                                          RvzbsInsts>(nullptr, "binv", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler_<XLEN, Binv<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "binv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "binvi",
-            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, Binv<XLEN>>, RvzbsInsts>(
-                nullptr, "binvi", ActionTags::EXECUTE_TAG));
+            "binvi", pegasus::Action::createAction<&RvzbsInsts::immOpHandler_<XLEN, Binv<XLEN>>,
+                                                   RvzbInstsBase>(nullptr, "binvi",
+                                                                  ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "bset",
-            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler<XLEN, Bset<XLEN>>,
-                                          RvzbsInsts>(nullptr, "bset", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvzbsInsts::binaryOpHandler_<XLEN, Bset<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "bset", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "bseti",
-            pegasus::Action::createAction<&RvzbsInsts::immOpHandler<XLEN, Bset<XLEN>>, RvzbsInsts>(
-                nullptr, "bseti", ActionTags::EXECUTE_TAG));
+            "bseti", pegasus::Action::createAction<&RvzbsInsts::immOpHandler_<XLEN, Bset<XLEN>>,
+                                                   RvzbInstsBase>(nullptr, "bseti",
+                                                                  ActionTags::EXECUTE_TAG));
     }
 
     template void RvzbsInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvzbsInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
-    template <typename XLEN, typename OP>
-    Action::ItrType RvzbsInsts::binaryOpHandler(pegasus::PegasusState* state,
-                                                Action::ItrType action_it)
-    {
-        const PegasusInstPtr & inst = state->getCurrentInst();
-
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-
-        const XLEN rd_val = OP()(rs1_val, rs2_val);
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
-
-    template <typename XLEN, typename OP>
-    Action::ItrType RvzbsInsts::immOpHandler(pegasus::PegasusState* state,
-                                             Action::ItrType action_it)
-    {
-        const PegasusInstPtr & inst = state->getCurrentInst();
-
-        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        const XLEN imm_val = inst->getImmediate();
-
-        const XLEN rd_val = OP()(rs1_val, imm_val);
-        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-
-        return ++action_it;
-    }
 } // namespace pegasus

@@ -12,15 +12,11 @@ namespace pegasus
 {
     class PegasusState;
 
-    class RvzbbInsts : public RvzbInstsBase
+    class RvzbkbInsts : public RvzbInstsBase
     {
       public:
-        using base_type = RvzbbInsts;
+        using base_type = RvzbkbInsts;
 
         template <typename XLEN> static void getInstHandlers(std::map<std::string, Action> &);
-
-      private:
-        template <typename XLEN>
-        Action::ItrType orc_bHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus
