@@ -145,8 +145,8 @@ namespace pegasus
     {
         inline XLEN operator()(XLEN rs1_val, XLEN rs2_val) const
         {
-            const XLEN lo = rs1_val & ((XLEN) 0xff);
-            const XLEN hi = (rs2_val & ((XLEN) 0xff)) << 8;
+            const XLEN lo = rs1_val & ((XLEN)0xff);
+            const XLEN hi = (rs2_val & ((XLEN)0xff)) << 8;
 
             return hi | lo;
         }
@@ -159,8 +159,8 @@ namespace pegasus
             // Due to sign extension, only support RV64
             static_assert(std::is_same_v<XLEN, RV64>);
 
-            const XLEN lo = rs1_val & ((XLEN) 0xffff);
-            const XLEN hi = (rs2_val & ((XLEN) 0xffff)) << 16;
+            const XLEN lo = rs1_val & ((XLEN)0xffff);
+            const XLEN hi = (rs2_val & ((XLEN)0xffff)) << 16;
 
             return (XLEN)(int64_t)(int32_t)(hi | lo);
         }
@@ -171,18 +171,20 @@ namespace pegasus
         inline XLEN operator()(XLEN rs1_val) const
         {
             using U = std::make_unsigned_t<XLEN>;
-            const U rs1 = static_cast<U> (rs1_val);
+            const U rs1 = static_cast<U>(rs1_val);
             U rd = 0;
 
             // bit-reverse a signle byte
-            constexpr auto rev8 = [] (std::uint8_t b) -> std::uint8_t {
-                b = (std::uint8_t) ((b >> 4) | (b << 4));  // 3210_7654
-                b = (std::uint8_t) (((b & 0xCCu) >> 2) | ((b & 0x33u) << 2));  // 1032_5476
-                b = (std::uint8_t) (((b & 0xAAu) >> 1) | ((b & 0x55u) << 1));  // 0123_4567
+            constexpr auto rev8 = [](std::uint8_t b) -> std::uint8_t
+            {
+                b = (std::uint8_t)((b >> 4) | (b << 4));                     // 3210_7654
+                b = (std::uint8_t)(((b & 0xCCu) >> 2) | ((b & 0x33u) << 2)); // 1032_5476
+                b = (std::uint8_t)(((b & 0xAAu) >> 1) | ((b & 0x55u) << 1)); // 0123_4567
                 return b;
             };
 
-            for (uint32_t i = 0; i < sizeof(U); ++i) {
+            for (uint32_t i = 0; i < sizeof(U); ++i)
+            {
                 std::uint8_t b = static_cast<std::uint8_t>(rs1 >> (i * 8));
                 rd |= static_cast<U>(static_cast<U>(rev8(b)) << (i * 8));
             }
@@ -193,45 +195,47 @@ namespace pegasus
 
     template <typename XLEN> struct Unzip
     {
-      inline XLEN operator()(XLEN rs1_val) const
-      {
-          using U = std::make_unsigned_t<XLEN>;
-          constexpr uint32_t num_bits = sizeof(U) * 8 / 2;
+        inline XLEN operator()(XLEN rs1_val) const
+        {
+            using U = std::make_unsigned_t<XLEN>;
+            constexpr uint32_t num_bits = sizeof(U) * 8 / 2;
 
-          const U rs1 = static_cast<U>(rs1_val);
-          U lo = 0;  // packed even bits
-          U hi = 0;  // packed odd  bits
+            const U rs1 = static_cast<U>(rs1_val);
+            U lo = 0; // packed even bits
+            U hi = 0; // packed odd  bits
 
-          for (uint32_t i = 0; i < num_bits; ++i) {
-              lo |= ((rs1 >> (2 * i))     & 1u) << i;
-              hi |= ((rs1 >> (2 * i + 1)) & 1u) << i;
-          }
+            for (uint32_t i = 0; i < num_bits; ++i)
+            {
+                lo |= ((rs1 >> (2 * i)) & 1u) << i;
+                hi |= ((rs1 >> (2 * i + 1)) & 1u) << i;
+            }
 
-          return static_cast<XLEN>(lo | (hi << num_bits));
-      }
+            return static_cast<XLEN>(lo | (hi << num_bits));
+        }
     };
 
     template <typename XLEN> struct Zip
     {
-      inline XLEN operator()(XLEN rs1_val) const
-      {
-          using U = std::make_unsigned_t<XLEN>;
-          constexpr uint32_t num_bits = sizeof(U) * 8 / 2;
+        inline XLEN operator()(XLEN rs1_val) const
+        {
+            using U = std::make_unsigned_t<XLEN>;
+            constexpr uint32_t num_bits = sizeof(U) * 8 / 2;
 
-          constexpr U mask = ((U) 1 << num_bits) - 1;
-          const U rs1 = static_cast<U>(rs1_val);
+            constexpr U mask = ((U)1 << num_bits) - 1;
+            const U rs1 = static_cast<U>(rs1_val);
 
-          const U lo  =  rs1               & mask;  // packed even bits
-          const U hi  = (rs1 >> num_bits)  & mask;  // packed odd  bits
+            const U lo = rs1 & mask;               // packed even bits
+            const U hi = (rs1 >> num_bits) & mask; // packed odd  bits
 
-          U out = 0;
-          for (uint32_t i = 0; i < num_bits; ++i) {
-              out |= ((lo >> i) & 1u) << (2 * i);       // even positions
-              out |= ((hi >> i) & 1u) << (2 * i + 1);   // odd positions
-          }
+            U out = 0;
+            for (uint32_t i = 0; i < num_bits; ++i)
+            {
+                out |= ((lo >> i) & 1u) << (2 * i);     // even positions
+                out |= ((hi >> i) & 1u) << (2 * i + 1); // odd positions
+            }
 
-          return static_cast<XLEN>(out);
-      }
+            return static_cast<XLEN>(out);
+        }
     };
 
 } // namespace pegasus

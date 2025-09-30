@@ -30,7 +30,7 @@ namespace pegasus
 
     template <typename XLEN, typename OP>
     Action::ItrType RvzbInstsBase::unaryOpHandler_(pegasus::PegasusState* state,
-                                                Action::ItrType action_it)
+                                                   Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -44,7 +44,7 @@ namespace pegasus
 
     template <typename XLEN, typename OP>
     Action::ItrType RvzbInstsBase::binaryOpHandler_(pegasus::PegasusState* state,
-                                                 Action::ItrType action_it)
+                                                    Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 
@@ -59,7 +59,7 @@ namespace pegasus
 
     template <typename XLEN, typename OP>
     Action::ItrType RvzbInstsBase::immOpHandler_(pegasus::PegasusState* state,
-                                              Action::ItrType action_it)
+                                                 Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
 

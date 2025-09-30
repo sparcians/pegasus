@@ -20,20 +20,19 @@ namespace pegasus
         inst_handlers.emplace(
             "andn",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Andn<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "andn",
-                                                      ActionTags::EXECUTE_TAG));
+                                          RvzbInstsBase>(nullptr, "andn", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "clz", pegasus::Action::createAction<
-                       &RvzbbInsts::unaryOpHandler_<XLEN, CountlZero<XLEN>>, RvzbInstsBase>(
-                       nullptr, "clz", ActionTags::EXECUTE_TAG));
+            "clz",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, CountlZero<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "clz", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "cpop", pegasus::Action::createAction<
-                        &RvzbbInsts::unaryOpHandler_<XLEN, Popcount<XLEN>>, RvzbInstsBase>(
-                        nullptr, "cpop", ActionTags::EXECUTE_TAG));
+            "cpop",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, Popcount<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "cpop", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "ctz", pegasus::Action::createAction<
-                       &RvzbbInsts::unaryOpHandler_<XLEN, CountrZero<XLEN>>, RvzbInstsBase>(
-                       nullptr, "ctz", ActionTags::EXECUTE_TAG));
+            "ctz",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, CountrZero<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "ctz", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "max",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Max<SXLEN>>,
@@ -41,8 +40,7 @@ namespace pegasus
         inst_handlers.emplace(
             "maxu",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Max<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "maxu",
-                                                      ActionTags::EXECUTE_TAG));
+                                          RvzbInstsBase>(nullptr, "maxu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "min",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV32, Min<SXLEN>>,
@@ -50,20 +48,18 @@ namespace pegasus
         inst_handlers.emplace(
             "minu",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Min<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "minu",
-                                                      ActionTags::EXECUTE_TAG));
+                                          RvzbInstsBase>(nullptr, "minu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "orc.b",
-            pegasus::Action::createAction<&RvzbbInsts::orc_bHandler_<XLEN>, RvzbbInsts>(
-                nullptr, "orc.b", ActionTags::EXECUTE_TAG));
+            "orc.b", pegasus::Action::createAction<&RvzbbInsts::orc_bHandler_<XLEN>, RvzbbInsts>(
+                         nullptr, "orc.b", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "orn",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Orn<XLEN>>,
                                           RvzbInstsBase>(nullptr, "orn", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "rev8", pegasus::Action::createAction<
-                        &RvzbbInsts::unaryOpHandler_<XLEN, ByteSwap<XLEN>>, RvzbInstsBase>(
-                        nullptr, "rev8", ActionTags::EXECUTE_TAG));
+            "rev8",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, ByteSwap<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "rev8", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "rol",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Rol<XLEN>>,
@@ -75,56 +71,57 @@ namespace pegasus
         inst_handlers.emplace(
             "rori",
             pegasus::Action::createAction<&RvzbbInsts::immOpHandler_<XLEN, Ror<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "rori",
-                                                      ActionTags::EXECUTE_TAG));
+                                          RvzbInstsBase>(nullptr, "rori", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "sext.b", pegasus::Action::createAction<
-                          &RvzbbInsts::unaryOpHandler_<XLEN, SextX<XLEN, 8>>, RvzbInstsBase>(
-                          nullptr, "sext.b", ActionTags::EXECUTE_TAG));
+            "sext.b",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, SextX<XLEN, 8>>,
+                                          RvzbInstsBase>(nullptr, "sext.b",
+                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "sext.h", pegasus::Action::createAction<
-                          &RvzbbInsts::unaryOpHandler_<XLEN, SextX<XLEN, 16>>, RvzbInstsBase>(
-                          nullptr, "sext.h", ActionTags::EXECUTE_TAG));
+            "sext.h",
+            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, SextX<XLEN, 16>>,
+                                          RvzbInstsBase>(nullptr, "sext.h",
+                                                         ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "xnor",
             pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Xnor<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "xnor",
-                                                      ActionTags::EXECUTE_TAG));
+                                          RvzbInstsBase>(nullptr, "xnor", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "zext.h",
-            pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, ZextH<XLEN>>,
-                                          RvzbInstsBase>(nullptr, "zext.h",
-                                                      ActionTags::EXECUTE_TAG));
+            "zext.h", pegasus::Action::createAction<&RvzbbInsts::unaryOpHandler_<XLEN, ZextH<XLEN>>,
+                                                    RvzbInstsBase>(nullptr, "zext.h",
+                                                                   ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "clzw", pegasus::Action::createAction<
-                            &RvzbbInsts::unaryOpHandler_<RV64, CountlZero<uint32_t>>, RvzbInstsBase>(
-                            nullptr, "clzw", ActionTags::EXECUTE_TAG));
+                "clzw",
+                pegasus::Action::createAction<
+                    &RvzbbInsts::unaryOpHandler_<RV64, CountlZero<uint32_t>>, RvzbInstsBase>(
+                    nullptr, "clzw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "cpopw", pegasus::Action::createAction<
                              &RvzbbInsts::unaryOpHandler_<RV64, Popcount<uint32_t>>, RvzbInstsBase>(
                              nullptr, "cpopw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
-                "ctzw", pegasus::Action::createAction<
-                            &RvzbbInsts::unaryOpHandler_<RV64, CountrZero<uint32_t>>, RvzbInstsBase>(
-                            nullptr, "ctzw", ActionTags::EXECUTE_TAG));
+                "ctzw",
+                pegasus::Action::createAction<
+                    &RvzbbInsts::unaryOpHandler_<RV64, CountrZero<uint32_t>>, RvzbInstsBase>(
+                    nullptr, "ctzw", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "rolw",
                 pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV64, Rolw<int64_t>>,
                                               RvzbInstsBase>(nullptr, "rolw",
-                                                          ActionTags::EXECUTE_TAG));
+                                                             ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "roriw",
                 pegasus::Action::createAction<&RvzbbInsts::immOpHandler_<RV64, Rorw<int64_t>>,
                                               RvzbInstsBase>(nullptr, "roriw",
-                                                          ActionTags::EXECUTE_TAG));
+                                                             ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "rorw",
                 pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV64, Rorw<int64_t>>,
                                               RvzbInstsBase>(nullptr, "rorw",
-                                                          ActionTags::EXECUTE_TAG));
+                                                             ActionTags::EXECUTE_TAG));
         }
     }
 

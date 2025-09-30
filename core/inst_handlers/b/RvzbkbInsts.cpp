@@ -17,41 +17,43 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "pack", pegasus::Action::createAction<
-                       &RvzbkbInsts::binaryOpHandler_<XLEN, Pack<XLEN>>, RvzbInstsBase>(
-                       nullptr, "pack", ActionTags::EXECUTE_TAG));
+            "pack",
+            pegasus::Action::createAction<&RvzbkbInsts::binaryOpHandler_<XLEN, Pack<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "pack", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "packh", pegasus::Action::createAction<
-                       &RvzbkbInsts::binaryOpHandler_<XLEN, Packh<XLEN>>, RvzbInstsBase>(
-                       nullptr, "packh", ActionTags::EXECUTE_TAG));
+            "packh",
+            pegasus::Action::createAction<&RvzbkbInsts::binaryOpHandler_<XLEN, Packh<XLEN>>,
+                                          RvzbInstsBase>(nullptr, "packh",
+                                                         ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
-                "packw", pegasus::Action::createAction<
-                           &RvzbkbInsts::binaryOpHandler_<XLEN, Packw<XLEN>>, RvzbInstsBase>(
-                           nullptr, "packw", ActionTags::EXECUTE_TAG));
+                "packw",
+                pegasus::Action::createAction<&RvzbkbInsts::binaryOpHandler_<XLEN, Packw<XLEN>>,
+                                              RvzbInstsBase>(nullptr, "packw",
+                                                             ActionTags::EXECUTE_TAG));
         }
 
         inst_handlers.emplace(
-            "brev8", pegasus::Action::createAction<
-                       &RvzbkbInsts::unaryOpHandler_<XLEN, Brev8<XLEN>>, RvzbInstsBase>(
-                       nullptr, "brev8", ActionTags::EXECUTE_TAG));
+            "brev8", pegasus::Action::createAction<&RvzbkbInsts::unaryOpHandler_<XLEN, Brev8<XLEN>>,
+                                                   RvzbInstsBase>(nullptr, "brev8",
+                                                                  ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
-                "unzip", pegasus::Action::createAction<
-                           &RvzbkbInsts::unaryOpHandler_<XLEN, Unzip<XLEN>>, RvzbInstsBase>(
-                           nullptr, "unzip", ActionTags::EXECUTE_TAG));
+                "unzip",
+                pegasus::Action::createAction<&RvzbkbInsts::unaryOpHandler_<XLEN, Unzip<XLEN>>,
+                                              RvzbInstsBase>(nullptr, "unzip",
+                                                             ActionTags::EXECUTE_TAG));
 
             inst_handlers.emplace(
-                "zip", pegasus::Action::createAction<
-                           &RvzbkbInsts::unaryOpHandler_<XLEN, Zip<XLEN>>, RvzbInstsBase>(
-                           nullptr, "zip", ActionTags::EXECUTE_TAG));
+                "zip", pegasus::Action::createAction<&RvzbkbInsts::unaryOpHandler_<XLEN, Zip<XLEN>>,
+                                                     RvzbInstsBase>(nullptr, "zip",
+                                                                    ActionTags::EXECUTE_TAG));
         }
-
     }
 
     template void RvzbkbInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
