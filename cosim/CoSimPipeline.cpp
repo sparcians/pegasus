@@ -33,7 +33,9 @@ namespace pegasus::cosim
 
     ////////////////////////////////////////////////////////////////////////////////////////
     void CoSimPipeline::setEventCacheSize(size_t event_window_size)
-    { event_window_size_ = event_window_size; }
+    {
+        event_window_size_ = event_window_size;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     std::unique_ptr<simdb::pipeline::Pipeline>
@@ -73,8 +75,8 @@ namespace pegasus::cosim
 
             // Run the events through a buffer
             constexpr bool flush_partial = true;
-            auto source_buffer =
-                simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(event_window_size_, flush_partial);
+            auto source_buffer = simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(
+                event_window_size_, flush_partial);
 
             // Pre-validated "range" of events (euid auto-inc by 1 in the event vector)
             using ConvertToRangeFunction = simdb::pipeline::Function<EventBuffer, EventsRange>;
@@ -285,7 +287,7 @@ namespace pegasus::cosim
             std::cout << "    From disk:  0\n\n";
         }
 
-        //TODO cnyce: Remove this flag when map_v2.1.3 is available
+        // TODO cnyce: Remove this flag when map_v2.1.3 is available
         torn_down_ = true;
     }
 

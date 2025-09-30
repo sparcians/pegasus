@@ -41,8 +41,7 @@ namespace pegasus::cosim
     class PegasusCoSim : public PegasusSim, public pegasus::cosim::CoSim
     {
       public:
-        PegasusCoSim(sparta::Scheduler* scheduler,
-                     uint64_t ilimit = 0,
+        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0,
                      const std::string & workload = "",
                      const uint32_t event_window_size = DEFAULT_EVENT_WINDOW_SIZE);
 

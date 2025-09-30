@@ -45,10 +45,8 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler,
-                               uint64_t ilimit,
-                               const std::string & workload,
-                               const uint32_t event_window_size) :
+    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
+                               const std::string & workload, const uint32_t event_window_size) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
