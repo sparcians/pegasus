@@ -184,9 +184,6 @@ namespace pegasus::cosim
             mutable size_t num_evts_retrieved_from_cache_ = 0;
             simdb::RunningMean avg_microseconds_recreating_evts_;
 
-            /// Flag to let us know if the AsyncDatabaseAccessor can be used.
-            bool torn_down_ = false;
-
             friend class CoSimPipeline;
         };
 

@@ -286,9 +286,6 @@ namespace pegasus::cosim
         {
             std::cout << "    From disk:  0\n\n";
         }
-
-        // TODO cnyce: Remove this flag when map_v2.1.3 is available
-        torn_down_ = true;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -386,19 +383,7 @@ namespace pegasus::cosim
         // Run the query on the database thread. It will stop what it is doing
         // as quickly as possible to run this query. The eval() method blocks
         // until the query is picked up and run.
-        if (!torn_down_)
-        {
-            async_eval_->eval(query_func);
-        }
-        else
-        {
-            // The pipeline has been torn down, so we cannot use async_eval_.
-            // The threads aren't even running anymore. Note that since we
-            // print the pipeline's metrics during teardown, this means that
-            // any events retrieved here will not be counted in the metrics
-            // that are printed to stdout.
-            query_func(db_mgr_);
-        }
+        async_eval_->eval(query_func);
 
         if (compressed_evts_range.event_bytes.empty())
         {
