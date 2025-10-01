@@ -304,8 +304,8 @@ namespace pegasus
      * Element iterator is provided for element iteration; bit iterator for
      * vector mask regitster bit iteration.
      *
-     * @tparam ElemType Element type for individual element.
-     * @tparam isMaskElems true if this *Elements* represents vector mask.
+     * @tparam EType       Element type for individual element.
+     * @tparam isMaskElems True if this *Elements* represents vector mask.
      */
     template <typename EType, bool isMaskElems> class Elements
     {

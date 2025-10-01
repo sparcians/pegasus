@@ -218,6 +218,211 @@ namespace pegasus
         return val;
     }
 
+    static inline uint64_t extract64(uint64_t val, int pos, int len)
+    {
+        assert(pos >= 0 && len > 0 && len <= 64 - pos);
+        return (val >> pos) & (~UINT64_C(0) >> (64 - len));
+    }
+
+    static inline uint64_t make_mask64(int pos, int len)
+    {
+        assert(pos >= 0 && len > 0 && pos < 64 && len <= 64);
+        return (UINT64_MAX >> (64 - len)) << pos;
+    }
+
+    // user needs to truncate output to required length
+    static inline uint64_t recip7(uint64_t val, int e, int s, int rm, bool sub,
+                                  bool* round_abnormal)
+    {
+        uint64_t exp = extract64(val, s, e);
+        uint64_t sig = extract64(val, 0, s);
+        uint64_t sign = extract64(val, s + e, 1);
+        const int p = 7;
+
+        static const uint8_t table[] = {
+            127, 125, 123, 121, 119, 117, 116, 114, 112, 110, 109, 107, 105, 104, 102, 100,
+            99,  97,  96,  94,  93,  91,  90,  88,  87,  85,  84,  83,  81,  80,  79,  77,
+            76,  75,  74,  72,  71,  70,  69,  68,  66,  65,  64,  63,  62,  61,  60,  59,
+            58,  57,  56,  55,  54,  53,  52,  51,  50,  49,  48,  47,  46,  45,  44,  43,
+            42,  41,  40,  40,  39,  38,  37,  36,  35,  35,  34,  33,  32,  31,  31,  30,
+            29,  28,  28,  27,  26,  25,  25,  24,  23,  23,  22,  21,  21,  20,  19,  19,
+            18,  17,  17,  16,  15,  15,  14,  14,  13,  12,  12,  11,  11,  10,  9,   9,
+            8,   8,   7,   7,   6,   5,   5,   4,   4,   3,   3,   2,   2,   1,   1,   0};
+
+        if (sub)
+        {
+            while (extract64(sig, s - 1, 1) == 0)
+                exp--, sig <<= 1;
+
+            sig = (sig << 1) & make_mask64(0, s);
+
+            if (exp != 0 && exp != UINT64_MAX)
+            {
+                *round_abnormal = true;
+                if (rm == softfloat_round_minMag || (rm == softfloat_round_min && !sign)
+                    || (rm == softfloat_round_max && sign))
+                    return ((sign << (s + e)) | make_mask64(s, e)) - 1; // max mag saturate
+                else
+                    return (sign << (s + e)) | make_mask64(s, e); // infinite
+            }
+        }
+
+        int idx = sig >> (s - p);
+        uint64_t out_sig = (uint64_t)(table[idx]) << (s - p);
+        uint64_t out_exp = 2 * make_mask64(0, e - 1) + ~exp;
+        if (out_exp == 0 || out_exp == UINT64_MAX)
+        {
+            out_sig = (out_sig >> 1) | make_mask64(s - 1, 1);
+            if (out_exp == UINT64_MAX)
+            { // submormal
+                out_sig >>= 1;
+                out_exp = 0;
+            }
+        }
+
+        return (sign << (s + e)) | (out_exp << s) | out_sig;
+    }
+
+    template <typename U> inline U frecip7(U u)
+    {
+        U ret = 0;
+
+        auto cls = fclass(u);
+        bool sub = false;
+        bool round_abnormal = false;
+        switch (cls)
+        {
+            case 0x001: // -inf
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0x8000
+                                     : std::is_same_v<U, uint32_t> ? 0x80000000
+                                                                   : 0x8000000000000000);
+                break;
+            case 0x080: //+inf
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0x0000
+                                     : std::is_same_v<U, uint32_t> ? 0x00000000
+                                                                   : 0x0000000000000000);
+                break;
+            case 0x008: // -0
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0xfc00
+                                     : std::is_same_v<U, uint32_t> ? 0xff800000
+                                                                   : 0xfff0000000000000);
+                softfloat_exceptionFlags |= softfloat_flag_infinite;
+                break;
+            case 0x010: // +0
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0x7c00
+                                     : std::is_same_v<U, uint32_t> ? 0x7f800000
+                                                                   : 0x7ff0000000000000);
+                softfloat_exceptionFlags |= softfloat_flag_infinite;
+                break;
+            case 0x100: // sNaN
+                softfloat_exceptionFlags |= softfloat_flag_invalid;
+                [[fallthrough]];
+            case 0x200: // qNaN
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? defaultNaNF16UI
+                                     : std::is_same_v<U, uint32_t> ? defaultNaNF32UI
+                                                                   : defaultNaNF64UI);
+                break;
+            case 0x004: // -subnormal
+                [[fallthrough]];
+            case 0x020: //+ sub
+                sub = true;
+                [[fallthrough]];
+            default: // +- normal
+                ret = static_cast<U>(
+                    std::is_same_v<U, uint16_t>
+                        ? recip7(ret, 5, 10, softfloat_roundingMode, sub, &round_abnormal)
+                    : std::is_same_v<U, uint32_t>
+                        ? recip7(ret, 8, 23, softfloat_roundingMode, sub, &round_abnormal)
+                        : recip7(ret, 11, 52, softfloat_roundingMode, sub, &round_abnormal));
+                if (round_abnormal)
+                    softfloat_exceptionFlags |= softfloat_flag_inexact | softfloat_flag_overflow;
+                break;
+        }
+
+        return ret;
+    }
+
+    // user needs to truncate output to required length
+    static inline uint64_t rsqrt7(uint64_t val, int e, int s, bool sub)
+    {
+        uint64_t exp = extract64(val, s, e);
+        uint64_t sig = extract64(val, 0, s);
+        uint64_t sign = extract64(val, s + e, 1);
+        const int p = 7;
+
+        static const uint8_t table[] = {
+            52,  51,  50,  48,  47,  46,  44,  43,  42,  41,  40,  39,  38,  36,  35,  34,
+            33,  32,  31,  30,  30,  29,  28,  27,  26,  25,  24,  23,  23,  22,  21,  20,
+            19,  19,  18,  17,  16,  16,  15,  14,  14,  13,  12,  12,  11,  10,  10,  9,
+            9,   8,   7,   7,   6,   6,   5,   4,   4,   3,   3,   2,   2,   1,   1,   0,
+            127, 125, 123, 121, 119, 118, 116, 114, 113, 111, 109, 108, 106, 105, 103, 102,
+            100, 99,  97,  96,  95,  93,  92,  91,  90,  88,  87,  86,  85,  84,  83,  82,
+            80,  79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  70,  69,  68,  67,  66,
+            65,  64,  63,  63,  62,  61,  60,  59,  59,  58,  57,  56,  56,  55,  54,  53};
+
+        if (sub)
+        {
+            while (extract64(sig, s - 1, 1) == 0)
+                exp--, sig <<= 1;
+
+            sig = (sig << 1) & make_mask64(0, s);
+        }
+
+        // even exp: sig >> 1, odd exp: sig >> 2
+        int idx = ((exp & 1) << (p - 1)) | (sig >> (s - p + 1));
+        uint64_t out_sig = (uint64_t)(table[idx]) << (s - p);
+        uint64_t out_exp = (3 * make_mask64(0, e - 1) + ~exp) / 2;
+
+        return (sign << (s + e)) | (out_exp << s) | out_sig;
+    }
+
+    template <typename U> inline U frsqrt7(U u)
+    {
+        U ret = 0;
+
+        auto cls = fclass(u);
+        bool sub = false;
+        switch (cls)
+        {
+            case 0x001: // -inf
+            case 0x002: // -normal
+            case 0x004: // -subnormal
+            case 0x100: // sNaN
+                softfloat_exceptionFlags |= softfloat_flag_invalid;
+                [[fallthrough]];
+            case 0x200: // qNaN
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? defaultNaNF16UI
+                                     : std::is_same_v<U, uint32_t> ? defaultNaNF32UI
+                                                                   : defaultNaNF64UI);
+                break;
+            case 0x008: // -0
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0xfc00
+                                     : std::is_same_v<U, uint32_t> ? 0xff800000
+                                                                   : 0xfff0000000000000);
+                softfloat_exceptionFlags |= softfloat_flag_infinite;
+                break;
+            case 0x010: // +0
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? 0x7c00
+                                     : std::is_same_v<U, uint32_t> ? 0x7f800000
+                                                                   : 0x7ff0000000000000);
+                softfloat_exceptionFlags |= softfloat_flag_infinite;
+                break;
+            case 0x080: //+inf
+                ret = 0x0;
+                break;
+            case 0x020: //+ sub
+                sub = true;
+                [[fallthrough]];
+            default: // +num
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? rsqrt7(ret, 5, 10, sub)
+                                     : std::is_same_v<U, uint32_t> ? rsqrt7(ret, 8, 23, sub)
+                                                                   : rsqrt7(ret, 11, 52, sub));
+                break;
+        }
+
+        return ret;
+    }
+
     template <typename XLEN> void restoreFloatCsrs(PegasusState* state)
     {
         decltype(softfloat_exceptionFlags) value = 0;
