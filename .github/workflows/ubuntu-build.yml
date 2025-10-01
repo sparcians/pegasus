@@ -38,7 +38,7 @@ jobs:
           repository: sparcians/map
           submodules: recursive
           path: map
-          ref: map_v2.1.2
+          ref: map_v2.1.3
 
       # Setup CCache to cache builds
       - name: ccache
@@ -53,7 +53,7 @@ jobs:
       - name: Install packages needed for sparta/pegasus
         run: |
           sudo apt-get update --fix-missing
-          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm
+          sudo apt-get install libboost-all-dev libyaml-cpp-dev rapidjson-dev libhdf5-dev llvm lld
 
       # Build
       - name: Build

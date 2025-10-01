@@ -112,16 +112,16 @@ class StateViewer(wx.Panel):
 
         pegasus_root = os.path.join(os.path.dirname(__file__), '..', '..')
 
-        int_json = os.path.join(pegasus_root, 'arch', 'rv64', 'reg_int.json')
+        int_json = os.path.join(pegasus_root, 'arch', 'rv64', 'gen', 'reg_int.json')
         with open(int_json, 'r') as fin:
             int_names = [reg['name'] for reg in json.load(fin)]
             int_names = [name for name in int_names if name.startswith('x')]
 
-        fp_json = os.path.join(pegasus_root, 'arch', 'rv64', 'reg_fp.json')
+        fp_json = os.path.join(pegasus_root, 'arch', 'rv64', 'gen', 'reg_fp.json')
         with open(fp_json, 'r') as fin:
             fp_names = [reg['name'] for reg in json.load(fin)]
 
-        csr_json = os.path.join(pegasus_root, 'arch', 'rv64', 'reg_csr.json')
+        csr_json = os.path.join(pegasus_root, 'arch', 'rv64', 'gen', 'reg_csr.json')
         with open(csr_json, 'r') as fin:
             csr_names = [reg['name'] for reg in json.load(fin)]
 

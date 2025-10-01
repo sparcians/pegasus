@@ -46,7 +46,7 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
-                               const std::string & workload) :
+                               const std::string & workload, const uint32_t event_window_size) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
@@ -71,6 +71,7 @@ namespace pegasus::cosim
 
         cosim_pipeline_ = app_mgr_->getApp<CoSimPipeline>();
         cosim_pipeline_->setNumHarts(num_harts);
+        cosim_pipeline_->setEventWindowSize(event_window_size);
         app_mgr_->openPipelines();
 
         for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)

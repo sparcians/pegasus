@@ -32,6 +32,12 @@ namespace pegasus::cosim
     void CoSimPipeline::setNumHarts(size_t num_harts) { hart_pipelines_.reserve(num_harts); }
 
     ////////////////////////////////////////////////////////////////////////////////////////
+    void CoSimPipeline::setEventWindowSize(size_t event_window_size)
+    {
+        event_window_size_ = event_window_size;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
     std::unique_ptr<simdb::pipeline::Pipeline>
     CoSimPipeline::createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor)
     {
@@ -41,7 +47,8 @@ namespace pegasus::cosim
 
         for (HartId hart_id = 0; hart_id < hart_pipelines_.capacity(); ++hart_id)
         {
-            hart_pipelines_.emplace_back(std::make_unique<CoSimHartPipeline>(db_accessor, hart_id));
+            hart_pipelines_.emplace_back(
+                std::make_unique<CoSimHartPipeline>(db_mgr_, db_accessor, hart_id));
             auto hart_pipeline = hart_pipelines_.at(hart_id).get();
 
             pipeline_input_queues_.emplace_back(std::make_unique<simdb::ConcurrentQueue<Event>>());
@@ -66,8 +73,10 @@ namespace pegasus::cosim
                     return false;
                 });
 
-            // Run the events through a 100-to-1 buffer
-            auto source_buffer = simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(100);
+            // Run the events through a buffer
+            constexpr bool flush_partial = true;
+            auto source_buffer = simdb::pipeline::createTask<simdb::pipeline::Buffer<Event>>(
+                event_window_size_, flush_partial);
 
             // Pre-validated "range" of events (euid auto-inc by 1 in the event vector)
             using ConvertToRangeFunction = simdb::pipeline::Function<EventBuffer, EventsRange>;
@@ -280,6 +289,18 @@ namespace pegasus::cosim
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
+    size_t CoSimPipeline::getNumCached(HartId hart_id) const
+    {
+        return hart_pipelines_.at(hart_id)->getNumCached();
+    }
+
+    size_t CoSimPipeline::CoSimHartPipeline::getNumCached() const
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return evt_cache_.size();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
     const Event* EventAccessor::operator->() { return get(); }
 
     const Event* EventAccessor::get()
@@ -291,11 +312,13 @@ namespace pegasus::cosim
 
         if (auto evt = cosim_pipeline_->getEventFromCache_(euid_, hart_id_))
         {
+            ++num_from_cache_;
             return evt;
         }
 
         if (auto evt = cosim_pipeline_->recreateEventFromDisk_(euid_, hart_id_))
         {
+            ++num_from_disk_;
             recreated_evt_ = std::move(evt);
             return recreated_evt_.get();
         }
@@ -361,6 +384,7 @@ namespace pegasus::cosim
         // as quickly as possible to run this query. The eval() method blocks
         // until the query is picked up and run.
         async_eval_->eval(query_func);
+
         if (compressed_evts_range.event_bytes.empty())
         {
             return nullptr;

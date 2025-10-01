@@ -7,6 +7,7 @@ import json
 import math
 import sys
 import os
+import argparse
 
 from insts.RVI_INST import RV32I_INST
 from insts.RVI_INST import RV64I_INST
@@ -19,19 +20,21 @@ from insts.RVF_INST import RV64F_INST
 from insts.RVD_INST import RV32D_INST
 from insts.RVD_INST import RV64D_INST
 
-from insts.RVZBA_INST import RV32ZBA_INST
-from insts.RVZBA_INST import RV64ZBA_INST
-from insts.RVZBB_INST import RV32ZBB_INST
-from insts.RVZBB_INST import RV64ZBB_INST
-from insts.RVZBC_INST import RV32ZBC_INST
-from insts.RVZBC_INST import RV64ZBC_INST
-from insts.RVZBS_INST import RV32ZBS_INST
-from insts.RVZBS_INST import RV64ZBS_INST
+from insts.RVZBA_INST   import RV32ZBA_INST
+from insts.RVZBA_INST   import RV64ZBA_INST
+from insts.RVZBB_INST   import RV32ZBB_INST
+from insts.RVZBB_INST   import RV64ZBB_INST
+from insts.RVZBC_INST   import RV32ZBC_INST
+from insts.RVZBC_INST   import RV64ZBC_INST
+from insts.RVZBKB_INST  import RV32ZBKB_INST
+from insts.RVZBKB_INST  import RV64ZBKB_INST
+from insts.RVZBS_INST   import RV32ZBS_INST
+from insts.RVZBS_INST   import RV64ZBS_INST
 
-from insts.RVZICSR_INST import RV32ZICSR_INST
-from insts.RVZICSR_INST import RV64ZICSR_INST
-from insts.RVZIFENCEI_INST import RV32ZIFENCEI_INST
-from insts.RVZIFENCEI_INST import RV64ZIFENCEI_INST
+from insts.RVZICSR_INST     import RV32ZICSR_INST
+from insts.RVZICSR_INST     import RV64ZICSR_INST
+from insts.RVZIFENCEI_INST  import RV32ZIFENCEI_INST
+from insts.RVZIFENCEI_INST  import RV64ZIFENCEI_INST
 
 from insts.RVZICBOP_INST import RV32ZICBOP_INST
 from insts.RVZICBOP_INST import RV64ZICBOP_INST
@@ -44,15 +47,17 @@ from insts.RVZICOND_INST import RV32ZICOND_INST
 from insts.RVZICOND_INST import RV64ZICOND_INST
 from insts.RVZCMP_INST import RV32ZCMP_INST
 from insts.RVZCMP_INST import RV64ZCMP_INST
+from insts.RVZCA_INST import RV32ZCA_INST
+from insts.RVZCA_INST import RV64ZCA_INST
 from insts.RVZABHA_INST import RV32ZABHA_INST
 from insts.RVZABHA_INST import RV64ZABHA_INST
 from insts.RVZILSD_INST import RV32ZILSD_INST
-from insts.RVZILSD_INST import RV64ZILSD_INST
 from insts.RVZFA_INST import RV32ZFA_INST
 from insts.RVZFA_INST import RV64ZFA_INST
 
 from insts.RVZVE64X_INST import RVZVE64X_INST
 from insts.RVZVE64D_INST import RVZVE64D_INST
+from insts.RVZVE64F_INST import RVZVE64F_INST
 from insts.RVZVE32X_INST import RVZVE32X_INST
 from insts.RVZVE32F_INST import RVZVE32F_INST
 
@@ -65,40 +70,14 @@ class InstJSONGenerator():
     """Generates instruction definition JSON files.
 
     Args:
-        isa_str (str): RISC-V ISA string (e.g. rv64imafd)
+        xlen (str): RISC-V XLEN string (e.g. "32" or "64")
+        extensions (list): List of supported extensions (e.g. "i", "v", "zicsr")
     """
-    def __init__(self, isa_str):
-        self.isa_str = isa_str
-
-        # Get xlen (32 or 64)
-        if "rv32" in isa_str:
-            self.xlen = 32
-            self.xlen_str = "rv32"
-        elif "rv64" in isa_str:
-            self.xlen = 64
-            self.xlen_str = "rv64"
-        else:
-            print("Invalid ISA string:", isa_str)
-            return
-
-        # Parse ISA string
-        self.extensions = []
-        isa_str = isa_str.removeprefix("rv32").removeprefix("rv64")
-        for ext in isa_str.split('_'):
-            if len(ext) == 1 or "Z" == ext[0] or "z" == ext[0]:
-                self.extensions.append(ext)
-            else:
-                for x in ext:
-                    if "g" == x:
-                        self.extensions.extend(['i', 'm', 'a', 'f', 'd'])
-                    elif "b" == x:
-                        self.extensions.extend(['zba', 'zbb', 'zbc', 'zbs'])
-                    elif "v" == x:
-                        self.extensions.extend(['zve64x', 'zve64d', 'zve32x', 'zve32f'])
-                    else:
-                        self.extensions.append(x)
-
+    def __init__(self, xlen, extensions):
+        self.xlen = xlen
+        self.extensions = extensions
         self.isa_map = {}
+
         for ext in self.extensions:
             xlen_str = "" if "zve" in ext else str(self.xlen)
             global_str = "RV" + xlen_str + ext.upper() + "_INST"
@@ -111,33 +90,110 @@ class InstJSONGenerator():
 
     def write_jsons(self):
         """Write register definitions to a JSON file in the given directory"""
+        xlen_str = "rv"+str(self.xlen)
+        gen_path = os.path.join(xlen_str, 'gen')
 
-        if not os.path.isdir(self.xlen_str):
-            os.makedirs(self.xlen_str)
+        if not os.path.isdir(gen_path):
+            os.makedirs(gen_path)
 
         for ext in self.extensions:
-            filename = self.xlen_str + "/pegasus_uarch_" + self.xlen_str + ext.lower() + ".json"
+            filename = os.path.join(gen_path, "pegasus_uarch_" + xlen_str + ext.lower() + ".json")
             with open(filename,"w") as fh:
                 json.dump(self.isa_map[ext], fh, indent=4)
 
+def get_supported_exts():
+    ''' Generates a string with all of the available extensions imported.
+        The format of the returned string is xlen_extension1_extension2_...'''
+    rv64_exts = list()
+    rv32_exts = list()
 
-USAGE_STR = "Usage: GenInstructionJSON.py [isa string]"
+    for var in globals().keys():
+        if "RV" == var[0:2]:
+            var = var.replace('_INST','').lower()
+            var = var.replace('rv','')
+            if "64" == var[0:2]:
+                var = var.replace("64",'')
+                rv64_exts.append(var)
+            elif "32" == var[0:2]:
+                var = var.replace("32",'')
+                rv32_exts.append(var)
+            else:
+                rv64_exts.append(var)
+                rv32_exts.append(var)
+        else:
+            continue
+
+    return (rv64_exts, rv32_exts)
+
+def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts):
+    ''' Writes header file with ISA defines '''
+    default_isa = "imafdcbv_zicsr_zifencei"
+
+    rv64_json_files = [ f'    "{arch_root}/rv64/gen/pegasus_uarch_rv64{ext}.json"' for ext in supported_rv64_exts ]
+    rv64_json_files_str = ', \\\n'.join( rv64_json_files )
+    rv32_json_files = [ f'    "{arch_root}/rv32/gen/pegasus_uarch_rv32{ext}.json"' for ext in supported_rv32_exts ]
+    rv32_json_files_str = ', \\\n'.join( rv32_json_files )
+
+    gen_path = 'gen'
+    if not os.path.isdir(gen_path):
+        os.makedirs(gen_path)
+
+    with open( os.path.join(gen_path, 'supportedISA.hpp'), 'w' ) as fh:
+        fh.write( '#pragma once\n\n' )
+        cmdline = ' '.join(sys.argv)
+        fh.write( f'// This file is autogenerated using: {cmdline}\n\n' )
+        fh.write( f'#define DEFAULT_ISA_STR "{default_isa}"\n' )
+        fh.write('#define SUPPORTED_RV64_EXTS {\\\n')
+        for idx, ext in enumerate(supported_rv64_exts):
+            # Last extension in the list
+            if idx == (len(supported_rv64_exts) - 1):
+                fh.write( f'    \"{ext}\", \"c\" }}\n')
+            else:
+                fh.write( f'    \"{ext}\", \\\n')
+        fh.write('#define SUPPORTED_RV32_EXTS {\\\n')
+        for idx, ext in enumerate(supported_rv32_exts):
+            # Last extension in the list
+            if idx == (len(supported_rv32_exts) - 1):
+                fh.write( f'    \"{ext}\", \"c\" }}\n')
+            else:
+                fh.write( f'    \"{ext}\", \\\n')
+        fh.write( '#define RV64_UARCH_JSON_LIST {\\\n' )
+        fh.write( rv64_json_files_str )
+        fh.write( ' }\n' )
+        fh.write( '#define RV32_UARCH_JSON_LIST {\\\n' )
+        fh.write( rv32_json_files_str )
+        fh.write( ' }\n' )
+
 def main():
-    """{USAGE_STR}"""
-    if(len(sys.argv) < 2):
-        print(USAGE_STR)
-        return
+    SUPPORTED_XLEN = ['rv32', 'rv64']
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="RISC-V Helper script for generating instruction uarch JSONs")
+    
+    parser.add_argument("xlen", choices=SUPPORTED_XLEN, metavar='xlen', nargs="?",
+                        help=f"XLEN ({', '.join(SUPPORTED_XLEN)})")
+    parser.add_argument("--gen-supported-isa-header", action="store_true",
+                        help="Only generates the supported/default ISA header files")
+    args = parser.parse_args()
 
     pegasus_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     arch_root = os.path.join(pegasus_root, 'arch')
 
     os.chdir(arch_root)
 
-    isa_string = sys.argv[1]
-    inst_handler_gen = InstJSONGenerator(isa_string)
+    supported_rv64_exts, supported_rv32_exts = get_supported_exts()
+
+    if args.gen_supported_isa_header:
+        gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts)
+        return
 
     # Instruction uarch jsons
-    inst_handler_gen.write_jsons()
+    if (args.xlen == "rv64"):
+        inst_handler_gen = InstJSONGenerator("64", supported_rv64_exts)
+        inst_handler_gen.write_jsons()
+    else:
+        inst_handler_gen = InstJSONGenerator("32", supported_rv32_exts)
+        inst_handler_gen.write_jsons()
 
 
 if __name__ == "__main__":
