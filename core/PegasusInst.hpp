@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include "core/PegasusExtractor.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
@@ -124,6 +123,11 @@ namespace pegasus
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::VM);
         }
 
+        uint64_t getNF() const
+        {
+            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::NF);
+        }
+
         uint64_t getStackAdjustment() const
         {
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::STACK_ADJ);
@@ -173,7 +177,7 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        std::shared_ptr<VectorConfig> & getVecConfig() { return vec_config_; }
+        sparta::SpartaSharedPointer<VectorConfig> & getVecConfig() { return vec_config_; }
 
         // Translation information.  Specifically, this is for data
         // accesses
@@ -196,7 +200,7 @@ namespace pegasus
         const uint64_t immediate_value_;
 
         // Vector Config that is different than global
-        std::shared_ptr<VectorConfig> vec_config_;
+        sparta::SpartaSharedPointer<VectorConfig> vec_config_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;

@@ -564,7 +564,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto & configPtr = inst->getVecConfig();
-        configPtr = std::make_shared<VectorConfig>(*state->getVectorConfig());
+        configPtr = sparta::SpartaSharedPointer{new VectorConfig{*state->getVectorConfig()}};
         configPtr->setLMUL(nReg * 8);
         configPtr->setVL(configPtr->getVLMAX());
         Elements<Element<elemWidth>, false> elems_vs2{state, configPtr.get(), inst->getRs2()};
