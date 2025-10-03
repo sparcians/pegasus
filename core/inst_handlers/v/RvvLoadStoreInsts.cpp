@@ -638,14 +638,8 @@ namespace pegasus
         {
             for (size_t i = config->getVSTART(); i < config->getVL(); ++i)
             {
-                if (ffirst && i == 0)
-                {
-                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb, true);
-                }
-                else
-                {
-                    inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb);
-                }
+                const bool throw_fault = ffirst && (i == 0);
+                inst->getTranslationState()->makeRequest(rs1_val + i * stride, eewb, throw_fault);
             }
         }
         else // masked
