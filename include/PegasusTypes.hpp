@@ -59,12 +59,14 @@ namespace pegasus
     {
         USER = 0,
         SUPERVISOR = 1,
-        // HYPERVISOR,
+        HYPERVISOR = 2,
         MACHINE = 3,
-        // VIRTUAL_USER,
-        // VIRTUAL_SUPERVISOR
+        VIRTUAL_USER = 4,
+        VIRTUAL_SUPERVISOR = 5,
         INVALID
     };
+
+    static constexpr uint32_t N_PRIV_MODES = static_cast<uint32_t>(PrivMode::INVALID);
 
     enum class ExcpType
     {
