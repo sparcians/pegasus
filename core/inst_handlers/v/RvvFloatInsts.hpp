@@ -19,13 +19,11 @@ namespace pegasus
       public:
         using base_type = RvvFloatInsts;
 
-        template <typename F16, typename F32, typename F64> struct FloatFuncs
+        template <auto F16, auto F32, auto F64> struct FloatFuncs
         {
-            const F16 f16;
-            const F32 f32;
-            const F64 f64;
-
-            constexpr FloatFuncs(F16 f16, F32 f32, F64 f64) : f16(f16), f32(f32), f64(f64) {}
+            static constexpr auto f16 = F16;
+            static constexpr auto f32 = F32;
+            static constexpr auto f64 = F64;
         };
 
         template <typename XLEN>
@@ -39,7 +37,7 @@ namespace pegasus
         Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs,
+        template <typename XLEN6, OperandMode opMode, typename funcs,
                   RoundingMode rm = RoundingMode::DYN>
         Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);

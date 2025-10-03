@@ -38,7 +38,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_sqrt, f32_sqrt, f64_sqrt}>,
+                    FloatFuncs<f16_sqrt, f32_sqrt, f64_sqrt>>,
                 RvvFloatInsts>(nullptr, "vfsqrt.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -950,7 +950,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs, RoundingMode rm>
+    template <typename XLEN, OperandMode opMode, typename funcs, RoundingMode rm>
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
@@ -959,20 +959,20 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                if constexpr (funcs.f16 == nullptr)
+                if constexpr (funcs::f16 == nullptr)
                 {
                     sparta_assert(false, "Unsupported SEW value");
                 }
                 else
                 {
                     return vfUnaryHelper<XLEN, 16, opMode,
-                                         [](auto src2) { return func_wrapper(funcs.f16, src2); },
+                                         [](auto src2) { return func_wrapper(funcs::f16, src2); },
                                          rm>(state, action_it);
                 }
                 break;
             case 32:
                 return vfUnaryHelper<XLEN, 32, opMode,
-                                     [](auto src2) { return func_wrapper(funcs.f32, src2); }, rm>(
+                                     [](auto src2) { return func_wrapper(funcs::f32, src2); }, rm>(
                     state, action_it);
 
             case 64:
@@ -981,7 +981,7 @@ namespace pegasus
                               && opMode.src2 != OperandMode::Mode::W)
                 {
                     return vfUnaryHelper<XLEN, 64, opMode,
-                                         [](auto src2) { return func_wrapper(funcs.f64, src2); },
+                                         [](auto src2) { return func_wrapper(funcs::f64, src2); },
                                          rm>(state, action_it);
                 }
             default:
