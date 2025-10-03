@@ -311,6 +311,14 @@ namespace pegasus
         }
     }
 
+    void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
+    {
+        sparta_assert(isPrivilegeModeSupported(priv_mode),
+            "Attempting to change privilege mode to an unsupport mode: " << priv_mode);
+        virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
+        priv_mode_ = priv_mode;
+    }
+
     template <typename XLEN> void PegasusState::changeMMUMode()
     {
         static const std::vector<MMUMode> satp_mmu_mode_map = {
