@@ -59,12 +59,14 @@ namespace pegasus
     {
         USER = 0,
         SUPERVISOR = 1,
-        // HYPERVISOR,
+        HYPERVISOR = 2,
         MACHINE = 3,
-        // VIRTUAL_USER,
-        // VIRTUAL_SUPERVISOR
+        VIRTUAL_USER = 4,
+        VIRTUAL_SUPERVISOR = 5,
         INVALID
     };
+
+    static constexpr uint32_t N_PRIV_MODES = static_cast<uint32_t>(PrivMode::INVALID);
 
     enum class ExcpType
     {
@@ -124,6 +126,35 @@ namespace pegasus
     };
 
     static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
+
+    inline std::ostream & operator<<(std::ostream & os, const PrivMode mode)
+    {
+        switch (mode)
+        {
+            case PrivMode::USER:
+                os << "USER";
+                break;
+            case PrivMode::SUPERVISOR:
+                os << "SUPERVISOR";
+                break;
+            case PrivMode::HYPERVISOR:
+                os << "HYPERVISOR";
+                break;
+            case PrivMode::MACHINE:
+                os << "MACHINE";
+                break;
+            case PrivMode::VIRTUAL_USER:
+                os << "VIRTUAL_USER";
+                break;
+            case PrivMode::VIRTUAL_SUPERVISOR:
+                os << "VIRTUAL_SUPERVISOR";
+                break;
+            case PrivMode::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
 
     inline std::ostream & operator<<(std::ostream & os, const MMUMode mode)
     {
