@@ -31,7 +31,7 @@ namespace pegasus
         static void getInstHandlers(std::map<std::string, Action> & inst_handlers);
 
       private:
-        template <typename XLEN, size_t elemWidth, AddressingMode addrMode>
+        template <typename XLEN, size_t elemWidth, AddressingMode addrMode, bool ffirst = false>
         Action::ItrType vlseComputeAddressHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it);
         template <typename XLEN, size_t elemWidth, AddressingMode addrMode>
@@ -44,7 +44,7 @@ namespace pegasus
         Action::ItrType vlsmComputeAddressHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it);
 
-        template <size_t elemWidth, bool isLoad>
+        template <size_t elemWidth, bool isLoad, bool ffirst = false>
         Action::ItrType vlseHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <bool isLoad>
         Action::ItrType vlseIdxHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
