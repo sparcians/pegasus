@@ -26,6 +26,11 @@ namespace pegasus
         return F{static_cast<U>(f.v ^ usgnmask<U>())};
     }
 
+    template float16_t fnegate<float16_t>(float16_t);
+    template float32_t fnegate<float32_t>(float32_t);
+    template float64_t fnegate<float64_t>(float64_t);
+
+
     template <typename F> inline F fmin(F f1, F f2)
     {
         if constexpr (std::is_same_v<F, float16_t>)
@@ -41,6 +46,11 @@ namespace pegasus
             return f64_le_quiet(f1, f2) ? f1 : f2;
         }
     }
+
+    template float16_t fmin<float16_t>(float16_t, float16_t);
+    template float32_t fmin<float32_t>(float32_t, float32_t);
+    template float64_t fmin<float64_t>(float64_t, float64_t);
+
 
     template <typename F> inline F fmax(F f1, F f2)
     {
@@ -58,6 +68,11 @@ namespace pegasus
         }
     }
 
+    template float16_t fmax<float16_t>(float16_t, float16_t);
+    template float32_t fmax<float32_t>(float32_t, float32_t);
+    template float64_t fmax<float64_t>(float64_t, float64_t);
+
+
     // sign injection
 
     template <typename F> inline F fsgnj(F f1, F f2)
@@ -67,6 +82,11 @@ namespace pegasus
         return F{static_cast<U>((f1.v & ~mask) | (f2.v & mask))};
     }
 
+    template float16_t fsgnj<float16_t>(float16_t, float16_t);
+    template float32_t fsgnj<float32_t>(float32_t, float32_t);
+    template float64_t fsgnj<float64_t>(float64_t, float64_t);
+
+
     template <typename F> inline F fsgnjn(F f1, F f2)
     {
         using U = decltype(f1.v);
@@ -74,12 +94,22 @@ namespace pegasus
         return F{static_cast<U>((f1.v & ~mask) | ((f2.v & mask) ^ mask))};
     }
 
+    template float16_t fsgnjn<float16_t>(float16_t, float16_t);
+    template float32_t fsgnjn<float32_t>(float32_t, float32_t);
+    template float64_t fsgnjn<float64_t>(float64_t, float64_t);
+
+
     template <typename F> inline F fsgnjx(F f1, F f2)
     {
         using U = decltype(f1.v);
         const U mask = usgnmask<U>();
         return F{static_cast<U>((f1.v & ~mask) | ((f1.v ^ f2.v) & mask))};
     }
+
+    template float16_t fsgnjx<float16_t>(float16_t, float16_t);
+    template float32_t fsgnjx<float32_t>(float32_t, float32_t);
+    template float64_t fsgnjx<float64_t>(float64_t, float64_t);
+
 
     // compare
 
@@ -99,6 +129,11 @@ namespace pegasus
         }
     }
 
+    template bool fne<float16_t>(float16_t, float16_t);
+    template bool fne<float32_t>(float32_t, float32_t);
+    template bool fne<float64_t>(float64_t, float64_t);
+
+
     template <typename F> inline bool fgt(F f1, F f2)
     {
         if constexpr (std::is_same_v<F, float16_t>)
@@ -115,6 +150,11 @@ namespace pegasus
         }
     }
 
+    template bool fgt<float16_t>(float16_t, float16_t);
+    template bool fgt<float32_t>(float32_t, float32_t);
+    template bool fgt<float64_t>(float64_t, float64_t);
+
+
     template <typename F> inline bool fge(F f1, F f2)
     {
         if constexpr (std::is_same_v<F, float16_t>)
@@ -130,6 +170,11 @@ namespace pegasus
             return !f64_lt(f1, f2);
         }
     }
+
+    template bool fge<float16_t>(float16_t, float16_t);
+    template bool fge<float32_t>(float32_t, float32_t);
+    template bool fge<float64_t>(float64_t, float64_t);
+
 
     template <typename U> inline uint16_t fclass(U u)
     {
@@ -217,6 +262,11 @@ namespace pegasus
         }
         return val;
     }
+
+    template uint16_t fclass<uint16_t>(uint16_t);
+    template uint16_t fclass<uint32_t>(uint32_t);
+    template uint16_t fclass<uint64_t>(uint64_t);
+
 
     static inline uint64_t extract64(uint64_t val, int pos, int len)
     {
@@ -342,6 +392,11 @@ namespace pegasus
         return ret;
     }
 
+    template uint16_t frecip7<uint16_t>(uint16_t);
+    template uint32_t frecip7<uint32_t>(uint32_t);
+    template uint64_t frecip7<uint64_t>(uint64_t);
+
+
     // user needs to truncate output to required length
     static inline uint64_t rsqrt7(uint64_t val, int e, int s, bool sub)
     {
@@ -422,6 +477,13 @@ namespace pegasus
 
         return ret;
     }
+
+    template uint16_t frsqrt7<uint16_t>(uint16_t);
+    template uint32_t frsqrt7<uint32_t>(uint32_t);
+    template uint64_t frsqrt7<uint64_t>(uint64_t);
+
+
+    // helper functions
 
     template <typename XLEN> void restoreFloatCsrs(PegasusState* state)
     {
