@@ -1,6 +1,5 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusState.hpp"
-#include "core/VecConfig.hpp"
 
 namespace pegasus
 {
@@ -44,6 +43,7 @@ namespace pegasus
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
         is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
         immediate_value_(getImmediateValue(opcode_info)),
+        veccfg_override_(extractor_info_->getVectorConfigOverride()),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
         rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(

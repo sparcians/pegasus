@@ -179,6 +179,8 @@ namespace pegasus
 
         VectorConfig* getVectorConfig() { return vector_config_.get(); }
 
+        sparta::SpartaSharedPointer<VectorConfig> makeVectorConfig();
+
         const PegasusInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
         void setCurrentInst(PegasusInstPtr inst)

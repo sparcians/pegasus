@@ -1,6 +1,6 @@
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
-#include "core/VecElements.hpp"
+#include "core/VecConfig.hpp"
 #include "core/Fetch.hpp"
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
@@ -751,6 +751,13 @@ namespace pegasus
         {
             sim_controller_->onSimulationFinished(this);
         }
+    }
+
+    sparta::SpartaSharedPointer<VectorConfig> PegasusState::makeVectorConfig()
+    {
+        const auto & inst = this->getCurrentInst();
+        const auto & cfgo = inst->getVectorConfigOverride();
+        return sparta::SpartaSharedPointer{new VectorConfig{cfgo->apply(*this->getVectorConfig())}};
     }
 
 } // namespace pegasus

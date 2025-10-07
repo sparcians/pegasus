@@ -563,8 +563,7 @@ namespace pegasus
     Action::ItrType vmvrHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto & configPtr = inst->getVecConfig();
-        configPtr = sparta::SpartaSharedPointer{new VectorConfig{*state->getVectorConfig()}};
+        const auto & configPtr = state->makeVectorConfig();
         configPtr->setLMUL(nReg * 8);
         configPtr->setVL(configPtr->getVLMAX());
         Elements<Element<elemWidth>, false> elems_vs2{state, configPtr.get(), inst->getRs2()};

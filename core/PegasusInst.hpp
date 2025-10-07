@@ -14,7 +14,7 @@ namespace sparta
 namespace pegasus
 {
     class PegasusState;
-    class VectorConfig;
+    struct VectorConfigOverride;
 
     class PegasusInst
     {
@@ -123,11 +123,6 @@ namespace pegasus
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::VM);
         }
 
-        uint64_t getNF() const
-        {
-            return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::NF);
-        }
-
         uint64_t getStackAdjustment() const
         {
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::STACK_ADJ);
@@ -177,7 +172,10 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        sparta::SpartaSharedPointer<VectorConfig> & getVecConfig() { return vec_config_; }
+        sparta::SpartaSharedPointer<VectorConfigOverride> & getVectorConfigOverride()
+        {
+            return veccfg_override_;
+        }
 
         // Translation information.  Specifically, this is for data
         // accesses
@@ -199,8 +197,8 @@ namespace pegasus
         // Cache immediate value, unsigned and signed
         const uint64_t immediate_value_;
 
-        // Vector Config that is different than global
-        sparta::SpartaSharedPointer<VectorConfig> vec_config_;
+        // Vector Config Override that is different than global
+        sparta::SpartaSharedPointer<VectorConfigOverride> veccfg_override_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;

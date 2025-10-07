@@ -813,8 +813,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto & configPtr = inst->getVecConfig();
-        configPtr = sparta::SpartaSharedPointer{new VectorConfig{*state->getVectorConfig()}};
+        const auto & configPtr = state->makeVectorConfig();
         configPtr->setLMUL(nReg * 8);
         configPtr->setVL(configPtr->getVLMAX());
         Elements<Element<elemWidth>, false> elems{state, configPtr.get(),
@@ -847,8 +846,7 @@ namespace pegasus
     {
         constexpr size_t BYTESIZE = 8;
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto & configPtr = inst->getVecConfig();
-        configPtr = sparta::SpartaSharedPointer{new VectorConfig{*state->getVectorConfig()}};
+        const auto & configPtr = state->makeVectorConfig();
         configPtr->setLMUL(1 * 8);
         configPtr->setVL((configPtr->getVL() + BYTESIZE - 1) / BYTESIZE);
         Elements<Element<BYTESIZE>, false> elems{state, configPtr.get(),
