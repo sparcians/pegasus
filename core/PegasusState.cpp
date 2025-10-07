@@ -41,12 +41,16 @@ namespace pegasus
             }
             else
             {
-                sparta_assert(false, "Unsupported privilege modes: " << priv);
+                sparta_assert(false, "Unsupported privilege modes: "
+                                         << priv
+                                         << "\nSupported privilege modes are: Machine (M), "
+                                            "Supervisor (S) and User (U)");
             }
         }
 
         return priv_modes;
     }
+
     uint32_t getXlenFromIsaString(const std::string & isa_string)
     {
         if (isa_string.find("32") != std::string::npos)
@@ -314,7 +318,7 @@ namespace pegasus
     void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
     {
         sparta_assert(isPrivilegeModeSupported(priv_mode),
-            "Attempting to change privilege mode to an unsupport mode: " << priv_mode);
+                      "Attempting to change privilege mode to an unsupport mode: " << priv_mode);
         virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
         priv_mode_ = priv_mode;
     }
