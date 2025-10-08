@@ -43,7 +43,7 @@ namespace pegasus
                                           RvzbInstsBase>(nullptr, "maxu", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "min",
-            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<RV32, Min<SXLEN>>,
+            pegasus::Action::createAction<&RvzbbInsts::binaryOpHandler_<XLEN, Min<SXLEN>>,
                                           RvzbInstsBase>(nullptr, "min", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "minu",
