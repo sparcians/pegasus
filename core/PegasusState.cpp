@@ -21,23 +21,23 @@
 
 namespace pegasus
 {
-    std::vector<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
+    std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
     {
-        std::vector<PrivMode> priv_modes(N_PRIV_MODES, PrivMode::INVALID);
+        std::unordered_set<PrivMode> priv_modes;
 
         for (const char mode : priv)
         {
             if (mode == 'm')
             {
-                priv_modes[static_cast<uint32_t>(PrivMode::MACHINE)] = PrivMode::MACHINE;
+                priv_modes.emplace(PrivMode::MACHINE);
             }
             else if (mode == 's')
             {
-                priv_modes[static_cast<uint32_t>(PrivMode::SUPERVISOR)] = PrivMode::SUPERVISOR;
+                priv_modes.emplace(PrivMode::SUPERVISOR);
             }
             else if (mode == 'u')
             {
-                priv_modes[static_cast<uint32_t>(PrivMode::USER)] = PrivMode::USER;
+                priv_modes.emplace(PrivMode::USER);
             }
             else
             {
@@ -318,7 +318,7 @@ namespace pegasus
     void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
     {
         sparta_assert(isPrivilegeModeSupported(priv_mode),
-                      "Attempting to change privilege mode to an unsupport mode: " << priv_mode);
+                      "Attempting to change privilege mode to an unsupported mode: " << priv_mode);
         virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
         priv_mode_ = priv_mode;
     }

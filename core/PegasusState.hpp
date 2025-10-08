@@ -98,7 +98,7 @@ namespace pegasus
 
         bool isPrivilegeModeSupported(const PrivMode mode) const
         {
-            return supported_priv_modes_[static_cast<uint32_t>(mode)] != PrivMode::INVALID;
+            return supported_priv_modes_.contains(mode);
         }
 
         uint64_t getXlen() const { return xlen_; }
@@ -306,7 +306,7 @@ namespace pegasus
         const std::string isa_string_;
 
         // Supported privilege modes
-        const std::vector<PrivMode> supported_priv_modes_;
+        const std::unordered_set<PrivMode> supported_priv_modes_;
 
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;
