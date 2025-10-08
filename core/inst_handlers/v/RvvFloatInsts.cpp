@@ -38,7 +38,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_sqrt, f32_sqrt, f64_sqrt}>,
+                    FloatFuncs<f16_sqrt, f32_sqrt, f64_sqrt>>,
                 RvvFloatInsts>(nullptr, "vfsqrt.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -46,42 +46,42 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}>,
+                    FloatFuncs<nullptr, f32_to_ui32, f64_to_ui64>>,
                 RvvFloatInsts>(nullptr, "vfcvt.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_i32, f64_to_i64}>,
+                    FloatFuncs<nullptr, f32_to_i32, f64_to_i64>>,
                 RvvFloatInsts>(nullptr, "vfcvt.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.rtz.xu.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_ui32, f64_to_ui64}, RoundingMode::MINMAG>,
+                    FloatFuncs<nullptr, f32_to_ui32, f64_to_ui64>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.rtz.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, f32_to_i32, f64_to_i64}, RoundingMode::MINMAG>,
+                    FloatFuncs<nullptr, f32_to_i32, f64_to_i64>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.f.xu.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, ui32_to_f32, ui64_to_f64}>,
+                    FloatFuncs<nullptr, ui32_to_f32, ui64_to_f64>>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.xu.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfcvt.f.x.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, i32_to_f32, i64_to_f64}>,
+                    FloatFuncs<nullptr, i32_to_f32, i64_to_f64>>,
                 RvvFloatInsts>(nullptr, "vfcvt.f.x.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -89,49 +89,49 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_ui32, f32_to_ui64, nullptr}>,
+                    FloatFuncs<f16_to_ui32, f32_to_ui64, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfwcvt.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_i32, f32_to_i64, nullptr}>,
+                    FloatFuncs<f16_to_i32, f32_to_i64, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfwcvt.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.rtz.xu.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_ui32, f32_to_ui64, nullptr}, RoundingMode::MINMAG>,
+                    FloatFuncs<f16_to_ui32, f32_to_ui64, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfwcvt.rtz.xu.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.rtz.x.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_i32, f32_to_i64, nullptr}, RoundingMode::MINMAG>,
+                    FloatFuncs<f16_to_i32, f32_to_i64, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfwcvt.rtz.x.f.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.f.xu.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, ui32_to_f64, nullptr}>,
+                    FloatFuncs<nullptr, ui32_to_f64, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfwcvt.f.xu.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.f.x.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{nullptr, i32_to_f64, nullptr}>,
+                    FloatFuncs<nullptr, i32_to_f64, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfwcvt.f.x.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwcvt.f.f.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::W, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{f16_to_f32, f32_to_f64, nullptr}>,
+                    FloatFuncs<f16_to_f32, f32_to_f64, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfwcvt.f.x.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -139,56 +139,56 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_ui32, nullptr}>,
+                    FloatFuncs<nullptr, f64_to_ui32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_i32, nullptr}>,
+                    FloatFuncs<nullptr, f64_to_i32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.xu.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_ui32, nullptr}, RoundingMode::MINMAG>,
+                    FloatFuncs<nullptr, f64_to_ui32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{nullptr, f64_to_i32, nullptr}, RoundingMode::MINMAG>,
+                    FloatFuncs<nullptr, f64_to_i32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.xu.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{ui32_to_f16, ui64_to_f32, nullptr}>,
+                    FloatFuncs<ui32_to_f16, ui64_to_f32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.f.xu.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.x.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{i32_to_f16, i64_to_f32, nullptr}>,
+                    FloatFuncs<i32_to_f16, i64_to_f32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.f.x.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{f32_to_f16, f64_to_f32, nullptr}>,
+                    FloatFuncs<f32_to_f16, f64_to_f32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.f.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rod.f.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs{f32_to_f16, f64_to_f32, nullptr}, RoundingMode::ODD>,
+                    FloatFuncs<f32_to_f16, f64_to_f32, nullptr>, RoundingMode::ODD>,
                 RvvFloatInsts>(nullptr, "vfncvt.rod.f.f.w", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -196,7 +196,7 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>}>,
+                    FloatFuncs<fclass<uint16_t>, fclass<uint32_t>, fclass<uint64_t>>>,
                 RvvFloatInsts>(nullptr, "vfclass.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -204,14 +204,14 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{frecip7<uint16_t>, frecip7<uint32_t>, frecip7<uint64_t>}>,
+                    FloatFuncs<frecip7<uint16_t>, frecip7<uint32_t>, frecip7<uint64_t>>>,
                 RvvFloatInsts>(nullptr, "vfrec7.v", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfrsqrt7.v",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfUnaryHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::V},
-                    FloatFuncs{frsqrt7<uint16_t>, frsqrt7<uint32_t>, frsqrt7<uint64_t>}>,
+                    FloatFuncs<frsqrt7<uint16_t>, frsqrt7<uint32_t>, frsqrt7<uint64_t>>>,
                 RvvFloatInsts>(nullptr, "vfrsqrt7.v", ActionTags::EXECUTE_TAG));
 
         // binary operations
@@ -223,7 +223,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfadd.vf",
@@ -232,7 +232,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfadd.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsub.vv",
@@ -241,7 +241,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfsub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsub.vf",
@@ -250,12 +250,12 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfsub.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfrsub.vf",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfrBinaryHandler_<XLEN, FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                &RvvFloatInsts::vfrBinaryHandler_<XLEN, FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfrsub.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfmul.vv",
@@ -264,7 +264,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_mul, f32_mul, f64_mul}>,
+                                                 FloatFuncs<f16_mul, f32_mul, f64_mul>>,
                 RvvFloatInsts>(nullptr, "vfmul.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfmul.vf",
@@ -273,7 +273,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_mul, f32_mul, f64_mul}>,
+                                                 FloatFuncs<f16_mul, f32_mul, f64_mul>>,
                 RvvFloatInsts>(nullptr, "vfmul.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfdiv.vv",
@@ -282,7 +282,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_div, f32_div, f64_div}>,
+                                                 FloatFuncs<f16_div, f32_div, f64_div>>,
                 RvvFloatInsts>(nullptr, "vfdiv.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfdiv.vf",
@@ -291,12 +291,12 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::V,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_div, f32_div, f64_div}>,
+                                                 FloatFuncs<f16_div, f32_div, f64_div>>,
                 RvvFloatInsts>(nullptr, "vfdiv.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfrdiv.vf",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfrBinaryHandler_<XLEN, FloatFuncs{f16_div, f32_div, f64_div}>,
+                &RvvFloatInsts::vfrBinaryHandler_<XLEN, FloatFuncs<f16_div, f32_div, f64_div>>,
                 RvvFloatInsts>(nullptr, "vfrdiv.vf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -306,7 +306,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfwadd.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwadd.vf",
@@ -315,7 +315,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfwadd.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwsub.vv",
@@ -324,7 +324,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfwsub.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwsub.vf",
@@ -333,7 +333,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfwsub.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwmul.vv",
@@ -342,7 +342,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_mul, f32_mul, f64_mul}>,
+                                                 FloatFuncs<f16_mul, f32_mul, f64_mul>>,
                 RvvFloatInsts>(nullptr, "vfwmul.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwmul.vf",
@@ -351,7 +351,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::V,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_mul, f32_mul, f64_mul}>,
+                                                 FloatFuncs<f16_mul, f32_mul, f64_mul>>,
                 RvvFloatInsts>(nullptr, "vfwmul.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwadd.wv",
@@ -360,7 +360,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::W,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfwadd.wv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwadd.wf",
@@ -369,7 +369,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::W,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_add, f32_add, f64_add}>,
+                                                 FloatFuncs<f16_add, f32_add, f64_add>>,
                 RvvFloatInsts>(nullptr, "vfwadd.wf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwsub.wv",
@@ -378,7 +378,7 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::W,
                                                              .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfwsub.wv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfwsub.wf",
@@ -387,68 +387,66 @@ namespace pegasus
                                                  OperandMode{.dst = OperandMode::Mode::W,
                                                              .src2 = OperandMode::Mode::W,
                                                              .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{f16_sub, f32_sub, f64_sub}>,
+                                                 FloatFuncs<f16_sub, f32_sub, f64_sub>>,
                 RvvFloatInsts>(nullptr, "vfwsub.wf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vfsgnj.vv",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{fsgnj<float16_t>, fsgnj<float32_t>,
-                                                            fsgnj<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfsgnj.vv", ActionTags::EXECUTE_TAG));
+            "vfsgnj.vv", pegasus::Action::createAction<
+                             &RvvFloatInsts::vfBinaryHandler_<
+                                 XLEN,
+                                 OperandMode{.dst = OperandMode::Mode::V,
+                                             .src2 = OperandMode::Mode::V,
+                                             .src1 = OperandMode::Mode::V},
+                                 FloatFuncs<fsgnj<float16_t>, fsgnj<float32_t>, fsgnj<float64_t>>>,
+                             RvvFloatInsts>(nullptr, "vfsgnj.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfsgnj.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{fsgnj<float16_t>, fsgnj<float32_t>,
-                                                            fsgnj<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfsgnj.vf", ActionTags::EXECUTE_TAG));
+            "vfsgnj.vf", pegasus::Action::createAction<
+                             &RvvFloatInsts::vfBinaryHandler_<
+                                 XLEN,
+                                 OperandMode{.dst = OperandMode::Mode::V,
+                                             .src2 = OperandMode::Mode::V,
+                                             .src1 = OperandMode::Mode::F},
+                                 FloatFuncs<fsgnj<float16_t>, fsgnj<float32_t>, fsgnj<float64_t>>>,
+                             RvvFloatInsts>(nullptr, "vfsgnj.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsgnjn.vv",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{fsgnjn<float16_t>, fsgnjn<float32_t>,
-                                                            fsgnjn<float64_t>}>,
+                &RvvFloatInsts::vfBinaryHandler_<
+                    XLEN,
+                    OperandMode{.dst = OperandMode::Mode::V,
+                                .src2 = OperandMode::Mode::V,
+                                .src1 = OperandMode::Mode::V},
+                    FloatFuncs<fsgnjn<float16_t>, fsgnjn<float32_t>, fsgnjn<float64_t>>>,
                 RvvFloatInsts>(nullptr, "vfsgnjn.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsgnjn.vf",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{fsgnjn<float16_t>, fsgnjn<float32_t>,
-                                                            fsgnjn<float64_t>}>,
+                &RvvFloatInsts::vfBinaryHandler_<
+                    XLEN,
+                    OperandMode{.dst = OperandMode::Mode::V,
+                                .src2 = OperandMode::Mode::V,
+                                .src1 = OperandMode::Mode::F},
+                    FloatFuncs<fsgnjn<float16_t>, fsgnjn<float32_t>, fsgnjn<float64_t>>>,
                 RvvFloatInsts>(nullptr, "vfsgnjn.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsgnjx.vv",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{fsgnjx<float16_t>, fsgnjx<float32_t>,
-                                                            fsgnjx<float64_t>}>,
+                &RvvFloatInsts::vfBinaryHandler_<
+                    XLEN,
+                    OperandMode{.dst = OperandMode::Mode::V,
+                                .src2 = OperandMode::Mode::V,
+                                .src1 = OperandMode::Mode::V},
+                    FloatFuncs<fsgnjx<float16_t>, fsgnjx<float32_t>, fsgnjx<float64_t>>>,
                 RvvFloatInsts>(nullptr, "vfsgnjx.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfsgnjx.vf",
             pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{fsgnjx<float16_t>, fsgnjx<float32_t>,
-                                                            fsgnjx<float64_t>}>,
+                &RvvFloatInsts::vfBinaryHandler_<
+                    XLEN,
+                    OperandMode{.dst = OperandMode::Mode::V,
+                                .src2 = OperandMode::Mode::V,
+                                .src1 = OperandMode::Mode::F},
+                    FloatFuncs<fsgnjx<float16_t>, fsgnjx<float32_t>, fsgnjx<float64_t>>>,
                 RvvFloatInsts>(nullptr, "vfsgnjx.vf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -458,7 +456,7 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::V},
-                                                  FloatFuncs{f16_eq, f32_eq, f64_eq}>,
+                                                  FloatFuncs<f16_eq, f32_eq, f64_eq>>,
                 RvvFloatInsts>(nullptr, "vmfeq.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmfeq.vf",
@@ -467,28 +465,26 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{f16_eq, f32_eq, f64_eq}>,
+                                                  FloatFuncs<f16_eq, f32_eq, f64_eq>>,
                 RvvFloatInsts>(nullptr, "vmfeq.vf", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vmfne.vv",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vmfBinaryHandler_<XLEN,
-                                                  OperandMode{.dst = OperandMode::Mode::V,
-                                                              .src2 = OperandMode::Mode::V,
-                                                              .src1 = OperandMode::Mode::V},
-                                                  FloatFuncs{fne<float16_t>, fne<float32_t>,
-                                                             fne<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vmfne.vv", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vmfne.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vmfBinaryHandler_<XLEN,
-                                                  OperandMode{.dst = OperandMode::Mode::V,
-                                                              .src2 = OperandMode::Mode::V,
-                                                              .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{fne<float16_t>, fne<float32_t>,
-                                                             fne<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vmfne.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace("vmfne.vv",
+                              pegasus::Action::createAction<
+                                  &RvvFloatInsts::vmfBinaryHandler_<
+                                      XLEN,
+                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                  .src2 = OperandMode::Mode::V,
+                                                  .src1 = OperandMode::Mode::V},
+                                      FloatFuncs<fne<float16_t>, fne<float32_t>, fne<float64_t>>>,
+                                  RvvFloatInsts>(nullptr, "vmfne.vv", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace("vmfne.vf",
+                              pegasus::Action::createAction<
+                                  &RvvFloatInsts::vmfBinaryHandler_<
+                                      XLEN,
+                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                  .src2 = OperandMode::Mode::V,
+                                                  .src1 = OperandMode::Mode::F},
+                                      FloatFuncs<fne<float16_t>, fne<float32_t>, fne<float64_t>>>,
+                                  RvvFloatInsts>(nullptr, "vmfne.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmflt.vv",
             pegasus::Action::createAction<
@@ -496,7 +492,7 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::V},
-                                                  FloatFuncs{f16_lt, f32_lt, f64_lt}>,
+                                                  FloatFuncs<f16_lt, f32_lt, f64_lt>>,
                 RvvFloatInsts>(nullptr, "vmflt.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmflt.vf",
@@ -505,7 +501,7 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{f16_lt, f32_lt, f64_lt}>,
+                                                  FloatFuncs<f16_lt, f32_lt, f64_lt>>,
                 RvvFloatInsts>(nullptr, "vmflt.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmfle.vv",
@@ -514,7 +510,7 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::V},
-                                                  FloatFuncs{f16_le, f32_le, f64_le}>,
+                                                  FloatFuncs<f16_le, f32_le, f64_le>>,
                 RvvFloatInsts>(nullptr, "vmfle.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmfle.vf",
@@ -523,28 +519,26 @@ namespace pegasus
                                                   OperandMode{.dst = OperandMode::Mode::V,
                                                               .src2 = OperandMode::Mode::V,
                                                               .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{f16_le, f32_le, f64_le}>,
+                                                  FloatFuncs<f16_le, f32_le, f64_le>>,
                 RvvFloatInsts>(nullptr, "vmfle.vf", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vmfgt.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vmfBinaryHandler_<XLEN,
-                                                  OperandMode{.dst = OperandMode::Mode::V,
-                                                              .src2 = OperandMode::Mode::V,
-                                                              .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{fgt<float16_t>, fgt<float32_t>,
-                                                             fgt<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vmfgt.vf", ActionTags::EXECUTE_TAG));
-        inst_handlers.emplace(
-            "vmfge.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vmfBinaryHandler_<XLEN,
-                                                  OperandMode{.dst = OperandMode::Mode::V,
-                                                              .src2 = OperandMode::Mode::V,
-                                                              .src1 = OperandMode::Mode::F},
-                                                  FloatFuncs{fge<float16_t>, fge<float32_t>,
-                                                             fge<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vmfge.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace("vmfgt.vf",
+                              pegasus::Action::createAction<
+                                  &RvvFloatInsts::vmfBinaryHandler_<
+                                      XLEN,
+                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                  .src2 = OperandMode::Mode::V,
+                                                  .src1 = OperandMode::Mode::F},
+                                      FloatFuncs<fgt<float16_t>, fgt<float32_t>, fgt<float64_t>>>,
+                                  RvvFloatInsts>(nullptr, "vmfgt.vf", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace("vmfge.vf",
+                              pegasus::Action::createAction<
+                                  &RvvFloatInsts::vmfBinaryHandler_<
+                                      XLEN,
+                                      OperandMode{.dst = OperandMode::Mode::V,
+                                                  .src2 = OperandMode::Mode::V,
+                                                  .src1 = OperandMode::Mode::F},
+                                      FloatFuncs<fge<float16_t>, fge<float32_t>, fge<float64_t>>>,
+                                  RvvFloatInsts>(nullptr, "vmfge.vf", ActionTags::EXECUTE_TAG));
 
         // ternary operations
 
@@ -777,45 +771,41 @@ namespace pegasus
                 RvvFloatInsts>(nullptr, "vfwnmsac.vf", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
-            "vfmin.vv",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{fmin<float16_t>, fmin<float32_t>,
-                                                            fmin<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfmin.vv", ActionTags::EXECUTE_TAG));
+            "vfmin.vv", pegasus::Action::createAction<
+                            &RvvFloatInsts::vfBinaryHandler_<
+                                XLEN,
+                                OperandMode{.dst = OperandMode::Mode::V,
+                                            .src2 = OperandMode::Mode::V,
+                                            .src1 = OperandMode::Mode::V},
+                                FloatFuncs<fmin<float16_t>, fmin<float32_t>, fmin<float64_t>>>,
+                            RvvFloatInsts>(nullptr, "vfmin.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfmin.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{fmin<float16_t>, fmin<float32_t>,
-                                                            fmin<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfmin.vf", ActionTags::EXECUTE_TAG));
+            "vfmin.vf", pegasus::Action::createAction<
+                            &RvvFloatInsts::vfBinaryHandler_<
+                                XLEN,
+                                OperandMode{.dst = OperandMode::Mode::V,
+                                            .src2 = OperandMode::Mode::V,
+                                            .src1 = OperandMode::Mode::F},
+                                FloatFuncs<fmin<float16_t>, fmin<float32_t>, fmin<float64_t>>>,
+                            RvvFloatInsts>(nullptr, "vfmin.vf", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfmax.vv",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::V},
-                                                 FloatFuncs{fmax<float16_t>, fmax<float32_t>,
-                                                            fmax<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfmax.vv", ActionTags::EXECUTE_TAG));
+            "vfmax.vv", pegasus::Action::createAction<
+                            &RvvFloatInsts::vfBinaryHandler_<
+                                XLEN,
+                                OperandMode{.dst = OperandMode::Mode::V,
+                                            .src2 = OperandMode::Mode::V,
+                                            .src1 = OperandMode::Mode::V},
+                                FloatFuncs<fmax<float16_t>, fmax<float32_t>, fmax<float64_t>>>,
+                            RvvFloatInsts>(nullptr, "vfmax.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vfmax.vf",
-            pegasus::Action::createAction<
-                &RvvFloatInsts::vfBinaryHandler_<XLEN,
-                                                 OperandMode{.dst = OperandMode::Mode::V,
-                                                             .src2 = OperandMode::Mode::V,
-                                                             .src1 = OperandMode::Mode::F},
-                                                 FloatFuncs{fmax<float16_t>, fmax<float32_t>,
-                                                            fmax<float64_t>}>,
-                RvvFloatInsts>(nullptr, "vfmax.vf", ActionTags::EXECUTE_TAG));
+            "vfmax.vf", pegasus::Action::createAction<
+                            &RvvFloatInsts::vfBinaryHandler_<
+                                XLEN,
+                                OperandMode{.dst = OperandMode::Mode::V,
+                                            .src2 = OperandMode::Mode::V,
+                                            .src1 = OperandMode::Mode::F},
+                                FloatFuncs<fmax<float16_t>, fmax<float32_t>, fmax<float64_t>>>,
+                            RvvFloatInsts>(nullptr, "vfmax.vf", ActionTags::EXECUTE_TAG));
     }
 
     template void RvvFloatInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -950,7 +940,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs, RoundingMode rm>
+    template <typename XLEN, OperandMode opMode, typename Funcs, RoundingMode rm>
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
@@ -959,20 +949,20 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                if constexpr (funcs.f16 == nullptr)
+                if constexpr (Funcs::f16 == nullptr)
                 {
                     sparta_assert(false, "Unsupported SEW value");
                 }
                 else
                 {
                     return vfUnaryHelper<XLEN, 16, opMode,
-                                         [](auto src2) { return func_wrapper(funcs.f16, src2); },
+                                         [](auto src2) { return func_wrapper(Funcs::f16, src2); },
                                          rm>(state, action_it);
                 }
                 break;
             case 32:
                 return vfUnaryHelper<XLEN, 32, opMode,
-                                     [](auto src2) { return func_wrapper(funcs.f32, src2); }, rm>(
+                                     [](auto src2) { return func_wrapper(Funcs::f32, src2); }, rm>(
                     state, action_it);
 
             case 64:
@@ -981,7 +971,7 @@ namespace pegasus
                               && opMode.src2 != OperandMode::Mode::W)
                 {
                     return vfUnaryHelper<XLEN, 64, opMode,
-                                         [](auto src2) { return func_wrapper(funcs.f64, src2); },
+                                         [](auto src2) { return func_wrapper(Funcs::f64, src2); },
                                          rm>(state, action_it);
                 }
             default:
@@ -1038,7 +1028,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs, RoundingMode rm>
+    template <typename XLEN, OperandMode opMode, typename Funcs, RoundingMode rm>
     Action::ItrType RvvFloatInsts::vfFloatToIntHandler_(pegasus::PegasusState* state,
                                                         Action::ItrType action_it)
     {
@@ -1047,24 +1037,24 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                if constexpr (funcs.f16 == nullptr)
+                if constexpr (Funcs::f16 == nullptr)
                 {
                     sparta_assert(false, "Unsupported SEW value");
                 }
                 else
                 {
-                    return vfFloatToIntHelper<XLEN, 16, opMode, funcs.f16, rm>(state, action_it);
+                    return vfFloatToIntHelper<XLEN, 16, opMode, Funcs::f16, rm>(state, action_it);
                 }
                 break;
             case 32:
-                return vfFloatToIntHelper<XLEN, 32, opMode, funcs.f32, rm>(state, action_it);
+                return vfFloatToIntHelper<XLEN, 32, opMode, Funcs::f32, rm>(state, action_it);
 
             case 64:
                 // neither narrowing to 64 bit nor widening from 64 bit
                 if constexpr (opMode.dst != OperandMode::Mode::W
                               && opMode.src2 != OperandMode::Mode::W)
                 {
-                    return vfFloatToIntHelper<XLEN, 64, opMode, funcs.f64, rm>(state, action_it);
+                    return vfFloatToIntHelper<XLEN, 64, opMode, Funcs::f64, rm>(state, action_it);
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -1123,7 +1113,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, typename Funcs>
     Action::ItrType RvvFloatInsts::vfBinaryHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
@@ -1138,22 +1128,20 @@ namespace pegasus
                                           {
                                               if constexpr (opMode.src2 == OperandMode::Mode::W)
                                               {
-                                                  return funcs
-                                                      .f32(float32_t{src2},
-                                                           f16_to_f32(float16_t{src1}))
+                                                  return Funcs::f32(float32_t{src2},
+                                                                    f16_to_f32(float16_t{src1}))
                                                       .v;
                                               }
                                               else
                                               {
-                                                  return funcs
-                                                      .f32(f16_to_f32(float16_t{src2}),
-                                                           f16_to_f32(float16_t{src1}))
+                                                  return Funcs::f32(f16_to_f32(float16_t{src2}),
+                                                                    f16_to_f32(float16_t{src1}))
                                                       .v;
                                               }
                                           }
                                           else
                                           {
-                                              return funcs.f16(float16_t{src2}, float16_t{src1}).v;
+                                              return Funcs::f16(float16_t{src2}, float16_t{src1}).v;
                                           }
                                       }>(state, action_it);
 
@@ -1165,22 +1153,20 @@ namespace pegasus
                                           {
                                               if constexpr (opMode.src2 == OperandMode::Mode::W)
                                               {
-                                                  return funcs
-                                                      .f64(float64_t{src2},
-                                                           f32_to_f64(float32_t{src1}))
+                                                  return Funcs::f64(float64_t{src2},
+                                                                    f32_to_f64(float32_t{src1}))
                                                       .v;
                                               }
                                               else
                                               {
-                                                  return funcs
-                                                      .f64(f32_to_f64(float32_t{src2}),
-                                                           f32_to_f64(float32_t{src1}))
+                                                  return Funcs::f64(f32_to_f64(float32_t{src2}),
+                                                                    f32_to_f64(float32_t{src1}))
                                                       .v;
                                               }
                                           }
                                           else
                                           {
-                                              return funcs.f32(float32_t{src2}, float32_t{src1}).v;
+                                              return Funcs::f32(float32_t{src2}, float32_t{src1}).v;
                                           }
                                       }>(state, action_it);
 
@@ -1188,7 +1174,7 @@ namespace pegasus
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
                     return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
-                        return funcs.f64(float64_t{src2}, float64_t{src1}).v;
+                        return Funcs::f64(float64_t{src2}, float64_t{src1}).v;
                     }>(state, action_it);
                 }
             default:
@@ -1198,7 +1184,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, typename Funcs>
     Action::ItrType RvvFloatInsts::vfrBinaryHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
@@ -1211,7 +1197,7 @@ namespace pegasus
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
                                       [](auto src2, auto src1) {
-                                          return funcs.f16(float16_t{src1}, float16_t{src2}).v;
+                                          return Funcs::f16(float16_t{src1}, float16_t{src2}).v;
                                       }>(state, action_it);
 
             case 32:
@@ -1220,7 +1206,7 @@ namespace pegasus
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
                                       [](auto src2, auto src1) {
-                                          return funcs.f32(float32_t{src1}, float32_t{src2}).v;
+                                          return Funcs::f32(float32_t{src1}, float32_t{src2}).v;
                                       }>(state, action_it);
 
             case 64:
@@ -1229,7 +1215,7 @@ namespace pegasus
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
                                       [](auto src2, auto src1) {
-                                          return funcs.f64(float64_t{src1}, float64_t{src2}).v;
+                                          return Funcs::f64(float64_t{src1}, float64_t{src2}).v;
                                       }>(state, action_it);
 
             default:
@@ -1287,7 +1273,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs>
+    template <typename XLEN, OperandMode opMode, typename Funcs>
     Action::ItrType RvvFloatInsts::vmfBinaryHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
@@ -1296,17 +1282,17 @@ namespace pegasus
         {
             case 16:
                 return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
-                    return funcs.f16(float16_t{src2}, float16_t{src1});
+                    return Funcs::f16(float16_t{src2}, float16_t{src1});
                 }>(state, action_it);
 
             case 32:
                 return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
-                    return funcs.f32(float32_t{src2}, float32_t{src1});
+                    return Funcs::f32(float32_t{src2}, float32_t{src1});
                 }>(state, action_it);
 
             case 64:
                 return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
-                    return funcs.f64(float64_t{src2}, float64_t{src1});
+                    return Funcs::f64(float64_t{src2}, float64_t{src1});
                 }>(state, action_it);
 
             default:

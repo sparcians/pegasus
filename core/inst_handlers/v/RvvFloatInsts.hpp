@@ -19,13 +19,11 @@ namespace pegasus
       public:
         using base_type = RvvFloatInsts;
 
-        template <typename F16, typename F32, typename F64> struct FloatFuncs
+        template <auto float16, auto float32, auto float64> struct FloatFuncs
         {
-            const F16 f16;
-            const F32 f32;
-            const F64 f64;
-
-            constexpr FloatFuncs(F16 f16, F32 f32, F64 f64) : f16(f16), f32(f32), f64(f64) {}
+            static constexpr auto f16 = float16;
+            static constexpr auto f32 = float32;
+            static constexpr auto f64 = float64;
         };
 
         template <typename XLEN>
@@ -39,27 +37,27 @@ namespace pegasus
         Action::ItrType vfmergeHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs,
+        template <typename XLEN, OperandMode opMode, typename Funcs,
                   RoundingMode rm = RoundingMode::DYN>
         Action::ItrType vfUnaryHandler_(pegasus::PegasusState* state_ptr,
                                         Action::ItrType action_it);
 
         // FloatToInt is implemented seperately from Unary becuase functions in softfloat have 3
         // arguments instead of 1.
-        template <typename XLEN, OperandMode opMode, RvvFloatInsts::FloatFuncs funcs,
+        template <typename XLEN, OperandMode opMode, typename Funcs,
                   RoundingMode rm = RoundingMode::DYN>
         Action::ItrType vfFloatToIntHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, typename Funcs>
         Action::ItrType vfBinaryHandler_(pegasus::PegasusState* state_ptr,
                                          Action::ItrType action_it);
 
-        template <typename XLEN, FloatFuncs funcs>
+        template <typename XLEN, typename Funcs>
         Action::ItrType vfrBinaryHandler_(pegasus::PegasusState* state_ptr,
                                           Action::ItrType action_it);
 
-        template <typename XLEN, OperandMode opMode, FloatFuncs funcs>
+        template <typename XLEN, OperandMode opMode, typename Funcs>
         Action::ItrType vmfBinaryHandler_(pegasus::PegasusState* state_ptr,
                                           Action::ItrType action_it);
 
