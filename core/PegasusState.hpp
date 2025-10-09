@@ -66,7 +66,8 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa_string, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
+            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
+            PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
@@ -94,6 +95,11 @@ namespace pegasus
         virtual ~PegasusState();
 
         HartId getHartId() const { return hart_id_; }
+
+        bool isPrivilegeModeSupported(const PrivMode mode) const
+        {
+            return supported_priv_modes_.contains(mode);
+        }
 
         uint64_t getXlen() const { return xlen_; }
 
@@ -140,11 +146,7 @@ namespace pegasus
 
         bool getVirtualMode() const { return virtual_mode_; }
 
-        void setPrivMode(PrivMode priv_mode, bool virt_mode)
-        {
-            virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
-            priv_mode_ = priv_mode;
-        }
+        void setPrivMode(PrivMode priv_mode, bool virt_mode);
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
@@ -302,6 +304,9 @@ namespace pegasus
 
         // ISA string
         const std::string isa_string_;
+
+        // Supported privilege modes
+        const std::unordered_set<PrivMode> supported_priv_modes_;
 
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;

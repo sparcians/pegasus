@@ -21,6 +21,36 @@
 
 namespace pegasus
 {
+    std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
+    {
+        std::unordered_set<PrivMode> priv_modes;
+
+        for (const char mode : priv)
+        {
+            if (mode == 'm')
+            {
+                priv_modes.emplace(PrivMode::MACHINE);
+            }
+            else if (mode == 's')
+            {
+                priv_modes.emplace(PrivMode::SUPERVISOR);
+            }
+            else if (mode == 'u')
+            {
+                priv_modes.emplace(PrivMode::USER);
+            }
+            else
+            {
+                sparta_assert(false, "Unsupported privilege modes: "
+                                         << priv
+                                         << "\nSupported privilege modes are: Machine (M), "
+                                            "Supervisor (S) and User (U)");
+            }
+        }
+
+        return priv_modes;
+    }
+
     uint32_t getXlenFromIsaString(const std::string & isa_string)
     {
         if (isa_string.find("32") != std::string::npos)
@@ -65,7 +95,8 @@ namespace pegasus
     PegasusState::PegasusState(sparta::TreeNode* core_tn, const PegasusStateParameters* p) :
         sparta::Unit(core_tn),
         hart_id_(p->hart_id),
-        isa_string_(p->isa_string),
+        isa_string_(p->isa),
+        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         vlen_(p->vlen),
         xlen_(getXlenFromIsaString(isa_string_)),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
@@ -282,6 +313,14 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+    }
+
+    void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
+    {
+        sparta_assert(isPrivilegeModeSupported(priv_mode),
+                      "Attempting to change privilege mode to an unsupported mode: " << priv_mode);
+        virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
+        priv_mode_ = priv_mode;
     }
 
     template <typename XLEN> void PegasusState::changeMMUMode()
