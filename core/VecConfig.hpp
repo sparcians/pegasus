@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <optional>
 
 #include "core/PegasusState.hpp"
 
@@ -27,8 +28,10 @@ namespace pegasus
         }
 
         explicit VectorConfig(const VectorConfig &) = default;
+        explicit VectorConfig(VectorConfig &&) = default;
 
         VectorConfig & operator=(const VectorConfig &) = default;
+        VectorConfig & operator=(VectorConfig &&) = default;
 
         // member accessors
 
@@ -134,7 +137,27 @@ namespace pegasus
 
         // VSTART CSR
         size_t vstart_ = 0;
+
+        friend struct VectorConfigOverride;
     }; // class VectorConfig
+
+    struct VectorConfigOverride
+    {
+        std::optional<size_t> lmul;
+        std::optional<size_t> sew;
+        std::optional<size_t> vl;
+
+        VectorConfig apply(const VectorConfig & base) const
+        {
+            return {base.vlen_,
+                    lmul.value_or(base.lmul_),
+                    sew.value_or(base.sew_),
+                    base.vta_,
+                    base.vma_,
+                    vl.value_or(base.vl_),
+                    base.vstart_};
+        }
+    }; // struct VectorConfigOverride
 
     inline std::ostream & operator<<(std::ostream & os, const VectorConfig & config)
     {

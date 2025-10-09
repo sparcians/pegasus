@@ -6,6 +6,8 @@
 
 namespace pegasus
 {
+    struct VectorConfigOverride;
+
     class PegasusExtractor
     {
       public:
@@ -26,6 +28,8 @@ namespace pegasus
         bool isMemoryInst() const { return is_memory_inst_; }
 
         bool isChangeOfFlowInst() const { return is_cof_inst_; }
+
+        sparta::SpartaSharedPointer<VectorConfigOverride> getVectorConfigOverride() const;
 
       private:
         const std::string mnemonic_;

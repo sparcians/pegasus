@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include "core/PegasusExtractor.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
@@ -15,7 +14,7 @@ namespace sparta
 namespace pegasus
 {
     class PegasusState;
-    class VectorConfig;
+    struct VectorConfigOverride;
 
     class PegasusInst
     {
@@ -173,7 +172,10 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        std::shared_ptr<VectorConfig> & getVecConfig() { return vec_config_; }
+        sparta::SpartaSharedPointer<VectorConfigOverride> & getVectorConfigOverride()
+        {
+            return veccfg_override_;
+        }
 
         // Translation information.  Specifically, this is for data
         // accesses
@@ -195,8 +197,8 @@ namespace pegasus
         // Cache immediate value, unsigned and signed
         const uint64_t immediate_value_;
 
-        // Vector Config that is different than global
-        std::shared_ptr<VectorConfig> vec_config_;
+        // Vector Config Override that is different than global
+        sparta::SpartaSharedPointer<VectorConfigOverride> veccfg_override_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;

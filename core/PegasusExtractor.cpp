@@ -1,5 +1,6 @@
 #include "core/PegasusExtractor.hpp"
 #include "core/PegasusState.hpp"
+#include "core/VecConfig.hpp"
 #include "core/Execute.hpp"
 
 namespace pegasus
@@ -9,7 +10,7 @@ namespace pegasus
     {
         if (SPARTA_EXPECT_FALSE(entry.find(key) == entry.end()))
         {
-            sparta_assert(false, "Missing key in uarch json: " << key);
+            sparta_assert(key != "veccfg", "Missing key in uarch json: " << key);
         }
         return boost::json::value_to<ValueType>(entry.find(key)->value());
     }
@@ -60,5 +61,12 @@ namespace pegasus
                                      << std::to_string(xlen)
                                      << " inst handler map: " << inst_handler_name_);
         }
+    }
+
+    sparta::SpartaSharedPointer<VectorConfigOverride>
+    PegasusExtractor::getVectorConfigOverride() const
+    {
+        // TODO: add real json extraction to create VectorConfigOverride.
+        return sparta::SpartaSharedPointer{new VectorConfigOverride{}};
     }
 } // namespace pegasus
