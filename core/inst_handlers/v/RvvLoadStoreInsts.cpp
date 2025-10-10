@@ -233,104 +233,108 @@ namespace pegasus
 
         inst_handlers.emplace(
             "vl1re8.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>, RvvLoadStoreInsts>(
-                nullptr, "vl1re8.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>,
+                                          RvvLoadStoreInsts>(nullptr, "vl1re8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl1re16.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>, RvvLoadStoreInsts>(
-                nullptr, "vl1re16.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>,
+                                          RvvLoadStoreInsts>(nullptr, "vl1re16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl1re32.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>, RvvLoadStoreInsts>(
-                nullptr, "vl1re32.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>,
+                                          RvvLoadStoreInsts>(nullptr, "vl1re32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl1re64.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>, RvvLoadStoreInsts>(
-                nullptr, "vl1re64.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>,
+                                          RvvLoadStoreInsts>(nullptr, "vl1re64.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vl2re8.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>, RvvLoadStoreInsts>(
-                nullptr, "vl2re8.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>,
+                                          RvvLoadStoreInsts>(nullptr, "vl2re8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl2re16.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>, RvvLoadStoreInsts>(
-                nullptr, "vl2re16.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>,
+                                          RvvLoadStoreInsts>(nullptr, "vl2re16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl2re32.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>, RvvLoadStoreInsts>(
-                nullptr, "vl2re32.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>,
+                                          RvvLoadStoreInsts>(nullptr, "vl2re32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl2re64.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>, RvvLoadStoreInsts>(
-                nullptr, "vl2re64.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>,
+                                          RvvLoadStoreInsts>(nullptr, "vl2re64.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vl4re8.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>, RvvLoadStoreInsts>(
-                nullptr, "vl4re8.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>,
+                                          RvvLoadStoreInsts>(nullptr, "vl4re8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl4re16.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>, RvvLoadStoreInsts>(
-                nullptr, "vl4re16.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>,
+                                          RvvLoadStoreInsts>(nullptr, "vl4re16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl4re32.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>, RvvLoadStoreInsts>(
-                nullptr, "vl4re32.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>,
+                                          RvvLoadStoreInsts>(nullptr, "vl4re32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl4re64.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>, RvvLoadStoreInsts>(
-                nullptr, "vl4re64.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>,
+                                          RvvLoadStoreInsts>(nullptr, "vl4re64.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
             "vl8re8.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>, RvvLoadStoreInsts>(
-                nullptr, "vl8re8.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 8>,
+                                          RvvLoadStoreInsts>(nullptr, "vl8re8.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl8re16.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>, RvvLoadStoreInsts>(
-                nullptr, "vl8re16.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 16>,
+                                          RvvLoadStoreInsts>(nullptr, "vl8re16.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl8re32.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>, RvvLoadStoreInsts>(
-                nullptr, "vl8re32.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 32>,
+                                          RvvLoadStoreInsts>(nullptr, "vl8re32.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "vl8re64.v",
-            pegasus::Action::createAction<
-                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>, RvvLoadStoreInsts>(
-                nullptr, "vl8re64.v", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, 64>,
+                                          RvvLoadStoreInsts>(nullptr, "vl8re64.v",
+                                                             ActionTags::COMPUTE_ADDR_TAG));
 
         inst_handlers.emplace(
-            "vs1r.v", pegasus::Action::createAction<
-                          &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>,
-                          RvvLoadStoreInsts>(nullptr, "vs1r.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vs1r.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>, RvvLoadStoreInsts>(
+                nullptr, "vs1r.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vs2r.v", pegasus::Action::createAction<
-                          &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>,
-                          RvvLoadStoreInsts>(nullptr, "vs2r.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vs2r.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>, RvvLoadStoreInsts>(
+                nullptr, "vs2r.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vs4r.v", pegasus::Action::createAction<
-                          &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>,
-                          RvvLoadStoreInsts>(nullptr, "vs4r.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vs4r.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>, RvvLoadStoreInsts>(
+                nullptr, "vs4r.v", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "vs8r.v", pegasus::Action::createAction<
-                          &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>,
-                          RvvLoadStoreInsts>(nullptr, "vs8r.v", ActionTags::COMPUTE_ADDR_TAG));
+            "vs8r.v",
+            pegasus::Action::createAction<
+                &RvvLoadStoreInsts::vlsreComputeAddressHandler_<XLEN, VLEN_MIN>, RvvLoadStoreInsts>(
+                nullptr, "vs8r.v", ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -509,80 +513,68 @@ namespace pegasus
                                                       RvvLoadStoreInsts>(nullptr, "vl1re8.v",
                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl1re16.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl1re16.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl1re16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl1re16.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl1re32.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl1re32.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl1re32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl1re32.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl1re64.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl1re64.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl1re64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl1re64.v",
+                                                                          ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vl2re8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<8, true>,
                                                       RvvLoadStoreInsts>(nullptr, "vl2re8.v",
                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl2re16.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl2re16.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl2re16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl2re16.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl2re32.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl2re32.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl2re32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl2re32.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl2re64.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl2re64.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl2re64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl2re64.v",
+                                                                          ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vl4re8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<8, true>,
                                                       RvvLoadStoreInsts>(nullptr, "vl4re8.v",
                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl4re16.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl4re16.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl4re16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl4re16.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl4re32.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl4re32.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl4re32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl4re32.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl4re64.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl4re64.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl4re64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl4re64.v",
+                                                                          ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vl8re8.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<8, true>,
                                                       RvvLoadStoreInsts>(nullptr, "vl8re8.v",
                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl8re16.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl8re16.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl8re16.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<16, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl8re16.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl8re32.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl8re32.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl8re32.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<32, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl8re32.v",
+                                                                          ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "vl8re64.v",
-            pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
-                                          RvvLoadStoreInsts>(nullptr, "vl8re64.v",
-                                                             ActionTags::EXECUTE_TAG));
+            "vl8re64.v", pegasus::Action::createAction<&RvvLoadStoreInsts::vlsreHandler_<64, true>,
+                                                       RvvLoadStoreInsts>(nullptr, "vl8re64.v",
+                                                                          ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vs1r.v",
