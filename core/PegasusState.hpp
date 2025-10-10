@@ -4,6 +4,7 @@
 #include "core/PegasusAllocatorWrapper.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/observers/Observer.hpp"
+#include "core/VecConfig.hpp"
 
 #include "arch/RegisterSet.hpp"
 #include "arch/gen/supportedISA.hpp"
@@ -43,7 +44,6 @@ namespace pegasus
     class STFLogger;
     class STFValidator;
     class SystemCallEmulator;
-    class VectorConfig;
 
     using MavisType =
         Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
@@ -175,9 +175,9 @@ namespace pegasus
 
         SimState* getSimState() { return &sim_state_; }
 
-        const VectorConfig* getVectorConfig() const { return vector_config_.get(); }
+        const VectorConfig* getVectorConfig() const { return &vector_config_; }
 
-        VectorConfig* getVectorConfig() { return vector_config_.get(); }
+        VectorConfig* getVectorConfig() { return &vector_config_; }
 
         const PegasusInstPtr & getCurrentInst() { return sim_state_.current_inst; }
 
@@ -391,7 +391,7 @@ namespace pegasus
         SimState sim_state_;
 
         //! Vector state
-        std::unique_ptr<VectorConfig> vector_config_;
+        VectorConfig vector_config_;
 
         // Increment PC Action
         template <bool CHECK_ILIMIT>

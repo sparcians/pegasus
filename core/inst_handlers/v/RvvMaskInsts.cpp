@@ -100,9 +100,9 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs1{state, state->getVectorConfig(), inst->getRs1()};
-        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        MaskElements elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
+        MaskElements elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         for (auto iter = elems_vs1.begin(); iter != elems_vs1.end(); ++iter)
         {
@@ -119,8 +119,8 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
+        MaskElements elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
         size_t count = 0;
 
         for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
@@ -147,8 +147,8 @@ namespace pegasus
                                                  Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
+        MaskElements elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
 
         for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
         {
@@ -181,9 +181,9 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
+        MaskElements elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, inst->getVecConfig(), inst->getRd()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
         bool found = false;
 
         for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
@@ -249,9 +249,9 @@ namespace pegasus
         using ElemsType = Elements<Element<elemWidth>, false>;
 
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        ElemsType elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        MaskElements elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
+        ElemsType elems_vd{state, inst->getVecConfig(), inst->getRd()};
         size_t count = 0;
         auto iter_v0 = elems_v0.maskBitIterBegin();
         auto iter_vd = elems_vd.begin();
@@ -308,7 +308,8 @@ namespace pegasus
 
     Action::ItrType RvvMaskInsts::viotaHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -336,8 +337,8 @@ namespace pegasus
         using ElemsType = Elements<Element<elemWidth>, false>;
 
         const PegasusInstPtr inst = state->getCurrentInst();
-        ElemsType elems_vd{state, state->getVectorConfig(), inst->getRd()};
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
+        ElemsType elems_vd{state, inst->getVecConfig(), inst->getRd()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
 
         auto execute = [&](auto iter, const auto & iter_end)
         {
@@ -361,7 +362,8 @@ namespace pegasus
 
     Action::ItrType RvvMaskInsts::veiHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:

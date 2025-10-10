@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "core/PegasusExtractor.hpp"
+#include "core/VecConfig.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
@@ -173,7 +174,9 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        std::shared_ptr<VectorConfig> & getVecConfig() { return vec_config_; }
+        const VectorConfig* getVecConfig() const { return &vec_config_; }
+
+        VectorConfig* getVecConfig() { return &vec_config_; }
 
         // Translation information.  Specifically, this is for data
         // accesses
@@ -195,8 +198,8 @@ namespace pegasus
         // Cache immediate value, unsigned and signed
         const uint64_t immediate_value_;
 
-        // Vector Config that is different than global
-        std::shared_ptr<VectorConfig> vec_config_;
+        // Vector Config this instruction executes on
+        VectorConfig vec_config_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;

@@ -119,11 +119,9 @@ namespace pegasus
         static constexpr auto outWidth = sizeof(outType) * CHAR_BIT;
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<inWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                    inst->getRs2()};
-        Elements<Element<inWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                    inst->getRs1()};
-        Elements<Element<outWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        Elements<Element<inWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<inWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<outWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         outType accumulator = static_cast<outType>(elems_vs1.getElement(0).getVal());
 
@@ -143,7 +141,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -183,11 +181,9 @@ namespace pegasus
         static constexpr auto inWidth = sizeof(inType) * CHAR_BIT;
         static constexpr auto outWidth = sizeof(outType) * CHAR_BIT;
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<inWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                    inst->getRs2()};
-        Elements<Element<inWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                    inst->getRs1()};
-        Elements<Element<outWidth>, false> elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        Elements<Element<inWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<inWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<outWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         outType accumulator = softFloatConverter<inType, outType>(elems_vs1.getElement(0).getVal());
 
@@ -207,7 +203,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
         elems_vd.getElement(0).setVal(
@@ -224,7 +220,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vredopHandlerUnsigned_(PegasusState* state,
                                                               Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -246,7 +243,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vredopHandlerSigned_(PegasusState* state,
                                                             Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -268,7 +266,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vwredopHandlerUnsigned_(PegasusState* state,
                                                                Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -291,7 +290,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vwredopHandlerSigned_(PegasusState* state,
                                                              Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -313,7 +313,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vfredopHandler_(PegasusState* state,
                                                        Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -333,7 +334,8 @@ namespace pegasus
     Action::ItrType RvvReductionInsts::vfwredopHandler_(PegasusState* state,
                                                         Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
