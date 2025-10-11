@@ -122,11 +122,12 @@ int main(int argc, char** argv)
 
         if (vm.count("opcode"))
         {
-            const pegasus::HartId hart_id = 0;
+            const pegasus::CoreId core_idx = 0;
+            const pegasus::HartId hart_idx = 0;
             const uint64_t pc = 0x1000;
             // Assume opcode is a hex string
             const uint64_t opcode_val = std::stoull(opcode, nullptr, 16);
-            pegasus::PegasusState* state = sim.getPegasusState(hart_id);
+            pegasus::PegasusState* state = sim.getPegasusCore(core_idx)->getPegasusState(hart_idx);
             state->writeMemory(pc, opcode_val);
             state->setPc(pc);
         }
@@ -151,7 +152,10 @@ int main(int argc, char** argv)
         cls.postProcess(&sim);
 
         // Get workload exit code
-        const pegasus::PegasusState::SimState* sim_state = sim.getPegasusState()->getSimState();
+        const pegasus::CoreId core_idx = 0;
+        const pegasus::HartId hart_idx = 0;
+        const pegasus::PegasusState::SimState* sim_state =
+            sim.getPegasusCore(core_idx)->getPegasusState(hart_idx)->getSimState();
         exit_code = sim_state->workload_exit_code;
         std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
     }

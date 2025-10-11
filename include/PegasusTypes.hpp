@@ -10,6 +10,7 @@ namespace pegasus
     using Addr = uint64_t;
     using Opcode = uint32_t;
     using OpcodeSize = size_t;
+    using CoreId = uint32_t;
     using HartId = uint32_t;
     using ExcpCode = uint64_t;
 

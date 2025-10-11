@@ -17,21 +17,13 @@ namespace pegasus
     {
     }
 
-    PegasusSim::~PegasusSim()
-    {
-        for (auto state : state_)
-        {
-            state->cleanup();
-        }
-
-        getRoot()->enterTeardown();
-    }
+    PegasusSim::~PegasusSim() { getRoot()->enterTeardown(); }
 
     void PegasusSim::run(uint64_t run_time)
     {
-        for (auto state : state_)
+        for (auto & [core_idx, core] : cores_)
         {
-            state->boot();
+            core->boot();
         }
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
@@ -41,8 +33,10 @@ namespace pegasus
         auto end = std::chrono::system_clock::system_clock::now();
         auto sim_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-        const HartId hart_id = 0;
-        const PegasusState* state = state_.at(hart_id);
+        // FIXME: Only run core 0, hart 0 for now
+        const CoreId core_idx = 0;
+        const HartId hart_idx = 0;
+        const PegasusState* state = cores_.at(core_idx)->getPegasusState(hart_idx);
         const uint64_t inst_count = state->getSimState()->inst_count;
         std::locale::global(std::locale(""));
         std::cout.imbue(std::locale());
@@ -68,19 +62,25 @@ namespace pegasus
 
     void PegasusSim::enableInteractiveMode()
     {
-        sparta_assert(!state_.empty(), "Must call after bindTree_()");
-        for (auto state : state_)
+        sparta_assert(!cores_.empty(), "Must call after bindTree_()");
+        for (auto & [core_idx, core] : cores_)
         {
-            state->enableInteractiveMode();
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->enableInteractiveMode();
+            }
         }
     }
 
     void PegasusSim::useSpikeFormatting()
     {
-        sparta_assert(!state_.empty(), "Must call after bindTree_()");
-        for (auto state : state_)
+        sparta_assert(!cores_.empty(), "Must call after bindTree_()");
+        for (auto & [core_idx, core] : cores_)
         {
-            state->useSpikeFormatting();
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->useSpikeFormatting();
+            }
         }
     }
 
@@ -99,33 +99,15 @@ namespace pegasus
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
-        // top.core
-        sparta::TreeNode* core_tn = nullptr;
-        const std::string core_name = "core0";
-        const uint32_t core_idx = 0;
-        tns_to_delete_.emplace_back(
-            core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
-                                                   "Core State", &state_factory_));
-
-        // top.core.fetch
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "fetch", sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
-            "Fetch Unit", &fetch_factory_));
-
-        // top.core.translate
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "translate", sparta::TreeNode::GROUP_NAME_NONE,
-            sparta::TreeNode::GROUP_IDX_NONE, "Translate Unit", &translate_factory_));
-
-        // top.core.execute
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "execute", sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
-            "Execute Unit", &execute_factory_));
-
-        // top.core.exception
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "exception", sparta::TreeNode::GROUP_NAME_NONE,
-            sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
+        // top.core*
+        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
+        {
+            sparta::TreeNode* core_tn = nullptr;
+            const std::string core_name = "core" + std::to_string(core_idx);
+            tns_to_delete_.emplace_back(
+                core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
+                                                       "Core", &core_factory_));
+        }
     }
 
     void PegasusSim::configureTree_()
@@ -136,17 +118,17 @@ namespace pegasus
         system_workload_and_args->setValueFromStringVector(workload_and_args_);
 
         // Set instruction limit for stopping simulation
-        if (ilimit_ > 0)
+        /*if (ilimit_ > 0)
         {
             auto core_ilimit_arg =
-                getRoot()->getChildAs<sparta::ParameterBase>("core0.params.ilimit");
+                getRoot()->getChildAs<sparta::ParameterBase>("core*.hart*.params.ilimit");
             core_ilimit_arg->setValueFromString(std::to_string(ilimit_));
-        }
+        }*/
     }
 
     void PegasusSim::bindTree_()
     {
-        // Pegasus System (shared by all harts)
+        // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
         SystemCallEmulator* system_call_emulator =
             getRoot()
@@ -154,28 +136,13 @@ namespace pegasus
                 ->getResourceAs<pegasus::SystemCallEmulator>();
 
         bool system_call_emulator_enabled = false;
-        const uint32_t num_harts = 1;
-        for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
+        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
         {
-            // Get PegasusState and Fetch for each hart
-            const std::string core_name = "core" + std::to_string(hart_id);
+            const std::string core_name = "core" + std::to_string(core_idx);
             const auto core = getRoot()->getChild(core_name);
-            state_.emplace_back(core->getResourceAs<PegasusState*>());
+            cores_.emplace(core_idx, core->getResourceAs<PegasusCore*>());
 
-            // Give PegasusState a pointer to PegasusSystem for accessing memory
-            PegasusState* state = state_.back();
-            state->setPegasusSystem(system_);
-            state->setPc(system_->getStartingPc());
-
-            if (core->getChildAs<sparta::ResourceTreeNode>("execute")
-                    ->getParameterSet()
-                    ->getParameterAs<bool>("enable_syscall_emulation"))
-            {
-                system_call_emulator_enabled = true;
-                state->setSystemCallEmulator(system_call_emulator);
-            }
-
-            for (const auto & reg_override : reg_value_overrides_)
+            /*for (const auto & reg_override : reg_value_overrides_)
             {
                 const bool MUST_EXIST = true;
                 sparta::Register* reg = state->findRegister(reg_override.first, MUST_EXIST);
@@ -249,13 +216,9 @@ namespace pegasus
                     std::cout << " None";
                 }
                 std::cout << std::endl;
-            }
-
-            if (false == workload_and_args_.empty())
-            {
-                state->setupProgramStack(system_->getWorkloadAndArgs());
-            }
+            }*/
         }
+
         if (false == workload_and_args_.empty() && system_call_emulator_enabled)
         {
             system_call_emulator->setWorkload(workload_and_args_[0]);
@@ -264,9 +227,9 @@ namespace pegasus
 
     void PegasusSim::endSimulation(int64_t exit_code)
     {
-        for (auto state : state_)
+        for (auto & [core_id, core] : cores_)
         {
-            state->stopSim(exit_code);
+            core->stopSim(exit_code);
         }
     }
 

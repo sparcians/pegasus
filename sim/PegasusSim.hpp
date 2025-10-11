@@ -4,11 +4,7 @@
 #include <string>
 #include <cinttypes>
 
-#include "core/PegasusState.hpp"
-#include "core/Fetch.hpp"
-#include "core/translate/Translate.hpp"
-#include "core/Execute.hpp"
-#include "core/Exception.hpp"
+#include "core/PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "sparta/app/Simulation.hpp"
 #include "system/SystemCallEmulator.hpp"
@@ -28,7 +24,7 @@ namespace pegasus
         // Run the simulator
         void run(uint64_t run_time) override;
 
-        PegasusState* getPegasusState(HartId hart_id = 0) const { return state_.at(hart_id); }
+        PegasusCore* getPegasusCore(CoreId core_id = 0) const { return cores_.at(core_id); }
 
         PegasusSystem* getPegasusSystem() const { return system_; }
 
@@ -45,16 +41,8 @@ namespace pegasus
         void configureTree_() override;
         void bindTree_() override;
 
-        sparta::ResourceFactory<pegasus::Fetch, pegasus::Fetch::FetchParameters> fetch_factory_;
-        sparta::ResourceFactory<pegasus::Translate, pegasus::Translate::TranslateParameters>
-            translate_factory_;
-        sparta::ResourceFactory<pegasus::Execute, pegasus::Execute::ExecuteParameters>
-            execute_factory_;
-        sparta::ResourceFactory<pegasus::Exception, pegasus::Exception::ExceptionParameters>
-            exception_factory_;
-        sparta::ResourceFactory<pegasus::PegasusState,
-                                pegasus::PegasusState::PegasusStateParameters>
-            state_factory_;
+        sparta::ResourceFactory<pegasus::PegasusCore, pegasus::PegasusCore::PegasusCoreParameters>
+            core_factory_;
         sparta::ResourceFactory<pegasus::PegasusSystem,
                                 pegasus::PegasusSystem::PegasusSystemParameters>
             system_factory_;
@@ -64,8 +52,11 @@ namespace pegasus
         std::unique_ptr<PegasusAllocators> allocators_tn_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
-        // Pegasus State for each hart
-        std::vector<PegasusState*> state_;
+        // TODO: Make this a parameter
+        const uint32_t num_cores_ = 1;
+
+        // Pegasus Core for each core
+        std::map<CoreId, PegasusCore*> cores_;
 
         // Pegasus system
         PegasusSystem* system_ = nullptr;
