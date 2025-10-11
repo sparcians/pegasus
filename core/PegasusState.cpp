@@ -19,6 +19,8 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include <algorithm>
+
 namespace pegasus
 {
     std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
@@ -67,29 +69,106 @@ namespace pegasus
         }
     }
 
-    std::string getSupportedIsaString(uint64_t xlen, const std::string isa_string,
-                                      const std::vector<std::string> & supported_rv64_exts,
-                                      const std::vector<std::string> & supported_rv32_exts)
+    bool PegasusState::validateISAString_(std::string & unsupportedExt)
     {
-        const bool enable_zcmp = isa_string.find("zcmp") != std::string::npos;
-        std::string supported_exts_str = "rv" + std::to_string(xlen);
-        const auto & supported_exts = (xlen == 64) ? supported_rv64_exts : supported_rv32_exts;
-        for (auto & ext : supported_exts)
+        std::string isa = isa_string_;
+
+        // Standarize to lowercase and skip rv32/rv64
+        std::transform(isa_string_.begin(), isa_string_.end(), isa.begin(),
+                       [](char c) { return std::tolower(c); });
+
+        const auto & supported_exts =
+            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
+
+        const auto hasExtension = [&](const std::string & str)
         {
-            if (enable_zcmp && (ext == "c"))
+            return std::find(supported_exts.begin(), supported_exts.end(), str)
+                   != supported_exts.end();
+        };
+
+        // Parse the first chunk for single char extension
+        size_t pos = 4;
+        while (pos < isa.size() && isa[pos] != '_')
+        {
+            const char c = isa[pos];
+            if (c == 'g')
             {
-                continue;
+                const char* gset[] = {"i", "m", "a", "f", "d", "zicsr", "zifencei"};
+                for (const auto* e : gset)
+                {
+                    if (!hasExtension(e))
+                    {
+                        unsupportedExt = e;
+                        return false;
+                    }
+                }
             }
-            else if (!enable_zcmp && (ext == "zcmp"))
+            else if (c == 'b')
             {
-                continue;
+                const char* gset[] = {"zba", "zbb", "zbs"};
+                for (const auto* e : gset)
+                {
+                    if (!hasExtension(e))
+                    {
+                        unsupportedExt = e;
+                        return false;
+                    }
+                }
+            }
+            else if (c == 'v')
+            {
+                const char* gset[] = {"zve64x", "zve64d", "zve64f", "zve32x", "zve32f"};
+                for (const auto* e : gset)
+                {
+                    if (!hasExtension(e))
+                    {
+                        unsupportedExt = e;
+                        return false;
+                    }
+                }
             }
             else
             {
-                supported_exts_str += ext + "_";
+                std::string ext(1, c);
+                if (!hasExtension(ext))
+                {
+                    unsupportedExt = ext;
+                    return false;
+                }
+            }
+
+            pos++;
+        }
+
+        if (pos < isa.size())
+        {
+            if (isa[pos] == '_')
+            {
+                pos++;
+            }
+
+            while (pos < isa.size())
+            {
+                size_t next = isa.find('_', pos);
+                const std::string tok =
+                    (next == std::string::npos) ? isa.substr(pos) : isa.substr(pos, next - pos);
+
+                if (!tok.empty())
+                {
+                    if (!hasExtension(tok))
+                    {
+                        unsupportedExt = tok;
+                        return false;
+                    }
+                }
+
+                if (next == std::string::npos)
+                    break;
+                pos = next + 1;
             }
         }
-        return supported_exts_str;
+
+        return true;
     }
 
     PegasusState::PegasusState(sparta::TreeNode* core_tn, const PegasusStateParameters* p) :
@@ -101,14 +180,11 @@ namespace pegasus
         xlen_(getXlenFromIsaString(isa_string_)),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
-        supported_isa_string_(getSupportedIsaString(xlen_, isa_string_, supported_rv64_extensions_,
-                                                    supported_rv32_extensions_)),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
-            supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
-            isa_file_path_)),
+            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
@@ -122,6 +198,13 @@ namespace pegasus
     {
         sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
+        std::string unsupportedExt;
+        if (!validateISAString_(unsupportedExt))
+        {
+            sparta_assert(false,
+                          "ISA extension: " << unsupportedExt
+                                            << " is not supported in isa_string: " << isa_string_);
+        }
         extension_manager_.setISA(isa_string_);
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
