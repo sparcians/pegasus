@@ -38,6 +38,10 @@ namespace pegasus
 
         void boot();
 
+        CoreId getCoreId() const { return core_id_; }
+
+        uint32_t getNumThreads() const { return num_harts_; }
+
         PegasusState* getPegasusState(HartId hart_idx = 0) const { return threads_.at(hart_idx); }
 
         std::map<HartId, PegasusState*> & getThreads() { return threads_; }

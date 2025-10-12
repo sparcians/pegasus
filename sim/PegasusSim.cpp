@@ -139,84 +139,89 @@ namespace pegasus
         for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
         {
             const std::string core_name = "core" + std::to_string(core_idx);
-            const auto core = getRoot()->getChild(core_name);
-            cores_.emplace(core_idx, core->getResourceAs<PegasusCore*>());
+            PegasusCore* core = getRoot()->getChild(core_name)->getResourceAs<PegasusCore*>();
+            cores_.emplace(core_idx, core);
 
-            /*for (const auto & reg_override : reg_value_overrides_)
+            // FIXME: Allow register overrides to be provide for specific threads
+            // const CoreId core_id = core->getCoreId();
+            for (auto & [hart_id, thread] : core->getThreads())
             {
-                const bool MUST_EXIST = true;
-                sparta::Register* reg = state->findRegister(reg_override.first, MUST_EXIST);
-                const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
-                uint64_t old_value = 0;
-                if (state->getXlen() == 64)
+                for (const auto & reg_override : reg_value_overrides_)
                 {
-                    old_value = reg->dmiRead<uint64_t>();
-                    reg->dmiWrite<uint64_t>(new_reg_value);
-                }
-                else
-                {
-                    old_value = reg->dmiRead<uint32_t>();
-                    reg->dmiWrite<uint32_t>(new_reg_value);
-                }
-                std::cout << std::hex << std::showbase << std::setfill(' ');
-
-                std::cout << "Setting " << std::quoted(reg->getName());
-                if (reg->getAliases().size() != 0)
-                {
-                    std::cout << " aka " << reg->getAliases();
-                }
-                std::cout << " to " << HEX16(new_reg_value) << " from default " << HEX16(old_value)
-                          << std::endl;
-
-                std::cout << "Fields:";
-
-                if (not reg->getFields().empty())
-                {
-                    uint64_t max_field_val_size = 0;
-                    size_t max_field_name_size = 0;
-
-                    // Order the fields based on bit settings
-                    struct OrderFields
+                    const bool MUST_EXIST = true;
+                    sparta::Register* reg = thread->findRegister(reg_override.first, MUST_EXIST);
+                    const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
+                    uint64_t old_value = 0;
+                    if (thread->getXlen() == 64)
                     {
-                        bool operator()(const sparta::RegisterBase::Field* lhs,
-                                        const sparta::RegisterBase::Field* rhs) const
+                        old_value = reg->dmiRead<uint64_t>();
+                        reg->dmiWrite<uint64_t>(new_reg_value);
+                    }
+                    else
+                    {
+                        old_value = reg->dmiRead<uint32_t>();
+                        reg->dmiWrite<uint32_t>(new_reg_value);
+                    }
+                    std::cout << std::hex << std::showbase << std::setfill(' ');
+
+                    std::cout << "Setting " << std::quoted(reg->getName());
+                    if (reg->getAliases().size() != 0)
+                    {
+                        std::cout << " aka " << reg->getAliases();
+                    }
+                    std::cout << " to " << HEX16(new_reg_value) << " from default "
+                              << HEX16(old_value) << std::endl;
+
+                    std::cout << "Fields:";
+
+                    if (not reg->getFields().empty())
+                    {
+                        uint64_t max_field_val_size = 0;
+                        size_t max_field_name_size = 0;
+
+                        // Order the fields based on bit settings
+                        struct OrderFields
                         {
-                            return (lhs->getLowBit() > rhs->getLowBit());
+                            bool operator()(const sparta::RegisterBase::Field* lhs,
+                                            const sparta::RegisterBase::Field* rhs) const
+                            {
+                                return (lhs->getLowBit() > rhs->getLowBit());
+                            }
+                        };
+
+                        // Go through the fields twice -- once to get formatting, the second to
+                        // actually print
+                        std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
+                        for (const auto & field : reg->getFields())
+                        {
+                            max_field_val_size = std::max(field->getNumBits(), max_field_val_size);
+                            max_field_name_size =
+                                std::max(field->getName().size(), max_field_name_size);
+                            ordered_fields.insert(field);
                         }
-                    };
+                        max_field_val_size =
+                            (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
+                        max_field_val_size += 2;
 
-                    // Go through the fields twice -- once to get formatting, the second to actually
-                    // print
-                    std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
-                    for (const auto & field : reg->getFields())
-                    {
-                        max_field_val_size = std::max(field->getNumBits(), max_field_val_size);
-                        max_field_name_size =
-                            std::max(field->getName().size(), max_field_name_size);
-                        ordered_fields.insert(field);
+                        for (const auto & field : ordered_fields)
+                        {
+                            std::cout
+                                << "\n\t" << std::setw(max_field_val_size) << std::right << std::dec
+                                << field->read() << " " << std::setw(max_field_name_size)
+                                << std::right << field->getName() << std::right << std::dec << " ["
+                                << std::setw(2) << field->getLowBit() << ":" << std::setw(2)
+                                << field->getHighBit() << "] "
+                                << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
+                                << ")";
+                        }
                     }
-                    max_field_val_size =
-                        (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
-                    max_field_val_size += 2;
-
-                    for (const auto & field : ordered_fields)
+                    else
                     {
-                        std::cout << "\n\t" << std::setw(max_field_val_size) << std::right
-                                  << std::dec << field->read() << " "
-                                  << std::setw(max_field_name_size) << std::right
-                                  << field->getName() << std::right << std::dec << " ["
-                                  << std::setw(2) << field->getLowBit() << ":" << std::setw(2)
-                                  << field->getHighBit() << "] "
-                                  << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
-                                  << ")";
+                        std::cout << " None";
                     }
-                }
-                else
-                {
-                    std::cout << " None";
                 }
                 std::cout << std::endl;
-            }*/
+            }
         }
 
         if (false == workload_and_args_.empty() && system_call_emulator_enabled)
