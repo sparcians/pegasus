@@ -1,6 +1,5 @@
 #include "sim/PegasusSim.hpp"
 
-#include "core/PegasusState.hpp"
 #include "core/translate/PageTable.hpp"
 
 #include "include/PegasusTypes.hpp"
@@ -23,7 +22,7 @@ class PegasusTranslateTester
         pegasus_sim_->configureTree();
         pegasus_sim_->finalizeTree();
 
-        state_ = pegasus_sim_->getPegasusState();
+        state_ = pegasus_sim_->getPegasusCore()->getPegasusState();
         translate_unit_ = state_->getTranslateUnit();
     }
 

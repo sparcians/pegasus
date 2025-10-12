@@ -18,7 +18,7 @@ class RegisterTester
         pegasus_sim_.buildTree();
         pegasus_sim_.configureTree();
         pegasus_sim_.finalizeTree();
-        state_ = pegasus_sim_.getPegasusState();
+        state_ = pegasus_sim_.getPegasusCore()->getPegasusState();
     }
 
     pegasus::PegasusState* getPegasusState() { return state_; }

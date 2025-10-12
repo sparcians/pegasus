@@ -18,7 +18,7 @@ class PegasusInstructionTester
         pegasus_sim_->configureTree();
         pegasus_sim_->finalizeTree();
 
-        state_ = pegasus_sim_->getPegasusState();
+        state_ = pegasus_sim_->getPegasusCore()->getPegasusState();
         fetch_unit_ = state_->getFetchUnit();
         execute_unit_ = state_->getExecuteUnit();
     }
