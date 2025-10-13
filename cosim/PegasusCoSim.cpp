@@ -38,7 +38,8 @@ namespace pegasus::cosim
         return success;
     }
 
-    bool CoSimMemoryInterface::write(CoreId, HartId, Addr paddr, std::vector<uint8_t> & buffer) const
+    bool CoSimMemoryInterface::write(CoreId, HartId, Addr paddr,
+                                     std::vector<uint8_t> & buffer) const
     {
         const size_t size = buffer.size() * sizeof(uint8_t);
         const bool success = memory_->tryWrite(paddr, size, buffer.data());
@@ -61,13 +62,13 @@ namespace pegasus::cosim
         const uint32_t num_harts = 1;
 
         event_list_.resize(num_cores);
-        for (auto& core_event_list : event_list_)
+        for (auto & core_event_list : event_list_)
         {
             core_event_list.resize(num_harts);
         }
 
         last_committed_event_.resize(num_cores);
-        for (auto& core_last_committed_event : last_committed_event_)
+        for (auto & core_last_committed_event : last_committed_event_)
         {
             core_last_committed_event.resize(num_harts, cosim::Event(cosim::Event::Type::INVALID));
         }
@@ -93,8 +94,9 @@ namespace pegasus::cosim
                 // Get Fetch for each hart
                 const std::string core_name = "core" + std::to_string(core_idx) + ".";
                 const std::string hart_name = "hart" + std::to_string(hart_idx) + ".";
-                fetch_.at(core_idx).emplace_back(
-                    getRoot()->getChild(core_name + hart_name + "fetch")->getResourceAs<pegasus::Fetch>());
+                fetch_.at(core_idx).emplace_back(getRoot()
+                                                     ->getChild(core_name + hart_name + "fetch")
+                                                     ->getResourceAs<pegasus::Fetch>());
 
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
 
@@ -269,7 +271,8 @@ namespace pegasus::cosim
 
     bool PegasusCoSim::isSimulationFinished(CoreId core_id, HartId hart_id) const
     {
-        const PegasusState::SimState* sim_state = getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState();
+        const PegasusState::SimState* sim_state =
+            getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState();
         return sim_state->sim_stopped;
     }
 
@@ -299,7 +302,8 @@ namespace pegasus::cosim
         return last_committed_event_.at(core_id).at(hart_id);
     }
 
-    const cosim::EventList & PegasusCoSim::getUncommittedEvents(CoreId core_id, HartId hart_id) const
+    const cosim::EventList & PegasusCoSim::getUncommittedEvents(CoreId core_id,
+                                                                HartId hart_id) const
     {
         return event_list_.at(core_id).at(hart_id);
     }

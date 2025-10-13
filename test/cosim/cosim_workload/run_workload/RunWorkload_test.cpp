@@ -9,6 +9,7 @@ void runCoSimWorkload(const std::string & workload)
     sparta::Scheduler scheduler;
     pegasus::cosim::PegasusCoSim cosim(&scheduler, ilimit, workload);
 
+    const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
     std::string exception_str;
     try
@@ -23,7 +24,7 @@ void runCoSimWorkload(const std::string & workload)
 
     cosim.finish();
 
-    auto state = cosim.getPegasusState(hart_id);
+    auto state = cosim.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto sim_state = state->getSimState();
     auto workload_exit_code = sim_state->workload_exit_code;
 

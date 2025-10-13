@@ -160,10 +160,14 @@ namespace pegasus::cosim
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Program State
 
-        virtual void readRegister(CoreId core_id, HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void peekRegister(CoreId core_id, HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void writeRegister(CoreId core_id, HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void pokeRegister(CoreId core_id, HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
+        virtual void readRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void peekRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void writeRegister(CoreId core_id, HartId hart, RegId reg,
+                                   std::vector<uint8_t> & buffer) const = 0;
+        virtual void pokeRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
 
         virtual void setPc(CoreId core_id, HartId hart, Addr pc) = 0;
         virtual Addr getPc(CoreId core_id, HartId hart_id) const = 0;
@@ -180,7 +184,8 @@ namespace pegasus::cosim
         // Injection
 
         virtual EventAccessor injectInstruction(CoreId core_id, HartId hart, Opcode opcode) = 0;
-        virtual EventAccessor injectInterrupt(CoreId core_id, HartId hart, uint64_t interrupt_code) = 0;
+        virtual EventAccessor injectInterrupt(CoreId core_id, HartId hart,
+                                              uint64_t interrupt_code) = 0;
         virtual EventAccessor injectReset(CoreId core_id, HartId hart_id) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,8 +195,10 @@ namespace pegasus::cosim
         // Debug
 
         virtual uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const = 0;
-        virtual const cosim::Event & getLastCommittedEvent(CoreId core_id, HartId hart_id) const = 0;
-        virtual const cosim::EventList & getUncommittedEvents(CoreId core_id, HartId hart_id) const = 0;
+        virtual const cosim::Event & getLastCommittedEvent(CoreId core_id,
+                                                           HartId hart_id) const = 0;
+        virtual const cosim::EventList & getUncommittedEvents(CoreId core_id,
+                                                              HartId hart_id) const = 0;
         virtual uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const = 0;
         virtual uint64_t getNumUncommittedWrites(CoreId core_id, HartId hart_id) const = 0;
     };

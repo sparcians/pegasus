@@ -130,11 +130,12 @@ void stepCoSimWorkload(const std::string & workload)
     sparta::Scheduler scheduler;
     pegasus::cosim::PegasusCoSim cosim(&scheduler, ilimit, workload);
 
+    const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
     std::string exception_str;
 
     cosim.enableLogger("step.log");
-    cosim.getPegasusState(hart_id)->boot();
+    cosim.getPegasusCore(core_id)->getPegasusState(hart_id)->boot();
 
     PipelineEventValidator evt_validator(cosim.getCoSimPipeline());
 
@@ -142,7 +143,7 @@ void stepCoSimWorkload(const std::string & workload)
     {
         try
         {
-            auto event = cosim.step(hart_id);
+            auto event = cosim.step(core_id, hart_id);
             if (event->isLastEvent())
             {
                 break;
@@ -163,7 +164,7 @@ void stepCoSimWorkload(const std::string & workload)
     // have done this yet if the test runs too fast or has too few events).
     evt_validator.postFinish();
 
-    auto state = cosim.getPegasusState(hart_id);
+    auto state = cosim.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto sim_state = state->getSimState();
     auto workload_exit_code = sim_state->workload_exit_code;
 

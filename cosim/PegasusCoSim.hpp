@@ -28,8 +28,10 @@ namespace pegasus::cosim
                   std::vector<uint8_t> & buffer) const override;
         bool read(CoreId core_id, HartId hart_id, Addr paddr, size_t size,
                   std::vector<uint8_t> & buffer) const override;
-        bool poke(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const override;
-        bool write(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const override;
+        bool poke(CoreId core_id, HartId hart_id, Addr paddr,
+                  std::vector<uint8_t> & buffer) const override;
+        bool write(CoreId core_id, HartId hart_id, Addr paddr,
+                   std::vector<uint8_t> & buffer) const override;
 
       private:
         sparta::memory::SimpleMemoryMapNode* memory_ = nullptr;
@@ -56,7 +58,8 @@ namespace pegasus::cosim
 
         // Unimplemented methods
         EventAccessor stepOperation(CoreId core_id, HartId hart_id) override final;
-        EventAccessor stepOperation(CoreId core_id, HartId hart_id, Addr override_pc) override final;
+        EventAccessor stepOperation(CoreId core_id, HartId hart_id,
+                                    Addr override_pc) override final;
         void commit(CoreId core_id, HartId hart_id) override final;
         void commit(const cosim::Event* event) override final;
         void commitStoreWrite(const cosim::Event* event) override final;
@@ -79,12 +82,16 @@ namespace pegasus::cosim
         void setPrivilegeMode(CoreId core_id, HartId hart_id, PrivMode priv_mode) override final;
         PrivMode getPrivilegeMode(CoreId core_id, HartId hart_id) const override final;
         bool isSimulationFinished(CoreId core_id, HartId hart_id) const override final;
-        EventAccessor injectInstruction(CoreId core_id, HartId hart_id, Opcode opcode) override final;
-        EventAccessor injectInterrupt(CoreId core_id, HartId hart_id, uint64_t interrupt_code) override final;
+        EventAccessor injectInstruction(CoreId core_id, HartId hart_id,
+                                        Opcode opcode) override final;
+        EventAccessor injectInterrupt(CoreId core_id, HartId hart_id,
+                                      uint64_t interrupt_code) override final;
         EventAccessor injectReset(CoreId core_id, HartId hart_id) override final;
         uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const override final;
-        const cosim::Event & getLastCommittedEvent(CoreId core_id, HartId hart_id) const override final;
-        const cosim::EventList & getUncommittedEvents(CoreId core_id, HartId hart_id) const override final;
+        const cosim::Event & getLastCommittedEvent(CoreId core_id,
+                                                   HartId hart_id) const override final;
+        const cosim::EventList & getUncommittedEvents(CoreId core_id,
+                                                      HartId hart_id) const override final;
         uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const override final;
         uint64_t getNumUncommittedWrites(CoreId core_id, HartId hart_id) const override final;
 
@@ -98,16 +105,16 @@ namespace pegasus::cosim
         std::unique_ptr<sparta::log::Tap> sparta_tap_;
 
         // Fetch Unit for each hart
-	std::vector<std::vector<Fetch*>> fetch_;
+        std::vector<std::vector<Fetch*>> fetch_;
 
         // CoSim memory interface
         CoSimMemoryInterface* cosim_memory_if_ = nullptr;
 
         // Event List for each hart
-	std::vector<std::vector<EventList>> event_list_;
+        std::vector<std::vector<EventList>> event_list_;
 
         // Last committed event for each hart
-	std::vector<std::vector<Event>> last_committed_event_;
+        std::vector<std::vector<Event>> last_committed_event_;
 
         // Sim config for sparta::app::Simulation base class
         sparta::app::SimulationConfiguration sim_config_;
