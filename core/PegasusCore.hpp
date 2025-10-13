@@ -52,6 +52,7 @@ namespace pegasus
         const CoreId core_id_;
         const uint32_t num_harts_;
 
+        void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
 
         sparta::ResourceFactory<pegasus::PegasusState,

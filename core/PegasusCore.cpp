@@ -77,17 +77,15 @@ namespace pegasus
         }
     }*/
 
-    void PegasusCore::onBindTreeLate_()
+    void PegasusCore::onBindTreeEarly_()
     {
         // Pegasus System (shared by all harts)
         auto root_tn = getContainer()->getParentAs<sparta::RootTreeNode>();
         system_ = root_tn->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
-        SystemCallEmulator* system_call_emulator =
-            root_tn->getChild("system_call_emulator")->getResourceAs<pegasus::SystemCallEmulator>();
 
         for (uint32_t hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
         {
-            // Get PegasusState and Fetch for each hart
+            // Get PegasusState for each hart
             const std::string hart_name = "hart" + std::to_string(hart_idx);
             const auto thread = getContainer()->getChild(hart_name);
             threads_.emplace(hart_idx, thread->getResourceAs<PegasusState*>());
@@ -96,10 +94,20 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             state->setPegasusSystem(system_);
             state->setPc(system_->getStartingPc());
+        }
+    }
 
-            if (thread->getChildAs<sparta::ResourceTreeNode>("execute")
-                    ->getParameterSet()
-                    ->getParameterAs<bool>("enable_syscall_emulation"))
+    void PegasusCore::onBindTreeLate_()
+    {
+        auto root_tn = getContainer()->getParentAs<sparta::RootTreeNode>();
+        SystemCallEmulator* system_call_emulator =
+            root_tn->getChild("system_call_emulator")->getResourceAs<pegasus::SystemCallEmulator>();
+
+        for (uint32_t hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
+        {
+            PegasusState* state = threads_.at(hart_idx);
+
+            if (state->getExecuteUnit()->getSystemCallEmulation())
             {
                 state->setSystemCallEmulator(system_call_emulator);
             }
