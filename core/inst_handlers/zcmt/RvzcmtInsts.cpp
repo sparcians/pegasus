@@ -13,7 +13,6 @@ namespace pegasus
     void RvzcmtInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        using namespace pegasus;
 
         // Instruction handlers
         inst_handlers.emplace("cm_jt", Action::createAction<&RvzcmtInsts::jt_<XLEN>, RvzcmtInsts>(
@@ -27,7 +26,6 @@ namespace pegasus
     void RvzcmtInsts::getInstComputeAddressHandlers(std::map<std::string, Action> & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        using namespace pegasus;
 
         // Address calculation
         inst_handlers.emplace(
