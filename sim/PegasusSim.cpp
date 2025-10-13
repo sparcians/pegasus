@@ -17,7 +17,18 @@ namespace pegasus
     {
     }
 
-    PegasusSim::~PegasusSim() { getRoot()->enterTeardown(); }
+    PegasusSim::~PegasusSim()
+    {
+        for (auto & [core_idx, core] : cores_)
+        {
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->cleanup();
+            }
+        }
+
+        getRoot()->enterTeardown();
+    }
 
     void PegasusSim::run(uint64_t run_time)
     {

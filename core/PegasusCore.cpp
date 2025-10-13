@@ -42,13 +42,7 @@ namespace pegasus
         }
     }
 
-    PegasusCore::~PegasusCore()
-    {
-        for (auto & [hart_idx, thread] : threads_)
-        {
-            thread->cleanup();
-        }
-    }
+    PegasusCore::~PegasusCore() {}
 
     void PegasusCore::boot()
     {
