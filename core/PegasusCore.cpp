@@ -60,17 +60,6 @@ namespace pegasus
         }
     }
 
-    /*void PegasusCore::onConfiguring_()
-    {
-        // Set instruction limit for stopping simulation
-        if (ilimit_ > 0)
-        {
-            auto core_ilimit_arg =
-                getRoot()->getChildAs<sparta::ParameterBase>("core0.params.ilimit");
-            core_ilimit_arg->setValueFromString(std::to_string(ilimit_));
-        }
-    }*/
-
     void PegasusCore::onBindTreeEarly_()
     {
         // Pegasus System (shared by all harts)

@@ -129,12 +129,11 @@ namespace pegasus
         system_workload_and_args->setValueFromStringVector(workload_and_args_);
 
         // Set instruction limit for stopping simulation
-        /*if (ilimit_ > 0)
+        if (ilimit_ > 0)
         {
-            auto core_ilimit_arg =
-                getRoot()->getChildAs<sparta::ParameterBase>("core*.hart*.params.ilimit");
-            core_ilimit_arg->setValueFromString(std::to_string(ilimit_));
-        }*/
+            getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
+                                                           std::to_string(ilimit_));
+        }
     }
 
     void PegasusSim::bindTree_()
