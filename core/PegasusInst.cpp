@@ -1,6 +1,5 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusState.hpp"
-#include "core/VecConfig.hpp"
 
 namespace pegasus
 {
@@ -44,6 +43,7 @@ namespace pegasus
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
         is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
         immediate_value_(getImmediateValue(opcode_info)),
+        veccfg_overrides_(extractor_info->veccfg_),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(
             opcode_info->getSourceOpInfoList())),
         rs2_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS2>(
@@ -85,6 +85,11 @@ namespace pegasus
                 sparta_assert(hasCsr() == false, "Unknown instruction with CSR: " << *this);
                 return false;
         }
+    }
+
+    void PegasusInst::updateVecConfig(const PegasusState* state)
+    {
+        vec_config_ = makeVecCfg(*state->getVectorConfig(), veccfg_overrides_);
     }
 
     std::ostream & operator<<(std::ostream & os, const PegasusInst & inst)

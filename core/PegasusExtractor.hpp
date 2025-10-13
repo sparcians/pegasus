@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
+#include "core/VecConfigOverride.hpp"
 #include "mavis/JSONUtils.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
@@ -33,6 +34,7 @@ namespace pegasus
         const bool is_unimplemented_;
         const bool is_memory_inst_;
         const bool is_cof_inst_;
+        const VecCfgOverrides veccfg_;
 
         ActionGroup inst_action_group_;
 

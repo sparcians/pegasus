@@ -114,7 +114,6 @@ namespace pegasus
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
-        vector_config_(std::make_unique<VectorConfig>()),
         inst_logger_(core_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(core_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -173,7 +172,7 @@ namespace pegasus
         stop_sim_action_group_.addAction(stop_action_);
 
         // Update VectorConfig vlen
-        vector_config_->setVLEN(vlen_);
+        vector_config_.setVLEN(vlen_);
     }
 
     // Not default -- defined in source file to reduce massive inlining
