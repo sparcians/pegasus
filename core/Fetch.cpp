@@ -138,7 +138,6 @@ namespace pegasus
         try
         {
             inst = state->getMavis()->makeInst(opcode, state);
-            inst->updateVecConfig(state);
             assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception

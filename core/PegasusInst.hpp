@@ -178,8 +178,6 @@ namespace pegasus
 
         VectorConfig* getVecConfig() { return &vec_config_; }
 
-        void updateVecConfig(const PegasusState* state);
-
         // Translation information.  Specifically, this is for data
         // accesses
         PegasusTranslationState* getTranslationState() { return &translation_state_; }
@@ -202,9 +200,6 @@ namespace pegasus
 
         // Vector Config this instruction executes on
         VectorConfig vec_config_;
-
-        // Vector Config overrides
-        const VecCfgOverrides veccfg_overrides_;
 
         // Registers
         const mavis::OperandInfo::Element* rs1_info_;

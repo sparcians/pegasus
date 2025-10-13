@@ -42,7 +42,7 @@ namespace pegasus
 
         if (str == "vlmax") return VecCfgOverride::VLMAX;
 
-        sparta_assert(false, "invalid veccfg string.");
+        sparta_assert(false, "invalid veccfg string " << str);
     }
 
     inline VectorConfig makeVecCfg(const VectorConfig & config, const VecCfgOverrides & overrides)
