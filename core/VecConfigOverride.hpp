@@ -6,14 +6,13 @@
 #include "mavis/JSONUtils.hpp"
 #include "core/VecConfig.hpp"
 
-
 namespace pegasus
 {
     enum class VecCfgOverride : uint16_t
     {
         NO_OVERRIDE,
 
-        EEW8  = 1 << 0,
+        EEW8 = 1 << 0,
         EEW16 = 1 << 1,
         EEW32 = 1 << 2,
         EEW64 = 1 << 3,
@@ -30,17 +29,26 @@ namespace pegasus
 
     inline VecCfgOverride strToVecCfg(const std::string & str)
     {
-        if (str == "eew8") return VecCfgOverride::EEW8;
-        if (str == "eew16") return VecCfgOverride::EEW16;
-        if (str == "eew32") return VecCfgOverride::EEW32;
-        if (str == "eew64") return VecCfgOverride::EEW64;
+        if (str == "eew8")
+            return VecCfgOverride::EEW8;
+        if (str == "eew16")
+            return VecCfgOverride::EEW16;
+        if (str == "eew32")
+            return VecCfgOverride::EEW32;
+        if (str == "eew64")
+            return VecCfgOverride::EEW64;
 
-        if (str == "emul1") return VecCfgOverride::EMUL1;
-        if (str == "emul2") return VecCfgOverride::EMUL2;
-        if (str == "emul4") return VecCfgOverride::EMUL4;
-        if (str == "emul8") return VecCfgOverride::EMUL8;
+        if (str == "emul1")
+            return VecCfgOverride::EMUL1;
+        if (str == "emul2")
+            return VecCfgOverride::EMUL2;
+        if (str == "emul4")
+            return VecCfgOverride::EMUL4;
+        if (str == "emul8")
+            return VecCfgOverride::EMUL8;
 
-        if (str == "vlmax") return VecCfgOverride::VLMAX;
+        if (str == "vlmax")
+            return VecCfgOverride::VLMAX;
 
         sparta_assert(false, "invalid veccfg string " << str);
     }
@@ -88,14 +96,15 @@ namespace pegasus
             }
         }
 
-        if (setVLMAX) //VLMAX relies on SEW and LMUL
+        if (setVLMAX) // VLMAX relies on SEW and LMUL
         {
             cfg.setVL(cfg.getVLMAX());
         }
         return cfg;
     }
 
-    inline VecCfgOverride tag_invoke(const boost::json::value_to_tag<VecCfgOverride> &, const boost::json::value& jv)
+    inline VecCfgOverride tag_invoke(const boost::json::value_to_tag<VecCfgOverride> &,
+                                     const boost::json::value & jv)
     {
         return strToVecCfg(jv.as_string().c_str());
     }
