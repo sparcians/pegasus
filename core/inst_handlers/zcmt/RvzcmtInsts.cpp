@@ -75,7 +75,7 @@ namespace pegasus
         }
         else
         {
-            assert(false && "Unimplemented JVT mode");
+            sparta_assert(false && "Unimplemented JVT mode");
         }
 
         return ++action_it;
