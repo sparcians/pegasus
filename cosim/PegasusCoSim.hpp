@@ -24,12 +24,12 @@ namespace pegasus::cosim
 
         ~CoSimMemoryInterface() {}
 
-        bool peek(HartId hart, Addr paddr, size_t size,
+        bool peek(CoreId core_id, HartId hart_id, Addr paddr, size_t size,
                   std::vector<uint8_t> & buffer) const override;
-        bool read(HartId hart, Addr paddr, size_t size,
+        bool read(CoreId core_id, HartId hart_id, Addr paddr, size_t size,
                   std::vector<uint8_t> & buffer) const override;
-        bool poke(HartId hart, Addr paddr, std::vector<uint8_t> & buffer) const override;
-        bool write(HartId hart, Addr paddr, std::vector<uint8_t> & buffer) const override;
+        bool poke(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const override;
+        bool write(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const override;
 
       private:
         sparta::memory::SimpleMemoryMapNode* memory_ = nullptr;
@@ -51,13 +51,13 @@ namespace pegasus::cosim
 
         CoSimPipeline* getCoSimPipeline() const { return cosim_pipeline_; }
 
-        EventAccessor step(HartId hart) override final;
-        EventAccessor step(HartId hart, Addr override_pc) override final;
+        EventAccessor step(CoreId core_id, HartId hart_id) override final;
+        EventAccessor step(CoreId core_id, HartId hart_id, Addr override_pc) override final;
 
         // Unimplemented methods
-        EventAccessor stepOperation(HartId hart) override final;
-        EventAccessor stepOperation(HartId hart, Addr override_pc) override final;
-        void commit(HartId hart) override final;
+        EventAccessor stepOperation(CoreId core_id, HartId hart_id) override final;
+        EventAccessor stepOperation(CoreId core_id, HartId hart_id, Addr override_pc) override final;
+        void commit(CoreId core_id, HartId hart_id) override final;
         void commit(const cosim::Event* event) override final;
         void commitStoreWrite(const cosim::Event* event) override final;
         void commitStoreWrite(const cosim::Event* event, Addr paddr) override final;
@@ -66,27 +66,27 @@ namespace pegasus::cosim
         void flush(const cosim::Event* event, bool flush_younger_only = false) override final;
         cosim::MemoryInterface* getMemoryInterface() override final;
         void setMemoryInterface(cosim::MemoryInterface* mem_if) override final;
-        void readRegister(HartId hart, RegId reg,
+        void readRegister(CoreId core_id, HartId hart_id, RegId reg,
                           std::vector<uint8_t> & buffer) const override final;
-        void peekRegister(HartId hart, RegId reg,
+        void peekRegister(CoreId core_id, HartId hart_id, RegId reg,
                           std::vector<uint8_t> & buffer) const override final;
-        void writeRegister(HartId hart, RegId reg,
+        void writeRegister(CoreId core_id, HartId hart_id, RegId reg,
                            std::vector<uint8_t> & buffer) const override final;
-        void pokeRegister(HartId hart, RegId reg,
+        void pokeRegister(CoreId core_id, HartId hart_id, RegId reg,
                           std::vector<uint8_t> & buffer) const override final;
-        void setPc(HartId hart, Addr pc) override final;
-        Addr getPc(HartId hart) const override final;
-        void setPrivilegeMode(HartId hart, PrivMode priv_mode) override final;
-        PrivMode getPrivilegeMode(HartId hart) const override final;
-        bool isSimulationFinished(HartId hart) const override final;
-        EventAccessor injectInstruction(HartId hart, Opcode opcode) override final;
-        EventAccessor injectInterrupt(HartId hart, uint64_t interrupt_code) override final;
-        EventAccessor injectReset(HartId hart) override final;
-        uint64_t getNumCommittedEvents(HartId hart) const override final;
-        const cosim::Event & getLastCommittedEvent(HartId hart) const override final;
-        const cosim::EventList & getUncommittedEvents(HartId hart) const override final;
-        uint64_t getNumUncommittedEvents(HartId hart) const override final;
-        uint64_t getNumUncommittedWrites(HartId hart) const override final;
+        void setPc(CoreId core_id, HartId hart_id, Addr pc) override final;
+        Addr getPc(CoreId core_id, HartId hart_id) const override final;
+        void setPrivilegeMode(CoreId core_id, HartId hart_id, PrivMode priv_mode) override final;
+        PrivMode getPrivilegeMode(CoreId core_id, HartId hart_id) const override final;
+        bool isSimulationFinished(CoreId core_id, HartId hart_id) const override final;
+        EventAccessor injectInstruction(CoreId core_id, HartId hart_id, Opcode opcode) override final;
+        EventAccessor injectInterrupt(CoreId core_id, HartId hart_id, uint64_t interrupt_code) override final;
+        EventAccessor injectReset(CoreId core_id, HartId hart_id) override final;
+        uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const override final;
+        const cosim::Event & getLastCommittedEvent(CoreId core_id, HartId hart_id) const override final;
+        const cosim::EventList & getUncommittedEvents(CoreId core_id, HartId hart_id) const override final;
+        uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const override final;
+        uint64_t getNumUncommittedWrites(CoreId core_id, HartId hart_id) const override final;
 
         void finish();
 
@@ -98,16 +98,16 @@ namespace pegasus::cosim
         std::unique_ptr<sparta::log::Tap> sparta_tap_;
 
         // Fetch Unit for each hart
-        std::vector<Fetch*> fetch_;
+	std::vector<std::vector<Fetch*>> fetch_;
 
         // CoSim memory interface
         CoSimMemoryInterface* cosim_memory_if_ = nullptr;
 
         // Event List for each hart
-        std::vector<EventList> event_list_;
+	std::vector<std::vector<EventList>> event_list_;
 
         // Last committed event for each hart
-        std::vector<Event> last_committed_event_;
+	std::vector<std::vector<Event>> last_committed_event_;
 
         // Sim config for sparta::app::Simulation base class
         sparta::app::SimulationConfiguration sim_config_;

@@ -16,11 +16,11 @@ namespace pegasus::cosim
         //! Allow derivation
         virtual ~MemoryInterface() {}
 
-        virtual bool peek(HartId hart, Addr paddr, size_t size,
+        virtual bool peek(CoreId core_id, HartId hart_id, Addr paddr, size_t size,
                           std::vector<uint8_t> & buffer) const = 0;
-        virtual bool read(HartId hart, Addr paddr, size_t size,
+        virtual bool read(CoreId core_id, HartId hart_id, Addr paddr, size_t size,
                           std::vector<uint8_t> & buffer) const = 0;
-        virtual bool poke(HartId hart, Addr paddr, std::vector<uint8_t> & buffer) const = 0;
-        virtual bool write(HartId hart, Addr paddr, std::vector<uint8_t> & buffer) const = 0;
+        virtual bool poke(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const = 0;
+        virtual bool write(CoreId core_id, HartId hart_id, Addr paddr, std::vector<uint8_t> & buffer) const = 0;
     };
 } // namespace pegasus::cosim

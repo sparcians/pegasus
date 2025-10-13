@@ -17,28 +17,28 @@ namespace pegasus::cosim
     {
     }
 
-    bool CoSimMemoryInterface::peek(HartId, Addr paddr, size_t size,
+    bool CoSimMemoryInterface::peek(CoreId, HartId, Addr paddr, size_t size,
                                     std::vector<uint8_t> & buffer) const
     {
         const bool success = memory_->tryPeek(paddr, size, buffer.data());
         return success;
     }
 
-    bool CoSimMemoryInterface::read(HartId, Addr paddr, size_t size,
+    bool CoSimMemoryInterface::read(CoreId, HartId, Addr paddr, size_t size,
                                     std::vector<uint8_t> & buffer) const
     {
         const bool success = memory_->tryRead(paddr, size, buffer.data());
         return success;
     }
 
-    bool CoSimMemoryInterface::poke(HartId, Addr paddr, std::vector<uint8_t> & buffer) const
+    bool CoSimMemoryInterface::poke(CoreId, HartId, Addr paddr, std::vector<uint8_t> & buffer) const
     {
         const size_t size = buffer.size() * sizeof(uint8_t);
         const bool success = memory_->tryPoke(paddr, size, buffer.data());
         return success;
     }
 
-    bool CoSimMemoryInterface::write(HartId, Addr paddr, std::vector<uint8_t> & buffer) const
+    bool CoSimMemoryInterface::write(CoreId, HartId, Addr paddr, std::vector<uint8_t> & buffer) const
     {
         const size_t size = buffer.size() * sizeof(uint8_t);
         const bool success = memory_->tryWrite(paddr, size, buffer.data());
@@ -56,10 +56,21 @@ namespace pegasus::cosim
         finalizeTree();
         finalizeFramework();
 
+        // TODO: Assume 1 core, 1 hart for now
+        const uint32_t num_cores = 1;
         const uint32_t num_harts = 1;
 
-        event_list_.resize(num_harts);
-        last_committed_event_.resize(num_harts, cosim::Event(cosim::Event::Type::INVALID));
+        event_list_.resize(num_cores);
+        for (auto& core_event_list : event_list_)
+        {
+            core_event_list.resize(num_harts);
+        }
+
+        last_committed_event_.resize(num_cores);
+        for (auto& core_last_committed_event : last_committed_event_)
+        {
+            core_last_committed_event.resize(num_harts, cosim::Event(cosim::Event::Type::INVALID));
+        }
 
         db_mgr_ = std::make_shared<simdb::DatabaseManager>("pegasus-cosim.db", true);
         app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
@@ -74,20 +85,25 @@ namespace pegasus::cosim
         cosim_pipeline_->setEventWindowSize(event_window_size);
         app_mgr_->openPipelines();
 
-        for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
+        fetch_.resize(num_cores);
+        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
-            // Get Fetch for each hart
-            const std::string core_name = "core" + std::to_string(hart_id);
-            fetch_.emplace_back(
-                getRoot()->getChild(core_name + ".fetch")->getResourceAs<pegasus::Fetch>());
+            for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+            {
+                // Get Fetch for each hart
+                const std::string core_name = "core" + std::to_string(core_idx) + ".";
+                const std::string hart_name = "hart" + std::to_string(hart_idx) + ".";
+                fetch_.at(core_idx).emplace_back(
+                    getRoot()->getChild(core_name + hart_name + "fetch")->getResourceAs<pegasus::Fetch>());
 
-            auto state = getPegasusState(hart_id);
+                auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
 
-            // Create and attach CoSimObserver to PegasusState for each hart
-            auto cosim_obs =
-                std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_id);
-            cosim_observers_.emplace_back(cosim_obs.get());
-            state->addObserver(std::move(cosim_obs));
+                // Create and attach CoSimObserver to PegasusState for each hart
+                auto cosim_obs =
+                    std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_idx);
+                cosim_observers_.emplace_back(cosim_obs.get());
+                state->addObserver(std::move(cosim_obs));
+            }
         }
 
         // Single memory IF for all harts
@@ -108,12 +124,13 @@ namespace pegasus::cosim
         }
     }
 
-    EventAccessor PegasusCoSim::step(HartId hart_id)
+    EventAccessor PegasusCoSim::step(CoreId core_id, HartId hart_id)
     {
-        ActionGroup* next_action_group = fetch_.at(hart_id)->getActionGroup();
+        ActionGroup* next_action_group = fetch_.at(core_id).at(hart_id)->getActionGroup();
+        PegasusState* state = getPegasusCore(core_id)->getPegasusState(hart_id);
         do
         {
-            next_action_group = next_action_group->execute(getPegasusState(hart_id));
+            next_action_group = next_action_group->execute(state);
         } while (next_action_group && (next_action_group->hasTag(ActionTags::FETCH_TAG) == false));
 
         return cosim_pipeline_->getLastEvent(hart_id);
@@ -124,23 +141,23 @@ namespace pegasus::cosim
 #endif
     }
 
-    EventAccessor PegasusCoSim::step(HartId hart_id, Addr addr)
+    EventAccessor PegasusCoSim::step(CoreId core_id, HartId hart_id, Addr addr)
     {
-        setPc(hart_id, addr);
-        return step(hart_id);
+        setPc(core_id, hart_id, addr);
+        return step(core_id, hart_id);
     }
 
-    EventAccessor PegasusCoSim::stepOperation(HartId)
-    {
-        sparta_assert(false, "CoSim method is not implemented!");
-    }
-
-    EventAccessor PegasusCoSim::stepOperation(HartId, Addr)
+    EventAccessor PegasusCoSim::stepOperation(CoreId, HartId)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::commit(HartId hart_id)
+    EventAccessor PegasusCoSim::stepOperation(CoreId, HartId, Addr)
+    {
+        sparta_assert(false, "CoSim method is not implemented!");
+    }
+
+    void PegasusCoSim::commit(CoreId core_id, HartId hart_id)
     {
 #if 0
         const cosim::Event & event = event_list_.at(hart_id).front();
@@ -151,13 +168,14 @@ namespace pegasus::cosim
         event_list_.at(hart_id).pop_front();
         // TODO: commit store writes
 #endif
+        (void)core_id;
         (void)hart_id;
     }
 
     void PegasusCoSim::commit(const cosim::Event* event)
     {
 #if 0
-        const HartId hart_id = event->getHartId();
+        const CoreId core_id, HartId hart_id = event->getCoreId core_id, HartId();
 
         // Find event in the event list
         const cosim::EventList & event_list = event_list_.at(hart_id);
@@ -167,7 +185,7 @@ namespace pegasus::cosim
 
         // Commit all events up to and including the event
         const uint32_t num_events_to_commit = std::distance(event_list.begin(), std::next(it));
-        for (uint32_t i = 0; i < num_events_to_commit; ++i)
+        for (uint32_t i; i < num_events_to_commit; ++i)
         {
             commit(hart_id);
         }
@@ -208,87 +226,90 @@ namespace pegasus::cosim
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::readRegister(HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::readRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::peekRegister(HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::peekRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::writeRegister(HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::writeRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::pokeRegister(HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::pokeRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::setPc(HartId hart_id, Addr addr)
+    void PegasusCoSim::setPc(CoreId core_id, HartId hart_id, Addr addr)
     {
         // TODO: Create Event for PC override
-        getPegasusState(hart_id)->setPc(addr);
+        getPegasusCore(core_id)->getPegasusState(hart_id)->setPc(addr);
     }
 
-    Addr PegasusCoSim::getPc(HartId hart_id) const { return getPegasusState(hart_id)->getPc(); }
+    Addr PegasusCoSim::getPc(CoreId core_id, HartId hart_id) const
+    {
+        return getPegasusCore(core_id)->getPegasusState(hart_id)->getPc();
+    }
 
-    void PegasusCoSim::setPrivilegeMode(HartId, PrivMode)
+    void PegasusCoSim::setPrivilegeMode(CoreId, HartId, PrivMode)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    PrivMode PegasusCoSim::getPrivilegeMode(HartId) const
+    PrivMode PegasusCoSim::getPrivilegeMode(CoreId, HartId) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    bool PegasusCoSim::isSimulationFinished(HartId hart_id) const
+    bool PegasusCoSim::isSimulationFinished(CoreId core_id, HartId hart_id) const
     {
-        const PegasusState::SimState* sim_state = getPegasusState(hart_id)->getSimState();
+        const PegasusState::SimState* sim_state = getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState();
         return sim_state->sim_stopped;
     }
 
-    EventAccessor PegasusCoSim::injectInstruction(HartId, Opcode)
+    EventAccessor PegasusCoSim::injectInstruction(CoreId, HartId, Opcode)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    EventAccessor PegasusCoSim::injectInterrupt(HartId, uint64_t)
+    EventAccessor PegasusCoSim::injectInterrupt(CoreId, HartId, uint64_t)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    EventAccessor PegasusCoSim::injectReset(HartId)
+    EventAccessor PegasusCoSim::injectReset(CoreId, HartId)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    uint64_t PegasusCoSim::getNumCommittedEvents(HartId hart_id) const
+    uint64_t PegasusCoSim::getNumCommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return getPegasusState(hart_id)->getSimState()->inst_count
-               - getNumUncommittedEvents(hart_id);
+        return getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState()->inst_count
+               - getNumUncommittedEvents(core_id, hart_id);
     }
 
-    const cosim::Event & PegasusCoSim::getLastCommittedEvent(HartId hart_id) const
+    const cosim::Event & PegasusCoSim::getLastCommittedEvent(CoreId core_id, HartId hart_id) const
     {
-        return last_committed_event_.at(hart_id);
+        return last_committed_event_.at(core_id).at(hart_id);
     }
 
-    const cosim::EventList & PegasusCoSim::getUncommittedEvents(HartId hart_id) const
+    const cosim::EventList & PegasusCoSim::getUncommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return event_list_.at(hart_id);
+        return event_list_.at(core_id).at(hart_id);
     }
 
-    uint64_t PegasusCoSim::getNumUncommittedEvents(HartId hart_id) const
+    uint64_t PegasusCoSim::getNumUncommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return event_list_.at(hart_id).size();
+        return event_list_.at(core_id).at(hart_id).size();
     }
 
-    uint64_t PegasusCoSim::getNumUncommittedWrites(HartId) const
+    uint64_t PegasusCoSim::getNumUncommittedWrites(CoreId, HartId) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
