@@ -661,7 +661,7 @@ namespace pegasus
         static_assert(std::is_same<XLEN, RV64>::value || std::is_same<XLEN, RV32>::value);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         const size_t sewb = vector_config->getSEW() / 8;
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
@@ -782,7 +782,7 @@ namespace pegasus
                                                        Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:

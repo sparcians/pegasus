@@ -309,7 +309,7 @@ namespace pegasus
     Action::ItrType RvvMaskInsts::viotaHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -363,7 +363,7 @@ namespace pegasus
     Action::ItrType RvvMaskInsts::veiHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:

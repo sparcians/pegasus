@@ -832,7 +832,7 @@ namespace pegasus
                                                 Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -879,7 +879,7 @@ namespace pegasus
                                                    Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -944,7 +944,7 @@ namespace pegasus
                                                    Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
@@ -1033,7 +1033,7 @@ namespace pegasus
                                                         Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
@@ -1118,7 +1118,7 @@ namespace pegasus
                                                     Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1190,7 +1190,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1278,7 +1278,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1358,7 +1358,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {

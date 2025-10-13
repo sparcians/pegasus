@@ -1333,7 +1333,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::vimvHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1444,7 +1444,7 @@ namespace pegasus
                                                       Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())
@@ -1577,7 +1577,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::virsubHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1650,7 +1650,7 @@ namespace pegasus
                                                       Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1717,7 +1717,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1786,7 +1786,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::vmiacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1868,7 +1868,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::vmicHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())
@@ -1960,7 +1960,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -2026,7 +2026,7 @@ namespace pegasus
                                                    Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -2120,7 +2120,7 @@ namespace pegasus
                                                        Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
