@@ -1303,12 +1303,11 @@ namespace pegasus
     Action::ItrType vimvlHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
         using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
         for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
         {
@@ -1333,7 +1332,8 @@ namespace pegasus
     template <typename XLEN, OperandMode opMode>
     Action::ItrType RvvIntegerInsts::vimvHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1360,14 +1360,14 @@ namespace pegasus
     Action::ItrType viBinaryHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         FunctorT<T> functor{};
         using R = typename decltype(elems_vd)::ElemType::ValueType;
 
@@ -1431,7 +1431,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1443,7 +1443,8 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viBinaryHandler_(PegasusState* state,
                                                       Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())
@@ -1535,10 +1536,8 @@ namespace pegasus
     Action::ItrType virsubHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
         {
@@ -1567,7 +1566,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1577,7 +1576,8 @@ namespace pegasus
     template <typename XLEN, OperandMode opMode>
     Action::ItrType RvvIntegerInsts::virsubHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1603,13 +1603,12 @@ namespace pegasus
     Action::ItrType viwmulsuHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<2 * elemWidth>, false> elems_vd{state, state->getVectorConfig(),
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<2 * elemWidth>, false> elems_vd{state, inst->getVecConfig(),
                                                          inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
@@ -1639,7 +1638,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1650,7 +1649,8 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viwmulsuHandler_(PegasusState* state,
                                                       Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1673,15 +1673,13 @@ namespace pegasus
     Action::ItrType viacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
         using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
 
         for (auto iter = elems_vs2.begin(); iter != elems_vs2.end(); ++iter)
@@ -1718,7 +1716,8 @@ namespace pegasus
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::viacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1748,14 +1747,13 @@ namespace pegasus
     Action::ItrType vmiacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        MaskElements elems_v0{state, state->getVectorConfig(), pegasus::V0};
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        MaskElements elems_v0{state, inst->getVecConfig(), pegasus::V0};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         for (auto iter = elems_vs2.begin(); iter != elems_vs2.end(); ++iter)
         {
@@ -1787,7 +1785,8 @@ namespace pegasus
     template <typename XLEN, OperandMode opMode, bool hasMaskOp, auto detectFunc>
     Action::ItrType RvvIntegerInsts::vmiacsbHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1813,13 +1812,12 @@ namespace pegasus
     Action::ItrType vmicHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         auto execute = [&]<typename Iterator>(const Iterator & begin, const Iterator & end)
         {
@@ -1858,7 +1856,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1869,7 +1867,8 @@ namespace pegasus
               template <typename> typename FunctorTemp>
     Action::ItrType RvvIntegerInsts::vmicHandler_(PegasusState* state, Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())
@@ -1919,21 +1918,19 @@ namespace pegasus
     Action::ItrType vimergeHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
         const UintType<elemWidth> x =
             opMode.src1 == OperandMode::Mode::X
                 ? static_cast<UintType<elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1()))
             : opMode.src1 == OperandMode::Mode::I
                 ? static_cast<UintType<elemWidth>>(inst->getImmediate())
                 : 0;
-        const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+        const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
 
         for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
         {
@@ -1962,7 +1959,8 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::vimergeHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -1988,10 +1986,9 @@ namespace pegasus
     Action::ItrType viextHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidthRs>, false> elems_vs2{state, state->getVectorConfig(),
+        Elements<Element<elemWidthRs>, false> elems_vs2{state, inst->getVecConfig(),
                                                         inst->getRs2()};
-        Elements<Element<elemWidthRd>, false> elems_vd{state, state->getVectorConfig(),
-                                                       inst->getRd()};
+        Elements<Element<elemWidthRd>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
         using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
 
         auto execute = [&](auto iter, const auto & end)
@@ -2017,7 +2014,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -2028,7 +2025,8 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viextHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -2072,14 +2070,13 @@ namespace pegasus
     Action::ItrType viTernaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         using ValueType = typename decltype(elems_vd)::ElemType::ValueType;
 
         auto execute = [&](auto iter, const auto & end)
@@ -2111,7 +2108,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -2122,7 +2119,8 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viTernaryHandler_(pegasus::PegasusState* state,
                                                        Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {

@@ -14,6 +14,16 @@ namespace pegasus
         return boost::json::value_to<ValueType>(entry.find(key)->value());
     }
 
+    VecCfgOverrides getJsonVecCfg(const boost::json::object & entry)
+    {
+        auto it = entry.find("veccfg");
+        if (it == entry.end())
+        {
+            return {};
+        }
+        return boost::json::value_to<VecCfgOverrides>(it->value());
+    }
+
     PegasusExtractor::PegasusExtractor(const boost::json::object & uarch_json,
                                        const PegasusState* state) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
@@ -21,6 +31,7 @@ namespace pegasus
         is_unimplemented_(inst_handler_name_ == "unsupported"),
         is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),
         is_cof_inst_(getUarchJsonValue<bool>(uarch_json, "cof")),
+        veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {
         const Execute* execute_unit = state->getExecuteUnit();
