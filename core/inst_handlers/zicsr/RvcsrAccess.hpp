@@ -52,18 +52,21 @@ namespace pegasus
                 {
                     allow &= READ_CSR_FIELD<XLEN>(state, SSTATEEN0, field_name);
                 }
+                [[fallthrough]];
 
             case PrivMode::SUPERVISOR:
                 if (isMstateen && state->isPrivilegeModeSupported(PrivMode::HYPERVISOR))
                 {
                     allow &= READ_CSR_FIELD<XLEN>(state, HSTATEEN0, field_name);
                 }
+                [[fallthrough]];
 
             case PrivMode::HYPERVISOR:
                 if (isMstateen)
                 {
                     allow &= READ_CSR_FIELD<XLEN>(state, MSTATEEN0, field_name);
                 }
+                [[fallthrough]];
 
             case PrivMode::MACHINE:
                 break;
