@@ -815,8 +815,7 @@ namespace pegasus
     Action::ItrType vfmvHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
 
         for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
         {
@@ -832,7 +831,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfmvHandler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -852,13 +852,11 @@ namespace pegasus
     Action::ItrType vfmergeHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, state->getVectorConfig(),
-                                                     inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
         const UintType<elemWidth> f =
             static_cast<UintType<elemWidth>>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+        const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
 
         for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
         {
@@ -880,7 +878,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfmergeHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -904,9 +903,9 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         softfloat_roundingMode =
             (rm == RoundingMode::ODD)
                 ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_odd)
@@ -931,7 +930,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -944,7 +943,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfUnaryHandler_(pegasus::PegasusState* state,
                                                    Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
@@ -990,9 +990,9 @@ namespace pegasus
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         softfloat_roundingMode =
             (rm == RoundingMode::MINMAG)
                 ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_minMag)
@@ -1019,7 +1019,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1032,7 +1032,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfFloatToIntHandler_(pegasus::PegasusState* state,
                                                         Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
@@ -1067,12 +1068,11 @@ namespace pegasus
     Action::ItrType vfBinaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, state->getVectorConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
@@ -1104,7 +1104,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1117,7 +1117,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfBinaryHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1188,7 +1189,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfrBinaryHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1229,11 +1231,9 @@ namespace pegasus
     Action::ItrType vmfbinaryHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
-        MaskElements elems_vd{state, state->getVectorConfig(), inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        MaskElements elems_vd{state, inst->getVecConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
@@ -1264,7 +1264,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1277,7 +1277,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vmfBinaryHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
         switch (vector_config->getSEW())
         {
             case 16:
@@ -1306,12 +1307,10 @@ namespace pegasus
     Action::ItrType vfTernaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs1{state, state->getVectorConfig(),
-                                                      inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, state->getVectorConfig(),
-                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, state->getVectorConfig(), inst->getRd()};
+            elems_vd{state, inst->getVecConfig(), inst->getRd()};
         softfloat_roundingMode = READ_CSR_REG<XLEN>(state, FRM);
 
         restoreFloatCsrs<XLEN>(state);
@@ -1345,7 +1344,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -1358,7 +1357,8 @@ namespace pegasus
     Action::ItrType RvvFloatInsts::vfTernaryHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {

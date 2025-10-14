@@ -333,13 +333,13 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto elems_vs2 =
             Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-                     false>{state, state->getVectorConfig(), inst->getRs1()};
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, state->getVectorConfig(),
-                                                                   inst->getRs1()};
+                     false>{state, inst->getVecConfig(), inst->getRs1()};
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
         auto elems_vd =
-            Elements<Element<elemWidth>, false>{state, state->getVectorConfig(), inst->getRd()};
+            Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRd()};
         using S = typename decltype(elems_vs2)::ElemType::ValueType;
         using R = typename decltype(elems_vd)::ElemType::ValueType;
         Functor functor{};
@@ -379,7 +379,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, state->getVectorConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
         WRITE_CSR_FIELD<XLEN>(state, VXSAT, "VXSAT", sat);
@@ -393,7 +393,8 @@ namespace pegasus
     Action::ItrType RvvFixedPointInsts::vxBinaryHandler_(PegasusState* state,
                                                          Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {
@@ -435,7 +436,8 @@ namespace pegasus
     Action::ItrType RvvFixedPointInsts::vxNClipHandler_(PegasusState* state,
                                                         Action::ItrType action_it)
     {
-        VectorConfig* vector_config = state->getVectorConfig();
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const VectorConfig* vector_config = inst->getVecConfig();
 
         switch (vector_config->getSEW())
         {

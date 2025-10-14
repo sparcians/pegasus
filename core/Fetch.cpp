@@ -138,6 +138,8 @@ namespace pegasus
         try
         {
             inst = state->getMavis()->makeInst(opcode, state);
+            inst->updateVecConfig(state); // Old PegasusInst may be returned from cache. So
+                                          // outside-constructor call is needed.
             assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception

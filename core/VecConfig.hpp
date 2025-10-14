@@ -3,11 +3,13 @@
 #include <stdint.h>
 #include <iostream>
 
-#include "core/PegasusState.hpp"
+#include "sparta/utils/SpartaAssert.hpp"
 
 namespace pegasus
 {
     constexpr size_t VLEN_MIN = 32;
+
+    class PegasusState;
 
     class VectorConfig
     {
@@ -26,7 +28,7 @@ namespace pegasus
         {
         }
 
-        explicit VectorConfig(const VectorConfig &) = default;
+        VectorConfig(const VectorConfig &) = default;
 
         VectorConfig & operator=(const VectorConfig &) = default;
 
@@ -86,37 +88,9 @@ namespace pegasus
 
         size_t getVLMAX() const { return getVLEN() / 8 * getLMUL() / getSEW(); }
 
-        template <typename XLEN> XLEN vsetAVL(PegasusState* state, bool set_max, XLEN avl = 0)
-        {
-            const size_t vl = set_max ? getVLMAX() : std::min<size_t>(getVLMAX(), avl);
-            setVL(vl);
-            WRITE_CSR_REG<XLEN>(state, VL, vl);
-            return vl;
-        }
+        template <typename XLEN> XLEN vsetAVL(PegasusState* state, bool set_max, XLEN avl = 0);
 
-        template <typename XLEN> void vsetVTYPE(PegasusState* state, XLEN vtype)
-        {
-            WRITE_CSR_REG<XLEN>(state, VTYPE, vtype);
-            const size_t vlmul = READ_CSR_FIELD<XLEN>(state, VTYPE, "vlmul");
-
-            static const size_t lmul_table[8] = {
-                8,  // 000
-                16, // 001
-                32, // 010
-                64, // 011
-                0,  // 100 (invalid)
-                1,  // 101
-                2,  // 110
-                4   // 111
-            };
-
-            const size_t lmul = lmul_table[vlmul & 0b111];
-            sparta_assert(lmul, "Invalid vtype VLMUL encoding.");
-            setLMUL(lmul);
-            setSEW(8u << READ_CSR_FIELD<XLEN>(state, VTYPE, "vsew"));
-            setVTA(READ_CSR_FIELD<XLEN>(state, VTYPE, "vta"));
-            setVMA(READ_CSR_FIELD<XLEN>(state, VTYPE, "vma"));
-        }
+        template <typename XLEN> void vsetVTYPE(PegasusState* state, XLEN vtype);
 
       private:
         // member variables

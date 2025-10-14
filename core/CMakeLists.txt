@@ -11,6 +11,7 @@ add_library(pegasuscore
     Exception.cpp
     PegasusExtractor.cpp
     PegasusInst.cpp
+    VecConfig.cpp
     translate/Translate.cpp
     observers/Observer.cpp
     observers/InstructionLogger.cpp
