@@ -71,100 +71,21 @@ namespace pegasus
 
     bool PegasusState::validateISAString_(std::string & unsupportedExt)
     {
-        std::string isa = isa_string_;
-
-        // Standarize to lowercase and skip rv32/rv64
-        std::transform(isa_string_.begin(), isa_string_.end(), isa.begin(),
-                       [](char c) { return std::tolower(c); });
-
         const auto & supported_exts =
             (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
 
-        const auto hasExtension = [&](const std::string & str)
+        const auto hasExtension = [&](const std::string & ext)
         {
-            return std::find(supported_exts.begin(), supported_exts.end(), str)
+            return std::find(supported_exts.begin(), supported_exts.end(), ext)
                    != supported_exts.end();
         };
 
-        // Parse the first chunk for single char extension
-        size_t pos = 4;
-        while (pos < isa.size() && isa[pos] != '_')
+        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
         {
-            const char c = isa[pos];
-            if (c == 'g')
+            if (!hasExtension(ext.first))
             {
-                const char* gset[] = {"i", "m", "a", "f", "d", "zicsr", "zifencei"};
-                for (const auto* e : gset)
-                {
-                    if (!hasExtension(e))
-                    {
-                        unsupportedExt = e;
-                        return false;
-                    }
-                }
-            }
-            else if (c == 'b')
-            {
-                const char* gset[] = {"zba", "zbb", "zbs"};
-                for (const auto* e : gset)
-                {
-                    if (!hasExtension(e))
-                    {
-                        unsupportedExt = e;
-                        return false;
-                    }
-                }
-            }
-            else if (c == 'v')
-            {
-                const char* gset[] = {"zve64x", "zve64d", "zve64f", "zve32x", "zve32f"};
-                for (const auto* e : gset)
-                {
-                    if (!hasExtension(e))
-                    {
-                        unsupportedExt = e;
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                std::string ext(1, c);
-                if (!hasExtension(ext))
-                {
-                    unsupportedExt = ext;
-                    return false;
-                }
-            }
-
-            pos++;
-        }
-
-        if (pos < isa.size())
-        {
-            if (isa[pos] == '_')
-            {
-                pos++;
-            }
-
-            while (pos < isa.size())
-            {
-                size_t next = isa.find('_', pos);
-                const std::string tok =
-                    (next == std::string::npos) ? isa.substr(pos) : isa.substr(pos, next - pos);
-
-                if (!tok.empty())
-                {
-                    if (!hasExtension(tok))
-                    {
-                        unsupportedExt = tok;
-                        return false;
-                    }
-                }
-
-                if (next == std::string::npos)
-                    break;
-                pos = next + 1;
+                unsupportedExt = ext.first;
+                return false;
             }
         }
 
@@ -197,6 +118,9 @@ namespace pegasus
     {
         sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
+
+        extension_manager_.setISA(isa_string_);
+
         std::string unsupportedExt;
         if (!validateISAString_(unsupportedExt))
         {
@@ -204,7 +128,6 @@ namespace pegasus
                           "ISA extension: " << unsupportedExt
                                             << " is not supported in isa_string: " << isa_string_);
         }
-        extension_manager_.setISA(isa_string_);
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
