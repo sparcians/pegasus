@@ -26,12 +26,12 @@ namespace pegasus
 
     void Fetch::onBindTreeEarly_()
     {
-        auto core_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
-        state_ = core_tn->getResourceAs<PegasusState>();
+        auto hart_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
+        state_ = hart_tn->getResourceAs<PegasusState>();
 
         // Connect Fetch, Translate and Execute
-        Translate* translate_unit = core_tn->getChild("translate")->getResourceAs<Translate*>();
-        Execute* execute_unit = core_tn->getChild("execute")->getResourceAs<Execute*>();
+        Translate* translate_unit = hart_tn->getChild("translate")->getResourceAs<Translate*>();
+        Execute* execute_unit = hart_tn->getChild("execute")->getResourceAs<Execute*>();
 
         ActionGroup* inst_translate_action_group = translate_unit->getInstTranslateActionGroup();
         ActionGroup* execute_action_group = execute_unit->getActionGroup();

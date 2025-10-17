@@ -44,7 +44,7 @@ namespace pegasus::cosim
          *
          * \note The event returned is a copy of what is appended to the event list.
          */
-        virtual EventAccessor step(HartId hart) = 0;
+        virtual EventAccessor step(CoreId core_id, HartId hart_id) = 0;
 
         /**
          * \brief Step the simulator after overriding the current pc
@@ -54,7 +54,7 @@ namespace pegasus::cosim
          *
          * \note The event returned is a copy of what is appended to the event list.
          */
-        virtual EventAccessor step(HartId hart, Addr override_pc) = 0;
+        virtual EventAccessor step(CoreId core_id, HartId hart, Addr override_pc) = 0;
 
         /**
          * \brief Step the simulator to the next Action at the current pc
@@ -64,7 +64,7 @@ namespace pegasus::cosim
          * \note The generated event may represent an incomplete step of
          *       the simulator and be only partially initialized.
          */
-        virtual EventAccessor stepOperation(HartId hart) = 0;
+        virtual EventAccessor stepOperation(CoreId core_id, HartId hart_id) = 0;
 
         /**
          * \brief Step the simulator to the next Action after overriding the current pc
@@ -75,13 +75,13 @@ namespace pegasus::cosim
          * \note The generated event may represent an incomplete step of the simulator and be only
          *       partially initialized.
          */
-        virtual EventAccessor stepOperation(HartId hart, Addr override_pc) = 0;
+        virtual EventAccessor stepOperation(CoreId core_id, HartId hart, Addr override_pc) = 0;
 
         /**
          * \brief Commit the oldest uncommitted Event in the event list
          * \param hart The hart to step
          */
-        virtual void commit(HartId hart) = 0;
+        virtual void commit(CoreId core_id, HartId hart_id) = 0;
 
         /**
          * \brief Commit the event and all older events in the event list
@@ -160,18 +160,22 @@ namespace pegasus::cosim
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Program State
 
-        virtual void readRegister(HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void peekRegister(HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void writeRegister(HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
-        virtual void pokeRegister(HartId hart, RegId reg, std::vector<uint8_t> & buffer) const = 0;
+        virtual void readRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void peekRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void writeRegister(CoreId core_id, HartId hart, RegId reg,
+                                   std::vector<uint8_t> & buffer) const = 0;
+        virtual void pokeRegister(CoreId core_id, HartId hart, RegId reg,
+                                  std::vector<uint8_t> & buffer) const = 0;
 
-        virtual void setPc(HartId hart, Addr pc) = 0;
-        virtual Addr getPc(HartId hart) const = 0;
+        virtual void setPc(CoreId core_id, HartId hart, Addr pc) = 0;
+        virtual Addr getPc(CoreId core_id, HartId hart_id) const = 0;
 
-        virtual void setPrivilegeMode(HartId hart, PrivMode priv_mode) = 0;
-        virtual PrivMode getPrivilegeMode(HartId hart) const = 0;
+        virtual void setPrivilegeMode(CoreId core_id, HartId hart, PrivMode priv_mode) = 0;
+        virtual PrivMode getPrivilegeMode(CoreId core_id, HartId hart_id) const = 0;
 
-        virtual bool isSimulationFinished(HartId hart) const = 0;
+        virtual bool isSimulationFinished(CoreId core_id, HartId hart_id) const = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Translation (TODO: need to determine suitable return type)
@@ -179,9 +183,10 @@ namespace pegasus::cosim
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Injection
 
-        virtual EventAccessor injectInstruction(HartId hart, Opcode opcode) = 0;
-        virtual EventAccessor injectInterrupt(HartId hart, uint64_t interrupt_code) = 0;
-        virtual EventAccessor injectReset(HartId hart) = 0;
+        virtual EventAccessor injectInstruction(CoreId core_id, HartId hart, Opcode opcode) = 0;
+        virtual EventAccessor injectInterrupt(CoreId core_id, HartId hart,
+                                              uint64_t interrupt_code) = 0;
+        virtual EventAccessor injectReset(CoreId core_id, HartId hart_id) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Checkpointing (TODO: is this necessary?)
@@ -189,11 +194,13 @@ namespace pegasus::cosim
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Debug
 
-        virtual uint64_t getNumCommittedEvents(HartId hart) const = 0;
-        virtual const cosim::Event & getLastCommittedEvent(HartId hart) const = 0;
-        virtual const cosim::EventList & getUncommittedEvents(HartId hart) const = 0;
-        virtual uint64_t getNumUncommittedEvents(HartId hart) const = 0;
-        virtual uint64_t getNumUncommittedWrites(HartId hart) const = 0;
+        virtual uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const = 0;
+        virtual const cosim::Event & getLastCommittedEvent(CoreId core_id,
+                                                           HartId hart_id) const = 0;
+        virtual const cosim::EventList & getUncommittedEvents(CoreId core_id,
+                                                              HartId hart_id) const = 0;
+        virtual uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const = 0;
+        virtual uint64_t getNumUncommittedWrites(CoreId core_id, HartId hart_id) const = 0;
     };
 
     /**

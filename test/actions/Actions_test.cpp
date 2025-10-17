@@ -46,7 +46,7 @@ int main()
     pegasus_sim.configureTree();
     pegasus_sim.finalizeTree();
 
-    pegasus::PegasusState* state = pegasus_sim.getPegasusState();
+    pegasus::PegasusState* state = pegasus_sim.getPegasusCore()->getPegasusState();
 
     // Create core units
     FetchUnit fetch_unit{};
