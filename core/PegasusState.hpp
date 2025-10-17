@@ -299,6 +299,8 @@ namespace pegasus
             return ++action_it;
         }
 
+        inline bool validateISAString_(std::string & unsupportedExt);
+
         //! Hart ID
         const HartId hart_id_;
 
@@ -317,7 +319,6 @@ namespace pegasus
         // Supported ISA string
         const std::vector<std::string> supported_rv64_extensions_;
         const std::vector<std::string> supported_rv32_extensions_;
-        const std::string supported_isa_string_;
 
         template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
 
