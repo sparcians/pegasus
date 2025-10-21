@@ -1,5 +1,5 @@
 #include "cosim/CoSimPipeline.hpp"
-#include "simdb/pipeline/Pipeline.hpp"
+#include "simdb/pipeline/PipelineManager.hpp"
 #include "simdb/pipeline/elements/Buffer.hpp"
 #include "simdb/pipeline/elements/CircularBuffer.hpp"
 #include "simdb/pipeline/elements/Function.hpp"
@@ -38,12 +38,11 @@ namespace pegasus::cosim
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
-    std::unique_ptr<simdb::pipeline::Pipeline>
-    CoSimPipeline::createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor)
+    void CoSimPipeline::createPipeline(simdb::pipeline::PipelineManager* pipeline_mgr)
     {
         assert(hart_pipelines_.capacity() > 0);
-
-        auto pipeline = std::make_unique<simdb::pipeline::Pipeline>(db_mgr_, NAME);
+        auto pipeline = pipeline_mgr->createPipeline(NAME);
+        auto db_accessor = pipeline_mgr->getAsyncDatabaseAccessor();
 
         for (HartId hart_id = 0; hart_id < hart_pipelines_.capacity(); ++hart_id)
         {
@@ -63,14 +62,14 @@ namespace pegasus::cosim
             auto async_source = simdb::pipeline::createTask<EventProducerFunction>(
                 [pipeline_input_queue,
                  send_evt = Event()](simdb::ConcurrentQueue<Event> & out,
-                                     bool /*simulation_terminating*/) mutable -> bool
+                                     bool /*force_flush*/) mutable
                 {
                     if (pipeline_input_queue->try_pop(send_evt))
                     {
                         out.emplace(std::move(send_evt));
-                        return true;
+                        return simdb::pipeline::RunnableOutcome::DID_WORK;
                     }
-                    return false;
+                    return simdb::pipeline::RunnableOutcome::NO_OP;
                 });
 
             // Run the events through a buffer
@@ -83,7 +82,7 @@ namespace pegasus::cosim
 
             auto convert_to_range = simdb::pipeline::createTask<ConvertToRangeFunction>(
                 [](EventBuffer && evts, simdb::ConcurrentQueue<EventsRange> & out,
-                   bool /*simulation_terminating*/)
+                   bool /*force_flush*/)
                 {
                     auto euid = evts.front().getEuid();
                     for (size_t i = 1; i < evts.size(); ++i)
@@ -100,6 +99,7 @@ namespace pegasus::cosim
                         std::make_pair(evts.front().getEuid(), evts.back().getEuid());
                     range.events = std::move(evts);
                     out.emplace(std::move(range));
+                    return simdb::pipeline::RunnableOutcome::DID_WORK;
                 });
 
             // Perform boost::serialization on the range of events (turn them into char buffers)
@@ -108,7 +108,7 @@ namespace pegasus::cosim
 
             auto to_bytes = simdb::pipeline::createTask<BoostSerializerFunction>(
                 [](EventsRange && evts, simdb::ConcurrentQueue<EventsRangeAsBytes> & out,
-                   bool /*simulation_terminating*/)
+                   bool /*force_flush*/)
                 {
                     EventsRangeAsBytes range_as_bytes;
                     range_as_bytes.euid_range = evts.euid_range;
@@ -123,6 +123,7 @@ namespace pegasus::cosim
                     os.flush();
 
                     out.emplace(std::move(range_as_bytes));
+                    return simdb::pipeline::RunnableOutcome::DID_WORK;
                 });
 
             // Perform zlib compression on the event ranges
@@ -131,19 +132,20 @@ namespace pegasus::cosim
             auto zlib = simdb::pipeline::createTask<ZlibFunction>(
                 [](EventsRangeAsBytes && uncompressed,
                    simdb::ConcurrentQueue<EventsRangeAsBytes> & out,
-                   bool /*simulation_terminating*/)
+                   bool /*force_flush*/)
                 {
                     EventsRangeAsBytes compressed;
                     compressed.euid_range = uncompressed.euid_range;
                     simdb::compressData(uncompressed.event_bytes, compressed.event_bytes);
                     out.emplace(std::move(compressed));
+                    return simdb::pipeline::RunnableOutcome::DID_WORK;
                 });
 
             // Write the compressed event ranges to disk
             auto async_writer =
                 db_accessor->createAsyncWriter<CoSimPipeline, EventsRangeAsBytes, EuidRange>(
                     [](EventsRangeAsBytes && evts, simdb::ConcurrentQueue<EuidRange> & out,
-                       simdb::pipeline::AppPreparedINSERTs* tables, bool /*simulation_terminating*/)
+                       simdb::pipeline::AppPreparedINSERTs* tables, bool /*force_flush*/)
                     {
                         auto inserter = tables->getPreparedINSERT("CompressedEvents");
                         inserter->setColumnValue(0, evts.euid_range.first);
@@ -153,6 +155,7 @@ namespace pegasus::cosim
 
                         // Send this euid range for eviction from the cache
                         out.emplace(std::move(evts.euid_range));
+                        return simdb::pipeline::RunnableOutcome::DID_WORK;
                     });
 
             // Put a circular buffer between the async writer and the eviction task.
@@ -168,8 +171,11 @@ namespace pegasus::cosim
 
             auto eviction_task = simdb::pipeline::createTask<EvictionFunction>(
                 [hart_pipeline](EuidRange && eviction_euid_range,
-                                bool /*simulation_terminating*/) mutable
-                { hart_pipeline->evict(eviction_euid_range); });
+                                bool /*force_flush*/) mutable
+                {
+                    hart_pipeline->evict(eviction_euid_range);
+                    return simdb::pipeline::RunnableOutcome::DID_WORK;
+                });
 
             // Connect tasks
             // ---------------------------------------------------------------------------
@@ -197,8 +203,6 @@ namespace pegasus::cosim
             // it already went ahead and added async_writer to the appropriate group
             // under the hood for us.
         }
-
-        return pipeline;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////

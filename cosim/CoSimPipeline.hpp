@@ -73,8 +73,7 @@ namespace pegasus::cosim
         void setEventWindowSize(size_t event_window_size);
 
         /// Returns a pipeline configured for fast event processing and retrieval.
-        std::unique_ptr<simdb::pipeline::Pipeline>
-        createPipeline(simdb::pipeline::AsyncDatabaseAccessor* db_accessor) override;
+        void createPipeline(simdb::pipeline::PipelineManager* pipeline_mgr) override;
 
         /// Called by unit tests to validate async event retrieval.
         void setSnooper(CoSimPipelineSnooper* snooper);
