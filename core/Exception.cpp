@@ -23,8 +23,8 @@ namespace pegasus
 
     void Exception::onBindTreeEarly_()
     {
-        auto core_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
-        PegasusState* state = core_tn->getResourceAs<PegasusState>();
+        auto hart_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
+        PegasusState* state = hart_tn->getResourceAs<PegasusState>();
 
         const auto xlen = state->getXlen();
         if (xlen == 64)

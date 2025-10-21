@@ -20,7 +20,8 @@ namespace pegasus
     void MagicMemory::onBindTreeEarly_()
     {
         auto core_tn = getContainer()->getRoot()->getChildAs<sparta::ResourceTreeNode>("core0");
-        state_ = core_tn->getResourceAs<PegasusState>();
+        auto hart_tn = core_tn->getChildAs<sparta::ResourceTreeNode>("hart0");
+        state_ = hart_tn->getResourceAs<PegasusState>();
     }
 
     bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,

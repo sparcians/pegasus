@@ -3,6 +3,7 @@ project(Pegasus)
 add_library(pegasuscore
     OBJECT
     ActionGroup.cpp
+    PegasusCore.cpp
     PegasusState.cpp
     ActionTags.cpp
     Fetch.cpp

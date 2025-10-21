@@ -91,8 +91,8 @@ namespace pegasus
         return true;
     }
 
-    PegasusState::PegasusState(sparta::TreeNode* core_tn, const PegasusStateParameters* p) :
-        sparta::Unit(core_tn),
+    PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
+        sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
@@ -110,8 +110,8 @@ namespace pegasus
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
-        inst_logger_(core_tn, "inst", "Pegasus Instruction Logger"),
-        stf_valid_logger_(core_tn, "stf_valid", "Pegasus STF Validator Logger"),
+        inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
+        stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
@@ -130,12 +130,12 @@ namespace pegasus
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
-            RegisterSet::create(core_tn, json_dir + std::string("/reg_int.json"), "int_regs");
-        fp_rset_ = RegisterSet::create(core_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
+            RegisterSet::create(hart_tn, json_dir + std::string("/reg_int.json"), "int_regs");
+        fp_rset_ = RegisterSet::create(hart_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
-        vec_rset_ = RegisterSet::create(core_tn, json_dir + vec_reg_json, "vec_regs");
+        vec_rset_ = RegisterSet::create(hart_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
-            RegisterSet::create(core_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
+            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
 
         auto add_registers = [this](const auto & reg_set)
         {
@@ -185,11 +185,11 @@ namespace pegasus
 
     void PegasusState::onBindTreeEarly_()
     {
-        auto core_tn = getContainer();
-        fetch_unit_ = core_tn->getChild("fetch")->getResourceAs<Fetch*>();
-        execute_unit_ = core_tn->getChild("execute")->getResourceAs<Execute*>();
-        translate_unit_ = core_tn->getChild("translate")->getResourceAs<Translate*>();
-        exception_unit_ = core_tn->getChild("exception")->getResourceAs<Exception*>();
+        auto hart_tn = getContainer();
+        fetch_unit_ = hart_tn->getChild("fetch")->getResourceAs<Fetch*>();
+        execute_unit_ = hart_tn->getChild("execute")->getResourceAs<Execute*>();
+        translate_unit_ = hart_tn->getChild("translate")->getResourceAs<Translate*>();
+        exception_unit_ = hart_tn->getChild("exception")->getResourceAs<Exception*>();
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
@@ -202,9 +202,9 @@ namespace pegasus
                 {},                                    // inclusions
                 {},                                    // exclusions
                 PegasusInstAllocatorWrapper<PegasusInstAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(core_tn))->inst_allocator),
+                    sparta::notNull(PegasusAllocators::getAllocators(hart_tn))->inst_allocator),
                 PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(core_tn))->extractor_allocator,
+                    sparta::notNull(PegasusAllocators::getAllocators(hart_tn))->extractor_allocator,
                     this)));
 
         if (isCompressionEnabled())

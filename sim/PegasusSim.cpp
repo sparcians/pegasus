@@ -19,9 +19,12 @@ namespace pegasus
 
     PegasusSim::~PegasusSim()
     {
-        for (auto state : state_)
+        for (auto & [core_idx, core] : cores_)
         {
-            state->cleanup();
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->cleanup();
+            }
         }
 
         getRoot()->enterTeardown();
@@ -29,9 +32,9 @@ namespace pegasus
 
     void PegasusSim::run(uint64_t run_time)
     {
-        for (auto state : state_)
+        for (auto & [core_idx, core] : cores_)
         {
-            state->boot();
+            core->boot();
         }
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
@@ -41,8 +44,10 @@ namespace pegasus
         auto end = std::chrono::system_clock::system_clock::now();
         auto sim_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-        const HartId hart_id = 0;
-        const PegasusState* state = state_.at(hart_id);
+        // FIXME: Only run core 0, hart 0 for now
+        const CoreId core_idx = 0;
+        const HartId hart_idx = 0;
+        const PegasusState* state = cores_.at(core_idx)->getPegasusState(hart_idx);
         const uint64_t inst_count = state->getSimState()->inst_count;
         std::locale::global(std::locale(""));
         std::cout.imbue(std::locale());
@@ -68,19 +73,25 @@ namespace pegasus
 
     void PegasusSim::enableInteractiveMode()
     {
-        sparta_assert(!state_.empty(), "Must call after bindTree_()");
-        for (auto state : state_)
+        sparta_assert(!cores_.empty(), "Must call after bindTree_()");
+        for (auto & [core_idx, core] : cores_)
         {
-            state->enableInteractiveMode();
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->enableInteractiveMode();
+            }
         }
     }
 
     void PegasusSim::useSpikeFormatting()
     {
-        sparta_assert(!state_.empty(), "Must call after bindTree_()");
-        for (auto state : state_)
+        sparta_assert(!cores_.empty(), "Must call after bindTree_()");
+        for (auto & [core_idx, core] : cores_)
         {
-            state->useSpikeFormatting();
+            for (auto & [hart_idx, thread] : core->getThreads())
+            {
+                thread->useSpikeFormatting();
+            }
         }
     }
 
@@ -99,33 +110,15 @@ namespace pegasus
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
-        // top.core
-        sparta::TreeNode* core_tn = nullptr;
-        const std::string core_name = "core0";
-        const uint32_t core_idx = 0;
-        tns_to_delete_.emplace_back(
-            core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
-                                                   "Core State", &state_factory_));
-
-        // top.core.fetch
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "fetch", sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
-            "Fetch Unit", &fetch_factory_));
-
-        // top.core.translate
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "translate", sparta::TreeNode::GROUP_NAME_NONE,
-            sparta::TreeNode::GROUP_IDX_NONE, "Translate Unit", &translate_factory_));
-
-        // top.core.execute
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "execute", sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
-            "Execute Unit", &execute_factory_));
-
-        // top.core.exception
-        tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
-            core_tn, "exception", sparta::TreeNode::GROUP_NAME_NONE,
-            sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
+        // top.core*
+        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
+        {
+            sparta::TreeNode* core_tn = nullptr;
+            const std::string core_name = "core" + std::to_string(core_idx);
+            tns_to_delete_.emplace_back(
+                core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
+                                                       "Core", &core_factory_));
+        }
     }
 
     void PegasusSim::configureTree_()
@@ -138,15 +131,14 @@ namespace pegasus
         // Set instruction limit for stopping simulation
         if (ilimit_ > 0)
         {
-            auto core_ilimit_arg =
-                getRoot()->getChildAs<sparta::ParameterBase>("core0.params.ilimit");
-            core_ilimit_arg->setValueFromString(std::to_string(ilimit_));
+            getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
+                                                           std::to_string(ilimit_));
         }
     }
 
     void PegasusSim::bindTree_()
     {
-        // Pegasus System (shared by all harts)
+        // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
         SystemCallEmulator* system_call_emulator =
             getRoot()
@@ -154,108 +146,94 @@ namespace pegasus
                 ->getResourceAs<pegasus::SystemCallEmulator>();
 
         bool system_call_emulator_enabled = false;
-        const uint32_t num_harts = 1;
-        for (uint32_t hart_id = 0; hart_id < num_harts; ++hart_id)
+        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
         {
-            // Get PegasusState and Fetch for each hart
-            const std::string core_name = "core" + std::to_string(hart_id);
-            const auto core = getRoot()->getChild(core_name);
-            state_.emplace_back(core->getResourceAs<PegasusState*>());
+            const std::string core_name = "core" + std::to_string(core_idx);
+            PegasusCore* core = getRoot()->getChild(core_name)->getResourceAs<PegasusCore*>();
+            cores_.emplace(core_idx, core);
 
-            // Give PegasusState a pointer to PegasusSystem for accessing memory
-            PegasusState* state = state_.back();
-            state->setPegasusSystem(system_);
-            state->setPc(system_->getStartingPc());
-
-            if (core->getChildAs<sparta::ResourceTreeNode>("execute")
-                    ->getParameterSet()
-                    ->getParameterAs<bool>("enable_syscall_emulation"))
+            // FIXME: Allow register overrides to be provide for specific threads
+            // const CoreId core_id = core->getCoreId();
+            for (auto & [hart_id, thread] : core->getThreads())
             {
-                system_call_emulator_enabled = true;
-                state->setSystemCallEmulator(system_call_emulator);
-            }
-
-            for (const auto & reg_override : reg_value_overrides_)
-            {
-                const bool MUST_EXIST = true;
-                sparta::Register* reg = state->findRegister(reg_override.first, MUST_EXIST);
-                const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
-                uint64_t old_value = 0;
-                if (state->getXlen() == 64)
+                for (const auto & reg_override : reg_value_overrides_)
                 {
-                    old_value = reg->dmiRead<uint64_t>();
-                    reg->dmiWrite<uint64_t>(new_reg_value);
-                }
-                else
-                {
-                    old_value = reg->dmiRead<uint32_t>();
-                    reg->dmiWrite<uint32_t>(new_reg_value);
-                }
-                std::cout << std::hex << std::showbase << std::setfill(' ');
-
-                std::cout << "Setting " << std::quoted(reg->getName());
-                if (reg->getAliases().size() != 0)
-                {
-                    std::cout << " aka " << reg->getAliases();
-                }
-                std::cout << " to " << HEX16(new_reg_value) << " from default " << HEX16(old_value)
-                          << std::endl;
-
-                std::cout << "Fields:";
-
-                if (not reg->getFields().empty())
-                {
-                    uint64_t max_field_val_size = 0;
-                    size_t max_field_name_size = 0;
-
-                    // Order the fields based on bit settings
-                    struct OrderFields
+                    const bool MUST_EXIST = true;
+                    sparta::Register* reg = thread->findRegister(reg_override.first, MUST_EXIST);
+                    const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
+                    uint64_t old_value = 0;
+                    if (thread->getXlen() == 64)
                     {
-                        bool operator()(const sparta::RegisterBase::Field* lhs,
-                                        const sparta::RegisterBase::Field* rhs) const
+                        old_value = reg->dmiRead<uint64_t>();
+                        reg->dmiWrite<uint64_t>(new_reg_value);
+                    }
+                    else
+                    {
+                        old_value = reg->dmiRead<uint32_t>();
+                        reg->dmiWrite<uint32_t>(new_reg_value);
+                    }
+                    std::cout << std::hex << std::showbase << std::setfill(' ');
+
+                    std::cout << "Setting " << std::quoted(reg->getName());
+                    if (reg->getAliases().size() != 0)
+                    {
+                        std::cout << " aka " << reg->getAliases();
+                    }
+                    std::cout << " to " << HEX16(new_reg_value) << " from default "
+                              << HEX16(old_value) << std::endl;
+
+                    std::cout << "Fields:";
+
+                    if (not reg->getFields().empty())
+                    {
+                        uint64_t max_field_val_size = 0;
+                        size_t max_field_name_size = 0;
+
+                        // Order the fields based on bit settings
+                        struct OrderFields
                         {
-                            return (lhs->getLowBit() > rhs->getLowBit());
+                            bool operator()(const sparta::RegisterBase::Field* lhs,
+                                            const sparta::RegisterBase::Field* rhs) const
+                            {
+                                return (lhs->getLowBit() > rhs->getLowBit());
+                            }
+                        };
+
+                        // Go through the fields twice -- once to get formatting, the second to
+                        // actually print
+                        std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
+                        for (const auto & field : reg->getFields())
+                        {
+                            max_field_val_size = std::max(field->getNumBits(), max_field_val_size);
+                            max_field_name_size =
+                                std::max(field->getName().size(), max_field_name_size);
+                            ordered_fields.insert(field);
                         }
-                    };
+                        max_field_val_size =
+                            (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
+                        max_field_val_size += 2;
 
-                    // Go through the fields twice -- once to get formatting, the second to actually
-                    // print
-                    std::set<sparta::RegisterBase::Field*, OrderFields> ordered_fields;
-                    for (const auto & field : reg->getFields())
-                    {
-                        max_field_val_size = std::max(field->getNumBits(), max_field_val_size);
-                        max_field_name_size =
-                            std::max(field->getName().size(), max_field_name_size);
-                        ordered_fields.insert(field);
+                        for (const auto & field : ordered_fields)
+                        {
+                            std::cout
+                                << "\n\t" << std::setw(max_field_val_size) << std::right << std::dec
+                                << field->read() << " " << std::setw(max_field_name_size)
+                                << std::right << field->getName() << std::right << std::dec << " ["
+                                << std::setw(2) << field->getLowBit() << ":" << std::setw(2)
+                                << field->getHighBit() << "] "
+                                << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
+                                << ")";
+                        }
                     }
-                    max_field_val_size =
-                        (max_field_val_size > 4) ? max_field_val_size / 4 : max_field_val_size;
-                    max_field_val_size += 2;
-
-                    for (const auto & field : ordered_fields)
+                    else
                     {
-                        std::cout << "\n\t" << std::setw(max_field_val_size) << std::right
-                                  << std::dec << field->read() << " "
-                                  << std::setw(max_field_name_size) << std::right
-                                  << field->getName() << std::right << std::dec << " ["
-                                  << std::setw(2) << field->getLowBit() << ":" << std::setw(2)
-                                  << field->getHighBit() << "] "
-                                  << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
-                                  << ")";
+                        std::cout << " None";
                     }
-                }
-                else
-                {
-                    std::cout << " None";
                 }
                 std::cout << std::endl;
             }
-
-            if (false == workload_and_args_.empty())
-            {
-                state->setupProgramStack(system_->getWorkloadAndArgs());
-            }
         }
+
         if (false == workload_and_args_.empty() && system_call_emulator_enabled)
         {
             system_call_emulator->setWorkload(workload_and_args_[0]);
@@ -264,9 +242,9 @@ namespace pegasus
 
     void PegasusSim::endSimulation(int64_t exit_code)
     {
-        for (auto state : state_)
+        for (auto & [core_id, core] : cores_)
         {
-            state->stopSim(exit_code);
+            core->stopSim(exit_code);
         }
     }
 
