@@ -19,6 +19,8 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include <algorithm>
+
 namespace pegasus
 {
     std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
@@ -67,29 +69,26 @@ namespace pegasus
         }
     }
 
-    std::string getSupportedIsaString(uint64_t xlen, const std::string isa_string,
-                                      const std::vector<std::string> & supported_rv64_exts,
-                                      const std::vector<std::string> & supported_rv32_exts)
+    bool PegasusState::validateISAString_(std::string & unsupportedExt)
     {
-        const bool enable_zcmp = isa_string.find("zcmp") != std::string::npos;
-        std::string supported_exts_str = "rv" + std::to_string(xlen);
-        const auto & supported_exts = (xlen == 64) ? supported_rv64_exts : supported_rv32_exts;
-        for (auto & ext : supported_exts)
+        const auto & supported_exts =
+            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
+
+        const auto hasExtension = [&](const std::string & ext) {
+            return std::find(supported_exts.begin(), supported_exts.end(), ext)
+                   != supported_exts.end();
+        };
+
+        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
         {
-            if (enable_zcmp && (ext == "c"))
+            if (!hasExtension(ext.first))
             {
-                continue;
-            }
-            else if (!enable_zcmp && (ext == "zcmp"))
-            {
-                continue;
-            }
-            else
-            {
-                supported_exts_str += ext + "_";
+                unsupportedExt = ext.first;
+                return false;
             }
         }
-        return supported_exts_str;
+
+        return true;
     }
 
     PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
@@ -101,14 +100,11 @@ namespace pegasus
         xlen_(getXlenFromIsaString(isa_string_)),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
-        supported_isa_string_(getSupportedIsaString(xlen_, isa_string_, supported_rv64_extensions_,
-                                                    supported_rv32_extensions_)),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         csr_values_json_(p->csr_values),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
-            supported_isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"),
-            isa_file_path_)),
+            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
@@ -121,7 +117,16 @@ namespace pegasus
     {
         sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
+
         extension_manager_.setISA(isa_string_);
+
+        std::string unsupportedExt;
+        if (!validateISAString_(unsupportedExt))
+        {
+            sparta_assert(false,
+                          "ISA extension: " << unsupportedExt
+                                            << " is not supported in isa_string: " << isa_string_);
+        }
 
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =

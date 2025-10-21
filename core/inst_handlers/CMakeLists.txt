@@ -13,6 +13,7 @@ target_link_libraries(pegasusinsts
     rvzifencei
     rvzicond
     rvzcmp
+    rvzcmt
     rvzabha
     rvzilsd
     rvzfa
@@ -30,6 +31,7 @@ add_subdirectory(zicsr)
 add_subdirectory(zifencei)
 add_subdirectory(zicond)
 add_subdirectory(zcmp)
+add_subdirectory(zcmt)
 add_subdirectory(zabha)
 add_subdirectory(zilsd)
 add_subdirectory(zfa)

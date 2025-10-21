@@ -45,6 +45,12 @@ CSR32_DEFS = {
         "version"         : { "high_bit" :  3, "low_bit" :  0, "readonly" : True,  "desc" : "Version of Debug Module spec supported" },
     }],
 
+    # User Jump table
+    0x017: ["jvt", "Table jump base vector and control register", {
+                "BASE" : { "high_bit" : 31, "low_bit" : 6, "readonly" : False, "desc" : "Jump Table base address" },
+                "MODE" : { "high_bit" :  5, "low_bit" : 0, "readonly" : False, "desc" : "Jump Table mode" },
+    }],
+
     # User Trap Setup
     0x040: ["uscratch", "Scratch register for user trap handlers.", {}],
     0x041: ["uepc", "User exception program counter.", {}],
@@ -213,6 +219,17 @@ CSR32_DEFS = {
         "CBIE"  : { "high_bit" :  5, "low_bit" :  4, "readonly" : False, "desc" : "Cache block invalidate instruction enable" },
         "FIOM"  : { "high_bit" :  0, "low_bit" :  0, "readonly" : False, "desc" : "Fence of I/O implies Memory" },
     }, 0 ],
+
+    # Supervisor state enable registers
+    0x10c: ["sstateen0", "Supervisor State Enable Register 0", {
+        "WPRI"    : { "high_bit" : 31, "low_bit" :  3, "readonly" : True , "desc" : "Reserved"              },
+        "JVT"     : { "high_bit" :  2, "low_bit" :  2, "readonly" : False, "desc" : "JVT register access"   },
+        "FCSR"    : { "high_bit" :  1, "low_bit" :  1, "readonly" : False, "desc" : "FCSR register access"  },
+        "C"       : { "high_bit" :  0, "low_bit" :  0, "readonly" : True , "desc" : "Custom state access"   },
+    }],
+    0x10d: ["sstateen1", "Supervisor State Enable Register 1", {}],
+    0x10e: ["sstateen2", "Supervisor State Enable Register 2", {}],
+    0x10f: ["sstateen3", "Supervisor State Enable Register 3", {}],
 
     # Supervisor Trap Handling
     0x140: ["sscratch", "Scratch register for supervisor trap handlers.", {}],
@@ -503,6 +520,35 @@ CSR32_DEFS = {
     0x3ee: ["pmpaddr62", "Physical memory protection address register.", {}],
     0x3ef: ["pmpaddr63", "Physical memory protection address register.", {}],
 
+    # Machine state enable registers
+    0x30c: ["mstateen0", "Machine State Enable Register 0", {
+        "WPRI" : { "high_bit" : 31, "low_bit" : 3, "readonly" : True , "desc" : "Reserved"              },
+        "JVT"  : { "high_bit" :  2, "low_bit" : 2, "readonly" : False, "desc" : "JVT register access"   },
+        "FCSR" : { "high_bit" :  1, "low_bit" : 1, "readonly" : False, "desc" : "FCSR register access"  },
+        "C"    : { "high_bit" :  0, "low_bit" : 0, "readonly" : True , "desc" : "Custom state access"   },
+    }],
+    0x30d: ["mstateen1", "Machine State Enable Register 1", {}],
+    0x30e: ["mstateen2", "Machine State Enable Register 2", {}],
+    0x30f: ["mstateen3", "Machine State Enable Register 3", {}],
+
+    0x31c: ["mstateen0h", "Machine State Enable Register 0, RV32 only", {
+        "SE0"     : { "high_bit" : 31, "low_bit" : 31, "readonly" : False, "desc" : "hstateen0/sstateen0 register access" },
+        "ENVCFG"  : { "high_bit" : 30, "low_bit" : 30, "readonly" : False, "desc" : "henvcfg/senvcfg register access"   },
+        "WPRI"    : { "high_bit" : 29, "low_bit" : 29, "readonly" : True , "desc" : "Reserved"                          },
+        "CSRIND"  : { "high_bit" : 28, "low_bit" : 28, "readonly" : False, "desc" : "Sscsrind access"                   },
+        "AIA"     : { "high_bit" : 27, "low_bit" : 27, "readonly" : False, "desc" : "Ssaia state access"                },
+        "IMSIC"   : { "high_bit" : 26, "low_bit" : 26, "readonly" : False, "desc" : "IMSIC state access"                },
+        "CONTEXT" : { "high_bit" : 25, "low_bit" : 25, "readonly" : False, "desc" : "hcontext/scontext register access" },
+        "P1P13"   : { "high_bit" : 24, "low_bit" : 24, "readonly" : False, "desc" : "hedelegh register access"          },
+        "P1P14"   : { "high_bit" : 23, "low_bit" : 23, "readonly" : False, "desc" : "srmcfg register access"            },
+        "CTR"     : { "high_bit" : 22, "low_bit" : 22, "readonly" : False, "desc" : "CTR register access"               },
+        "CLIC"    : { "high_bit" : 21, "low_bit" : 21, "readonly" : False, "desc" : "CLIC registers access"             },
+        "WPRI"    : { "high_bit" : 20, "low_bit" :  0, "readonly" : True , "desc" : "Reserved"                          },
+    }],
+    0x31d: ["mstateen1h", "Machine State Enable Register 1, RV32 only", {}],
+    0x31e: ["mstateen2h", "Machine State Enable Register 2, RV32 only", {}],
+    0x31f: ["mstateen3h", "Machine State Enable Register 3, RV32 only", {}],
+
     # Machine Counter/Timers
     0xB00: ["mcycle", "Machine cycle counter.", {}],
     0xB02: ["minstret", "Machine instructions-retired counter.", {}],
@@ -710,6 +756,35 @@ CSR32_DEFS = {
     }],
     0x606: ["hcounteren", "Hypervisor counter-enable register", {}],
     0x607: ["hgeie",      "Hypervisor guest external interrupt-enable register", {}],
+
+    # Hypervisor state enable registers
+    0x60c: ["hstateen0", "Hypervisor State Enable Register 0", {
+        "WPRI" : { "high_bit" : 31, "low_bit" : 3, "readonly" : True , "desc" : "Reserved"              },
+        "JVT"  : { "high_bit" :  2, "low_bit" : 2, "readonly" : False, "desc" : "JVT register access"   },
+        "FCSR" : { "high_bit" :  1, "low_bit" : 1, "readonly" : False, "desc" : "FCSR register access"  },
+        "C"    : { "high_bit" :  0, "low_bit" : 0, "readonly" : True , "desc" : "Custom state access"   },
+    }],
+    0x60d: ["hstateen1", "Hypervisor State Enable Register 1", {}],
+    0x60e: ["hstateen2", "Hypervisor State Enable Register 2", {}],
+    0x60f: ["hstateen3", "Hypervisor State Enable Register 3", {}],
+
+    0x61c: ["hstateen0h", "Hypervisor State Enable Register 0, RV32 only", {
+        "SE0"     : { "high_bit" : 31, "low_bit" : 31, "readonly" : False, "desc" : "sstateen0 register access" },
+        "ENVCFG"  : { "high_bit" : 30, "low_bit" : 30, "readonly" : False, "desc" : "senvcfg register access"   },
+        "WPRI"    : { "high_bit" : 29, "low_bit" : 29, "readonly" : True , "desc" : "Reserved"                  },
+        "CSRIND"  : { "high_bit" : 28, "low_bit" : 28, "readonly" : False, "desc" : "Sscsrind access"           },
+        "AIA"     : { "high_bit" : 27, "low_bit" : 27, "readonly" : False, "desc" : "Ssaia state access"        },
+        "IMSIC"   : { "high_bit" : 26, "low_bit" : 26, "readonly" : False, "desc" : "IMSIC state access"        },
+        "CONTEXT" : { "high_bit" : 25, "low_bit" : 25, "readonly" : False, "desc" : "scontext register access"  },
+        "WPRI"    : { "high_bit" : 24, "low_bit" : 23, "readonly" : True , "desc" : "Reserved"                  },
+        "CTR"     : { "high_bit" : 22, "low_bit" : 22, "readonly" : False, "desc" : "CTR register access"       },
+        "CLIC"    : { "high_bit" : 21, "low_bit" : 21, "readonly" : False, "desc" : "CLIC registers access"     },
+        "WPRI"    : { "high_bit" : 20, "low_bit" :  0, "readonly" : True , "desc" : "Reserved"                  },
+    }],
+    0x61d: ["hstateen1h", "Hypervisor State Enable Register 1, RV32 only", {}],
+    0x61e: ["hstateen2h", "Hypervisor State Enable Register 2, RV32 only", {}],
+    0x61f: ["hstateen3h", "Hypervisor State Enable Register 3, RV32 only", {}],
+
     0x643: ["htval",      "Hypervisor trap value register", {}],
     0x644: ["hip",        "Hypervisor interrupt-pending register", {
         "WPRI"  : { "high_bit" : 31, "low_bit" : 13, "readonly" : True,  "desc" : "reserved" },

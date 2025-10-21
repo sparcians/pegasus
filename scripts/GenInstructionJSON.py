@@ -49,6 +49,8 @@ from insts.RVZCMP_INST import RV32ZCMP_INST
 from insts.RVZCMP_INST import RV64ZCMP_INST
 from insts.RVZCA_INST import RV32ZCA_INST
 from insts.RVZCA_INST import RV64ZCA_INST
+from insts.RVZCMT_INST import RV32ZCMT_INST
+from insts.RVZCMT_INST import RV64ZCMT_INST
 from insts.RVZABHA_INST import RV32ZABHA_INST
 from insts.RVZABHA_INST import RV64ZABHA_INST
 from insts.RVZILSD_INST import RV32ZILSD_INST
@@ -145,16 +147,31 @@ def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts
         fh.write( f'#define DEFAULT_ISA_STR "{default_isa}"\n' )
         fh.write('#define SUPPORTED_RV64_EXTS {\\\n')
         for idx, ext in enumerate(supported_rv64_exts):
+            if ext == 'a':
+                fh.write( f'    \"zalrsc\", \\\n')
+                fh.write( f'    \"zaamo\", \\\n')
+            elif ext == 'm':
+                fh.write( f'    \"zmmul\", \\\n')
             # Last extension in the list
             if idx == (len(supported_rv64_exts) - 1):
-                fh.write( f'    \"{ext}\", \"c\" }}\n')
+                fh.write( f'    \"{ext}\", \\\n')
+                cd = ', \"zcd\"' if 'd' in supported_rv64_exts else ''
+                fh.write( f'    \"c\"{cd} }}\n')
             else:
                 fh.write( f'    \"{ext}\", \\\n')
         fh.write('#define SUPPORTED_RV32_EXTS {\\\n')
         for idx, ext in enumerate(supported_rv32_exts):
+            if ext == 'a':
+                fh.write( f'    \"zalrsc\", \\\n')
+                fh.write( f'    \"zaamo\", \\\n')
+            elif ext == 'm':
+                fh.write( f'    \"zmmul\", \\\n')
             # Last extension in the list
             if idx == (len(supported_rv32_exts) - 1):
-                fh.write( f'    \"{ext}\", \"c\" }}\n')
+                fh.write( f'    \"{ext}\", \\\n')
+                cd = ', \"zcd\"' if 'd' in supported_rv32_exts else ''
+                cf = ', \"zcf\"' if 'f' in supported_rv32_exts else ''
+                fh.write( f'    \"c\"{cd}{cf} }}\n')
             else:
                 fh.write( f'    \"{ext}\", \\\n')
         fh.write( '#define RV64_UARCH_JSON_LIST {\\\n' )
