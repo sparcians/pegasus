@@ -1,4 +1,5 @@
 #include "core/PegasusExtractor.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 #include "core/Execute.hpp"
 
@@ -25,7 +26,7 @@ namespace pegasus
     }
 
     PegasusExtractor::PegasusExtractor(const boost::json::object & uarch_json,
-                                       const PegasusState* state) :
+                                       const PegasusCore* core) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_unimplemented_(inst_handler_name_ == "unsupported"),
@@ -34,9 +35,11 @@ namespace pegasus
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {
-        const Execute* execute_unit = state->getExecuteUnit();
+        // FIXME: Where should inst handlers live?
+        const HartId hart_id = 0;
+        const Execute* execute_unit = core->getPegasusState(hart_id)->getExecuteUnit();
 
-        const auto xlen = state->getXlen();
+        const auto xlen = core->getXlen();
         const Execute::InstHandlersMap* inst_compute_address_handlers =
             (xlen == 64) ? execute_unit->getInstComputeAddressHandlersMap<RV64>()
                          : execute_unit->getInstComputeAddressHandlersMap<RV32>();
