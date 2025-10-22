@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/PegasusTypes.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 
 namespace pegasus
@@ -41,21 +41,21 @@ namespace pegasus
 
         XLEN allow = true;
 
-        const auto & extensionManager = state->getExtensionManager();
+        const auto & extensionManager = state->getCore()->getExtensionManager();
         const bool isSstateen = extensionManager.isEnabled("Ssstateen");
         const bool isMstateen = extensionManager.isEnabled("Smstateen");
 
         switch (state->getPrivMode())
         {
             case PrivMode::USER:
-                if (isSstateen && state->isPrivilegeModeSupported(PrivMode::SUPERVISOR))
+                if (isSstateen && state->getCore()->isPrivilegeModeSupported(PrivMode::SUPERVISOR))
                 {
                     allow &= READ_CSR_FIELD<XLEN>(state, SSTATEEN0, field_name);
                 }
                 [[fallthrough]];
 
             case PrivMode::SUPERVISOR:
-                if (isMstateen && state->isPrivilegeModeSupported(PrivMode::HYPERVISOR))
+                if (isMstateen && state->getCore()->isPrivilegeModeSupported(PrivMode::HYPERVISOR))
                 {
                     allow &= READ_CSR_FIELD<XLEN>(state, HSTATEEN0, field_name);
                 }

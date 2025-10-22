@@ -256,6 +256,9 @@ namespace pegasus
         return ext_val;
     }
 
+    template uint32_t PegasusCore::getMisaExtFieldValue<RV32>() const;
+    template uint32_t PegasusCore::getMisaExtFieldValue<RV64>() const;
+
     mavis::FileNameListType PegasusCore::getUArchFiles_() const
     {
         const std::string xlen_str = std::to_string(xlen_);

@@ -2,6 +2,7 @@
 #include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/Exception.hpp"
@@ -416,7 +417,7 @@ namespace pegasus
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
 
-        auto & ext_manager = state->getExtensionManager();
+        auto & ext_manager = state->getCore()->getExtensionManager();
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
         if (fs_val == 0)
@@ -435,7 +436,7 @@ namespace pegasus
             }
         }
 
-        state->changeMavisContext();
+        state->getCore()->changeMavisContext();
         state->changeMMUMode<XLEN>();
 
         return ++action_it;
@@ -446,7 +447,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        auto & ext_manager = state->getExtensionManager();
+        auto & ext_manager = state->getCore()->getExtensionManager();
 
         std::vector<std::string> exts_to_enable;
         std::vector<std::string> exts_to_disable;
@@ -483,7 +484,7 @@ namespace pegasus
 
         ext_manager.disableExtensions(exts_to_disable);
         ext_manager.enableExtensions(exts_to_enable);
-        state->changeMavisContext();
+        state->getCore()->changeMavisContext();
 
         return ++action_it;
     }

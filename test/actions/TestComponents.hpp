@@ -1,3 +1,4 @@
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 
 #include <algorithm>
@@ -37,7 +38,7 @@ class FetchUnit : public Unit
         const uint64_t opcode = workload_.at(pc);
 
         // Construct and set the current inst
-        auto inst = state->getMavis()->makeInst(opcode, state);
+        auto inst = state->getCore()->getMavis()->makeInst(opcode, state);
         state->setCurrentInst(inst);
 
         // Always go to either Decode or Translate

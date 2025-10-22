@@ -4,6 +4,7 @@
 #include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "system/PegasusSystem.hpp"
@@ -942,7 +943,7 @@ namespace pegasus
             // Get the previous privilege mode from the SPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
 
-            if (state->hasHypervisor())
+            if (state->getCore()->hasHypervisor())
             {
                 prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
                 WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
