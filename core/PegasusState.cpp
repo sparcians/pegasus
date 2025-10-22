@@ -189,7 +189,7 @@ namespace pegasus
 
         for (auto & obs : observers_)
         {
-            obs->registerReadWriteMemCallbacks(pegasus_system_->getSystemMemory());
+            obs->registerReadWriteMemCallbacks(pegasus_core_->getSystem()->getSystemMemory());
             for (auto reg : csr_rset_->getRegisters())
             {
                 obs->registerReadWriteCsrCallbacks(reg);
@@ -315,7 +315,7 @@ namespace pegasus
 
     template <typename MemoryType> MemoryType PegasusState::readMemory(const Addr paddr)
     {
-        auto* memory = pegasus_system_->getSystemMemory();
+        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -333,7 +333,7 @@ namespace pegasus
     template <typename MemoryType>
     void PegasusState::writeMemory(const Addr paddr, const MemoryType value)
     {
-        auto* memory = pegasus_system_->getSystemMemory();
+        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -416,7 +416,7 @@ namespace pegasus
     // This is used mostly for system call emulation
     void PegasusState::setupProgramStack(const std::vector<std::string> & program_arguments)
     {
-        if (false == getExecuteUnit()->getSystemCallEmulation())
+        if (false == pegasus_core_->isSystemCallEmulationEnabled())
         {
             // System call emulation is not enabled.  There's a good
             // chance we might be running a bare metal binary so no
@@ -484,7 +484,7 @@ namespace pegasus
         sparta_assert(sp != 0, "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "
                                "to set it to something...smarter");
 
-        auto* memory = sparta::notNull(pegasus_system_)->getSystemMemory();
+        auto* memory = sparta::notNull(pegasus_core_->getSystem())->getSystemMemory();
         sparta_assert(memory != nullptr, "Got no memory to preload with the argument stack");
 
         ////////////////////////////////////////////////////////////////////////////////

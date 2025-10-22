@@ -6,6 +6,7 @@
 
 #include "core/PegasusAllocatorWrapper.hpp"
 #include "core/PegasusState.hpp"
+#include "core/InstHandlers.hpp"
 #include "core/Fetch.hpp"
 #include "core/translate/Translate.hpp"
 #include "core/Execute.hpp"
@@ -38,6 +39,8 @@ namespace pegasus
 
             PARAMETER(uint32_t, core_id, 0, "Core ID")
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
+            PARAMETER(bool, enable_syscall_emulation, false,
+                      "System calls (ecall) will be emulated");
             PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
@@ -60,6 +63,12 @@ namespace pegasus
         PegasusState* getPegasusState(HartId hart_idx = 0) const { return threads_.at(hart_idx); }
 
         std::map<HartId, PegasusState*> & getThreads() { return threads_; }
+
+        PegasusSystem* getSystem() const { return system_; }
+
+        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
+
+        bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
         bool isPrivilegeModeSupported(const PrivMode mode) const
         {
@@ -100,6 +109,8 @@ namespace pegasus
 
         uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
+        const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
+
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
@@ -119,6 +130,9 @@ namespace pegasus
         // Pegasus system
         PegasusSystem* system_ = nullptr;
 
+        //! System Call Emulator for ecall emulation
+        SystemCallEmulator* system_call_emulator_ = nullptr;
+
         // Core ID
         const CoreId core_id_;
 
@@ -127,6 +141,9 @@ namespace pegasus
 
         // Pegasus State for each hart
         std::map<HartId, PegasusState*> threads_;
+
+        // Is system call emulation enabled?
+        const bool syscall_emulation_enabled_;
 
         // ISA string
         const std::string isa_string_;
@@ -179,5 +196,8 @@ namespace pegasus
             pc_alignment_ = pc_alignment;
             pc_alignment_mask_ = ~(pc_alignment - 1);
         }
+
+        // Instruction Actions
+        InstHandlers inst_handlers_;
     };
 } // namespace pegasus

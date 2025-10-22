@@ -985,8 +985,8 @@ namespace pegasus
                                       READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
                                       READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
 
-        auto mem = state->getPegasusSystem()->getSystemMemory();
-        auto emulator = state->getSystemCallEmulator();
+        auto mem = state->getCore()->getSystem()->getSystemMemory();
+        auto emulator = state->getCore()->getSystemCallEmulator();
         auto ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
         WRITE_INT_REG<XLEN>(state, 10, ret_code);
 

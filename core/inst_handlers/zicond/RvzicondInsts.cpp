@@ -15,7 +15,7 @@ extern "C"
 namespace pegasus
 {
     template <typename XLEN>
-    void RvzicondInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
+    void RvzicondInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
@@ -30,8 +30,8 @@ namespace pegasus
                 nullptr, "czero.nez", ActionTags::EXECUTE_TAG));
     }
 
-    template void RvzicondInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvzicondInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
+    template void RvzicondInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvzicondInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
     template <typename XLEN, typename OPERATOR>
     Action::ItrType RvzicondInsts::czeroHandler_(pegasus::PegasusState* state,

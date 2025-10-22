@@ -153,20 +153,9 @@ namespace pegasus
 
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
 
-        PegasusSystem* getPegasusSystem() const { return pegasus_system_; }
-
-        void setPegasusSystem(PegasusSystem* pegasus_system) { pegasus_system_ = pegasus_system; }
-
         void enableInteractiveMode();
 
         void useSpikeFormatting();
-
-        void setSystemCallEmulator(SystemCallEmulator* emulator)
-        {
-            system_call_emulator_ = emulator;
-        }
-
-        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -314,12 +303,6 @@ namespace pegasus
 
         //! PegasusCore
         PegasusCore* pegasus_core_ = nullptr;
-
-        //! PegasusSystem for accessing memory
-        PegasusSystem* pegasus_system_ = nullptr;
-
-        //! System Call Emulator for ecall emulation
-        SystemCallEmulator* system_call_emulator_ = nullptr;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

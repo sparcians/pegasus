@@ -7,7 +7,7 @@
 namespace pegasus
 {
     template <typename XLEN>
-    void RvzcmpInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
+    void RvzcmpInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
@@ -34,8 +34,8 @@ namespace pegasus
                 nullptr, "cm.mvsa01", ActionTags::EXECUTE_TAG));
     }
 
-    template void RvzcmpInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvzcmpInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
+    template void RvzcmpInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvzcmpInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
     template <typename XLEN> void RvzcmpInsts::pop_(pegasus::PegasusState* state)
     {

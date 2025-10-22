@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Execute.hpp"
+#include "core/InstHandlers.hpp"
 #include "core/inst_handlers/zicsr/RvcsrAccess.hpp"
 
 namespace pegasus
@@ -12,9 +12,10 @@ namespace pegasus
       public:
         using base_type = RvzicsrInsts;
 
-        template <typename XLEN> static void getInstHandlers(Execute::InstHandlersMap &);
+        template <typename XLEN> static void getInstHandlers(InstHandlers::InstHandlersMap &);
 
-        template <typename XLEN> static void getCsrUpdateActions(Execute::CsrUpdateActionsMap &);
+        template <typename XLEN>
+        static void getCsrUpdateActions(InstHandlers::CsrUpdateActionsMap &);
 
       private:
         template <typename XLEN>

@@ -16,7 +16,7 @@ extern "C"
 namespace pegasus
 {
     template <typename XLEN>
-    void RvzicsrInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
+    void RvzicsrInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
@@ -45,11 +45,11 @@ namespace pegasus
                 nullptr, "csrrwi", ActionTags::EXECUTE_TAG));
     }
 
-    template void RvzicsrInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvzicsrInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
+    template void RvzicsrInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvzicsrInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
     template <typename XLEN>
-    void RvzicsrInsts::getCsrUpdateActions(Execute::CsrUpdateActionsMap & csrUpdate_actions)
+    void RvzicsrInsts::getCsrUpdateActions(InstHandlers::CsrUpdateActionsMap & csrUpdate_actions)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -90,8 +90,8 @@ namespace pegasus
                 nullptr, "misaUpdate"));
     }
 
-    template void RvzicsrInsts::getCsrUpdateActions<RV32>(Execute::CsrUpdateActionsMap &);
-    template void RvzicsrInsts::getCsrUpdateActions<RV64>(Execute::CsrUpdateActionsMap &);
+    template void RvzicsrInsts::getCsrUpdateActions<RV32>(InstHandlers::CsrUpdateActionsMap &);
+    template void RvzicsrInsts::getCsrUpdateActions<RV64>(InstHandlers::CsrUpdateActionsMap &);
 
     template <typename XLEN>
     Action::ItrType RvzicsrInsts::csrrcHandler_(pegasus::PegasusState* state,

@@ -79,6 +79,7 @@ namespace pegasus
         sparta::Unit(core_tn),
         core_id_(p->core_id),
         num_harts_(p->num_harts),
+        syscall_emulation_enabled_(p->enable_syscall_emulation),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         xlen_(getXlenFromIsaString(isa_string_)),
@@ -88,7 +89,8 @@ namespace pegasus
         uarch_file_path_(p->uarch_file_path),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
-        hypervisor_enabled_(extension_manager_.isEnabled("h"))
+        hypervisor_enabled_(extension_manager_.isEnabled("h")),
+        inst_handlers_(syscall_emulation_enabled_)
     {
         // top.core*.hart*
         for (HartId hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
@@ -158,6 +160,19 @@ namespace pegasus
         auto root_tn = getContainer()->getParentAs<sparta::RootTreeNode>();
         system_ = root_tn->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
 
+        for (uint32_t hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
+        {
+            // Get PegasusState for each hart
+            const std::string hart_name = "hart" + std::to_string(hart_idx);
+            const auto thread = getContainer()->getChild(hart_name);
+            threads_.emplace(hart_idx, thread->getResourceAs<PegasusState*>());
+
+            PegasusState* state = threads_.at(hart_idx);
+            // This MUST be done before initializing Mavis
+            state->setPegasusCore(this);
+            state->setPc(system_->getStartingPc());
+        }
+
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
 
@@ -184,36 +199,17 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
-
-        for (uint32_t hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
-        {
-            // Get PegasusState for each hart
-            const std::string hart_name = "hart" + std::to_string(hart_idx);
-            const auto thread = getContainer()->getChild(hart_name);
-            threads_.emplace(hart_idx, thread->getResourceAs<PegasusState*>());
-
-            // Give PegasusState a pointer to PegasusSystem for accessing memory
-            PegasusState* state = threads_.at(hart_idx);
-            state->setPegasusSystem(system_);
-            state->setPegasusCore(this);
-            state->setPc(system_->getStartingPc());
-        }
     }
 
     void PegasusCore::onBindTreeLate_()
     {
         auto root_tn = getContainer()->getParentAs<sparta::RootTreeNode>();
-        SystemCallEmulator* system_call_emulator =
+        system_call_emulator_ =
             root_tn->getChild("system_call_emulator")->getResourceAs<pegasus::SystemCallEmulator>();
 
         for (uint32_t hart_idx = 0; hart_idx < num_harts_; ++hart_idx)
         {
             PegasusState* state = threads_.at(hart_idx);
-
-            if (state->getExecuteUnit()->getSystemCallEmulation())
-            {
-                state->setSystemCallEmulator(system_call_emulator);
-            }
 
             const auto workload_and_args = system_->getWorkloadAndArgs();
             if (false == workload_and_args.empty())

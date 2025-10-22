@@ -4,6 +4,7 @@ add_library(pegasuscore
     OBJECT
     ActionGroup.cpp
     PegasusCore.cpp
+    InstHandlers.cpp
     PegasusState.cpp
     ActionTags.cpp
     Fetch.cpp
