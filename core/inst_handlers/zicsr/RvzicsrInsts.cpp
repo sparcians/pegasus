@@ -3,7 +3,6 @@
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/Exception.hpp"
 #include "core/Trap.hpp"

@@ -1,7 +1,6 @@
 #include "core/Execute.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
 
@@ -42,7 +41,7 @@ namespace pegasus
 
         if (inst->writesCsr())
         {
-            const CsrUpdateActionsMap* csr_update_actions =
+            const InstHandlers::CsrUpdateActionsMap* csr_update_actions =
                 (state->getXlen() == 64) ? inst_handlers->getCsrUpdateActionsMap<RV64>()
                                          : inst_handlers->getCsrUpdateActionsMap<RV32>();
             auto action_it = csr_update_actions->find(inst->getCsr());

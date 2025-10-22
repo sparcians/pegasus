@@ -1,7 +1,6 @@
 #include "core/Fetch.hpp"
 #include "core/PegasusAllocatorWrapper.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"

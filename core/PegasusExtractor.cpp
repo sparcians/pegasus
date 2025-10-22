@@ -1,6 +1,5 @@
 #include "core/PegasusExtractor.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 
 namespace pegasus
 {
@@ -34,12 +33,10 @@ namespace pegasus
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {
-        const InstHandlers* inst_handlers = core->geInstHandlers();
-
         const auto xlen = core->getXlen();
-        const Execute::InstHandlersMap* inst_compute_address_handlers =
-            (xlen == 64) ? inst_handlers->getInstComputeAddressHandlersMap<RV64>()
-                         : inst_handlers->getInstComputeAddressHandlersMap<RV32>();
+        const InstHandlers::InstHandlersMap* inst_compute_address_handlers =
+            (xlen == 64) ? core->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
+                         : core->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
             try
@@ -57,9 +54,9 @@ namespace pegasus
             }
         }
 
-        const Execute::InstHandlersMap* inst_handlers =
-            (xlen == 64) ? inst_handlers->getInstHandlersMap<RV64>()
-                         : inst_handlers->getInstHandlersMap<RV32>();
+        const InstHandlers::InstHandlersMap* inst_handlers =
+            (xlen == 64) ? core->getInstHandlers()->getInstHandlersMap<RV64>()
+                         : core->getInstHandlers()->getInstHandlersMap<RV32>();
         try
         {
             const Action & inst_handler = inst_handlers->at(inst_handler_name_);

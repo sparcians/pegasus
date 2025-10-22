@@ -1,6 +1,5 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 
 namespace pegasus
 {

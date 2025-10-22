@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 
 namespace pegasus
 {

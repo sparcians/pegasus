@@ -5,7 +5,6 @@
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/PegasusCore.hpp"
-#include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
