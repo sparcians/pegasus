@@ -28,6 +28,7 @@ namespace pegasus
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
         vlen_(p->vlen),
+        xlen_(p->xlen),
         csr_values_json_(p->csr_values),
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
@@ -39,8 +40,7 @@ namespace pegasus
         stop_sim_action_group_("stop_sim")
     {
         // Set up register sets
-        // FIXME: const auto json_dir = (xlen == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
-        const auto json_dir = REG64_JSON_DIR;
+        const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
             RegisterSet::create(hart_tn, json_dir + std::string("/reg_int.json"), "int_regs");
         fp_rset_ = RegisterSet::create(hart_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
@@ -95,7 +95,7 @@ namespace pegasus
     // Not default -- defined in source file to reduce massive inlining
     PegasusState::~PegasusState() {}
 
-    uint64_t PegasusState::getXlen() const { return pegasus_core_->getXlen(); }
+    uint64_t PegasusState::getXlen() const { return xlen_; }
 
     void PegasusState::onBindTreeEarly_()
     {
@@ -143,10 +143,8 @@ namespace pegasus
             }
         }
 
-        const uint64_t xlen = getXlen();
-
         // Set up translation
-        if (xlen == 64)
+        if (xlen_ == 64)
         {
             changeMMUMode<RV64>();
         }
@@ -158,7 +156,7 @@ namespace pegasus
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
         if (inst_logger_.observed())
         {
-            if (xlen == 64)
+            if (xlen_ == 64)
             {
                 addObserver(std::make_unique<InstructionLogger>(inst_logger_, ObserverMode::RV64));
             }
@@ -170,12 +168,12 @@ namespace pegasus
 
         if (!stf_filename_.empty())
         {
-            addObserver(std::make_unique<STFLogger>(xlen, pc_, stf_filename_, this));
+            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
         }
 
         if (!validation_stf_filename_.empty())
         {
-            if (xlen == 64)
+            if (xlen_ == 64)
             {
                 addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64,
                                                            pc_, validation_stf_filename_));
@@ -468,7 +466,7 @@ namespace pegasus
 
         // Typicsl stack pointer is 8KB on most linux systems
         const uint64_t typical_ulimit_stack_size = 8192;
-        if (getXlen() == 64)
+        if (xlen_ == 64)
         {
             sp = reg->dmiRead<RV64>();
             sparta_assert(std::numeric_limits<uint64_t>::max() - sp > typical_ulimit_stack_size,
@@ -586,7 +584,7 @@ namespace pegasus
         {
             PegasusState* state = this;
 
-            if (getXlen() == 64)
+            if (xlen_ == 64)
             {
                 POKE_CSR_REG<RV64>(this, MHARTID, hart_id_);
 

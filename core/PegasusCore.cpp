@@ -101,6 +101,10 @@ namespace pegasus
                 hart_tn = new sparta::ResourceTreeNode(core_tn, hart_name, "harts", hart_idx,
                                                        "Hart State", &state_factory_));
 
+            // Set XLEN
+            hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
+                ->setValueFromString(std::to_string(xlen_));
+
             // top.core*.hart*.fetch
             tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
                 hart_tn, "fetch", sparta::TreeNode::GROUP_NAME_NONE,

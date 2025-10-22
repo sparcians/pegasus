@@ -68,6 +68,8 @@ namespace pegasus
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
 
+            // Set by PegasusCore
+            HIDDEN_PARAMETER(uint32_t, xlen, 64, "XLEN (either 32 or 64 bit)")
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
@@ -252,6 +254,9 @@ namespace pegasus
 
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;
+
+        // XLEN (either 32 or 64 bit)
+        const uint64_t xlen_ = 64;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
