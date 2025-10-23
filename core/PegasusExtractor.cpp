@@ -1,6 +1,5 @@
 #include "core/PegasusExtractor.hpp"
-#include "core/PegasusState.hpp"
-#include "core/Execute.hpp"
+#include "core/PegasusCore.hpp"
 
 namespace pegasus
 {
@@ -25,7 +24,7 @@ namespace pegasus
     }
 
     PegasusExtractor::PegasusExtractor(const boost::json::object & uarch_json,
-                                       const PegasusState* state) :
+                                       const PegasusCore* core) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_unimplemented_(inst_handler_name_ == "unsupported"),
@@ -34,12 +33,10 @@ namespace pegasus
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {
-        const Execute* execute_unit = state->getExecuteUnit();
-
-        const auto xlen = state->getXlen();
-        const Execute::InstHandlersMap* inst_compute_address_handlers =
-            (xlen == 64) ? execute_unit->getInstComputeAddressHandlersMap<RV64>()
-                         : execute_unit->getInstComputeAddressHandlersMap<RV32>();
+        const auto xlen = core->getXlen();
+        const InstHandlers::InstHandlersMap* inst_compute_address_handlers =
+            (xlen == 64) ? core->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
+                         : core->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
             try
@@ -57,9 +54,9 @@ namespace pegasus
             }
         }
 
-        const Execute::InstHandlersMap* inst_handlers =
-            (xlen == 64) ? execute_unit->getInstHandlersMap<RV64>()
-                         : execute_unit->getInstHandlersMap<RV32>();
+        const InstHandlers::InstHandlersMap* inst_handlers =
+            (xlen == 64) ? core->getInstHandlers()->getInstHandlersMap<RV64>()
+                         : core->getInstHandlers()->getInstHandlersMap<RV32>();
         try
         {
             const Action & inst_handler = inst_handlers->at(inst_handler_name_);

@@ -81,7 +81,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
     pegasus_cmd = ["./pegasus",
                  "--debug-dump-filename", error_dump,
-                 "-p", "top.core0.hart0.params.isa", isa_string, wkld]
+                 "-p", "top.core0.params.isa", isa_string, wkld]
 
     test_passed = False
     try:

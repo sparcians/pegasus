@@ -1,5 +1,5 @@
 #include "core/PegasusInst.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 
 namespace pegasus
 {
@@ -70,16 +70,16 @@ namespace pegasus
         switch (getMavisUid())
         {
             // csrrw/csrrwi always writes
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRW:
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRWI:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRW:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRWI:
                 return true;
             // csrrs/csrrc write if rs1 != 0
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRS:
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRC:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRS:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRC:
                 return rs1_info_ && (rs1_info_->field_value != 0);
             // csrrsi/csrrci writes if imm != 0
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRSI:
-            case PegasusState::MavisUIDs::MAVIS_UID_CSRRCI:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRSI:
+            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRCI:
                 return getImmediate() != 0;
             default:
                 sparta_assert(hasCsr() == false, "Unknown instruction with CSR: " << *this);

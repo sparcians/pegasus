@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/PegasusAllocatorWrapper.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/observers/Observer.hpp"
 #include "core/VecConfig.hpp"
@@ -13,8 +12,6 @@
 #include "include/gen/CSRHelpers.hpp"
 
 #include "sim/PegasusAllocators.hpp"
-
-#include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
@@ -28,12 +25,11 @@
 #error "REG64_JSON_DIR must be defined"
 #endif
 
-template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
-
 namespace pegasus
 {
     class PegasusInst;
     using PegasusInstPtr = sparta::SpartaSharedPointer<PegasusInst>;
+    class PegasusCore;
     class PegasusSystem;
     class Fetch;
     class Execute;
@@ -44,10 +40,6 @@ namespace pegasus
     class STFLogger;
     class STFValidator;
     class SystemCallEmulator;
-
-    using MavisType =
-        Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-              PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
 
     class PegasusState : public sparta::Unit
     {
@@ -66,11 +58,7 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
-            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
-            PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
-            PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
-            PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
@@ -80,6 +68,8 @@ namespace pegasus
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
 
+            // Set by PegasusCore
+            HIDDEN_PARAMETER(uint32_t, xlen, 64, "XLEN (either 32 or 64 bit)")
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
@@ -96,33 +86,7 @@ namespace pegasus
 
         HartId getHartId() const { return hart_id_; }
 
-        bool isPrivilegeModeSupported(const PrivMode mode) const
-        {
-            return supported_priv_modes_.contains(mode);
-        }
-
-        uint64_t getXlen() const { return xlen_; }
-
-        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
-        {
-            return extension_manager_;
-        }
-
-        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
-
-        MavisType* getMavis() { return mavis_.get(); }
-
-        enum MavisUIDs : mavis::InstructionUniqueID
-        {
-            MAVIS_UID_CSRRW = 1,
-            MAVIS_UID_CSRRS,
-            MAVIS_UID_CSRRC,
-            MAVIS_UID_CSRRWI,
-            MAVIS_UID_CSRRSI,
-            MAVIS_UID_CSRRCI
-        };
-
-        void changeMavisContext();
+        uint64_t getXlen() const;
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
@@ -135,10 +99,6 @@ namespace pegasus
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
-
-        uint64_t getPcAlignment() const { return pc_alignment_; }
-
-        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
@@ -189,25 +149,15 @@ namespace pegasus
             sim_state_.current_inst = inst;
         }
 
-        // Is the "H" extension enabled?
-        bool hasHypervisor() const { return hypervisor_enabled_; }
-
         PegasusTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
-        PegasusSystem* getPegasusSystem() const { return pegasus_system_; }
+        PegasusCore* getCore() const { return pegasus_core_; }
 
-        void setPegasusSystem(PegasusSystem* pegasus_system) { pegasus_system_ = pegasus_system; }
+        void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
 
         void enableInteractiveMode();
 
         void useSpikeFormatting();
-
-        void setSystemCallEmulator(SystemCallEmulator* emulator)
-        {
-            system_call_emulator_ = emulator;
-        }
-
-        SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
         Fetch* getFetchUnit() const { return fetch_unit_; }
 
@@ -299,51 +249,17 @@ namespace pegasus
             return ++action_it;
         }
 
-        inline bool validateISAString_(std::string & unsupportedExt);
-
         //! Hart ID
         const HartId hart_id_;
-
-        // ISA string
-        const std::string isa_string_;
-
-        // Supported privilege modes
-        const std::unordered_set<PrivMode> supported_priv_modes_;
 
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;
 
         // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
-
-        // Supported ISA string
-        const std::vector<std::string> supported_rv64_extensions_;
-        const std::vector<std::string> supported_rv32_extensions_;
-
-        template <typename XLEN> uint32_t getMisaExtFieldValue_() const;
-
-        // Path to Mavis
-        const std::string isa_file_path_;
-
-        // Path to Pegasus
-        const std::string uarch_file_path_;
-
-        // Get Pegasus arch JSONs for Mavis
-        mavis::FileNameListType getUArchFiles_() const;
+        const uint64_t xlen_ = 64;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
-
-        // Mavis extension manager
-        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
-
-        // Mavis
-        std::unique_ptr<MavisType> mavis_;
-
-        static inline mavis::InstUIDList mavis_uid_list_{
-            {"csrrw", MAVIS_UID_CSRRW},   {"csrrs", MAVIS_UID_CSRRS},
-            {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
-            {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
 
         // Instruction limit to end simulation
         const uint64_t ilimit_ = 0;
@@ -355,9 +271,6 @@ namespace pegasus
         const std::string stf_filename_;
         const std::string validation_stf_filename_;
 
-        //! Do we have hypervisor?
-        const bool hypervisor_enabled_;
-
         //! Current pc
         Addr pc_ = 0x0;
 
@@ -366,20 +279,6 @@ namespace pegasus
 
         //! Previous pc
         Addr prev_pc_ = 0x0;
-
-        //! PC alignment
-        uint64_t pc_alignment_ = 4;
-
-        //! PC alignment
-        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
-
-        void setPcAlignment_(uint64_t pc_alignment)
-        {
-            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
-                          "Invalid PC alignment value! " << pc_alignment);
-            pc_alignment_ = pc_alignment;
-            pc_alignment_mask_ = ~(pc_alignment - 1);
-        }
 
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
@@ -407,11 +306,8 @@ namespace pegasus
         // Translation/MMU state
         PegasusTranslationState fetch_translation_state_;
 
-        //! PegasusSystem for accessing memory
-        PegasusSystem* pegasus_system_ = nullptr;
-
-        //! System Call Emulator for ecall emulation
-        SystemCallEmulator* system_call_emulator_ = nullptr;
+        //! PegasusCore
+        PegasusCore* pegasus_core_ = nullptr;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

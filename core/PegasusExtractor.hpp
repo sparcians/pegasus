@@ -7,13 +7,15 @@
 
 namespace pegasus
 {
+    class PegasusCore;
+
     class PegasusExtractor
     {
       public:
         // Required by Mavis
         using PtrType = sparta::SpartaSharedPointer<PegasusExtractor>;
 
-        PegasusExtractor(const boost::json::object & json, const PegasusState* state);
+        PegasusExtractor(const boost::json::object & json, const PegasusCore* core);
         PegasusExtractor(const PegasusExtractor &) = default;
 
         // Required by Mavis
