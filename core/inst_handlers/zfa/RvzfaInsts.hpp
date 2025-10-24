@@ -85,8 +85,8 @@ namespace pegasus
         template <typename SIZE>
         static void fmaxFminNanCheck_(SIZE rs1_val, SIZE rs2_val, SIZE & rd_val, bool max)
         {
-            static_assert(std::is_same<SIZE, FLOAT_SP>::value
-                          || std::is_same<SIZE, FLOAT_DP>::value);
+            static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value
+                          || std::is_same<SIZE, FLOAT_HP>::value);
 
             const Constants<SIZE> & cons = getConst<SIZE>();
 

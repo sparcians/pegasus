@@ -18,6 +18,8 @@ from insts.RVF_INST import RV32F_INST
 from insts.RVF_INST import RV64F_INST
 from insts.RVD_INST import RV32D_INST
 from insts.RVD_INST import RV64D_INST
+from insts.RVZFH_INST import RV32ZFH_INST
+from insts.RVZFH_INST import RV64ZFH_INST
 
 from insts.RVZBA_INST import RV32ZBA_INST
 from insts.RVZBA_INST import RV64ZBA_INST
