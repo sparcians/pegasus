@@ -10,9 +10,14 @@
 #include <iomanip>
 #include <boost/serialization/access.hpp>
 
+namespace pegasus
+{
+    class PegasusState;
+}
+
 namespace pegasus::cosim
 {
-    class CoSimPipeline;
+    class CoSimEventPipeline;
     class CoSimObserver;
 
     /*!
@@ -137,7 +142,11 @@ namespace pegasus::cosim
 
         uint64_t getEuid() const { return event_uid_; }
 
+        uint64_t getCheckpointId() const { return checkpoint_id_; }
+
         Type getEventType() const { return type_; }
+
+        CoreId getCoreId() const { return core_id_; }
 
         HartId getHartId() const { return hart_id_; }
 
@@ -194,7 +203,9 @@ namespace pegasus::cosim
 
         // Event info
         sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
+        sparta::utils::ValidValue<uint64_t> checkpoint_id_;   //!< Checkpoint ID of Event
         Type type_ = Type::INVALID;                           //!< Type of Event
+        CoreId core_id_ = std::numeric_limits<CoreId>::max(); //!< Core ID of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
         bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
@@ -272,7 +283,9 @@ namespace pegasus::cosim
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             ar & event_uid_;
+            ar & checkpoint_id_;
             ar & type_;
+            ar & core_id_;
             ar & hart_id_;
             ar & done_;
             ar & event_ends_sim_;
@@ -300,26 +313,11 @@ namespace pegasus::cosim
 
         friend class boost::serialization::access;
         friend class CoSimObserver;
-        friend class CoSimPipeline;
-        friend class StopEvent;
-    };
+        friend class CoSimEventPipeline;
 
-    /// This helper is used in order to get around the
-    /// fact that we can't "friend" CoSimHartPipeline
-    /// since it is a private class inside CoSimPipeline.
-    class StopEvent
-    {
-      public:
-        void stopSim(Event & event)
-        {
-            // Friend access needed here.
-            event.event_ends_sim_ = true;
-            event.done_ = true;
-        }
-
-      private:
-        StopEvent() = default;
-        friend class CoSimPipeline;
+        /// Called by friend CoSimObserver during cosim flush. Applies all
+        /// pertinent member variables to the given PegasusState.
+        void apply_(PegasusState* state) const;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)

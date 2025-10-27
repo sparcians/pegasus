@@ -9,17 +9,39 @@
 #define COSIMLOG(msg) SPARTA_LOG(cosim_logger_, msg)
 #endif
 
+namespace sparta::serialization::checkpoint
+{
+    class DatabaseCheckpointer;
+}
+
+using CoSimCheckpointer = sparta::serialization::checkpoint::DatabaseCheckpointer;
+
+namespace pegasus
+{
+    class PegasusState;
+}
+
 namespace pegasus::cosim
 {
-    class CoSimPipeline;
+    class CoSimEventPipeline;
 
     class CoSimObserver : public Observer
     {
       public:
         using base_type = CoSimObserver;
 
-        CoSimObserver(sparta::log::MessageSource & cosim_logger, CoSimPipeline* cosim_pipeline,
-                      HartId hart_id);
+        CoSimObserver(
+          sparta::log::MessageSource & cosim_logger,
+          CoSimEventPipeline* evt_pipeline,
+          CoSimCheckpointer* checkpointer,
+          CoreId core_id,
+          HartId hart_id);
+
+        CoSimEventPipeline* getEventPipeline();
+        const CoSimEventPipeline* getEventPipeline() const;
+
+        CoSimCheckpointer* getCheckpointer();
+        const CoSimCheckpointer* getCheckpointer() const;
 
       private:
         void preExecute_(PegasusState*) override;
@@ -29,9 +51,17 @@ namespace pegasus::cosim
         void sendLastEvent_();
         void stopSim() override;
 
+        // To support flushing, give friend access to CoSimEventPipeline.
+        // Cannot be public since we have to also update event_uid_ to keep
+        // the event UIDs in sync with the checkpointer IDs.
+        friend class CoSimEventPipeline;
+        void loadState_(uint64_t euid, PegasusState* state);
+
         sparta::log::MessageSource & cosim_logger_;
-        CoSimPipeline* cosim_pipeline_ = nullptr;
-        HartId hart_id_;
+        CoSimEventPipeline* evt_pipeline_ = nullptr;
+        CoSimCheckpointer* checkpointer_ = nullptr;
+        const CoreId core_id_;
+        const HartId hart_id_;
         uint64_t event_uid_ = 0;
         sparta::utils::ValidValue<Event> last_event_;
     };

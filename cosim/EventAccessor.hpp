@@ -2,15 +2,11 @@
 
 #include "include/PegasusTypes.hpp"
 
-/// Events go into the pipeline one at a time, and are buffered for
-/// performance reasons (more zlib compression, fewer DB writes).
-#define DEFAULT_EVENT_WINDOW_SIZE 100
-
 namespace pegasus::cosim
 {
 
     class Event;
-    class CoSimPipeline;
+    class CoSimEventPipeline;
 
     /// The EventAccessor class is used as a proxy to access
     /// events after step(). The reason a proxy is used is that
@@ -19,10 +15,11 @@ namespace pegasus::cosim
     class EventAccessor
     {
       public:
-        EventAccessor(uint64_t euid, HartId hart_id, CoSimPipeline* cosim_pipeline) :
+        EventAccessor(uint64_t euid, CoreId core_id, HartId hart_id, CoSimEventPipeline* evt_pipeline) :
             euid_(euid),
+            core_id_(core_id),
             hart_id_(hart_id),
-            cosim_pipeline_(cosim_pipeline)
+            evt_pipeline_(evt_pipeline)
         {
         }
 
@@ -33,6 +30,8 @@ namespace pegasus::cosim
         EventAccessor & operator=(EventAccessor && other) = default;
 
         uint64_t getEuid() const { return euid_; }
+        CoreId getCoreId() const { return core_id_; }
+        HartId getHartId() const { return hart_id_; }
 
         /// It is strongly recommended that you call operator->()
         /// for EVERY api call you want to make. The event could
@@ -43,7 +42,7 @@ namespace pegasus::cosim
         ///   auto type = accessor->getEventType();        // maybe had to go to disk
         ///
         /// Not this:
-        ///   Event* evt = accessor.operator->();
+        ///   Event* evt = accessor.get();
         ///   auto done = evt->isDone();                   // could be alive
         ///   auto type = evt->getEventType();             // could be dead!
         const Event* operator->();
@@ -57,13 +56,18 @@ namespace pegasus::cosim
         /// How many times did we get this event from the cache?
         size_t getNumFromCache() const { return num_from_cache_; }
 
+        /// How many times did we have to recreate this event from the pipeline?
+        size_t getNumFromPipeline() const { return num_from_pipeline_; }
+
       private:
         uint64_t euid_;
+        CoreId core_id_;
         HartId hart_id_;
-        CoSimPipeline* cosim_pipeline_ = nullptr;
+        CoSimEventPipeline* evt_pipeline_ = nullptr;
         std::shared_ptr<Event> recreated_evt_;
         size_t num_from_disk_ = 0;
         size_t num_from_cache_ = 0;
+        size_t num_from_pipeline_ = 0;
     };
 
 } // namespace pegasus::cosim

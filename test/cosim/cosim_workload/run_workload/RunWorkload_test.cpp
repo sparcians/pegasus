@@ -1,5 +1,4 @@
 #include "cosim/PegasusCoSim.hpp"
-#include "cosim/CoSimPipeline.hpp"
 #include "simdb/apps/AppManager.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 

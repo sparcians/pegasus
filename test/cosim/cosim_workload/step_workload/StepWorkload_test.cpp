@@ -1,5 +1,5 @@
 #include "cosim/PegasusCoSim.hpp"
-#include "cosim/CoSimPipeline.hpp"
+#include "cosim/CoSimEventPipeline.hpp"
 #include "simdb/apps/AppManager.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
@@ -10,13 +10,13 @@
 /// and getting back EventAccessors each step. The PipelineEventValidator
 /// is used to request events from the pipeline, whether they exist in the
 /// cache or not, and verify all of them against the original.
-class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
+class PipelineEventValidator : public pegasus::cosim::EventListener
 {
   public:
-    PipelineEventValidator(pegasus::cosim::CoSimPipeline* cosim_pipeline) :
-        cosim_pipeline_(cosim_pipeline)
+    PipelineEventValidator(pegasus::cosim::CoSimEventPipeline* evt_pipeline) :
+        evt_pipeline_(evt_pipeline)
     {
-        cosim_pipeline->setSnooper(this);
+        evt_pipeline->setListener(this);
     }
 
     ~PipelineEventValidator()
@@ -32,7 +32,7 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
         {
             // Make a deep copy of the event to verify against later
             auto event_truth = *event.get();
-            EventValidator event_validator(std::move(event_truth), cosim_pipeline_);
+            EventValidator event_validator(std::move(event_truth), evt_pipeline_);
             event_validators_.emplace_back(std::move(event_validator));
         }
 
@@ -76,9 +76,9 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
     {
       public:
         EventValidator(pegasus::cosim::Event && event,
-                       pegasus::cosim::CoSimPipeline* cosim_pipeline) :
+                       pegasus::cosim::CoSimEventPipeline* evt_pipeline) :
             event_truth_(std::move(event)),
-            cosim_pipeline_(cosim_pipeline)
+            evt_pipeline_(evt_pipeline)
         {
         }
 
@@ -94,8 +94,7 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
         /// and verify against the original event given to our constructor.
         void validate(bool ensure_db_validation = false)
         {
-            auto accessor =
-                cosim_pipeline_->getEvent(event_truth_.getEuid(), event_truth_.getHartId());
+            auto accessor = evt_pipeline_->getEvent(event_truth_.getEuid());
             auto event = *accessor.get();
             EXPECT_EQUAL(event, event_truth_);
 
@@ -107,7 +106,7 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
 
       private:
         pegasus::cosim::Event event_truth_;
-        pegasus::cosim::CoSimPipeline* cosim_pipeline_ = nullptr;
+        pegasus::cosim::CoSimEventPipeline* evt_pipeline_ = nullptr;
     };
 
     void runValidators_(bool ensure_db_validation = false)
@@ -120,7 +119,7 @@ class PipelineEventValidator : public pegasus::cosim::CoSimPipelineSnooper
     }
 
     std::vector<EventValidator> event_validators_;
-    pegasus::cosim::CoSimPipeline* cosim_pipeline_ = nullptr;
+    pegasus::cosim::CoSimEventPipeline* evt_pipeline_ = nullptr;
     bool validation_attempted_ = false;
 };
 
@@ -135,15 +134,16 @@ void stepCoSimWorkload(const std::string & workload)
     std::string exception_str;
 
     cosim.enableLogger("step.log");
-    cosim.getPegasusCore(core_id)->getPegasusState(hart_id)->boot();
 
-    PipelineEventValidator evt_validator(cosim.getCoSimPipeline());
+    auto evt_pipeline = cosim.getEventPipeline(core_id, hart_id);
+    PipelineEventValidator evt_validator(evt_pipeline);
 
     while (true)
     {
         try
         {
             auto event = cosim.step(core_id, hart_id);
+            cosim.commit(core_id, hart_id);
             if (event->isLastEvent())
             {
                 break;
@@ -158,11 +158,16 @@ void stepCoSimWorkload(const std::string & workload)
 
     // Shutdown pipeline
     cosim.finish();
-    EXPECT_EQUAL(cosim.getCoSimPipeline()->getNumCached(hart_id), 0);
+    EXPECT_EQUAL(evt_pipeline->getNumCached(), 0);
 
     // Force validation of DB-recreated events (test is not guaranteed to
     // have done this yet if the test runs too fast or has too few events).
     evt_validator.postFinish();
+
+    // Ensure we get code coverage for the pipeline snoopers. They are used
+    // under the hood when attempting to get an event from the pipeline after
+    // if was not found in cache.
+    EXPECT_TRUE(evt_pipeline->getNumSnooped() > 0);
 
     auto state = cosim.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto sim_state = state->getSimState();
