@@ -83,7 +83,8 @@ namespace pegasus::cosim
         auto checkpointer_factory = app_mgr_->getAppFactory<CoSimCheckpointer>();
         checkpointer_factory->setScheduler(*scheduler);
 
-        size_t pipeline_idx = (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
+        size_t pipeline_idx =
+            (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
         for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
             for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
@@ -120,8 +121,8 @@ namespace pegasus::cosim
                 auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
                 ++pipeline_idx;
 
-                auto cosim_obs =
-                    std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline, checkpointer, core_idx, hart_idx);
+                auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
+                                                                 checkpointer, core_idx, hart_idx);
 
                 // Initialize PegasusState and take initial snapshot
                 state->boot();
@@ -203,7 +204,7 @@ namespace pegasus::cosim
         evt_pipeline->commitOldest();
     }
 
-    void PegasusCoSim::commit(cosim::EventAccessor& event)
+    void PegasusCoSim::commit(cosim::EventAccessor & event)
     {
         auto core_id = event.getCoreId();
         auto hart_id = event.getHartId();
@@ -211,27 +212,27 @@ namespace pegasus::cosim
         evt_pipeline->commitUpTo(event.getEuid());
     }
 
-    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor&)
+    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor &)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor&, Addr)
+    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor &, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor&)
+    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor &)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor&, Addr)
+    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor &, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::flush(cosim::EventAccessor& event, bool flush_younger_only)
+    void PegasusCoSim::flush(cosim::EventAccessor & event, bool flush_younger_only)
     {
         auto core_id = event.getCoreId();
         auto hart_id = event.getHartId();

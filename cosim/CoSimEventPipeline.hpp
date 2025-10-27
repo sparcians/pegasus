@@ -26,7 +26,7 @@ namespace pegasus::cosim
     /// every cosim step(). Used for testing and validation.
     class EventListener
     {
-    public:
+      public:
         virtual ~EventListener() = default;
         virtual void onNewEvent(EventAccessor && evt) = 0;
     };
@@ -50,18 +50,17 @@ namespace pegasus::cosim
     /// threads.
     class CoSimEventPipeline : public simdb::App
     {
-    public:
+      public:
         /// All SimDB apps must provide a NAME
         static constexpr auto NAME = "cosim-event-pipeline";
 
         /// Constructor must have this signature for simdb::AppManager factories
-        CoSimEventPipeline(simdb::DatabaseManager* db_mgr,
-                           CoreId core_id,
-                           HartId hart_id) :
-          db_mgr_(db_mgr),
-          core_id_(core_id),
-          hart_id_(hart_id)
-        {}
+        CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id) :
+            db_mgr_(db_mgr),
+            core_id_(core_id),
+            hart_id_(hart_id)
+        {
+        }
 
         /// Define the SimDB schema.
         static void defineSchema(simdb::Schema & schema);
@@ -77,7 +76,7 @@ namespace pegasus::cosim
         void setListener(EventListener* listener);
 
         /// Process a new event from cosim step(). Called during postExecute().
-        void onStep(Event&& evt);
+        void onStep(Event && evt);
 
         /// Commit the oldest uncommitted event.
         void commitOldest();
@@ -88,7 +87,8 @@ namespace pegasus::cosim
         /// Flush the event with the given uid. If flush_younger_only=true,
         /// only flush younger uncommitted events. This method will throw if
         /// the event to flush has already been committed.
-        void flush(uint64_t euid, bool flush_younger_only, CoSimObserver* observer, PegasusState* state);
+        void flush(uint64_t euid, bool flush_younger_only, CoSimObserver* observer,
+                   PegasusState* state);
 
         /// Get the event uid for the most recent event for this core/hart.
         uint64_t getLastEventUID() const;
@@ -100,7 +100,7 @@ namespace pegasus::cosim
         EventAccessor getEvent(uint64_t euid);
 
         /// Get the list of uncommitted events for this core/hart.
-        const EventList& getUncommittedEvents() const;
+        const EventList & getUncommittedEvents() const;
 
         /// Get an EventAccessor for the most recent committed event for this core/hart.
         EventAccessor getLastCommittedEvent() const;
@@ -126,7 +126,7 @@ namespace pegasus::cosim
         /// Used for testing only.
         size_t getNumSnooped() const;
 
-    private:
+      private:
         /// Friend access given to EventAccessor for event retrieval.
         friend class EventAccessor;
 
@@ -215,10 +215,9 @@ namespace pegasus::cosim
 namespace simdb
 {
 
-    template <>
-    class AppFactory<pegasus::cosim::CoSimEventPipeline> : public AppFactoryBase
+    template <> class AppFactory<pegasus::cosim::CoSimEventPipeline> : public AppFactoryBase
     {
-    public:
+      public:
         using AppT = pegasus::cosim::CoSimEventPipeline;
 
         void setCoreHartIds(size_t instance_num, pegasus::CoreId core_id, pegasus::HartId hart_id)
@@ -231,20 +230,17 @@ namespace simdb
             auto it = core_hart_ids_by_inst_num_.find(instance_num);
             if (it == core_hart_ids_by_inst_num_.end())
             {
-                throw DBException("Core/Hart IDs not set for CoSimEventPipeline instance " +
-                    std::to_string(instance_num));
+                throw DBException("Core/Hart IDs not set for CoSimEventPipeline instance "
+                                  + std::to_string(instance_num));
             }
 
-            const auto& [core_id, hart_id] = it->second;
+            const auto & [core_id, hart_id] = it->second;
             return new pegasus::cosim::CoSimEventPipeline(db_mgr, core_id, hart_id);
         }
 
-        void defineSchema(Schema& schema) const override
-        {
-            AppT::defineSchema(schema);
-        }
+        void defineSchema(Schema & schema) const override { AppT::defineSchema(schema); }
 
-    private:
+      private:
         std::map<size_t, std::pair<pegasus::CoreId, pegasus::HartId>> core_hart_ids_by_inst_num_;
     };
 

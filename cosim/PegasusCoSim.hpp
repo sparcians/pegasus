@@ -63,12 +63,12 @@ namespace pegasus::cosim
         EventAccessor stepOperation(CoreId core_id, HartId hart_id,
                                     Addr override_pc) override final;
         void commit(CoreId core_id, HartId hart_id) override final;
-        void commit(cosim::EventAccessor& event) override final;
-        void commitStoreWrite(cosim::EventAccessor& event) override final;
-        void commitStoreWrite(cosim::EventAccessor& event, Addr paddr) override final;
-        void dropStoreWrite(cosim::EventAccessor& event) override final;
-        void dropStoreWrite(cosim::EventAccessor& event, Addr paddr) override final;
-        void flush(cosim::EventAccessor& event, bool flush_younger_only = false) override final;
+        void commit(cosim::EventAccessor & event) override final;
+        void commitStoreWrite(cosim::EventAccessor & event) override final;
+        void commitStoreWrite(cosim::EventAccessor & event, Addr paddr) override final;
+        void dropStoreWrite(cosim::EventAccessor & event) override final;
+        void dropStoreWrite(cosim::EventAccessor & event, Addr paddr) override final;
+        void flush(cosim::EventAccessor & event, bool flush_younger_only = false) override final;
         cosim::MemoryInterface* getMemoryInterface() override final;
         void setMemoryInterface(cosim::MemoryInterface* mem_if) override final;
         void readRegister(CoreId core_id, HartId hart_id, RegId reg,
@@ -90,8 +90,7 @@ namespace pegasus::cosim
                                       uint64_t interrupt_code) override final;
         EventAccessor injectReset(CoreId core_id, HartId hart_id) override final;
         uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const override final;
-        EventAccessor getLastCommittedEvent(CoreId core_id,
-                                            HartId hart_id) const override final;
+        EventAccessor getLastCommittedEvent(CoreId core_id, HartId hart_id) const override final;
         const cosim::EventList & getUncommittedEvents(CoreId core_id,
                                                       HartId hart_id) const override final;
         uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const override final;

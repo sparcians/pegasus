@@ -30,12 +30,8 @@ namespace pegasus::cosim
       public:
         using base_type = CoSimObserver;
 
-        CoSimObserver(
-          sparta::log::MessageSource & cosim_logger,
-          CoSimEventPipeline* evt_pipeline,
-          CoSimCheckpointer* checkpointer,
-          CoreId core_id,
-          HartId hart_id);
+        CoSimObserver(sparta::log::MessageSource & cosim_logger, CoSimEventPipeline* evt_pipeline,
+                      CoSimCheckpointer* checkpointer, CoreId core_id, HartId hart_id);
 
         CoSimEventPipeline* getEventPipeline();
         const CoSimEventPipeline* getEventPipeline() const;

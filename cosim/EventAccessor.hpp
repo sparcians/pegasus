@@ -15,7 +15,8 @@ namespace pegasus::cosim
     class EventAccessor
     {
       public:
-        EventAccessor(uint64_t euid, CoreId core_id, HartId hart_id, CoSimEventPipeline* evt_pipeline) :
+        EventAccessor(uint64_t euid, CoreId core_id, HartId hart_id,
+                      CoSimEventPipeline* evt_pipeline) :
             euid_(euid),
             core_id_(core_id),
             hart_id_(hart_id),
@@ -30,7 +31,9 @@ namespace pegasus::cosim
         EventAccessor & operator=(EventAccessor && other) = default;
 
         uint64_t getEuid() const { return euid_; }
+
         CoreId getCoreId() const { return core_id_; }
+
         HartId getHartId() const { return hart_id_; }
 
         /// It is strongly recommended that you call operator->()

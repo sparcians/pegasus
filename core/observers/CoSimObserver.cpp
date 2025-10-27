@@ -11,10 +11,8 @@
 namespace pegasus::cosim
 {
     CoSimObserver::CoSimObserver(sparta::log::MessageSource & cosim_logger,
-                                 CoSimEventPipeline* evt_pipeline,
-                                 CoSimCheckpointer* checkpointer,
-                                 CoreId core_id,
-                                 HartId hart_id) :
+                                 CoSimEventPipeline* evt_pipeline, CoSimCheckpointer* checkpointer,
+                                 CoreId core_id, HartId hart_id) :
         Observer(ObserverMode::RV64),
         cosim_logger_(cosim_logger),
         evt_pipeline_(evt_pipeline),
@@ -25,25 +23,13 @@ namespace pegasus::cosim
         // TODO: CoSimObserver for rv32
     }
 
-    CoSimEventPipeline* CoSimObserver::getEventPipeline()
-    {
-        return evt_pipeline_;
-    }
+    CoSimEventPipeline* CoSimObserver::getEventPipeline() { return evt_pipeline_; }
 
-    const CoSimEventPipeline* CoSimObserver::getEventPipeline() const
-    {
-        return evt_pipeline_;
-    }
+    const CoSimEventPipeline* CoSimObserver::getEventPipeline() const { return evt_pipeline_; }
 
-    CoSimCheckpointer* CoSimObserver::getCheckpointer()
-    {
-        return checkpointer_;
-    }
+    CoSimCheckpointer* CoSimObserver::getCheckpointer() { return checkpointer_; }
 
-    const CoSimCheckpointer* CoSimObserver::getCheckpointer() const
-    {
-        return checkpointer_;
-    }
+    const CoSimCheckpointer* CoSimObserver::getCheckpointer() const { return checkpointer_; }
 
     void CoSimObserver::preExecute_(PegasusState* state) { resetLastEvent_(state); }
 
@@ -123,9 +109,9 @@ namespace pegasus::cosim
 
     void CoSimObserver::loadState_(uint64_t euid, PegasusState* state)
     {
-        sparta_assert(euid <= event_uid_,
-                      "Cannot load state for event uid " + std::to_string(euid) +
-                      " since current event uid is " + std::to_string(event_uid_) + "!");
+        sparta_assert(euid <= event_uid_, "Cannot load state for event uid " + std::to_string(euid)
+                                              + " since current event uid is "
+                                              + std::to_string(event_uid_) + "!");
 
         checkpointer_->loadCheckpoint(euid);
         event_uid_ = euid;
