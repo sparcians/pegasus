@@ -282,15 +282,16 @@ namespace pegasus
     {
         // TODO: Variable for max num threads supported
         std::bitset<8> threads_running((num_harts_ << 1) - 1);
-        while(true)
+        while (true)
         {
             // Simple round robin
-            for(HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
             {
                 PegasusState* state = threads_[hart_id];
+                Fetch* fetch = state->getFetchUnit();
                 if (state->getSimState()->sim_stopped == false)
                 {
-                    ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
+                    ActionGroup* next_action_group = fetch->getActionGroup();
                     while (next_action_group)
                     {
                         next_action_group = next_action_group->execute(state);
@@ -301,6 +302,12 @@ namespace pegasus
                         threads_running.reset(hart_id);
                     }
                 }
+
+                // We replace the next ActionGroup pointer to pause the sim, so it needs to
+                // be set back to Fetch
+                state->getFinishActionGroup()->setNextActionGroup(fetch->getActionGroup());
+
+                // TODO: Eventually there will be a switch statement here for the pause reason
             }
 
             if (threads_running.none())

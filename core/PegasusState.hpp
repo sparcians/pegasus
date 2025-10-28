@@ -62,6 +62,7 @@ namespace pegasus
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
+            PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
@@ -118,10 +119,16 @@ namespace pegasus
 
         struct SimState
         {
+            // Executing instruction
             uint32_t current_opcode = 0;
             uint64_t current_uid = 0;
             PegasusInstPtr current_inst = nullptr;
+
+            // Number of instructions executed
             uint64_t inst_count = 0;
+
+            // Simulation control
+            SimPauseReason sim_pause_reason = SimPauseReason::INVALID;
             bool sim_stopped = false;
             bool test_passed = true;
             int64_t workload_exit_code = 0;
@@ -130,6 +137,7 @@ namespace pegasus
             {
                 current_opcode = 0;
                 current_inst.reset();
+                sim_pause_reason = SimPauseReason::INVALID;
             }
         };
 
@@ -249,6 +257,8 @@ namespace pegasus
             return ++action_it;
         }
 
+        Action::ItrType pauseSim_(PegasusState*, Action::ItrType action_it) { return ++action_it; }
+
         //! Hart ID
         const HartId hart_id_;
 
@@ -263,6 +273,9 @@ namespace pegasus
 
         // Instruction limit to end simulation
         const uint64_t ilimit_ = 0;
+
+        // Instruction quantum size
+        const uint64_t quantum_;
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
@@ -345,6 +358,10 @@ namespace pegasus
         // Stop simulation Action
         Action stop_action_;
         ActionGroup stop_sim_action_group_;
+
+        // Pause simulation Action
+        Action pause_action_;
+        ActionGroup pause_sim_action_group_;
 
         // Co-simulation debug utils
         std::unordered_map<std::string, int> reg_ids_by_name_;
