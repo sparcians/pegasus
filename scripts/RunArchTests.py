@@ -59,7 +59,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
     tests = []
     base_dir = "bare_metal"
-    
+
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
@@ -143,7 +143,7 @@ def main():
 
     ###########################################################################
     # Process arguments
-    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v"]
+    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v", "zfh"]
     SUPPORTED_XLEN = ["rv32", "rv64"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
