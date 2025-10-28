@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Execute.hpp"
+#include "core/InstHandlers.hpp"
 
 namespace pegasus
 {
@@ -11,7 +11,7 @@ namespace pegasus
       public:
         using base_type = RvzcmpInsts;
 
-        template <typename XLEN> static void getInstHandlers(Execute::InstHandlersMap &);
+        template <typename XLEN> static void getInstHandlers(InstHandlers::InstHandlersMap &);
 
       private:
         // Pop implementation

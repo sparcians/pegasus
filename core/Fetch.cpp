@@ -1,6 +1,6 @@
 #include "core/Fetch.hpp"
 #include "core/PegasusAllocatorWrapper.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
@@ -137,7 +137,7 @@ namespace pegasus
         PegasusInstPtr inst = nullptr;
         try
         {
-            inst = state->getMavis()->makeInst(opcode, state);
+            inst = state->getCore()->getMavis()->makeInst(opcode, state);
             inst->updateVecConfig(state); // Old PegasusInst may be returned from cache. So
                                           // outside-constructor call is needed.
             assert(state->getCurrentInst() == nullptr);

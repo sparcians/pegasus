@@ -11,7 +11,7 @@
 namespace pegasus
 {
     template <typename XLEN>
-    void RvmInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
+    void RvmInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -65,8 +65,8 @@ namespace pegasus
         }
     }
 
-    template void RvmInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvmInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
+    template void RvmInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvmInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
     template <typename XLEN>
     Action::ItrType RvmInsts::divHandler_(pegasus::PegasusState* state, Action::ItrType action_it)

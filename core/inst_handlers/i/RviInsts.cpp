@@ -4,7 +4,7 @@
 #include "include/PegasusUtils.hpp"
 #include "include/ActionTags.hpp"
 #include "core/ActionGroup.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusInst.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
@@ -881,7 +881,8 @@ namespace pegasus
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC) & state->getPcAlignmentMask());
+            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC)
+                             & state->getCore()->getPcAlignmentMask());
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
@@ -935,12 +936,13 @@ namespace pegasus
             }
 
             // Update the PC with SEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC) & state->getPcAlignmentMask());
+            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC)
+                             & state->getCore()->getPcAlignmentMask());
 
             // Get the previous privilege mode from the SPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
 
-            if (state->hasHypervisor())
+            if (state->getCore()->hasHypervisor())
             {
                 prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
                 WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
@@ -982,8 +984,8 @@ namespace pegasus
                                       READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
                                       READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
 
-        auto mem = state->getPegasusSystem()->getSystemMemory();
-        auto emulator = state->getSystemCallEmulator();
+        auto mem = state->getCore()->getSystem()->getSystemMemory();
+        auto emulator = state->getCore()->getSystemCallEmulator();
         auto ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
         WRITE_INT_REG<XLEN>(state, 10, ret_code);
 

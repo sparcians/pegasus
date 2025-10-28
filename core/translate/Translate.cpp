@@ -13,11 +13,9 @@
 namespace pegasus
 {
 
-    Translate::Translate(sparta::TreeNode* translate_node, const TranslateParameters* p) :
+    Translate::Translate(sparta::TreeNode* translate_node, const TranslateParameters*) :
         sparta::Unit(translate_node)
     {
-        (void)p;
-
         // Baremetal (translation disabled)
         {
             // RV32
