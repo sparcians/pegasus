@@ -127,6 +127,9 @@ namespace pegasus
             exception_factory_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
+        // Execute the threads on this core
+        void advanceSim_();
+
         // Pegasus system
         PegasusSystem* system_ = nullptr;
 

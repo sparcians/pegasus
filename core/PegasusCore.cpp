@@ -4,6 +4,7 @@
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
+#include "sparta/events/StartupEvent.hpp"
 
 namespace pegasus
 {
@@ -138,6 +139,8 @@ namespace pegasus
                           "ISA extension: " << unsupportedExt
                                             << " is not supported in isa_string: " << isa_string_);
         }
+
+        sparta::StartupEvent(core_tn, CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_));
     }
 
     PegasusCore::~PegasusCore() {}
@@ -273,5 +276,17 @@ namespace pegasus
             const mavis::FileNameListType uarch_files = RV32_UARCH_JSON_LIST;
             return uarch_files;
         }
+    }
+
+    void PegasusCore::advanceSim_()
+    {
+        HartId current_hart_id = 0;
+        PegasusState* state = threads_[current_hart_id];
+        ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
+        while (next_action_group)
+        {
+            next_action_group = next_action_group->execute(state);
+        }
+        // End of sim
     }
 } // namespace pegasus
