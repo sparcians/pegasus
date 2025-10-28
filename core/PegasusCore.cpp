@@ -280,12 +280,33 @@ namespace pegasus
 
     void PegasusCore::advanceSim_()
     {
-        HartId current_hart_id = 0;
-        PegasusState* state = threads_[current_hart_id];
-        ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
-        while (next_action_group)
+        // TODO: Variable for max num threads supported
+        std::bitset<8> threads_running((num_harts_ << 1) - 1);
+        while(true)
         {
-            next_action_group = next_action_group->execute(state);
+            // Simple round robin
+            for(HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+            {
+                PegasusState* state = threads_[hart_id];
+                if (state->getSimState()->sim_stopped == false)
+                {
+                    ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
+                    while (next_action_group)
+                    {
+                        next_action_group = next_action_group->execute(state);
+                    }
+
+                    if (state->getSimState()->sim_stopped)
+                    {
+                        threads_running.reset(hart_id);
+                    }
+                }
+            }
+
+            if (threads_running.none())
+            {
+                break;
+            }
         }
         // End of sim
     }
