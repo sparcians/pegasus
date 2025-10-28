@@ -290,6 +290,7 @@ namespace pegasus
                 PegasusState* state = threads_[hart_id];
                 if (state->getSimState()->sim_stopped == false)
                 {
+                    DLOG("Running hart" << std::dec << hart_id);
                     Fetch* fetch = state->getFetchUnit();
                     ActionGroup* next_action_group = fetch->getActionGroup();
                     while (next_action_group)
@@ -299,9 +300,14 @@ namespace pegasus
 
                     if (state->getSimState()->sim_stopped)
                     {
-                        DLOG("Stopping hart " << std::dec << hart_id);
+                        DLOG("Stopping hart" << std::dec << hart_id);
                         threads_running.reset(hart_id);
                         DLOG(threads_running);
+
+                        if (threads_running.none())
+                        {
+                            return;
+                        }
                     }
 
                     // We replace the next ActionGroup pointer to pause the sim, so it needs to
@@ -310,11 +316,6 @@ namespace pegasus
 
                     // TODO: Eventually there will be a switch statement here for the pause reason
                 }
-            }
-
-            if (threads_running.none())
-            {
-                break;
             }
         }
         // End of sim
