@@ -1,3 +1,5 @@
+RVA_MAVIS_EXTS = ["a", "zalrsc", "zaamo"]
+
 RV32A_INST = [
     {'mnemonic': 'lr.w', 'handler': 'lr_w', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False},
     {'mnemonic': 'sc.w', 'handler': 'sc_w', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False},

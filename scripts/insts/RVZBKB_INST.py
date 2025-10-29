@@ -16,6 +16,7 @@
 #   x	 x    Zbb       XNOR 	    Exclusive NOR
 #   x	 -    -         ZIP 	    Bit interleave
 
+RVZBKB_MAVIS_EXTS = ["zbkb"]
 
 RV32ZBKB_INST = [
   {'mnemonic': 'andn'   , 'handler': 'andn'  , 'cost': 1, 'tags': 'SCALAR_CRYPTO_EXT_32', 'memory': False, 'cof': False},

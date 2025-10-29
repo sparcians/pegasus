@@ -1,3 +1,5 @@
+RVZCMP_MAVIS_EXTS = ["zcmp"]
+
 RV32ZCMP_INST = [
     {'mnemonic': 'cm.push', 'handler': 'cm.push', 'cost': 1, 'tags': 'BASE_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'cm.pop', 'handler': 'cm.pop', 'cost': 1, 'tags': 'BASE_EXT_32', 'memory': False, 'cof': False},

@@ -78,7 +78,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
+    isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
     pegasus_cmd = ["./pegasus",
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, wkld]
