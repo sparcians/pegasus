@@ -1,3 +1,5 @@
+RVZFH_MAVIS_EXTS = ["zfh", "zfhmin", "zfhmind"]
+
 RV32ZFH_INST = [
     {'mnemonic': 'fmv.h.x', 'handler': 'fmv_h_x', 'cost': 1, 'tags': 'ZFH_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'fmv.x.h', 'handler': 'fmv_x_h', 'cost': 1, 'tags': 'ZFH_EXT_32', 'memory': False, 'cof': False},

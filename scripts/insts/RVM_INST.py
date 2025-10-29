@@ -1,3 +1,5 @@
+RVM_MAVIS_EXTS = ["m", "zmmul"]
+
 RV32M_INST = [
     {'mnemonic': 'mul', 'handler': 'mul', 'cost': 1, 'tags': 'M_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'mulh', 'handler': 'mulh', 'cost': 1, 'tags': 'M_EXT_32', 'memory': False, 'cof': False},
