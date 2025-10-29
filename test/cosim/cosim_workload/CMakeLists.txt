@@ -1,2 +1,3 @@
+add_subdirectory(flush_workload)
 add_subdirectory(step_workload)
 add_subdirectory(run_workload)

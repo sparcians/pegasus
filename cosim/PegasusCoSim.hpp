@@ -46,7 +46,8 @@ namespace pegasus::cosim
     {
       public:
         PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0,
-                     const std::string & workload = "");
+                     const std::string & workload = "",
+                     const std::string & db_file = "pegasus-cosim.db");
 
         ~PegasusCoSim() noexcept;
 

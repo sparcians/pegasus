@@ -48,7 +48,7 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
-                               const std::string & workload) :
+                               const std::string & workload, const std::string & db_file) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
@@ -68,7 +68,7 @@ namespace pegasus::cosim
             core_cosim_observers.resize(num_harts, nullptr);
         }
 
-        db_mgr_ = std::make_shared<simdb::DatabaseManager>("pegasus-cosim.db", true);
+        db_mgr_ = std::make_shared<simdb::DatabaseManager>(db_file, true);
         app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
 
         // Enable CoSimEventPipeline and CoSimCheckpointer apps. Every core/hart needs their own.

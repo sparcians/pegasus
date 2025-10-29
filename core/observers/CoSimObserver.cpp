@@ -49,6 +49,8 @@ namespace pegasus::cosim
                                                      dst_reg.reg_prev_value.getByteVector());
         }
 
+        // TODO cnyce: mem_reads_, mem_writes_
+
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
 
@@ -81,7 +83,7 @@ namespace pegasus::cosim
         }
 
         last_event.curr_pc_ = state->getPc();
-        // TODO: curr_priv_
+        last_event.curr_priv_ = state->getPrivMode();
     }
 
     void CoSimObserver::sendLastEvent_()
@@ -124,8 +126,8 @@ namespace pegasus::cosim
 
     void Event::apply_(PegasusState* state) const
     {
-        state->setPc(curr_pc_);
-        state->setNextPc(next_pc_);
+        state->setPc(next_pc_);
+        state->setNextPc(next_pc_ + opcode_size_);
         state->setPrivMode(curr_priv_, state->getVirtualMode());
 
         auto sim_state = state->getSimState();

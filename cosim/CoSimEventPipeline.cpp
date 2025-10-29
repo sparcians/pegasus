@@ -329,7 +329,7 @@ namespace pegasus::cosim
         else
         {
             // Erase all events up to and including the given euid
-            uncommitted_evts_buffer_.erase(uncommitted_evts_buffer_.begin(), std::next(it));
+            uncommitted_evts_buffer_.erase(it, uncommitted_evts_buffer_.end());
         }
 
         // Reload state at the previous event. Note that checkpoint IDs are kept in sync
