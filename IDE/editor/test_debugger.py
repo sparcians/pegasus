@@ -121,7 +121,7 @@ class StateViewer(wx.Panel):
         with open(fp_json, 'r') as fin:
             fp_names = [reg['name'] for reg in json.load(fin)]
 
-        csr_json = os.path.join(pegasus_root, 'arch', 'rv64', 'gen', 'reg_csr.json')
+        csr_json = os.path.join(pegasus_root, 'arch', 'rv64', 'gen', 'reg_csr_hart.json')
         with open(csr_json, 'r') as fin:
             csr_names = [reg['name'] for reg in json.load(fin)]
 

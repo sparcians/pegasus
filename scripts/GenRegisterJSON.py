@@ -164,6 +164,14 @@ class GenRegisterJSON():
         elif self.group is RegisterGroup.CSR:
             self.gen_csr_reg_defs()
 
+    def get_reg_ctx(self):
+        ''' Returns a list with the register contexts available '''
+        reg_ctx = set([x['context'] for x in self.reg_defs if x.get('context', None)])
+        if self.group is RegisterGroup.CSR:
+            reg_ctx.add('CORE')
+            reg_ctx.add('HART')
+        return list(reg_ctx)
+
     def gen_int_reg_defs(self):
         """Generates integer register definitions
         """
@@ -235,14 +243,16 @@ class GenRegisterJSON():
         CSR_DEFS = CSR32_DEFS if (self.reg_size == 4) else CSR64_DEFS
 
         for k, v in CSR_DEFS.items():
-            self.reg_defs.append(self.__CreateRegDict({
-                "name":          v[0],
-                "num":           k,
-                "desc":          v[1],
-                "size":          8,
-                "aliases":       ["csr"+str(k)],
-                "fields":        v[2],
-                "enabled":       True}))
+            reg = dict()
+            for e, val in v.items():
+                reg[e] = val
+
+            reg["size"]    = self.reg_size
+            reg["num"]     = k
+            reg["aliases"] = ["csr"+str(k)]
+            reg["enabled"] = True
+
+            self.reg_defs.append(self.__CreateRegDict(reg))
 
     def add_custom_register(self, name, num, desc, size, aliases, fields, enabled):
         self.reg_defs.append(self.__CreateRegDict({
@@ -255,10 +265,16 @@ class GenRegisterJSON():
             "enabled":       enabled
         }))
 
-    def write_json(self, filename):
+    def write_json(self, filename, ctx=None):
         """Write register definitions to a JSON file"""
+        regs = list()
+        if ctx:
+            regs = [x for x in self.reg_defs if x.get('context', None) == ctx]
+        else:
+            regs = self.reg_defs
+
         with open(filename,"w") as fh:
-            json.dump(self.reg_defs, fh, indent=4)
+            json.dump(regs, fh, indent=4)
 
     def __CreateRegDict(self, reg_dict):
         # Remove the 'fields' key if it is empty
