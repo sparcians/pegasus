@@ -1,5 +1,5 @@
 
-LINUX_TESTS ?= dhry syscall_test fstatat_test
+LINUX_TESTS ?= dhry syscall_test fstatat_test threading
 
 include ../common.mk
 
