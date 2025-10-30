@@ -93,10 +93,14 @@ namespace pegasus::cosim
             if (state->getCsrRegisterSet()->getRegister(csr))
             {
                 last_event.inst_csr_ = csr;
-            } else {
+            }
+            else
+            {
                 last_event.inst_csr_.clearValid();
             }
-        } else {
+        }
+        else
+        {
             last_event.inst_csr_.clearValid();
         }
     }

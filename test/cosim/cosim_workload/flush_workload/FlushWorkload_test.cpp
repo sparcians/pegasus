@@ -13,7 +13,7 @@
 using namespace pegasus;
 using namespace pegasus::cosim;
 
-bool AdvanceSimTruth(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
+bool AdvanceSimTruth(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
     auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
 
@@ -36,7 +36,7 @@ bool AdvanceSimTruth(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
     return true;
 }
 
-bool AdvanceSimTest(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
+bool AdvanceSimTest(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
     auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
 
@@ -86,8 +86,7 @@ bool AdvanceSimTest(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
 }
 
 template <typename XLEN>
-bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
-             CoreId core_id, HartId hart_id)
+bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, HartId hart_id)
 {
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
@@ -137,8 +136,7 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
     }
 
     // Compare registers
-    auto compare_simple_regs = [](RegisterSet* rset_truth,
-                                  RegisterSet* rset_test)
+    auto compare_simple_regs = [](RegisterSet* rset_truth, RegisterSet* rset_test)
     {
         EXPECT_EQUAL(rset_truth->getNumRegisters(), rset_test->getNumRegisters());
         for (uint32_t reg_id = 0; reg_id < rset_truth->getNumRegisters(); ++reg_id)
@@ -153,8 +151,7 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
     compare_simple_regs(state_truth->getFpRegisterSet(), state_test->getFpRegisterSet());
     compare_simple_regs(state_truth->getVecRegisterSet(), state_test->getVecRegisterSet());
 
-    auto compare_csr_regs = [](RegisterSet* rset_truth,
-                               RegisterSet* rset_test)
+    auto compare_csr_regs = [](RegisterSet* rset_truth, RegisterSet* rset_test)
     {
         EXPECT_EQUAL(rset_truth->getNumRegisters(), rset_test->getNumRegisters());
         for (uint32_t reg_id = 0; reg_id < rset_truth->getNumRegisters(); ++reg_id)
@@ -193,18 +190,18 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
     auto last_event_truth = pipeline_truth->getLastEvent();
     auto last_event_test = pipeline_test->getLastEvent();
 
-    const auto& mem_reads_truth = last_event_truth->getMemoryReads();
-    const auto& mem_reads_test = last_event_test->getMemoryReads();
+    const auto & mem_reads_truth = last_event_truth->getMemoryReads();
+    const auto & mem_reads_test = last_event_test->getMemoryReads();
     EXPECT_EQUAL(mem_reads_truth, mem_reads_test);
 
-    const auto& mem_writes_truth = last_event_truth->getMemoryWrites();
-    const auto& mem_writes_test = last_event_test->getMemoryWrites();
+    const auto & mem_writes_truth = last_event_truth->getMemoryWrites();
+    const auto & mem_writes_test = last_event_test->getMemoryWrites();
     EXPECT_EQUAL(mem_writes_truth, mem_writes_test);
 
     auto mem_writes_n = std::min(mem_writes_truth.size(), mem_writes_test.size());
     for (size_t i = 0; i < mem_writes_n; ++i)
     {
-        const auto& write_truth = mem_writes_truth[i];
+        const auto & write_truth = mem_writes_truth[i];
         const auto paddr = write_truth.paddr;
         auto mem_value_truth = state_truth->readMemory<XLEN>(paddr);
         auto mem_value_test = state_test->readMemory<XLEN>(paddr);
@@ -236,11 +233,11 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
 }
 
 template <typename XLEN>
-bool AdvanceAndCompare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
-                       CoreId core_id, HartId hart_id)
+bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
+                       HartId hart_id)
 {
     // TODO cnyce
-    //return AdvanceSimTruth(sim_truth, core_id, hart_id);
+    // return AdvanceSimTruth(sim_truth, core_id, hart_id);
 
     auto stepped_truth = AdvanceSimTruth(sim_truth, core_id, hart_id);
     auto stepped_test = AdvanceSimTest(sim_test, core_id, hart_id);
@@ -293,9 +290,8 @@ int main(int argc, char** argv)
     const pegasus::HartId hart_id = 0;
     std::string exception_str;
 
-    auto advance_and_compare = (arch == "rv32") ?
-        AdvanceAndCompare<uint32_t> :
-        AdvanceAndCompare<uint64_t>;
+    auto advance_and_compare =
+        (arch == "rv32") ? AdvanceAndCompare<uint32_t> : AdvanceAndCompare<uint64_t>;
 
     size_t step_count = 0;
     try
@@ -313,7 +309,8 @@ int main(int argc, char** argv)
     catch (const std::exception & ex)
     {
         exception_str = ex.what();
-        std::cout << "Exception caught on step " << step_count << ": " << exception_str << std::endl;
+        std::cout << "Exception caught on step " << step_count << ": " << exception_str
+                  << std::endl;
     }
 
     // Shutdown pipelines
@@ -323,7 +320,7 @@ int main(int argc, char** argv)
     EXPECT_EQUAL(cosim_test.getEventPipeline(core_id, hart_id)->getNumCached(), 0);
 
     // Final validation
-    auto validate_final_state = [&](PegasusCoSim& cosim)
+    auto validate_final_state = [&](PegasusCoSim & cosim)
     {
         auto state = cosim.getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state = state->getSimState();

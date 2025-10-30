@@ -12,7 +12,7 @@ namespace sparta
 {
     class ArchData;
     class TreeNode;
-}
+} // namespace sparta
 
 namespace simdb::pipeline
 {
@@ -150,10 +150,8 @@ namespace pegasus::cosim
         void enumerateArchDatas_(PegasusState* state);
 
         /// Appends each ArchData found in the tree recursively.
-        void addArchDatas_(
-            sparta::TreeNode* node,
-            std::vector<sparta::ArchData*>& adatas,
-            std::map<sparta::ArchData*, sparta::TreeNode*>& adatas_helper);
+        void addArchDatas_(sparta::TreeNode* node, std::vector<sparta::ArchData*> & adatas,
+                           std::map<sparta::ArchData*, sparta::TreeNode*> & adatas_helper);
 
         /// SimDB instance.
         simdb::DatabaseManager* db_mgr_ = nullptr;

@@ -370,8 +370,8 @@ namespace pegasus::cosim
 
         sparta_assert(reload_euid.getValue() <= observer->event_uid_,
                       "Cannot reload state for event uid " + std::to_string(reload_euid.getValue())
-                          + " since current event uid is "
-                          + std::to_string(observer->event_uid_) + "!");
+                          + " since current event uid is " + std::to_string(observer->event_uid_)
+                          + "!");
 
         auto get_side_effects = [&](const Event & evt) -> const Action*
         {
@@ -380,10 +380,9 @@ namespace pegasus::cosim
                 auto csr = evt.getCsr();
                 auto reg_width = observer->getRegWidth();
                 auto execute = state->getExecuteUnit();
-                auto update_actions_map =
-                    reg_width == 8 ?
-                    execute->getCsrUpdateActionsMap<uint32_t>() :
-                    execute->getCsrUpdateActionsMap<uint64_t>();
+                auto update_actions_map = reg_width == 8
+                                              ? execute->getCsrUpdateActionsMap<uint32_t>()
+                                              : execute->getCsrUpdateActionsMap<uint64_t>();
 
                 if (auto action_it = update_actions_map->find(csr);
                     action_it != update_actions_map->end())
@@ -681,7 +680,7 @@ namespace pegasus::cosim
 
     void CoSimEventPipeline::enumerateArchDatas_(PegasusState* state)
     {
-        auto& adatas = state_adatas_[state];
+        auto & adatas = state_adatas_[state];
         if (!adatas.empty())
         {
             return;
@@ -692,18 +691,21 @@ namespace pegasus::cosim
     }
 
     void CoSimEventPipeline::addArchDatas_(
-        sparta::TreeNode* n,
-        std::vector<sparta::ArchData*>& adatas,
-        std::map<sparta::ArchData*, sparta::TreeNode*>& adatas_helper)
+        sparta::TreeNode* n, std::vector<sparta::ArchData*> & adatas,
+        std::map<sparta::ArchData*, sparta::TreeNode*> & adatas_helper)
     {
         assert(n);
-        for (sparta::ArchData* ad : n->getAssociatedArchDatas()) {
-            if (ad != nullptr) {
+        for (sparta::ArchData* ad : n->getAssociatedArchDatas())
+        {
+            if (ad != nullptr)
+            {
                 auto itr = adatas_helper.find(ad);
-                if (itr != adatas_helper.end()) {
+                if (itr != adatas_helper.end())
+                {
                     throw simdb::DBException("Found a second reference to ArchData ")
-                        << ad << " in the tree: " << n->getRoot()->stringize() << " . First reference found throgh "
-                        << itr->second->getLocation() << " and second found through " << n->getLocation()
+                        << ad << " in the tree: " << n->getRoot()->stringize()
+                        << " . First reference found throgh " << itr->second->getLocation()
+                        << " and second found through " << n->getLocation()
                         << ". An ArchData should be findable throug exactly 1 TreeNode";
                 }
                 adatas.push_back(ad);
@@ -711,7 +713,8 @@ namespace pegasus::cosim
             }
         }
 
-        for (sparta::TreeNode* child : sparta::TreeNodePrivateAttorney::getAllChildren(n)) {
+        for (sparta::TreeNode* child : sparta::TreeNodePrivateAttorney::getAllChildren(n))
+        {
             addArchDatas_(child, adatas, adatas_helper);
         }
     }
