@@ -101,6 +101,14 @@ namespace pegasus
             pegasus::Action::createAction<&RvzfhInsts::fcvt_wu_hHandler_<XLEN>, RvzfhInsts>(
                 nullptr, "fcvt_wu_h", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
+            "fcvt_d_h",
+            pegasus::Action::createAction<&RvzfhInsts::fcvt_d_hHandler_<XLEN>, RvzfhInsts>(
+                nullptr, "fcvt_d_h", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
+            "fcvt_h_d",
+            pegasus::Action::createAction<&RvzfhInsts::fcvt_h_dHandler_<XLEN>, RvzfhInsts>(
+                nullptr, "fcvt_h_d", ActionTags::EXECUTE_TAG));
+        inst_handlers.emplace(
             "fmv_h_x",
             pegasus::Action::createAction<&RvzfhInsts::fmv_h_xHandler_<XLEN>, RvzfhInsts>(
                 nullptr, "fmv_h_x", ActionTags::EXECUTE_TAG));
@@ -582,7 +590,7 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_SP rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         WRITE_FP_REG<RV64>(state, inst->getRd(),
                            nanBoxing<RV64, FLOAT_HP>(f32_to_f16(float32_t{rs1_val}).v));
         updateCsr<XLEN>(state);
@@ -598,6 +606,33 @@ namespace pegasus
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
         WRITE_FP_REG<RV64>(state, inst->getRd(),
                            nanBoxing<RV64, FLOAT_SP>(f16_to_f32(float16_t{rs1_val}).v));
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzfhInsts::fcvt_h_dHandler_(pegasus::PegasusState* state,
+                                                 Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const FLOAT_DP rs1_val =
+            checkNanBoxing<RV64, FLOAT_DP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        softfloat_roundingMode = getRM<XLEN>(state);
+        WRITE_FP_REG<RV64>(state, inst->getRd(),
+                           nanBoxing<RV64, FLOAT_HP>(f64_to_f16(float64_t{rs1_val}).v));
+        updateCsr<XLEN>(state);
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzfhInsts::fcvt_d_hHandler_(pegasus::PegasusState* state,
+                                                 Action::ItrType action_it)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        const FLOAT_HP rs1_val =
+            checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
+        WRITE_FP_REG<RV64>(state, inst->getRd(),
+                           nanBoxing<RV64, FLOAT_DP>(f16_to_f64(float16_t{rs1_val}).v));
         updateCsr<XLEN>(state);
         return ++action_it;
     }

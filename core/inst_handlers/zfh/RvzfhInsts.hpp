@@ -62,6 +62,10 @@ namespace pegasus
         Action::ItrType fcvt_w_hHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType fcvt_wu_hHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_h_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN>
+        Action::ItrType fcvt_d_hHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         template <typename XLEN>
         Action::ItrType fsgnj_hHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
