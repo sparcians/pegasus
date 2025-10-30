@@ -47,7 +47,7 @@ namespace pegasus
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
         vec_rset_ = RegisterSet::create(hart_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
-            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
+            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr_hart.json"), "csr_regs");
 
         auto add_registers = [this](const auto & reg_set)
         {

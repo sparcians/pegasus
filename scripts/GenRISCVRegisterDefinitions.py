@@ -76,8 +76,12 @@ def main():
     registers["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
 
     for name, regs in registers.items():
-        filename = "reg_" + name + ".json"
-        regs.write_json(filename)
+        contexts = regs.get_reg_ctx()
+
+        if len(contexts):
+            for ctx in contexts:
+                filename = f'reg_{name}_{ctx.lower()}.json'
+                regs.write_json(filename, ctx)
 
     # Generate Pegasus header files
     if not os.path.exists(inc_root):
