@@ -59,7 +59,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
     tests = []
     base_dir = "bare_metal"
-    
+
     for test in tenstorrent_tests:
         dirs = test.split('/')
         prefixes = dirs[dirs.index(base_dir)+1:-1]
@@ -78,7 +78,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbv_zicsr_zifencei_zicond" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond"
+    isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
     pegasus_cmd = ["./pegasus",
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, wkld]
@@ -143,7 +143,7 @@ def main():
 
     ###########################################################################
     # Process arguments
-    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v"]
+    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v", "zfh"]
     SUPPORTED_XLEN = ["rv32", "rv64"]
     if args.extensions:
         assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"

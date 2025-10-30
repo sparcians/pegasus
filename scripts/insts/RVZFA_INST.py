@@ -1,3 +1,5 @@
+RVZFA_MAVIS_EXTS = ["zfa"]
+
 RV32ZFA_INST = [
     {'mnemonic': 'fleq.s', 'handler': 'fleq.s', 'cost': 1, 'tags': 'ZFA_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'fli.s', 'handler': 'fli.s', 'cost': 1, 'tags': 'ZFA_EXT_32', 'memory': False, 'cof': False},
