@@ -8,6 +8,12 @@
 #include "cosim/Event.hpp"
 #include "cosim/CoSimApi.hpp"
 
+namespace sparta
+{
+    class ArchData;
+    class TreeNode;
+}
+
 namespace simdb::pipeline
 {
     class RunnableFlusher;
@@ -140,6 +146,15 @@ namespace pegasus::cosim
         /// Recreate an old event from disk when it is no longer in the cache.
         std::unique_ptr<Event> recreateEventFromDisk_(uint64_t euid);
 
+        /// Find the ArchData instances in the given PegasusState.
+        void enumerateArchDatas_(PegasusState* state);
+
+        /// Appends each ArchData found in the tree recursively.
+        void addArchDatas_(
+            sparta::TreeNode* node,
+            std::vector<sparta::ArchData*>& adatas,
+            std::map<sparta::ArchData*, sparta::TreeNode*>& adatas_helper);
+
         /// SimDB instance.
         simdb::DatabaseManager* db_mgr_ = nullptr;
 
@@ -183,6 +198,9 @@ namespace pegasus::cosim
 
         /// Event recreated from the pipeline snoopers.
         std::unique_ptr<Event> snooped_event_;
+
+        /// Map of PegasusState to its ArchData instances.
+        std::unordered_map<PegasusState*, std::vector<sparta::ArchData*>> state_adatas_;
 
         /// Has the simulation been stopped?
         bool sim_stopped_ = false;

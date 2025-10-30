@@ -1,6 +1,7 @@
 #include "cosim/CoSimEventPipeline.hpp"
 #include "core/observers/CoSimObserver.hpp"
 #include "core/PegasusState.hpp"
+#include "core/Execute.hpp"
 #include "simdb/pipeline/PipelineManager.hpp"
 #include "simdb/pipeline/elements/Function.hpp"
 #include "simdb/pipeline/AsyncDatabaseAccessor.hpp"
@@ -372,23 +373,86 @@ namespace pegasus::cosim
                           + " since current event uid is "
                           + std::to_string(observer->event_uid_) + "!");
 
-        last_event_uid_ = reload_euid;
-        observer->event_uid_ = reload_euid;
-        observer->getCheckpointer()->loadCheckpoint(reload_euid);
+        auto get_side_effects = [&](const Event & evt) -> const Action*
+        {
+            if (evt.hasCsr())
+            {
+                auto csr = evt.getCsr();
+                auto reg_width = observer->getRegWidth();
+                auto execute = state->getExecuteUnit();
+                auto update_actions_map =
+                    reg_width == 8 ?
+                    execute->getCsrUpdateActionsMap<uint32_t>() :
+                    execute->getCsrUpdateActionsMap<uint64_t>();
 
-        auto reload_evt = getEvent(reload_euid).get();
-        state->setPrivMode(reload_evt->getPrivilegeMode(), state->getVirtualMode());
+                if (auto action_it = update_actions_map->find(csr);
+                    action_it != update_actions_map->end())
+                {
+                    return &action_it->second;
+                }
+            }
 
-        auto sim_state = state->getSimState();
-        sim_state->reset();
-        sim_state->current_opcode = reload_evt->getOpcode();
-        sim_state->current_uid = reload_evt->getEuid();
-        sim_state->sim_stopped = reload_evt->isLastEvent();
-        sim_state->inst_count = reload_evt->getEuid();
+            return nullptr;
+        };
 
-        auto inst = state->getMavis()->makeInst(reload_evt->getOpcode(), state);
-        inst->updateVecConfig(state);
-        state->setCurrentInst(inst);
+        auto reload_event = [&](const Event & reload_evt, const Action* side_effects)
+        {
+            auto euid = reload_evt.getEuid();
+            auto checkpointer = observer->getCheckpointer();
+            bool delete_future_chkpts = (euid == reload_euid);
+
+            if (delete_future_chkpts)
+            {
+                checkpointer->loadCheckpoint(euid);
+            }
+            else
+            {
+                enumerateArchDatas_(state);
+                const auto & adatas = state_adatas_[state];
+                checkpointer->findCheckpoint(euid, true)->load(adatas);
+            }
+
+            last_event_uid_ = euid;
+            observer->event_uid_ = euid;
+            state->setPrivMode(reload_evt.getPrivilegeMode(), state->getVirtualMode());
+
+            auto sim_state = state->getSimState();
+            sim_state->reset();
+            sim_state->current_opcode = reload_evt.getOpcode();
+            sim_state->current_uid = reload_evt.getEuid();
+            sim_state->sim_stopped = reload_evt.isLastEvent();
+            sim_state->inst_count = reload_evt.getEuid();
+
+            auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
+            inst->updateVecConfig(state);
+            state->setCurrentInst(inst);
+
+            // Now that state is reloaded and all CSR values are correct, perform
+            // any CSR side effects needed.
+            if (side_effects)
+            {
+                auto dummy_it = state->getExecuteUnit()->getActionGroup()->getActionIterator();
+                side_effects->execute(state, dummy_it);
+            }
+        };
+
+        // Go through all uncommitted checkpoints:
+        //   1. If there is an early checkpoint than the one we are reloading which
+        //      has a CSR side effect, we have to manually get the checkpoint and
+        //      regenerate the state ArchDatas before running the side effects Action.
+        //   2. When we get to the final checkpoint we have to load, whether there are
+        //      CSR side effects or not, we should call the checkpointer's loadCheckpoint()
+        //      method so it can update its internals e.g. deleting future checkpoints and
+        //      updating the current checkpoint.
+        for (const Event & evt : uncommitted_evts_buffer_)
+        {
+            auto side_effects = get_side_effects(evt);
+            bool load = (side_effects != nullptr || evt.getEuid() == reload_euid);
+            if (load)
+            {
+                reload_event(evt, side_effects);
+            }
+        }
     }
 
     uint64_t CoSimEventPipeline::getLastEventUID() const { return last_event_uid_; }
@@ -613,6 +677,43 @@ namespace pegasus::cosim
 
         // Return the requested event
         return std::make_unique<Event>(evts[index]);
+    }
+
+    void CoSimEventPipeline::enumerateArchDatas_(PegasusState* state)
+    {
+        auto& adatas = state_adatas_[state];
+        if (!adatas.empty())
+        {
+            return;
+        }
+
+        std::map<sparta::ArchData*, sparta::TreeNode*> adatas_helper;
+        addArchDatas_(state->getContainer(), adatas, adatas_helper);
+    }
+
+    void CoSimEventPipeline::addArchDatas_(
+        sparta::TreeNode* n,
+        std::vector<sparta::ArchData*>& adatas,
+        std::map<sparta::ArchData*, sparta::TreeNode*>& adatas_helper)
+    {
+        assert(n);
+        for (sparta::ArchData* ad : n->getAssociatedArchDatas()) {
+            if (ad != nullptr) {
+                auto itr = adatas_helper.find(ad);
+                if (itr != adatas_helper.end()) {
+                    throw simdb::DBException("Found a second reference to ArchData ")
+                        << ad << " in the tree: " << n->getRoot()->stringize() << " . First reference found throgh "
+                        << itr->second->getLocation() << " and second found through " << n->getLocation()
+                        << ". An ArchData should be findable throug exactly 1 TreeNode";
+                }
+                adatas.push_back(ad);
+                adatas_helper[ad] = n;
+            }
+        }
+
+        for (sparta::TreeNode* child : sparta::TreeNodePrivateAttorney::getAllChildren(n)) {
+            addArchDatas_(child, adatas, adatas_helper);
+        }
     }
 
     const Event* EventAccessor::operator->() { return get(); }

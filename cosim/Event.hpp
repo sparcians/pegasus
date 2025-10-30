@@ -184,6 +184,10 @@ namespace pegasus::cosim
 
         ExcpCode getExceptionCode() const { return excp_code_; }
 
+        bool hasCsr() const { return inst_csr_.isValid(); }
+
+        uint32_t getCsr() const { return inst_csr_; }
+
         const std::vector<RegReadAccess> & getRegisterReads() const { return register_reads_; }
 
         const std::vector<RegWriteAccess> & getRegisterWrites() const { return register_writes_; }
@@ -247,6 +251,9 @@ namespace pegasus::cosim
             std::numeric_limits<ExcpCode>::max(); //!< The exception code for faulting instruction
                                                   //!< and interrupt Events
 
+        // Inst CSR which may cause side effects
+        sparta::utils::ValidValue<uint32_t> inst_csr_;
+
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -304,6 +311,7 @@ namespace pegasus::cosim
             ar & next_priv_;
             ar & excp_type_;
             ar & excp_code_;
+            ar & inst_csr_;
             ar & register_reads_;
             ar & register_writes_;
             ar & memory_reads_;

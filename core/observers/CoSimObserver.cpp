@@ -84,6 +84,21 @@ namespace pegasus::cosim
 
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
+
+        const auto & inst = state->getCurrentInst();
+        if (inst && inst->hasCsr())
+        {
+            const uint32_t csr =
+                inst->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+            if (state->getCsrRegisterSet()->getRegister(csr))
+            {
+                last_event.inst_csr_ = csr;
+            } else {
+                last_event.inst_csr_.clearValid();
+            }
+        } else {
+            last_event.inst_csr_.clearValid();
+        }
     }
 
     void CoSimObserver::sendLastEvent_()
