@@ -144,9 +144,16 @@ namespace pegasus
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);
+
+            std::cout << "About to run inst: PC 0x" << std::hex << state->getPc()
+                      << " opcode 0x" << std::setw(8) << std::setfill('0') << opcode
+                      << " (next PC 0x" << std::setw(8) << std::setfill('0') << state->getNextPc()
+                      << std::dec << std::endl;
         }
         catch (const mavis::BaseException & e)
         {
+            std::cout << "Decode failed for opcode 0x" << std::hex << opcode << " at PC 0x"
+                      << state->getPc() << ": " << e.what() << std::dec << std::endl;
             THROW_ILLEGAL_INST;
         }
 

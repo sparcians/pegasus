@@ -41,6 +41,11 @@ namespace pegasus
     class STFValidator;
     class SystemCallEmulator;
 
+    namespace cosim
+    {
+        class Event;
+    }
+
     class PegasusState : public sparta::Unit
     {
       public:
@@ -349,6 +354,10 @@ namespace pegasus
         // Co-simulation debug utils
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
+
+        // Event friend class for cosim. Allows direct state manipulation
+        // during flush (rollback) operations.
+        friend class cosim::Event;
     };
 
     template <typename XLEN>

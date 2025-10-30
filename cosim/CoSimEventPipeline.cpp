@@ -1,9 +1,11 @@
 #include "cosim/CoSimEventPipeline.hpp"
 #include "core/observers/CoSimObserver.hpp"
+#include "core/PegasusState.hpp"
 #include "simdb/pipeline/PipelineManager.hpp"
 #include "simdb/pipeline/elements/Function.hpp"
 #include "simdb/pipeline/AsyncDatabaseAccessor.hpp"
 #include "simdb/utils/Compress.hpp"
+#include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -323,20 +325,70 @@ namespace pegasus::cosim
 
         if (flush_younger_only)
         {
+            auto next_it = std::next(it);
+            if (next_it != uncommitted_evts_buffer_.end())
+            {
+                state->setPc(next_it->getPc());
+            }
+
             // Erase all events younger than the given euid
             uncommitted_evts_buffer_.erase(std::next(it), uncommitted_evts_buffer_.end());
         }
         else
         {
+            auto next_it = it;
+            if (next_it != uncommitted_evts_buffer_.end())
+            {
+                state->setPc(next_it->getPc());
+            }
+
             // Erase all events up to and including the given euid
             uncommitted_evts_buffer_.erase(it, uncommitted_evts_buffer_.end());
         }
 
-        // Reload state at the previous event. Note that checkpoint IDs are kept in sync
-        // with event UIDs, so the CoSimObserver will reset the "next event uid" member
-        // variable so that the next event (step) has euid = reload ID + 1.
-        auto reload_euid = flush_younger_only ? euid : (euid - 1);
-        observer->loadState_(reload_euid, state);
+        // Reload state to the youngest uncommitted event. If there are none left,
+        // then reload to the last committed event.
+        sparta::utils::ValidValue<uint64_t> reload_euid;
+        if (!uncommitted_evts_buffer_.empty())
+        {
+            reload_euid = uncommitted_evts_buffer_.back().getEuid();
+        }
+        else if (last_committed_event_uid_.isValid())
+        {
+            reload_euid = last_committed_event_uid_.getValue();
+        }
+        else
+        {
+            // Not sure what to do. Throw for now.
+            throw simdb::DBException("After flushing event with euid " + std::to_string(euid)
+                                     + " for core " + std::to_string(core_id_) + ", hart "
+                                     + std::to_string(hart_id_)
+                                     + ", there are no uncommitted or committed events to "
+                                       "reload state from!");
+        }
+
+        sparta_assert(reload_euid.getValue() <= observer->event_uid_,
+                      "Cannot reload state for event uid " + std::to_string(reload_euid.getValue())
+                          + " since current event uid is "
+                          + std::to_string(observer->event_uid_) + "!");
+
+        last_event_uid_ = reload_euid;
+        observer->event_uid_ = reload_euid;
+        observer->getCheckpointer()->loadCheckpoint(reload_euid);
+
+        auto reload_evt = getEvent(reload_euid).get();
+        state->setPrivMode(reload_evt->getPrivilegeMode(), state->getVirtualMode());
+
+        auto sim_state = state->getSimState();
+        sim_state->reset();
+        sim_state->current_opcode = reload_evt->getOpcode();
+        sim_state->current_uid = reload_evt->getEuid();
+        sim_state->sim_stopped = reload_evt->isLastEvent();
+        sim_state->inst_count = reload_evt->getEuid();
+
+        auto inst = state->getMavis()->makeInst(reload_evt->getOpcode(), state);
+        inst->updateVecConfig(state);
+        state->setCurrentInst(inst);
     }
 
     uint64_t CoSimEventPipeline::getLastEventUID() const { return last_event_uid_; }

@@ -47,12 +47,6 @@ namespace pegasus::cosim
         void sendLastEvent_();
         void stopSim() override;
 
-        // To support flushing, give friend access to CoSimEventPipeline.
-        // Cannot be public since we have to also update event_uid_ to keep
-        // the event UIDs in sync with the checkpointer IDs.
-        friend class CoSimEventPipeline;
-        void loadState_(uint64_t euid, PegasusState* state);
-
         sparta::log::MessageSource & cosim_logger_;
         CoSimEventPipeline* evt_pipeline_ = nullptr;
         CoSimCheckpointer* checkpointer_ = nullptr;
@@ -60,5 +54,8 @@ namespace pegasus::cosim
         const HartId hart_id_;
         uint64_t event_uid_ = 0;
         sparta::utils::ValidValue<Event> last_event_;
+
+        // Friend needed to reset event_uid_ during flush
+        friend class CoSimEventPipeline;
     };
 } // namespace pegasus::cosim

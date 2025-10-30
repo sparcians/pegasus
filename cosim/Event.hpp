@@ -314,10 +314,6 @@ namespace pegasus::cosim
         friend class boost::serialization::access;
         friend class CoSimObserver;
         friend class CoSimEventPipeline;
-
-        /// Called by friend CoSimObserver during cosim flush. Applies all
-        /// pertinent member variables to the given PegasusState.
-        void apply_(PegasusState* state) const;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)
@@ -434,4 +430,31 @@ namespace pegasus::cosim
         }
         return os;
     }
+
+    inline std::ostream & operator<<(std::ostream & os, const Event::MemReadAccess & mem_read_access)
+    {
+        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_read_access.paddr
+           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex
+           << mem_read_access.vaddr << " Size: " << std::dec << mem_read_access.size << " Value: "
+           << std::setw(16) << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_read_access.value)
+           << std::dec << "\n";
+
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const Event::MemWriteAccess & mem_write_access)
+    {
+        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_write_access.paddr
+           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex
+           << mem_write_access.vaddr << " Size: " << std::dec << mem_write_access.size << " Value: "
+           << std::setw(16) << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_write_access.value) << " [Prev: "
+           << std::setw(16) << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_write_access.prev_value)
+           << std::dec << "]\n";
+
+        return os;
+    }
+
 } // namespace pegasus::cosim

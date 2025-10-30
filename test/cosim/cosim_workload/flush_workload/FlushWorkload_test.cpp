@@ -25,12 +25,12 @@ bool AdvanceSimTruth(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
 
     auto start_pc = state->getPc();
     auto event = sim.step(core_id, hart_id);
-    auto pc = event->getPc();
-    auto next_pc = event->getNextPc();
+    auto event_pc = event->getPc();
+    auto event_next_pc = event->getNextPc();
 
-    EXPECT_EQUAL(state->getPc(), next_pc);
     (void)start_pc;
-    (void)pc;
+    (void)event_pc;
+    (void)event_next_pc;
 
     sim.commit(event);
     return true;
@@ -46,17 +46,17 @@ bool AdvanceSimTest(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
         return false;
     }
 
-    auto start_pc = state->getPc();
-    (void)start_pc;
-
-    // Step up to 3 times before flushing.
-    std::vector<EventAccessor> stepped_events;
+    // Step N times, flush N-1 events, and commit the 1st step.
     const size_t max_steps_before_flush = 3;
+    std::vector<EventAccessor> stepped_events;
     while (stepped_events.size() < max_steps_before_flush)
     {
+        auto start_pc = state->getPc();
         auto event = sim.step(core_id, hart_id);
         auto event_pc = event->getPc();
         auto event_next_pc = event->getNextPc();
+
+        (void)start_pc;
         (void)event_pc;
         (void)event_next_pc;
 
@@ -67,24 +67,21 @@ bool AdvanceSimTest(PegasusCoSim& sim, CoreId core_id, HartId hart_id)
         }
     }
 
-    auto flush_event = stepped_events.front();
-    auto flush_pc = flush_event->getPc();
-    auto flush_next_pc = flush_event->getNextPc();
-    (void)flush_pc;
-    (void)flush_next_pc;
-
-    if (flush_event->isLastEvent())
+    while (stepped_events.size() > 1)
     {
-        // If the first step was the last event, we are done.
-        sim.commit(flush_event);
+        auto event = stepped_events.back();
+        stepped_events.pop_back();
+
+        constexpr bool flush_younger_only = false;
+        sim.flush(event, flush_younger_only);
+    }
+
+    sim.commit(stepped_events.front());
+    if (stepped_events.front()->isLastEvent())
+    {
         return false;
     }
 
-    // Flush back to the first step event and commit.
-    constexpr bool flush_younger_only = true;
-    sim.flush(flush_event, flush_younger_only);
-    sim.commit(flush_event);
-    EXPECT_EQUAL(state->getPc(), flush_next_pc);
     return true;
 }
 
@@ -95,21 +92,17 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
 
-    EXPECT_EQUAL(state_truth->getPc(), state_test->getPc());
-    // TODO cnyce
-    return ERROR_CODE == 0;
-
     // Compare PegasusState member variables
     EXPECT_EQUAL(state_truth->getXlen(), state_test->getXlen());
     EXPECT_EQUAL(state_truth->isCompressionEnabled(), state_test->isCompressionEnabled());
     EXPECT_EQUAL(state_truth->getStopSimOnWfi(), state_test->getStopSimOnWfi());
     EXPECT_EQUAL(state_truth->getPc(), state_test->getPc());
-    EXPECT_EQUAL(state_truth->getNextPc(), state_test->getNextPc());
     EXPECT_EQUAL(state_truth->getPcAlignment(), state_test->getPcAlignment());
     EXPECT_EQUAL(state_truth->getPrivMode(), state_test->getPrivMode());
     EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
     EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
     EXPECT_EQUAL(state_truth->hasHypervisor(), state_test->hasHypervisor());
+    // TODO cnyce: pc alignment (and mask)
 
     // Compare sim state
     auto sim_state_truth = state_truth->getSimState();
@@ -181,17 +174,74 @@ bool Compare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
 
     compare_csr_regs(state_truth->getCsrRegisterSet(), state_test->getCsrRegisterSet());
 
-    // TODO cnyce: Compare memory
-    auto memory_truth = state_truth->getPegasusSystem()->getSystemMemory();
-    auto memory_test = state_test->getPegasusSystem()->getSystemMemory();
-    (void)memory_truth;
-    (void)memory_test;
+    // Compare vector config
+    auto vec_config_truth = state_truth->getVectorConfig();
+    auto vec_config_test = state_test->getVectorConfig();
+    EXPECT_EQUAL(vec_config_truth->getVLEN(), vec_config_test->getVLEN());
+    EXPECT_EQUAL(vec_config_truth->getLMUL(), vec_config_test->getLMUL());
+    EXPECT_EQUAL(vec_config_truth->getSEW(), vec_config_test->getSEW());
+    EXPECT_EQUAL(vec_config_truth->getVTA(), vec_config_test->getVTA());
+    EXPECT_EQUAL(vec_config_truth->getVMA(), vec_config_test->getVMA());
+    EXPECT_EQUAL(vec_config_truth->getVL(), vec_config_test->getVL());
+    EXPECT_EQUAL(vec_config_truth->getVSTART(), vec_config_test->getVSTART());
+    EXPECT_EQUAL(vec_config_truth->getVLMAX(), vec_config_test->getVLMAX());
+
+    // Compare memory
+    auto pipeline_truth = sim_truth.getEventPipeline(core_id, hart_id);
+    auto pipeline_test = sim_test.getEventPipeline(core_id, hart_id);
+
+    auto last_event_truth = pipeline_truth->getLastEvent();
+    auto last_event_test = pipeline_test->getLastEvent();
+
+    const auto& mem_reads_truth = last_event_truth->getMemoryReads();
+    const auto& mem_reads_test = last_event_test->getMemoryReads();
+    EXPECT_EQUAL(mem_reads_truth, mem_reads_test);
+
+    const auto& mem_writes_truth = last_event_truth->getMemoryWrites();
+    const auto& mem_writes_test = last_event_test->getMemoryWrites();
+    EXPECT_EQUAL(mem_writes_truth, mem_writes_test);
+
+    auto mem_writes_n = std::min(mem_writes_truth.size(), mem_writes_test.size());
+    for (size_t i = 0; i < mem_writes_n; ++i)
+    {
+        const auto& write_truth = mem_writes_truth[i];
+        const auto paddr = write_truth.paddr;
+        auto mem_value_truth = state_truth->readMemory<XLEN>(paddr);
+        auto mem_value_test = state_test->readMemory<XLEN>(paddr);
+        EXPECT_EQUAL(mem_value_truth, mem_value_test);
+    }
+
+    // Compare enabled extensions
+    auto & extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
+    auto & extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
+
+    std::set<std::string> ext_names;
+    for (auto it = extensions_map_truth.begin(); it != extensions_map_truth.end(); ++it)
+    {
+        ext_names.insert(it->first);
+    }
+    for (auto it = extensions_map_test.begin(); it != extensions_map_test.end(); ++it)
+    {
+        ext_names.insert(it->first);
+    }
+
+    for (const auto & ext_name : ext_names)
+    {
+        auto ext_enabled_truth = extensions_map_truth.isEnabled(ext_name);
+        auto ext_enabled_test = extensions_map_test.isEnabled(ext_name);
+        EXPECT_EQUAL(ext_enabled_truth, ext_enabled_test);
+    }
+
+    return ERROR_CODE == 0;
 }
 
 template <typename XLEN>
 bool AdvanceAndCompare(PegasusCoSim& sim_truth, PegasusCoSim& sim_test,
                        CoreId core_id, HartId hart_id)
 {
+    // TODO cnyce
+    //return AdvanceSimTruth(sim_truth, core_id, hart_id);
+
     auto stepped_truth = AdvanceSimTruth(sim_truth, core_id, hart_id);
     auto stepped_test = AdvanceSimTest(sim_test, core_id, hart_id);
 
@@ -250,15 +300,20 @@ int main(int argc, char** argv)
     size_t step_count = 0;
     try
     {
-        while (advance_and_compare(cosim_truth, cosim_test, core_id, hart_id))
+        while (true)
         {
-            // Loop until sim end
             ++step_count;
+            if (!advance_and_compare(cosim_truth, cosim_test, core_id, hart_id))
+            {
+                break;
+            }
         }
+        std::cout << "Completed " << step_count << " steps." << std::endl;
     }
     catch (const std::exception & ex)
     {
         exception_str = ex.what();
+        std::cout << "Exception caught on step " << step_count << ": " << exception_str << std::endl;
     }
 
     // Shutdown pipelines

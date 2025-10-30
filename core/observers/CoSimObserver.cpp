@@ -109,37 +109,4 @@ namespace pegasus::cosim
 
     void CoSimObserver::stopSim() { evt_pipeline_->stopSim(); }
 
-    void CoSimObserver::loadState_(uint64_t euid, PegasusState* state)
-    {
-        sparta_assert(euid <= event_uid_, "Cannot load state for event uid " + std::to_string(euid)
-                                              + " since current event uid is "
-                                              + std::to_string(event_uid_) + "!");
-
-        checkpointer_->loadCheckpoint(euid);
-        event_uid_ = euid;
-
-        // So far, we have reloaded the ArchData state (registers etc.) and now we have
-        // to reload the PegasusState state to match (PC, privilege mode, etc.)
-        auto reload_evt = evt_pipeline_->getEvent(euid);
-        reload_evt->apply_(state);
-    }
-
-    void Event::apply_(PegasusState* state) const
-    {
-        state->setPc(next_pc_);
-        state->setNextPc(next_pc_ + opcode_size_);
-        state->setPrivMode(curr_priv_, state->getVirtualMode());
-
-        auto sim_state = state->getSimState();
-        sim_state->reset();
-        sim_state->current_opcode = opcode_;
-        sim_state->current_uid = event_uid_;
-        sim_state->sim_stopped = event_ends_sim_;
-        sim_state->inst_count = event_uid_;
-
-        PegasusInstPtr inst = state->getMavis()->makeInst(opcode_, state);
-        inst->updateVecConfig(state);
-        state->setCurrentInst(inst);
-    }
-
 } // namespace pegasus::cosim
