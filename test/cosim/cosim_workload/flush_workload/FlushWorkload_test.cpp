@@ -23,15 +23,7 @@ bool AdvanceSimTruth(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
         return false;
     }
 
-    auto start_pc = state->getPc();
     auto event = sim.step(core_id, hart_id);
-    auto event_pc = event->getPc();
-    auto event_next_pc = event->getNextPc();
-
-    (void)start_pc;
-    (void)event_pc;
-    (void)event_next_pc;
-
     sim.commit(event);
     return true;
 }
@@ -51,15 +43,7 @@ bool AdvanceSimTest(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
     std::vector<EventAccessor> stepped_events;
     while (stepped_events.size() < max_steps_before_flush)
     {
-        auto start_pc = state->getPc();
         auto event = sim.step(core_id, hart_id);
-        auto event_pc = event->getPc();
-        auto event_next_pc = event->getNextPc();
-
-        (void)start_pc;
-        (void)event_pc;
-        (void)event_next_pc;
-
         stepped_events.push_back(event);
         if (event->isLastEvent())
         {
@@ -77,11 +61,6 @@ bool AdvanceSimTest(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
     }
 
     sim.commit(stepped_events.front());
-    if (stepped_events.front()->isLastEvent())
-    {
-        return false;
-    }
-
     return true;
 }
 
@@ -101,7 +80,8 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
     EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
     EXPECT_EQUAL(state_truth->hasHypervisor(), state_test->hasHypervisor());
-    // TODO cnyce: pc alignment (and mask)
+    EXPECT_EQUAL(state_truth->getPcAlignment(), state_test->getPcAlignment());
+    EXPECT_EQUAL(state_truth->getPcAlignmentMask(), state_test->getPcAlignmentMask());
 
     // Compare sim state
     auto sim_state_truth = state_truth->getSimState();
@@ -209,8 +189,8 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     }
 
     // Compare enabled extensions
-    auto & extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
-    auto & extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
 
     std::set<std::string> ext_names;
     for (auto it = extensions_map_truth.begin(); it != extensions_map_truth.end(); ++it)
@@ -236,9 +216,6 @@ template <typename XLEN>
 bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
                        HartId hart_id)
 {
-    // TODO cnyce
-    // return AdvanceSimTruth(sim_truth, core_id, hart_id);
-
     auto stepped_truth = AdvanceSimTruth(sim_truth, core_id, hart_id);
     auto stepped_test = AdvanceSimTest(sim_test, core_id, hart_id);
 

@@ -7,12 +7,7 @@
 #include "cosim/EventAccessor.hpp"
 #include "cosim/Event.hpp"
 #include "cosim/CoSimApi.hpp"
-
-namespace sparta
-{
-    class ArchData;
-    class TreeNode;
-} // namespace sparta
+#include <unordered_set>
 
 namespace simdb::pipeline
 {
@@ -61,12 +56,16 @@ namespace pegasus::cosim
         static constexpr auto NAME = "cosim-event-pipeline";
 
         /// Constructor must have this signature for simdb::AppManager factories
-        CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id) :
-            db_mgr_(db_mgr),
-            core_id_(core_id),
-            hart_id_(hart_id)
-        {
-        }
+        CoSimEventPipeline(
+            simdb::DatabaseManager* db_mgr,
+            CoreId core_id,
+            HartId hart_id,
+            PegasusState* state);
+
+        /// Set the associated observer. Not added to the ctor to avoid circular
+        /// dependencies between CoSimEventPipeline and CoSimObserver (each needs
+        /// the other to be constructed).
+        void setObserver(CoSimObserver* observer);
 
         /// Define the SimDB schema.
         static void defineSchema(simdb::Schema & schema);
@@ -146,13 +145,6 @@ namespace pegasus::cosim
         /// Recreate an old event from disk when it is no longer in the cache.
         std::unique_ptr<Event> recreateEventFromDisk_(uint64_t euid);
 
-        /// Find the ArchData instances in the given PegasusState.
-        void enumerateArchDatas_(PegasusState* state);
-
-        /// Appends each ArchData found in the tree recursively.
-        void addArchDatas_(sparta::TreeNode* node, std::vector<sparta::ArchData*> & adatas,
-                           std::map<sparta::ArchData*, sparta::TreeNode*> & adatas_helper);
-
         /// SimDB instance.
         simdb::DatabaseManager* db_mgr_ = nullptr;
 
@@ -168,6 +160,21 @@ namespace pegasus::cosim
 
         /// Hart ID.
         const HartId hart_id_;
+
+        /// PegasusState associated with this pipeline.
+        PegasusState *const state_;
+
+        /// CoSimObserver associated with this pipeline.
+        CoSimObserver* observer_ = nullptr;
+
+        /// List of enabled extensions used for fast CSR side effects replayer.
+        /// Kept in sync with the enabled extensions as of the last committed event,
+        /// or whatever was enabled in the ExtensionManager at the start of simulation.
+        std::unordered_set<std::string> uncommitted_evts_enabled_extensions_baseline_;
+
+        /// Flag which prevents us from updating the enabled extensions baseline
+        /// during a flush operation.
+        bool flushing_ = false;
 
         /// Last seen event uid.
         sparta::utils::ValidValue<uint64_t> last_event_uid_;
@@ -196,9 +203,6 @@ namespace pegasus::cosim
 
         /// Event recreated from the pipeline snoopers.
         std::unique_ptr<Event> snooped_event_;
-
-        /// Map of PegasusState to its ArchData instances.
-        std::unordered_map<PegasusState*, std::vector<sparta::ArchData*>> state_adatas_;
 
         /// Has the simulation been stopped?
         bool sim_stopped_ = false;
@@ -234,30 +238,34 @@ namespace simdb
     template <> class AppFactory<pegasus::cosim::CoSimEventPipeline> : public AppFactoryBase
     {
       public:
+        using CoreId = pegasus::CoreId;
+        using HartId = pegasus::HartId;
+        using PegasusState = pegasus::PegasusState;
         using AppT = pegasus::cosim::CoSimEventPipeline;
 
-        void setCoreHartIds(size_t instance_num, pegasus::CoreId core_id, pegasus::HartId hart_id)
+        void setCtorArgs(size_t instance_num, CoreId core_id, HartId hart_id, PegasusState* state)
         {
-            core_hart_ids_by_inst_num_[instance_num] = std::make_pair(core_id, hart_id);
+            ctor_args_by_inst_num_[instance_num] = std::make_tuple(core_id, hart_id, state);
         }
 
         AppT* createApp(DatabaseManager* db_mgr, size_t instance_num = 0) override
         {
-            auto it = core_hart_ids_by_inst_num_.find(instance_num);
-            if (it == core_hart_ids_by_inst_num_.end())
+            auto it = ctor_args_by_inst_num_.find(instance_num);
+            if (it == ctor_args_by_inst_num_.end())
             {
-                throw DBException("Core/Hart IDs not set for CoSimEventPipeline instance "
+                throw DBException("Ctor args not set for CoSimEventPipeline instance "
                                   + std::to_string(instance_num));
             }
 
-            const auto & [core_id, hart_id] = it->second;
-            return new pegasus::cosim::CoSimEventPipeline(db_mgr, core_id, hart_id);
+            const auto & [core_id, hart_id, state] = it->second;
+            return new pegasus::cosim::CoSimEventPipeline(db_mgr, core_id, hart_id, state);
         }
 
         void defineSchema(Schema & schema) const override { AppT::defineSchema(schema); }
 
       private:
-        std::map<size_t, std::pair<pegasus::CoreId, pegasus::HartId>> core_hart_ids_by_inst_num_;
+        using CtorArgs = std::tuple<CoreId, HartId, PegasusState*>;
+        std::map<size_t, CtorArgs> ctor_args_by_inst_num_;
     };
 
 } // namespace simdb

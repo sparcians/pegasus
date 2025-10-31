@@ -91,7 +91,7 @@ namespace pegasus::cosim
             {
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
                 checkpointer_factory->setArchDataRoot(pipeline_idx, *state->getContainer());
-                evt_pipeline_factory->setCoreHartIds(pipeline_idx, core_idx, hart_idx);
+                evt_pipeline_factory->setCtorArgs(pipeline_idx, core_idx, hart_idx, state);
                 ++pipeline_idx;
             }
         }
@@ -123,6 +123,8 @@ namespace pegasus::cosim
 
                 auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
                                                                  checkpointer, core_idx, hart_idx);
+
+                evt_pipeline->setObserver(cosim_obs.get());
 
                 // Initialize PegasusState and take initial snapshot
                 state->boot();

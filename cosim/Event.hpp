@@ -8,7 +8,9 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include <unordered_set>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/unordered_set.hpp>
 
 namespace pegasus
 {
@@ -180,6 +182,10 @@ namespace pegasus::cosim
 
         PrivMode getNextPrivilegeMode() const { return next_priv_; }
 
+        PrivMode getLdStPrivilegeMode() const { return curr_ldst_priv_; }
+
+        PrivMode getNextLdStPrivilegeMode() const { return next_ldst_priv_; }
+
         ExcpType getExceptionType() const { return excp_type_; }
 
         ExcpCode getExceptionCode() const { return excp_code_; }
@@ -244,6 +250,10 @@ namespace pegasus::cosim
         PrivMode curr_priv_ = PrivMode::INVALID; //!< Current privilege mode
         PrivMode next_priv_ = PrivMode::INVALID; //!< Next privilege mode
 
+        // Load/Store Privilege mode
+        PrivMode curr_ldst_priv_ = PrivMode::INVALID; //!< Current load/store privilege mode
+        PrivMode next_ldst_priv_ = PrivMode::INVALID; //!< Next load/store privilege mode
+
         // Exceptions (traps and interrupts)
         ExcpType excp_type_ = ExcpType::INVALID; //!< The exception type for faulting instructions
                                                  //!< and interrupt Events
@@ -273,6 +283,16 @@ namespace pegasus::cosim
 
         std::vector<MemReadAccess> memory_reads_;   //!< Memory read by this Event
         std::vector<MemWriteAccess> memory_writes_; //!< Memory written by this Event
+
+        //! @}
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        //! \name Extension changes
+        //! @{
+
+        std::unordered_set<std::string> enabled_extensions_;   //!< List of extensions enabled by this Event
+        std::unordered_set<std::string> disabled_extensions_;  //!< List of extensions disabled by this Event
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,6 +329,8 @@ namespace pegasus::cosim
             ar & alternate_next_pc_;
             ar & curr_priv_;
             ar & next_priv_;
+            ar & curr_ldst_priv_;
+            ar & next_ldst_priv_;
             ar & excp_type_;
             ar & excp_code_;
             ar & inst_csr_;
@@ -316,6 +338,8 @@ namespace pegasus::cosim
             ar & register_writes_;
             ar & memory_reads_;
             ar & memory_writes_;
+            ar & enabled_extensions_;
+            ar & disabled_extensions_;
             ar & dasm_string_;
         }
 

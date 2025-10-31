@@ -55,11 +55,12 @@ namespace pegasus::cosim
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
 
         last_event.next_pc_ = state->getPc();
+        last_event.next_priv_ = state->getPrivMode();
+        last_event.next_ldst_priv_ = state->getLdstPrivMode();
         sparta_assert(
             last_event.next_pc_ != last_event.curr_pc_,
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
-        // TODO: next_priv_
 
         sendLastEvent_();
     }
@@ -84,6 +85,7 @@ namespace pegasus::cosim
 
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
+        last_event.curr_ldst_priv_ = state->getLdstPrivMode();
 
         const auto & inst = state->getCurrentInst();
         if (inst && inst->hasCsr())

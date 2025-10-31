@@ -19,6 +19,50 @@
 namespace pegasus::cosim
 {
 
+    CoSimEventPipeline::CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id, PegasusState* state) :
+        db_mgr_(db_mgr),
+        core_id_(core_id),
+        hart_id_(hart_id),
+        state_(state)
+    {
+        auto & ext_mgr = state->getExtensionManager();
+        const auto & ext_map = ext_mgr.getEnabledExtensions();
+        for (const auto & [ext_name, _] : ext_map)
+        {
+            if (ext_map.isEnabled(ext_name))
+            {
+                uncommitted_evts_enabled_extensions_baseline_.insert(ext_name);
+            }
+        }
+
+        ext_mgr.registerExtensionChangeCallback(
+            [this](const std::string & extension_name, bool enabled)
+            {
+                if (flushing_)
+                {
+                    return;
+                }
+
+                sparta_assert(observer_ != nullptr, "CoSimObserver never set!");
+                Event & last_event = observer_->last_event_;
+                if (enabled)
+                {
+                    last_event.enabled_extensions_.insert(extension_name);
+                }
+                else
+                {
+                    last_event.disabled_extensions_.insert(extension_name);
+                }
+            });
+    }
+
+    void CoSimEventPipeline::setObserver(CoSimObserver* observer)
+    {
+        sparta_assert(observer_ == nullptr || observer_ == observer,
+                      "CoSimEventPipeline observer can only be set once!");
+        observer_ = observer;
+    }
+
     void CoSimEventPipeline::defineSchema(simdb::Schema & schema)
     {
         using dt = simdb::SqlDataType;
@@ -261,6 +305,15 @@ namespace pegasus::cosim
         auto evt = std::move(uncommitted_evts_buffer_.front());
         uncommitted_evts_buffer_.pop_front();
 
+        for (const auto & ext : evt.enabled_extensions_)
+        {
+            uncommitted_evts_enabled_extensions_baseline_.insert(ext);
+        }
+        for (const auto & ext : evt.disabled_extensions_)
+        {
+            uncommitted_evts_enabled_extensions_baseline_.erase(ext);
+        }
+
         committed_evts_buffer_.emplace_back(std::move(evt));
         if (committed_evts_buffer_.size() == 100)
         {
@@ -320,6 +373,11 @@ namespace pegasus::cosim
                                      + std::to_string(hart_id_) + "!");
         }
 
+        // Since we are reverting state changes, keep track of the extensions that
+        // were enabled/disabled for all the events we are about to flush.
+        std::unordered_set<std::string> post_flush_enabled_extensions;
+        std::unordered_set<std::string> post_flush_disabled_extensions;
+
         // Find the event among uncommitted events and erase as needed
         auto it = std::find_if(uncommitted_evts_buffer_.begin(), uncommitted_evts_buffer_.end(),
                                [euid](const Event & evt) { return evt.getEuid() == euid; });
@@ -332,15 +390,35 @@ namespace pegasus::cosim
                 state->setPc(next_it->getPc());
             }
 
+            for (auto it2 = std::next(it); it2 != uncommitted_evts_buffer_.end(); ++it2)
+            {
+                for (const auto & ext : it2->enabled_extensions_)
+                {
+                    post_flush_disabled_extensions.insert(ext);
+                }
+                for (const auto & ext : it2->disabled_extensions_)
+                {
+                    post_flush_enabled_extensions.insert(ext);
+                }
+            }
+
             // Erase all events younger than the given euid
             uncommitted_evts_buffer_.erase(std::next(it), uncommitted_evts_buffer_.end());
         }
         else
         {
-            auto next_it = it;
-            if (next_it != uncommitted_evts_buffer_.end())
+            state->setPc(it->getPc());
+
+            for (auto it2 = it; it2 != uncommitted_evts_buffer_.end(); ++it2)
             {
-                state->setPc(next_it->getPc());
+                for (const auto & ext : it2->enabled_extensions_)
+                {
+                    post_flush_disabled_extensions.insert(ext);
+                }
+                for (const auto & ext : it2->disabled_extensions_)
+                {
+                    post_flush_enabled_extensions.insert(ext);
+                }
             }
 
             // Erase all events up to and including the given euid
@@ -373,47 +451,15 @@ namespace pegasus::cosim
                           + " since current event uid is " + std::to_string(observer->event_uid_)
                           + "!");
 
-        auto get_side_effects = [&](const Event & evt) -> const Action*
-        {
-            if (evt.hasCsr())
-            {
-                auto csr = evt.getCsr();
-                auto reg_width = observer->getRegWidth();
-                auto execute = state->getExecuteUnit();
-                auto update_actions_map = reg_width == 8
-                                              ? execute->getCsrUpdateActionsMap<uint32_t>()
-                                              : execute->getCsrUpdateActionsMap<uint64_t>();
-
-                if (auto action_it = update_actions_map->find(csr);
-                    action_it != update_actions_map->end())
-                {
-                    return &action_it->second;
-                }
-            }
-
-            return nullptr;
-        };
-
-        auto reload_event = [&](const Event & reload_evt, const Action* side_effects)
+        auto reload_event = [&](const Event & reload_evt)
         {
             auto euid = reload_evt.getEuid();
             auto checkpointer = observer->getCheckpointer();
-            bool delete_future_chkpts = (euid == reload_euid);
-
-            if (delete_future_chkpts)
-            {
-                checkpointer->loadCheckpoint(euid);
-            }
-            else
-            {
-                enumerateArchDatas_(state);
-                const auto & adatas = state_adatas_[state];
-                checkpointer->findCheckpoint(euid, true)->load(adatas);
-            }
+            checkpointer->loadCheckpoint(euid);
 
             last_event_uid_ = euid;
             observer->event_uid_ = euid;
-            state->setPrivMode(reload_evt.getPrivilegeMode(), state->getVirtualMode());
+            state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
 
             auto sim_state = state->getSimState();
             sim_state->reset();
@@ -425,32 +471,68 @@ namespace pegasus::cosim
             auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
             inst->updateVecConfig(state);
             state->setCurrentInst(inst);
-
-            // Now that state is reloaded and all CSR values are correct, perform
-            // any CSR side effects needed.
-            if (side_effects)
-            {
-                auto dummy_it = state->getExecuteUnit()->getActionGroup()->getActionIterator();
-                side_effects->execute(state, dummy_it);
-            }
         };
 
-        // Go through all uncommitted checkpoints:
-        //   1. If there is an early checkpoint than the one we are reloading which
-        //      has a CSR side effect, we have to manually get the checkpoint and
-        //      regenerate the state ArchDatas before running the side effects Action.
-        //   2. When we get to the final checkpoint we have to load, whether there are
-        //      CSR side effects or not, we should call the checkpointer's loadCheckpoint()
-        //      method so it can update its internals e.g. deleting future checkpoints and
-        //      updating the current checkpoint.
-        for (const Event & evt : uncommitted_evts_buffer_)
+        // Restore the enabled extensions before reloading any events from our uncommitted buffer.
+        auto & ext_mgr = state_->getExtensionManager();
+        const auto & curr_exts = ext_mgr.getEnabledExtensions();
+
+        // Set flag which says not to update the baseline extensions. Our callback gets
+        // hit for every enableExtension/disableExtension call otherwise.
+        struct FlushingGuard
         {
-            auto side_effects = get_side_effects(evt);
-            bool load = (side_effects != nullptr || evt.getEuid() == reload_euid);
-            if (load)
+            FlushingGuard(bool & flushing_flag) : flag_(flushing_flag)
             {
-                reload_event(evt, side_effects);
+                flag_ = true;
             }
+            ~FlushingGuard() { flag_ = false; }
+
+         private:
+            bool & flag_;
+        } guard(flushing_);
+
+        for (const auto & [ext_name, _] : curr_exts)
+        {
+            if (curr_exts.isEnabled(ext_name)
+                && uncommitted_evts_enabled_extensions_baseline_.count(ext_name) == 0)
+            {
+                ext_mgr.disableExtension(ext_name);
+            }
+
+            else if (!curr_exts.isEnabled(ext_name)
+                     && uncommitted_evts_enabled_extensions_baseline_.count(ext_name) > 0)
+            {
+                ext_mgr.enableExtension(ext_name);
+            }
+        }
+
+        reload_event(uncommitted_evts_buffer_.back());
+
+        // Undo extension changes for all flushed events
+        for (const auto & ext : post_flush_enabled_extensions)
+        {
+            ext_mgr.enableExtension(ext);
+        }
+        for (const auto & ext : post_flush_disabled_extensions)
+        {
+            ext_mgr.disableExtension(ext);
+        }
+
+        // Switch contexts if extensions changed
+        if (!post_flush_enabled_extensions.empty()
+            || !post_flush_disabled_extensions.empty())
+        {
+            state->changeMavisContext();
+        }
+
+        // Refresh MMU mode (doesn't hurt even if not changed)
+        if (observer->getRegWidth() == 8)
+        {
+            state->changeMMUMode<uint32_t>();
+        }
+        else
+        {
+            state->changeMMUMode<uint64_t>();
         }
     }
 
@@ -678,47 +760,6 @@ namespace pegasus::cosim
         return std::make_unique<Event>(evts[index]);
     }
 
-    void CoSimEventPipeline::enumerateArchDatas_(PegasusState* state)
-    {
-        auto & adatas = state_adatas_[state];
-        if (!adatas.empty())
-        {
-            return;
-        }
-
-        std::map<sparta::ArchData*, sparta::TreeNode*> adatas_helper;
-        addArchDatas_(state->getContainer(), adatas, adatas_helper);
-    }
-
-    void CoSimEventPipeline::addArchDatas_(
-        sparta::TreeNode* n, std::vector<sparta::ArchData*> & adatas,
-        std::map<sparta::ArchData*, sparta::TreeNode*> & adatas_helper)
-    {
-        assert(n);
-        for (sparta::ArchData* ad : n->getAssociatedArchDatas())
-        {
-            if (ad != nullptr)
-            {
-                auto itr = adatas_helper.find(ad);
-                if (itr != adatas_helper.end())
-                {
-                    throw simdb::DBException("Found a second reference to ArchData ")
-                        << ad << " in the tree: " << n->getRoot()->stringize()
-                        << " . First reference found throgh " << itr->second->getLocation()
-                        << " and second found through " << n->getLocation()
-                        << ". An ArchData should be findable throug exactly 1 TreeNode";
-                }
-                adatas.push_back(ad);
-                adatas_helper[ad] = n;
-            }
-        }
-
-        for (sparta::TreeNode* child : sparta::TreeNodePrivateAttorney::getAllChildren(n))
-        {
-            addArchDatas_(child, adatas, adatas_helper);
-        }
-    }
-
     const Event* EventAccessor::operator->() { return get(); }
 
     const Event* EventAccessor::get()
@@ -737,7 +778,7 @@ namespace pegasus::cosim
         // Disable pipeline tasks while we try to find the event from the
         // pipeline, or falling back to running a DB query. The tasks will
         // be re-enabled when this object goes out of scope.
-        auto disabler = evt_pipeline_->getPipelineManager()->scopedDisableAll(false);
+        auto disabler = evt_pipeline_->getPipelineManager()->scopedDisableAll();
 
         if (auto evt = evt_pipeline_->recreateEventFromPipeline_(euid_))
         {
