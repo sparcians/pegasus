@@ -122,10 +122,6 @@ namespace pegasus::cosim
         /// Called after the pipeline threads have been flushed and destroyed.
         void postTeardown() override;
 
-        /// Check if the given hart's pipeline has any events cached.
-        /// Used for testing only.
-        size_t getNumCached() const;
-
         /// Get the total number of events successfully snooped
         /// from the pipeline after not finding it in the cache.
         /// Used for testing only.

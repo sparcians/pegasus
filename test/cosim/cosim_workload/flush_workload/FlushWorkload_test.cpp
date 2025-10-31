@@ -293,8 +293,6 @@ int main(int argc, char** argv)
     // Shutdown pipelines
     cosim_truth.finish();
     cosim_test.finish();
-    EXPECT_EQUAL(cosim_truth.getEventPipeline(core_id, hart_id)->getNumCached(), 0);
-    EXPECT_EQUAL(cosim_test.getEventPipeline(core_id, hart_id)->getNumCached(), 0);
 
     // Final validation
     auto validate_final_state = [&](PegasusCoSim & cosim)

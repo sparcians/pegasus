@@ -621,12 +621,6 @@ namespace pegasus::cosim
         }
     }
 
-    size_t CoSimEventPipeline::getNumCached() const
-    {
-        // We consider anything not yet sent to the pipeline as cached
-        return uncommitted_evts_buffer_.size() + committed_evts_buffer_.size();
-    }
-
     size_t CoSimEventPipeline::getNumSnooped() const
     {
         return num_pipeline_evts_snooped_in_serialize_task_
