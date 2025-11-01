@@ -82,6 +82,12 @@ namespace pegasus::cosim
             last_event.dasm_string_ = inst->getMavisOpcodeInfo()->dasmString();
             // TODO: inst_type_
         }
+        else
+        {
+            // No instruction means the fetch unit was not able to decode
+            // the current opcode. Set the opcode from the SimState instead.
+            last_event.opcode_ = state->getSimState()->current_opcode;
+        }
 
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
@@ -98,12 +104,12 @@ namespace pegasus::cosim
             }
             else
             {
-                last_event.inst_csr_.clearValid();
+                last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
             }
         }
         else
         {
-            last_event.inst_csr_.clearValid();
+            last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
         }
     }
 

@@ -71,7 +71,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
 
 # Function to run a single test and append to the appropriate queue
-def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests):
+def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
@@ -79,7 +79,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
     isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
-    pegasus_cmd = ["./pegasus",
+    pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, wkld]
 
@@ -108,7 +108,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
         failing_tests.append([testname, error])
 
 
-def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
+def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
     import concurrent.futures
 
     # Limit number of concurrent tests running to the number of CPUs on this machine
@@ -116,7 +116,7 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
     jobs = []
     for testname, wkld in tests:
         # Submit job
-        jobs.append(executor.submit(run_test, testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests))
+        jobs.append(executor.submit(run_test, testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable))
 
     # Wait for jobs to complete with a timeout of 5 minutes
     for j in concurrent.futures.as_completed(jobs):
@@ -125,6 +125,12 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
         except TimeoutError:
             print("TIMEOUT:", j)
             continue
+
+
+def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
+    for testname, wkld in tests:
+        print ("Running test:", testname)
+        run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable)
 
 
 def main():
@@ -137,6 +143,8 @@ def main():
     parser.add_argument("-v","--verbose", action='store_true', default=False, help="Be noisy")
     parser.add_argument("--riscv-arch", type=str, help="The directory of the built RISC-V Arch tests")
     parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
+    parser.add_argument("--pegasus-exe", type=str, default="./pegasus", help="Path to the Pegasus executable (default: ./pegasus)")
+    parser.add_argument("--serial", action='store_true', default=False, help="Run tests serially instead of in parallel")
     args = parser.parse_args()
 
     global be_noisy
@@ -174,8 +182,8 @@ def main():
 
     ###########################################################################
     # Make sure we're in the correct sim directory for pegasus
-    if not os.path.isfile('./pegasus'):
-        print("ERROR: ./pegasus command not found.  Run inside sim directory")
+    if not os.path.isfile(args.pegasus_exe):
+        print("ERROR: Pegasus executable not found:", args.pegasus_exe)
         sys.exit(1)
 
     ###########################################################################
@@ -209,7 +217,11 @@ def main():
     passing_tests = []
     failing_tests = []
     timeout_tests = []
-    run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir)
+
+    if args.serial:
+        run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
+    else:
+        run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
 
     ###########################################################################
     # Report results

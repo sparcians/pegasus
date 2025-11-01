@@ -138,10 +138,12 @@ void stepCoSimWorkload(const std::string & workload)
     auto evt_pipeline = cosim.getEventPipeline(core_id, hart_id);
     PipelineEventValidator evt_validator(evt_pipeline);
 
+    size_t step_count = 0;
     while (true)
     {
         try
         {
+            ++step_count;
             auto event = cosim.step(core_id, hart_id);
             cosim.commit(core_id, hart_id);
             if (event->isLastEvent())

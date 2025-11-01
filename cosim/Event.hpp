@@ -8,9 +8,8 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
-#include <unordered_set>
 #include <boost/serialization/access.hpp>
-#include <boost/serialization/unordered_set.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace pegasus
 {
@@ -190,9 +189,12 @@ namespace pegasus::cosim
 
         ExcpCode getExceptionCode() const { return excp_code_; }
 
-        bool hasCsr() const { return inst_csr_.isValid(); }
+        bool hasCsr() const { return inst_csr_ != std::numeric_limits<uint32_t>::max(); }
 
-        uint32_t getCsr() const { return inst_csr_; }
+        uint32_t getCsr() const {
+            sparta_assert(hasCsr(), "Event does not have a valid CSR!");
+            return inst_csr_;
+        }
 
         const std::vector<RegReadAccess> & getRegisterReads() const { return register_reads_; }
 
@@ -262,7 +264,8 @@ namespace pegasus::cosim
                                                   //!< and interrupt Events
 
         // Inst CSR which may cause side effects
-        sparta::utils::ValidValue<uint32_t> inst_csr_;
+        uint32_t inst_csr_ = std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
+                                                                   //!< instruction causing this Event
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -291,8 +294,29 @@ namespace pegasus::cosim
         //! \name Extension changes
         //! @{
 
-        std::unordered_set<std::string> enabled_extensions_;   //!< List of extensions enabled by this Event
-        std::unordered_set<std::string> disabled_extensions_;  //!< List of extensions disabled by this Event
+        struct MavisExtensions
+        {
+            std::vector<std::string> extensions;
+            bool enabled;
+
+            MavisExtensions(const std::vector<std::string> & extensions, bool enabled)
+                : extensions(extensions)
+                , enabled(enabled)
+            {}
+
+            MavisExtensions() = default;
+
+            bool operator==(const MavisExtensions & other) const = default;
+
+            template <typename Archive>
+            void serialize(Archive& ar, const unsigned int /*verison*/)
+            {
+                ar & extensions;
+                ar & enabled;
+            }
+        };
+
+        std::vector<MavisExtensions> extension_changes_; //!< List of extension changes
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -338,8 +362,7 @@ namespace pegasus::cosim
             ar & register_writes_;
             ar & memory_reads_;
             ar & memory_writes_;
-            ar & enabled_extensions_;
-            ar & disabled_extensions_;
+            ar & extension_changes_;
             ar & dasm_string_;
         }
 

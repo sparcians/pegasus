@@ -127,6 +127,10 @@ namespace pegasus::cosim
         /// Used for testing only.
         size_t getNumSnooped() const;
 
+        /// Get the total number of events still in the cache.
+        /// Used for testing only.
+        size_t getNumCached() const;
+
       private:
         /// Friend access given to EventAccessor for event retrieval.
         friend class EventAccessor;
@@ -162,11 +166,6 @@ namespace pegasus::cosim
 
         /// CoSimObserver associated with this pipeline.
         CoSimObserver* observer_ = nullptr;
-
-        /// List of enabled extensions used for fast CSR side effects replayer.
-        /// Kept in sync with the enabled extensions as of the last committed event,
-        /// or whatever was enabled in the ExtensionManager at the start of simulation.
-        std::unordered_set<std::string> uncommitted_evts_enabled_extensions_baseline_;
 
         /// Flag which prevents us from updating the enabled extensions baseline
         /// during a flush operation.

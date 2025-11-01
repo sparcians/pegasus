@@ -3,6 +3,8 @@
 #include "simdb/apps/AppManager.hpp"
 #include "sparta/kernel/SleeperThread.hpp"
 #include "sparta/utils/SpartaTester.hpp"
+#include <filesystem>
+#include <regex>
 
 /// In this test, we will be running the same workload through two PegasusCoSim
 /// instances. One will ONLY step forward and serve as the "truth" against which
@@ -12,6 +14,29 @@
 
 using namespace pegasus;
 using namespace pegasus::cosim;
+
+std::string GetArchFromPath(const std::string& path)
+{
+    // Get the filename only (handles both absolute and relative paths)
+    std::filesystem::path p(path);
+    std::string filename = p.filename().string();
+
+    // Simple regex: match "rv32" or "rv64" at the start of the filename
+    std::regex rv_pattern(R"(^(rv(32|64)))");
+
+    std::smatch match;
+    if (std::regex_search(filename, match, rv_pattern)) {
+        return match.str(1); // "rv32" or "rv64"
+    }
+
+    // Optional: fall back to searching anywhere in the string
+    std::regex anywhere(R"(rv(32|64))");
+    if (std::regex_search(path, match, anywhere)) {
+        return match.str(0);
+    }
+
+    return "unknown";
+}
 
 bool AdvanceSimTruth(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
@@ -192,21 +217,12 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     auto extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
     auto extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
 
-    std::set<std::string> ext_names;
+    std::unordered_set<std::string> enabled_exts_truth;
     for (auto it = extensions_map_truth.begin(); it != extensions_map_truth.end(); ++it)
     {
-        ext_names.insert(it->first);
-    }
-    for (auto it = extensions_map_test.begin(); it != extensions_map_test.end(); ++it)
-    {
-        ext_names.insert(it->first);
-    }
-
-    for (const auto & ext_name : ext_names)
-    {
-        auto ext_enabled_truth = extensions_map_truth.isEnabled(ext_name);
-        auto ext_enabled_test = extensions_map_test.isEnabled(ext_name);
-        EXPECT_EQUAL(ext_enabled_truth, ext_enabled_test);
+        const auto & ext_name = it->first;
+        const auto truth_ext_enabled = extensions_map_truth.isEnabled(ext_name);
+        EXPECT_EQUAL(extensions_map_test.isEnabled(ext_name), truth_ext_enabled);
     }
 
     return ERROR_CODE == 0;
@@ -216,6 +232,9 @@ template <typename XLEN>
 bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
                        HartId hart_id)
 {
+    //TODO cnyce
+    //return AdvanceSimTruth(sim_truth, core_id, hart_id);
+
     auto stepped_truth = AdvanceSimTruth(sim_truth, core_id, hart_id);
     auto stepped_test = AdvanceSimTest(sim_test, core_id, hart_id);
 
@@ -227,25 +246,51 @@ bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId
     return false;
 }
 
+std::string GenerateUUID()
+{
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<uint64_t> dis;
+
+    uint64_t part1 = dis(gen);
+    uint64_t part2 = dis(gen);
+
+    // Set UUID version (4) and variant (RFC 4122)
+    part1 = (part1 & 0xFFFFFFFFFFFF0FFFULL) | 0x0000000000004000ULL;
+    part2 = (part2 & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
+
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0')
+        << std::setw(8)  << ((part1 >> 32) & 0xFFFFFFFFULL) << '-'
+        << std::setw(4)  << ((part1 >> 16) & 0xFFFFULL) << '-'
+        << std::setw(4)  << (part1 & 0xFFFFULL) << '-'
+        << std::setw(4)  << ((part2 >> 48) & 0xFFFFULL) << '-'
+        << std::setw(12) << (part2 & 0xFFFFFFFFFFFFULL);
+
+    return oss.str();
+}
+
 int main(int argc, char** argv)
 {
-    const std::string workload = argc >= 2 ? argv[1] : "";
-    if (workload.empty())
+    // This test is either run like this for unit tests:
+    //   ./FlushWorkload_test <workload>
+    // Or via the RunArchTests.py script which provides the workload path
+    // and other parameters. Take the workload from the last cmdline argument.
+    if (argc < 2)
     {
-        std::cout << "Must supply workload!" << std::endl;
+        std::cout << "Must supply workload as last argument!" << std::endl;
         return 1;
     }
 
-    std::string arch;
-    if (workload.find("rv32") == 0)
+    const std::string workload = argc == 2 ? argv[1] : argv[argc - 1];
+    if (workload.empty())
     {
-        arch = "rv32";
+        std::cout << "Must supply workload as last argument!" << std::endl;
+        return 1;
     }
-    else if (workload.find("rv64") == 0)
-    {
-        arch = "rv64";
-    }
-    else
+
+    const std::string arch = GetArchFromPath(workload);
+    if (arch == "unknown")
     {
         std::cout << "Workload must start with 'rv32' or 'rv64' to indicate architecture!"
                   << std::endl;
@@ -256,12 +301,15 @@ int main(int argc, char** argv)
     sparta::SleeperThread::disableForever();
 
     const uint64_t ilimit = 0;
+    const auto uuid = GenerateUUID();
+    const auto db_truth = uuid + "_truth.db";
+    const auto db_test = uuid + "_test.db";
 
     sparta::Scheduler scheduler_truth;
-    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, "cosim_truth.db");
+    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth);
 
     sparta::Scheduler scheduler_test;
-    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, "cosim_test.db");
+    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;

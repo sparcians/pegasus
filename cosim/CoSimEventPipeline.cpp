@@ -26,17 +26,9 @@ namespace pegasus::cosim
         state_(state)
     {
         auto & ext_mgr = state->getExtensionManager();
-        const auto & ext_map = ext_mgr.getEnabledExtensions();
-        for (const auto & [ext_name, _] : ext_map)
-        {
-            if (ext_map.isEnabled(ext_name))
-            {
-                uncommitted_evts_enabled_extensions_baseline_.insert(ext_name);
-            }
-        }
 
         ext_mgr.registerExtensionChangeCallback(
-            [this](const std::string & extension_name, bool enabled)
+            [this](const std::vector<std::string> & extensions, bool enabled)
             {
                 if (flushing_)
                 {
@@ -45,14 +37,7 @@ namespace pegasus::cosim
 
                 sparta_assert(observer_ != nullptr, "CoSimObserver never set!");
                 Event & last_event = observer_->last_event_;
-                if (enabled)
-                {
-                    last_event.enabled_extensions_.insert(extension_name);
-                }
-                else
-                {
-                    last_event.disabled_extensions_.insert(extension_name);
-                }
+                last_event.extension_changes_.emplace_back(extensions, enabled);
             });
     }
 
@@ -305,15 +290,6 @@ namespace pegasus::cosim
         auto evt = std::move(uncommitted_evts_buffer_.front());
         uncommitted_evts_buffer_.pop_front();
 
-        for (const auto & ext : evt.enabled_extensions_)
-        {
-            uncommitted_evts_enabled_extensions_baseline_.insert(ext);
-        }
-        for (const auto & ext : evt.disabled_extensions_)
-        {
-            uncommitted_evts_enabled_extensions_baseline_.erase(ext);
-        }
-
         committed_evts_buffer_.emplace_back(std::move(evt));
         if (committed_evts_buffer_.size() == 100)
         {
@@ -373,57 +349,84 @@ namespace pegasus::cosim
                                      + std::to_string(hart_id_) + "!");
         }
 
-        // Since we are reverting state changes, keep track of the extensions that
-        // were enabled/disabled for all the events we are about to flush.
-        std::unordered_set<std::string> post_flush_enabled_extensions;
-        std::unordered_set<std::string> post_flush_disabled_extensions;
-
-        // Find the event among uncommitted events and erase as needed
-        auto it = std::find_if(uncommitted_evts_buffer_.begin(), uncommitted_evts_buffer_.end(),
-                               [euid](const Event & evt) { return evt.getEuid() == euid; });
-
-        if (flush_younger_only)
+        // Set flag which says not to update the baseline extensions. Our callback gets
+        // hit for every enableExtension/disableExtension call otherwise.
+        struct FlushingGuard
         {
-            auto next_it = std::next(it);
-            if (next_it != uncommitted_evts_buffer_.end())
+            FlushingGuard(bool & flushing_flag) : flag_(flushing_flag)
             {
-                state->setPc(next_it->getPc());
+                flag_ = true;
             }
+            ~FlushingGuard() { flag_ = false; }
 
-            for (auto it2 = std::next(it); it2 != uncommitted_evts_buffer_.end(); ++it2)
-            {
-                for (const auto & ext : it2->enabled_extensions_)
-                {
-                    post_flush_disabled_extensions.insert(ext);
-                }
-                for (const auto & ext : it2->disabled_extensions_)
-                {
-                    post_flush_enabled_extensions.insert(ext);
-                }
-            }
+         private:
+            bool & flag_;
+        } guard(flushing_);
 
-            // Erase all events younger than the given euid
-            uncommitted_evts_buffer_.erase(std::next(it), uncommitted_evts_buffer_.end());
-        }
-        else
+        auto & ext_mgr = state_->getExtensionManager();
+
+        // Undo the CSR side effects, softfloat changes, MMU mode, and extension changes
+        // for every uncommitted event we are flushing. All events will be undone in the
+        // reverse order they occurred (undo youngest to oldest).
+        auto change_mmu_mode = false;
+
+        auto undo_evt = [&](const Event & evt) -> bool
         {
-            state->setPc(it->getPc());
-
-            for (auto it2 = it; it2 != uncommitted_evts_buffer_.end(); ++it2)
+            if (flush_younger_only && evt.getEuid() == euid)
             {
-                for (const auto & ext : it2->enabled_extensions_)
+                return false;
+            }
+
+            if (!flush_younger_only && evt.getEuid() < euid)
+            {
+                return false;
+            }
+
+            //TODO cnyce: call this only for reload_evt
+            state->setPc(evt.getPc());
+            state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
+
+            const auto & ext_changes = evt.extension_changes_;
+            const auto change_mavis_ctx = !ext_changes.empty();
+
+            for (auto rit = ext_changes.rbegin(); rit != ext_changes.rend(); ++rit)
+            {
+                const auto & ext_info = *rit;
+                const auto & ext_names = ext_info.extensions;
+                const auto enabled = ext_info.enabled;
+
+                if (enabled)
                 {
-                    post_flush_disabled_extensions.insert(ext);
+                    ext_mgr.disableExtensions(ext_names);
                 }
-                for (const auto & ext : it2->disabled_extensions_)
+                else
                 {
-                    post_flush_enabled_extensions.insert(ext);
+                    ext_mgr.enableExtensions(ext_names);
                 }
             }
 
-            // Erase all events up to and including the given euid
-            uncommitted_evts_buffer_.erase(it, uncommitted_evts_buffer_.end());
+            if (change_mavis_ctx)
+            {
+                state->changeMavisContext();
+            }
+
+            // Update MMU mode when MSTATUS / SATP csrs have changed,
+            // or when the privilege mode(s) have changed.
+            change_mmu_mode |= evt.curr_priv_ != evt.next_priv_;
+            change_mmu_mode |= evt.curr_ldst_priv_ != evt.next_ldst_priv_;
+            if (!change_mmu_mode && evt.inst_csr_ != std::numeric_limits<uint32_t>::max())
+            {
+                change_mmu_mode |= evt.inst_csr_ == MSTATUS || evt.inst_csr_ == SATP;
+            }
+
+            return true;
+        };
+
+        while (undo_evt(uncommitted_evts_buffer_.back()))
+        {
+            uncommitted_evts_buffer_.pop_back();
         }
+        sparta_assert(!uncommitted_evts_buffer_.empty());
 
         // Reload state to the youngest uncommitted event. If there are none left,
         // then reload to the last committed event.
@@ -459,6 +462,8 @@ namespace pegasus::cosim
 
             last_event_uid_ = euid;
             observer->event_uid_ = euid;
+
+            state->setPc(reload_evt.getNextPc());
             state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
 
             auto sim_state = state->getSimState();
@@ -468,71 +473,32 @@ namespace pegasus::cosim
             sim_state->sim_stopped = reload_evt.isLastEvent();
             sim_state->inst_count = reload_evt.getEuid();
 
+            // Now that the ArchData is reloaded, we can safely update the MMU mode.
+            if (change_mmu_mode)
+            {
+                if (observer->getRegWidth() == 8)
+                {
+                    state->changeMMUMode<uint32_t>();
+                }
+                else
+                {
+                    state->changeMMUMode<uint64_t>();
+                }
+            }
+        };
+
+        const auto & reload_evt = uncommitted_evts_buffer_.back();
+        reload_event(reload_evt);
+
+        // Now that the state has had a chance to switch the Mavis context, we
+        // can safely decode the opcode. Note the try/catch is the same as the
+        // call to makeInst() in Fetch::decode_
+        try
+        {
             auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
             inst->updateVecConfig(state);
             state->setCurrentInst(inst);
-        };
-
-        // Restore the enabled extensions before reloading any events from our uncommitted buffer.
-        auto & ext_mgr = state_->getExtensionManager();
-        const auto & curr_exts = ext_mgr.getEnabledExtensions();
-
-        // Set flag which says not to update the baseline extensions. Our callback gets
-        // hit for every enableExtension/disableExtension call otherwise.
-        struct FlushingGuard
-        {
-            FlushingGuard(bool & flushing_flag) : flag_(flushing_flag)
-            {
-                flag_ = true;
-            }
-            ~FlushingGuard() { flag_ = false; }
-
-         private:
-            bool & flag_;
-        } guard(flushing_);
-
-        for (const auto & [ext_name, _] : curr_exts)
-        {
-            if (curr_exts.isEnabled(ext_name)
-                && uncommitted_evts_enabled_extensions_baseline_.count(ext_name) == 0)
-            {
-                ext_mgr.disableExtension(ext_name);
-            }
-
-            else if (!curr_exts.isEnabled(ext_name)
-                     && uncommitted_evts_enabled_extensions_baseline_.count(ext_name) > 0)
-            {
-                ext_mgr.enableExtension(ext_name);
-            }
-        }
-
-        reload_event(uncommitted_evts_buffer_.back());
-
-        // Undo extension changes for all flushed events
-        for (const auto & ext : post_flush_enabled_extensions)
-        {
-            ext_mgr.enableExtension(ext);
-        }
-        for (const auto & ext : post_flush_disabled_extensions)
-        {
-            ext_mgr.disableExtension(ext);
-        }
-
-        // Switch contexts if extensions changed
-        if (!post_flush_enabled_extensions.empty()
-            || !post_flush_disabled_extensions.empty())
-        {
-            state->changeMavisContext();
-        }
-
-        // Refresh MMU mode (doesn't hurt even if not changed)
-        if (observer->getRegWidth() == 8)
-        {
-            state->changeMMUMode<uint32_t>();
-        }
-        else
-        {
-            state->changeMMUMode<uint64_t>();
+        } catch (const mavis::BaseException &) {
         }
     }
 
@@ -582,7 +548,7 @@ namespace pegasus::cosim
 
         if (!uncommitted_evts_buffer_.empty())
         {
-            std::cout << "At sim end, event pipeline at core " << core_id_ << ", hart " << hart_id_
+            std::cout << "WARNING: At sim end, event pipeline at core " << core_id_ << ", hart " << hart_id_
                       << " had " << uncommitted_evts_buffer_.size() << " uncommitted events.\n";
         }
     }
@@ -625,6 +591,11 @@ namespace pegasus::cosim
     {
         return num_pipeline_evts_snooped_in_serialize_task_
                + num_pipeline_evts_snooped_in_zlib_task_ + num_pipeline_evts_snooped_in_db_task_;
+    }
+
+    size_t CoSimEventPipeline::getNumCached() const
+    {
+        return uncommitted_evts_buffer_.size() + committed_evts_buffer_.size();
     }
 
     const Event* CoSimEventPipeline::getEventFromCache_(uint64_t euid)
