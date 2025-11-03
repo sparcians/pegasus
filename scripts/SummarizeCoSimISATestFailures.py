@@ -11,21 +11,13 @@ def ExtractFailure(log_file, failure_dict):
     with open(log_file, 'r') as fin:
         for line in fin.readlines():
             if line.find('FAILED on line') != -1:
-                # Line is something like:
-                #   Test 'sim_state_truth->current_uid' FAILED on line 115 in file /home/cnyce/pegasus/test/cosim/cosim_workload/flush_workload/FlushWorkload_test.cpp. Value: '1057' should equal '1058'
-                # Turn this into a summary like:
-                #   FAILED on line 115 in FlushWorkload_test.cpp: sim_state_truth->current_uid
                 parts = line.split(' FAILED on line ')
                 assert len(parts) == 2
 
                 # Parse a C++ test failure line and produce a concise summary.
                 #
-                # Example input:
+                # Example input for regex:
                 #     Test 'sim_state_truth->current_uid' FAILED on line 115 in file /path/to/FlushWorkload_test.cpp. Value: '1057' should equal '1058'
-                #
-                # Output:
-                #     FAILED on line 115 in FlushWorkload_test.cpp: sim_state_truth->current_uid
-                #
                 #
                 pattern = re.compile(r"Test\s+'([^']+)'\s+FAILED\s+on\s+line\s+(\d+)\s+in\s+file\s+([^\s]+)")
                 match = pattern.search(line)

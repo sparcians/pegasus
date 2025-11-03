@@ -49,8 +49,6 @@ namespace pegasus::cosim
                                                      dst_reg.reg_prev_value.getByteVector());
         }
 
-        // TODO cnyce: mem_reads_, mem_writes_
-
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
 

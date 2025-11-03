@@ -145,8 +145,6 @@ namespace pegasus
         }
         catch (const mavis::BaseException & e)
         {
-            std::cout << "Decode failed for opcode 0x" << std::hex << opcode << " at PC 0x"
-                      << state->getPc() << ": " << e.what() << std::dec << std::endl;
             THROW_ILLEGAL_INST;
         }
 

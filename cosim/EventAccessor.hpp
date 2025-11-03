@@ -51,7 +51,7 @@ namespace pegasus::cosim
         const Event* operator->();
 
         /// Same as operator->().
-        const Event* get();
+        const Event* get(bool must_exist = true);
 
         /// How many times did we have to go to disk to get this event?
         size_t getNumFromDisk() const { return num_from_disk_; }

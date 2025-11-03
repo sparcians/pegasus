@@ -250,9 +250,6 @@ template <typename XLEN>
 bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
                        HartId hart_id, size_t max_steps_before_flush)
 {
-    //TODO cnyce
-    //return StepSim(sim_truth, core_id, hart_id);
-
     auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
     auto stepped_test =
         max_steps_before_flush > 0
@@ -296,7 +293,7 @@ std::string GenerateUUID()
 //   ./FlushWorkload_test -w <workload>
 //
 // Or via the RunArchTests.py script which provides the workload path
-// and other parameters. Take the workload from the last cmdline argument.
+// and other parameters.
 //   ./FlushWorkload_test --debug-dump-filename <fname> -p <isa_path> <isa> -w <workload>
 //
 // Or for manual debugging:

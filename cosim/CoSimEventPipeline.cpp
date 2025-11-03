@@ -257,7 +257,7 @@ namespace pegasus::cosim
             ->addTask(std::move(zlib));
     }
 
-    simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager()
+    simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
     {
         return pipeline_mgr_;
     }
@@ -751,7 +751,7 @@ namespace pegasus::cosim
 
     const Event* EventAccessor::operator->() { return get(); }
 
-    const Event* EventAccessor::get()
+    const Event* EventAccessor::get(bool must_exist)
     {
         if (recreated_evt_)
         {
@@ -783,7 +783,12 @@ namespace pegasus::cosim
             return recreated_evt_.get();
         }
 
-        throw simdb::DBException("Unable to find the event with euid ") << euid_;
+        if (must_exist)
+        {
+            throw simdb::DBException("Unable to find the event with euid ") << euid_;
+        }
+
+        return nullptr;
     }
 
 } // namespace pegasus::cosim

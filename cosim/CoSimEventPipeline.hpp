@@ -75,7 +75,7 @@ namespace pegasus::cosim
 
         /// Allow EventAccessor to use the PipelineManager to disable threads
         /// while recreating events as needed (when not found in cache).
-        simdb::pipeline::PipelineManager* getPipelineManager();
+        simdb::pipeline::PipelineManager* getPipelineManager() const;
 
         /// Called by unit tests to validate async event retrieval.
         void setListener(EventListener* listener);

@@ -309,7 +309,7 @@ namespace pegasus::cosim
             bool operator==(const MavisExtensions & other) const = default;
 
             template <typename Archive>
-            void serialize(Archive& ar, const unsigned int /*verison*/)
+            void serialize(Archive& ar, const unsigned int /*version*/)
             {
                 ar & extensions;
                 ar & enabled;

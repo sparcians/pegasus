@@ -44,7 +44,6 @@ namespace pegasus
     namespace cosim
     {
         class Event;
-        class CoSimEventPipeline;
     }
 
     class PegasusState : public sparta::Unit

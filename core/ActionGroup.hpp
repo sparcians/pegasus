@@ -67,8 +67,6 @@ namespace pegasus
 
         const std::vector<Action> & getActions() const { return actions_; };
 
-        Action::ItrType getActionIterator() { return actions_.begin(); }
-
         ActionGroup* execute(PegasusState* state)
         {
             Action::ItrType action_it = actions_.begin();

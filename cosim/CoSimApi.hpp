@@ -4,7 +4,6 @@
 #include "cosim/MemoryInterface.hpp"
 
 #include <deque>
-#include <list>
 #include <memory>
 
 /**
