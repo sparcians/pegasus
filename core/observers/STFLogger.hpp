@@ -28,6 +28,8 @@ namespace pegasus
         void writeInstruction_(const PegasusInst* inst);
 
         template <typename XLEN, typename F>
-        void stfWrite_src_(PegasusState* state, F get_stf_reg_type);
+        void stfWrite_InstRegRecord_(PegasusState* state, F get_stf_reg_type);
+        template <typename XLEN>
+        void stfWrite_EventRecord_(PegasusState* state, bool & is_invalid_opcode);
     };
 } // namespace pegasus
