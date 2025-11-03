@@ -1,6 +1,7 @@
 #include "cosim/CoSimEventPipeline.hpp"
 #include "core/observers/CoSimObserver.hpp"
 #include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/Execute.hpp"
 #include "simdb/pipeline/PipelineManager.hpp"
 #include "simdb/pipeline/elements/Function.hpp"
@@ -26,7 +27,7 @@ namespace pegasus::cosim
         hart_id_(hart_id),
         state_(state)
     {
-        auto & ext_mgr = state->getExtensionManager();
+        auto & ext_mgr = state->getCore()->getExtensionManager();
 
         ext_mgr.registerExtensionChangeCallback(
             [this](const std::vector<std::string> & extensions, bool enabled)
@@ -363,7 +364,7 @@ namespace pegasus::cosim
             bool & flag_;
         } guard(flushing_);
 
-        auto & ext_mgr = state_->getExtensionManager();
+        auto & ext_mgr = state_->getCore()->getExtensionManager();
 
         // Undo the CSR side effects, softfloat changes, MMU mode, and extension changes
         // for every uncommitted event we are flushing. All events will be undone in the
@@ -413,7 +414,7 @@ namespace pegasus::cosim
             if (!exts_to_enable.empty() || !exts_to_disable.empty())
             {
                 ext_mgr.changeExtensions(exts_to_enable, exts_to_disable);
-                state->changeMavisContext();
+                state->getCore()->changeMavisContext();
             }
 
             // Update MMU mode when MSTATUS / SATP csrs have changed,
@@ -501,7 +502,7 @@ namespace pegasus::cosim
             // call to makeInst() in Fetch::decode_
             try
             {
-                auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
+                auto inst = state->getCore()->getMavis()->makeInst(reload_evt.getOpcode(), state);
                 inst->updateVecConfig(state);
                 state->setCurrentInst(inst);
             }

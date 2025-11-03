@@ -416,12 +416,9 @@ namespace pegasus
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
 
-<<<<<<< HEAD
         auto & ext_manager = state->getCore()->getExtensionManager();
-=======
-        auto & ext_manager = state->getExtensionManager();
         bool change_mavis_ctx = false;
->>>>>>> 33d08a7 (Refactor test to make it easier to debug side-by-side with baseline)
+
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
         if (fs_val == 0)

@@ -118,16 +118,19 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
 
     // Compare PegasusState member variables
     EXPECT_EQUAL(state_truth->getXlen(), state_test->getXlen());
-    EXPECT_EQUAL(state_truth->isCompressionEnabled(), state_test->isCompressionEnabled());
     EXPECT_EQUAL(state_truth->getStopSimOnWfi(), state_test->getStopSimOnWfi());
     EXPECT_EQUAL(state_truth->getPc(), state_test->getPc());
-    EXPECT_EQUAL(state_truth->getPcAlignment(), state_test->getPcAlignment());
     EXPECT_EQUAL(state_truth->getPrivMode(), state_test->getPrivMode());
     EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
     EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
-    EXPECT_EQUAL(state_truth->hasHypervisor(), state_test->hasHypervisor());
-    EXPECT_EQUAL(state_truth->getPcAlignment(), state_test->getPcAlignment());
-    EXPECT_EQUAL(state_truth->getPcAlignmentMask(), state_test->getPcAlignmentMask());
+
+    // Compare PegasusCore member variables
+    EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(), state_test->getCore()->isCompressionEnabled());
+    EXPECT_EQUAL(state_truth->getCore()->hasHypervisor(), state_test->getCore()->hasHypervisor());
+    EXPECT_EQUAL(state_truth->getCore()->getPcAlignment(), state_test->getCore()->getPcAlignment());
+    EXPECT_EQUAL(state_truth->getCore()->getPcAlignmentMask(), state_test->getCore()->getPcAlignmentMask());
+    EXPECT_EQUAL(state_truth->getCore()->getMisaExtFieldValue<XLEN>(),
+                 state_test->getCore()->getMisaExtFieldValue<XLEN>());
 
     // Compare sim state
     auto sim_state_truth = state_truth->getSimState();
@@ -235,8 +238,8 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     }
 
     // Compare enabled extensions
-    auto extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
-    auto extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_truth = state_truth->getCore()->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_test = state_test->getCore()->getExtensionManager().getEnabledExtensions();
 
     std::unordered_set<std::string> enabled_exts_truth;
     for (auto it = extensions_map_truth.begin(); it != extensions_map_truth.end(); ++it)
