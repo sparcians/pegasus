@@ -125,10 +125,12 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
 
     // Compare PegasusCore member variables
-    EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(), state_test->getCore()->isCompressionEnabled());
+    EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(),
+                 state_test->getCore()->isCompressionEnabled());
     EXPECT_EQUAL(state_truth->getCore()->hasHypervisor(), state_test->getCore()->hasHypervisor());
     EXPECT_EQUAL(state_truth->getCore()->getPcAlignment(), state_test->getCore()->getPcAlignment());
-    EXPECT_EQUAL(state_truth->getCore()->getPcAlignmentMask(), state_test->getCore()->getPcAlignmentMask());
+    EXPECT_EQUAL(state_truth->getCore()->getPcAlignmentMask(),
+                 state_test->getCore()->getPcAlignmentMask());
     EXPECT_EQUAL(state_truth->getCore()->getMisaExtFieldValue<XLEN>(),
                  state_test->getCore()->getMisaExtFieldValue<XLEN>());
 
@@ -238,7 +240,8 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     }
 
     // Compare enabled extensions
-    auto extensions_map_truth = state_truth->getCore()->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_truth =
+        state_truth->getCore()->getExtensionManager().getEnabledExtensions();
     auto extensions_map_test = state_test->getCore()->getExtensionManager().getEnabledExtensions();
 
     std::unordered_set<std::string> enabled_exts_truth;
