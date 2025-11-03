@@ -136,6 +136,7 @@ namespace pegasus
             {
                 current_opcode = 0;
                 current_inst.reset();
+                ++current_uid;
             }
         };
 

@@ -289,6 +289,7 @@ namespace pegasus::cosim
 
         auto evt = std::move(uncommitted_evts_buffer_.front());
         uncommitted_evts_buffer_.pop_front();
+        last_committed_event_uid_ = evt.getEuid();
 
         committed_evts_buffer_.emplace_back(std::move(evt));
         if (committed_evts_buffer_.size() == 100)
@@ -382,13 +383,12 @@ namespace pegasus::cosim
                 return false;
             }
 
-            //TODO cnyce: call this only for reload_evt
             state->setPc(evt.getPc());
             state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
 
+            std::vector<std::string> exts_to_enable;
+            std::vector<std::string> exts_to_disable;
             const auto & ext_changes = evt.extension_changes_;
-            const auto change_mavis_ctx = !ext_changes.empty();
-
             for (auto rit = ext_changes.rbegin(); rit != ext_changes.rend(); ++rit)
             {
                 const auto & ext_info = *rit;
@@ -397,16 +397,24 @@ namespace pegasus::cosim
 
                 if (enabled)
                 {
-                    ext_mgr.disableExtensions(ext_names);
+                    exts_to_disable.insert(exts_to_disable.end(), ext_names.begin(),
+                                           ext_names.end());
                 }
                 else
                 {
-                    ext_mgr.enableExtensions(ext_names);
+                    exts_to_enable.insert(exts_to_enable.end(), ext_names.begin(),
+                                           ext_names.end());
                 }
             }
 
-            if (change_mavis_ctx)
+            exts_to_enable.erase(
+                std::unique(exts_to_enable.begin(), exts_to_enable.end()), exts_to_enable.end());
+            exts_to_disable.erase(
+                std::unique(exts_to_disable.begin(), exts_to_disable.end()), exts_to_disable.end());
+
+            if (!exts_to_enable.empty() || !exts_to_disable.empty())
             {
+                ext_mgr.changeExtensions(exts_to_enable, exts_to_disable);
                 state->changeMavisContext();
             }
 
@@ -422,11 +430,15 @@ namespace pegasus::cosim
             return true;
         };
 
+        sparta_assert(!uncommitted_evts_buffer_.empty());
         while (undo_evt(uncommitted_evts_buffer_.back()))
         {
             uncommitted_evts_buffer_.pop_back();
+            if (uncommitted_evts_buffer_.empty())
+            {
+                break;
+            }
         }
-        sparta_assert(!uncommitted_evts_buffer_.empty());
 
         // Reload state to the youngest uncommitted event. If there are none left,
         // then reload to the last committed event.
@@ -485,20 +497,32 @@ namespace pegasus::cosim
                     state->changeMMUMode<uint64_t>();
                 }
             }
+
+            // Now that the state has had a chance to switch the Mavis context, we
+            // can safely decode the opcode. Note the try/catch is the same as the
+            // call to makeInst() in Fetch::decode_
+            try
+            {
+                auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
+                inst->updateVecConfig(state);
+                state->setCurrentInst(inst);
+            } catch (const mavis::BaseException &) {
+            }
+
         };
 
-        const auto & reload_evt = uncommitted_evts_buffer_.back();
-        reload_event(reload_evt);
-
-        // Now that the state has had a chance to switch the Mavis context, we
-        // can safely decode the opcode. Note the try/catch is the same as the
-        // call to makeInst() in Fetch::decode_
-        try
+        if (!uncommitted_evts_buffer_.empty())
         {
-            auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
-            inst->updateVecConfig(state);
-            state->setCurrentInst(inst);
-        } catch (const mavis::BaseException &) {
+            const auto & reload_evt = uncommitted_evts_buffer_.back();
+            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
+            reload_event(reload_evt);
+        }
+        else
+        {
+            auto reload_evt_accessor = getLastCommittedEvent();
+            const auto & reload_evt = *reload_evt_accessor.get();
+            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
+            reload_event(reload_evt);
         }
     }
 

@@ -38,7 +38,7 @@ std::string GetArchFromPath(const std::string& path)
     return "unknown";
 }
 
-bool AdvanceSimTruth(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
+bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
     auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
 
@@ -53,7 +53,7 @@ bool AdvanceSimTruth(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
     return true;
 }
 
-bool AdvanceSimTest(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
+bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id, size_t max_steps_before_flush = 3)
 {
     auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
 
@@ -63,8 +63,26 @@ bool AdvanceSimTest(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
         return false;
     }
 
+    // A value of 1 for max_steps_before_flush means:
+    //   - step 1 time
+    //   - flush that event
+    //   - step 1 time again
+    //   - commit that event
+    if (max_steps_before_flush == 0)
+    {
+        throw std::invalid_argument("max_steps_before_flush must be >= 1");
+    }
+    else if (max_steps_before_flush == 1)
+    {
+        auto event = sim.step(core_id, hart_id);
+        constexpr bool flush_younger_only = false;
+        sim.flush(event, flush_younger_only);
+        event = sim.step(core_id, hart_id);
+        sim.commit(event);
+        return true;
+    }
+
     // Step N times, flush N-1 events, and commit the 1st step.
-    const size_t max_steps_before_flush = 3;
     std::vector<EventAccessor> stepped_events;
     while (stepped_events.size() < max_steps_before_flush)
     {
@@ -230,13 +248,16 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
 
 template <typename XLEN>
 bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
-                       HartId hart_id)
+                       HartId hart_id, size_t max_steps_before_flush)
 {
     //TODO cnyce
-    //return AdvanceSimTruth(sim_truth, core_id, hart_id);
+    //return StepSim(sim_truth, core_id, hart_id);
 
-    auto stepped_truth = AdvanceSimTruth(sim_truth, core_id, hart_id);
-    auto stepped_test = AdvanceSimTest(sim_test, core_id, hart_id);
+    auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
+    auto stepped_test =
+        max_steps_before_flush > 0
+        ? StepSimWithFlush(sim_test, core_id, hart_id, max_steps_before_flush)
+        : StepSim(sim_test, core_id, hart_id);
 
     EXPECT_EQUAL(stepped_truth, stepped_test);
     if (stepped_truth && stepped_test)
@@ -270,32 +291,80 @@ std::string GenerateUUID()
     return oss.str();
 }
 
-int main(int argc, char** argv)
+// Parse the workload and 'max steps before flush' from command line arguments.
+// The test is either run like this for unit tests:
+//   ./FlushWorkload_test -w <workload>
+//
+// Or via the RunArchTests.py script which provides the workload path
+// and other parameters. Take the workload from the last cmdline argument.
+//   ./FlushWorkload_test --debug-dump-filename <fname> -p <isa_path> <isa> -w <workload>
+//
+// Or for manual debugging:
+//   ./FlushWorkload_test -w <workload> [--max-steps-before-flush <steps>] [--fast-forward-steps <steps>]
+//   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
+//   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
+std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
 {
-    // This test is either run like this for unit tests:
-    //   ./FlushWorkload_test <workload>
-    // Or via the RunArchTests.py script which provides the workload path
-    // and other parameters. Take the workload from the last cmdline argument.
-    if (argc < 2)
+    if (argc == 1)
     {
-        std::cout << "Must supply workload as last argument!" << std::endl;
-        return 1;
+        throw std::invalid_argument("Must supply workload");
     }
 
-    const std::string workload = argc == 2 ? argv[1] : argv[argc - 1];
+    std::string workload;
+    size_t max_steps_before_flush = 3;
+    size_t fast_forward_steps = 0;
+
+    for (int i = 1; i < argc; )
+    {
+        std::string arg = argv[i];
+        if (arg == "-w")
+        {
+            workload = argv[i + 1];
+            i += 2;
+            continue;
+        }
+        else if (arg == "--debug-dump-filename")
+        {
+            // Only used by the RunArchTests.py core ISA tests (Pegasus simulator, not cosim)
+            i += 2;
+            continue;
+        }
+        else if (arg == "-p")
+        {
+            // Only used by the RunArchTests.py core ISA tests (Pegasus simulator, not cosim)
+            i += 3;
+            continue;
+        }
+        else if (arg == "--max-steps-before-flush")
+        {
+            max_steps_before_flush = std::stoul(argv[i + 1]);
+            i += 2;
+            continue;
+        }
+        else if (arg == "--fast-forward-steps")
+        {
+            fast_forward_steps = std::stoul(argv[i + 1]);
+            i += 2;
+            continue;
+        }
+        else
+        {
+            throw std::invalid_argument("Unknown argument: " + arg);
+        }
+    }
+
     if (workload.empty())
     {
-        std::cout << "Must supply workload as last argument!" << std::endl;
-        return 1;
+        throw std::invalid_argument("Must supply workload");
     }
 
-    const std::string arch = GetArchFromPath(workload);
-    if (arch == "unknown")
-    {
-        std::cout << "Workload must start with 'rv32' or 'rv64' to indicate architecture!"
-                  << std::endl;
-        return 1;
-    }
+    return {workload, max_steps_before_flush, fast_forward_steps};
+}
+
+int main(int argc, char** argv)
+{
+    const auto [workload, max_steps_before_flush, fast_forward_steps] = ParseArgs(argc, argv);
+    const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
     sparta::SleeperThread::disableForever();
@@ -324,8 +393,13 @@ int main(int argc, char** argv)
         while (true)
         {
             ++step_count;
-            if (!advance_and_compare(cosim_truth, cosim_test, core_id, hart_id))
+            auto steps_before_flush = step_count <= fast_forward_steps ? 0 : max_steps_before_flush;
+            if (!advance_and_compare(cosim_truth, cosim_test, core_id, hart_id, steps_before_flush))
             {
+                if (ERROR_CODE)
+                {
+                    std::cout << "Mismatch detected at step " << step_count << std::endl;
+                }
                 break;
             }
         }
@@ -343,23 +417,41 @@ int main(int argc, char** argv)
     cosim_test.finish();
 
     // Final validation
-    auto validate_final_state = [&](PegasusCoSim & cosim)
+    auto validate_final_state = [&](PegasusCoSim & cosim_truth, PegasusCoSim & cosim_test)
     {
-        auto state = cosim.getPegasusCore(core_id)->getPegasusState(hart_id);
-        auto sim_state = state->getSimState();
-        auto workload_exit_code = sim_state->workload_exit_code;
+        auto state_truth = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto sim_state_truth = state_truth->getSimState();
+        auto workload_exit_code_truth = sim_state_truth->workload_exit_code;
+        auto test_passed_truth = sim_state_truth->test_passed;
+        auto sim_stopped_truth = sim_state_truth->sim_stopped;
+        auto inst_count_truth = sim_state_truth->inst_count;
 
-        EXPECT_EQUAL(workload_exit_code, 0);
+        auto state_test = cosim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto sim_state_test = state_test->getSimState();
+        auto workload_exit_code_test = sim_state_test->workload_exit_code;
+        auto test_passed_test = sim_state_test->test_passed;
+        auto sim_stopped_test = sim_state_test->sim_stopped;
+        auto inst_count_test = sim_state_test->inst_count;
+
+        EXPECT_EQUAL(workload_exit_code_truth, 0);
+        EXPECT_EQUAL(workload_exit_code_test, 0);
+
+        EXPECT_TRUE(test_passed_truth);
+        EXPECT_TRUE(test_passed_test);
+
+        EXPECT_EQUAL(inst_count_truth, inst_count_test);
+
+        // No need to clutter the failures... sim would not have stopped
+        // if there were already mismatches.
+        if (ERROR_CODE == 0)
+        {
+            EXPECT_TRUE(sim_stopped_truth);
+            EXPECT_TRUE(sim_stopped_test);
+        }
     };
 
-    validate_final_state(cosim_truth);
-    validate_final_state(cosim_test);
+    validate_final_state(cosim_truth, cosim_test);
     EXPECT_EQUAL(exception_str, "");
-
-    if (ERROR_CODE)
-    {
-        std::cout << "Test failed after " << step_count << " steps." << std::endl;
-    }
 
     REPORT_ERROR;
     return ERROR_CODE;

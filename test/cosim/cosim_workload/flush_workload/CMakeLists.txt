@@ -8,7 +8,7 @@ file (CREATE_LINK ${SIM_BASE}/core/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOL
 
 # Quick-running test for "make pegasus_regress"
 file (CREATE_LINK ${SIM_BASE}/test/cosim/cosim_workload/rv64mi-p-csr ${CMAKE_CURRENT_BINARY_DIR}/rv64mi-p-csr SYMBOLIC)
-cosim_named_test(FlushWorkload_test_run FlushWorkload_test rv64mi-p-csr)
+cosim_named_test(FlushWorkload_test_run FlushWorkload_test -w rv64mi-p-csr)
 
 # Exhaustive test for "make pegasus_cosim_regress" to run all ISA tests in parallel
 find_package(Python3 REQUIRED)
@@ -21,7 +21,7 @@ add_custom_target(pegasus_cosim_regress
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/SummarizeCoSimISATestFailures.py
         --test-dir ${CMAKE_CURRENT_BINARY_DIR}
         --brief
-    COMMAND ${CMAKE_COMMAND} -E rm -f *.log
+    #COMMAND ${CMAKE_COMMAND} -E rm -f *.log
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     USES_TERMINAL
     DEPENDS FlushWorkload_test

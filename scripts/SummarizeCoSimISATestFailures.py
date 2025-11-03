@@ -30,16 +30,12 @@ def ExtractFailure(log_file, failure_dict):
                 pattern = re.compile(r"Test\s+'([^']+)'\s+FAILED\s+on\s+line\s+(\d+)\s+in\s+file\s+([^\s]+)")
                 match = pattern.search(line)
                 if not match:
-                    return
+                    continue
 
-                test_expr, line_num, filepath = match.groups()
-                filename = os.path.basename(filepath)
-
-                summary = f"FAILED on line {line_num} in {filename}: {test_expr}"
+                test_expr, _, _ = match.groups()
                 similar_failures = failure_dict.get(test_expr, [])
                 similar_failures.append(os.path.basename(log_file))
                 failure_dict[test_expr] = similar_failures
-                return
 
 # Walk the current directory and find all .log files
 failure_dict = {}
@@ -63,7 +59,8 @@ def PrintBriefFailures(failure_dict):
         log_files = failure_dict[test_expr]
         print(f"Test Expression: '{test_expr}' failed in {len(log_files)} log file(s). First few:")
         for log_file in log_files[:5]:
-            print(f"    - {log_file}")
+            test_name = log_file.rstrip('.log')
+            print(f"    - {test_name}")
         if len(log_files) > 5:
             print(f"    ... and {len(log_files) - 5} more.")
 
