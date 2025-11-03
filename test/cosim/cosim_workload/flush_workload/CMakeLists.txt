@@ -21,7 +21,7 @@ add_custom_target(pegasus_cosim_regress
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/SummarizeCoSimISATestFailures.py
         --test-dir ${CMAKE_CURRENT_BINARY_DIR}
         --brief
-    #COMMAND ${CMAKE_COMMAND} -E rm -f *.log
+    COMMAND ${CMAKE_COMMAND} -E rm -f *.log
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     USES_TERMINAL
     DEPENDS FlushWorkload_test
