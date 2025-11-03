@@ -888,7 +888,7 @@ int main()
 
     // Test the script-generated reg_*.json files (this is basically testing the script, not the
     // registers)
-    testRegFileNoThrow("reg_csr.json");
+    testRegFileNoThrow("reg_csr_hart.json");
     testRegFileNoThrow("reg_int.json");
     testRegFileNoThrow("reg_fp.json");
     testRegFileNoThrow("reg_vec128.json");

@@ -1,3 +1,5 @@
+RVZABHA_MAVIS_EXTS = ["zabha"]
+
 RV32ZABHA_INST = [
     {'mnemonic': 'lr.b', 'handler': 'lr_b', 'cost': 1, 'tags': 'ZABHA_EXT_32', 'memory': True, 'cof': False},
     {'mnemonic': 'sc.b', 'handler': 'sc_b', 'cost': 1, 'tags': 'ZABHA_EXT_32', 'memory': True, 'cof': False},

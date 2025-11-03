@@ -1,5 +1,5 @@
 #include "core/observers/InstructionLogger.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusInst.hpp"
 #include "include/PegasusUtils.hpp"
 
@@ -323,7 +323,7 @@ namespace pegasus
         inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger
-        const auto & symbols = state->getPegasusSystem()->getSymbols();
+        const auto & symbols = state->getCore()->getSystem()->getSymbols();
         if (symbols.find(pc_) != symbols.end())
         {
             inst_log_writer_->writeSymbols(symbols.at(pc_));

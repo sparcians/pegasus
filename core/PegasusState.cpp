@@ -1,3 +1,4 @@
+#include "core/PegasusCore.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/VecElements.hpp"
@@ -23,111 +24,22 @@
 
 namespace pegasus
 {
-    std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
-    {
-        std::unordered_set<PrivMode> priv_modes;
-
-        for (const char mode : priv)
-        {
-            if (mode == 'm')
-            {
-                priv_modes.emplace(PrivMode::MACHINE);
-            }
-            else if (mode == 's')
-            {
-                priv_modes.emplace(PrivMode::SUPERVISOR);
-            }
-            else if (mode == 'u')
-            {
-                priv_modes.emplace(PrivMode::USER);
-            }
-            else
-            {
-                sparta_assert(false, "Unsupported privilege modes: "
-                                         << priv
-                                         << "\nSupported privilege modes are: Machine (M), "
-                                            "Supervisor (S) and User (U)");
-            }
-        }
-
-        return priv_modes;
-    }
-
-    uint32_t getXlenFromIsaString(const std::string & isa_string)
-    {
-        if (isa_string.find("32") != std::string::npos)
-        {
-            return 32;
-        }
-        else if (isa_string.find("64") != std::string::npos)
-        {
-            return 64;
-        }
-        else
-        {
-            sparta_assert(false, "Failed to determine XLEN from ISA string: " << isa_string);
-        }
-    }
-
-    bool PegasusState::validateISAString_(std::string & unsupportedExt)
-    {
-        const auto & supported_exts =
-            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
-
-        const auto hasExtension = [&](const std::string & ext) {
-            return std::find(supported_exts.begin(), supported_exts.end(), ext)
-                   != supported_exts.end();
-        };
-
-        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
-        {
-            if (!hasExtension(ext.first))
-            {
-                unsupportedExt = ext.first;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
-        isa_string_(p->isa),
-        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         vlen_(p->vlen),
-        xlen_(getXlenFromIsaString(isa_string_)),
-        supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
-        supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
-        isa_file_path_(p->isa_file_path),
-        uarch_file_path_(p->uarch_file_path),
+        xlen_(p->xlen),
         csr_values_json_(p->csr_values),
-        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
-            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         ilimit_(p->ilimit),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
-        hypervisor_enabled_(extension_manager_.isEnabled("h")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim")
     {
-        sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
-        sparta_assert(xlen_ == extension_manager_.getXLEN());
-
-        extension_manager_.setISA(isa_string_);
-
-        std::string unsupportedExt;
-        if (!validateISAString_(unsupportedExt))
-        {
-            sparta_assert(false,
-                          "ISA extension: " << unsupportedExt
-                                            << " is not supported in isa_string: " << isa_string_);
-        }
-
+        // Set up register sets
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
         int_rset_ =
             RegisterSet::create(hart_tn, json_dir + std::string("/reg_int.json"), "int_regs");
@@ -135,7 +47,7 @@ namespace pegasus
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
         vec_rset_ = RegisterSet::create(hart_tn, json_dir + vec_reg_json, "vec_regs");
         csr_rset_ =
-            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr.json"), "csr_regs");
+            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr_hart.json"), "csr_regs");
 
         auto add_registers = [this](const auto & reg_set)
         {
@@ -183,38 +95,16 @@ namespace pegasus
     // Not default -- defined in source file to reduce massive inlining
     PegasusState::~PegasusState() {}
 
+    uint64_t PegasusState::getXlen() const { return xlen_; }
+
     void PegasusState::onBindTreeEarly_()
     {
         auto hart_tn = getContainer();
+
         fetch_unit_ = hart_tn->getChild("fetch")->getResourceAs<Fetch*>();
         execute_unit_ = hart_tn->getChild("execute")->getResourceAs<Execute*>();
         translate_unit_ = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         exception_unit_ = hart_tn->getChild("exception")->getResourceAs<Exception*>();
-
-        // Initialize Mavis
-        DLOG("Initializing Mavis with ISA string " << isa_string_);
-
-        mavis_ = std::make_unique<MavisType>(
-            extension_manager_.constructMavis<
-                PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>(
-                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
-                {},                                    // inclusions
-                {},                                    // exclusions
-                PegasusInstAllocatorWrapper<PegasusInstAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(hart_tn))->inst_allocator),
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(hart_tn))->extractor_allocator,
-                    this)));
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
@@ -297,7 +187,7 @@ namespace pegasus
 
         for (auto & obs : observers_)
         {
-            obs->registerReadWriteMemCallbacks(pegasus_system_->getSystemMemory());
+            obs->registerReadWriteMemCallbacks(pegasus_core_->getSystem()->getSystemMemory());
             for (auto reg : csr_rset_->getRegisters())
             {
                 obs->registerReadWriteCsrCallbacks(reg);
@@ -305,23 +195,9 @@ namespace pegasus
         }
     }
 
-    void PegasusState::changeMavisContext()
-    {
-        extension_manager_.switchMavisContext(*mavis_.get());
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
-    }
-
     void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
     {
-        sparta_assert(isPrivilegeModeSupported(priv_mode),
+        sparta_assert(pegasus_core_->isPrivilegeModeSupported(priv_mode),
                       "Attempting to change privilege mode to an unsupported mode: " << priv_mode);
         virtual_mode_ = virt_mode && (priv_mode != PrivMode::MACHINE);
         priv_mode_ = priv_mode;
@@ -352,22 +228,6 @@ namespace pegasus
         DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
                         DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
         translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
-    }
-
-    mavis::FileNameListType PegasusState::getUArchFiles_() const
-    {
-        const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str + "/gen";
-        if (xlen_ == 64)
-        {
-            const mavis::FileNameListType uarch_files = RV64_UARCH_JSON_LIST;
-            return uarch_files;
-        }
-        else
-        {
-            const mavis::FileNameListType uarch_files = RV32_UARCH_JSON_LIST;
-            return uarch_files;
-        }
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -423,25 +283,6 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN> uint32_t PegasusState::getMisaExtFieldValue_() const
-    {
-        uint32_t ext_val = 0;
-        for (char ext = 'a'; ext <= 'z'; ++ext)
-        {
-            const std::string ext_str = std::string(1, ext);
-            if (extension_manager_.isEnabled(ext_str))
-            {
-                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
-            }
-        }
-
-        // FIXME: Assume both User and Supervisor mode are supported
-        ext_val |= 1 << CSR::MISA::u::high_bit;
-        ext_val |= 1 << CSR::MISA::s::high_bit;
-
-        return ext_val;
-    }
-
     void PegasusState::enableInteractiveMode()
     {
         sparta_assert(sim_controller_ == nullptr, "Interactive mode is already enabled");
@@ -472,7 +313,7 @@ namespace pegasus
 
     template <typename MemoryType> MemoryType PegasusState::readMemory(const Addr paddr)
     {
-        auto* memory = pegasus_system_->getSystemMemory();
+        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -490,7 +331,7 @@ namespace pegasus
     template <typename MemoryType>
     void PegasusState::writeMemory(const Addr paddr, const MemoryType value)
     {
-        auto* memory = pegasus_system_->getSystemMemory();
+        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -573,7 +414,7 @@ namespace pegasus
     // This is used mostly for system call emulation
     void PegasusState::setupProgramStack(const std::vector<std::string> & program_arguments)
     {
-        if (false == getExecuteUnit()->getSystemCallEmulation())
+        if (false == pegasus_core_->isSystemCallEmulationEnabled())
         {
             // System call emulation is not enabled.  There's a good
             // chance we might be running a bare metal binary so no
@@ -641,7 +482,7 @@ namespace pegasus
         sparta_assert(sp != 0, "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "
                                "to set it to something...smarter");
 
-        auto* memory = sparta::notNull(pegasus_system_)->getSystemMemory();
+        auto* memory = sparta::notNull(pegasus_core_->getSystem())->getSystemMemory();
         sparta_assert(memory != nullptr, "Got no memory to preload with the argument stack");
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -683,19 +524,19 @@ namespace pegasus
         const auto COMPAT_HWCAP_ISA_V(1 << ('V' - 'A'));
 
         uint64_t a_val = COMPAT_HWCAP_ISA_I | COMPAT_HWCAP_ISA_M | COMPAT_HWCAP_ISA_A;
-        if (extension_manager_.isEnabled("f"))
+        if (pegasus_core_->isExtensionEnabled("f"))
         {
             a_val |= COMPAT_HWCAP_ISA_F;
         }
-        if (extension_manager_.isEnabled("d"))
+        if (pegasus_core_->isExtensionEnabled("d"))
         {
             a_val |= COMPAT_HWCAP_ISA_D;
         }
-        if (extension_manager_.isEnabled("c"))
+        if (pegasus_core_->isExtensionEnabled("c"))
         {
             a_val |= COMPAT_HWCAP_ISA_C;
         }
-        if (extension_manager_.isEnabled("v"))
+        if (pegasus_core_->isExtensionEnabled("v"))
         {
             a_val |= COMPAT_HWCAP_ISA_V;
         }
@@ -750,7 +591,7 @@ namespace pegasus
                 const uint64_t xlen_val = 2;
                 POKE_CSR_FIELD<RV64>(this, MISA, "mxl", xlen_val);
 
-                const uint32_t ext_val = getMisaExtFieldValue_<RV64>();
+                const uint32_t ext_val = pegasus_core_->getMisaExtFieldValue<RV64>();
                 POKE_CSR_FIELD<RV64>(this, MISA, "extensions", ext_val);
 
                 // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
@@ -765,7 +606,7 @@ namespace pegasus
                 const uint32_t xlen_val = 1;
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
 
-                const uint32_t ext_val = getMisaExtFieldValue_<RV32>();
+                const uint32_t ext_val = pegasus_core_->getMisaExtFieldValue<RV32>();
                 POKE_CSR_FIELD<RV32>(this, MISA, "extensions", ext_val);
             }
 

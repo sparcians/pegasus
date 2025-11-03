@@ -1,3 +1,5 @@
+RVD_MAVIS_EXTS = ["d", "zcd"]
+
 RV32D_INST = [
     {'mnemonic': 'fmv.w.x', 'handler': 'fmv_w_x', 'cost': 1, 'tags': 'D_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'fmv.x.w', 'handler': 'fmv_x_w', 'cost': 1, 'tags': 'D_EXT_32', 'memory': False, 'cof': False},

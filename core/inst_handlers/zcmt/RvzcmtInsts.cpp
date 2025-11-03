@@ -10,7 +10,7 @@
 namespace pegasus
 {
     template <typename XLEN>
-    void RvzcmtInsts::getInstHandlers(Execute::InstHandlersMap & inst_handlers)
+    void RvzcmtInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
@@ -38,10 +38,10 @@ namespace pegasus
                 nullptr, "cm_jalt", ActionTags::COMPUTE_ADDR_TAG));
     }
 
-    template void RvzcmtInsts::getInstHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvzcmtInsts::getInstHandlers<RV64>(Execute::InstHandlersMap &);
-    template void RvzcmtInsts::getInstComputeAddressHandlers<RV32>(Execute::InstHandlersMap &);
-    template void RvzcmtInsts::getInstComputeAddressHandlers<RV64>(Execute::InstHandlersMap &);
+    template void RvzcmtInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvzcmtInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
+    template void RvzcmtInsts::getInstComputeAddressHandlers<RV32>(InstHandlers::InstHandlersMap &);
+    template void RvzcmtInsts::getInstComputeAddressHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
     template <typename XLEN>
     Action::ItrType RvzcmtInsts::computeAddressHandler_(pegasus::PegasusState* state,

@@ -1,3 +1,5 @@
+RVZICSR_MAVIS_EXTS = ["zicsr"]
+
 RV32ZICSR_INST = [
     {'mnemonic': 'csrrw', 'handler': 'csrrw', 'cost': 1, 'tags': 'BASE_EXT_32', 'memory': False, 'cof': False},
     {'mnemonic': 'csrrs', 'handler': 'csrrs', 'cost': 1, 'tags': 'BASE_EXT_32', 'memory': False, 'cof': False},

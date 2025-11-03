@@ -14,7 +14,7 @@ pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart tr
 # Linux Tests
 set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000"
                       --reg "gp 0x77000"
-                      --reg "tp 0x7d000" -p top.core0.hart0.execute.params.enable_syscall_emulation true)
+                      --reg "tp 0x7d000" -p top.core0.params.enable_syscall_emulation true)
 
 set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
 pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/dhry.elf)

@@ -4,6 +4,7 @@
 
 import json
 import os
+import glob
 
 from RV64_CSR import CSR64_DEFS
 from RV32_CSR import CSR32_DEFS
@@ -78,7 +79,7 @@ def gen_csr_helpers_header():
             lines.append('        {')
 
             for csr_num, csr_defn in CSR_DEFS.items():
-                csr_fields = csr_defn[2]
+                csr_fields = csr_defn['fields']
                 if not csr_fields:
                     bit_mask = (1 << bit_shift_amt) - 1
                 else:
@@ -141,7 +142,7 @@ def gen_csr_helpers_header():
                 return permutations
 
             for csr_num, csr_defn in CSR_DEFS.items():
-                csr_fields = csr_defn[2]
+                csr_fields = csr_defn['fields']
                 if not csr_fields:
                     continue
 
@@ -210,7 +211,7 @@ def gen_csr_num_header():
     csr_largest_value = -1;
     for k, v in CSR_DEFS.items():
         csr_header_file.write("    static constexpr uint32_t "+
-                              (v[0]).upper()+
+                              (v['name']).upper()+
                               " = "+
                               str(hex(k))+
                               "; // "+
@@ -259,14 +260,21 @@ def gen_csr_field_idxs_header(reg_size):
     elif data_width == 64:
         json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "gen", "rv64"))
 
-    reg_csr_json_filename = os.path.join(json_dir, "reg_csr.json")
+    reg_csr_json_filename = glob.glob(os.path.join(json_dir, "reg_csr*.json"))
     reg_fp_json_filename  = os.path.join(json_dir, "reg_fp.json")
     reg_int_json_filename = os.path.join(json_dir, "reg_int.json")
     reg_vec_json_filename = os.path.join(json_dir, "reg_vec128.json")
 
     def WriteRegisterFieldIdxs(reg_type, reg_json_filename, fout):
-        with open(reg_json_filename) as reg_json_file:
-            reg_json = json.load(reg_json_file)
+        reg_json = []
+        if isinstance(reg_json_filename,list):
+            # Combine all JSON contents into a single list
+            for _file in reg_json_filename:
+                with open(_file) as reg_json_file:
+                    reg_json.extend(json.load(reg_json_file))
+        else:
+            with open(reg_json_filename) as reg_json_file:
+                reg_json = json.load(reg_json_file)
 
         def GetWritableFieldsBitMask(reg_json):
             if 'fields' not in reg_json:
@@ -356,11 +364,11 @@ def gen_csr_bitmask_header(reg_size):
 
     for k, v in CSR_DEFS.items():
         # Print only if there are bit flags
-        if v[2]:
+        if v['fields']:
             csr_bf_header_file.write("    namespace "+
-                                     (v[0]).upper()+
+                                     (v['name']).upper()+
                                      "_" + str(data_width) + "_bitmasks {\n")
-            fields = v[2]
+            fields = v['fields']
             for field_name in fields:
                 if field_name.lower() != "resv" and field_name.lower() != "wpri":
                     high_bit = fields[field_name]['high_bit']
@@ -370,7 +378,7 @@ def gen_csr_bitmask_header(reg_size):
                                              field_name + " = " + hex(mask) + ";\n")
 
             csr_bf_header_file.write("    } // namespace "+
-                                     (v[0]).upper()+
+                                     (v['name']).upper()+
                                      "_" + str(data_width) + "_bitfield\n\n")
 
             csr_keys_with_bitmasks.add(k)
@@ -388,11 +396,11 @@ def gen_csr_bitmask_header(reg_size):
             continue
 
         csr_num = int(k)
-        csr_name = v[0].upper()
+        csr_name = v['name'].upper()
 
         csr_bf_header_file.write('            // {}\n'.format(csr_name))
         csr_bf_header_file.write('            csr_bitmasks[{}] = {{\n'.format(csr_num))
-        fields = v[2]
+        fields = v['fields']
         bitmasks = []
         for field_name in fields:
             if field_name.lower() != "resv" and field_name.lower() != "wpri":

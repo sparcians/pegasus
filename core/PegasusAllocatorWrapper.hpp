@@ -4,6 +4,8 @@
 
 namespace pegasus
 {
+    class PegasusCore;
+
     template <typename AllocatorT> class PegasusInstAllocatorWrapper
     {
       public:
@@ -38,9 +40,9 @@ namespace pegasus
                       << " objects allocated/created" << std::endl;
         }
 
-        PegasusExtractorAllocatorWrapper(AllocatorT & allocator, PegasusState* state) :
+        PegasusExtractorAllocatorWrapper(AllocatorT & allocator, PegasusCore* core) :
             allocator_(allocator),
-            state_(state)
+            core_(core)
         {
         }
 
@@ -51,11 +53,11 @@ namespace pegasus
         template <typename... Args> InstTypePtr operator()(Args &&... args)
         {
             return sparta::allocate_sparta_shared_pointer<typename AllocatorT::element_type>(
-                allocator_, std::forward<Args>(args)..., state_);
+                allocator_, std::forward<Args>(args)..., core_);
         }
 
       private:
         AllocatorT & allocator_;
-        PegasusState* state_ = nullptr;
+        PegasusCore* core_ = nullptr;
     };
 } // namespace pegasus

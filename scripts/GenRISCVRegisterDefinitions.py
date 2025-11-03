@@ -49,8 +49,16 @@ def main():
     registers["int"].add_custom_register("resv_valid", num, "Load reservation valid", 8, [], {}, True)
 
     for name, regs in registers.items():
-        filename = "reg_" + name + ".json"
-        regs.write_json(filename)
+        contexts = regs.get_reg_ctx()
+
+        if len(contexts) > 1:
+            for ctx in contexts:
+                filename = f'reg_{name}_{ctx.lower()}.json'
+                regs.write_json(filename, ctx)
+        else:
+            filename = f'reg_{name}.json'
+            regs.write_json(filename)
+
 
     # Make rv32 directory if it doesn't exist
     os.chdir("..")
@@ -76,8 +84,15 @@ def main():
     registers["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
 
     for name, regs in registers.items():
-        filename = "reg_" + name + ".json"
-        regs.write_json(filename)
+        contexts = regs.get_reg_ctx()
+
+        if len(contexts) > 1:
+            for ctx in contexts:
+                filename = f'reg_{name}_{ctx.lower()}.json'
+                regs.write_json(filename, ctx)
+        else:
+            filename = f'reg_{name}.json'
+            regs.write_json(filename)
 
     # Generate Pegasus header files
     if not os.path.exists(inc_root):
