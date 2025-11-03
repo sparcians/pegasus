@@ -191,7 +191,8 @@ namespace pegasus::cosim
 
         bool hasCsr() const { return inst_csr_ != std::numeric_limits<uint32_t>::max(); }
 
-        uint32_t getCsr() const {
+        uint32_t getCsr() const
+        {
             sparta_assert(hasCsr(), "Event does not have a valid CSR!");
             return inst_csr_;
         }
@@ -264,8 +265,9 @@ namespace pegasus::cosim
                                                   //!< and interrupt Events
 
         // Inst CSR which may cause side effects
-        uint32_t inst_csr_ = std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
-                                                                   //!< instruction causing this Event
+        uint32_t inst_csr_ =
+            std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
+                                                  //!< instruction causing this Event
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,17 +301,17 @@ namespace pegasus::cosim
             std::vector<std::string> extensions;
             bool enabled;
 
-            MavisExtensions(const std::vector<std::string> & extensions, bool enabled)
-                : extensions(extensions)
-                , enabled(enabled)
-            {}
+            MavisExtensions(const std::vector<std::string> & extensions, bool enabled) :
+                extensions(extensions),
+                enabled(enabled)
+            {
+            }
 
             MavisExtensions() = default;
 
             bool operator==(const MavisExtensions & other) const = default;
 
-            template <typename Archive>
-            void serialize(Archive& ar, const unsigned int /*version*/)
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
             {
                 ar & extensions;
                 ar & enabled;

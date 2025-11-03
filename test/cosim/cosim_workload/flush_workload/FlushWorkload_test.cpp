@@ -15,7 +15,7 @@
 using namespace pegasus;
 using namespace pegasus::cosim;
 
-std::string GetArchFromPath(const std::string& path)
+std::string GetArchFromPath(const std::string & path)
 {
     // Get the filename only (handles both absolute and relative paths)
     std::filesystem::path p(path);
@@ -25,13 +25,15 @@ std::string GetArchFromPath(const std::string& path)
     std::regex rv_pattern(R"(^(rv(32|64)))");
 
     std::smatch match;
-    if (std::regex_search(filename, match, rv_pattern)) {
+    if (std::regex_search(filename, match, rv_pattern))
+    {
         return match.str(1); // "rv32" or "rv64"
     }
 
     // Optional: fall back to searching anywhere in the string
     std::regex anywhere(R"(rv(32|64))");
-    if (std::regex_search(path, match, anywhere)) {
+    if (std::regex_search(path, match, anywhere))
+    {
         return match.str(0);
     }
 
@@ -53,7 +55,8 @@ bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
     return true;
 }
 
-bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id, size_t max_steps_before_flush = 3)
+bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
+                      size_t max_steps_before_flush = 3)
 {
     auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
 
@@ -251,10 +254,9 @@ bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId
                        HartId hart_id, size_t max_steps_before_flush)
 {
     auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
-    auto stepped_test =
-        max_steps_before_flush > 0
-        ? StepSimWithFlush(sim_test, core_id, hart_id, max_steps_before_flush)
-        : StepSim(sim_test, core_id, hart_id);
+    auto stepped_test = max_steps_before_flush > 0
+                            ? StepSimWithFlush(sim_test, core_id, hart_id, max_steps_before_flush)
+                            : StepSim(sim_test, core_id, hart_id);
 
     EXPECT_EQUAL(stepped_truth, stepped_test);
     if (stepped_truth && stepped_test)
@@ -278,12 +280,10 @@ std::string GenerateUUID()
     part2 = (part2 & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
 
     std::ostringstream oss;
-    oss << std::hex << std::setfill('0')
-        << std::setw(8)  << ((part1 >> 32) & 0xFFFFFFFFULL) << '-'
-        << std::setw(4)  << ((part1 >> 16) & 0xFFFFULL) << '-'
-        << std::setw(4)  << (part1 & 0xFFFFULL) << '-'
-        << std::setw(4)  << ((part2 >> 48) & 0xFFFFULL) << '-'
-        << std::setw(12) << (part2 & 0xFFFFFFFFFFFFULL);
+    oss << std::hex << std::setfill('0') << std::setw(8) << ((part1 >> 32) & 0xFFFFFFFFULL) << '-'
+        << std::setw(4) << ((part1 >> 16) & 0xFFFFULL) << '-' << std::setw(4) << (part1 & 0xFFFFULL)
+        << '-' << std::setw(4) << ((part2 >> 48) & 0xFFFFULL) << '-' << std::setw(12)
+        << (part2 & 0xFFFFFFFFFFFFULL);
 
     return oss.str();
 }
@@ -297,7 +297,8 @@ std::string GenerateUUID()
 //   ./FlushWorkload_test --debug-dump-filename <fname> -p <isa_path> <isa> -w <workload>
 //
 // Or for manual debugging:
-//   ./FlushWorkload_test -w <workload> [--max-steps-before-flush <steps>] [--fast-forward-steps <steps>]
+//   ./FlushWorkload_test -w <workload> [--max-steps-before-flush <steps>] [--fast-forward-steps
+//   <steps>]
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
 std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
@@ -311,7 +312,7 @@ std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
 
-    for (int i = 1; i < argc; )
+    for (int i = 1; i < argc;)
     {
         std::string arg = argv[i];
         if (arg == "-w")

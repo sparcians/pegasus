@@ -19,7 +19,8 @@
 namespace pegasus::cosim
 {
 
-    CoSimEventPipeline::CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id, PegasusState* state) :
+    CoSimEventPipeline::CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id,
+                                           HartId hart_id, PegasusState* state) :
         db_mgr_(db_mgr),
         core_id_(core_id),
         hart_id_(hart_id),
@@ -354,13 +355,11 @@ namespace pegasus::cosim
         // hit for every enableExtension/disableExtension call otherwise.
         struct FlushingGuard
         {
-            FlushingGuard(bool & flushing_flag) : flag_(flushing_flag)
-            {
-                flag_ = true;
-            }
+            FlushingGuard(bool & flushing_flag) : flag_(flushing_flag) { flag_ = true; }
+
             ~FlushingGuard() { flag_ = false; }
 
-         private:
+          private:
             bool & flag_;
         } guard(flushing_);
 
@@ -402,15 +401,14 @@ namespace pegasus::cosim
                 }
                 else
                 {
-                    exts_to_enable.insert(exts_to_enable.end(), ext_names.begin(),
-                                           ext_names.end());
+                    exts_to_enable.insert(exts_to_enable.end(), ext_names.begin(), ext_names.end());
                 }
             }
 
-            exts_to_enable.erase(
-                std::unique(exts_to_enable.begin(), exts_to_enable.end()), exts_to_enable.end());
-            exts_to_disable.erase(
-                std::unique(exts_to_disable.begin(), exts_to_disable.end()), exts_to_disable.end());
+            exts_to_enable.erase(std::unique(exts_to_enable.begin(), exts_to_enable.end()),
+                                 exts_to_enable.end());
+            exts_to_disable.erase(std::unique(exts_to_disable.begin(), exts_to_disable.end()),
+                                  exts_to_disable.end());
 
             if (!exts_to_enable.empty() || !exts_to_disable.empty())
             {
@@ -506,9 +504,10 @@ namespace pegasus::cosim
                 auto inst = state->getMavis()->makeInst(reload_evt.getOpcode(), state);
                 inst->updateVecConfig(state);
                 state->setCurrentInst(inst);
-            } catch (const mavis::BaseException &) {
             }
-
+            catch (const mavis::BaseException &)
+            {
+            }
         };
 
         if (!uncommitted_evts_buffer_.empty())
@@ -572,8 +571,9 @@ namespace pegasus::cosim
 
         if (!uncommitted_evts_buffer_.empty())
         {
-            std::cout << "WARNING: At sim end, event pipeline at core " << core_id_ << ", hart " << hart_id_
-                      << " had " << uncommitted_evts_buffer_.size() << " uncommitted events.\n";
+            std::cout << "WARNING: At sim end, event pipeline at core " << core_id_ << ", hart "
+                      << hart_id_ << " had " << uncommitted_evts_buffer_.size()
+                      << " uncommitted events.\n";
         }
     }
 

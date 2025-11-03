@@ -56,11 +56,8 @@ namespace pegasus::cosim
         static constexpr auto NAME = "cosim-event-pipeline";
 
         /// Constructor must have this signature for simdb::AppManager factories
-        CoSimEventPipeline(
-            simdb::DatabaseManager* db_mgr,
-            CoreId core_id,
-            HartId hart_id,
-            PegasusState* state);
+        CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id,
+                           PegasusState* state);
 
         /// Set the associated observer. Not added to the ctor to avoid circular
         /// dependencies between CoSimEventPipeline and CoSimObserver (each needs
@@ -162,7 +159,7 @@ namespace pegasus::cosim
         const HartId hart_id_;
 
         /// PegasusState associated with this pipeline.
-        PegasusState *const state_;
+        PegasusState* const state_;
 
         /// CoSimObserver associated with this pipeline.
         CoSimObserver* observer_ = nullptr;
