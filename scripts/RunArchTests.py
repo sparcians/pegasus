@@ -210,6 +210,7 @@ def main():
     parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
     parser.add_argument("--pegasus-exe", type=str, default="./pegasus", help="Path to the Pegasus executable (default: ./pegasus)")
     parser.add_argument("--serial", action='store_true', default=False, help="Run tests serially instead of in parallel")
+    parser.add_argument("--expected-pass-rate", type=float, help="Expected pass rate (for CI purposes only)")
     args = parser.parse_args()
 
     global be_noisy
@@ -328,9 +329,13 @@ def main():
 
     expected_pass_rate = expected_passing_tests/total_tests
     print("EXPECTED RATE: {:.2%} ({}/{})".format(expected_pass_rate, expected_passing_tests, total_tests))
-    if (num_passed < expected_passing_tests):
-        print("ERROR: failed!")
 
+    if args.expected_pass_rate is not None:
+        if round(pass_rate*100, 2) < args.expected_pass_rate:
+            print(f"ERROR: Pass rate {pass_rate:.2%} is below expected pass rate of {args.expected_pass_rate}!")
+            sys.exit(1)
+    elif (num_passed < expected_passing_tests):
+        print("ERROR: failed!")
 
 if __name__ == "__main__":
     main()

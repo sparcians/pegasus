@@ -16,3 +16,10 @@ if [ ${REGRESS_PEGASUS} -ne 0 ]; then
     echo "ERROR: regress of Pegasus FAILED!!!"
     exit 1
 fi
+
+make -j$(nproc --all) pegasus_cosim_regress
+REGRESS_PEGASUS=$?
+if [ ${REGRESS_PEGASUS} -ne 0 ]; then
+    echo "ERROR: regress of Pegasus FAILED!!!"
+    exit 1
+fi
