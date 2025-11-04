@@ -170,8 +170,33 @@ def print_sparta_failures():
         for log_file in log_files:
             print(f"    - {log_file}")
 
-    if failure_dict:
-        print()
+    if not failure_dict:
+        return
+
+    print()
+
+    failures_per_log_file = {}
+    for test_expr, log_files in failure_dict.items():
+        for log_file in log_files:
+            failures = failures_per_log_file.get(log_file, set())
+            failures.add(test_expr)
+            failures_per_log_file[log_file] = failures
+
+    log_file_with_most_failures = max(failures_per_log_file.items(), key=lambda item: len(item[1]))
+    log_file, failures = log_file_with_most_failures
+    print(f"Log file with the most failures: {log_file} ({len(failures)} failures)")
+    for test_expr in sorted(failures):
+        print(f"    - {test_expr}")
+
+    print()
+
+    log_file_with_least_failures = min(failures_per_log_file.items(), key=lambda item: len(item[1]))
+    log_file, failures = log_file_with_least_failures
+    print(f"Log file with the least failures: {log_file} ({len(failures)} failures)")
+    for test_expr in sorted(failures):
+        print(f"    - {test_expr}")
+
+    print()
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the Tenstorrent architecture tests on Pegasus")
