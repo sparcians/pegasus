@@ -151,8 +151,8 @@ def extract_sparta_failures(log_file, failure_dict):
                     continue
 
                 test_expr, _, _ = match.groups()
-                similar_failures = failure_dict.get(test_expr, [])
-                similar_failures.append(os.path.basename(log_file))
+                similar_failures = failure_dict.get(test_expr, set())
+                similar_failures.add(os.path.basename(log_file))
                 failure_dict[test_expr] = similar_failures
 
 
@@ -167,7 +167,7 @@ def print_sparta_failures():
     for test_expr in sorted(failure_dict.keys()):
         log_files = failure_dict[test_expr]
         print(f"Test Expression: '{test_expr}' failed in {len(log_files)} log file(s):")
-        for log_file in log_files:
+        for log_file in sorted(log_files):
             print(f"    - {log_file}")
 
     if not failure_dict:
