@@ -42,9 +42,13 @@ namespace pegasus
         stf_writer_.setHeaderPC(inital_pc);
         stf_writer_.finalizeHeader();
         if (state->getXlen() == 32)
+        {
             recordRegState_<uint32_t>(state);
+        }
         else
+        {
             recordRegState_<uint64_t>(state);
+        }
     }
 
     template <typename XLEN, typename F>
@@ -127,84 +131,107 @@ namespace pegasus
             switch (fault_cause_.getValue())
             {
                 case FaultCause::INST_ADDR_MISALIGNED:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INST_ADDR_MISALIGN,
-                                                    READ_CSR_REG<XLEN>(state, MEPC));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::INST_ADDR_MISALIGN,
+                        static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)));
                     invalid_opcode = true;
                     break;
+
                 case FaultCause::INST_ACCESS:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INST_ADDR_FAULT,
-                                                    READ_CSR_REG<XLEN>(state, MEPC));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::INST_ADDR_FAULT,
+                        static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)));
                     invalid_opcode = true;
                     break;
+
                 case FaultCause::INST_PAGE_FAULT:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::INST_PAGE_FAULT,
-                        {READ_CSR_REG<XLEN>(state, MEPC), state->getXlen()});
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen()});
                     invalid_opcode = true;
                     break;
+
                 case FaultCause::LOAD_ADDR_MISALIGNED:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::LOAD_ADDR_MISALIGN,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::LOAD_ADDR_MISALIGN,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
+
                 case FaultCause::LOAD_ACCESS:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::LOAD_ACCESS_FAULT,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::LOAD_ACCESS_FAULT,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
+
                 case FaultCause::STORE_AMO_ADDR_MISALIGNED:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::STORE_ADDR_MISALIGN,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::STORE_ADDR_MISALIGN,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
+
                 case FaultCause::STORE_AMO_ACCESS:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::STORE_ACCESS_FAULT,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::STORE_ACCESS_FAULT,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
+
                 case FaultCause::LOAD_PAGE_FAULT:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::LOAD_PAGE_FAULT,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::LOAD_PAGE_FAULT,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
+
                 case FaultCause::STORE_AMO_PAGE_FAULT:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::STORE_PAGE_FAULT,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     state->getXlen(),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL)});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::STORE_PAGE_FAULT,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)), state->getXlen(),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     return; // tied to invalid opcode
+
                 case FaultCause::ILLEGAL_INST:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::ILLEGAL_INST,
-                                                    {READ_CSR_REG<XLEN>(state, MEPC),
-                                                     READ_CSR_REG<XLEN>(state, MTVAL),
-                                                     state->getXlen()});
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::ILLEGAL_INST,
+                        {static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)),
+                         static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVAL)),
+                         state->getXlen()});
                     invalid_opcode = true;
                     break;
+
                 case FaultCause::BREAKPOINT:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::BREAKPOINT,
-                                                    READ_CSR_REG<XLEN>(state, MEPC));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::BREAKPOINT,
+                        static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MEPC)));
                     break;
+
                 case FaultCause::USER_ECALL:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::USER_ECALL,
-                                                    READ_INT_REG<XLEN>(state, 17));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::USER_ECALL,
+                        static_cast<uint64_t>(READ_INT_REG<XLEN>(state, 17)));
                     break;
+
                 case FaultCause::SUPERVISOR_ECALL:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::SUPERVISOR_ECALL,
-                                                    READ_INT_REG<XLEN>(state, 17));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::SUPERVISOR_ECALL,
+                        static_cast<uint64_t>(READ_INT_REG<XLEN>(state, 17)));
                     break;
+
                 case FaultCause::MACHINE_ECALL:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::MACHINE_ECALL,
-                                                    READ_INT_REG<XLEN>(state, 17));
+                    stf_writer_ << stf::EventRecord(
+                        stf::EventRecord::TYPE::MACHINE_ECALL,
+                        static_cast<uint64_t>(READ_INT_REG<XLEN>(state, 17)));
                     break;
+
                 default:
                     sparta_assert(false, "STFLogger: Unknown fault cause");
             }
-            stf_writer_ << stf::EventPCTargetRecord(READ_CSR_REG<XLEN>(state, MTVEC));
+
+            stf_writer_ << stf::EventPCTargetRecord(
+                static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
         }
         else if (interrupt_cause_.isValid())
         {
@@ -214,30 +241,39 @@ namespace pegasus
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_SUPERVISOR_SOFTWARE,
                                                     {0});
                     break;
+
                 case InterruptCause::MACHINE_SOFTWARE:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_SOFTWARE,
                                                     {0});
                     break;
+
                 case InterruptCause::SUPERVISOR_TIMER:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_SUPERVISOR_TIMER,
                                                     {0});
                     break;
+
                 case InterruptCause::MACHINE_TIMER:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_TIMER, {0});
                     break;
+
                 case InterruptCause::SUPERVISOR_EXTERNAL:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_EXT, {0});
                     break;
+
                 case InterruptCause::MACHINE_EXTERNAL:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_EXT, {0});
                     break;
+
                 case InterruptCause::COUNTER_OVERFLOW:
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_SOFTWARE, {0});
                     break;
+
                 default:
                     sparta_assert(false, "STFLogger: Unknown interrupt");
             }
-            stf_writer_ << stf::EventPCTargetRecord(READ_CSR_REG<XLEN>(state, MTVEC));
+
+            stf_writer_ << stf::EventPCTargetRecord(
+                static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
         }
         else if (state->getCurrentInst()->isChangeOfFlowInst())
         {
@@ -301,18 +337,14 @@ namespace pegasus
 
         bool invalid_opcode = false;
 
-        // TODO: If the stf lib provides support for stf::EventRecord to contain 32 bit value, the
-        // call to stfWrite_EventRecord_ should be:
-        //  if (state->getXlen() == 32)
-        //  {
-        //      stfWrite_EventRecord_<uint32_t>(state, invalid_opcode);
-        //  }
-        //  else
-        //  {
-        //      stfWrite_EventRecord_<uint64_t>(state, invalid_opcode);
-        //  }
-
-        stfWrite_EventRecord_<uint64_t>(state, invalid_opcode);
+        if (state->getXlen() == 32)
+        {
+            stfWrite_EventRecord_<uint32_t>(state, invalid_opcode);
+        }
+        else
+        {
+            stfWrite_EventRecord_<uint64_t>(state, invalid_opcode);
+        }
 
         uint64_t opcode = state->getCurrentInst()->getOpcode();
 
