@@ -437,21 +437,10 @@ int main(int argc, char** argv)
         auto sim_stopped_test = sim_state_test->sim_stopped;
         auto inst_count_test = sim_state_test->inst_count;
 
-        EXPECT_EQUAL(workload_exit_code_truth, 0);
-        EXPECT_EQUAL(workload_exit_code_test, 0);
-
-        EXPECT_TRUE(test_passed_truth);
-        EXPECT_TRUE(test_passed_test);
-
+        EXPECT_EQUAL(workload_exit_code_truth, workload_exit_code_test);
+        EXPECT_EQUAL(test_passed_truth, test_passed_test);
         EXPECT_EQUAL(inst_count_truth, inst_count_test);
-
-        // No need to clutter the failures... sim would not have stopped
-        // if there were already mismatches.
-        if (ERROR_CODE == 0)
-        {
-            EXPECT_TRUE(sim_stopped_truth);
-            EXPECT_TRUE(sim_stopped_test);
-        }
+        EXPECT_EQUAL(sim_stopped_truth, sim_stopped_test);
     };
 
     validate_final_state(cosim_truth, cosim_test);
