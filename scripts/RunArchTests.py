@@ -213,6 +213,15 @@ def main():
     parser.add_argument("--expected-pass-rate", type=float, help="Expected pass rate (for CI purposes only)")
     args = parser.parse_args()
 
+    # Extract the RISC-V tarball if needed
+    if args.riscv_arch is not None:
+        if not os.path.isdir(args.riscv_arch):
+            tarball = args.riscv_arch + ".tar.gz"
+            if os.path.isfile(tarball):
+                print("Extracting RISC-V arch tests from", tarball)
+                subprocess.run(["tar", "-xzf", tarball], check=True)
+                args.riscv_arch = os.getcwd() + "/" + os.path.basename(args.riscv_arch)
+
     global be_noisy
 
     ###########################################################################
