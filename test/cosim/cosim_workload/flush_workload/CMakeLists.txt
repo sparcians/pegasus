@@ -17,11 +17,7 @@ add_custom_target(pegasus_cosim_regress
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/RunArchTests.py
         --rv64-only --riscv-arch ${CMAKE_SOURCE_DIR}/riscv-tests
         --pegasus-exe ${CMAKE_CURRENT_BINARY_DIR}/FlushWorkload_test
-    COMMAND ${CMAKE_COMMAND} -E rm -f *.db
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/SummarizeCoSimISATestFailures.py
-        --test-dir ${CMAKE_CURRENT_BINARY_DIR}
-        --brief
-    COMMAND ${CMAKE_COMMAND} -E rm -f *.log
+    COMMAND ${CMAKE_COMMAND} -E rm -f *.log *.db *.db-journal
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     USES_TERMINAL
     DEPENDS FlushWorkload_test

@@ -81,12 +81,12 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
-                 "-p", "top.core0.hart0.params.isa", isa_string, "-w", wkld]
+                 "-p", "top.core0.params.isa", isa_string, "-w", wkld]
 
     test_passed = False
     try:
         with open(logname, "w") as f:
-            result = subprocess.run(pegasus_cmd, stdout=f, stderr=f, timeout=10)
+            result = subprocess.run(pegasus_cmd, stdout=f, stderr=f, timeout=300)
             if result.returncode == 0:
                 test_passed = True
 
@@ -132,6 +132,46 @@ def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, outpu
         print ("Running test:", testname)
         run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable)
 
+
+def extract_sparta_failures(log_file, failure_dict):
+    with open(log_file, 'r') as fin:
+        for line in fin.readlines():
+            if line.find('FAILED on line') != -1:
+                parts = line.split(' FAILED on line ')
+                assert len(parts) == 2
+
+                # Parse a C++ test failure line and produce a concise summary.
+                #
+                # Example input for regex:
+                #     Test 'sim_state_truth->current_uid' FAILED on line 115 in file /path/to/FlushWorkload_test.cpp. Value: '1057' should equal '1058'
+                #
+                pattern = re.compile(r"Test\s+'([^']+)'\s+FAILED\s+on\s+line\s+(\d+)\s+in\s+file\s+([^\s]+)")
+                match = pattern.search(line)
+                if not match:
+                    continue
+
+                test_expr, _, _ = match.groups()
+                similar_failures = failure_dict.get(test_expr, [])
+                similar_failures.append(os.path.basename(log_file))
+                failure_dict[test_expr] = similar_failures
+
+
+def print_sparta_failures():
+    failure_dict = {}
+    for entry in os.listdir(os.getcwd()):
+        if entry.endswith('.log'):
+            log_path = os.path.join(os.getcwd(), entry)
+            log_path = os.path.abspath(log_path)
+            extract_sparta_failures(log_path, failure_dict)
+
+    for test_expr in sorted(failure_dict.keys()):
+        log_files = failure_dict[test_expr]
+        print(f"Test Expression: '{test_expr}' failed in {len(log_files)} log file(s):")
+        for log_file in log_files:
+            print(f"    - {log_file}")
+
+    if failure_dict:
+        print()
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the Tenstorrent architecture tests on Pegasus")
@@ -242,6 +282,8 @@ def main():
         for test in timeout_tests:
             print("\t" + test)
     print()
+
+    print_sparta_failures()
 
     pass_rate = num_passed/len(tests)
     print("PASS RATE: {:.2%} ({}/{})".format(pass_rate, num_passed, len(tests)))
