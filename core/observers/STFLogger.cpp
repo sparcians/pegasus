@@ -52,7 +52,7 @@ namespace pegasus
     }
 
     template <typename XLEN, typename F>
-    void STFLogger::stfWrite_InstRegRecord_(PegasusState* state, F get_stf_reg_type)
+    void STFLogger::writeInstRegRecord_(PegasusState* state, F get_stf_reg_type)
     {
         for (const auto & src_reg : src_regs_)
         {
@@ -124,7 +124,7 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    void STFLogger::stfWrite_EventRecord_(PegasusState* state, bool & invalid_opcode)
+    void STFLogger::writeEventRecord_(PegasusState* state, bool & invalid_opcode)
     {
         if (fault_cause_.isValid())
         {
@@ -304,46 +304,45 @@ namespace pegasus
 
         auto get_stf_reg_type = [](const RegType reg_type)
         {
-            if (reg_type == RegType::INTEGER)
+            switch (reg_type)
             {
-                return stf::Registers::STF_REG_TYPE::INTEGER;
-            }
-            else if (reg_type == RegType::FLOATING_POINT)
-            {
-                return stf::Registers::STF_REG_TYPE::FLOATING_POINT;
-            }
-            else if (reg_type == RegType::VECTOR)
-            {
-                return stf::Registers::STF_REG_TYPE::VECTOR;
-            }
-            else if (reg_type == RegType::CSR)
-            {
-                return stf::Registers::STF_REG_TYPE::CSR;
-            }
-            else
-            {
-                sparta_assert(false, "Invalid register type!");
+                case RegType::INTEGER:
+                    return stf::Registers::STF_REG_TYPE::INTEGER;
+
+                case RegType::FLOATING_POINT:
+                    return stf::Registers::STF_REG_TYPE::FLOATING_POINT;
+
+                case RegType::VECTOR:
+                    return stf::Registers::STF_REG_TYPE::VECTOR;
+
+                case RegType::CSR:
+                    return stf::Registers::STF_REG_TYPE::CSR;
+
+                default:
+                    sparta_assert(false, "Invalid register type!");
+                    // Added a dummy return to satisfy compiler (unreachable)
+                    return stf::Registers::STF_REG_TYPE::INTEGER;
             }
         };
 
         if (state->getXlen() == 32)
         {
-            stfWrite_InstRegRecord_<uint32_t>(state, get_stf_reg_type);
+            writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
         }
         else
         {
-            stfWrite_InstRegRecord_<uint64_t>(state, get_stf_reg_type);
+            writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
         }
 
         bool invalid_opcode = false;
 
         if (state->getXlen() == 32)
         {
-            stfWrite_EventRecord_<uint32_t>(state, invalid_opcode);
+            writeEventRecord_<uint32_t>(state, invalid_opcode);
         }
         else
         {
-            stfWrite_EventRecord_<uint64_t>(state, invalid_opcode);
+            writeEventRecord_<uint64_t>(state, invalid_opcode);
         }
 
         uint64_t opcode = state->getCurrentInst()->getOpcode();
