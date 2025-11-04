@@ -1,5 +1,6 @@
 set(AUTOGEN_RV32_REG_JSON_FILES
-  ${SIM_BASE}/arch/rv32/gen/reg_csr.json
+  ${SIM_BASE}/arch/rv32/gen/reg_csr_hart.json
+  ${SIM_BASE}/arch/rv32/gen/reg_csr_core.json
   ${SIM_BASE}/arch/rv32/gen/reg_fp.json
   ${SIM_BASE}/arch/rv32/gen/reg_int.json
   ${SIM_BASE}/arch/rv32/gen/reg_vec128.json
@@ -10,7 +11,8 @@ set(AUTOGEN_RV32_REG_JSON_FILES
 )
 
 set(AUTOGEN_RV64_REG_JSON_FILES
-  ${SIM_BASE}/arch/rv64/gen/reg_csr.json
+  ${SIM_BASE}/arch/rv64/gen/reg_csr_hart.json
+  ${SIM_BASE}/arch/rv64/gen/reg_csr_core.json
   ${SIM_BASE}/arch/rv64/gen/reg_fp.json
   ${SIM_BASE}/arch/rv64/gen/reg_int.json
   ${SIM_BASE}/arch/rv64/gen/reg_vec128.json
