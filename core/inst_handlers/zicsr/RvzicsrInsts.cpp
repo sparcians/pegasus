@@ -7,6 +7,8 @@
 #include "core/Exception.hpp"
 #include "core/Trap.hpp"
 
+#include "include/gen/CSRBitMasks32.hpp"
+
 extern "C"
 {
 #include "source/include/softfloat.h"
@@ -415,6 +417,19 @@ namespace pegasus
         // only write to the shared fields
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
+
+        // Update the summarize field
+        XLEN mstatus_fast_check_mask = 0;
+        if constexpr (std::is_same_v<XLEN, RV32>) {
+            mstatus_fast_check_mask = MSTATUS_32_bitmasks::XS | MSTATUS_32_bitmasks::FS;
+        }
+        else {
+            mstatus_fast_check_mask = MSTATUS_64_bitmasks::XS | MSTATUS_64_bitmasks::FS;
+        }
+
+        if (mstatus_val & mstatus_fast_check_mask) {
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", 0b1);
+        }
 
         auto & ext_manager = state->getCore()->getExtensionManager();
         // If FS is set to 0 (off), all floating point extensions are disabled
