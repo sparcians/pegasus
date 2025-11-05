@@ -147,7 +147,7 @@ namespace pegasus
                 case FaultCause::INST_PAGE_FAULT:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::INST_PAGE_FAULT,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen())});
                     invalid_opcode = true;
                     break;
@@ -155,7 +155,7 @@ namespace pegasus
                 case FaultCause::LOAD_ADDR_MISALIGNED:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::LOAD_ADDR_MISALIGN,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
@@ -163,7 +163,7 @@ namespace pegasus
                 case FaultCause::LOAD_ACCESS:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::LOAD_ACCESS_FAULT,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
@@ -171,7 +171,7 @@ namespace pegasus
                 case FaultCause::STORE_AMO_ADDR_MISALIGNED:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::STORE_ADDR_MISALIGN,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
@@ -179,7 +179,7 @@ namespace pegasus
                 case FaultCause::STORE_AMO_ACCESS:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::STORE_ACCESS_FAULT,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
@@ -187,7 +187,7 @@ namespace pegasus
                 case FaultCause::LOAD_PAGE_FAULT:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::LOAD_PAGE_FAULT,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     break;
@@ -195,7 +195,7 @@ namespace pegasus
                 case FaultCause::STORE_AMO_PAGE_FAULT:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::STORE_PAGE_FAULT,
-                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)), 
+                        {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
                     return; // tied to invalid opcode
@@ -260,19 +260,23 @@ namespace pegasus
                     break;
 
                 case InterruptCause::MACHINE_TIMER:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_TIMER, {static_cast<XLEN>(0)});
+                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_TIMER,
+                                                    {static_cast<XLEN>(0)});
                     break;
 
                 case InterruptCause::SUPERVISOR_EXTERNAL:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_EXT, {static_cast<XLEN>(0)});
+                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_EXT,
+                                                    {static_cast<XLEN>(0)});
                     break;
 
                 case InterruptCause::MACHINE_EXTERNAL:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_EXT, {static_cast<XLEN>(0)});
+                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_MACHINE_EXT,
+                                                    {static_cast<XLEN>(0)});
                     break;
 
                 case InterruptCause::COUNTER_OVERFLOW:
-                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_SOFTWARE, {static_cast<XLEN>(0)});
+                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::INT_USER_SOFTWARE,
+                                                    {static_cast<XLEN>(0)});
                     break;
 
                 default:
