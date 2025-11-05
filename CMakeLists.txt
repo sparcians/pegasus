@@ -149,7 +149,7 @@ FetchContent_MakeAvailable(spike)
 
 ################################################################################
 
-find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16)
+find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
 
 execute_process (
   COMMAND
