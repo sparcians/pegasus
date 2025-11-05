@@ -59,7 +59,8 @@ namespace pegasus
         const auto & supported_exts =
             (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
 
-        const auto hasExtension = [&](const std::string & ext) {
+        const auto hasExtension = [&](const std::string & ext)
+        {
             return std::find(supported_exts.begin(), supported_exts.end(), ext)
                    != supported_exts.end();
         };
@@ -251,11 +252,13 @@ namespace pegasus
         }
 
         // FIXME: Assume both User and Supervisor mode are supported
-        if constexpr (std::is_same_v<XLEN, RV64>) {
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
             ext_val |= 1 << CSR_64::MISA::u::high_bit;
             ext_val |= 1 << CSR_64::MISA::s::high_bit;
         }
-        else {
+        else
+        {
             ext_val |= 1 << CSR_32::MISA::u::high_bit;
             ext_val |= 1 << CSR_32::MISA::s::high_bit;
         }
