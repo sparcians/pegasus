@@ -12,8 +12,11 @@
 /// forward N times, then flush to the N-1 instruction. Then the comparison takes
 /// place, and we continue until the end of the workload.
 
-using namespace pegasus;
-using namespace pegasus::cosim;
+using pegasus::cosim::PegasusCoSim;
+using pegasus::cosim::EventAccessor;
+using pegasus::CoreId;
+using pegasus::HartId;
+using pegasus::RegisterSet;
 
 std::string GetArchFromPath(const std::string & path)
 {
