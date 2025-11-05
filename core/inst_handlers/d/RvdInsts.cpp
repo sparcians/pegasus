@@ -157,7 +157,7 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_sub(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -183,7 +183,7 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
-                                f64_to_ui32(float64_t{rs1_val}, getRM<RV64>(state), true)));
+                                f64_to_ui32(float64_t{rs1_val}, getRM<XLEN>(state), true)));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -193,7 +193,7 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -220,7 +220,7 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_mul(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -233,7 +233,7 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_sqrt(float64_t{rs1_val}).v);
         updateCsr<XLEN>(state);
@@ -245,7 +245,7 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -261,7 +261,7 @@ namespace pegasus
                                                Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -291,7 +291,7 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_div(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -329,7 +329,7 @@ namespace pegasus
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
                             signExtend<uint32_t, uint64_t>(
-                                f64_to_i32(float64_t{rs1_val}, getRM<RV64>(state), true)));
+                                f64_to_i32(float64_t{rs1_val}, getRM<XLEN>(state), true)));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -341,7 +341,7 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                            f64_to_ui64(float64_t{rs1_val}, getRM<RV64>(state), true));
+                            f64_to_ui64(float64_t{rs1_val}, getRM<XLEN>(state), true));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
@@ -377,7 +377,7 @@ namespace pegasus
                                              Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         WRITE_FP_REG<RV64>(state, inst->getRd(), f64_add(float64_t{rs1_val}, float64_t{rs2_val}).v);
@@ -390,7 +390,7 @@ namespace pegasus
                                               Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
         const uint64_t rs3_val = READ_FP_REG<RV64>(state, inst->getRs3());
@@ -432,7 +432,7 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
-        softfloat_roundingMode = getRM<RV64>(state);
+        softfloat_roundingMode = getRM<XLEN>(state);
         WRITE_FP_REG<RV64>(state, inst->getRd(),
                            nanBoxing<RV64, FLOAT_SP>(f64_to_f32(float64_t{rs1_val}).v));
         updateCsr<XLEN>(state);
@@ -513,7 +513,7 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         WRITE_INT_REG<XLEN>(state, inst->getRd(),
-                            f64_to_i64(float64_t{rs1_val}, getRM<RV64>(state), true));
+                            f64_to_i64(float64_t{rs1_val}, getRM<XLEN>(state), true));
         updateCsr<XLEN>(state);
         return ++action_it;
     }
