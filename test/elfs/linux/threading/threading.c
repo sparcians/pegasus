@@ -10,9 +10,9 @@ void* thread_func(void* arg)
 
 int main()
 {
-    printf("Hello from thread 0!\n");
     pthread_t thread;
     pthread_create(&thread, NULL, thread_func, NULL);
+    printf("Hello from thread 0!\n");
     pthread_join(thread, NULL); // Wait for the thread to terminate
     printf("Both threads finished.\n");
     return 0;
