@@ -119,33 +119,18 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
 
-    // Compare PegasusState member variables
-    EXPECT_EQUAL(state_truth->getXlen(), state_test->getXlen());
-    EXPECT_EQUAL(state_truth->getStopSimOnWfi(), state_test->getStopSimOnWfi());
-    EXPECT_EQUAL(state_truth->getPc(), state_test->getPc());
-    EXPECT_EQUAL(state_truth->getPrivMode(), state_test->getPrivMode());
-    EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
-    EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
+    // Compare PegasusState
+    state_truth->compare<true>(state_test);
 
-    // Compare PegasusCore member variables
-    EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(),
-                 state_test->getCore()->isCompressionEnabled());
-    EXPECT_EQUAL(state_truth->getCore()->hasHypervisor(), state_test->getCore()->hasHypervisor());
-    EXPECT_EQUAL(state_truth->getCore()->getPcAlignment(), state_test->getCore()->getPcAlignment());
-    EXPECT_EQUAL(state_truth->getCore()->getPcAlignmentMask(),
-                 state_test->getCore()->getPcAlignmentMask());
-    EXPECT_EQUAL(state_truth->getCore()->getMisaExtFieldValue<XLEN>(),
-                 state_test->getCore()->getMisaExtFieldValue<XLEN>());
-
-    // Compare sim state
+    // Compare SimState
     auto sim_state_truth = state_truth->getSimState();
     auto sim_state_test = state_test->getSimState();
-    EXPECT_EQUAL(sim_state_truth->current_opcode, sim_state_test->current_opcode);
-    EXPECT_EQUAL(sim_state_truth->current_uid, sim_state_test->current_uid);
-    EXPECT_EQUAL(sim_state_truth->inst_count, sim_state_test->inst_count);
-    EXPECT_EQUAL(sim_state_truth->sim_stopped, sim_state_test->sim_stopped);
-    EXPECT_EQUAL(sim_state_truth->test_passed, sim_state_test->test_passed);
-    EXPECT_EQUAL(sim_state_truth->workload_exit_code, sim_state_test->workload_exit_code);
+    sim_state_truth->compare<true>(sim_state_test);
+
+    // Compare PegasusCore
+    auto core_truth = state_truth->getCore();
+    auto core_test = state_test->getCore();
+    core_truth->compare<true>(core_test);
 
     // Compare current inst
     auto inst_truth = state_truth->getCurrentInst();
@@ -157,16 +142,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
 
     if (has_inst_truth && has_inst_test)
     {
-        EXPECT_EQUAL(inst_truth->getUid(), inst_test->getUid());
-        EXPECT_EQUAL(inst_truth->getOpcode(), inst_test->getOpcode());
-        EXPECT_EQUAL(inst_truth->getOpcodeSize(), inst_test->getOpcodeSize());
-        EXPECT_EQUAL(inst_truth->isMemoryInst(), inst_test->isMemoryInst());
-        EXPECT_EQUAL(inst_truth->isChangeOfFlowInst(), inst_test->isChangeOfFlowInst());
-        EXPECT_EQUAL(inst_truth->hasCsr(), inst_test->hasCsr());
-        EXPECT_EQUAL(inst_truth->writesCsr(), inst_test->writesCsr());
-        EXPECT_EQUAL(inst_truth->isStoreType(), inst_test->isStoreType());
-        EXPECT_EQUAL(inst_truth->getMnemonic(), inst_test->getMnemonic());
-        EXPECT_EQUAL(inst_truth->dasmString(), inst_test->dasmString());
+        inst_truth->compare<true>(inst_test);
     }
 
     // Compare registers
@@ -208,14 +184,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     // Compare vector config
     auto vec_config_truth = state_truth->getVectorConfig();
     auto vec_config_test = state_test->getVectorConfig();
-    EXPECT_EQUAL(vec_config_truth->getVLEN(), vec_config_test->getVLEN());
-    EXPECT_EQUAL(vec_config_truth->getLMUL(), vec_config_test->getLMUL());
-    EXPECT_EQUAL(vec_config_truth->getSEW(), vec_config_test->getSEW());
-    EXPECT_EQUAL(vec_config_truth->getVTA(), vec_config_test->getVTA());
-    EXPECT_EQUAL(vec_config_truth->getVMA(), vec_config_test->getVMA());
-    EXPECT_EQUAL(vec_config_truth->getVL(), vec_config_test->getVL());
-    EXPECT_EQUAL(vec_config_truth->getVSTART(), vec_config_test->getVSTART());
-    EXPECT_EQUAL(vec_config_truth->getVLMAX(), vec_config_test->getVLMAX());
+    vec_config_truth->compare<true>(vec_config_test);
 
     // Compare memory
     auto pipeline_truth = sim_truth.getEventPipeline(core_id, hart_id);
