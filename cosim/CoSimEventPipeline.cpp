@@ -82,8 +82,6 @@ namespace pegasus::cosim
         async_eval_ = db_accessor;
 
         // Task 1: Run the incoming events through boost::serialization
-        using EventList = std::deque<Event>;
-
         auto serialize =
             simdb::pipeline::createTask<simdb::pipeline::Function<EventList, SerializedEvtsBuffer>>(
                 [this](EventList && evts, simdb::ConcurrentQueue<SerializedEvtsBuffer> & out,
