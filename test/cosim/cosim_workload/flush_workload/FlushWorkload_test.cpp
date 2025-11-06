@@ -378,8 +378,9 @@ int main(int argc, char** argv)
 
     const uint64_t ilimit = 0;
     const auto uuid = GenerateUUID();
-    const auto db_truth = uuid + "_truth.db";
-    const auto db_test = uuid + "_test.db";
+    const auto cwd = std::filesystem::current_path().string();
+    const auto db_truth = cwd + "/" + uuid + "_truth.db";
+    const auto db_test = cwd + "/" + uuid + "_test.db";
 
     sparta::Scheduler scheduler_truth;
     PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth);
