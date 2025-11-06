@@ -111,6 +111,9 @@ namespace pegasus
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
 
+        template <bool IS_UNIT_TEST = false>
+        bool compare(const PegasusCore* core) const;
+
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
