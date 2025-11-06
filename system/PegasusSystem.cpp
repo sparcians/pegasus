@@ -2,6 +2,7 @@
 
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/memory/MemoryObject.hpp"
+#include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
 {
@@ -103,15 +104,31 @@ namespace pegasus
                     }
                     else if (name == "pass")
                     {
-                        sparta_assert(pass_addr_.isValid() == false,
-                                      "Found multiple pass symbols in ELF!");
-                        pass_addr_ = addr;
+                        if (pass_addr_.isValid())
+                        {
+                            std::cout << "WARNING: Found multiple pass symbols in ELF!\n\tFirst "
+                                         "one (stashed): "
+                                      << HEX16(pass_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                      << std::endl;
+                        }
+                        else
+                        {
+                            pass_addr_ = addr;
+                        }
                     }
                     else if (name == "fail")
                     {
-                        sparta_assert(fail_addr_.isValid() == false,
-                                      "Found multiple fail symbols in ELF!");
-                        fail_addr_ = addr;
+                        if (fail_addr_.isValid())
+                        {
+                            std::cout
+                                << "Found multiple fail symbols in ELF!\n\tFirst one (stashed): "
+                                << HEX16(fail_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                << std::endl;
+                        }
+                        else
+                        {
+                            fail_addr_ = addr;
+                        }
                     }
                 }
             }

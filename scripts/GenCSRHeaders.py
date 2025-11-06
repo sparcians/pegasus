@@ -297,7 +297,7 @@ def gen_csr_field_idxs_header(reg_size):
             return bit_mask
 
         fout.write('\n')
-        fout.write('    struct {}\n    {{\n\n'.format(reg_type))
+        fout.write('    struct {}_{}\n    {{\n\n'.format(reg_type, data_width))
         for reg in reg_json:
             # FP registers all have "sp" and "dp" fields
             if reg_type == 'FP':
@@ -386,7 +386,7 @@ def gen_csr_bitmask_header(reg_size):
             csr_keys_without_bitmasks.add(k)
 
     csr_bf_header_file.write('\n\n')
-    csr_bf_header_file.write('    inline uint64_t GetCSRBitMask(uint32_t reg_num, uint32_t field_idx) {\n')
+    csr_bf_header_file.write('    inline uint64_t GetCSR{}BitMask(uint32_t reg_num, uint32_t field_idx) {{\n'.format(data_width))
     csr_bf_header_file.write('        static std::vector<std::vector<uint64_t>> csr_bitmasks;\n')
     csr_bf_header_file.write('        if (csr_bitmasks.empty()) {\n')
     csr_bf_header_file.write('            csr_bitmasks.resize({});\n\n'.format(max_csr_num+1))

@@ -395,7 +395,7 @@ class PegasusTranslateTester
         std::cout << std::endl;
 
         // Set SATP value
-        state_->getCsrRegister(pegasus::CSR::SATP::reg_num)->dmiWrite<uint64_t>(satp_ppn);
+        state_->getCsrRegister(pegasus::CSR_64::SATP::reg_num)->dmiWrite<uint64_t>(satp_ppn);
 
         // Write PTEs to memory
         state_->writeMemory<uint32_t>(lvl1_paddr, lvl1_pte.getPte());
