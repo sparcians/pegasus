@@ -484,8 +484,11 @@ namespace pegasus::cosim
             sim_state->current_uid = reload_evt.getEuid();
             sim_state->sim_stopped = reload_evt.isLastEvent();
             sim_state->inst_count = reload_evt.getEuid();
-            sim_state->workload_exit_code = reload_evt.getExitCode();
             sim_state->test_passed = sim_state->workload_exit_code == 0;
+            if (!sim_state->sim_stopped)
+            {
+                sim_state->workload_exit_code = 0;
+            }
 
             // Now that the ArchData is reloaded, we can safely update the MMU mode.
             if (change_mmu_mode)
@@ -612,15 +615,6 @@ namespace pegasus::cosim
         else
         {
             std::cout << "    From disk:  0\n\n";
-        }
-
-        auto last_evt_accessor = getLastCommittedEvent();
-        if (auto last_evt = last_evt_accessor.get())
-        {
-            auto sim_state = state_->getSimState();
-            sim_state->workload_exit_code = last_evt->getExitCode();
-            sim_state->sim_stopped = last_evt->isLastEvent();
-            sim_state->test_passed = sim_state->workload_exit_code == 0;
         }
     }
 

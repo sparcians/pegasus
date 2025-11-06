@@ -155,8 +155,6 @@ namespace pegasus::cosim
 
         bool isLastEvent() const { return event_ends_sim_; }
 
-        int getExitCode() const { return workload_exit_code_; }
-
         bool isEventInRoi() const { return is_in_region_of_interest_; }
 
         bool isEventEnteringRoi() const { return is_entering_region_of_interest_; }
@@ -224,7 +222,6 @@ namespace pegasus::cosim
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
         bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
-        int workload_exit_code_ = 0; //!< Workload exit code if this Event ends simulation
 
         // Region of interest
         bool is_in_region_of_interest_{
@@ -345,7 +342,6 @@ namespace pegasus::cosim
             ar & hart_id_;
             ar & done_;
             ar & event_ends_sim_;
-            ar & workload_exit_code_;
             ar & is_in_region_of_interest_;
             ar & is_entering_region_of_interest_;
             ar & is_exiting_region_of_interest_;

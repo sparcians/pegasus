@@ -104,14 +104,6 @@ namespace pegasus::cosim
             {
                 last_event.inst_csr_ = csr;
             }
-            else
-            {
-                last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
-            }
-        }
-        else
-        {
-            last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
         }
     }
 
