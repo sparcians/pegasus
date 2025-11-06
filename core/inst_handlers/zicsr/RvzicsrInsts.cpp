@@ -420,10 +420,12 @@ namespace pegasus
 
         // Update the summarize field
         XLEN mstatus_fast_check_mask = 0;
-        if constexpr (std::is_same_v<XLEN, RV32>) {
+        if constexpr (std::is_same_v<XLEN, RV32>)
+        {
             mstatus_fast_check_mask = MSTATUS_32_bitmasks::XS | MSTATUS_32_bitmasks::FS;
         }
-        else {
+        else
+        {
             mstatus_fast_check_mask = MSTATUS_64_bitmasks::XS | MSTATUS_64_bitmasks::FS;
         }
 
