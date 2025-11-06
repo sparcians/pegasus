@@ -382,11 +382,16 @@ int main(int argc, char** argv)
     const auto db_truth = cwd + "/" + uuid + "_truth.db";
     const auto db_test = cwd + "/" + uuid + "_test.db";
 
+    const size_t snapshot_threshold = 10;
+    const size_t max_cached_windows = 10;
+
     sparta::Scheduler scheduler_truth;
-    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth);
+    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth, snapshot_threshold,
+                             max_cached_windows);
 
     sparta::Scheduler scheduler_test;
-    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test);
+    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test, snapshot_threshold,
+                            max_cached_windows);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
