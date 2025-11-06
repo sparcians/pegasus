@@ -285,8 +285,7 @@ namespace pegasus
         }
     }
 
-    template <bool IS_UNIT_TEST>
-    bool PegasusCore::compare(const PegasusCore* core) const
+    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
     {
         if constexpr (IS_UNIT_TEST)
         {
@@ -341,13 +340,12 @@ namespace pegasus
             return false;
         }
 
-        auto misa_ext_field_value = xlen_ == 32 ?
-            getMisaExtFieldValue<uint32_t>() :
-            getMisaExtFieldValue<uint64_t>();
+        auto misa_ext_field_value =
+            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
 
-        auto other_misa_ext_field_value = core->getXlen() == 32 ?
-            core->getMisaExtFieldValue<uint32_t>() :
-            core->getMisaExtFieldValue<uint64_t>();
+        auto other_misa_ext_field_value = core->getXlen() == 32
+                                              ? core->getMisaExtFieldValue<uint32_t>()
+                                              : core->getMisaExtFieldValue<uint64_t>();
 
         if constexpr (IS_UNIT_TEST)
         {

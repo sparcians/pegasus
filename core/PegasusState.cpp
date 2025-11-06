@@ -410,8 +410,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <bool IS_UNIT_TEST>
-    bool PegasusState::compare(const PegasusState* state) const
+    template <bool IS_UNIT_TEST> bool PegasusState::compare(const PegasusState* state) const
     {
         auto xlen = getXlen();
         auto other_xlen = state->getXlen();

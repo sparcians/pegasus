@@ -92,8 +92,7 @@ namespace pegasus
 
         template <typename XLEN> void vsetVTYPE(PegasusState* state, XLEN vtype);
 
-        template <bool IS_UNIT_TEST = false>
-        bool compare(const VectorConfig* config) const;
+        template <bool IS_UNIT_TEST = false> bool compare(const VectorConfig* config) const;
 
       private:
         // member variables

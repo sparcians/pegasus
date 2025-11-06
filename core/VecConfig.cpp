@@ -41,8 +41,7 @@ namespace pegasus
     template void VectorConfig::vsetVTYPE<RV32>(PegasusState*, RV32);
     template void VectorConfig::vsetVTYPE<RV64>(PegasusState*, RV64);
 
-    template <bool IS_UNIT_TEST>
-    bool VectorConfig::compare(const VectorConfig* config) const
+    template <bool IS_UNIT_TEST> bool VectorConfig::compare(const VectorConfig* config) const
     {
         if constexpr (IS_UNIT_TEST)
         {

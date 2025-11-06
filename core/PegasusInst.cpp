@@ -93,8 +93,7 @@ namespace pegasus
         vec_config_ = makeVecCfg(*state->getVectorConfig(), veccfg_overrides_);
     }
 
-    template <bool IS_UNIT_TEST>
-    bool PegasusInst::compare(const PegasusInst* inst) const
+    template <bool IS_UNIT_TEST> bool PegasusInst::compare(const PegasusInst* inst) const
     {
         if constexpr (IS_UNIT_TEST)
         {

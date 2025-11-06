@@ -49,8 +49,7 @@ namespace pegasus::cosim
 
     PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
                                const std::string & workload, const std::string & db_file,
-                               const size_t snapshot_threshold,
-                               const size_t max_cached_windows) :
+                               const size_t snapshot_threshold, const size_t max_cached_windows) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {

@@ -138,8 +138,7 @@ namespace pegasus
                 ++current_uid;
             }
 
-            template <bool IS_UNIT_TEST = false>
-            bool compare(const SimState* state) const;
+            template <bool IS_UNIT_TEST = false> bool compare(const SimState* state) const;
         };
 
         const SimState* getSimState() const { return &sim_state_; }
@@ -226,8 +225,7 @@ namespace pegasus
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
 
-        template <bool IS_UNIT_TEST = false>
-        bool compare(const PegasusState* state) const;
+        template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
         // Initialze a program stack (argc, argv, envp, auxv, etc)
         void setupProgramStack(const std::vector<std::string> & program_arguments);
