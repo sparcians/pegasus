@@ -3,7 +3,7 @@ project(PegasusCoSim)
 add_library(pegasuscosimlib
     STATIC
     PegasusCoSim.cpp
-    CoSimPipeline.cpp
+    CoSimEventPipeline.cpp
 )
 
 find_package(Boost REQUIRED COMPONENTS serialization)

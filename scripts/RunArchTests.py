@@ -71,7 +71,7 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
 
 
 # Function to run a single test and append to the appropriate queue
-def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests):
+def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
@@ -79,14 +79,14 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
     isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
-    pegasus_cmd = ["./pegasus",
+    pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
-                 "-p", "top.core0.params.isa", isa_string, wkld]
+                 "-p", "top.core0.params.isa", isa_string, "-w", wkld]
 
     test_passed = False
     try:
         with open(logname, "w") as f:
-            result = subprocess.run(pegasus_cmd, stdout=f, stderr=f, timeout=10)
+            result = subprocess.run(pegasus_cmd, stdout=f, stderr=f, timeout=300)
             if result.returncode == 0:
                 test_passed = True
 
@@ -108,7 +108,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
         failing_tests.append([testname, error])
 
 
-def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
+def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
     import concurrent.futures
 
     # Limit number of concurrent tests running to the number of CPUs on this machine
@@ -116,7 +116,7 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
     jobs = []
     for testname, wkld in tests:
         # Submit job
-        jobs.append(executor.submit(run_test, testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests))
+        jobs.append(executor.submit(run_test, testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable))
 
     # Wait for jobs to complete with a timeout of 5 minutes
     for j in concurrent.futures.as_completed(jobs):
@@ -126,6 +126,77 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
             print("TIMEOUT:", j)
             continue
 
+
+def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
+    for testname, wkld in tests:
+        print ("Running test:", testname)
+        run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable)
+
+
+def extract_sparta_failures(log_file, failure_dict):
+    with open(log_file, 'r') as fin:
+        for line in fin.readlines():
+            if line.find('FAILED on line') != -1:
+                parts = line.split(' FAILED on line ')
+                assert len(parts) == 2
+
+                # Parse a C++ test failure line and produce a concise summary.
+                #
+                # Example input for regex:
+                #     Test 'sim_state_truth->current_uid' FAILED on line 115 in file /path/to/FlushWorkload_test.cpp. Value: '1057' should equal '1058'
+                #
+                pattern = re.compile(r"Test\s+'([^']+)'\s+FAILED\s+on\s+line\s+(\d+)\s+in\s+file\s+([^\s]+)")
+                match = pattern.search(line)
+                if not match:
+                    continue
+
+                test_expr, _, _ = match.groups()
+                similar_failures = failure_dict.get(test_expr, set())
+                similar_failures.add(os.path.basename(log_file))
+                failure_dict[test_expr] = similar_failures
+
+
+def print_sparta_failures():
+    failure_dict = {}
+    for entry in os.listdir(os.getcwd()):
+        if entry.endswith('.log'):
+            log_path = os.path.join(os.getcwd(), entry)
+            log_path = os.path.abspath(log_path)
+            extract_sparta_failures(log_path, failure_dict)
+
+    for test_expr in sorted(failure_dict.keys()):
+        log_files = failure_dict[test_expr]
+        print(f"Test Expression: '{test_expr}' failed in {len(log_files)} log file(s):")
+        for log_file in sorted(log_files):
+            print(f"    - {log_file}")
+
+    if not failure_dict:
+        return
+
+    print()
+
+    failures_per_log_file = {}
+    for test_expr, log_files in failure_dict.items():
+        for log_file in log_files:
+            failures = failures_per_log_file.get(log_file, set())
+            failures.add(test_expr)
+            failures_per_log_file[log_file] = failures
+
+    log_file_with_most_failures = max(failures_per_log_file.items(), key=lambda item: len(item[1]))
+    log_file, failures = log_file_with_most_failures
+    print(f"Log file with the most failures: {log_file} ({len(failures)} failures)")
+    for test_expr in sorted(failures):
+        print(f"    - {test_expr}")
+
+    print()
+
+    log_file_with_least_failures = min(failures_per_log_file.items(), key=lambda item: len(item[1]))
+    log_file, failures = log_file_with_least_failures
+    print(f"Log file with the least failures: {log_file} ({len(failures)} failures)")
+    for test_expr in sorted(failures):
+        print(f"    - {test_expr}")
+
+    print()
 
 def main():
     parser = argparse.ArgumentParser(description="Script to run the Tenstorrent architecture tests on Pegasus")
@@ -137,7 +208,19 @@ def main():
     parser.add_argument("-v","--verbose", action='store_true', default=False, help="Be noisy")
     parser.add_argument("--riscv-arch", type=str, help="The directory of the built RISC-V Arch tests")
     parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
+    parser.add_argument("--pegasus-exe", type=str, default="./pegasus", help="Path to the Pegasus executable (default: ./pegasus)")
+    parser.add_argument("--serial", action='store_true', default=False, help="Run tests serially instead of in parallel")
+    parser.add_argument("--expected-pass-rate", type=float, help="Expected pass rate (for CI purposes only)")
     args = parser.parse_args()
+
+    # Extract the RISC-V tarball if needed
+    if args.riscv_arch is not None:
+        if not os.path.isdir(args.riscv_arch):
+            tarball = args.riscv_arch + ".tar.gz"
+            if os.path.isfile(tarball):
+                print("Extracting RISC-V arch tests from", tarball)
+                subprocess.run(["tar", "-xzf", tarball], check=True)
+                args.riscv_arch = os.getcwd() + "/" + os.path.basename(args.riscv_arch)
 
     global be_noisy
 
@@ -174,8 +257,8 @@ def main():
 
     ###########################################################################
     # Make sure we're in the correct sim directory for pegasus
-    if not os.path.isfile('./pegasus'):
-        print("ERROR: ./pegasus command not found.  Run inside sim directory")
+    if not os.path.isfile(args.pegasus_exe):
+        print("ERROR: Pegasus executable not found:", args.pegasus_exe)
         sys.exit(1)
 
     ###########################################################################
@@ -209,7 +292,11 @@ def main():
     passing_tests = []
     failing_tests = []
     timeout_tests = []
-    run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir)
+
+    if args.serial:
+        run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
+    else:
+        run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
 
     ###########################################################################
     # Report results
@@ -231,6 +318,8 @@ def main():
             print("\t" + test)
     print()
 
+    print_sparta_failures()
+
     pass_rate = num_passed/len(tests)
     print("PASS RATE: {:.2%} ({}/{})".format(pass_rate, num_passed, len(tests)))
 
@@ -249,9 +338,13 @@ def main():
 
     expected_pass_rate = expected_passing_tests/total_tests
     print("EXPECTED RATE: {:.2%} ({}/{})".format(expected_pass_rate, expected_passing_tests, total_tests))
-    if (num_passed < expected_passing_tests):
-        print("ERROR: failed!")
 
+    if args.expected_pass_rate is not None:
+        if round(pass_rate*100, 2) < args.expected_pass_rate:
+            print(f"ERROR: Pass rate {pass_rate:.2%} is below expected pass rate of {args.expected_pass_rate}!")
+            sys.exit(1)
+    elif (num_passed < expected_passing_tests):
+        print("ERROR: failed!")
 
 if __name__ == "__main__":
     main()
