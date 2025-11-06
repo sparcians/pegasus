@@ -429,7 +429,8 @@ namespace pegasus
             mstatus_fast_check_mask = MSTATUS_64_bitmasks::XS | MSTATUS_64_bitmasks::FS;
         }
 
-        if (mstatus_val & mstatus_fast_check_mask) {
+        if (mstatus_val & mstatus_fast_check_mask)
+        {
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", 0b1);
         }
 
