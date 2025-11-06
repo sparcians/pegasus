@@ -129,7 +129,6 @@ namespace pegasus
                         {
                             fail_addr_ = addr;
                         }
-
                     }
                 }
             }
