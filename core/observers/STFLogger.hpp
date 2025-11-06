@@ -24,7 +24,12 @@ namespace pegasus
       private:
         stf::STFWriter stf_writer_;
         void postExecute_(PegasusState* state) override;
-        void recordRegState_(PegasusState* state);
+        template <typename XLEN> void recordRegState_(PegasusState* state);
         void writeInstruction_(const PegasusInst* inst);
+
+        template <typename XLEN, typename F>
+        void writeInstRegRecord_(PegasusState* state, F get_stf_reg_type);
+        template <typename XLEN>
+        void writeEventRecord_(PegasusState* state, bool & is_invalid_opcode);
     };
 } // namespace pegasus
