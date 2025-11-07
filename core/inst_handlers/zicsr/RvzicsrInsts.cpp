@@ -7,6 +7,8 @@
 #include "core/Exception.hpp"
 #include "core/Trap.hpp"
 
+#include "include/gen/CSRBitMasks32.hpp"
+
 extern "C"
 {
 #include "source/include/softfloat.h"
@@ -416,26 +418,66 @@ namespace pegasus
         const XLEN mstatus_val = READ_CSR_REG<XLEN>(state, MSTATUS);
         WRITE_CSR_REG<XLEN>(state, SSTATUS, mstatus_val);
 
+        // Update the summarize field
+        XLEN mstatus_fast_check_mask = 0;
+        if constexpr (std::is_same_v<XLEN, RV32>)
+        {
+            mstatus_fast_check_mask = MSTATUS_32_bitmasks::XS | MSTATUS_32_bitmasks::FS;
+        }
+        else
+        {
+            mstatus_fast_check_mask = MSTATUS_64_bitmasks::XS | MSTATUS_64_bitmasks::FS;
+        }
+
+        if (mstatus_val & mstatus_fast_check_mask)
+        {
+            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", 0b1);
+        }
+
         auto & ext_manager = state->getCore()->getExtensionManager();
+        bool change_mavis_ctx = false;
+
         // If FS is set to 0 (off), all floating point extensions are disabled
         const uint32_t fs_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "fs");
         if (fs_val == 0)
         {
-            ext_manager.disableExtensions({"f", "d"});
+            std::vector<std::string> disabled_exts;
+            if (ext_manager.isEnabled("f"))
+            {
+                disabled_exts.emplace_back("f");
+            }
+            if (ext_manager.isEnabled("d"))
+            {
+                disabled_exts.emplace_back("d");
+            }
+            ext_manager.disableExtensions(disabled_exts);
+            change_mavis_ctx = !disabled_exts.empty();
         }
         else
         {
+            std::vector<std::string> enabled_exts;
             if (READ_CSR_FIELD<XLEN>(state, MISA, "f") == 0x1)
             {
-                ext_manager.enableExtension("f");
+                if (!ext_manager.isEnabled("f"))
+                {
+                    enabled_exts.emplace_back("f");
+                }
             }
             if (READ_CSR_FIELD<XLEN>(state, MISA, "d") == 0x1)
             {
-                ext_manager.enableExtension("d");
+                if (!ext_manager.isEnabled("d"))
+                {
+                    enabled_exts.emplace_back("d");
+                }
             }
+            ext_manager.enableExtensions(enabled_exts);
+            change_mavis_ctx = !enabled_exts.empty();
         }
 
-        state->getCore()->changeMavisContext();
+        if (change_mavis_ctx)
+        {
+            state->getCore()->changeMavisContext();
+        }
         state->changeMMUMode<XLEN>();
 
         return ++action_it;
@@ -478,6 +520,34 @@ namespace pegasus
                         exts_to_disable.emplace_back(ext_str);
                     }
                 }
+            }
+        }
+
+        // Remove from exts_to_disable any extensions that are already disabled
+        auto it = exts_to_disable.begin();
+        while (it != exts_to_disable.end())
+        {
+            if (!ext_manager.isEnabled(*it))
+            {
+                it = exts_to_disable.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        // Remove from exts_to_enable any extensions that are already enabled
+        it = exts_to_enable.begin();
+        while (it != exts_to_enable.end())
+        {
+            if (ext_manager.isEnabled(*it))
+            {
+                it = exts_to_enable.erase(it);
+            }
+            else
+            {
+                ++it;
             }
         }
 

@@ -9,10 +9,16 @@
 #include <algorithm>
 #include <iomanip>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
+
+namespace pegasus
+{
+    class PegasusState;
+}
 
 namespace pegasus::cosim
 {
-    class CoSimPipeline;
+    class CoSimEventPipeline;
     class CoSimObserver;
 
     /*!
@@ -137,13 +143,19 @@ namespace pegasus::cosim
 
         uint64_t getEuid() const { return event_uid_; }
 
+        uint64_t getCheckpointId() const { return checkpoint_id_; }
+
         Type getEventType() const { return type_; }
+
+        CoreId getCoreId() const { return core_id_; }
 
         HartId getHartId() const { return hart_id_; }
 
         bool isDone() const { return done_; }
 
         bool isLastEvent() const { return event_ends_sim_; }
+
+        int getExitCode() const { return workload_exit_code_; }
 
         bool isEventInRoi() const { return is_in_region_of_interest_; }
 
@@ -171,9 +183,21 @@ namespace pegasus::cosim
 
         PrivMode getNextPrivilegeMode() const { return next_priv_; }
 
+        PrivMode getLdStPrivilegeMode() const { return curr_ldst_priv_; }
+
+        PrivMode getNextLdStPrivilegeMode() const { return next_ldst_priv_; }
+
         ExcpType getExceptionType() const { return excp_type_; }
 
         ExcpCode getExceptionCode() const { return excp_code_; }
+
+        bool hasCsr() const { return inst_csr_ != std::numeric_limits<uint32_t>::max(); }
+
+        uint32_t getCsr() const
+        {
+            sparta_assert(hasCsr(), "Event does not have a valid CSR!");
+            return inst_csr_;
+        }
 
         const std::vector<RegReadAccess> & getRegisterReads() const { return register_reads_; }
 
@@ -194,10 +218,13 @@ namespace pegasus::cosim
 
         // Event info
         sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
+        sparta::utils::ValidValue<uint64_t> checkpoint_id_;   //!< Checkpoint ID of Event
         Type type_ = Type::INVALID;                           //!< Type of Event
+        CoreId core_id_ = std::numeric_limits<CoreId>::max(); //!< Core ID of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
         bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
+        int workload_exit_code_ = 0; //!< Workload exit code if this Event ends simulation
 
         // Region of interest
         bool is_in_region_of_interest_{
@@ -229,12 +256,21 @@ namespace pegasus::cosim
         PrivMode curr_priv_ = PrivMode::INVALID; //!< Current privilege mode
         PrivMode next_priv_ = PrivMode::INVALID; //!< Next privilege mode
 
+        // Load/Store Privilege mode
+        PrivMode curr_ldst_priv_ = PrivMode::INVALID; //!< Current load/store privilege mode
+        PrivMode next_ldst_priv_ = PrivMode::INVALID; //!< Next load/store privilege mode
+
         // Exceptions (traps and interrupts)
         ExcpType excp_type_ = ExcpType::INVALID; //!< The exception type for faulting instructions
                                                  //!< and interrupt Events
         ExcpCode excp_code_ =
             std::numeric_limits<ExcpCode>::max(); //!< The exception code for faulting instruction
                                                   //!< and interrupt Events
+
+        // Inst CSR which may cause side effects
+        uint32_t inst_csr_ =
+            std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
+                                                  //!< instruction causing this Event
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +296,37 @@ namespace pegasus::cosim
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////////////////////////
+        //! \name Extension changes
+        //! @{
+
+        struct MavisExtensions
+        {
+            std::vector<std::string> extensions;
+            bool enabled;
+
+            MavisExtensions(const std::vector<std::string> & extensions, bool enabled) :
+                extensions(extensions),
+                enabled(enabled)
+            {
+            }
+
+            MavisExtensions() = default;
+
+            bool operator==(const MavisExtensions & other) const = default;
+
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & extensions;
+                ar & enabled;
+            }
+        };
+
+        std::vector<MavisExtensions> extension_changes_; //!< List of extension changes
+
+        //! @}
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
         //! \name Mavis Opcode Information
         //! @{
 
@@ -272,10 +339,13 @@ namespace pegasus::cosim
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             ar & event_uid_;
+            ar & checkpoint_id_;
             ar & type_;
+            ar & core_id_;
             ar & hart_id_;
             ar & done_;
             ar & event_ends_sim_;
+            ar & workload_exit_code_;
             ar & is_in_region_of_interest_;
             ar & is_entering_region_of_interest_;
             ar & is_exiting_region_of_interest_;
@@ -289,37 +359,22 @@ namespace pegasus::cosim
             ar & alternate_next_pc_;
             ar & curr_priv_;
             ar & next_priv_;
+            ar & curr_ldst_priv_;
+            ar & next_ldst_priv_;
             ar & excp_type_;
             ar & excp_code_;
+            ar & inst_csr_;
             ar & register_reads_;
             ar & register_writes_;
             ar & memory_reads_;
             ar & memory_writes_;
+            ar & extension_changes_;
             ar & dasm_string_;
         }
 
         friend class boost::serialization::access;
         friend class CoSimObserver;
-        friend class CoSimPipeline;
-        friend class StopEvent;
-    };
-
-    /// This helper is used in order to get around the
-    /// fact that we can't "friend" CoSimHartPipeline
-    /// since it is a private class inside CoSimPipeline.
-    class StopEvent
-    {
-      public:
-        void stopSim(Event & event)
-        {
-            // Friend access needed here.
-            event.event_ends_sim_ = true;
-            event.done_ = true;
-        }
-
-      private:
-        StopEvent() = default;
-        friend class CoSimPipeline;
+        friend class CoSimEventPipeline;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)
@@ -436,4 +491,31 @@ namespace pegasus::cosim
         }
         return os;
     }
+
+    inline std::ostream & operator<<(std::ostream & os,
+                                     const Event::MemReadAccess & mem_read_access)
+    {
+        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_read_access.paddr
+           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_read_access.vaddr
+           << " Size: " << std::dec << mem_read_access.size << " Value: " << std::setw(16)
+           << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_read_access.value) << std::dec << "\n";
+
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os,
+                                     const Event::MemWriteAccess & mem_write_access)
+    {
+        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_write_access.paddr
+           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_write_access.vaddr
+           << " Size: " << std::dec << mem_write_access.size << " Value: " << std::setw(16)
+           << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_write_access.value) << " [Prev: " << std::setw(16)
+           << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_write_access.prev_value) << std::dec << "]\n";
+
+        return os;
+    }
+
 } // namespace pegasus::cosim

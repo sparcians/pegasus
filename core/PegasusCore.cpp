@@ -1,6 +1,7 @@
 #include "PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
+#include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
@@ -253,8 +254,16 @@ namespace pegasus
         }
 
         // FIXME: Assume both User and Supervisor mode are supported
-        ext_val |= 1 << CSR::MISA::u::high_bit;
-        ext_val |= 1 << CSR::MISA::s::high_bit;
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
+            ext_val |= 1 << CSR_64::MISA::u::high_bit;
+            ext_val |= 1 << CSR_64::MISA::s::high_bit;
+        }
+        else
+        {
+            ext_val |= 1 << CSR_32::MISA::u::high_bit;
+            ext_val |= 1 << CSR_32::MISA::s::high_bit;
+        }
 
         return ext_val;
     }

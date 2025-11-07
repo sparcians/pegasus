@@ -55,6 +55,7 @@ set(AUTOGEN_RV32_INST_JSON_FILES
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32a.json
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32f.json
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32d.json
+  ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32zfh.json
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32zicsr.json
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32zifencei.json
   ${SIM_BASE}/arch/rv32/gen/pegasus_uarch_rv32zicond.json
@@ -82,6 +83,7 @@ set(AUTOGEN_RV64_INST_JSON_FILES
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64a.json
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64f.json
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64d.json
+  ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64zfh.json
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64zicsr.json
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64zifencei.json
   ${SIM_BASE}/arch/rv64/gen/pegasus_uarch_rv64zicond.json
