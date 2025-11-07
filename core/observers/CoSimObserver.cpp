@@ -67,10 +67,7 @@ namespace pegasus::cosim
         sendLastEvent_();
     }
 
-    void CoSimObserver::preException_(PegasusState* state)
-    {
-        resetLastEvent_(state);
-    }
+    void CoSimObserver::preException_(PegasusState* state) { resetLastEvent_(state); }
 
     void CoSimObserver::resetLastEvent_(PegasusState* state)
     {
