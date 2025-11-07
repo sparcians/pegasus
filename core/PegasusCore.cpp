@@ -178,7 +178,6 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
-            state->setPc(system_->getStartingPc());
         }
 
         // Initialize Mavis
@@ -207,6 +206,11 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        // Start simulation with only the main thread running
+        PegasusState* state = threads_.at(0);
+        state->setPc(system_->getStartingPc());
+        state->getSimState()->sim_stopped = false;
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -311,7 +315,6 @@ namespace pegasus
                     {
                         DLOG("Stopping hart" << std::dec << hart_id);
                         threads_running.reset(hart_id);
-                        DLOG(threads_running);
 
                         if (threads_running.none())
                         {

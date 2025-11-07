@@ -24,6 +24,26 @@
 
 namespace pegasus
 {
+    PrivMode getPrivilegeMode(const char priv)
+    {
+        if (priv == 'm')
+        {
+            return PrivMode::MACHINE;
+        }
+        else if (priv == 's')
+        {
+            return PrivMode::SUPERVISOR;
+        }
+        else if (priv == 'u')
+        {
+            return PrivMode::USER;
+        }
+        else
+        {
+            sparta_assert(false, "Unsupported privilege mode: " << priv);
+        }
+    }
+
     PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
@@ -35,6 +55,7 @@ namespace pegasus
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
+        priv_mode_(getPrivilegeMode(p->priv_mode)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -627,13 +648,13 @@ namespace pegasus
 
             std::cout << "PegasusState::boot()\n";
             std::cout << std::hex;
-            std::cout << "\tMHARTID: 0x" << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
+            std::cout << "\tMHARTID: " << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tMISA:    0x" << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
+            std::cout << "\tMISA:    " << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tMSTATUS: 0x" << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
+            std::cout << "\tMSTATUS: " << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tSSTATUS: 0x" << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
+            std::cout << "\tSSTATUS: " << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
                       << std::endl;
             std::cout << std::dec;
         }

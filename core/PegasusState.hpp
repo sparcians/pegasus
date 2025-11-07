@@ -63,6 +63,7 @@ namespace pegasus
             }
 
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
+            PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
                       "Provides initial values of CSRs")
@@ -134,7 +135,7 @@ namespace pegasus
 
             // Simulation control
             SimPauseReason sim_pause_reason = SimPauseReason::INVALID;
-            bool sim_stopped = false;
+            bool sim_stopped = true;
             bool test_passed = true;
             int64_t workload_exit_code = 0;
 
