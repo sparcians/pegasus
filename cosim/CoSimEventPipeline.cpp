@@ -385,6 +385,7 @@ namespace pegasus::cosim
 
             state->setPc(evt.getPc());
             state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
+            state->setCurrentException(evt.getPrevExceptionCode());
 
             std::vector<std::string> exts_to_enable;
             std::vector<std::string> exts_to_disable;

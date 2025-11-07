@@ -123,6 +123,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     EXPECT_EQUAL(state_truth->getPrivMode(), state_test->getPrivMode());
     EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
     EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
+    EXPECT_EQUAL(state_truth->getCurrentException(), state_test->getCurrentException());
 
     // Compare PegasusCore member variables
     EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(),
