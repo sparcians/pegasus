@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+#include <string>
+#include <stdint.h>
 
 #include "core/Action.hpp"
 

@@ -17,7 +17,6 @@
 #include <sys/types.h>
 #include <sys/stat.h> //fstat, etc
 #include <sys/syscall.h>
-#include "system/stat.h"
 
 #define SYSCALL_LOG(x)                                                                             \
     if (SPARTA_EXPECT_FALSE(syscall_log_))                                                         \
