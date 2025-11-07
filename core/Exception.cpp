@@ -56,8 +56,10 @@ namespace pegasus
         // Check to see if we're throwing the same exception back to
         // back (like illop to illop).  We can be in an infinite loop
         sparta_assert(state->getCurrentException() != excp_code,
-                      "Currently handling fault '" << static_cast<FaultCause>(state->getCurrentException()) <<
-                      "' when same fault happened: '" << static_cast<FaultCause>(excp_code) << "'");
+                      "Currently handling fault '"
+                          << static_cast<FaultCause>(state->getCurrentException())
+                          << "' when same fault happened: '" << static_cast<FaultCause>(excp_code)
+                          << "'");
 
         DLOG("Exception code: " << excp_code);
 

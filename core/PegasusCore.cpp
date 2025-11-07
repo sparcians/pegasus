@@ -59,7 +59,8 @@ namespace pegasus
         const auto & supported_exts =
             (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
 
-        const auto hasExtension = [&](const std::string & ext) {
+        const auto hasExtension = [&](const std::string & ext)
+        {
             return std::find(supported_exts.begin(), supported_exts.end(), ext)
                    != supported_exts.end();
         };
