@@ -70,6 +70,9 @@ namespace pegasus
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(std::string, stf_filename, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
+            // Typical stack pointer is 8KB on most linux systems
+            PARAMETER(uint32_t, ulimit_stack_size, 8192,
+                      "Typical ulimit stack size for system call emulation")
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
 
@@ -276,6 +279,9 @@ namespace pegasus
         // STF Trace Filename
         const std::string stf_filename_;
         const std::string validation_stf_filename_;
+
+        //! Typical stack size for system call emulation
+        const uint64_t ulimit_stack_size_;
 
         //! Current pc
         Addr pc_ = 0x0;
