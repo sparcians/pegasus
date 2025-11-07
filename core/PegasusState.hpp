@@ -155,6 +155,12 @@ namespace pegasus
             sim_state_.current_inst = inst;
         }
 
+        void setCurrentException(uint64_t excp_code) { current_exception_ = excp_code; }
+
+        void clearCurrentException() { current_exception_ = 0; }
+
+        uint64_t getCurrentException() const { return current_exception_; }
+
         PegasusTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
         PegasusCore* getCore() const { return pegasus_core_; }
@@ -294,6 +300,9 @@ namespace pegasus
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;
+
+        //! Current exception code
+        uint64_t current_exception_ = 0;
 
         //! LR/SC Reservations
         Reservation reservation_;

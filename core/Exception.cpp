@@ -52,6 +52,13 @@ namespace pegasus
         const bool is_interrupt = interrupt_cause_.isValid();
         const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
                                                 : static_cast<XLEN>(fault_cause_.getValue());
+
+        // Check to see if we're throwing the same exception back to
+        // back (like illop to illop).  We can be in an infinite loop
+        sparta_assert(state->getCurrentException() != excp_code,
+                      "Currently handling fault '" << static_cast<FaultCause>(state->getCurrentException()) <<
+                      "' when same fault happened: '" << static_cast<FaultCause>(excp_code) << "'");
+
         DLOG("Exception code: " << excp_code);
 
         if (false == is_interrupt)
@@ -148,6 +155,9 @@ namespace pegasus
 
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();
+
+        state->setCurrentException(excp_code);
+
         return ++action_it;
     }
 
