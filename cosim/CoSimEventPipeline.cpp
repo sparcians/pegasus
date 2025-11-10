@@ -386,6 +386,15 @@ namespace pegasus::cosim
             state->setPc(evt.getPc());
             state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
 
+            if (evt.getStartReservation().isValid())
+            {
+                state->getReservation() = evt.getStartReservation();
+            }
+            else
+            {
+                state->getReservation().clearValid();
+            }
+
             std::vector<std::string> exts_to_enable;
             std::vector<std::string> exts_to_disable;
             const auto & ext_changes = evt.extension_changes_;
@@ -477,6 +486,14 @@ namespace pegasus::cosim
 
             state->setPc(reload_evt.getNextPc());
             state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
+            if (reload_evt.getEndReservation().isValid())
+            {
+                state->getReservation() = reload_evt.getEndReservation();
+            }
+            else
+            {
+                state->getReservation().clearValid();
+            }
 
             auto sim_state = state->getSimState();
             sim_state->reset();

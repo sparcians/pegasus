@@ -17,7 +17,7 @@ add_custom_target(pegasus_cosim_regress
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/RunArchTests.py
         --rv64-only --riscv-arch ${CMAKE_SOURCE_DIR}/riscv-tests
         --pegasus-exe ${CMAKE_CURRENT_BINARY_DIR}/FlushWorkload_test
-        --expected-pass-rate 96.23
+        --expected-pass-rate 96.81
     COMMAND ${CMAKE_COMMAND} -E rm -f *.log *.db *.db-journal
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     USES_TERMINAL

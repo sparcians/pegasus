@@ -209,6 +209,10 @@ namespace pegasus::cosim
 
         const std::string & getDisassemblyStr() const { return dasm_string_; }
 
+        const sparta::utils::ValidValue<Addr> & getStartReservation() const { return start_reservation_; }
+
+        const sparta::utils::ValidValue<Addr> & getEndReservation() const { return end_reservation_; }
+
         bool operator==(const Event & other) const = default;
 
       private:
@@ -271,6 +275,10 @@ namespace pegasus::cosim
         uint32_t inst_csr_ =
             std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
                                                   //!< instruction causing this Event
+
+        // PegasusState reservation
+        sparta::utils::ValidValue<Addr> start_reservation_; //!< LR/SC reservation address (start of inst)
+        sparta::utils::ValidValue<Addr> end_reservation_;   //!< LR/SC reservation address (end of inst)
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -364,6 +372,8 @@ namespace pegasus::cosim
             ar & excp_type_;
             ar & excp_code_;
             ar & inst_csr_;
+            ar & start_reservation_;
+            ar & end_reservation_;
             ar & register_reads_;
             ar & register_writes_;
             ar & memory_reads_;

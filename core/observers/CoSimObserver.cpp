@@ -56,6 +56,11 @@ namespace pegasus::cosim
             last_event.workload_exit_code_ = state->getSimState()->workload_exit_code;
         }
 
+        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        {
+            last_event.end_reservation_ = reservation;
+        }
+
         last_event.next_pc_ = state->getPc();
         last_event.next_priv_ = state->getPrivMode();
         last_event.next_ldst_priv_ = state->getLdstPrivMode();
@@ -94,6 +99,11 @@ namespace pegasus::cosim
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
+
+        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        {
+            last_event.start_reservation_ = reservation;
+        }
 
         const auto & inst = state->getCurrentInst();
         if (inst && inst->hasCsr())
