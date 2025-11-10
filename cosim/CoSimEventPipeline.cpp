@@ -516,19 +516,6 @@ namespace pegasus::cosim
                     state->changeMMUMode<uint64_t>();
                 }
             }
-
-            // Now that the state has had a chance to switch the Mavis context, we
-            // can safely decode the opcode. Note the try/catch is the same as the
-            // call to makeInst() in Fetch::decode_
-            try
-            {
-                auto inst = state->getCore()->getMavis()->makeInst(reload_evt.getOpcode(), state);
-                inst->updateVecConfig(state);
-                state->setCurrentInst(inst);
-            }
-            catch (const mavis::BaseException &)
-            {
-            }
         };
 
         if (!uncommitted_evts_buffer_.empty())

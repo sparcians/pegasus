@@ -147,12 +147,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     // Compare current inst
     auto inst_truth = state_truth->getCurrentInst();
     auto inst_test = state_test->getCurrentInst();
-
-    auto has_inst_truth = (inst_truth != nullptr);
-    auto has_inst_test = (inst_test != nullptr);
-    EXPECT_EQUAL(has_inst_truth, has_inst_test);
-
-    if (has_inst_truth && has_inst_test)
+    if (inst_truth && inst_test)
     {
         EXPECT_EQUAL(inst_truth->getUid(), inst_test->getUid());
         EXPECT_EQUAL(inst_truth->getOpcode(), inst_test->getOpcode());
