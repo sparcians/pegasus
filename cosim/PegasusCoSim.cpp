@@ -115,11 +115,16 @@ namespace pegasus::cosim
                                                      ->getResourceAs<pegasus::Fetch>());
 
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
+                auto system = getPegasusCore(core_idx)->getSystem();
 
                 // Create and attach CoSimObserver to PegasusState for each hart
                 auto evt_pipeline = app_mgr_->getApp<CoSimEventPipeline>(pipeline_idx);
                 auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
                 ++pipeline_idx;
+
+                // Each checkpointer needs to checkpoint all ArchData's under the hart's PegasusState
+                // as well as the PegasusSystem's memory map
+                checkpointer->addRoot(*system->getContainer());
 
                 auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
                                                                  checkpointer, core_idx, hart_idx);

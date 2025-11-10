@@ -22,6 +22,8 @@ namespace sparta::memory
 
 namespace pegasus
 {
+    class Observer;
+
     class PegasusSystem : public sparta::Unit
     {
       public:
@@ -43,6 +45,9 @@ namespace pegasus
 
         // Get pointer to system memory
         sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
+
+        // Give observers their callbacks to read/write memory operations
+        void registerMemoryCallbacks(Observer* observer);
 
         // Get starting PC from ELF
         Addr getStartingPc() const { return starting_pc_; }
