@@ -8,6 +8,7 @@
 #include "simdb/pipeline/AsyncDatabaseAccessor.hpp"
 #include "simdb/utils/Compress.hpp"
 #include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "source/include/softfloat.h"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -395,6 +396,11 @@ namespace pegasus::cosim
                 state->getReservation().clearValid();
             }
 
+            softfloat_roundingMode = evt.start_softfloat_flags_.softfloat_roundingMode;
+            softfloat_detectTininess = evt.start_softfloat_flags_.softfloat_detectTininess;
+            softfloat_exceptionFlags = evt.start_softfloat_flags_.softfloat_exceptionFlags;
+            extF80_roundingPrecision = evt.start_softfloat_flags_.extF80_roundingPrecision;
+
             std::vector<std::string> exts_to_enable;
             std::vector<std::string> exts_to_disable;
             const auto & ext_changes = evt.extension_changes_;
@@ -486,6 +492,7 @@ namespace pegasus::cosim
 
             state->setPc(reload_evt.getNextPc());
             state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
+
             if (reload_evt.getEndReservation().isValid())
             {
                 state->getReservation() = reload_evt.getEndReservation();
@@ -494,6 +501,11 @@ namespace pegasus::cosim
             {
                 state->getReservation().clearValid();
             }
+
+            softfloat_roundingMode = reload_evt.end_softfloat_flags_.softfloat_roundingMode;
+            softfloat_detectTininess = reload_evt.end_softfloat_flags_.softfloat_detectTininess;
+            softfloat_exceptionFlags = reload_evt.end_softfloat_flags_.softfloat_exceptionFlags;
+            extF80_roundingPrecision = reload_evt.end_softfloat_flags_.extF80_roundingPrecision;
 
             auto sim_state = state->getSimState();
             sim_state->reset();
