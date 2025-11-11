@@ -49,6 +49,8 @@ namespace pegasus
                  SOFTWARE_CHECK            (18)       0x040000
                  HARDWARE_ERROR            (19)       0x080000
 )")
+            PARAMETER(bool, fail_on_back_to_back_faults, false,
+                      "If the simulator detects a back-to-back same fault, stop simulation")
         };
 
         Exception(sparta::TreeNode* exception_node, const ExceptionParameters* p);
@@ -73,6 +75,7 @@ namespace pegasus
         void onBindTreeEarly_() override;
 
         const std::bitset<sizeof(uint64_t) * 8> unexpected_faults_;
+        const bool fail_back_to_back_faults_;
 
         template <typename XLEN>
         Action::ItrType handleException_(pegasus::PegasusState* state, Action::ItrType action_it);
