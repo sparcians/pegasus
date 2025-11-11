@@ -664,7 +664,7 @@ CSR64_DEFS = {
              'fields': {
                'SD'   : { 'high_bit': 63, 'low_bit':  63, 'readonly': False, 'desc': 'Fast-check bit: summarizes either FS/XS/VS set' },
                'WPRI' : { 'high_bit':  2, 'low_bit':   2, 'readonly': True , 'desc': 'reserved' },
-               'MPV'  : { 'high_bit': 39, 'low_bit':  39, 'readonly': False, 'desc': 'Machine Previous Virtualization Mode' },
+               'MPV'  : { 'high_bit': 39, 'low_bit':  39, 'readonly': True,  'desc': 'Machine Previous Virtualization Mode' },
                'GVA'  : { 'high_bit': 38, 'low_bit':  38, 'readonly': False, 'desc': 'Guest Virtual Address' },
                'MBE'  : { 'high_bit': 37, 'low_bit':  37, 'readonly': True , 'desc': 'Controls endianness of explicit memory accesses made from M-mode' },
                'SBE'  : { 'high_bit': 36, 'low_bit':  36, 'readonly': True , 'desc': 'Controls endianness of explicit memory accesses made from S-mode' },

@@ -7,6 +7,9 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdint.h>
+
+#include <string.h>   // for memset, strerror
 
 int fail_code = 0;
 
@@ -71,7 +74,79 @@ void test_mmap() {}
 void test_mprotect() {}
 void test_prlimit() {}
 void test_getrandom() {}
-void test_statx() {}
+
+// Pulled from https://www.man7.org/linux/man-pages/man2/statx.2.html
+struct RV_statx_timestamp
+{
+    int64_t tv_sec;   // Seconds since the Epoch
+    uint32_t tv_nsec; // Nanoseconds
+};
+
+struct RV_statx
+{
+    uint32_t stx_mask;
+    uint32_t stx_blksize;
+    uint64_t stx_attributes;
+    uint32_t stx_nlink;
+    uint32_t stx_uid;
+    uint32_t stx_gid;
+    uint16_t stx_mode;
+    uint64_t stx_ino;
+    uint64_t stx_size;
+    uint64_t stx_blocks;
+    uint64_t stx_attributes_mask;
+
+    struct RV_statx_timestamp stx_atime;
+    struct RV_statx_timestamp stx_btime;
+    struct RV_statx_timestamp stx_ctime;
+    struct RV_statx_timestamp stx_mtime;
+
+    uint32_t stx_rdev_major;
+    uint32_t stx_rdev_minor;
+    uint32_t stx_dev_major;
+    uint32_t stx_dev_minor;
+
+    uint64_t stx_mnt_id;
+
+    uint32_t stx_dio_mem_align;
+    uint32_t stx_dio_offset_align;
+
+    uint64_t stx_subvol;
+
+    uint32_t stx_atomic_write_unit_min;
+    uint32_t stx_atomic_write_unit_max;
+    uint32_t stx_atomic_write_segments_max;
+    uint32_t stx_dio_read_offset_align;
+    uint32_t stx_atomic_write_unit_max_opt;
+};
+
+#define SYS_STATX 291
+#define STATX_BASIC_STATS 0x000007ffU   //Ideally this should be defined in sys/stat.h,
+                                        //Currently, Referred from https://codebrowser.dev/qt6/include/x86_64-linux-gnu/bits/statx-generic.h.html
+
+int test_statx(const char *path, int expected_result) {
+    errno = 0;
+
+    struct RV_statx statxBuffer;
+    memset(&statxBuffer, 0, sizeof(statxBuffer));
+    int ret = syscall(SYS_STATX, AT_FDCWD, path, 0, STATX_BASIC_STATS, &statxBuffer);
+    if (ret != expected_result) {
+        printf("ERROR: %s statx failed for '%s' with ret=%d, errno=%d (%s)\n",
+               __func__, path, ret, errno, strerror(errno));
+        return -1;
+    }
+
+    if (ret == 0) {
+        printf("%s: statx succeeded for '%s'\n", __func__, path);
+    }
+
+    if(ret == -1){
+        printf("%s: statx failed (expected) for '%s'\n", __func__, path);
+    }
+
+    return 0;
+}
+
 void test_lstat() {}
 void test_getmainvars() {}
 
@@ -224,6 +299,9 @@ int main(int argc, char ** argv)
         test_close(fd);
     }
 
+    test_statx(argv[1], 0);
+    test_statx("/path/does/not/exist", -1);
+
     test_write();
     test_writev();
     test_pread();
@@ -249,7 +327,6 @@ int main(int argc, char ** argv)
     test_mprotect();
     test_prlimit();
     test_getrandom();
-    test_statx();
     test_getmainvars();
 
     printf("\nTEST COMPLETE, return code: %d\n\n", fail_code);

@@ -410,9 +410,21 @@ namespace pegasus
             inst_handlers.emplace(
                 "ebreak", pegasus::Action::createAction<&RviInsts::ebreakHandler_, RviInsts>(
                               nullptr, "ebreak", ActionTags::EXECUTE_TAG));
-            inst_handlers.emplace(
-                "ecall", pegasus::Action::createAction<&RviInsts::ecallHandler_<RV32>, RviInsts>(
-                             nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            if (enable_syscall_emulation)
+            {
+                inst_handlers.emplace(
+                    "ecall",
+                    pegasus::Action::createAction<&RviInsts::ecallHandlerSystemEmulation_<RV32>,
+                                                  RviInsts>(nullptr, "ecall",
+                                                            ActionTags::EXECUTE_TAG));
+            }
+            else
+            {
+                inst_handlers.emplace(
+                    "ecall",
+                    pegasus::Action::createAction<&RviInsts::ecallHandler_<RV32>, RviInsts>(
+                        nullptr, "ecall", ActionTags::EXECUTE_TAG));
+            }
             inst_handlers.emplace("fence",
                                   pegasus::Action::createAction<&RviInsts::fenceHandler_, RviInsts>(
                                       nullptr, "fence", ActionTags::EXECUTE_TAG));
@@ -969,6 +981,9 @@ namespace pegasus
 
         // Update the MMU Mode from SATP and MSTATUS
         state->changeMMUMode<XLEN>();
+
+        // Clear the current exception (check for back to back)
+        state->clearCurrentException();
 
         return ++action_it;
     }

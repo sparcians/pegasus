@@ -1,10 +1,12 @@
 #include "PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
+#include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 #include "sparta/events/StartupEvent.hpp"
+#include "sparta/utils/SpartaTester.hpp"
 
 namespace pegasus
 {
@@ -253,8 +255,16 @@ namespace pegasus
         }
 
         // FIXME: Assume both User and Supervisor mode are supported
-        ext_val |= 1 << CSR::MISA::u::high_bit;
-        ext_val |= 1 << CSR::MISA::s::high_bit;
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
+            ext_val |= 1 << CSR_64::MISA::u::high_bit;
+            ext_val |= 1 << CSR_64::MISA::s::high_bit;
+        }
+        else
+        {
+            ext_val |= 1 << CSR_32::MISA::u::high_bit;
+            ext_val |= 1 << CSR_32::MISA::s::high_bit;
+        }
 
         return ext_val;
     }
@@ -320,4 +330,82 @@ namespace pegasus
         }
         // End of sim
     }
+
+    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
+    {
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(xlen_, core->xlen_);
+        }
+        else if (xlen_ != core->xlen_)
+        {
+            return false;
+        }
+
+        auto compression_enabled = isCompressionEnabled();
+        auto other_compression_enabled = core->isCompressionEnabled();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(compression_enabled, other_compression_enabled);
+        }
+        else if (compression_enabled != other_compression_enabled)
+        {
+            return false;
+        }
+
+        auto has_hypervisor = hasHypervisor();
+        auto other_has_hypervisor = core->hasHypervisor();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
+        }
+        else if (has_hypervisor != other_has_hypervisor)
+        {
+            return false;
+        }
+
+        auto pc_alignment = getPcAlignment();
+        auto other_pc_alignment = core->getPcAlignment();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(pc_alignment, other_pc_alignment);
+        }
+        else if (pc_alignment != other_pc_alignment)
+        {
+            return false;
+        }
+
+        auto pc_alignment_mask = getPcAlignmentMask();
+        auto other_pc_alignment_mask = core->getPcAlignmentMask();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(pc_alignment_mask, other_pc_alignment_mask);
+        }
+        else if (pc_alignment_mask != other_pc_alignment_mask)
+        {
+            return false;
+        }
+
+        auto misa_ext_field_value =
+            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
+
+        auto other_misa_ext_field_value = core->getXlen() == 32
+                                              ? core->getMisaExtFieldValue<uint32_t>()
+                                              : core->getMisaExtFieldValue<uint64_t>();
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(misa_ext_field_value, other_misa_ext_field_value);
+        }
+        else if (misa_ext_field_value != other_misa_ext_field_value)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    template bool PegasusCore::compare<false>(const PegasusCore* core) const;
+    template bool PegasusCore::compare<true>(const PegasusCore* core) const;
+
 } // namespace pegasus

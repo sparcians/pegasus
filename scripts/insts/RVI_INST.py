@@ -1,4 +1,4 @@
-RVI_MAVIS_EXTS = ["i", "c", "zca"]
+RVI_MAVIS_EXTS = ["i", "c", "zca", "zcb"]
 
 RV32I_INST = [
     {'mnemonic': 'sll', 'handler': 'sll', 'cost': 1, 'tags': 'BASE_EXT_32', 'memory': False, 'cof': False},

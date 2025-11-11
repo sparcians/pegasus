@@ -3,7 +3,7 @@
 #include "cosim/EventAccessor.hpp"
 #include "cosim/MemoryInterface.hpp"
 
-#include <list>
+#include <deque>
 #include <memory>
 
 /**
@@ -14,7 +14,7 @@
  */
 namespace pegasus::cosim
 {
-    using EventList = std::list<Event>;
+    using EventList = std::deque<Event>;
 
     /**
      * \class CoSim
@@ -87,7 +87,7 @@ namespace pegasus::cosim
          * \brief Commit the event and all older events in the event list
          * \param event The event to commit
          */
-        virtual void commit(const cosim::Event* event) = 0;
+        virtual void commit(cosim::EventAccessor & event) = 0;
 
         /**
          * \brief Commit the memory write(s) of a store instruction to memory
@@ -101,7 +101,7 @@ namespace pegasus::cosim
          *       the comitStoreWrite(event, paddr) method or drop their memory writes using the
          *       dropStoreWrite(event) and dropStoreWrite(event, paddr) methods.
          */
-        virtual void commitStoreWrite(const cosim::Event* event) = 0;
+        virtual void commitStoreWrite(cosim::EventAccessor & event) = 0;
 
         /**
          * \brief Commit a specified memory write of a store instruction
@@ -116,20 +116,20 @@ namespace pegasus::cosim
          *       the comitStoreWrite(event, paddr) method or drop their memory writes using the
          *       dropStoreWrite(event) and dropStoreWrite(event, paddr) methods.
          */
-        virtual void commitStoreWrite(const cosim::Event* event, Addr paddr) = 0;
+        virtual void commitStoreWrite(cosim::EventAccessor & event, Addr paddr) = 0;
 
         /**
          * \brief Drop a store event's memory write(s)
          * \param event The store event with memory write(s) to drop
          */
-        virtual void dropStoreWrite(const cosim::Event* event) = 0;
+        virtual void dropStoreWrite(cosim::EventAccessor & event) = 0;
 
         /**
          * \brief Drop a store event's memory write to the specified physical address
          * \param event The store event with memory write(s) to drop
          * \param paddr The physical address of the memory write to drop
          */
-        virtual void dropStoreWrite(const cosim::Event* event, Addr paddr) = 0;
+        virtual void dropStoreWrite(cosim::EventAccessor & event, Addr paddr) = 0;
 
         /**
          * \brief Flush the event and all younger uncommitted events
@@ -140,7 +140,7 @@ namespace pegasus::cosim
          *       write(s) and removes it from the event list. Events will be flushed from youngest
          *       to oldest.
          */
-        virtual void flush(const cosim::Event* event, bool flush_younger_only = false) = 0;
+        virtual void flush(cosim::EventAccessor & event, bool flush_younger_only = false) = 0;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Memory Interface
@@ -195,8 +195,7 @@ namespace pegasus::cosim
         // Debug
 
         virtual uint64_t getNumCommittedEvents(CoreId core_id, HartId hart_id) const = 0;
-        virtual const cosim::Event & getLastCommittedEvent(CoreId core_id,
-                                                           HartId hart_id) const = 0;
+        virtual EventAccessor getLastCommittedEvent(CoreId core_id, HartId hart_id) const = 0;
         virtual const cosim::EventList & getUncommittedEvents(CoreId core_id,
                                                               HartId hart_id) const = 0;
         virtual uint64_t getNumUncommittedEvents(CoreId core_id, HartId hart_id) const = 0;

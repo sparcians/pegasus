@@ -6,7 +6,8 @@
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/SpartaAssert.hpp"
 
-#include "cosim/CoSimPipeline.hpp"
+#include "cosim/CoSimEventPipeline.hpp"
+#include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
 #include "simdb/sqlite/DatabaseManager.hpp"
 #include "simdb/apps/AppManager.hpp"
 
@@ -47,7 +48,8 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
-                               const std::string & workload, const uint32_t event_window_size) :
+                               const std::string & workload, const std::string & db_file,
+                               const size_t snapshot_threshold, const size_t max_cached_windows) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
@@ -61,32 +63,47 @@ namespace pegasus::cosim
         const uint32_t num_cores = 1;
         const uint32_t num_harts = 1;
 
-        event_list_.resize(num_cores);
-        for (auto & core_event_list : event_list_)
+        cosim_observers_.resize(num_cores);
+        for (auto & core_cosim_observers : cosim_observers_)
         {
-            core_event_list.resize(num_harts);
+            core_cosim_observers.resize(num_harts, nullptr);
         }
 
-        last_committed_event_.resize(num_cores);
-        for (auto & core_last_committed_event : last_committed_event_)
-        {
-            core_last_committed_event.resize(num_harts, cosim::Event(cosim::Event::Type::INVALID));
-        }
-
-        db_mgr_ = std::make_shared<simdb::DatabaseManager>("pegasus-cosim.db", true);
+        db_mgr_ = std::make_shared<simdb::DatabaseManager>(db_file, true);
         app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
 
-        app_mgr_->enableApp(CoSimPipeline::NAME);
+        // Enable CoSimEventPipeline and CoSimCheckpointer apps. Every core/hart needs their own.
+        const uint32_t num_pipelines = num_cores * num_harts;
+        app_mgr_->enableApp(CoSimEventPipeline::NAME, num_pipelines);
+        app_mgr_->enableApp(CoSimCheckpointer::NAME, num_pipelines);
+
+        // Before creating the apps, set up the ctor args that they need. Recall that the
+        // checkpointer apps need to know the arch data root for each hart, which is where
+        // the PegasusState lives for that hart. All instances however use the same scheduler.
+        auto evt_pipeline_factory = app_mgr_->getAppFactory<CoSimEventPipeline>();
+        auto checkpointer_factory = app_mgr_->getAppFactory<CoSimCheckpointer>();
+        checkpointer_factory->setScheduler(*scheduler);
+
+        size_t pipeline_idx =
+            (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
+        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
+        {
+            for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+            {
+                auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
+                checkpointer_factory->setArchDataRoot(pipeline_idx, *state->getContainer());
+                evt_pipeline_factory->setCtorArgs(pipeline_idx, core_idx, hart_idx, state);
+                ++pipeline_idx;
+            }
+        }
+
         app_mgr_->createEnabledApps();
         app_mgr_->createSchemas();
         app_mgr_->postInit(0, nullptr);
-
-        cosim_pipeline_ = app_mgr_->getApp<CoSimPipeline>();
-        cosim_pipeline_->setNumHarts(num_harts);
-        cosim_pipeline_->setEventWindowSize(event_window_size);
         app_mgr_->openPipelines();
 
         fetch_.resize(num_cores);
+        pipeline_idx = (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
         for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
             for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
@@ -101,9 +118,23 @@ namespace pegasus::cosim
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
 
                 // Create and attach CoSimObserver to PegasusState for each hart
-                auto cosim_obs =
-                    std::make_unique<CoSimObserver>(cosim_logger_, cosim_pipeline_, hart_idx);
-                cosim_observers_.emplace_back(cosim_obs.get());
+                auto evt_pipeline = app_mgr_->getApp<CoSimEventPipeline>(pipeline_idx);
+                auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
+                ++pipeline_idx;
+
+                auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
+                                                                 checkpointer, core_idx, hart_idx);
+
+                evt_pipeline->setObserver(cosim_obs.get());
+
+                // Initialize PegasusState and take initial snapshot
+                state->boot();
+                checkpointer->setSnapshotThreshold(snapshot_threshold);
+                checkpointer->setMaxCachedWindows(max_cached_windows);
+                cosim_obs->getCheckpointer()->createHead();
+
+                // Store observer
+                cosim_observers_.at(core_idx).at(hart_idx) = cosim_obs.get();
                 state->addObserver(std::move(cosim_obs));
             }
         }
@@ -113,6 +144,16 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::~PegasusCoSim() noexcept { getRoot()->enterTeardown(); }
+
+    CoSimEventPipeline* PegasusCoSim::getEventPipeline(CoreId core_id, HartId hart_id)
+    {
+        return cosim_observers_.at(core_id).at(hart_id)->getEventPipeline();
+    }
+
+    const CoSimEventPipeline* PegasusCoSim::getEventPipeline(CoreId core_id, HartId hart_id) const
+    {
+        return cosim_observers_.at(core_id).at(hart_id)->getEventPipeline();
+    }
 
     void PegasusCoSim::enableLogger(const std::string & filename)
     {
@@ -135,7 +176,8 @@ namespace pegasus::cosim
             next_action_group = next_action_group->execute(state);
         } while (next_action_group && (next_action_group->hasTag(ActionTags::FETCH_TAG) == false));
 
-        return cosim_pipeline_->getLastEvent(hart_id);
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        return evt_pipeline->getLastEvent();
 
 #if 0
         event_list_.at(hart_id).emplace_back(event);
@@ -161,64 +203,46 @@ namespace pegasus::cosim
 
     void PegasusCoSim::commit(CoreId core_id, HartId hart_id)
     {
-#if 0
-        const cosim::Event & event = event_list_.at(hart_id).front();
-        // COSIMLOG(event);
-        sparta_assert(event.isDone(), "Cannot commit an event that isn't done! " << event);
-
-        last_committed_event_.at(hart_id) = event;
-        event_list_.at(hart_id).pop_front();
-        // TODO: commit store writes
-#endif
-        (void)core_id;
-        (void)hart_id;
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        evt_pipeline->commitOldest();
     }
 
-    void PegasusCoSim::commit(const cosim::Event* event)
+    void PegasusCoSim::commit(cosim::EventAccessor & event)
     {
-#if 0
-        const CoreId core_id, HartId hart_id = event->getCoreId core_id, HartId();
-
-        // Find event in the event list
-        const cosim::EventList & event_list = event_list_.at(hart_id);
-        auto it = std::find_if(event_list.begin(), event_list.end(), [event](const cosim::Event & e)
-                               { return e.getEuid() == event->getEuid(); });
-        sparta_assert(it != event_list.end(), "Event not found in event list!");
-
-        // Commit all events up to and including the event
-        const uint32_t num_events_to_commit = std::distance(event_list.begin(), std::next(it));
-        for (uint32_t i; i < num_events_to_commit; ++i)
-        {
-            commit(hart_id);
-        }
-        COSIMLOG("Number of events committed: " << num_events_to_commit);
-#endif
-        (void)event;
+        auto core_id = event.getCoreId();
+        auto hart_id = event.getHartId();
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        evt_pipeline->commitUpTo(event.getEuid());
     }
 
-    void PegasusCoSim::commitStoreWrite(const cosim::Event*)
+    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor &)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::commitStoreWrite(const cosim::Event*, Addr)
+    void PegasusCoSim::commitStoreWrite(cosim::EventAccessor &, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::dropStoreWrite(const cosim::Event*)
+    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor &)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::dropStoreWrite(const cosim::Event*, Addr)
+    void PegasusCoSim::dropStoreWrite(cosim::EventAccessor &, Addr)
     {
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::flush(const cosim::Event*, bool)
+    void PegasusCoSim::flush(cosim::EventAccessor & event, bool flush_younger_only)
     {
-        sparta_assert(false, "CoSim method is not implemented!");
+        auto core_id = event.getCoreId();
+        auto hart_id = event.getHartId();
+        auto observer = cosim_observers_.at(core_id).at(hart_id);
+        auto state = getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        evt_pipeline->flush(event.getEuid(), flush_younger_only, observer, state);
     }
 
     cosim::MemoryInterface* PegasusCoSim::getMemoryInterface() { return cosim_memory_if_; }
@@ -297,20 +321,22 @@ namespace pegasus::cosim
                - getNumUncommittedEvents(core_id, hart_id);
     }
 
-    const cosim::Event & PegasusCoSim::getLastCommittedEvent(CoreId core_id, HartId hart_id) const
+    EventAccessor PegasusCoSim::getLastCommittedEvent(CoreId core_id, HartId hart_id) const
     {
-        return last_committed_event_.at(core_id).at(hart_id);
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        return evt_pipeline->getLastCommittedEvent();
     }
 
     const cosim::EventList & PegasusCoSim::getUncommittedEvents(CoreId core_id,
                                                                 HartId hart_id) const
     {
-        return event_list_.at(core_id).at(hart_id);
+        auto evt_pipeline = getEventPipeline(core_id, hart_id);
+        return evt_pipeline->getUncommittedEvents();
     }
 
     uint64_t PegasusCoSim::getNumUncommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return event_list_.at(core_id).at(hart_id).size();
+        return getUncommittedEvents(core_id, hart_id).size();
     }
 
     uint64_t PegasusCoSim::getNumUncommittedWrites(CoreId, HartId) const
@@ -327,9 +353,19 @@ namespace pegasus::cosim
 
     void PegasusCoSim::finish()
     {
-        const auto euid = cosim_pipeline_->getLastEventUID();
-        std::cout << "Pegasus co-sim finished after processing " << euid << " events. "
-                  << std::endl;
+        // Send remaining committed events down the pipeline(s) and shut down threads.
         app_mgr_->postSimLoopTeardown();
+
+        std::cout << "Pegasus co-sim finished." << std::endl;
+        for (CoreId core_id = 0; core_id < cosim_observers_.size(); ++core_id)
+        {
+            for (HartId hart_id = 0; hart_id < cosim_observers_.at(core_id).size(); ++hart_id)
+            {
+                auto evt_pipeline = getEventPipeline(core_id, hart_id);
+                const auto euid = evt_pipeline->getLastEventUID();
+                std::cout << "  Core " << core_id << ", Hart " << hart_id << ": ";
+                std::cout << euid << " events processed." << std::endl;
+            }
+        }
     }
 } // namespace pegasus::cosim

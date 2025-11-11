@@ -128,8 +128,6 @@ namespace pegasus
             }
         }
 
-        ++(state->getSimState()->current_uid);
-
         // Decode instruction with Mavis
         PegasusInstPtr inst = nullptr;
         try

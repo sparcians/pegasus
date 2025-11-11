@@ -19,6 +19,7 @@
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
+#include "sparta/utils/SpartaTester.hpp"
 
 #include <algorithm>
 
@@ -35,6 +36,7 @@ namespace pegasus
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
+        ulimit_stack_size_(p->ulimit_stack_size),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -424,7 +426,138 @@ namespace pegasus
         return ++action_it;
     }
 
-    // Initialze a program stack (argc, argv, envp, auxv, etc)
+    template <bool IS_UNIT_TEST> bool PegasusState::compare(const PegasusState* state) const
+    {
+        auto xlen = getXlen();
+        auto other_xlen = state->getXlen();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(xlen, other_xlen);
+        }
+        else if (xlen != other_xlen)
+        {
+            return false;
+        }
+
+        auto stop_sim_on_wfi = getStopSimOnWfi();
+        auto other_stop_sim_on_wfi = state->getStopSimOnWfi();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(stop_sim_on_wfi, other_stop_sim_on_wfi);
+        }
+        else if (stop_sim_on_wfi != other_stop_sim_on_wfi)
+        {
+            return false;
+        }
+
+        auto pc = getPc();
+        auto other_pc = state->getPc();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(pc, other_pc);
+        }
+        else if (pc != other_pc)
+        {
+            return false;
+        }
+
+        auto priv_mode = getPrivMode();
+        auto other_priv_mode = state->getPrivMode();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(priv_mode, other_priv_mode);
+        }
+        else if (priv_mode != other_priv_mode)
+        {
+            return false;
+        }
+
+        auto ldst_priv_mode = getLdstPrivMode();
+        auto other_ldst_priv_mode = state->getLdstPrivMode();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(ldst_priv_mode, other_ldst_priv_mode);
+        }
+        else if (ldst_priv_mode != other_ldst_priv_mode)
+        {
+            return false;
+        }
+
+        auto virtual_mode = getVirtualMode();
+        auto other_virtual_mode = state->getVirtualMode();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(virtual_mode, other_virtual_mode);
+        }
+        else if (virtual_mode != other_virtual_mode)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    template <bool IS_UNIT_TEST>
+    bool PegasusState::SimState::compare(const SimState* sim_state) const
+    {
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(current_opcode, sim_state->current_opcode);
+        }
+        else if (current_opcode != sim_state->current_opcode)
+        {
+            return false;
+        }
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(current_uid, sim_state->current_uid);
+        }
+        else if (current_uid != sim_state->current_uid)
+        {
+            return false;
+        }
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(inst_count, sim_state->inst_count);
+        }
+        else if (inst_count != sim_state->inst_count)
+        {
+            return false;
+        }
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(sim_stopped, sim_state->sim_stopped);
+        }
+        else if (sim_stopped != sim_state->sim_stopped)
+        {
+            return false;
+        }
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(test_passed, sim_state->test_passed);
+        }
+        else if (test_passed != sim_state->test_passed)
+        {
+            return false;
+        }
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(workload_exit_code, sim_state->workload_exit_code);
+        }
+        else if (workload_exit_code != sim_state->workload_exit_code)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Initialize a program stack (argc, argv, envp, auxv, etc)
     // Useful info about ELF binaries: https://lwn.net/Articles/631631/
     // This is used mostly for system call emulation
     void PegasusState::setupProgramStack(const std::vector<std::string> & program_arguments)
@@ -479,19 +612,16 @@ namespace pegasus
         sparta::Register* reg = findRegister("sp", MUST_EXIST);
         uint64_t sp = 0;
 
-        // Typicsl stack pointer is 8KB on most linux systems
-        const uint64_t typical_ulimit_stack_size = 8192;
         if (xlen_ == 64)
         {
             sp = reg->dmiRead<RV64>();
-            sparta_assert(std::numeric_limits<uint64_t>::max() - sp > typical_ulimit_stack_size,
+            sparta_assert(std::numeric_limits<uint64_t>::max() - sp > ulimit_stack_size_,
                           "Stack pointer initial value has a good chance of overflowing");
         }
         else
         {
             sp = reg->dmiRead<RV32>();
-            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp
-                              > typical_ulimit_stack_size,
+            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp > ulimit_stack_size_,
                           "Stack pointer initial value has a good chance of overflowing");
         }
         sparta_assert(sp != 0, "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "
@@ -651,5 +781,11 @@ namespace pegasus
             sim_controller_->onSimulationFinished(this);
         }
     }
+
+    template bool PegasusState::compare<false>(const PegasusState* rhs) const;
+    template bool PegasusState::compare<true>(const PegasusState* rhs) const;
+
+    template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
+    template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
 
 } // namespace pegasus
