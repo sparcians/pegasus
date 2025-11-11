@@ -16,6 +16,8 @@ set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000"
                       --reg "gp 0x77000"
                       --reg "tp 0x7d000" -p top.core0.params.enable_syscall_emulation true)
 
+set (SYSCALL_LOG -l top syscall ${CMAKE_CURRENT_BINARY_DIR}/syscall.log -l top inst ${CMAKE_CURRENT_BINARY_DIR}/inst.log)
+
 set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
 pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/dhry.elf)
 pegasus_named_test(pegasus_fstatat_test pegasus ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )

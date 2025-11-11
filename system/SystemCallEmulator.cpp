@@ -1028,12 +1028,18 @@ namespace pegasus
         host_stat.reserve(300);
         // ret = sysretErrno_(::statx(dirfd, pathname_str.c_str(), flags, mask, &host_stat));
 
+#ifdef __APPLE__
+        // syscall is not supported on MacOS
+        ret = -1;
+#else
+
 #ifndef SYS_statx
         constexpr int SYS_statx = 332; // x86_64-specific syscall number for statx;
                                        // used for manually invoking via syscall()
 #endif
         ret = sysretErrno_(
             syscall(SYS_statx, dirfd, pathname_str.c_str(), flags, mask, host_stat.data()));
+#endif
 
         if (ret != -1)
         {
