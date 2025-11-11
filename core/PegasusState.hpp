@@ -234,6 +234,27 @@ namespace pegasus
 
         void addObserver(std::unique_ptr<Observer> observer);
 
+        template <typename ObserverType>
+        ObserverType* getObserver(bool expect_one = true) const
+        {
+            ObserverType* found_observer = nullptr;
+            for (const auto & obs : observers_)
+            {
+                if (auto casted_obs = dynamic_cast<ObserverType*>(obs.get()))
+                {
+                    sparta_assert(!expect_one || found_observer == nullptr,
+                                  "Multiple observers of type "
+                                      << typeid(ObserverType).name()
+                                      << " exist in PegasusState: " << this);
+                    found_observer = casted_obs;
+                }
+            }
+            sparta_assert(!expect_one || found_observer != nullptr,
+                          "No observer of type " << typeid(ObserverType).name()
+                                                 << " exists in PegasusState: " << this);
+            return found_observer;
+        }
+
         void insertExecuteActions(ActionGroup* action_group);
 
         ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
