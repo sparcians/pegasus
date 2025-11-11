@@ -82,6 +82,8 @@ namespace pegasus
         sparta::Unit(core_tn),
         core_id_(p->core_id),
         num_harts_(p->num_harts),
+        uev_advance_sim_(&unit_event_set_, "advance_sim", CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
+        threads_running_((num_harts_ << 1) - 1),
         syscall_emulation_enabled_(p->enable_syscall_emulation),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
@@ -290,45 +292,41 @@ namespace pegasus
 
     void PegasusCore::advanceSim_()
     {
-        // TODO: Variable for max num threads supported
-        std::bitset<8> threads_running((num_harts_ << 1) - 1);
-        while (true)
+        PegasusState* state = threads_[current_hart_id_];
+        if (state->getSimState()->sim_stopped == false)
         {
-            // Simple round robin
-            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+            DLOG("Running hart" << std::dec << current_hart_id_);
+            Fetch* fetch = state->getFetchUnit();
+            ActionGroup* next_action_group = fetch->getActionGroup();
+            while (next_action_group)
             {
-                PegasusState* state = threads_[hart_id];
-                if (state->getSimState()->sim_stopped == false)
-                {
-                    DLOG("Running hart" << std::dec << hart_id);
-                    Fetch* fetch = state->getFetchUnit();
-                    ActionGroup* next_action_group = fetch->getActionGroup();
-                    while (next_action_group)
-                    {
-                        next_action_group = next_action_group->execute(state);
-                    }
-
-                    if (state->getSimState()->sim_stopped)
-                    {
-                        DLOG("Stopping hart" << std::dec << hart_id);
-                        threads_running.reset(hart_id);
-                        DLOG(threads_running);
-
-                        if (threads_running.none())
-                        {
-                            return;
-                        }
-                    }
-
-                    // We replace the next ActionGroup pointer to pause the sim, so it needs to
-                    // be set back to Fetch
-                    state->getFinishActionGroup()->setNextActionGroup(fetch->getActionGroup());
-
-                    // TODO: Eventually there will be a switch statement here for the pause reason
-                }
+                next_action_group = next_action_group->execute(state);
             }
+
+            if (state->getSimState()->sim_stopped)
+            {
+                DLOG("Stopping hart" << std::dec << current_hart_id_);
+                threads_running_.reset(current_hart_id_);
+            }
+
+            // We replace the next ActionGroup pointer to pause the sim, so it needs to
+            // be set back to Fetch
+            state->getFinishActionGroup()->setNextActionGroup(fetch->getActionGroup());
+
+            // TODO: Eventually there will be a switch statement here for the pause reason
         }
-        // End of sim
+
+        // Simple round robin
+        ++current_hart_id_;
+        current_hart_id_ = (current_hart_id_ == num_harts_) ? 0 : current_hart_id_;
+
+        if (threads_running_.any())
+        {
+            // TODO: We don't have a timing model yet so for now just assume each inst takes 1 cycle
+            const uint64_t quantum_size = state->getQuantumSize();
+            const uint64_t num_insts_exec = (state->getSimState()->inst_count % quantum_size) ? (state->getSimState()->inst_count % quantum_size) : quantum_size;
+            uev_advance_sim_.schedule(num_insts_exec);
+        }
     }
 
     template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const

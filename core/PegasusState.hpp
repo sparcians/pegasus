@@ -97,6 +97,8 @@ namespace pegasus
 
         uint64_t getXlen() const;
 
+        uint64_t getQuantumSize() const { return quantum_; }
+
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
 
         void setPc(Addr pc) { pc_ = pc; }

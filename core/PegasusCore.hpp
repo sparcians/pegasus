@@ -15,6 +15,7 @@
 #include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ResourceFactory.hpp"
+#include "sparta/events/UniqueEvent.hpp"
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
@@ -129,9 +130,6 @@ namespace pegasus
             exception_factory_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
-        // Execute the threads on this core
-        void advanceSim_();
-
         // Pegasus system
         PegasusSystem* system_ = nullptr;
 
@@ -146,6 +144,14 @@ namespace pegasus
 
         // Pegasus State for each hart
         std::map<HartId, PegasusState*> threads_;
+
+        // Execute the threads on this core
+        void advanceSim_();
+        sparta::UniqueEvent<> uev_advance_sim_;
+
+        // Status of each thread
+        HartId current_hart_id_ = 0;
+        std::bitset<8> threads_running_;
 
         // Is system call emulation enabled?
         const bool syscall_emulation_enabled_;
