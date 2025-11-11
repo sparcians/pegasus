@@ -121,6 +121,8 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
 
     // Compare PegasusState
     state_truth->compare<true>(state_test);
+    // TODO cnyce: Add this to PegasusState::compare()
+    EXPECT_EQUAL(state_truth->getCurrentException(), state_test->getCurrentException());
 
     // Compare SimState
     auto sim_state_truth = state_truth->getSimState();

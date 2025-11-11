@@ -970,6 +970,9 @@ namespace pegasus
         // Update the MMU Mode from SATP and MSTATUS
         state->changeMMUMode<XLEN>();
 
+        // Clear the current exception (check for back to back)
+        state->clearCurrentException();
+
         return ++action_it;
     }
 

@@ -89,6 +89,7 @@ namespace pegasus::cosim
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
+        last_event.prev_excp_code_ = state->getCurrentException();
 
         const auto & inst = state->getCurrentInst();
         if (inst && inst->hasCsr())

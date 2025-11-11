@@ -189,6 +189,8 @@ namespace pegasus::cosim
 
         ExcpCode getExceptionCode() const { return excp_code_; }
 
+        ExcpCode getPrevExceptionCode() const { return prev_excp_code_; }
+
         bool hasCsr() const { return inst_csr_ != std::numeric_limits<uint32_t>::max(); }
 
         uint32_t getCsr() const
@@ -263,6 +265,8 @@ namespace pegasus::cosim
         ExcpCode excp_code_ =
             std::numeric_limits<ExcpCode>::max(); //!< The exception code for faulting instruction
                                                   //!< and interrupt Events
+        ExcpCode prev_excp_code_ =
+            std::numeric_limits<ExcpCode>::max(); //!< The previous exception code before this Event
 
         // Inst CSR which may cause side effects
         uint32_t inst_csr_ =
@@ -359,6 +363,7 @@ namespace pegasus::cosim
             ar & next_ldst_priv_;
             ar & excp_type_;
             ar & excp_code_;
+            ar & prev_excp_code_;
             ar & inst_csr_;
             ar & register_reads_;
             ar & register_writes_;
