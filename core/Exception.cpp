@@ -79,7 +79,8 @@ namespace pegasus
                                   "Currently handling fault '"
                                       << static_cast<FaultCause>(state->getCurrentException())
                                       << "' when same fault happened: '"
-                                      << static_cast<FaultCause>(excp_code) << "'");
+                                      << static_cast<FaultCause>(excp_code) << "' at PC: "
+                                      << HEX16(state->getPc()));
                 }
             }
         }
