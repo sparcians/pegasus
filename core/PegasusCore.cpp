@@ -181,7 +181,6 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
-            state->setPc(system_->getStartingPc());
         }
 
         // Initialize Mavis
@@ -210,6 +209,11 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        // Start simulation with only the main thread running
+        PegasusState* state = threads_.at(0);
+        state->setPc(system_->getStartingPc());
+        state->getSimState()->sim_stopped = false;
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -405,5 +409,4 @@ namespace pegasus
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;
     template bool PegasusCore::compare<true>(const PegasusCore* core) const;
-
 } // namespace pegasus
