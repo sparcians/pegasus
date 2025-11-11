@@ -4,7 +4,6 @@
 #include "core/Action.hpp"
 
 #include <map>
-#include <string>
 
 namespace pegasus
 {

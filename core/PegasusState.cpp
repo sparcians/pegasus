@@ -35,6 +35,7 @@ namespace pegasus
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
+        ulimit_stack_size_(p->ulimit_stack_size),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -596,19 +597,16 @@ namespace pegasus
         sparta::Register* reg = findRegister("sp", MUST_EXIST);
         uint64_t sp = 0;
 
-        // Typicsl stack pointer is 8KB on most linux systems
-        const uint64_t typical_ulimit_stack_size = 8192;
         if (xlen_ == 64)
         {
             sp = reg->dmiRead<RV64>();
-            sparta_assert(std::numeric_limits<uint64_t>::max() - sp > typical_ulimit_stack_size,
+            sparta_assert(std::numeric_limits<uint64_t>::max() - sp > ulimit_stack_size_,
                           "Stack pointer initial value has a good chance of overflowing");
         }
         else
         {
             sp = reg->dmiRead<RV32>();
-            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp
-                              > typical_ulimit_stack_size,
+            sparta_assert(std::numeric_limits<uint32_t>::max() - (uint32_t)sp > ulimit_stack_size_,
                           "Stack pointer initial value has a good chance of overflowing");
         }
         sparta_assert(sp != 0, "The stack pointer (sp aka x2) is set to 0.  Use --reg \"sp <val>\" "

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <string>
 #include "core/inst_handlers/f/RvfInstsBase.hpp"
 
 namespace pegasus

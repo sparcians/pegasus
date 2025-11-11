@@ -145,7 +145,7 @@ namespace pegasus
         const XLEN a1_val = READ_INT_REG<XLEN>(state, 11);
 
         // FIXME: Does Mavis handle this?
-        if (inst->getRs1() == inst->getRs2())
+        if (inst->getRd() == inst->getRd2())
         {
             THROW_ILLEGAL_INST;
         }
