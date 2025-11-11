@@ -155,8 +155,6 @@ namespace pegasus::cosim
 
         bool isLastEvent() const { return event_ends_sim_; }
 
-        int getExitCode() const { return workload_exit_code_; }
-
         bool isEventInRoi() const { return is_in_region_of_interest_; }
 
         bool isEventEnteringRoi() const { return is_entering_region_of_interest_; }
@@ -191,6 +189,8 @@ namespace pegasus::cosim
 
         ExcpCode getExceptionCode() const { return excp_code_; }
 
+        ExcpCode getPrevExceptionCode() const { return prev_excp_code_; }
+
         bool hasCsr() const { return inst_csr_ != std::numeric_limits<uint32_t>::max(); }
 
         uint32_t getCsr() const
@@ -224,7 +224,6 @@ namespace pegasus::cosim
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
         bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
-        int workload_exit_code_ = 0; //!< Workload exit code if this Event ends simulation
 
         // Region of interest
         bool is_in_region_of_interest_{
@@ -266,6 +265,8 @@ namespace pegasus::cosim
         ExcpCode excp_code_ =
             std::numeric_limits<ExcpCode>::max(); //!< The exception code for faulting instruction
                                                   //!< and interrupt Events
+        ExcpCode prev_excp_code_ =
+            std::numeric_limits<ExcpCode>::max(); //!< The previous exception code before this Event
 
         // Inst CSR which may cause side effects
         uint32_t inst_csr_ =
@@ -345,7 +346,6 @@ namespace pegasus::cosim
             ar & hart_id_;
             ar & done_;
             ar & event_ends_sim_;
-            ar & workload_exit_code_;
             ar & is_in_region_of_interest_;
             ar & is_entering_region_of_interest_;
             ar & is_exiting_region_of_interest_;
@@ -363,6 +363,7 @@ namespace pegasus::cosim
             ar & next_ldst_priv_;
             ar & excp_type_;
             ar & excp_code_;
+            ar & prev_excp_code_;
             ar & inst_csr_;
             ar & register_reads_;
             ar & register_writes_;

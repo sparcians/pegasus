@@ -1,5 +1,6 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusCore.hpp"
+#include "sparta/utils/SpartaTester.hpp"
 
 namespace pegasus
 {
@@ -91,6 +92,71 @@ namespace pegasus
     {
         vec_config_ = makeVecCfg(*state->getVectorConfig(), veccfg_overrides_);
     }
+
+    template <bool IS_UNIT_TEST> bool PegasusInst::compare(const PegasusInst* inst) const
+    {
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(uid_, inst->uid_);
+            EXPECT_EQUAL(getOpcode(), inst->getOpcode());
+            EXPECT_EQUAL(getOpcodeSize(), inst->getOpcodeSize());
+            EXPECT_EQUAL(isMemoryInst(), inst->isMemoryInst());
+            EXPECT_EQUAL(isChangeOfFlowInst(), inst->isChangeOfFlowInst());
+            EXPECT_EQUAL(hasCsr(), inst->hasCsr());
+            EXPECT_EQUAL(writesCsr(), inst->writesCsr());
+            EXPECT_EQUAL(isStoreType(), inst->isStoreType());
+            EXPECT_EQUAL(getMnemonic(), inst->getMnemonic());
+            EXPECT_EQUAL(dasmString(), inst->dasmString());
+        }
+        else
+        {
+            if (uid_ != inst->uid_)
+            {
+                return false;
+            }
+            if (getOpcode() != inst->getOpcode())
+            {
+                return false;
+            }
+            if (getOpcodeSize() != inst->getOpcodeSize())
+            {
+                return false;
+            }
+            if (isMemoryInst() != inst->isMemoryInst())
+            {
+                return false;
+            }
+            if (isChangeOfFlowInst() != inst->isChangeOfFlowInst())
+            {
+                return false;
+            }
+            if (hasCsr() != inst->hasCsr())
+            {
+                return false;
+            }
+            if (writesCsr() != inst->writesCsr())
+            {
+                return false;
+            }
+            if (isStoreType() != inst->isStoreType())
+            {
+                return false;
+            }
+            if (getMnemonic() != inst->getMnemonic())
+            {
+                return false;
+            }
+            if (dasmString() != inst->dasmString())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template bool PegasusInst::compare<false>(const PegasusInst* inst) const;
+    template bool PegasusInst::compare<true>(const PegasusInst* inst) const;
 
     std::ostream & operator<<(std::ostream & os, const PegasusInst & inst)
     {

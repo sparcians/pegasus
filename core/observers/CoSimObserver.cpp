@@ -51,11 +51,6 @@ namespace pegasus::cosim
 
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
-        if (last_event.event_ends_sim_)
-        {
-            last_event.workload_exit_code_ = state->getSimState()->workload_exit_code;
-        }
-
         last_event.next_pc_ = state->getPc();
         last_event.next_priv_ = state->getPrivMode();
         last_event.next_ldst_priv_ = state->getLdstPrivMode();
@@ -94,6 +89,7 @@ namespace pegasus::cosim
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
+        last_event.prev_excp_code_ = state->getCurrentException();
 
         const auto & inst = state->getCurrentInst();
         if (inst && inst->hasCsr())
@@ -104,14 +100,6 @@ namespace pegasus::cosim
             {
                 last_event.inst_csr_ = csr;
             }
-            else
-            {
-                last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
-            }
-        }
-        else
-        {
-            last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
         }
     }
 

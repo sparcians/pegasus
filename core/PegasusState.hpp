@@ -140,6 +140,8 @@ namespace pegasus
                 current_inst.reset();
                 ++current_uid;
             }
+
+            template <bool IS_UNIT_TEST = false> bool compare(const SimState* state) const;
         };
 
         const SimState* getSimState() const { return &sim_state_; }
@@ -157,6 +159,12 @@ namespace pegasus
             inst->setUid(sim_state_.current_uid);
             sim_state_.current_inst = inst;
         }
+
+        void setCurrentException(uint64_t excp_code) { current_exception_ = excp_code; }
+
+        void clearCurrentException() { current_exception_ = std::numeric_limits<ExcpCode>::max(); }
+
+        uint64_t getCurrentException() const { return current_exception_; }
 
         PegasusTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
@@ -225,6 +233,8 @@ namespace pegasus
 
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
+
+        template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
         // Initialze a program stack (argc, argv, envp, auxv, etc)
         void setupProgramStack(const std::vector<std::string> & program_arguments);
@@ -300,6 +310,9 @@ namespace pegasus
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;
+
+        //! Current exception code
+        uint64_t current_exception_ = std::numeric_limits<ExcpCode>::max();
 
         //! LR/SC Reservations
         Reservation reservation_;
