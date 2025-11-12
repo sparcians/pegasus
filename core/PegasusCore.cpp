@@ -82,8 +82,8 @@ namespace pegasus
         sparta::Unit(core_tn),
         core_id_(p->core_id),
         num_harts_(p->num_harts),
-        uev_advance_sim_(&unit_event_set_, "advance_sim",
-                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
+        ev_advance_sim_(&unit_event_set_, "advance_sim",
+                        CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
         threads_running_((num_harts_ << 1) - 1),
         syscall_emulation_enabled_(p->enable_syscall_emulation),
         isa_string_(p->isa),
@@ -324,12 +324,14 @@ namespace pegasus
 
         if (threads_running_.any())
         {
-            // TODO: We don't have a timing model yet so for now just assume each inst takes 1 cycle
-            const uint64_t quantum_size = state->getQuantumSize();
-            const uint64_t num_insts_exec = (state->getSimState()->inst_count % quantum_size)
-                                                ? (state->getSimState()->inst_count % quantum_size)
-                                                : quantum_size;
-            uev_advance_sim_.schedule(num_insts_exec);
+            const uint64_t current_cycle = state->getSimState()->cycles;
+            ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
+
+            // Update current cycle for all threads
+            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+            {
+                threads_[hart_id]->getSimState()->cycles = current_cycle;
+            }
         }
     }
 

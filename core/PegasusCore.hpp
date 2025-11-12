@@ -147,7 +147,7 @@ namespace pegasus
 
         // Execute the threads on this core
         void advanceSim_();
-        sparta::Event<> uev_advance_sim_;
+        sparta::Event<> ev_advance_sim_;
 
         // Status of each thread
         HartId current_hart_id_ = 0;

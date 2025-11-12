@@ -138,6 +138,9 @@ namespace pegasus
             // Number of instructions executed
             uint64_t inst_count = 0;
 
+            // How many cycles
+            uint64_t cycles = 0;
+
             // Simulation control
             SimPauseReason sim_pause_reason = SimPauseReason::INVALID;
             bool sim_stopped = true;

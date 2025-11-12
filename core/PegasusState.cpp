@@ -438,6 +438,10 @@ namespace pegasus
         // Increment instruction count
         ++sim_state_.inst_count;
 
+        // TODO: We don't have a timing model yet so
+        // for now just assume each inst takes 1 cycle
+        ++sim_state_.cycles;
+
         if constexpr (CHECK_ILIMIT)
         {
             if (sim_state_.inst_count == ilimit_)
