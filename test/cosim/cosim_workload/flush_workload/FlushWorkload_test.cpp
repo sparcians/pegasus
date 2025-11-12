@@ -189,7 +189,8 @@ bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, Ha
     vec_config_truth->compare<true>(vec_config_test);
 
     // Compare memory
-    auto inst_logger = dynamic_cast<const pegasus::InstructionLogger*>(state_truth->getObservers()[0].get());
+    auto inst_logger =
+        dynamic_cast<const pegasus::InstructionLogger*>(state_truth->getObservers()[0].get());
     const auto & mem_writes_truth = inst_logger->getMemoryWrites();
     for (const auto & mem_write : mem_writes_truth)
     {
