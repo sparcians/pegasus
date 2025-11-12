@@ -16,6 +16,7 @@
 using pegasus::CoreId;
 using pegasus::HartId;
 using pegasus::RegisterSet;
+using pegasus::PegasusSim;
 using pegasus::cosim::EventAccessor;
 using pegasus::cosim::PegasusCoSim;
 
@@ -127,8 +128,6 @@ bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, Ha
 
     // Compare PegasusState
     state_truth->compare<true>(state_test);
-    // TODO cnyce: Add this to PegasusState::compare()
-    EXPECT_EQUAL(state_truth->getCurrentException(), state_test->getCurrentException());
 
     // Compare SimState
     auto sim_state_truth = state_truth->getSimState();
@@ -330,7 +329,6 @@ int main(int argc, char** argv)
     PegasusSim cosim_truth(&scheduler_truth, {workload}, {}, ilimit);
 
     sparta::app::SimulationConfiguration config_truth;
-    const auto workload_fname = std::filesystem::path(workload).filename().string();
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
     cosim_truth.configure(0, nullptr, &config_truth);
     cosim_truth.buildTree();
