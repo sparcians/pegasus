@@ -314,11 +314,8 @@ namespace pegasus
                 threads_running_.reset(current_hart_id_);
             }
 
-            // We replace the next ActionGroup pointer to pause the sim, so it needs to
-            // be set back to Fetch
-            state->getFinishActionGroup()->setNextActionGroup(fetch->getActionGroup());
-
             // TODO: Eventually there will be a switch statement here for the pause reason
+            state->unpauseHart();
         }
 
         // Simple round robin

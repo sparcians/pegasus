@@ -259,6 +259,20 @@ namespace pegasus
         translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
     }
 
+    void PegasusState::pauseHart(const SimPauseReason reason)
+    {
+        sim_state_.sim_pause_reason = reason;
+        finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+    }
+
+    void PegasusState::unpauseHart()
+    {
+        sim_state_.sim_pause_reason = SimPauseReason::INVALID;
+        // We replace the next ActionGroup pointer to pause the sim, so it needs to
+        // be set back to Fetch
+        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+    }
+
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
     {
         if (operand)

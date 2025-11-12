@@ -148,7 +148,6 @@ namespace pegasus
             {
                 current_opcode = 0;
                 current_inst.reset();
-                sim_pause_reason = SimPauseReason::INVALID;
                 ++current_uid;
             }
 
@@ -159,11 +158,9 @@ namespace pegasus
 
         SimState* getSimState() { return &sim_state_; }
 
-        void pauseHart(const SimPauseReason reason)
-        {
-            sim_state_.sim_pause_reason = reason;
-            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
-        }
+        void pauseHart(const SimPauseReason reason);
+
+        void unpauseHart();
 
         const VectorConfig* getVectorConfig() const { return &vector_config_; }
 

@@ -15,7 +15,7 @@
 #include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ResourceFactory.hpp"
-#include "sparta/events/UniqueEvent.hpp"
+#include "sparta/events/Event.hpp"
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
@@ -147,7 +147,7 @@ namespace pegasus
 
         // Execute the threads on this core
         void advanceSim_();
-        sparta::UniqueEvent<> uev_advance_sim_;
+        sparta::Event<> uev_advance_sim_;
 
         // Status of each thread
         HartId current_hart_id_ = 0;
