@@ -207,9 +207,15 @@ namespace pegasus::cosim
 
         const std::string & getDisassemblyStr() const { return dasm_string_; }
 
-        const sparta::utils::ValidValue<Addr> & getStartReservation() const { return start_reservation_; }
+        const sparta::utils::ValidValue<Addr> & getStartReservation() const
+        {
+            return start_reservation_;
+        }
 
-        const sparta::utils::ValidValue<Addr> & getEndReservation() const { return end_reservation_; }
+        const sparta::utils::ValidValue<Addr> & getEndReservation() const
+        {
+            return end_reservation_;
+        }
 
         bool operator==(const Event & other) const = default;
 
@@ -274,8 +280,10 @@ namespace pegasus::cosim
                                                   //!< instruction causing this Event
 
         // PegasusState reservation
-        sparta::utils::ValidValue<Addr> start_reservation_; //!< LR/SC reservation address (start of inst)
-        sparta::utils::ValidValue<Addr> end_reservation_;   //!< LR/SC reservation address (end of inst)
+        sparta::utils::ValidValue<Addr>
+            start_reservation_; //!< LR/SC reservation address (start of inst)
+        sparta::utils::ValidValue<Addr>
+            end_reservation_; //!< LR/SC reservation address (end of inst)
 
         // Softfloat state changes
         struct SoftfloatFlags
