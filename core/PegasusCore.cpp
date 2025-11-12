@@ -5,6 +5,7 @@
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
+#include "sparta/events/StartupEvent.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
 namespace pegasus
@@ -81,6 +82,9 @@ namespace pegasus
         sparta::Unit(core_tn),
         core_id_(p->core_id),
         num_harts_(p->num_harts),
+        ev_advance_sim_(&unit_event_set_, "advance_sim",
+                        CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
+        threads_running_((num_harts_ << 1) - 1),
         syscall_emulation_enabled_(p->enable_syscall_emulation),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
@@ -140,6 +144,8 @@ namespace pegasus
                           "ISA extension: " << unsupportedExt
                                             << " is not supported in isa_string: " << isa_string_);
         }
+
+        sparta::StartupEvent(core_tn, CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_));
     }
 
     PegasusCore::~PegasusCore() {}
@@ -176,7 +182,6 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
-            state->setPc(system_->getStartingPc());
         }
 
         // Initialize Mavis
@@ -205,6 +210,11 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        // Start simulation with only the main thread running
+        PegasusState* state = threads_.at(0);
+        state->setPc(system_->getStartingPc());
+        state->getSimState()->sim_stopped = false;
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -285,6 +295,46 @@ namespace pegasus
         }
     }
 
+    void PegasusCore::advanceSim_()
+    {
+        PegasusState* state = threads_[current_hart_id_];
+        if (state->getSimState()->sim_stopped == false)
+        {
+            DLOG("Running hart" << std::dec << current_hart_id_);
+            Fetch* fetch = state->getFetchUnit();
+            ActionGroup* next_action_group = fetch->getActionGroup();
+            while (next_action_group)
+            {
+                next_action_group = next_action_group->execute(state);
+            }
+
+            if (state->getSimState()->sim_stopped)
+            {
+                DLOG("Stopping hart" << std::dec << current_hart_id_);
+                threads_running_.reset(current_hart_id_);
+            }
+
+            // TODO: Eventually there will be a switch statement here for the pause reason
+            state->unpauseHart();
+        }
+
+        // Simple round robin
+        ++current_hart_id_;
+        current_hart_id_ = (current_hart_id_ == num_harts_) ? 0 : current_hart_id_;
+
+        if (threads_running_.any())
+        {
+            const uint64_t current_cycle = state->getSimState()->cycles;
+            ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
+
+            // Update current cycle for all threads
+            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+            {
+                threads_[hart_id]->getSimState()->cycles = current_cycle;
+            }
+        }
+    }
+
     template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
     {
         if constexpr (IS_UNIT_TEST)
@@ -361,5 +411,4 @@ namespace pegasus
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;
     template bool PegasusCore::compare<true>(const PegasusCore* core) const;
-
 } // namespace pegasus

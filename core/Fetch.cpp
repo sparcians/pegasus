@@ -5,7 +5,6 @@
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
 
-#include "sparta/events/StartupEvent.hpp"
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
@@ -20,8 +19,6 @@ namespace pegasus
         Action decode_action =
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
         decode_action_group_.addAction(decode_action);
-
-        sparta::StartupEvent(fetch_node, CREATE_SPARTA_HANDLER(Fetch, advanceSim_));
     }
 
     void Fetch::onBindTreeEarly_()
@@ -176,16 +173,5 @@ namespace pegasus
         }
 
         return ++action_it;
-    }
-
-    void Fetch::advanceSim_()
-    {
-        // Run
-        ActionGroup* next_action_group = &fetch_action_group_;
-        while (next_action_group)
-        {
-            next_action_group = next_action_group->execute(state_);
-        }
-        // End of sim
     }
 } // namespace pegasus

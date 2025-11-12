@@ -39,7 +39,5 @@ namespace pegasus
         Action::ItrType decode_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         ActionGroup decode_action_group_{"Decode"};
-
-        void advanceSim_();
     };
 } // namespace pegasus

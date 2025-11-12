@@ -28,6 +28,14 @@ namespace pegasus
     using FLOAT_SP = uint32_t;
     using FLOAT_DP = uint64_t;
 
+    enum class SimPauseReason
+    {
+        QUANTUM,   //! Instruction quantum reached
+        INTERRUPT, //! Interrupt
+        FORK,      //! New thread
+        INVALID    //! Invalid
+    };
+
     enum class InstType
     {
         SCALAR,         //! Scalar (integer)

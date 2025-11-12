@@ -25,6 +25,26 @@
 
 namespace pegasus
 {
+    PrivMode getPrivilegeMode(const char priv)
+    {
+        if (priv == 'm')
+        {
+            return PrivMode::MACHINE;
+        }
+        else if (priv == 's')
+        {
+            return PrivMode::SUPERVISOR;
+        }
+        else if (priv == 'u')
+        {
+            return PrivMode::USER;
+        }
+        else
+        {
+            sparta_assert(false, "Unsupported privilege mode: " << priv);
+        }
+    }
+
     PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
@@ -32,14 +52,17 @@ namespace pegasus
         xlen_(p->xlen),
         csr_values_json_(p->csr_values),
         ilimit_(p->ilimit),
+        quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
         ulimit_stack_size_(p->ulimit_stack_size),
+        priv_mode_(getPrivilegeMode(p->priv_mode)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
-        stop_sim_action_group_("stop_sim")
+        stop_sim_action_group_("stop_sim"),
+        pause_sim_action_group_("pause_sim")
     {
         // Set up register sets
         const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
@@ -89,6 +112,10 @@ namespace pegasus
         stop_action_ = pegasus::Action::createAction<&PegasusState::stopSim_>(this, "stop sim");
         stop_action_.addTag(ActionTags::STOP_SIM_TAG);
         stop_sim_action_group_.addAction(stop_action_);
+
+        // Create Action to pause simulation
+        pause_action_ = pegasus::Action::createAction<&PegasusState::pauseSim_>(this, "pause sim");
+        pause_sim_action_group_.addAction(pause_action_);
 
         // Update VectorConfig vlen
         vector_config_.setVLEN(vlen_);
@@ -230,6 +257,20 @@ namespace pegasus
         DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
                         DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
         translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
+    }
+
+    void PegasusState::pauseHart(const SimPauseReason reason)
+    {
+        sim_state_.sim_pause_reason = reason;
+        finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+    }
+
+    void PegasusState::unpauseHart()
+    {
+        sim_state_.sim_pause_reason = SimPauseReason::INVALID;
+        // We replace the next ActionGroup pointer to pause the sim, so it needs to
+        // be set back to Fetch
+        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -397,6 +438,10 @@ namespace pegasus
         // Increment instruction count
         ++sim_state_.inst_count;
 
+        // TODO: We don't have a timing model yet so
+        // for now just assume each inst takes 1 cycle
+        ++sim_state_.cycles;
+
         if constexpr (CHECK_ILIMIT)
         {
             if (sim_state_.inst_count == ilimit_)
@@ -406,6 +451,13 @@ namespace pegasus
                 const uint64_t exit_code = 0;
                 stopSim(exit_code);
             }
+        }
+
+        if (sim_state_.inst_count % quantum_ == 0)
+        {
+            DLOG("Executed " << std::dec << quantum_
+                             << " instructions (total: " << sim_state_.inst_count << ")");
+            pauseHart(SimPauseReason::QUANTUM);
         }
 
         return ++action_it;
@@ -742,13 +794,13 @@ namespace pegasus
 
             std::cout << "PegasusState::boot()\n";
             std::cout << std::hex;
-            std::cout << "\tMHARTID: 0x" << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
+            std::cout << "\tMHARTID: " << state->getCsrRegister(MHARTID)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tMISA:    0x" << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
+            std::cout << "\tMISA:    " << state->getCsrRegister(MISA)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tMSTATUS: 0x" << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
+            std::cout << "\tMSTATUS: " << state->getCsrRegister(MSTATUS)->dmiRead<uint64_t>()
                       << std::endl;
-            std::cout << "\tSSTATUS: 0x" << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
+            std::cout << "\tSSTATUS: " << state->getCsrRegister(SSTATUS)->dmiRead<uint64_t>()
                       << std::endl;
             std::cout << std::dec;
         }

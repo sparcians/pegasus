@@ -66,6 +66,7 @@ namespace pegasus
                  {99, {"set_robust_list", cfp(&SysCallHandlers::set_robust_list_)}},
                  {113, {"clock_gettime", cfp(&SysCallHandlers::clock_gettime_)}},
                  {131, {"tgkill", cfp(&SysCallHandlers::tgkill_)}},
+                 {134, {"rt_sigaction", cfp(&SysCallHandlers::rt_sigaction_)}},
                  {135, {"rt_sigprocmask", cfp(&SysCallHandlers::rt_sigprocmask_)}},
                  {160, {"uname", cfp(&SysCallHandlers::uname_)}},
                  {172, {"getpid", cfp(&SysCallHandlers::getpid_)}},
@@ -86,6 +87,7 @@ namespace pegasus
                   {"clock_gettime",
                    cfp(&SysCallHandlers::clock_gettime_)}}, // sc_call_id = 403 is for
                                                             // "clock_gettime64".
+                 {435, {"clone", cfp(&SysCallHandlers::clone_)}},
                  {1024, {"open", cfp(&SysCallHandlers::open_)}},
                  {1039, {"lstat", cfp(&SysCallHandlers::lstat_)}},
                  {2011, {"getmainvars", cfp(&SysCallHandlers::getmainvars_)}}});
@@ -241,6 +243,7 @@ namespace pegasus
         int64_t set_robust_list_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t clock_gettime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t tgkill_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t rt_sigaction_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t rt_sigprocmask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t uname_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -253,13 +256,14 @@ namespace pegasus
         int64_t mmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t munmap_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getrandom_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t clone_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t lstat_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getmainvars_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
-        int64_t hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
 
         // The parent emulator
         SystemCallEmulator* emulator_ = nullptr;
@@ -536,6 +540,12 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::mprotect_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+
+    int64_t SysCallHandlers::hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
@@ -955,6 +965,13 @@ namespace pegasus
         return exit_(call_stack, mem);
     }
 
+    int64_t SysCallHandlers::rt_sigaction_(const SystemCallStack &,
+                                           sparta::memory::BlockingMemoryIF*)
+    {
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
+    }
+
     int64_t SysCallHandlers::rt_sigprocmask_(const SystemCallStack &,
                                              sparta::memory::BlockingMemoryIF*)
     {
@@ -1055,6 +1072,59 @@ namespace pegasus
         return ret;
     }
 
+    struct clone_args
+    {
+        uint64_t flags;        /* Flags bit mask */
+        uint64_t pidfd;        /* Where to store PID file descriptor
+                                  (int *) */
+        uint64_t child_tid;    /* Where to store child TID,
+                                  in child's memory (pid_t *) */
+        uint64_t parent_tid;   /* Where to store child TID,
+                                  in parent's memory (pid_t *) */
+        uint64_t exit_signal;  /* Signal to deliver to parent on
+                                  child termination */
+        uint64_t stack;        /* Pointer to lowest byte of stack */
+        uint64_t stack_size;   /* Size of stack */
+        uint64_t tls;          /* Location of new TLS */
+        uint64_t set_tid;      /* Pointer to a pid_t array
+                                  (since Linux 5.5) */
+        uint64_t set_tid_size; /* Number of elements in set_tid
+                                  (since Linux 5.5) */
+        uint64_t cgroup;       /* File descriptor for target cgroup
+                                  of child (since Linux 5.7) */
+    };
+
+    int64_t SysCallHandlers::clone_(const SystemCallStack & call_stack,
+                                    sparta::memory::BlockingMemoryIF* memory)
+    {
+        // Get clone args struct from memory
+        clone_args args;
+        const uint64_t addr = call_stack[1];
+        const size_t size = call_stack[2];
+        sparta_assert(sizeof(clone_args) == size,
+                      "Size of clone_args struct does not match size parameter!");
+        const bool success = memory->tryRead(addr, size, reinterpret_cast<uint8_t*>(&args));
+        sparta_assert(success);
+
+        SYSCALL_LOG(__func__ << " clone_args: flags: 0x" << std::hex << args.flags);
+        SYSCALL_LOG(__func__ << " clone_args: pidfd: 0x" << std::hex << args.pidfd);
+        SYSCALL_LOG(__func__ << " clone_args: child_tid: 0x" << std::hex << args.child_tid);
+        SYSCALL_LOG(__func__ << " clone_args: parent_tid: 0x" << std::hex << args.parent_tid);
+        SYSCALL_LOG(__func__ << " clone_args: exit_signal: 0x" << std::hex << args.exit_signal);
+        SYSCALL_LOG(__func__ << " clone_args: stack: 0x" << std::hex << args.stack);
+        SYSCALL_LOG(__func__ << " clone_args: stack_size: 0x" << std::hex << args.stack_size);
+        SYSCALL_LOG(__func__ << " clone_args: tls: 0x" << std::hex << args.tls);
+        SYSCALL_LOG(__func__ << " clone_args: set_tid: 0x" << std::hex << args.set_tid);
+        SYSCALL_LOG(__func__ << " clone_args: set_tid_size: 0x" << std::hex << args.set_tid_size);
+        SYSCALL_LOG(__func__ << " clone_args: cgroup: 0x" << std::hex << args.cgroup);
+
+        // TODO: Boot up a new thread, set the thread/hart ID, pause the current thread, etc.
+
+        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
+        int64_t ret = -1;
+        return ret;
+    }
+
     int64_t SysCallHandlers::open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
@@ -1075,11 +1145,5 @@ namespace pegasus
         sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
         int64_t ret = -1;
         return ret;
-    }
-
-    int64_t SysCallHandlers::hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
-    {
-        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
-        return 0;
     }
 } // namespace pegasus
