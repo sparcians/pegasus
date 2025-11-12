@@ -966,7 +966,7 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::rt_sigaction_(const SystemCallStack &,
-                                             sparta::memory::BlockingMemoryIF*)
+                                           sparta::memory::BlockingMemoryIF*)
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
@@ -1072,7 +1072,8 @@ namespace pegasus
         return ret;
     }
 
-    struct clone_args {
+    struct clone_args
+    {
         uint64_t flags;        /* Flags bit mask */
         uint64_t pidfd;        /* Where to store PID file descriptor
                                   (int *) */
@@ -1093,13 +1094,15 @@ namespace pegasus
                                   of child (since Linux 5.7) */
     };
 
-    int64_t SysCallHandlers::clone_(const SystemCallStack & call_stack, sparta::memory::BlockingMemoryIF* memory)
+    int64_t SysCallHandlers::clone_(const SystemCallStack & call_stack,
+                                    sparta::memory::BlockingMemoryIF* memory)
     {
         // Get clone args struct from memory
         clone_args args;
         const uint64_t addr = call_stack[1];
         const size_t size = call_stack[2];
-        sparta_assert(sizeof(clone_args) == size, "Size of clone_args struct does not match size parameter!");
+        sparta_assert(sizeof(clone_args) == size,
+                      "Size of clone_args struct does not match size parameter!");
         const bool success = memory->tryRead(addr, size, reinterpret_cast<uint8_t*>(&args));
         sparta_assert(success);
 
