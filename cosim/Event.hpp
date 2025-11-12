@@ -292,10 +292,10 @@ namespace pegasus::cosim
         // Softfloat state changes
         struct SoftfloatFlags
         {
-            uint_fast8_t softfloat_roundingMode;
-            uint_fast8_t softfloat_detectTininess;
-            uint_fast8_t softfloat_exceptionFlags;
-            uint_fast8_t extF80_roundingPrecision;
+            uint_fast8_t softfloat_roundingMode = 0;
+            uint_fast8_t softfloat_detectTininess = 0;
+            uint_fast8_t softfloat_exceptionFlags = 0;
+            uint_fast8_t extF80_roundingPrecision = 0;
 
             template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
             {
