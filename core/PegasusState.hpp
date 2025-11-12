@@ -234,8 +234,7 @@ namespace pegasus
 
         void addObserver(std::unique_ptr<Observer> observer);
 
-        template <typename ObserverType>
-        ObserverType* getObserver(bool expect_one = true) const
+        template <typename ObserverType> ObserverType* getObserver(bool expect_one = true) const
         {
             ObserverType* found_observer = nullptr;
             for (const auto & obs : observers_)

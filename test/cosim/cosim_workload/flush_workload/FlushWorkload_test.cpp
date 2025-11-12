@@ -15,8 +15,8 @@
 
 using pegasus::CoreId;
 using pegasus::HartId;
-using pegasus::RegisterSet;
 using pegasus::PegasusSim;
+using pegasus::RegisterSet;
 using pegasus::cosim::EventAccessor;
 using pegasus::cosim::PegasusCoSim;
 
