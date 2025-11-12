@@ -58,10 +58,10 @@ namespace pegasus::cosim
             last_event.end_reservation_ = reservation;
         }
 
-        last_event.start_softfloat_flags_.softfloat_roundingMode = softfloat_roundingMode;
-        last_event.start_softfloat_flags_.softfloat_detectTininess = softfloat_detectTininess;
-        last_event.start_softfloat_flags_.softfloat_exceptionFlags = softfloat_exceptionFlags;
-        last_event.start_softfloat_flags_.extF80_roundingPrecision = extF80_roundingPrecision;
+        last_event.end_softfloat_flags_.softfloat_roundingMode = softfloat_roundingMode;
+        last_event.end_softfloat_flags_.softfloat_detectTininess = softfloat_detectTininess;
+        last_event.end_softfloat_flags_.softfloat_exceptionFlags = softfloat_exceptionFlags;
+        last_event.end_softfloat_flags_.extF80_roundingPrecision = extF80_roundingPrecision;
 
         last_event.next_pc_ = state->getPc();
         last_event.next_priv_ = state->getPrivMode();
