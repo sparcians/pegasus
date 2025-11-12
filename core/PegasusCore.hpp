@@ -15,6 +15,7 @@
 #include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ResourceFactory.hpp"
+#include "sparta/events/Event.hpp"
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
@@ -143,6 +144,14 @@ namespace pegasus
 
         // Pegasus State for each hart
         std::map<HartId, PegasusState*> threads_;
+
+        // Execute the threads on this core
+        void advanceSim_();
+        sparta::Event<> ev_advance_sim_;
+
+        // Status of each thread
+        HartId current_hart_id_ = 0;
+        std::bitset<8> threads_running_;
 
         // Is system call emulation enabled?
         const bool syscall_emulation_enabled_;
