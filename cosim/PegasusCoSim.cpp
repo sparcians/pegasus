@@ -90,7 +90,13 @@ namespace pegasus::cosim
             for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
             {
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
-                checkpointer_factory->setArchDataRoot(pipeline_idx, *state->getContainer());
+                auto system = getPegasusCore(core_idx)->getSystem();
+
+                std::vector<sparta::TreeNode*> chkptr_arch_data_roots;
+                chkptr_arch_data_roots.push_back(state->getContainer());
+                chkptr_arch_data_roots.push_back(system->getContainer());
+
+                checkpointer_factory->setArchDataRoots(pipeline_idx, chkptr_arch_data_roots);
                 evt_pipeline_factory->setCtorArgs(pipeline_idx, core_idx, hart_idx, state);
                 ++pipeline_idx;
             }
@@ -115,16 +121,11 @@ namespace pegasus::cosim
                                                      ->getResourceAs<pegasus::Fetch>());
 
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
-                auto system = getPegasusCore(core_idx)->getSystem();
 
                 // Create and attach CoSimObserver to PegasusState for each hart
                 auto evt_pipeline = app_mgr_->getApp<CoSimEventPipeline>(pipeline_idx);
                 auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
                 ++pipeline_idx;
-
-                // Each checkpointer needs to checkpoint all ArchData's under the hart's PegasusState
-                // as well as the PegasusSystem's memory map
-                checkpointer->addRoot(*system->getContainer());
 
                 auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
                                                                  checkpointer, core_idx, hart_idx);
