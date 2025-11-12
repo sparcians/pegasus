@@ -1,5 +1,5 @@
 #include "system/PegasusSystem.hpp"
-
+#include "core/observers/Observer.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
 #include "sparta/memory/MemoryObject.hpp"
 #include "sparta/utils/LogUtils.hpp"
@@ -320,6 +320,19 @@ namespace pegasus
         memory_map_->addMapping(addr_block_start, PEGASUS_SYSTEM_TOTAL_MEMORY, memory_if,
                                 0x0 /* Additional offset */);
         memory_map_->dumpMappings(std::cout);
+    }
+
+    void PegasusSystem::registerMemoryCallbacks(Observer* observer)
+    {
+        observer->registerReadWriteMemCallbacks(getSystemMemory());
+        using BMOIfNode = sparta::memory::BlockingMemoryIFNode;
+        for (const auto & n : tree_nodes_)
+        {
+            if (auto bm_if_node = dynamic_cast<BMOIfNode*>(n.get()))
+            {
+                observer->registerReadWriteMemCallbacks(bm_if_node);
+            }
+        }
     }
 
     void PegasusSystem::enableEOTPassFailMode()

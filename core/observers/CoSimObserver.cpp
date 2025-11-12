@@ -7,6 +7,7 @@
 #include "system/PegasusSystem.hpp"
 #include "simdb/pipeline/Pipeline.hpp"
 #include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "source/include/softfloat.h"
 
 namespace pegasus::cosim
 {
@@ -51,6 +52,17 @@ namespace pegasus::cosim
 
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
+
+        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        {
+            last_event.end_reservation_ = reservation;
+        }
+
+        last_event.end_softfloat_flags_.softfloat_roundingMode = softfloat_roundingMode;
+        last_event.end_softfloat_flags_.softfloat_detectTininess = softfloat_detectTininess;
+        last_event.end_softfloat_flags_.softfloat_exceptionFlags = softfloat_exceptionFlags;
+        last_event.end_softfloat_flags_.extF80_roundingPrecision = extF80_roundingPrecision;
+
         last_event.next_pc_ = state->getPc();
         last_event.next_priv_ = state->getPrivMode();
         last_event.next_ldst_priv_ = state->getLdstPrivMode();
@@ -90,6 +102,16 @@ namespace pegasus::cosim
         last_event.curr_priv_ = state->getPrivMode();
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
         last_event.prev_excp_code_ = state->getCurrentException();
+
+        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        {
+            last_event.start_reservation_ = reservation;
+        }
+
+        last_event.start_softfloat_flags_.softfloat_roundingMode = softfloat_roundingMode;
+        last_event.start_softfloat_flags_.softfloat_detectTininess = softfloat_detectTininess;
+        last_event.start_softfloat_flags_.softfloat_exceptionFlags = softfloat_exceptionFlags;
+        last_event.start_softfloat_flags_.extF80_roundingPrecision = extF80_roundingPrecision;
 
         const auto & inst = state->getCurrentInst();
         if (inst && inst->hasCsr())

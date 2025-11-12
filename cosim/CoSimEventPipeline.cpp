@@ -8,6 +8,7 @@
 #include "simdb/pipeline/AsyncDatabaseAccessor.hpp"
 #include "simdb/utils/Compress.hpp"
 #include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "source/include/softfloat.h"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -385,6 +386,20 @@ namespace pegasus::cosim
             state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
             state->setCurrentException(evt.getPrevExceptionCode());
 
+            if (evt.getStartReservation().isValid())
+            {
+                state->getReservation() = evt.getStartReservation();
+            }
+            else
+            {
+                state->getReservation().clearValid();
+            }
+
+            softfloat_roundingMode = evt.start_softfloat_flags_.softfloat_roundingMode;
+            softfloat_detectTininess = evt.start_softfloat_flags_.softfloat_detectTininess;
+            softfloat_exceptionFlags = evt.start_softfloat_flags_.softfloat_exceptionFlags;
+            extF80_roundingPrecision = evt.start_softfloat_flags_.extF80_roundingPrecision;
+
             std::vector<std::string> exts_to_enable;
             std::vector<std::string> exts_to_disable;
             const auto & ext_changes = evt.extension_changes_;
@@ -477,6 +492,20 @@ namespace pegasus::cosim
             state->setPc(reload_evt.getNextPc());
             state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
 
+            if (reload_evt.getEndReservation().isValid())
+            {
+                state->getReservation() = reload_evt.getEndReservation();
+            }
+            else
+            {
+                state->getReservation().clearValid();
+            }
+
+            softfloat_roundingMode = reload_evt.end_softfloat_flags_.softfloat_roundingMode;
+            softfloat_detectTininess = reload_evt.end_softfloat_flags_.softfloat_detectTininess;
+            softfloat_exceptionFlags = reload_evt.end_softfloat_flags_.softfloat_exceptionFlags;
+            extF80_roundingPrecision = reload_evt.end_softfloat_flags_.extF80_roundingPrecision;
+
             auto sim_state = state->getSimState();
             sim_state->reset();
             sim_state->current_opcode = reload_evt.getOpcode();
@@ -500,19 +529,6 @@ namespace pegasus::cosim
                 {
                     state->changeMMUMode<uint64_t>();
                 }
-            }
-
-            // Now that the state has had a chance to switch the Mavis context, we
-            // can safely decode the opcode. Note the try/catch is the same as the
-            // call to makeInst() in Fetch::decode_
-            try
-            {
-                auto inst = state->getCore()->getMavis()->makeInst(reload_evt.getOpcode(), state);
-                inst->updateVecConfig(state);
-                state->setCurrentInst(inst);
-            }
-            catch (const mavis::BaseException &)
-            {
             }
         };
 

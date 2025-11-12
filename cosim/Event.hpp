@@ -209,6 +209,16 @@ namespace pegasus::cosim
 
         const std::string & getDisassemblyStr() const { return dasm_string_; }
 
+        const sparta::utils::ValidValue<Addr> & getStartReservation() const
+        {
+            return start_reservation_;
+        }
+
+        const sparta::utils::ValidValue<Addr> & getEndReservation() const
+        {
+            return end_reservation_;
+        }
+
         bool operator==(const Event & other) const = default;
 
       private:
@@ -272,6 +282,34 @@ namespace pegasus::cosim
         uint32_t inst_csr_ =
             std::numeric_limits<uint32_t>::max(); //!< The CSR accessed by the
                                                   //!< instruction causing this Event
+
+        // PegasusState reservation
+        sparta::utils::ValidValue<Addr>
+            start_reservation_; //!< LR/SC reservation address (start of inst)
+        sparta::utils::ValidValue<Addr>
+            end_reservation_; //!< LR/SC reservation address (end of inst)
+
+        // Softfloat state changes
+        struct SoftfloatFlags
+        {
+            uint_fast8_t softfloat_roundingMode = 0;
+            uint_fast8_t softfloat_detectTininess = 0;
+            uint_fast8_t softfloat_exceptionFlags = 0;
+            uint_fast8_t extF80_roundingPrecision = 0;
+
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & softfloat_roundingMode;
+                ar & softfloat_detectTininess;
+                ar & softfloat_exceptionFlags;
+                ar & extF80_roundingPrecision;
+            }
+
+            bool operator==(const SoftfloatFlags & other) const = default;
+        };
+
+        SoftfloatFlags start_softfloat_flags_;
+        SoftfloatFlags end_softfloat_flags_;
 
         //! @}
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,6 +403,10 @@ namespace pegasus::cosim
             ar & excp_code_;
             ar & prev_excp_code_;
             ar & inst_csr_;
+            ar & start_reservation_;
+            ar & end_reservation_;
+            ar & start_softfloat_flags_;
+            ar & end_softfloat_flags_;
             ar & register_reads_;
             ar & register_writes_;
             ar & memory_reads_;

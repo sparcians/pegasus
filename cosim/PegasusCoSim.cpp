@@ -91,7 +91,13 @@ namespace pegasus::cosim
             for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
             {
                 auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
-                checkpointer_factory->setArchDataRoot(pipeline_idx, *state->getContainer());
+                auto system = getPegasusCore(core_idx)->getSystem();
+
+                std::vector<sparta::TreeNode*> chkptr_arch_data_roots;
+                chkptr_arch_data_roots.push_back(state->getContainer());
+                chkptr_arch_data_roots.push_back(system->getContainer());
+
+                checkpointer_factory->setArchDataRoots(pipeline_idx, chkptr_arch_data_roots);
                 evt_pipeline_factory->setCtorArgs(pipeline_idx, core_idx, hart_idx, state);
                 ++pipeline_idx;
             }

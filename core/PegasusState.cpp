@@ -213,15 +213,6 @@ namespace pegasus
                                                            pc_, validation_stf_filename_));
             }
         }
-
-        for (auto & obs : observers_)
-        {
-            obs->registerReadWriteMemCallbacks(pegasus_core_->getSystem()->getSystemMemory());
-            for (auto reg : csr_rset_->getRegisters())
-            {
-                obs->registerReadWriteCsrCallbacks(reg);
-            }
-        }
     }
 
     void PegasusState::setPrivMode(PrivMode priv_mode, bool virt_mode)
@@ -414,6 +405,12 @@ namespace pegasus
             finish_action_group_.addAction(post_execute_action_);
             exception_unit_->getActionGroup()->insertActionBefore(pre_exception_action_,
                                                                   ActionTags::EXCEPTION_TAG);
+        }
+
+        pegasus_core_->getSystem()->registerMemoryCallbacks(observer.get());
+        for (auto reg : csr_rset_->getRegisters())
+        {
+            observer->registerReadWriteCsrCallbacks(reg);
         }
 
         observers_.emplace_back(std::move(observer));
