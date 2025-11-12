@@ -83,8 +83,6 @@ namespace pegasus::cosim
         async_eval_ = db_accessor;
 
         // Task 1: Run the incoming events through boost::serialization
-        using EventList = std::deque<Event>;
-
         auto serialize =
             simdb::pipeline::createTask<simdb::pipeline::Function<EventList, SerializedEvtsBuffer>>(
                 [this](EventList && evts, simdb::ConcurrentQueue<SerializedEvtsBuffer> & out,
@@ -386,6 +384,7 @@ namespace pegasus::cosim
 
             state->setPc(evt.getPc());
             state->setPrivMode(evt.getPrivilegeMode(), state->getVirtualMode());
+            state->setCurrentException(evt.getPrevExceptionCode());
 
             if (evt.getStartReservation().isValid())
             {
@@ -514,7 +513,7 @@ namespace pegasus::cosim
             sim_state->sim_stopped = reload_evt.isLastEvent();
             sim_state->inst_count = reload_evt.getEuid();
             sim_state->test_passed = sim_state->workload_exit_code == 0;
-            if (!reload_evt.isLastEvent())
+            if (!sim_state->sim_stopped)
             {
                 sim_state->workload_exit_code = 0;
             }

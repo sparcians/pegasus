@@ -13,7 +13,8 @@ namespace pegasus
     Exception::Exception(sparta::TreeNode* exception_node,
                          const ExceptionParameters* except_params) :
         sparta::Unit(exception_node),
-        unexpected_faults_(except_params->unexpected_faults)
+        unexpected_faults_(except_params->unexpected_faults),
+        fail_back_to_back_faults_(except_params->fail_on_back_to_back_faults)
     {
         rv32_exception_action_ = pegasus::Action::createAction<&Exception::handleException_<RV32>>(
             this, "exception", ActionTags::EXCEPTION_TAG);
@@ -52,19 +53,37 @@ namespace pegasus
         const bool is_interrupt = interrupt_cause_.isValid();
         const uint64_t excp_code = is_interrupt ? static_cast<XLEN>(interrupt_cause_.getValue())
                                                 : static_cast<XLEN>(fault_cause_.getValue());
-        DLOG("Exception code: " << excp_code);
 
-        if (false == is_interrupt)
-        {
-            sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
-                          "Unexpected fault: " << fault_cause_.getValue());
-        }
+        DLOG("Exception code: " << excp_code);
 
         // Determine which privilege mode to handle the trap in
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
         const XLEN trap_deleg_val = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
         const PrivMode priv_mode =
             ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
+
+        if (false == is_interrupt)
+        {
+            sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
+                          "Unexpected fault: " << fault_cause_.getValue());
+
+            if (SPARTA_EXPECT_FALSE(fail_back_to_back_faults_))
+            {
+                // Check to see if we're throwing the same exception back to
+                // back (like illop to illop).  We can be in an infinite loop
+                if (SPARTA_EXPECT_FALSE(state->getCurrentException() == excp_code))
+                {
+                    const auto current_epc = READ_CSR_REG<XLEN>(
+                        state, (priv_mode == PrivMode::SUPERVISOR ? SEPC : MEPC));
+                    sparta_assert(current_epc != state->getPc(),
+                                  "Currently handling fault '"
+                                      << static_cast<FaultCause>(state->getCurrentException())
+                                      << "' when same fault happened: '"
+                                      << static_cast<FaultCause>(excp_code)
+                                      << "' at PC: " << HEX16(state->getPc()));
+                }
+            }
+        }
 
         const bool prev_virt_mode = state->getVirtualMode();
 
@@ -148,6 +167,9 @@ namespace pegasus
 
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();
+
+        state->setCurrentException(excp_code);
+
         return ++action_it;
     }
 

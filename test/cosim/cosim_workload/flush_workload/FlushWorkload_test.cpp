@@ -12,8 +12,11 @@
 /// forward N times, then flush to the N-1 instruction. Then the comparison takes
 /// place, and we continue until the end of the workload.
 
-using namespace pegasus;
-using namespace pegasus::cosim;
+using pegasus::CoreId;
+using pegasus::HartId;
+using pegasus::RegisterSet;
+using pegasus::cosim::EventAccessor;
+using pegasus::cosim::PegasusCoSim;
 
 std::string GetArchFromPath(const std::string & path)
 {
@@ -116,49 +119,27 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
     auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
 
-    // Compare PegasusState member variables
-    EXPECT_EQUAL(state_truth->getXlen(), state_test->getXlen());
-    EXPECT_EQUAL(state_truth->getStopSimOnWfi(), state_test->getStopSimOnWfi());
-    EXPECT_EQUAL(state_truth->getPc(), state_test->getPc());
-    EXPECT_EQUAL(state_truth->getPrivMode(), state_test->getPrivMode());
-    EXPECT_EQUAL(state_truth->getLdstPrivMode(), state_test->getLdstPrivMode());
-    EXPECT_EQUAL(state_truth->getVirtualMode(), state_test->getVirtualMode());
+    // Compare PegasusState
+    state_truth->compare<true>(state_test);
+    // TODO cnyce: Add this to PegasusState::compare()
+    EXPECT_EQUAL(state_truth->getCurrentException(), state_test->getCurrentException());
 
-    // Compare PegasusCore member variables
-    EXPECT_EQUAL(state_truth->getCore()->isCompressionEnabled(),
-                 state_test->getCore()->isCompressionEnabled());
-    EXPECT_EQUAL(state_truth->getCore()->hasHypervisor(), state_test->getCore()->hasHypervisor());
-    EXPECT_EQUAL(state_truth->getCore()->getPcAlignment(), state_test->getCore()->getPcAlignment());
-    EXPECT_EQUAL(state_truth->getCore()->getPcAlignmentMask(),
-                 state_test->getCore()->getPcAlignmentMask());
-    EXPECT_EQUAL(state_truth->getCore()->getMisaExtFieldValue<XLEN>(),
-                 state_test->getCore()->getMisaExtFieldValue<XLEN>());
-
-    // Compare sim state
+    // Compare SimState
     auto sim_state_truth = state_truth->getSimState();
     auto sim_state_test = state_test->getSimState();
-    EXPECT_EQUAL(sim_state_truth->current_opcode, sim_state_test->current_opcode);
-    EXPECT_EQUAL(sim_state_truth->current_uid, sim_state_test->current_uid);
-    EXPECT_EQUAL(sim_state_truth->inst_count, sim_state_test->inst_count);
-    EXPECT_EQUAL(sim_state_truth->sim_stopped, sim_state_test->sim_stopped);
-    EXPECT_EQUAL(sim_state_truth->test_passed, sim_state_test->test_passed);
-    EXPECT_EQUAL(sim_state_truth->workload_exit_code, sim_state_test->workload_exit_code);
+    sim_state_truth->compare<true>(sim_state_test);
+
+    // Compare PegasusCore
+    auto core_truth = state_truth->getCore();
+    auto core_test = state_test->getCore();
+    core_truth->compare<true>(core_test);
 
     // Compare current inst
     auto inst_truth = state_truth->getCurrentInst();
     auto inst_test = state_test->getCurrentInst();
     if (inst_truth && inst_test)
     {
-        EXPECT_EQUAL(inst_truth->getUid(), inst_test->getUid());
-        EXPECT_EQUAL(inst_truth->getOpcode(), inst_test->getOpcode());
-        EXPECT_EQUAL(inst_truth->getOpcodeSize(), inst_test->getOpcodeSize());
-        EXPECT_EQUAL(inst_truth->isMemoryInst(), inst_test->isMemoryInst());
-        EXPECT_EQUAL(inst_truth->isChangeOfFlowInst(), inst_test->isChangeOfFlowInst());
-        EXPECT_EQUAL(inst_truth->hasCsr(), inst_test->hasCsr());
-        EXPECT_EQUAL(inst_truth->writesCsr(), inst_test->writesCsr());
-        EXPECT_EQUAL(inst_truth->isStoreType(), inst_test->isStoreType());
-        EXPECT_EQUAL(inst_truth->getMnemonic(), inst_test->getMnemonic());
-        EXPECT_EQUAL(inst_truth->dasmString(), inst_test->dasmString());
+        inst_truth->compare<true>(inst_test);
     }
 
     // Compare registers
@@ -200,14 +181,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     // Compare vector config
     auto vec_config_truth = state_truth->getVectorConfig();
     auto vec_config_test = state_test->getVectorConfig();
-    EXPECT_EQUAL(vec_config_truth->getVLEN(), vec_config_test->getVLEN());
-    EXPECT_EQUAL(vec_config_truth->getLMUL(), vec_config_test->getLMUL());
-    EXPECT_EQUAL(vec_config_truth->getSEW(), vec_config_test->getSEW());
-    EXPECT_EQUAL(vec_config_truth->getVTA(), vec_config_test->getVTA());
-    EXPECT_EQUAL(vec_config_truth->getVMA(), vec_config_test->getVMA());
-    EXPECT_EQUAL(vec_config_truth->getVL(), vec_config_test->getVL());
-    EXPECT_EQUAL(vec_config_truth->getVSTART(), vec_config_test->getVSTART());
-    EXPECT_EQUAL(vec_config_truth->getVLMAX(), vec_config_test->getVLMAX());
+    vec_config_truth->compare<true>(vec_config_test);
 
     // Compare memory
     auto pipeline_truth = sim_truth.getEventPipeline(core_id, hart_id);
@@ -265,28 +239,6 @@ bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId
         return Compare<XLEN>(sim_truth, sim_test, core_id, hart_id);
     }
     return false;
-}
-
-std::string GenerateUUID()
-{
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<uint64_t> dis;
-
-    uint64_t part1 = dis(gen);
-    uint64_t part2 = dis(gen);
-
-    // Set UUID version (4) and variant (RFC 4122)
-    part1 = (part1 & 0xFFFFFFFFFFFF0FFFULL) | 0x0000000000004000ULL;
-    part2 = (part2 & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
-
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0') << std::setw(8) << ((part1 >> 32) & 0xFFFFFFFFULL) << '-'
-        << std::setw(4) << ((part1 >> 16) & 0xFFFFULL) << '-' << std::setw(4) << (part1 & 0xFFFFULL)
-        << '-' << std::setw(4) << ((part2 >> 48) & 0xFFFFULL) << '-' << std::setw(12)
-        << (part2 & 0xFFFFFFFFFFFFULL);
-
-    return oss.str();
 }
 
 // Parse the workload and 'max steps before flush' from command line arguments.
@@ -369,15 +321,22 @@ int main(int argc, char** argv)
     sparta::SleeperThread::disableForever();
 
     const uint64_t ilimit = 0;
-    const auto uuid = GenerateUUID();
-    const auto db_truth = uuid + "_truth.db";
-    const auto db_test = uuid + "_test.db";
+
+    const auto cwd = std::filesystem::current_path().string();
+    const auto workload_fname = std::filesystem::path(workload).filename().string();
+    const auto db_truth = cwd + "/" + workload_fname + "_truth.db";
+    const auto db_test = cwd + "/" + workload_fname + "_test.db";
+
+    const size_t snapshot_threshold = 10;
+    const size_t max_cached_windows = 10;
 
     sparta::Scheduler scheduler_truth;
-    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth);
+    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth, snapshot_threshold,
+                             max_cached_windows);
 
     sparta::Scheduler scheduler_test;
-    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test);
+    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test, snapshot_threshold,
+                            max_cached_windows);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;

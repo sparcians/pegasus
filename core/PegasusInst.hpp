@@ -184,6 +184,13 @@ namespace pegasus
         // accesses
         PegasusTranslationState* getTranslationState() { return &translation_state_; }
 
+        template <bool IS_UNIT_TEST = false> bool compare(const PegasusInst* inst) const;
+
+        template <bool IS_UNIT_TEST = false> bool compare(const PegasusInst::PtrType & inst) const
+        {
+            return compare<IS_UNIT_TEST>(inst.get());
+        }
+
       private:
         // Unique ID
         uint64_t uid_;

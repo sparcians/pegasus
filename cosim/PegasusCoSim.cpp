@@ -48,7 +48,8 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
-                               const std::string & workload, const std::string & db_file) :
+                               const std::string & workload, const std::string & db_file,
+                               const size_t snapshot_threshold, const size_t max_cached_windows) :
         PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
@@ -134,8 +135,8 @@ namespace pegasus::cosim
 
                 // Initialize PegasusState and take initial snapshot
                 state->boot();
-                checkpointer->setSnapshotThreshold(10);
-                checkpointer->setMaxCachedWindows(10);
+                checkpointer->setSnapshotThreshold(snapshot_threshold);
+                checkpointer->setMaxCachedWindows(max_cached_windows);
                 cosim_obs->getCheckpointer()->createHead();
 
                 // Store observer

@@ -101,6 +101,7 @@ namespace pegasus::cosim
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
+        last_event.prev_excp_code_ = state->getCurrentException();
 
         if (const auto & reservation = state->getReservation(); reservation.isValid())
         {
@@ -121,14 +122,6 @@ namespace pegasus::cosim
             {
                 last_event.inst_csr_ = csr;
             }
-            else
-            {
-                last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
-            }
-        }
-        else
-        {
-            last_event.inst_csr_ = std::numeric_limits<uint32_t>::max();
         }
     }
 
