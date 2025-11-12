@@ -188,20 +188,15 @@ bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, Ha
     auto vec_config_test = state_test->getVectorConfig();
     vec_config_truth->compare<true>(vec_config_test);
 
-    // Compare memory (TODO cnyce)
-#if 0
-    auto pipeline_test = sim_test.getEventPipeline(core_id, hart_id);
-    auto last_event_test = pipeline_test->getLastEvent();
-    const auto & mem_reads_test = last_event_test->getMemoryReads();
-    const auto & mem_writes_test = last_event_test->getMemoryWrites();
-
-    auto observer_truth = state_truth->getObserver<InstructionLogger>();
-    const auto & mem_reads_truth = observer_truth->getMemoryReads();
-    const auto & mem_writes_truth = observer_truth->getMemoryWrites();
-
-    EXPECT_EQUAL(mem_reads_truth, mem_reads_test);
-    EXPECT_EQUAL(mem_writes_truth, mem_writes_test);
-#endif
+    // Compare memory
+    auto inst_logger = dynamic_cast<const pegasus::InstructionLogger*>(state_truth->getObservers()[0].get());
+    const auto & mem_writes_truth = inst_logger->getMemoryWrites();
+    for (const auto & mem_write : mem_writes_truth)
+    {
+        auto mem_value_truth = state_truth->readMemory<uint64_t>(mem_write.addr);
+        auto mem_value_test = state_test->readMemory<uint64_t>(mem_write.addr);
+        EXPECT_EQUAL(mem_value_truth, mem_value_test);
+    }
 
     // Compare enabled extensions
     auto extensions_map_truth =
