@@ -439,9 +439,7 @@ namespace pegasus
         {
             DLOG("Executed " << std::dec << quantum_
                              << " instructions (total: " << sim_state_.inst_count << ")");
-
-            sim_state_.sim_pause_reason = SimPauseReason::QUANTUM;
-            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+            pauseHart(SimPauseReason::QUANTUM);
         }
 
         return ++action_it;

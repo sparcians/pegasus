@@ -159,6 +159,12 @@ namespace pegasus
 
         SimState* getSimState() { return &sim_state_; }
 
+        void pauseHart(const SimPauseReason reason)
+        {
+            sim_state_.sim_pause_reason = reason;
+            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+        }
+
         const VectorConfig* getVectorConfig() const { return &vector_config_; }
 
         VectorConfig* getVectorConfig() { return &vector_config_; }
