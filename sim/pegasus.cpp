@@ -99,18 +99,6 @@ int main(int argc, char** argv)
             ilimit = 1;
         }
 
-        // Shove some register overrides in
-        pegasus::PegasusSimParameters::RegValueOverridePairs reg_value_overrides;
-        if (vm.count("reg"))
-        {
-            auto & reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
-            for (auto reg_override : reg_overrides)
-            {
-                reg_value_overrides.emplace_back(
-                    std::make_pair(reg_override.name, reg_override.value));
-            }
-        }
-
         // Process command line parameters
         auto & sim_cfg = cls.getSimulationConfiguration();
 
@@ -146,9 +134,27 @@ int main(int argc, char** argv)
         // Inst limit
         sim_cfg.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
 
+        // Register overrides
+        if (vm.count("reg"))
+        {
+            std::string reg_overrides_param_value = "[";
+            const auto reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
+            for (uint32_t reg_idx = 0; reg_idx < reg_overrides.size(); ++reg_idx)
+            {
+                const auto & reg_override = reg_overrides[reg_idx];
+                reg_overrides_param_value +=
+                    "[" + reg_override.name + ", " + reg_override.value + "]";
+                const bool last_overrides = reg_idx == (reg_overrides.size() - 1);
+                reg_overrides_param_value += last_overrides ? "" : ",";
+            }
+
+            reg_overrides_param_value += "]";
+            sim_cfg.processParameter("top.extension.sim.reg_overrides", reg_overrides_param_value);
+        }
+
         // Create the simulator
         sparta::Scheduler scheduler;
-        pegasus::PegasusSim sim(&scheduler, reg_value_overrides);
+        pegasus::PegasusSim sim(&scheduler);
 
         cls.populateSimulation(&sim);
 
