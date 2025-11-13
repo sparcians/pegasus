@@ -242,9 +242,10 @@ bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId c
 //
 // Or for manual debugging:
 //   ./FlushWorkload_test -w <workload> [--max-steps-before-flush <steps>] [--fast-forward-steps
-//   <steps>]
+//   <steps>] [--db-stem <stem>]
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
+//   --> '--db-stem' specifies the database stem name
 std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** argv)
 {
     if (argc == 1)
