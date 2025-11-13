@@ -39,8 +39,7 @@ int main()
 {
     // Create the simulator
     sparta::Scheduler scheduler_;
-    const uint64_t ilimit = 0;
-    pegasus::PegasusSim pegasus_sim{&scheduler_, {}, {}, ilimit};
+    pegasus::PegasusSim pegasus_sim{&scheduler_};
 
     pegasus_sim.buildTree();
     pegasus_sim.configureTree();

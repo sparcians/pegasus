@@ -11,8 +11,7 @@ class PegasusInstructionTester
     PegasusInstructionTester()
     {
         // Create the simulator
-        const uint64_t ilimit = 0;
-        pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_, {}, {}, ilimit));
+        pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_));
 
         pegasus_sim_->buildTree();
         pegasus_sim_->configureTree();

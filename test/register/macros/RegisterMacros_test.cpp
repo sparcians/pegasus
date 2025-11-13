@@ -25,7 +25,7 @@ class RegisterTester
 
   private:
     sparta::Scheduler scheduler_;
-    pegasus::PegasusSim pegasus_sim_{&scheduler_, {}, {}, 0};
+    pegasus::PegasusSim pegasus_sim_{&scheduler_};
     pegasus::PegasusState* state_ = nullptr;
 };
 
