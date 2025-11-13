@@ -7,7 +7,7 @@
 
 const char USAGE[] =
     "Usage:\n"
-    "./pegasus [-i inst limit] [--reg \"name value\"] [--opcode opcode] [--interactive] "
+    "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode opcode] [--interactive] "
     "[--spike-formatting] <workloads>"
     "\n";
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         app_opts.add_options()
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
-            ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register")
+            ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register e.g. \"core0.hart0.sp 0x1000\"")
             ("opcode", po::value<std::string>(&opcode), "Executes a single opcode")
             ("interactive", "Enable interactive mode (IDE)")
             ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
