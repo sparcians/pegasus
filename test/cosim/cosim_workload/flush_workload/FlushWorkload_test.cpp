@@ -312,7 +312,8 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
 
 int main(int argc, char** argv)
 {
-    const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] = ParseArgs(argc, argv);
+    const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] =
+        ParseArgs(argc, argv);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
@@ -321,7 +322,8 @@ int main(int argc, char** argv)
     const uint64_t ilimit = 0;
 
     const auto cwd = std::filesystem::current_path().string();
-    const auto workload_fname = !db_stem.empty() ? db_stem : std::filesystem::path(workload).filename().string();
+    const auto workload_fname =
+        !db_stem.empty() ? db_stem : std::filesystem::path(workload).filename().string();
     const auto db_truth = cwd + "/" + workload_fname + "_truth.db";
     const auto db_test = cwd + "/" + workload_fname + "_test.db";
 
@@ -333,7 +335,8 @@ int main(int argc, char** argv)
 
     sparta::app::SimulationConfiguration config_truth;
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
-    config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh", false);
+    config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
+                                  false);
     cosim_truth.configure(0, nullptr, &config_truth);
     cosim_truth.buildTree();
     cosim_truth.configureTree();
