@@ -1,4 +1,4 @@
-#include "PegasusSim.hpp"
+#include "sim/PegasusSim.hpp"
 #include "include/ActionTags.hpp"
 #include "include/gen/CSRFieldIdxs64.hpp"
 #include <filesystem>
@@ -8,10 +8,9 @@
 namespace pegasus
 {
     PegasusSim::PegasusSim(sparta::Scheduler* scheduler,
-                           const WorkloadAndArguments & workload_and_args,
-                           const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit) :
+                           const PegasusSimParameters::RegValueOverridePairs & reg_value_overrides,
+                           uint64_t ilimit) :
         sparta::app::Simulation("PegasusSim", scheduler),
-        workload_and_args_(workload_and_args),
         reg_value_overrides_(reg_value_overrides),
         ilimit_(ilimit)
     {
@@ -119,14 +118,24 @@ namespace pegasus
                 core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
                                                        "Core", &core_factory_));
         }
+
+        getRoot()->addExtensionFactory(PegasusSimParameters::name,
+                                       [&]() -> sparta::TreeNode::ExtensionsBase*
+                                       { return new PegasusSimParameters(); });
     }
 
     void PegasusSim::configureTree_()
     {
+        auto extension = sparta::notNull(getRoot()->getExtension("sim"));
+        const auto & workloads_and_args =
+            extension->getParameters()
+                ->getParameter("workloads")
+                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
+
         // Set PegasusSystem workload parameter
         auto system_workload_and_args =
             getRoot()->getChildAs<sparta::ParameterBase>("system.params.workload_and_args");
-        system_workload_and_args->setValueFromStringVector(workload_and_args_);
+        system_workload_and_args->setValueFromStringVector(workloads_and_args[0]);
 
         // Set instruction limit for stopping simulation
         if (ilimit_ > 0)
@@ -234,9 +243,14 @@ namespace pegasus
             }
         }
 
-        if (false == workload_and_args_.empty() && system_call_emulator_enabled)
+        auto extension = sparta::notNull(getRoot()->getExtension("sim"));
+        const auto & workloads_and_args =
+            extension->getParameters()
+                ->getParameter("workloads")
+                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
+        if (false == workloads_and_args[0].empty() && system_call_emulator_enabled)
         {
-            system_call_emulator->setWorkload(workload_and_args_[0]);
+            system_call_emulator->setWorkload(workloads_and_args[0][0]);
         }
     }
 
