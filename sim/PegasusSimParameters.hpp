@@ -33,10 +33,13 @@ namespace pegasus
 
             workloads_.reset(
                 new WorkloadsParam("workloads", {}, "Workload(s) to run", ps));
+            inst_limit_.reset(
+                new sparta::Parameter<uint64_t>("inst_limit", 0, "Instruction limit for all harts", ps));
         }
 
       private:
         std::unique_ptr<WorkloadsParam> workloads_;
+        std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;
     };
 
 } // namespace pegasus

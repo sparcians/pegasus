@@ -8,7 +8,7 @@
 const char USAGE[] =
     "Usage:\n"
     "./pegasus [-i inst limit] [--reg \"name value\"] [--opcode opcode] [--interactive] "
-    "[--spike-formatting] <workload>"
+    "[--spike-formatting] <workloads>"
     "\n";
 
 struct RegOverride
@@ -141,13 +141,14 @@ int main(int argc, char** argv)
             wkld_and_args_param_value += last_wkld ? "" : ",";
         }
         wkld_and_args_param_value += "]";
-        std::cout << wkld_and_args_param_value << std::endl;
+        sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
 
-        sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value, true);
+        // Inst limit
+        sim_cfg.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
 
         // Create the simulator
         sparta::Scheduler scheduler;
-        pegasus::PegasusSim sim(&scheduler, reg_value_overrides, ilimit);
+        pegasus::PegasusSim sim(&scheduler, reg_value_overrides);
 
         cls.populateSimulation(&sim);
 

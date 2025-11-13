@@ -16,8 +16,7 @@ namespace pegasus
     {
       public:
         PegasusSim(sparta::Scheduler* scheduler,
-                   const PegasusSimParameters::RegValueOverridePairs & reg_value_overrides,
-                   uint64_t ilimit);
+                   const PegasusSimParameters::RegValueOverridePairs & reg_value_overrides);
         ~PegasusSim();
 
         // Run the simulator
@@ -61,7 +60,6 @@ namespace pegasus
         PegasusSystem* system_ = nullptr;
 
         const PegasusSimParameters::RegValueOverridePairs reg_value_overrides_;
-        const uint64_t ilimit_;
 
         friend class PegasusCoSim;
     };

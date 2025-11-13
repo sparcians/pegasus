@@ -7,12 +7,11 @@
 
 namespace pegasus
 {
-    PegasusSim::PegasusSim(sparta::Scheduler* scheduler,
-                           const PegasusSimParameters::RegValueOverridePairs & reg_value_overrides,
-                           uint64_t ilimit) :
+    PegasusSim::PegasusSim(
+        sparta::Scheduler* scheduler,
+        const PegasusSimParameters::RegValueOverridePairs & reg_value_overrides) :
         sparta::app::Simulation("PegasusSim", scheduler),
-        reg_value_overrides_(reg_value_overrides),
-        ilimit_(ilimit)
+        reg_value_overrides_(reg_value_overrides)
     {
     }
 
@@ -138,11 +137,9 @@ namespace pegasus
         system_workload_and_args->setValueFromStringVector(workloads_and_args[0]);
 
         // Set instruction limit for stopping simulation
-        if (ilimit_ > 0)
-        {
-            getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
-                                                           std::to_string(ilimit_));
-        }
+        const auto & ilimit_param = extension->getParameters()->getParameter("inst_limit");
+        getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
+                                                       ilimit_param->getValueAsString());
     }
 
     void PegasusSim::bindTree_()
