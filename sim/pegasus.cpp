@@ -82,18 +82,6 @@ int main(int argc, char** argv)
 
         const auto & vm = cls.getVariablesMap();
 
-        if (0 == vm.count("no-run"))
-        {
-            if (workloads.empty() && (0 == vm.count("opcode")))
-            {
-                std::cout
-                    << "ERROR: Missing a workload or opcode to run. Provide an ELF or opcode to run"
-                    << std::endl;
-                std::cout << USAGE;
-                return 1;
-            }
-        }
-
         if (vm.count("opcode"))
         {
             ilimit = 1;
@@ -103,34 +91,40 @@ int main(int argc, char** argv)
         auto & sim_cfg = cls.getSimulationConfiguration();
 
         // Workload
-        std::string wkld_and_args_param_value = "[";
-        for (uint32_t wkld_idx = 0; wkld_idx < workloads.size(); ++wkld_idx)
+        if (workloads.empty() == false)
         {
-            std::vector<std::string> workload_with_args;
-            sparta::utils::tokenize_on_whitespace(workloads[wkld_idx], workload_with_args);
-
-            // Get full path of workload
-            const std::filesystem::path workload_path =
-                std::filesystem::canonical(std::filesystem::absolute(workload_with_args[0]));
-
-            wkld_and_args_param_value += "[";
-            wkld_and_args_param_value += workload_path.string();
-
-            // Get args (if any)
-            for (uint32_t arg_idx = 1; arg_idx < workload_with_args.size(); ++arg_idx)
+            std::string wkld_and_args_param_value = "[";
+            for (uint32_t wkld_idx = 0; wkld_idx < workloads.size(); ++wkld_idx)
             {
-                auto & arg = workload_with_args[arg_idx];
-                wkld_and_args_param_value += ", " + arg;
+                std::vector<std::string> workload_with_args;
+                sparta::utils::tokenize_on_whitespace(workloads[wkld_idx], workload_with_args);
+
+                // Get full path of workload
+                const std::filesystem::path workload_path =
+                    std::filesystem::canonical(std::filesystem::absolute(workload_with_args[0]));
+
+                wkld_and_args_param_value += "[";
+                wkld_and_args_param_value += workload_path.string();
+
+                // Get args (if any)
+                for (uint32_t arg_idx = 1; arg_idx < workload_with_args.size(); ++arg_idx)
+                {
+                    auto & arg = workload_with_args[arg_idx];
+                    wkld_and_args_param_value += ", " + arg;
+                }
+                wkld_and_args_param_value += "]";
+                const bool last_wkld = wkld_idx == (workloads.size() - 1);
+                wkld_and_args_param_value += last_wkld ? "" : ",";
             }
             wkld_and_args_param_value += "]";
-            const bool last_wkld = wkld_idx == (workloads.size() - 1);
-            wkld_and_args_param_value += last_wkld ? "" : ",";
+            sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
         }
-        wkld_and_args_param_value += "]";
-        sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
 
         // Inst limit
-        sim_cfg.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        if (ilimit != 0)
+        {
+            sim_cfg.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        }
 
         // Register overrides
         if (vm.count("reg"))
