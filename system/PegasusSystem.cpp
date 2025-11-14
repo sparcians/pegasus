@@ -1,3 +1,4 @@
+#include "sim/PegasusSimParameters.hpp"
 #include "system/PegasusSystem.hpp"
 #include "core/observers/Observer.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
@@ -6,14 +7,16 @@
 
 namespace pegasus
 {
-
     PegasusSystem::PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p) :
         sparta::Unit(sys_node),
-        workload_and_args_(p->workload_and_args)
+        workloads_and_args_(
+            PegasusSimParameters::getParameter<PegasusSimParameters::WorkloadsAndArgs>(sys_node,
+                                                                                       "workloads"))
     {
-        if (false == workload_and_args_.empty())
+        if (false == workloads_and_args_.empty())
         {
-            loadWorkload_(workload_and_args_[0]);
+            // Get first workload
+            loadWorkload_(workloads_and_args_.at(0).at(0));
         }
 
         if (p->enable_uart)

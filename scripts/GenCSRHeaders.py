@@ -256,9 +256,9 @@ def gen_csr_field_idxs_header(reg_size):
     csr_fi_header_file.write(GetCsrNumFileHeader(-1))
 
     if data_width == 32:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "gen", "rv32"))
+        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv32", "gen"))
     elif data_width == 64:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "gen", "rv64"))
+        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv64", "gen"))
 
     reg_csr_json_filename = glob.glob(os.path.join(json_dir, "reg_csr*.json"))
     reg_fp_json_filename  = os.path.join(json_dir, "reg_fp.json")

@@ -16,8 +16,8 @@ from GenCSRHeaders import gen_csr_field_idxs_header
 def main():
     pegasus_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     arch_root = os.path.join(pegasus_root, 'arch')
-    rv32_root = os.path.join(arch_root, 'gen', 'rv32')
-    rv64_root = os.path.join(arch_root, 'gen', 'rv64')
+    rv32_root = os.path.join(arch_root, 'rv32', 'gen')
+    rv64_root = os.path.join(arch_root, 'rv64', 'gen')
     inc_root = os.path.join(pegasus_root, 'include')
 
     os.chdir(arch_root)

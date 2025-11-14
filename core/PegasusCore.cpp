@@ -85,7 +85,8 @@ namespace pegasus
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
         threads_running_((num_harts_ << 1) - 1),
-        syscall_emulation_enabled_(p->enable_syscall_emulation),
+        syscall_emulation_enabled_(
+            PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         xlen_(getXlenFromIsaString(isa_string_)),
@@ -227,10 +228,10 @@ namespace pegasus
         {
             PegasusState* state = threads_.at(hart_idx);
 
-            const auto workload_and_args = system_->getWorkloadAndArgs();
-            if (false == workload_and_args.empty())
+            const auto workloads_and_args = system_->getWorkloadsAndArgs();
+            if (false == workloads_and_args.empty())
             {
-                state->setupProgramStack(workload_and_args);
+                state->setupProgramStack(workloads_and_args.at(hart_idx));
             }
         }
     }

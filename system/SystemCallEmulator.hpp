@@ -76,10 +76,12 @@ namespace pegasus
         //! Get the memory map parameters (used by Callback delegate class)
         const std::vector<uint64_t> & getMemMapParams() const { return memory_map_params_; }
 
-        //! Set the workload
-        void setWorkload(const std::string & workload);
-
       private:
+        void onBindTreeLate_() override;
+
+        // Is system call emulation enabled?
+        const bool syscall_emulation_enabled_;
+
         const std::vector<uint64_t> memory_map_params_;
 
         sparta::log::MessageSource syscall_log_;
@@ -87,7 +89,7 @@ namespace pegasus
         int fd_for_write_ = DEFAULT_WRITE_FD;
         PegasusSim* sim_ = nullptr;
 
-        std::string workload_;
+        const std::string workload_;
 
         std::unique_ptr<SysCallHandlers> callbacks_;
     };

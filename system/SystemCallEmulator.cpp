@@ -34,7 +34,6 @@ namespace pegasus
             memory_map_manager_(emulator_->getMemMapParams()),
             syscall_log_(sys_log)
         {
-
             // Create function pointer
             auto cfp = [this]<typename FuncT>(FuncT && funct)
             { return std::bind(funct, this, std::placeholders::_1, std::placeholders::_2); };
@@ -344,11 +343,28 @@ namespace pegasus
         Addr brk_address_ = 0;
     };
 
+    const std::string getWorkloadParam(sparta::TreeNode* rtn)
+    {
+        auto extension = sparta::notNull(rtn->getExtension("sim"));
+        const auto & workloads_and_args =
+            extension->getParameters()
+                ->getParameter("workloads")
+                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
+        if (workloads_and_args.empty())
+        {
+            return "";
+        }
+        return workloads_and_args.at(0).at(0);
+    }
+
     SystemCallEmulator::SystemCallEmulator(
         sparta::TreeNode* my_node, const SystemCallEmulator::SystemCallEmulatorParameters* p) :
         sparta::Unit(my_node),
+        syscall_emulation_enabled_(
+            PegasusSimParameters::getParameter<bool>(my_node, "enable_syscall_emulation")),
         memory_map_params_(p->mem_map_params),
-        syscall_log_(my_node, "syscall", "System Call Logger")
+        syscall_log_(my_node, "syscall", "System Call Logger"),
+        workload_(getWorkloadParam(my_node->getRoot()))
     {
         sim_ = dynamic_cast<PegasusSim*>(my_node->getRoot()->getSimulation());
 
@@ -372,7 +388,12 @@ namespace pegasus
                                                           << "' for capturing write system calls");
             fd_for_write_ = ::fileno(file_for_write_);
         }
+
         callbacks_ = std::make_unique<SysCallHandlers>(this, syscall_log_);
+        if (workload_.empty() == false)
+        {
+            callbacks_->setWorkload(workload_);
+        }
     }
 
     SystemCallEmulator::~SystemCallEmulator()
@@ -380,6 +401,24 @@ namespace pegasus
         if (nullptr != file_for_write_)
         {
             ::fclose(file_for_write_);
+        }
+    }
+
+    void SystemCallEmulator::onBindTreeLate_()
+    {
+        if (syscall_emulation_enabled_)
+        {
+            const auto & symbols = sim_->getPegasusSystem()->getSymbols();
+            for (auto symbol : symbols)
+            {
+                if (symbol.second == "_end")
+                {
+                    callbacks_->setBreakAddress(symbol.first);
+                    break;
+                }
+            }
+            sparta_assert(callbacks_->getBreakAddress() != 0,
+                          "Could not find _end symbol in workload for system call emulation");
         }
     }
 
@@ -398,24 +437,6 @@ namespace pegasus
             fd = fd_for_write_;
         }
         return fd;
-    }
-
-    void SystemCallEmulator::setWorkload(const std::string & workload)
-    {
-        workload_ = workload;
-        callbacks_->setWorkload(workload);
-
-        const auto & symbols = sim_->getPegasusSystem()->getSymbols();
-        for (auto symbol : symbols)
-        {
-            if (symbol.second == "_end")
-            {
-                callbacks_->setBreakAddress(symbol.first);
-                break;
-            }
-        }
-        sparta_assert(callbacks_->getBreakAddress() != 0,
-                      "Could not find _end symbol in workload for system call emulation");
     }
 
     ////////////////////////////////////////////////////////////////////////////////
