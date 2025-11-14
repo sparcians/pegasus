@@ -227,10 +227,10 @@ namespace pegasus
         {
             PegasusState* state = threads_.at(hart_idx);
 
-            const auto workload_and_args = system_->getWorkloadAndArgs();
-            if (false == workload_and_args.empty())
+            const auto workloads_and_args = system_->getWorkloadsAndArgs();
+            if (false == workloads_and_args.empty())
             {
-                state->setupProgramStack(workload_and_args);
+                state->setupProgramStack(workloads_and_args.at(hart_idx));
             }
         }
     }

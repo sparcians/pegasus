@@ -120,24 +120,7 @@ namespace pegasus
                                        { return new PegasusSimParameters(); });
     }
 
-    void PegasusSim::configureTree_()
-    {
-        auto extension = sparta::notNull(getRoot()->getExtension("sim"));
-        const auto & workloads_and_args =
-            extension->getParameters()
-                ->getParameter("workloads")
-                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
-
-        // Set PegasusSystem workload parameter
-        auto system_workload_and_args =
-            getRoot()->getChildAs<sparta::ParameterBase>("system.params.workload_and_args");
-        system_workload_and_args->setValueFromStringVector(workloads_and_args[0]);
-
-        // Set instruction limit for stopping simulation
-        const auto & ilimit_param = extension->getParameters()->getParameter("inst_limit");
-        getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
-                                                       ilimit_param->getValueAsString());
-    }
+    void PegasusSim::configureTree_() {}
 
     void PegasusSim::bindTree_()
     {

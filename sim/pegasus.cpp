@@ -5,11 +5,11 @@
 #include "sim/PegasusSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] =
-    "Usage:\n"
-    "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode opcode] [--interactive] "
-    "[--spike-formatting] <workloads>"
-    "\n";
+const char USAGE[] = "Usage:\n"
+                     "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode "
+                     "opcode] [--interactive] "
+                     "[--spike-formatting] <workloads>"
+                     "\n";
 
 struct RegOverride
 {
@@ -120,15 +120,14 @@ int main(int argc, char** argv)
             for (uint32_t arg_idx = 1; arg_idx < workload_with_args.size(); ++arg_idx)
             {
                 auto & arg = workload_with_args[arg_idx];
-                wkld_and_args_param_value += arg;
-                const bool last_arg = arg_idx == (workload_with_args.size() - 1);
-                wkld_and_args_param_value += last_arg ? "" : ",";
+                wkld_and_args_param_value += ", " + arg;
             }
             wkld_and_args_param_value += "]";
             const bool last_wkld = wkld_idx == (workloads.size() - 1);
             wkld_and_args_param_value += last_wkld ? "" : ",";
         }
         wkld_and_args_param_value += "]";
+        std::cout << wkld_and_args_param_value << std::endl;
         sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
 
         // Inst limit
