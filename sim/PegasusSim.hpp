@@ -22,6 +22,9 @@ namespace pegasus
         // Run the simulator
         void run(uint64_t run_time) override;
 
+        // Step the simulator. Returns false if simulation already ended.
+        bool step(CoreId core_id, HartId hart_id);
+
         PegasusCore* getPegasusCore(CoreId core_id = 0) const { return cores_.at(core_id); }
 
         PegasusSystem* getPegasusSystem() const { return system_; }

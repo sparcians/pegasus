@@ -537,6 +537,17 @@ namespace pegasus
             return false;
         }
 
+        auto curr_excp = getCurrentException();
+        auto other_curr_excp = state->getCurrentException();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(curr_excp, other_curr_excp);
+        }
+        else if (curr_excp != other_curr_excp)
+        {
+            return false;
+        }
+
         return true;
     }
 

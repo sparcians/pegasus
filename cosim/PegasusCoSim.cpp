@@ -55,15 +55,21 @@ namespace pegasus::cosim
     {
         sim_config_.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
 
+	// TODO: Assume 1 core, 1 hart for now
+        const uint32_t num_cores = 1;
+        const uint32_t num_harts = 1;
+
+        for (uint32_t core_id = 0; core_id < num_cores; ++core_id)
+        {
+            std::string path = "top.core" + std::to_string(core_id) + ".params.isa";
+            sim_config_.processParameter(path, "rv64gcbv_zicsr_zifencei_zicond_zfh", false);
+        }
+
         configure(0, nullptr, &sim_config_);
         buildTree();
         configureTree();
         finalizeTree();
         finalizeFramework();
-
-        // TODO: Assume 1 core, 1 hart for now
-        const uint32_t num_cores = 1;
-        const uint32_t num_harts = 1;
 
         cosim_observers_.resize(num_cores);
         for (auto & core_cosim_observers : cosim_observers_)
