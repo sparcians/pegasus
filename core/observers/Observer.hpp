@@ -201,6 +201,10 @@ namespace pegasus
             }
         }
 
+        const std::vector<MemRead> & getMemoryReads() const { return mem_reads_; }
+
+        const std::vector<MemWrite> & getMemoryWrites() const { return mem_writes_; }
+
       protected:
         uint64_t pc_;
         uint64_t opcode_;

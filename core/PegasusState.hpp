@@ -234,6 +234,8 @@ namespace pegasus
 
         void addObserver(std::unique_ptr<Observer> observer);
 
+        const std::vector<std::unique_ptr<Observer>> & getObservers() const { return observers_; }
+
         void insertExecuteActions(ActionGroup* action_group);
 
         ActionGroup* getFinishActionGroup() { return &finish_action_group_; }

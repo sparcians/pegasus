@@ -59,6 +59,25 @@ namespace pegasus
         // TODO: mem usage, workload exit code
     }
 
+    bool PegasusSim::step(CoreId core_id, HartId hart_id)
+    {
+        auto state = getPegasusCore(core_id)->getPegasusState(hart_id);
+
+        // Return false if we cannot step forward (end of sim)
+        if (state->getSimState()->sim_stopped)
+        {
+            return false;
+        }
+
+        ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
+        do
+        {
+            next_action_group = next_action_group->execute(state);
+        } while (next_action_group && (next_action_group->hasTag(ActionTags::FETCH_TAG) == false));
+
+        return true;
+    }
+
     void PegasusSim::setEOTMode(const std::string & eot_mode)
     {
         if (eot_mode == "pass_fail")
