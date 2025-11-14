@@ -126,12 +126,7 @@ namespace pegasus
     {
         // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
-        SystemCallEmulator* system_call_emulator =
-            getRoot()
-                ->getChild("system_call_emulator")
-                ->getResourceAs<pegasus::SystemCallEmulator>();
 
-        bool system_call_emulator_enabled = false;
         for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
         {
             const std::string core_name = "core" + std::to_string(core_idx);
@@ -259,15 +254,6 @@ namespace pegasus
                     }
                 }
             }
-        }
-
-        const auto & workloads_and_args =
-            extension->getParameters()
-                ->getParameter("workloads")
-                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
-        if (false == workloads_and_args[0].empty() && system_call_emulator_enabled)
-        {
-            system_call_emulator->setWorkload(workloads_and_args[0][0]);
         }
     }
 

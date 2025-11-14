@@ -85,7 +85,8 @@ namespace pegasus
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
         threads_running_((num_harts_ << 1) - 1),
-        syscall_emulation_enabled_(p->enable_syscall_emulation),
+        syscall_emulation_enabled_(
+            PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         xlen_(getXlenFromIsaString(isa_string_)),

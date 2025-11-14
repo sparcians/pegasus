@@ -7,19 +7,11 @@
 
 namespace pegasus
 {
-    const PegasusSimParameters::WorkloadsAndArgs getWorkloadsAndArgsParam(sparta::TreeNode* rtn)
-    {
-        auto extension = sparta::notNull(rtn->getExtension("sim"));
-        const auto & workloads_and_args =
-            extension->getParameters()
-                ->getParameter("workloads")
-                ->getValueAs<PegasusSimParameters::WorkloadsAndArgs>();
-        return workloads_and_args;
-    }
-
     PegasusSystem::PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p) :
         sparta::Unit(sys_node),
-        workloads_and_args_(getWorkloadsAndArgsParam(sys_node->getRoot()))
+        workloads_and_args_(
+            PegasusSimParameters::getParameter<PegasusSimParameters::WorkloadsAndArgs>(sys_node,
+                                                                                       "workloads"))
     {
         if (false == workloads_and_args_.empty())
         {

@@ -8,8 +8,6 @@
 
 namespace pegasus
 {
-
-    //
     // \class PegasusSimParameters
     // \brief TODO
     class PegasusSimParameters : public sparta::ExtensionsParamsOnly
@@ -36,14 +34,25 @@ namespace pegasus
                 new WorkloadsParam("workloads", {}, "Workload(s) to run with arguments", ps));
             inst_limit_.reset(new sparta::Parameter<uint64_t>(
                 "inst_limit", 0, "Instruction limit for all harts", ps));
+            syscall_emulation_.reset(new sparta::Parameter<bool>(
+                "enable_syscall_emulation", false, "System calls (ecall) will be emulated", ps));
             reg_overrides_.reset(new RegisterOverridesParam(
                 "reg_overrides", {},
                 "Override initial values of registers e.g. \"core0.hart0.sp 0x1000\"", ps));
         }
 
+        template <typename T>
+        static T getParameter(sparta::TreeNode* node, const std::string & param)
+        {
+            auto ext = sparta::notNull(node->getRoot()->getExtension(PegasusSimParameters::name));
+            auto ext_params = ext->getParameters();
+            return ext_params->getParameter(param)->getValueAs<T>();
+        }
+
       private:
         std::unique_ptr<WorkloadsParam> workloads_;
         std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;
+        std::unique_ptr<sparta::Parameter<bool>> syscall_emulation_;
         std::unique_ptr<RegisterOverridesParam> reg_overrides_;
     };
 } // namespace pegasus
