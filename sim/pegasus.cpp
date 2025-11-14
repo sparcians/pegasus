@@ -127,7 +127,6 @@ int main(int argc, char** argv)
             wkld_and_args_param_value += last_wkld ? "" : ",";
         }
         wkld_and_args_param_value += "]";
-        std::cout << wkld_and_args_param_value << std::endl;
         sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
 
         // Inst limit

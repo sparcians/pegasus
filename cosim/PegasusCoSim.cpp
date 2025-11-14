@@ -47,15 +47,18 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit, const std::string &,
-                               const std::string & db_file, const size_t snapshot_threshold,
-                               const size_t max_cached_windows) :
+    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
+                               const std::string & workload, const std::string & db_file,
+                               const size_t snapshot_threshold, const size_t max_cached_windows) :
         PegasusSim(scheduler),
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
         sim_config_.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        const std::string wkld_param = "[[" + workload + "]]";
+        sim_config_.processParameter("top.extension.sim.workloads", wkld_param);
+        sim_config_.copyTreeNodeExtensionsFromArchAndConfigPTrees();
 
-	// TODO: Assume 1 core, 1 hart for now
+        // TODO: Assume 1 core, 1 hart for now
         const uint32_t num_cores = 1;
         const uint32_t num_harts = 1;
 
