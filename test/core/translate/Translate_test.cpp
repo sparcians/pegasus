@@ -17,6 +17,8 @@ class PegasusTranslateTester
         // Create the simulator
         pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_));
 
+        sparta::app::SimulationConfiguration config;
+        pegasus_sim_->configure(0, nullptr, &config);
         pegasus_sim_->buildTree();
         pegasus_sim_->configureTree();
         pegasus_sim_->finalizeTree();

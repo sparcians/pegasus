@@ -12,9 +12,9 @@ pegasus_named_test(pegasus_nop_test pegasus -p top.core0.hart0.params.stop_sim_o
 pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart true workloads/uart.elf)
 
 # Linux Tests
-set (LINUX_ARCH_SETUP --reg "sp 0x0000003ffffff000"
-                      --reg "gp 0x77000"
-                      --reg "tp 0x7d000" -p top.core0.params.enable_syscall_emulation true)
+set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
+                      --reg "core0.hart0.gp 0x77000"
+                      --reg "core0.hart0.tp 0x7d000" -p top.core0.params.enable_syscall_emulation true)
 
 set (SYSCALL_LOG -l top syscall ${CMAKE_CURRENT_BINARY_DIR}/syscall.log -l top inst ${CMAKE_CURRENT_BINARY_DIR}/inst.log)
 

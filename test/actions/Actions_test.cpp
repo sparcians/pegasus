@@ -41,6 +41,8 @@ int main()
     sparta::Scheduler scheduler_;
     pegasus::PegasusSim pegasus_sim{&scheduler_};
 
+    sparta::app::SimulationConfiguration config;
+    pegasus_sim.configure(0, nullptr, &config);
     pegasus_sim.buildTree();
     pegasus_sim.configureTree();
     pegasus_sim.finalizeTree();
