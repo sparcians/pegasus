@@ -335,9 +335,9 @@ int main(int argc, char** argv)
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
     config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
                                   false);
-    PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+    pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
     const std::string wkld_param =
-        PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+        pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
     config_truth.processParameter("top.extension.sim.workloads", wkld_param);
     config_truth.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
     config_truth.copyTreeNodeExtensionsFromArchAndConfigPTrees();
