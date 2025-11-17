@@ -113,6 +113,12 @@ namespace pegasus
         if (state->getCurrentInst()->getMavisOpcodeInfo()->isInstType(
                 mavis::OpcodeInfo::InstructionTypes::VECTOR))
         {
+            if(state->getCurrentInst()->getVecConfig()->getVMA())
+            {
+                stf_writer_ << stf::InstRegRecord(pegasus::V0, stf::Registers::STF_REG_TYPE::VECTOR,
+                                stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                readVectorRegister_(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
+            }
             stf_writer_ << stf::InstRegRecord(VL, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                                               READ_CSR_REG<XLEN>(state, VL));
