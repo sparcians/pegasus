@@ -49,6 +49,27 @@ namespace pegasus
             return ext_params->getParameter(param)->getValueAs<T>();
         }
 
+        template <typename T>
+        static const std::string convertVectorToStringParam(const std::vector<T> vector_param)
+        {
+            std::string string_param = "[";
+            for (uint32_t param_idx = 0; param_idx < vector_param.size(); ++param_idx)
+            {
+                if constexpr (sparta::utils::is_vector<T>::value)
+                {
+                    string_param += convertVectorToStringParam(vector_param[param_idx]);
+                }
+                else
+                {
+                    string_param += vector_param[param_idx];
+                }
+                const bool last_param = param_idx == (vector_param.size() - 1);
+                string_param += last_param ? "" : ",";
+            }
+            string_param += "]";
+            return string_param;
+        }
+
       private:
         std::unique_ptr<WorkloadsParam> workloads_;
         std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;

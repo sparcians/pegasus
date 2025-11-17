@@ -54,7 +54,9 @@ namespace pegasus::cosim
         cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
     {
         sim_config_.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
-        const std::string wkld_param = "[[" + workload + "]]";
+        PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+        const std::string wkld_param =
+            PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
         sim_config_.processParameter("top.extension.sim.workloads", wkld_param);
         sim_config_.copyTreeNodeExtensionsFromArchAndConfigPTrees();
 

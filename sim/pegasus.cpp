@@ -91,32 +91,25 @@ int main(int argc, char** argv)
         auto & sim_cfg = cls.getSimulationConfiguration();
 
         // Workload
+        pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args;
         if (workloads.empty() == false)
         {
-            std::string wkld_and_args_param_value = "[";
             for (uint32_t wkld_idx = 0; wkld_idx < workloads.size(); ++wkld_idx)
             {
-                std::vector<std::string> workload_with_args;
-                sparta::utils::tokenize_on_whitespace(workloads[wkld_idx], workload_with_args);
+                workloads_and_args.emplace_back();
+                pegasus::PegasusSimParameters::WorkloadAndArgs & workload_and_args =
+                    workloads_and_args.back();
+                sparta::utils::tokenize_on_whitespace(workloads[wkld_idx], workload_and_args);
 
                 // Get full path of workload
                 const std::filesystem::path workload_path =
-                    std::filesystem::canonical(std::filesystem::absolute(workload_with_args[0]));
+                    std::filesystem::canonical(std::filesystem::absolute(workload_and_args[0]));
 
-                wkld_and_args_param_value += "[";
-                wkld_and_args_param_value += workload_path.string();
-
-                // Get args (if any)
-                for (uint32_t arg_idx = 1; arg_idx < workload_with_args.size(); ++arg_idx)
-                {
-                    auto & arg = workload_with_args[arg_idx];
-                    wkld_and_args_param_value += ", " + arg;
-                }
-                wkld_and_args_param_value += "]";
-                const bool last_wkld = wkld_idx == (workloads.size() - 1);
-                wkld_and_args_param_value += last_wkld ? "" : ",";
+                workload_and_args[0] = workload_path.string();
             }
-            wkld_and_args_param_value += "]";
+
+            const std::string wkld_and_args_param_value =
+                pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
             sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
         }
 
