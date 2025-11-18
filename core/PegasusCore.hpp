@@ -108,6 +108,22 @@ namespace pegasus
 
         uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
+        using Reservation = sparta::utils::ValidValue<Addr>;
+
+        void makeReservation(HartId hart_id, Addr vaddr)
+        {
+            for (auto & reservation : reservations_)
+            {
+                if (reservation.isValid() && (reservation.getValue() == vaddr))
+                {
+                    reservation.clearValid();
+                }
+            }
+            reservations_.at(hart_id) = vaddr;
+        }
+
+        Reservation & getReservation(HartId hart_id) { return reservations_.at(hart_id); }
+
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusCore* core) const;
@@ -205,6 +221,9 @@ namespace pegasus
             pc_alignment_ = pc_alignment;
             pc_alignment_mask_ = ~(pc_alignment - 1);
         }
+
+        //! LR/SC Reservations
+        std::vector<Reservation> reservations_;
 
         // Instruction Actions
         InstHandlers inst_handlers_;

@@ -122,10 +122,6 @@ namespace pegasus
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
-        Reservation & getReservation() { return reservation_; }
-
-        const Reservation & getReservation() const { return reservation_; }
-
         template <typename XLEN> void changeMMUMode();
 
         struct SimState
@@ -337,9 +333,6 @@ namespace pegasus
 
         //! Current exception code
         uint64_t current_exception_ = std::numeric_limits<ExcpCode>::max();
-
-        //! LR/SC Reservations
-        Reservation reservation_;
 
         //! Simulation state
         SimState sim_state_;

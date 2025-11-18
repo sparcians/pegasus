@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"
 #include "include/PegasusUtils.hpp"
@@ -32,7 +32,7 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const XLEN rs1_val = inst->getRs1Reg()->dmiRead<uint64_t>();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN imm = inst->getImmediate();
         const XLEN vaddr = rs1_val + imm;
         inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
@@ -62,8 +62,8 @@ namespace pegasus
         }
         // Must read the RS2 value before writing the Rd (might be the
         // same register!)
-        const XLEN rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
-        inst->getRdReg()->write(rd_val);
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val));
         return ++action_it;
     }
@@ -79,7 +79,8 @@ namespace pegasus
         auto xlation_state = inst->getTranslationState();
 
         // Make the reservation
-        state->getReservation() = xlation_state->getResult().getVAddr();
+        state->getCore()->makeReservation(state->getHartId(),
+                                          xlation_state->getResult().getVAddr());
 
         // Get the memory
         const uint64_t paddr = xlation_state->getResult().getPAddr();
@@ -108,7 +109,7 @@ namespace pegasus
         auto xlation_state = inst->getTranslationState();
 
         XLEN sc_bad = 1; // assume bad
-        if (auto & resv = state->getReservation(); resv.isValid())
+        if (auto & resv = state->getCore()->getReservation(state->getHartId()); resv.isValid())
         {
             if (resv == xlation_state->getResult().getVAddr())
             {
