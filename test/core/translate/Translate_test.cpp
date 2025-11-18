@@ -15,9 +15,10 @@ class PegasusTranslateTester
     PegasusTranslateTester()
     {
         // Create the simulator
-        const uint64_t ilimit = 0;
-        pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_, {}, {}, ilimit));
+        pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_));
 
+        sparta::app::SimulationConfiguration config;
+        pegasus_sim_->configure(0, nullptr, &config);
         pegasus_sim_->buildTree();
         pegasus_sim_->configureTree();
         pegasus_sim_->finalizeTree();

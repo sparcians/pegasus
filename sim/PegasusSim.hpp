@@ -4,6 +4,7 @@
 #include <string>
 #include <cinttypes>
 
+#include "sim/PegasusSimParameters.hpp"
 #include "core/PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "sparta/app/Simulation.hpp"
@@ -14,11 +15,8 @@ namespace pegasus
     class PegasusSim : public sparta::app::Simulation
     {
       public:
-        using RegValueOverridePairs = std::vector<std::pair<std::string, std::string>>;
-        using WorkloadAndArguments = std::vector<std::string>;
+        PegasusSim(sparta::Scheduler* scheduler);
 
-        PegasusSim(sparta::Scheduler* scheduler, const WorkloadAndArguments & workload_and_args,
-                   const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit);
         ~PegasusSim();
 
         // Run the simulator
@@ -63,10 +61,6 @@ namespace pegasus
 
         // Pegasus system
         PegasusSystem* system_ = nullptr;
-
-        const WorkloadAndArguments workload_and_args_;
-        const RegValueOverridePairs reg_value_overrides_;
-        const uint64_t ilimit_;
 
         friend class PegasusCoSim;
     };
