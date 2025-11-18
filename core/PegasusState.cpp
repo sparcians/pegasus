@@ -425,11 +425,18 @@ namespace pegasus
         observers_.emplace_back(std::move(observer));
     }
 
-    void PegasusState::insertExecuteActions(ActionGroup* action_group)
+    void PegasusState::insertExecuteActions(ActionGroup* action_group, const bool is_memory_inst)
     {
         if (pre_execute_action_)
         {
-            action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
+            if (is_memory_inst)
+            {
+                action_group->insertActionBefore(pre_execute_action_, ActionTags::COMPUTE_ADDR_TAG);
+            }
+            else
+            {
+                action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
+            }
         }
     }
 
