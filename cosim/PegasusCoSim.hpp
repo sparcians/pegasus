@@ -115,7 +115,11 @@ namespace pegasus::cosim
 
         void finish();
 
+        // Debug/testing
+        const pegasus::PegasusSim & getPegasusSim() const { return *pegasus_sim_.get(); }
+
       private:
+
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger
