@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cinttypes>
+#include <string>
+#include <vector>
+
 #include "cosim/CoSimApi.hpp"
 
 namespace pegasus
@@ -68,6 +72,7 @@ namespace pegasus::cosim
         ~PegasusCoSim() noexcept;
 
         void enableLogger(const std::string & filename = "");
+        void logMessage(const std::string & message);
 
         CoSimEventPipeline* getEventPipeline(CoreId core_id, HartId hart_id);
         const CoSimEventPipeline* getEventPipeline(CoreId core_id, HartId hart_id) const;

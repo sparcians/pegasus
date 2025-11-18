@@ -189,6 +189,11 @@ namespace pegasus::cosim
         }
     }
 
+    void PegasusCoSim::logMessage(const std::string & message)
+    {
+        *cosim_logger_ << message;
+    }
+
     EventAccessor PegasusCoSim::step(CoreId core_id, HartId hart_id)
     {
         ActionGroup* next_action_group = fetch_.at(core_id).at(hart_id)->getActionGroup();
