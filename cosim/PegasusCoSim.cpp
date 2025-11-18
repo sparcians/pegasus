@@ -69,8 +69,15 @@ namespace pegasus::cosim
             sim_config_->processParameter(path, "rv64gcbv_zicsr_zifencei_zicond_zfh", false);
         }
 
+        sim_config_->processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+        const std::string wkld_param =
+            PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+        sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
+        sim_config_->copyTreeNodeExtensionsFromArchAndConfigPTrees();
+
         scheduler_.reset(new sparta::Scheduler());
-        pegasus_sim_.reset(new PegasusSim(scheduler_.get(), getWorkloadArgs_(workload), {}, ilimit));
+        pegasus_sim_.reset(new PegasusSim(scheduler_.get()));
         cosim_logger_.reset(new sparta::log::MessageSource(pegasus_sim_->getRoot(), "cosim", "Pegasus Cosim Logger"));
 
         pegasus_sim_->configure(0, nullptr, sim_config_.get());

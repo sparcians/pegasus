@@ -332,13 +332,20 @@ int main(int argc, char** argv)
     const size_t snapshot_threshold = 10;
     const size_t max_cached_windows = 10;
 
-    sparta::Scheduler scheduler_truth;
-    PegasusSim cosim_truth(&scheduler_truth, {workload}, {}, ilimit);
-
     sparta::app::SimulationConfiguration config_truth;
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
     config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
                                   false);
+    pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+    const std::string wkld_param =
+        pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+    config_truth.processParameter("top.extension.sim.workloads", wkld_param);
+    config_truth.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+    config_truth.copyTreeNodeExtensionsFromArchAndConfigPTrees();
+
+    sparta::Scheduler scheduler_truth;
+    PegasusSim cosim_truth(&scheduler_truth);
+
     cosim_truth.configure(0, nullptr, &config_truth);
     cosim_truth.buildTree();
     cosim_truth.configureTree();
