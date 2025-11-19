@@ -10,23 +10,28 @@ namespace pegasus
 {
     class PegasusSim;
     class Fetch;
-}
+} // namespace pegasus
 
 namespace sparta
 {
     class Scheduler;
 
-    namespace app {
+    namespace app
+    {
         class SimulationConfiguration;
     }
-    namespace log {
+
+    namespace log
+    {
         class MessageSource;
         class Tap;
-    }
-    namespace memory {
+    } // namespace log
+
+    namespace memory
+    {
         class SimpleMemoryMapNode;
     }
-}
+} // namespace sparta
 
 namespace simdb
 {
@@ -64,8 +69,7 @@ namespace pegasus::cosim
     class PegasusCoSim : public pegasus::cosim::CoSim
     {
       public:
-        PegasusCoSim(uint64_t ilimit = 0,
-                     const std::string & workload = "",
+        PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
                      const std::string & db_file = "pegasus-cosim.db",
                      const size_t snapshot_threshold = 100, const size_t max_cached_windows = 10);
 
@@ -124,7 +128,6 @@ namespace pegasus::cosim
         const pegasus::PegasusSim & getPegasusSim() const { return *pegasus_sim_.get(); }
 
       private:
-
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger

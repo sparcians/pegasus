@@ -53,8 +53,9 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload, const std::string & db_file,
-                               const size_t snapshot_threshold, const size_t max_cached_windows)
+    PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
+                               const std::string & db_file, const size_t snapshot_threshold,
+                               const size_t max_cached_windows)
     {
 
         // TODO: Assume 1 core, 1 hart for now
@@ -78,7 +79,8 @@ namespace pegasus::cosim
 
         scheduler_.reset(new sparta::Scheduler());
         pegasus_sim_.reset(new PegasusSim(scheduler_.get()));
-        cosim_logger_.reset(new sparta::log::MessageSource(pegasus_sim_->getRoot(), "cosim", "Pegasus Cosim Logger"));
+        cosim_logger_.reset(new sparta::log::MessageSource(pegasus_sim_->getRoot(), "cosim",
+                                                           "Pegasus Cosim Logger"));
 
         pegasus_sim_->configure(0, nullptr, sim_config_.get());
         pegasus_sim_->buildTree();
@@ -169,7 +171,8 @@ namespace pegasus::cosim
         }
 
         // Single memory IF for all harts
-        cosim_memory_if_ = new CoSimMemoryInterface(pegasus_sim_->getPegasusSystem()->getSystemMemory());
+        cosim_memory_if_ =
+            new CoSimMemoryInterface(pegasus_sim_->getPegasusSystem()->getSystemMemory());
     }
 
     PegasusCoSim::~PegasusCoSim() noexcept { pegasus_sim_->getRoot()->enterTeardown(); }
@@ -196,10 +199,7 @@ namespace pegasus::cosim
         }
     }
 
-    void PegasusCoSim::logMessage(const std::string & message)
-    {
-        *cosim_logger_ << message;
-    }
+    void PegasusCoSim::logMessage(const std::string & message) { *cosim_logger_ << message; }
 
     EventAccessor PegasusCoSim::step(CoreId core_id, HartId hart_id)
     {
@@ -351,7 +351,10 @@ namespace pegasus::cosim
 
     uint64_t PegasusCoSim::getNumCommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState()->inst_count
+        return pegasus_sim_->getPegasusCore(core_id)
+                   ->getPegasusState(hart_id)
+                   ->getSimState()
+                   ->inst_count
                - getNumUncommittedEvents(core_id, hart_id);
     }
 
