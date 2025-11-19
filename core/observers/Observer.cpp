@@ -91,18 +91,20 @@ namespace pegasus
                 for (auto & src_reg : inst->getMavisOpcodeInfo()->getSourceOpInfoList())
                 {
                     const auto reg = state->getSpartaRegister(&src_reg);
-                    // src_regs_.emplace_back(getRegId(reg), readRegister_(reg));
 
                     SrcReg src(getRegId(reg), readRegister_(reg)); // base register value
 
+                    // recording inital src register values for LMUL other than m1 cases
+                    // (m2,m4,m8,mf2...)
                     if (getRegId(reg).reg_type == RegType::VECTOR)
                     {
                         uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
-                        uint32_t lmul = encoded_lmul / 8; // LMUL encoding
+                        uint32_t reg_count =
+                            std::max(1u, encoded_lmul / 8); // works well for fractional lmul cases
 
                         uint32_t base = getRegId(reg).reg_num;
 
-                        for (uint32_t i = 0; i < lmul; ++i)
+                        for (uint32_t i = 0; i < reg_count; ++i)
                         {
                             uint32_t phys = base + i;
 
