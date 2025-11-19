@@ -139,15 +139,10 @@ namespace pegasus
 
         struct SrcReg : ObservedReg
         {
-            using ObservedReg::ObservedReg;      // inherit constructors
+            using ObservedReg::ObservedReg;
 
-            // NEW: store LMUL-wide frozen values
-            std::vector<RegValue> lmul_values;    // only for sources
-
-            // template <typename T>
-            // T getLMULValue(size_t phys_index) const {
-            //     return lmul_values[phys_index].getValue<T>();
-            // }
+            // NEW: store LMUL-wide register values // only for sources
+            std::vector<RegValue> lmul_values;
         };
 
         struct DestReg : ObservedReg
@@ -253,7 +248,7 @@ namespace pegasus
             }
         }
 
-        std::vector<uint8_t> makeVectorRegValue(const std::vector<uint64_t>& words);
+        std::vector<uint8_t> makeVectorRegValue(const std::vector<uint64_t> & words);
 
         std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
 

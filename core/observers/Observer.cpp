@@ -93,27 +93,25 @@ namespace pegasus
                     const auto reg = state->getSpartaRegister(&src_reg);
                     // src_regs_.emplace_back(getRegId(reg), readRegister_(reg));
 
-                    SrcReg src(getRegId(reg), readRegister_(reg));  // base register value
+                    SrcReg src(getRegId(reg), readRegister_(reg)); // base register value
 
-                    if(getRegId(reg).reg_type == RegType::VECTOR)
+                    if (getRegId(reg).reg_type == RegType::VECTOR)
                     {
                         uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
-                        uint32_t lmul = encoded_lmul / 8;   //LMUL encoding
+                        uint32_t lmul = encoded_lmul / 8; // LMUL encoding
 
                         uint32_t base = getRegId(reg).reg_num;
 
-                        for(uint32_t i = 0; i < lmul; ++i)
+                        for (uint32_t i = 0; i < lmul; ++i)
                         {
                             uint32_t phys = base + i;
 
-                            src.lmul_values.push_back(
-                                makeVectorRegValue(readVectorRegister_(state, RegId{RegType::VECTOR, phys, "V" + std::to_string(phys)}))
-                            );
+                            src.lmul_values.push_back(makeVectorRegValue(readVectorRegister_(
+                                state, RegId{RegType::VECTOR, phys, "V" + std::to_string(phys)})));
                         }
                     }
 
                     src_regs_.push_back(std::move(src));
-
                 }
 
                 // Get value of destination registers
@@ -211,7 +209,7 @@ namespace pegasus
         mem_reads_.push_back(mem_read);
     }
 
-    std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t>& words)
+    std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)
     {
         std::vector<uint8_t> bytes;
         bytes.resize(words.size() * sizeof(uint64_t));
