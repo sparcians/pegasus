@@ -2,6 +2,9 @@
 
 #include "include/PegasusTypes.hpp"
 
+#include <cinttypes>
+#include <memory>
+
 namespace pegasus::cosim
 {
 
