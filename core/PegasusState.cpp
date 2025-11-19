@@ -261,8 +261,11 @@ namespace pegasus
 
     void PegasusState::pauseHart(const SimPauseReason reason)
     {
-        sim_state_.sim_pause_reason = reason;
-        finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+        if (sim_state_.sim_pause_reason == SimPauseReason::INVALID)
+        {
+            sim_state_.sim_pause_reason = reason;
+            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+        }
     }
 
     void PegasusState::unpauseHart()

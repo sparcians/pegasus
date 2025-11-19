@@ -79,20 +79,19 @@ namespace pegasus
         auto xlation_state = inst->getTranslationState();
 
         // Make the reservation
-        state->getCore()->makeReservation(state->getHartId(),
-                                          xlation_state->getResult().getVAddr());
+        const uint64_t paddr = xlation_state->getResult().getPAddr();
+        state->getCore()->makeReservation(state->getHartId(), paddr);
 
         // Get the memory
-        const uint64_t paddr = xlation_state->getResult().getPAddr();
         xlation_state->popResult();
         const XLEN rd_val = state->readMemory<SIZE>(paddr);
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
-            inst->getRdReg()->write(signExtend<SIZE, XLEN>(rd_val));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(rd_val));
         }
         else
         {
-            inst->getRdReg()->write(rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
 
         return ++action_it;
@@ -108,20 +107,25 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
 
-        XLEN sc_bad = 1; // assume bad
+        XLEN fail_code = 1; // assume bad
         if (auto & resv = state->getCore()->getReservation(state->getHartId()); resv.isValid())
         {
-            if (resv == xlation_state->getResult().getVAddr())
+            if (resv == xlation_state->getResult().getPAddr())
             {
                 const uint64_t paddr = xlation_state->getResult().getPAddr();
-                const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
+                const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
                 state->writeMemory<SIZE>(paddr, rs2_val);
-                sc_bad = 0;
+                fail_code = 0;
             }
-            resv.clearValid();
         }
         xlation_state->popResult();
-        inst->getRdReg()->dmiWrite<XLEN>(sc_bad);
+
+        // From spec: An SC may succeed only if no store from another hart to the
+        // reservation set can be observed to have occurred between the LR and the SC,
+        // and if there is no other SC between the LR and itself in program order.
+        state->getCore()->clearReservations();
+
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), fail_code);
         return ++action_it;
     }
 } // namespace pegasus

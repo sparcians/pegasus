@@ -32,6 +32,7 @@ namespace pegasus
     {
         QUANTUM,   //! Instruction quantum reached
         INTERRUPT, //! Interrupt
+        PAUSE,     //! Pause
         FORK,      //! New thread
         INVALID    //! Invalid
     };

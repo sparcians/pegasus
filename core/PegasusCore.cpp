@@ -84,6 +84,10 @@ namespace pegasus
         num_harts_(p->num_harts),
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
+        pause_counter_duration_(p->pause_counter_duration),
+        ev_pause_counter_expires_(
+            &unit_event_set_, "pause_counter_expires",
+            CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         isa_string_(p->isa),
@@ -161,9 +165,11 @@ namespace pegasus
 
     void PegasusCore::stopSim(const int64_t exit_code)
     {
+        DLOG("Stopping simulation for all harts");
         for (auto & [hart_idx, thread] : threads_)
         {
             thread->stopSim(exit_code);
+            threads_running_.reset(hart_idx);
         }
     }
 
@@ -298,7 +304,8 @@ namespace pegasus
     void PegasusCore::advanceSim_()
     {
         PegasusState* state = threads_[current_hart_id_];
-        if (state->getSimState()->sim_stopped == false)
+        if ((state->getSimState()->sim_stopped == false)
+            && (state->getSimState()->sim_pause_reason == SimPauseReason::INVALID))
         {
             DLOG("Running hart" << std::dec << current_hart_id_);
             Fetch* fetch = state->getFetchUnit();
@@ -314,8 +321,27 @@ namespace pegasus
                 threads_running_.reset(current_hart_id_);
             }
 
-            // TODO: Eventually there will be a switch statement here for the pause reason
-            state->unpauseHart();
+            switch (state->getSimState()->sim_pause_reason)
+            {
+                case SimPauseReason::QUANTUM:
+                    state->unpauseHart();
+                    break;
+                case SimPauseReason::INTERRUPT:
+                    sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
+                    break;
+                case SimPauseReason::PAUSE:
+                    DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
+                    threads_running_.reset(current_hart_id_);
+                    ev_pause_counter_expires_.preparePayload(current_hart_id_)
+                        ->schedule(pause_counter_duration_);
+                    break;
+                case SimPauseReason::FORK:
+                    sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
+                    break;
+                case SimPauseReason::INVALID:
+                    sparta_assert(false, "Invalid pause reason!");
+                    break;
+            }
         }
 
         // Simple round robin
@@ -332,6 +358,19 @@ namespace pegasus
             {
                 threads_[hart_id]->getSimState()->cycles = current_cycle;
             }
+        }
+    }
+
+    void PegasusCore::pauseCounterExpires_(const HartId & hart_id)
+    {
+        PegasusState* state = threads_[hart_id];
+        if (state->getSimState()->sim_pause_reason == SimPauseReason::PAUSE)
+        {
+            DLOG("Pause counter expired for hart" << std::dec << hart_id);
+            state->unpauseHart();
+            threads_running_.set(hart_id);
+            state->getSimState()->cycles = getClock()->currentCycle();
+            ev_advance_sim_.schedule();
         }
     }
 
