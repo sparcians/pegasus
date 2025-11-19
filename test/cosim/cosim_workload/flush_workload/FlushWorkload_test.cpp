@@ -411,7 +411,8 @@ int main(int argc, char** argv)
         auto sim_stopped_truth = sim_state_truth->sim_stopped;
         auto inst_count_truth = sim_state_truth->inst_count;
 
-        auto state_test = cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_test =
+            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_test = state_test->getSimState();
         auto workload_exit_code_test = sim_state_test->workload_exit_code;
         auto test_passed_test = sim_state_test->test_passed;
