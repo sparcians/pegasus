@@ -339,7 +339,6 @@ namespace pegasus
                     sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
                     break;
                 case SimPauseReason::INVALID:
-                    sparta_assert(false, "Invalid pause reason!");
                     break;
             }
         }
