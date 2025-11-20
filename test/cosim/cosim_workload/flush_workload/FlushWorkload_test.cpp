@@ -1,4 +1,5 @@
 #include "cosim/PegasusCoSim.hpp"
+#include "sim/PegasusSim.hpp"
 #include "cosim/CoSimEventPipeline.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "simdb/apps/AppManager.hpp"
@@ -52,7 +53,7 @@ bool StepSim(PegasusSim & sim, CoreId core_id, HartId hart_id)
 
 bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
-    auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state = sim.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Return false if we cannot step forward (end of sim)
     if (state->getSimState()->sim_stopped)
@@ -68,7 +69,7 @@ bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
                       size_t max_steps_before_flush = 3)
 {
-    auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state = sim.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Return false if we cannot step forward (end of sim)
     if (state->getSimState()->sim_stopped)
@@ -124,7 +125,7 @@ template <typename XLEN>
 bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, HartId hart_id)
 {
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
-    auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state_test = sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Compare PegasusState
     state_truth->compare<true>(state_test);
@@ -363,9 +364,7 @@ int main(int argc, char** argv)
         }
     }
 
-    sparta::Scheduler scheduler_test;
-    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test, snapshot_threshold,
-                            max_cached_windows);
+    PegasusCoSim cosim_test(ilimit, workload, db_test, snapshot_threshold, max_cached_windows);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
@@ -412,7 +411,8 @@ int main(int argc, char** argv)
         auto sim_stopped_truth = sim_state_truth->sim_stopped;
         auto inst_count_truth = sim_state_truth->inst_count;
 
-        auto state_test = cosim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_test =
+            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_test = state_test->getSimState();
         auto workload_exit_code_test = sim_state_test->workload_exit_code;
         auto test_passed_test = sim_state_test->test_passed;
