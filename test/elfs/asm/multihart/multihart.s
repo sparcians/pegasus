@@ -9,15 +9,17 @@
 .section .text
     .global main
 
+# Increment counter for number of threads running
 start_running:
     la x6,data
     lr.w x7, (x6)
-    addi x8,x7,0x1 # Increment num of running threads
-    sc.w x9, x8, (x6) # Try to write
+    addi x8,x7,0x1
+    sc.w x9, x8, (x6) # Try the write
     pause
     bnez x9, start_running
-    jr ra # Return (x1)
+    jr ra # Return to main (start) if successful
 
+# Decrement counter for number of threads running
 stop_running:
     la x6,data
     lr.w x7, (x6)
@@ -30,10 +32,6 @@ stop_running:
 main:
     jal start_running
 start:
-    la x6,data
-    lr.w x7, (x6)
-    addi x29,x0,0x2 # Number of threads running
-    bne x7, x29, start
     csrrs x28,mhartid,x0
     bnez x28,hart1
 
@@ -45,6 +43,7 @@ hart1:
     nop
     j stop_running
 
+# Number of running threads must be zero for EOT
 pass:
     la x6,data
     lr.w x7, (x6)
