@@ -368,8 +368,17 @@ namespace pegasus
             DLOG("Pause counter expired for hart" << std::dec << hart_id);
             state->unpauseHart();
             threads_running_.set(hart_id);
-            state->getSimState()->cycles = getClock()->currentCycle();
-            ev_advance_sim_.schedule();
+            if (ev_advance_sim_.isScheduled() == false)
+            {
+                const uint64_t current_cycle = state->getSimState()->cycles;
+                ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
+
+                // Update current cycle for all threads
+                for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+                {
+                    threads_[hart_id]->getSimState()->cycles = current_cycle;
+                }
+            }
         }
     }
 
