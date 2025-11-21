@@ -1,13 +1,37 @@
 #pragma once
 
-#include "sim/PegasusSim.hpp"
+#include <cinttypes>
+#include <string>
+#include <vector>
+
 #include "cosim/CoSimApi.hpp"
-#include "sparta/app/SimulationConfiguration.hpp"
 
 namespace pegasus
 {
+    class PegasusSim;
     class Fetch;
-}
+} // namespace pegasus
+
+namespace sparta
+{
+    class Scheduler;
+
+    namespace app
+    {
+        class SimulationConfiguration;
+    }
+
+    namespace log
+    {
+        class MessageSource;
+        class Tap;
+    } // namespace log
+
+    namespace memory
+    {
+        class SimpleMemoryMapNode;
+    }
+} // namespace sparta
 
 namespace simdb
 {
@@ -42,17 +66,17 @@ namespace pegasus::cosim
     class CoSimObserver;
     class CoSimEventPipeline;
 
-    class PegasusCoSim : public PegasusSim, public pegasus::cosim::CoSim
+    class PegasusCoSim : public pegasus::cosim::CoSim
     {
       public:
-        PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit = 0,
-                     const std::string & workload = "",
+        PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
                      const std::string & db_file = "pegasus-cosim.db",
                      const size_t snapshot_threshold = 100, const size_t max_cached_windows = 10);
 
         ~PegasusCoSim() noexcept;
 
         void enableLogger(const std::string & filename = "");
+        void logMessage(const std::string & message);
 
         CoSimEventPipeline* getEventPipeline(CoreId core_id, HartId hart_id);
         const CoSimEventPipeline* getEventPipeline(CoreId core_id, HartId hart_id) const;
@@ -100,21 +124,30 @@ namespace pegasus::cosim
 
         void finish();
 
+        // Debug/testing
+        const pegasus::PegasusSim & getPegasusSim() const { return *pegasus_sim_.get(); }
+
       private:
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger
-        sparta::log::MessageSource cosim_logger_;
+        std::unique_ptr<sparta::log::MessageSource> cosim_logger_;
         std::unique_ptr<sparta::log::Tap> sparta_tap_;
 
-        // Fetch Unit for each hart
+        // Sparta components
+        std::unique_ptr<sparta::Scheduler> scheduler_;
+
+        // The main simulator
+        std::unique_ptr<pegasus::PegasusSim> pegasus_sim_;
+
+        // Handy list of fetching blocks
         std::vector<std::vector<Fetch*>> fetch_;
 
         // CoSim memory interface
         CoSimMemoryInterface* cosim_memory_if_ = nullptr;
 
         // Sim config for sparta::app::Simulation base class
-        sparta::app::SimulationConfiguration sim_config_;
+        std::unique_ptr<sparta::app::SimulationConfiguration> sim_config_;
 
         // SimDB instance to hold all events and checkpoints
         std::shared_ptr<simdb::DatabaseManager> db_mgr_;

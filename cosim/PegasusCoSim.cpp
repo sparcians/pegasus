@@ -1,9 +1,15 @@
+
 #include "cosim/PegasusCoSim.hpp"
+#include "sim/PegasusSim.hpp"
 #include "core/Fetch.hpp"
 #include "core/observers/CoSimObserver.hpp"
 #include "include/ActionTags.hpp"
 
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
+#include "sparta/app/SimulationConfiguration.hpp"
+#include "sparta/kernel/Scheduler.hpp"
+#include "sparta/log/MessageSource.hpp"
+#include "sparta/log/Tap.hpp"
 #include "sparta/utils/SpartaAssert.hpp"
 
 #include "cosim/CoSimEventPipeline.hpp"
@@ -47,21 +53,40 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(sparta::Scheduler* scheduler, uint64_t ilimit,
-                               const std::string & workload, const std::string & db_file,
-                               const size_t snapshot_threshold, const size_t max_cached_windows) :
-        PegasusSim(scheduler, getWorkloadArgs_(workload), {}, ilimit),
-        cosim_logger_(getRoot(), "cosim", "Pegasus Cosim Logger")
+    PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
+                               const std::string & db_file, const size_t snapshot_threshold,
+                               const size_t max_cached_windows)
     {
-        configure(0, nullptr, &sim_config_);
-        buildTree();
-        configureTree();
-        finalizeTree();
-        finalizeFramework();
 
         // TODO: Assume 1 core, 1 hart for now
         const uint32_t num_cores = 1;
         const uint32_t num_harts = 1;
+
+        sim_config_.reset(new sparta::app::SimulationConfiguration);
+
+        for (uint32_t core_id = 0; core_id < num_cores; ++core_id)
+        {
+            std::string path = "top.core" + std::to_string(core_id) + ".params.isa";
+            sim_config_->processParameter(path, "rv64gcbv_zicsr_zifencei_zicond_zfh", false);
+        }
+
+        sim_config_->processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+        const std::string wkld_param =
+            PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+        sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
+        sim_config_->copyTreeNodeExtensionsFromArchAndConfigPTrees();
+
+        scheduler_.reset(new sparta::Scheduler());
+        pegasus_sim_.reset(new PegasusSim(scheduler_.get()));
+        cosim_logger_.reset(new sparta::log::MessageSource(pegasus_sim_->getRoot(), "cosim",
+                                                           "Pegasus Cosim Logger"));
+
+        pegasus_sim_->configure(0, nullptr, sim_config_.get());
+        pegasus_sim_->buildTree();
+        pegasus_sim_->configureTree();
+        pegasus_sim_->finalizeTree();
+        pegasus_sim_->finalizeFramework();
 
         cosim_observers_.resize(num_cores);
         for (auto & core_cosim_observers : cosim_observers_)
@@ -82,7 +107,7 @@ namespace pegasus::cosim
         // the PegasusState lives for that hart. All instances however use the same scheduler.
         auto evt_pipeline_factory = app_mgr_->getAppFactory<CoSimEventPipeline>();
         auto checkpointer_factory = app_mgr_->getAppFactory<CoSimCheckpointer>();
-        checkpointer_factory->setScheduler(*scheduler);
+        checkpointer_factory->setScheduler(*scheduler_.get());
 
         size_t pipeline_idx =
             (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
@@ -90,8 +115,8 @@ namespace pegasus::cosim
         {
             for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
             {
-                auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
-                auto system = getPegasusCore(core_idx)->getSystem();
+                auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
+                auto system = pegasus_sim_->getPegasusCore(core_idx)->getSystem();
 
                 std::vector<sparta::TreeNode*> chkptr_arch_data_roots;
                 chkptr_arch_data_roots.push_back(state->getContainer());
@@ -117,18 +142,18 @@ namespace pegasus::cosim
                 // Get Fetch for each hart
                 const std::string core_name = "core" + std::to_string(core_idx) + ".";
                 const std::string hart_name = "hart" + std::to_string(hart_idx) + ".";
-                fetch_.at(core_idx).emplace_back(getRoot()
+                fetch_.at(core_idx).emplace_back(pegasus_sim_->getRoot()
                                                      ->getChild(core_name + hart_name + "fetch")
                                                      ->getResourceAs<pegasus::Fetch>());
 
-                auto state = getPegasusCore(core_idx)->getPegasusState(hart_idx);
+                auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
 
                 // Create and attach CoSimObserver to PegasusState for each hart
                 auto evt_pipeline = app_mgr_->getApp<CoSimEventPipeline>(pipeline_idx);
                 auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
                 ++pipeline_idx;
 
-                auto cosim_obs = std::make_unique<CoSimObserver>(cosim_logger_, evt_pipeline,
+                auto cosim_obs = std::make_unique<CoSimObserver>(*cosim_logger_.get(), evt_pipeline,
                                                                  checkpointer, core_idx, hart_idx);
 
                 evt_pipeline->setObserver(cosim_obs.get());
@@ -146,10 +171,11 @@ namespace pegasus::cosim
         }
 
         // Single memory IF for all harts
-        cosim_memory_if_ = new CoSimMemoryInterface(getPegasusSystem()->getSystemMemory());
+        cosim_memory_if_ =
+            new CoSimMemoryInterface(pegasus_sim_->getPegasusSystem()->getSystemMemory());
     }
 
-    PegasusCoSim::~PegasusCoSim() noexcept { getRoot()->enterTeardown(); }
+    PegasusCoSim::~PegasusCoSim() noexcept { pegasus_sim_->getRoot()->enterTeardown(); }
 
     CoSimEventPipeline* PegasusCoSim::getEventPipeline(CoreId core_id, HartId hart_id)
     {
@@ -165,18 +191,20 @@ namespace pegasus::cosim
     {
         if (!filename.empty())
         {
-            sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", filename));
+            sparta_tap_.reset(new sparta::log::Tap(pegasus_sim_->getRoot(), "cosim", filename));
         }
         else
         {
-            sparta_tap_.reset(new sparta::log::Tap(getRoot(), "cosim", std::cout));
+            sparta_tap_.reset(new sparta::log::Tap(pegasus_sim_->getRoot(), "cosim", std::cout));
         }
     }
+
+    void PegasusCoSim::logMessage(const std::string & message) { *cosim_logger_ << message; }
 
     EventAccessor PegasusCoSim::step(CoreId core_id, HartId hart_id)
     {
         ActionGroup* next_action_group = fetch_.at(core_id).at(hart_id)->getActionGroup();
-        PegasusState* state = getPegasusCore(core_id)->getPegasusState(hart_id);
+        PegasusState* state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
         do
         {
             next_action_group = next_action_group->execute(state);
@@ -246,7 +274,7 @@ namespace pegasus::cosim
         auto core_id = event.getCoreId();
         auto hart_id = event.getHartId();
         auto observer = cosim_observers_.at(core_id).at(hart_id);
-        auto state = getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
         auto evt_pipeline = getEventPipeline(core_id, hart_id);
         evt_pipeline->flush(event.getEuid(), flush_younger_only, observer, state);
     }
@@ -281,12 +309,12 @@ namespace pegasus::cosim
     void PegasusCoSim::setPc(CoreId core_id, HartId hart_id, Addr addr)
     {
         // TODO: Create Event for PC override
-        getPegasusCore(core_id)->getPegasusState(hart_id)->setPc(addr);
+        pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id)->setPc(addr);
     }
 
     Addr PegasusCoSim::getPc(CoreId core_id, HartId hart_id) const
     {
-        return getPegasusCore(core_id)->getPegasusState(hart_id)->getPc();
+        return pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id)->getPc();
     }
 
     void PegasusCoSim::setPrivilegeMode(CoreId, HartId, PrivMode)
@@ -302,7 +330,7 @@ namespace pegasus::cosim
     bool PegasusCoSim::isSimulationFinished(CoreId core_id, HartId hart_id) const
     {
         const PegasusState::SimState* sim_state =
-            getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState();
+            pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState();
         return sim_state->sim_stopped;
     }
 
@@ -323,7 +351,10 @@ namespace pegasus::cosim
 
     uint64_t PegasusCoSim::getNumCommittedEvents(CoreId core_id, HartId hart_id) const
     {
-        return getPegasusCore(core_id)->getPegasusState(hart_id)->getSimState()->inst_count
+        return pegasus_sim_->getPegasusCore(core_id)
+                   ->getPegasusState(hart_id)
+                   ->getSimState()
+                   ->inst_count
                - getNumUncommittedEvents(core_id, hart_id);
     }
 

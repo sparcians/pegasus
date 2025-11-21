@@ -15,6 +15,8 @@ class RegisterTester
   public:
     RegisterTester()
     {
+        sparta::app::SimulationConfiguration config;
+        pegasus_sim_.configure(0, nullptr, &config);
         pegasus_sim_.buildTree();
         pegasus_sim_.configureTree();
         pegasus_sim_.finalizeTree();
@@ -25,7 +27,7 @@ class RegisterTester
 
   private:
     sparta::Scheduler scheduler_;
-    pegasus::PegasusSim pegasus_sim_{&scheduler_, {}, {}, 0};
+    pegasus::PegasusSim pegasus_sim_{&scheduler_};
     pegasus::PegasusState* state_ = nullptr;
 };
 

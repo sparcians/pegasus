@@ -1,5 +1,7 @@
 #include "cosim/PegasusCoSim.hpp"
+#include "sim/PegasusSim.hpp"
 #include "cosim/CoSimEventPipeline.hpp"
+#include "core/observers/InstructionLogger.hpp"
 #include "simdb/apps/AppManager.hpp"
 #include "sparta/kernel/SleeperThread.hpp"
 #include "sparta/utils/SpartaTester.hpp"
@@ -14,6 +16,7 @@
 
 using pegasus::CoreId;
 using pegasus::HartId;
+using pegasus::PegasusSim;
 using pegasus::RegisterSet;
 using pegasus::cosim::EventAccessor;
 using pegasus::cosim::PegasusCoSim;
@@ -43,9 +46,14 @@ std::string GetArchFromPath(const std::string & path)
     return "unknown";
 }
 
+bool StepSim(PegasusSim & sim, CoreId core_id, HartId hart_id)
+{
+    return sim.step(core_id, hart_id);
+}
+
 bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 {
-    auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state = sim.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Return false if we cannot step forward (end of sim)
     if (state->getSimState()->sim_stopped)
@@ -61,7 +69,7 @@ bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
 bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
                       size_t max_steps_before_flush = 3)
 {
-    auto state = sim.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state = sim.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Return false if we cannot step forward (end of sim)
     if (state->getSimState()->sim_stopped)
@@ -114,15 +122,13 @@ bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
 }
 
 template <typename XLEN>
-bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, HartId hart_id)
+bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, HartId hart_id)
 {
     auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
-    auto state_test = sim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state_test = sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
 
     // Compare PegasusState
     state_truth->compare<true>(state_test);
-    // TODO cnyce: Add this to PegasusState::compare()
-    EXPECT_EQUAL(state_truth->getCurrentException(), state_test->getCurrentException());
 
     // Compare SimState
     auto sim_state_truth = state_truth->getSimState();
@@ -184,27 +190,13 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
     vec_config_truth->compare<true>(vec_config_test);
 
     // Compare memory
-    auto pipeline_truth = sim_truth.getEventPipeline(core_id, hart_id);
-    auto pipeline_test = sim_test.getEventPipeline(core_id, hart_id);
-
-    auto last_event_truth = pipeline_truth->getLastEvent();
-    auto last_event_test = pipeline_test->getLastEvent();
-
-    const auto & mem_reads_truth = last_event_truth->getMemoryReads();
-    const auto & mem_reads_test = last_event_test->getMemoryReads();
-    EXPECT_EQUAL(mem_reads_truth, mem_reads_test);
-
-    const auto & mem_writes_truth = last_event_truth->getMemoryWrites();
-    const auto & mem_writes_test = last_event_test->getMemoryWrites();
-    EXPECT_EQUAL(mem_writes_truth, mem_writes_test);
-
-    auto mem_writes_n = std::min(mem_writes_truth.size(), mem_writes_test.size());
-    for (size_t i = 0; i < mem_writes_n; ++i)
+    auto inst_logger =
+        dynamic_cast<const pegasus::InstructionLogger*>(state_truth->getObservers()[0].get());
+    const auto & mem_writes_truth = inst_logger->getMemoryWrites();
+    for (const auto & mem_write : mem_writes_truth)
     {
-        const auto & write_truth = mem_writes_truth[i];
-        const auto paddr = write_truth.paddr;
-        auto mem_value_truth = state_truth->readMemory<XLEN>(paddr);
-        auto mem_value_test = state_test->readMemory<XLEN>(paddr);
+        auto mem_value_truth = state_truth->readMemory<uint64_t>(mem_write.addr);
+        auto mem_value_test = state_test->readMemory<uint64_t>(mem_write.addr);
         EXPECT_EQUAL(mem_value_truth, mem_value_test);
     }
 
@@ -225,7 +217,7 @@ bool Compare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, 
 }
 
 template <typename XLEN>
-bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
+bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
                        HartId hart_id, size_t max_steps_before_flush)
 {
     auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
@@ -251,10 +243,11 @@ bool AdvanceAndCompare(PegasusCoSim & sim_truth, PegasusCoSim & sim_test, CoreId
 //
 // Or for manual debugging:
 //   ./FlushWorkload_test -w <workload> [--max-steps-before-flush <steps>] [--fast-forward-steps
-//   <steps>]
+//   <steps>] [--db-stem <stem>]
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
-std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
+//   --> '--db-stem' specifies the database stem name
+std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** argv)
 {
     if (argc == 1)
     {
@@ -262,6 +255,7 @@ std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
     }
 
     std::string workload;
+    std::string db_stem;
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
 
@@ -271,6 +265,12 @@ std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
         if (arg == "-w")
         {
             workload = argv[i + 1];
+            i += 2;
+            continue;
+        }
+        else if (arg == "--db-stem")
+        {
+            db_stem = argv[i + 1];
             i += 2;
             continue;
         }
@@ -309,12 +309,13 @@ std::tuple<std::string, size_t, size_t> ParseArgs(int argc, char** argv)
         throw std::invalid_argument("Must supply workload");
     }
 
-    return {workload, max_steps_before_flush, fast_forward_steps};
+    return {workload, db_stem, max_steps_before_flush, fast_forward_steps};
 }
 
 int main(int argc, char** argv)
 {
-    const auto [workload, max_steps_before_flush, fast_forward_steps] = ParseArgs(argc, argv);
+    const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] =
+        ParseArgs(argc, argv);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
@@ -323,20 +324,47 @@ int main(int argc, char** argv)
     const uint64_t ilimit = 0;
 
     const auto cwd = std::filesystem::current_path().string();
-    const auto workload_fname = std::filesystem::path(workload).filename().string();
+    const auto workload_fname =
+        !db_stem.empty() ? db_stem : std::filesystem::path(workload).filename().string();
     const auto db_truth = cwd + "/" + workload_fname + "_truth.db";
     const auto db_test = cwd + "/" + workload_fname + "_test.db";
 
     const size_t snapshot_threshold = 10;
     const size_t max_cached_windows = 10;
 
-    sparta::Scheduler scheduler_truth;
-    PegasusCoSim cosim_truth(&scheduler_truth, ilimit, workload, db_truth, snapshot_threshold,
-                             max_cached_windows);
+    sparta::app::SimulationConfiguration config_truth;
+    config_truth.enableLogging("top", "inst", workload_fname + ".log");
+    config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
+                                  false);
+    pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+    const std::string wkld_param =
+        pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+    config_truth.processParameter("top.extension.sim.workloads", wkld_param);
+    config_truth.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+    config_truth.copyTreeNodeExtensionsFromArchAndConfigPTrees();
 
-    sparta::Scheduler scheduler_test;
-    PegasusCoSim cosim_test(&scheduler_test, ilimit, workload, db_test, snapshot_threshold,
-                            max_cached_windows);
+    sparta::Scheduler scheduler_truth;
+    PegasusSim cosim_truth(&scheduler_truth);
+
+    cosim_truth.configure(0, nullptr, &config_truth);
+    cosim_truth.buildTree();
+    cosim_truth.configureTree();
+    cosim_truth.finalizeTree();
+    cosim_truth.finalizeFramework();
+
+    // Assume 1 core, 1 hart for now
+    const pegasus::CoreId num_cores = 1;
+    const pegasus::HartId num_harts = 1;
+    for (pegasus::CoreId core_id = 0; core_id < num_cores; ++core_id)
+    {
+        for (pegasus::HartId hart_id = 0; hart_id < num_harts; ++hart_id)
+        {
+            auto state = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+            state->boot();
+        }
+    }
+
+    PegasusCoSim cosim_test(ilimit, workload, db_test, snapshot_threshold, max_cached_windows);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
@@ -371,11 +399,10 @@ int main(int argc, char** argv)
     }
 
     // Shutdown pipelines
-    cosim_truth.finish();
     cosim_test.finish();
 
     // Final validation
-    auto validate_final_state = [&](PegasusCoSim & cosim_truth, PegasusCoSim & cosim_test)
+    auto validate_final_state = [&](PegasusSim & cosim_truth, PegasusCoSim & cosim_test)
     {
         auto state_truth = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_truth = state_truth->getSimState();
@@ -384,7 +411,8 @@ int main(int argc, char** argv)
         auto sim_stopped_truth = sim_state_truth->sim_stopped;
         auto inst_count_truth = sim_state_truth->inst_count;
 
-        auto state_test = cosim_test.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_test =
+            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_test = state_test->getSimState();
         auto workload_exit_code_test = sim_state_test->workload_exit_code;
         auto test_passed_test = sim_state_test->test_passed;

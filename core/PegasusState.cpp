@@ -25,6 +25,15 @@
 
 namespace pegasus
 {
+    uint64_t getInstLimit(sparta::TreeNode* rtn, uint64_t ilimit)
+    {
+        auto extension = sparta::notNull(rtn->getExtension("sim"));
+        const uint64_t sim_ilimit =
+            extension->getParameters()->getParameter("inst_limit")->getValueAs<uint64_t>();
+        // Hart ilimit overrides the sim ilimit
+        return (ilimit == 0) ? sim_ilimit : ilimit;
+    }
+
     PrivMode getPrivilegeMode(const char priv)
     {
         if (priv == 'm')
@@ -51,7 +60,7 @@ namespace pegasus
         vlen_(p->vlen),
         xlen_(p->xlen),
         csr_values_json_(p->csr_values),
-        ilimit_(p->ilimit),
+        ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
@@ -524,6 +533,17 @@ namespace pegasus
             EXPECT_EQUAL(virtual_mode, other_virtual_mode);
         }
         else if (virtual_mode != other_virtual_mode)
+        {
+            return false;
+        }
+
+        auto curr_excp = getCurrentException();
+        auto other_curr_excp = state->getCurrentException();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(curr_excp, other_curr_excp);
+        }
+        else if (curr_excp != other_curr_excp)
         {
             return false;
         }

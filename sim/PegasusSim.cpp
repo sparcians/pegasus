@@ -1,4 +1,4 @@
-#include "PegasusSim.hpp"
+#include "sim/PegasusSim.hpp"
 #include "include/ActionTags.hpp"
 #include "include/gen/CSRFieldIdxs64.hpp"
 #include <filesystem>
@@ -7,13 +7,8 @@
 
 namespace pegasus
 {
-    PegasusSim::PegasusSim(sparta::Scheduler* scheduler,
-                           const WorkloadAndArguments & workload_and_args,
-                           const RegValueOverridePairs & reg_value_overrides, uint64_t ilimit) :
-        sparta::app::Simulation("PegasusSim", scheduler),
-        workload_and_args_(workload_and_args),
-        reg_value_overrides_(reg_value_overrides),
-        ilimit_(ilimit)
+    PegasusSim::PegasusSim(sparta::Scheduler* scheduler) :
+        sparta::app::Simulation("PegasusSim", scheduler)
     {
     }
 
@@ -57,6 +52,25 @@ namespace pegasus
         std::cout << "MIPS: " << std::dec << (inst_count / (sim_time / 1000000.0)) << std::endl;
 
         // TODO: mem usage, workload exit code
+    }
+
+    bool PegasusSim::step(CoreId core_id, HartId hart_id)
+    {
+        auto state = getPegasusCore(core_id)->getPegasusState(hart_id);
+
+        // Return false if we cannot step forward (end of sim)
+        if (state->getSimState()->sim_stopped)
+        {
+            return false;
+        }
+
+        ActionGroup* next_action_group = state->getFetchUnit()->getActionGroup();
+        do
+        {
+            next_action_group = next_action_group->execute(state);
+        } while (next_action_group && (next_action_group->hasTag(ActionTags::FETCH_TAG) == false));
+
+        return true;
     }
 
     void PegasusSim::setEOTMode(const std::string & eot_mode)
@@ -119,48 +133,78 @@ namespace pegasus
                 core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
                                                        "Core", &core_factory_));
         }
+
+        getRoot()->addExtensionFactory(PegasusSimParameters::name,
+                                       [&]() -> sparta::TreeNode::ExtensionsBase*
+                                       { return new PegasusSimParameters(); });
     }
 
-    void PegasusSim::configureTree_()
-    {
-        // Set PegasusSystem workload parameter
-        auto system_workload_and_args =
-            getRoot()->getChildAs<sparta::ParameterBase>("system.params.workload_and_args");
-        system_workload_and_args->setValueFromStringVector(workload_and_args_);
-
-        // Set instruction limit for stopping simulation
-        if (ilimit_ > 0)
-        {
-            getSimulationConfiguration()->processParameter("top.core*.hart*.params.ilimit",
-                                                           std::to_string(ilimit_));
-        }
-    }
+    void PegasusSim::configureTree_() {}
 
     void PegasusSim::bindTree_()
     {
         // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
-        SystemCallEmulator* system_call_emulator =
-            getRoot()
-                ->getChild("system_call_emulator")
-                ->getResourceAs<pegasus::SystemCallEmulator>();
 
-        bool system_call_emulator_enabled = false;
         for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
         {
             const std::string core_name = "core" + std::to_string(core_idx);
             PegasusCore* core = getRoot()->getChild(core_name)->getResourceAs<PegasusCore*>();
             cores_.emplace(core_idx, core);
+        }
 
-            // FIXME: Allow register overrides to be provide for specific threads
-            // const CoreId core_id = core->getCoreId();
-            for (auto & [hart_id, thread] : core->getThreads())
+        auto extension = sparta::notNull(getRoot()->getExtension("sim"));
+        const auto & reg_overrides = extension->getParameters()
+                                         ->getParameter("reg_overrides")
+                                         ->getValueAs<PegasusSimParameters::RegisterOverrides>();
+        for (const auto & reg_override : reg_overrides)
+        {
+            sparta_assert(reg_override.size() == 2, "Register override param is malformed!");
+            std::vector<std::string> tmp;
+            const std::string delim = ".";
+            sparta::utils::tokenize(reg_override[0], tmp, delim);
+            sparta_assert(tmp.size() == 3, "Register override param is malformed!");
+            const std::string & core = tmp[0];
+            const std::string & hart = tmp[1];
+            const std::string & reg_name = tmp[2];
+
+            // Figure out which cores will receive this override
+            std::vector<CoreId> core_ids;
+            const std::string core_num = core.substr(4);
+            if (core_num == "*")
             {
-                for (const auto & reg_override : reg_value_overrides_)
+                core_ids.resize(num_cores_);
+                std::iota(core_ids.begin(), core_ids.end(), 0);
+            }
+            else
+            {
+                core_ids.emplace_back(std::stoi(core_num));
+            }
+
+            for (CoreId core_id : core_ids)
+            {
+                PegasusCore* pegasus_core = getPegasusCore(core_id);
+
+                // Figure out which threads on this core will receive this override
+                std::vector<HartId> hart_ids;
+                const std::string hart_num = hart.substr(4);
+                if (hart_num == "*")
                 {
+                    hart_ids.resize(pegasus_core->getNumThreads());
+                    std::iota(hart_ids.begin(), hart_ids.end(), 0);
+                }
+                else
+                {
+                    hart_ids.emplace_back(std::stoi(hart_num));
+                }
+
+                for (HartId hart_id : hart_ids)
+                {
+                    PegasusState* thread = getPegasusCore(core_id)->getPegasusState(hart_id);
+
                     const bool MUST_EXIST = true;
-                    sparta::Register* reg = thread->findRegister(reg_override.first, MUST_EXIST);
-                    const uint64_t new_reg_value = std::stoull(reg_override.second, nullptr, 0);
+                    sparta::Register* reg = thread->findRegister(reg_name, MUST_EXIST);
+                    const uint64_t new_reg_value = std::stoull(reg_override[1], nullptr, 0);
                     uint64_t old_value = 0;
                     if (thread->getXlen() == 64)
                     {
@@ -174,7 +218,9 @@ namespace pegasus
                     }
                     std::cout << std::hex << std::showbase << std::setfill(' ');
 
-                    std::cout << "Setting " << std::quoted(reg->getName());
+                    std::cout << "Setting ";
+                    std::cout << "\"core" << std::to_string(core_id) << ".hart"
+                              << std::to_string(hart_id) << "." << reg->getName() << "\"";
                     if (reg->getAliases().size() != 0)
                     {
                         std::cout << " aka " << reg->getAliases();
@@ -182,10 +228,9 @@ namespace pegasus
                     std::cout << " to " << HEX16(new_reg_value) << " from default "
                               << HEX16(old_value) << std::endl;
 
-                    std::cout << "Fields:";
-
                     if (not reg->getFields().empty())
                     {
+                        std::cout << "Fields:";
                         uint64_t max_field_val_size = 0;
                         size_t max_field_name_size = 0;
 
@@ -224,19 +269,10 @@ namespace pegasus
                                 << (field->isReadOnly() ? "RO" : "RW") << " (" << field->getDesc()
                                 << ")";
                         }
-                    }
-                    else
-                    {
-                        std::cout << " None";
+                        std::cout << std::endl;
                     }
                 }
-                std::cout << std::endl;
             }
-        }
-
-        if (false == workload_and_args_.empty() && system_call_emulator_enabled)
-        {
-            system_call_emulator->setWorkload(workload_and_args_[0]);
         }
     }
 

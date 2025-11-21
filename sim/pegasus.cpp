@@ -1,14 +1,15 @@
 
 #include <iomanip>
+#include <filesystem>
 
 #include "sim/PegasusSim.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] =
-    "Usage:\n"
-    "./pegasus [-i inst limit] [--reg \"name value\"] [--opcode opcode] [--interactive] "
-    "[--spike-formatting] <workload>"
-    "\n";
+const char USAGE[] = "Usage:\n"
+                     "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode "
+                     "opcode] [--interactive] "
+                     "[--spike-formatting] <workloads>"
+                     "\n";
 
 struct RegOverride
 {
@@ -30,7 +31,7 @@ int main(int argc, char** argv)
 {
     uint64_t ilimit = 0;
     std::string opcode = "";
-    std::string workload;
+    std::vector<std::string> workloads;
     std::string eot_mode;
 
     sparta::app::DefaultValues DEFAULTS;
@@ -60,16 +61,16 @@ int main(int argc, char** argv)
         app_opts.add_options()
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
-            ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register")
+            ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register e.g. \"core0.hart0.sp 0x1000\"")
             ("opcode", po::value<std::string>(&opcode), "Executes a single opcode")
             ("interactive", "Enable interactive mode (IDE)")
             ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
-            ("workload,w", po::value<std::string>(&workload), "Worklad to run (ELF or JSON)");
+            ("workloads,w", po::value<std::vector<std::string>>(&workloads), "Workload(s) to run with workload arguments");
 
         // Add any positional command-line options
         po::positional_options_description & pos_opts = cls.getPositionalOptions();
-        pos_opts.add("workload", -1);
+        pos_opts.add("workloads", -1);
         // clang-format on
 
         // Parse command line options and configure simulator
@@ -81,42 +82,64 @@ int main(int argc, char** argv)
 
         const auto & vm = cls.getVariablesMap();
 
-        if (0 == vm.count("no-run"))
-        {
-            if (workload.empty() && (0 == vm.count("opcode")))
-            {
-                std::cout
-                    << "ERROR: Missing a workload or opcode to run. Provide an ELF or opcode to run"
-                    << std::endl;
-                std::cout << USAGE;
-                return 1;
-            }
-        }
-
         if (vm.count("opcode"))
         {
             ilimit = 1;
         }
 
-        // Workload command line arguments
-        std::vector<std::string> workload_args;
-        sparta::utils::tokenize_on_whitespace(workload, workload_args);
+        // Process command line parameters
+        auto & sim_cfg = cls.getSimulationConfiguration();
 
-        // Shove some register overrides in
-        pegasus::PegasusSim::RegValueOverridePairs reg_value_overrides;
+        // Workload
+        pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args;
+        if (workloads.empty() == false)
+        {
+            for (uint32_t wkld_idx = 0; wkld_idx < workloads.size(); ++wkld_idx)
+            {
+                workloads_and_args.emplace_back();
+                pegasus::PegasusSimParameters::WorkloadAndArgs & workload_and_args =
+                    workloads_and_args.back();
+                sparta::utils::tokenize_on_whitespace(workloads[wkld_idx], workload_and_args);
+
+                // Get full path of workload
+                const std::filesystem::path workload_path =
+                    std::filesystem::canonical(std::filesystem::absolute(workload_and_args[0]));
+
+                workload_and_args[0] = workload_path.string();
+            }
+
+            const std::string wkld_and_args_param_value =
+                pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+            sim_cfg.processParameter("top.extension.sim.workloads", wkld_and_args_param_value);
+        }
+
+        // Inst limit
+        if (ilimit != 0)
+        {
+            sim_cfg.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        }
+
+        // Register overrides
         if (vm.count("reg"))
         {
-            auto & reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
-            for (auto reg_override : reg_overrides)
+            std::string reg_overrides_param_value = "[";
+            const auto reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
+            for (uint32_t reg_idx = 0; reg_idx < reg_overrides.size(); ++reg_idx)
             {
-                reg_value_overrides.emplace_back(
-                    std::make_pair(reg_override.name, reg_override.value));
+                const auto & reg_override = reg_overrides[reg_idx];
+                reg_overrides_param_value +=
+                    "[" + reg_override.name + ", " + reg_override.value + "]";
+                const bool last_overrides = reg_idx == (reg_overrides.size() - 1);
+                reg_overrides_param_value += last_overrides ? "" : ",";
             }
+
+            reg_overrides_param_value += "]";
+            sim_cfg.processParameter("top.extension.sim.reg_overrides", reg_overrides_param_value);
         }
 
         // Create the simulator
         sparta::Scheduler scheduler;
-        pegasus::PegasusSim sim(&scheduler, workload_args, reg_value_overrides, ilimit);
+        pegasus::PegasusSim sim(&scheduler);
 
         cls.populateSimulation(&sim);
 
