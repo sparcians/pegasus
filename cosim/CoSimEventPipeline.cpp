@@ -388,11 +388,11 @@ namespace pegasus::cosim
 
             if (evt.getStartReservation().isValid())
             {
-                state->getReservation() = evt.getStartReservation();
+                state->getCore()->getReservation(hart_id_) = evt.getStartReservation();
             }
             else
             {
-                state->getReservation().clearValid();
+                state->getCore()->getReservation(hart_id_).clearValid();
             }
 
             softfloat_roundingMode = evt.start_softfloat_flags_.softfloat_roundingMode;
@@ -494,11 +494,11 @@ namespace pegasus::cosim
 
             if (reload_evt.getEndReservation().isValid())
             {
-                state->getReservation() = reload_evt.getEndReservation();
+                state->getCore()->getReservation(hart_id_) = reload_evt.getEndReservation();
             }
             else
             {
-                state->getReservation().clearValid();
+                state->getCore()->getReservation(hart_id_).clearValid();
             }
 
             softfloat_roundingMode = reload_evt.end_softfloat_flags_.softfloat_roundingMode;
