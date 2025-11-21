@@ -65,13 +65,23 @@ namespace pegasus
             }
             else
             {
-                stf_writer_ << stf::InstRegRecord(
-                    src_reg.reg_id.reg_num, stf_reg_type,
-                    stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                    src_reg.reg_value
-                        .getValueVector<uint64_t>()); // Note: the underlying container for
-                                                      // InstRegRecord in stf_writer_ accepts only
-                                                      // uint64_t of dataPackets for vector.
+                uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
+                // uint32_t lmul = encoded_lmul / 8;
+                uint32_t reg_count =
+                    std::max(1u, encoded_lmul / 8); // works well for fractional lmul cases
+
+                for (uint32_t i = 0; i < reg_count; ++i)
+                {
+                    uint32_t phys = src_reg.reg_id.reg_num + i;
+
+                    stf_writer_ << stf::InstRegRecord(
+                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        src_reg.lmul_values[i]
+                            .getValueVector<uint64_t>()); // Note: the underlying container for
+                                                          // InstRegRecord in stf_writer_ accepts
+                                                          // only uint64_t of dataPackets for
+                                                          // vector.
+                }
             }
         }
 
@@ -100,19 +110,38 @@ namespace pegasus
             }
             else
             {
-                stf_writer_ << stf::InstRegRecord(
-                    dst_reg.reg_id.reg_num, stf_reg_type,
-                    stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                    readVectorRegister_(
-                        state, dst_reg.reg_id)); // Note: the underlying container for InstRegRecord
-                                                 // in stf_writer_ accepts only uint64_t of
-                                                 // dataPackets for vector.
+                uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
+                // uint32_t lmul = encoded_lmul / 8;
+                uint32_t reg_count =
+                    std::max(1u, encoded_lmul / 8); // works well for fractional lmul cases
+                for (uint32_t i = 0; i < reg_count; ++i)
+                {
+                    uint32_t phys = dst_reg.reg_id.reg_num + i;
+
+                    stf_writer_ << stf::InstRegRecord(
+                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                        readVectorRegister_(
+                            state, RegId{RegType::VECTOR, i,
+                                         "V"
+                                             + std::to_string(
+                                                 i)})); // Note: the underlying container for
+                                                        // InstRegRecord in stf_writer_ accepts only
+                                                        // uint64_t of dataPackets for vector.
+                }
             }
         }
 
         if (state->getCurrentInst()->getMavisOpcodeInfo()->isInstType(
                 mavis::OpcodeInfo::InstructionTypes::VECTOR))
         {
+            if (state->getCurrentInst()->isVectorInstMasked())
+            {
+                stf_writer_ << stf::InstRegRecord(
+                    pegasus::V0, stf::Registers::STF_REG_TYPE::VECTOR,
+                    stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                    readVectorRegister_(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
+            }
+
             stf_writer_ << stf::InstRegRecord(VL, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
                                               READ_CSR_REG<XLEN>(state, VL));
@@ -336,23 +365,16 @@ namespace pegasus
             }
         };
 
-        if (state->getXlen() == 32)
-        {
-            writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
-        }
-        else
-        {
-            writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
-        }
-
         bool invalid_opcode = false;
 
         if (state->getXlen() == 32)
         {
+            writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
             writeEventRecord_<uint32_t>(state, invalid_opcode);
         }
         else
         {
+            writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
             writeEventRecord_<uint64_t>(state, invalid_opcode);
         }
 
