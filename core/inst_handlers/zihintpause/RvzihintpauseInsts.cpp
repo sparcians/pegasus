@@ -12,9 +12,9 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "pause",
-            pegasus::Action::createAction<&RvzihintpauseInsts::pauseHandler_<XLEN>, RvzihintpauseInsts>(
-                nullptr, "pause", ActionTags::EXECUTE_TAG));
+            "pause", pegasus::Action::createAction<&RvzihintpauseInsts::pauseHandler_<XLEN>,
+                                                   RvzihintpauseInsts>(nullptr, "pause",
+                                                                       ActionTags::EXECUTE_TAG));
     }
 
     template void RvzihintpauseInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
@@ -22,7 +22,7 @@ namespace pegasus
 
     template <typename XLEN>
     Action::ItrType RvzihintpauseInsts::pauseHandler_(pegasus::PegasusState* state,
-                                                     Action::ItrType action_it)
+                                                      Action::ItrType action_it)
     {
         state->pauseHart(SimPauseReason::PAUSE);
         return ++action_it;
