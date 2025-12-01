@@ -141,7 +141,7 @@ namespace pegasus
         {
             using ObservedReg::ObservedReg;
 
-            //store LMUL-wide register values // only for sources
+            // store LMUL-wide register values // only for sources
             std::vector<RegValue> lmul_values;
         };
 
