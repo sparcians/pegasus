@@ -94,7 +94,7 @@ namespace pegasus
         RvdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvzihintpauseInsts::getInstHandlers<RV32>(rv64_inst_actions_);
+        RvzihintpauseInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicondInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmtInsts::getInstHandlers<RV32>(rv32_inst_actions_);
