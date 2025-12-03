@@ -120,9 +120,17 @@ namespace pegasus
         }
         xlation_state->popResult();
 
-        // From spec: An SC may succeed only if no store from another hart to the
+        // From RISC-V spec:
+        //
+        // Regardless of success or failure, executing an SC instruction invalidates
+        // any reservation held by this hart.
+        //
+        // An SC may succeed only if no store from another hart to the
         // reservation set can be observed to have occurred between the LR and the SC,
         // and if there is no other SC between the LR and itself in program order.
+        // FIXME: All store instructions can invalidate a reservation, not just a SC
+
+        // Always clear all reservations after a SC
         state->getCore()->clearReservations();
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fail_code);

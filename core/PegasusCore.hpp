@@ -114,13 +114,12 @@ namespace pegasus
 
         void makeReservation(HartId hart_id, Addr paddr)
         {
+
             for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
             {
                 auto & reservation = reservations_.at(hart_id);
                 if (reservation.isValid() && (reservation.getValue() == paddr))
                 {
-                    std::cout << "Clearning reservation hart: " << std::dec << hart_id
-                              << ", paddr: 0x" << std::hex << paddr << std::endl;
                     reservation.clearValid();
                 }
             }
@@ -135,15 +134,6 @@ namespace pegasus
             {
                 reservation.clearValid();
             }
-
-            if (ev_pause_counter_expires_.isScheduled())
-            {
-                for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
-                {
-                    pauseCounterExpires_(hart_id);
-                }
-            }
-            ev_pause_counter_expires_.cancel();
         }
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }

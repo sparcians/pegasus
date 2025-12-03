@@ -171,6 +171,8 @@ namespace pegasus
             thread->stopSim(exit_code);
             threads_running_.reset(hart_idx);
         }
+
+        ev_pause_counter_expires_.cancel();
     }
 
     void PegasusCore::onBindTreeEarly_()
@@ -301,9 +303,14 @@ namespace pegasus
         }
     }
 
+    // This method will execute a single thread for up to X instructions
+    // where X is the quantum for that thread. The cycle count of all threads
+    // is updated to match the current thread's cycle count. Then this event
+    // is rescheduled at that cycle count.
     void PegasusCore::advanceSim_()
     {
         PegasusState* state = threads_[current_hart_id_];
+        bool pause_thread = false;
         if ((state->getSimState()->sim_stopped == false)
             && (state->getSimState()->sim_pause_reason == SimPauseReason::INVALID))
         {
@@ -330,17 +337,29 @@ namespace pegasus
                     sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
                     break;
                 case SimPauseReason::PAUSE:
-                    DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
-                    threads_running_.reset(current_hart_id_);
-                    ev_pause_counter_expires_.preparePayload(current_hart_id_)
-                        ->schedule(pause_counter_duration_);
+                    pause_thread = true;
                     break;
                 case SimPauseReason::FORK:
-                    sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
+                    sparta_assert(false, "Pause reason FORK is not supported yet!");
                     break;
                 case SimPauseReason::INVALID:
                     break;
             }
+        }
+
+        // Update current cycle for all threads
+        const uint64_t current_cycle = state->getSimState()->cycles;
+        for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            threads_[hart_id]->getSimState()->cycles = current_cycle;
+        }
+
+        if (pause_thread)
+        {
+            DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
+            threads_running_.reset(current_hart_id_);
+            ev_pause_counter_expires_.preparePayload(current_hart_id_)
+                ->schedule(current_cycle - getClock()->currentCycle() + pause_counter_duration_);
         }
 
         // Simple round robin
@@ -349,17 +368,14 @@ namespace pegasus
 
         if (threads_running_.any())
         {
-            const uint64_t current_cycle = state->getSimState()->cycles;
+            // Keep going!
             ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
-
-            // Update current cycle for all threads
-            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
-            {
-                threads_[hart_id]->getSimState()->cycles = current_cycle;
-            }
         }
     }
 
+    // This event will be scheduled if a thread executes an instruction
+    // that pauses it. Once the pause counter expires, this event will
+    // unpause the thread and reschedule the advance sim event.
     void PegasusCore::pauseCounterExpires_(const HartId & hart_id)
     {
         PegasusState* state = threads_[hart_id];
@@ -370,14 +386,15 @@ namespace pegasus
             threads_running_.set(hart_id);
             if (ev_advance_sim_.isScheduled() == false)
             {
-                const uint64_t current_cycle = state->getSimState()->cycles;
-                ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
-
                 // Update current cycle for all threads
+                const uint64_t current_cycle = getClock()->currentCycle();
                 for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
                 {
                     threads_[hart_id]->getSimState()->cycles = current_cycle;
                 }
+
+                // Keep going!
+                ev_advance_sim_.schedule();
             }
         }
     }
