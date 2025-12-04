@@ -310,9 +310,10 @@ namespace pegasus
     void PegasusCore::advanceSim_()
     {
         PegasusState* state = threads_[current_hart_id_];
+        auto* sim_state = state->getSimState();
         bool pause_thread = false;
-        if ((state->getSimState()->sim_stopped == false)
-            && (state->getSimState()->sim_pause_reason == SimPauseReason::INVALID))
+        if ((sim_state->sim_stopped == false)
+            && (sim_state->sim_pause_reason == SimPauseReason::INVALID))
         {
             DLOG("Running hart" << std::dec << current_hart_id_);
             Fetch* fetch = state->getFetchUnit();
@@ -322,13 +323,13 @@ namespace pegasus
                 next_action_group = next_action_group->execute(state);
             }
 
-            if (state->getSimState()->sim_stopped)
+            if (sim_state->sim_stopped)
             {
                 DLOG("Stopping hart" << std::dec << current_hart_id_);
                 threads_running_.reset(current_hart_id_);
             }
 
-            switch (state->getSimState()->sim_pause_reason)
+            switch (sim_state->sim_pause_reason)
             {
                 case SimPauseReason::QUANTUM:
                     state->unpauseHart();
@@ -348,7 +349,7 @@ namespace pegasus
         }
 
         // Update current cycle for all threads
-        const uint64_t current_cycle = state->getSimState()->cycles;
+        const uint64_t current_cycle = sim_state->cycles;
         for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
         {
             threads_[hart_id]->getSimState()->cycles = current_cycle;

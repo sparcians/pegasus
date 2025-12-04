@@ -108,7 +108,8 @@ namespace pegasus
         auto xlation_state = inst->getTranslationState();
 
         XLEN fail_code = 1; // assume bad
-        if (auto & resv = state->getCore()->getReservation(state->getHartId()); resv.isValid())
+        if (const auto & resv = state->getCore()->getReservation(state->getHartId());
+            resv.isValid())
         {
             if (resv == xlation_state->getResult().getPAddr())
             {

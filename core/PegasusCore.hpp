@@ -128,6 +128,11 @@ namespace pegasus
 
         Reservation & getReservation(HartId hart_id) { return reservations_.at(hart_id); }
 
+        const Reservation & getReservation(HartId hart_id) const
+        {
+            return reservations_.at(hart_id);
+        }
+
         void clearReservations()
         {
             for (auto & reservation : reservations_)
