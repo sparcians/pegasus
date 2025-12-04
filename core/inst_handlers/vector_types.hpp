@@ -9,7 +9,7 @@ namespace pegasus
             V, // vector
             X, // scalar int
             F, // scalar float
-            S, // single vector element[0]
+            S, // single scalar vector element[0]
             I, // immediate
             W, // wide
             N  // not used

@@ -1,5 +1,6 @@
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 #include "core/inst_handlers/inst_helpers.hpp"
+#include "core/inst_handlers/finst_helpers.hpp"
 #include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
 #include "core/VecElements.hpp"
@@ -16,28 +17,28 @@ namespace pegasus
         inst_handlers.emplace(
             "vmv.s.x",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::S,
                                                                 .src1 = OperandMode::Mode::X}>,
                 RvvPermuteInsts>(nullptr, "vmv.s.x", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vmv.x.s",
             pegasus::Action::createAction<
                 &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::X,
-                                                                .src2 = OperandMode::Mode::V}>,
+                                                                .src2 = OperandMode::Mode::S}>,
                 RvvPermuteInsts>(nullptr, "vmv.x.s", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vfmv.s.f",
             pegasus::Action::createAction<
-                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::V,
+                &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::S,
                                                                 .src1 = OperandMode::Mode::F}>,
-                RvvPermuteInsts>(nullptr, "vfmv.s.x", ActionTags::EXECUTE_TAG));
+                RvvPermuteInsts>(nullptr, "vfmv.s.f", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfmv.f.s",
             pegasus::Action::createAction<
                 &RvvPermuteInsts::vmvHandler_<XLEN, OperandMode{.dst = OperandMode::Mode::F,
-                                                                .src2 = OperandMode::Mode::V}>,
-                RvvPermuteInsts>(nullptr, "vfmv.x.s", ActionTags::EXECUTE_TAG));
+                                                                .src2 = OperandMode::Mode::S}>,
+                RvvPermuteInsts>(nullptr, "vfmv.f.s", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vslideup.vx",
@@ -181,9 +182,10 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const VectorConfig* vector_config = inst->getVecConfig();
+        using ValueType = typename Element<elemWidth>::ValueType;
 
         if constexpr ((opMode.dst == OperandMode::Mode::F || opMode.dst == OperandMode::Mode::X)
-                      && opMode.src2 == OperandMode::Mode::V)
+                      && opMode.src2 == OperandMode::Mode::S)
         {
             Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(),
                                                           inst->getRs2()};
@@ -192,18 +194,18 @@ namespace pegasus
                 WRITE_INT_REG<XLEN>(state, inst->getRd(),
                                     sext<XLEN>(elems_vs2.getElement(0).getVal()));
             }
-            else
+            else // opMode.dst == OperandMode::Mode::F
             {
-                WRITE_FP_REG<RV64>(state, inst->getRd(), elems_vs2.getElement(0).getVal());
+                WRITE_FP_REG<RV64>(state, inst->getRd(),
+                                   nanBoxing<RV64, ValueType>(elems_vs2.getElement(0).getVal()));
             }
         }
         else if constexpr ((opMode.src1 == OperandMode::Mode::F
                             || opMode.src1 == OperandMode::Mode::X)
-                           && opMode.dst == OperandMode::Mode::V)
+                           && opMode.dst == OperandMode::Mode::S)
         {
             if (vector_config->getVSTART() < vector_config->getVL())
             {
-                using ValueType = typename Element<elemWidth>::ValueType;
                 Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(),
                                                              inst->getRd()};
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
@@ -211,9 +213,10 @@ namespace pegasus
                     elems_vd.getElement(0).setVal(
                         sext<ValueType>(READ_INT_REG<XLEN>(state, inst->getRs1())));
                 }
-                else
+                else // opMode.src1 == OperandMode::Mode::F
                 {
-                    elems_vd.getElement(0).setVal(READ_FP_REG<RV64>(state, inst->getRs1()));
+                    elems_vd.getElement(0).setVal(
+                        checkNanBoxing<ValueType, RV64>(READ_FP_REG<RV64>(state, inst->getRs1())));
                 }
             }
         }
@@ -234,6 +237,7 @@ namespace pegasus
                 {
                     break;
                 }
+                // vmv.x.s or vmv.s.x
                 return vmvHelper<XLEN, 8, opMode>(state, action_it);
 
             case 16:

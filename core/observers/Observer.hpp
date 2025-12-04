@@ -85,9 +85,9 @@ namespace pegasus
                 const size_t num_bytes = sizeof(TYPE);
                 assert((offset + num_bytes) <= value_.size());
                 TYPE val = 0;
-                for (size_t i = offset; i < num_bytes; ++i)
+                for (size_t i = 0; i < num_bytes; ++i)
                 {
-                    val |= static_cast<TYPE>(value_[i]) << (i * 8);
+                    val |= static_cast<TYPE>(value_[offset + i]) << (i * 8);
                 }
                 return val;
             }
