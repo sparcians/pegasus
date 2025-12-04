@@ -1,5 +1,5 @@
 #include "core/observers/CoSimObserver.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusInst.hpp"
 #include "cosim/CoSimEventPipeline.hpp"
 #include "cosim/PegasusCoSim.hpp"
