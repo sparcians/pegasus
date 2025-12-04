@@ -285,6 +285,7 @@ namespace pegasus
                 case mavis::InstMetaData::OperandTypes::WORD:
                 case mavis::InstMetaData::OperandTypes::LONG:
                     return getIntRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::HALF:
                 case mavis::InstMetaData::OperandTypes::SINGLE:
                 case mavis::InstMetaData::OperandTypes::DOUBLE:
                 case mavis::InstMetaData::OperandTypes::QUAD:
