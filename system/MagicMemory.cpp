@@ -1,6 +1,6 @@
 #include "system/MagicMemory.hpp"
 #include "system/PegasusSystem.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
@@ -19,9 +19,9 @@ namespace pegasus
 
     void MagicMemory::onBindTreeEarly_()
     {
+        // TODO: How to support multi-core?
         auto core_tn = getContainer()->getRoot()->getChildAs<sparta::ResourceTreeNode>("core0");
-        auto hart_tn = core_tn->getChildAs<sparta::ResourceTreeNode>("hart0");
-        state_ = hart_tn->getResourceAs<PegasusState>();
+        core_ = core_tn->getResourceAs<PegasusCore>();
     }
 
     bool MagicMemory::tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size,
@@ -60,7 +60,7 @@ namespace pegasus
                     if (mm_command.cmd.payload & 0x1)
                     {
                         const auto exit_code = mm_command.cmd.payload >> 1;
-                        state_->stopSim(exit_code);
+                        core_->stopSim(exit_code);
                     }
                     else
                     {

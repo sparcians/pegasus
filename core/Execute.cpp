@@ -52,7 +52,7 @@ namespace pegasus
             }
         }
 
-        state->insertExecuteActions(inst_action_group);
+        state->insertExecuteActions(inst_action_group, inst->isMemoryInst());
 
         ILOG(inst);
 

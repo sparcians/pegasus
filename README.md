@@ -95,6 +95,12 @@ Install the following packages (tested with Ubuntu 24.04):
 - (apt-get install rapidjson-dev) RapidJSON CPP 1.1.0
 - (apt-get install libsqlite3-dev) SQLite3 3.37.2
 - (apt-get install libhdf5-dev) HDF5 1.10.7
+- (apt-get install clang-format) clang-format version 18.1.3
+
+Required for the STF library:
+- (apt-get install llvm) LLVM version 18.1.3
+- (apt-get install pkg-config) pkg-config 1.8.1
+- (apt-get install zstd libzstd-dev) Zstandard CLI (64-bit) v1.5.5
 
 A Pegasus Conda environment is also available:
 ```

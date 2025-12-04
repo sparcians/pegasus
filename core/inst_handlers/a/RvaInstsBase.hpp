@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/ActionGroup.hpp"
 #include "include/ActionTags.hpp"
 #include "include/PegasusUtils.hpp"
@@ -32,7 +32,7 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const XLEN rs1_val = inst->getRs1Reg()->dmiRead<uint64_t>();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN imm = inst->getImmediate();
         const XLEN vaddr = rs1_val + imm;
         inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
@@ -62,8 +62,8 @@ namespace pegasus
         }
         // Must read the RS2 value before writing the Rd (might be the
         // same register!)
-        const XLEN rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
-        inst->getRdReg()->write(rd_val);
+        const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val));
         return ++action_it;
     }
@@ -79,19 +79,19 @@ namespace pegasus
         auto xlation_state = inst->getTranslationState();
 
         // Make the reservation
-        state->getReservation() = xlation_state->getResult().getVAddr();
+        const uint64_t paddr = xlation_state->getResult().getPAddr();
+        state->getCore()->makeReservation(state->getHartId(), paddr);
 
         // Get the memory
-        const uint64_t paddr = xlation_state->getResult().getPAddr();
         xlation_state->popResult();
         const XLEN rd_val = state->readMemory<SIZE>(paddr);
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
-            inst->getRdReg()->write(signExtend<SIZE, XLEN>(rd_val));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(rd_val));
         }
         else
         {
-            inst->getRdReg()->write(rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
 
         return ++action_it;
@@ -107,20 +107,34 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
 
-        XLEN sc_bad = 1; // assume bad
-        if (auto & resv = state->getReservation(); resv.isValid())
+        XLEN fail_code = 1; // assume bad
+        if (const auto & resv = state->getCore()->getReservation(state->getHartId());
+            resv.isValid())
         {
-            if (resv == xlation_state->getResult().getVAddr())
+            if (resv == xlation_state->getResult().getPAddr())
             {
                 const uint64_t paddr = xlation_state->getResult().getPAddr();
-                const uint64_t rs2_val = inst->getRs2Reg()->dmiRead<uint64_t>();
+                const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
                 state->writeMemory<SIZE>(paddr, rs2_val);
-                sc_bad = 0;
+                fail_code = 0;
             }
-            resv.clearValid();
         }
         xlation_state->popResult();
-        inst->getRdReg()->dmiWrite<XLEN>(sc_bad);
+
+        // From RISC-V spec:
+        //
+        // Regardless of success or failure, executing an SC instruction invalidates
+        // any reservation held by this hart.
+        //
+        // An SC may succeed only if no store from another hart to the
+        // reservation set can be observed to have occurred between the LR and the SC,
+        // and if there is no other SC between the LR and itself in program order.
+        // FIXME: All store instructions can invalidate a reservation, not just a SC
+
+        // Always clear all reservations after a SC
+        state->getCore()->clearReservations();
+
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), fail_code);
         return ++action_it;
     }
 } // namespace pegasus
