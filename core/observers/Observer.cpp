@@ -98,6 +98,12 @@ namespace pegasus
                 for (auto & dst_reg : inst->getMavisOpcodeInfo()->getDestOpInfoList())
                 {
                     const auto reg = state->getSpartaRegister(&dst_reg);
+                    // Can't write to x0
+                    if (((RegType)reg->getGroupNum() == RegType::INTEGER)
+                        && (reg->getGroupIdx() == 0))
+                    {
+                        continue;
+                    }
                     dst_regs_.emplace_back(getRegId(reg), readRegister_(reg));
                 }
             }
