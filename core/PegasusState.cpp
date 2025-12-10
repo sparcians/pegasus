@@ -261,8 +261,11 @@ namespace pegasus
 
     void PegasusState::pauseHart(const SimPauseReason reason)
     {
-        sim_state_.sim_pause_reason = reason;
-        finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+        if (sim_state_.sim_pause_reason == SimPauseReason::INVALID)
+        {
+            sim_state_.sim_pause_reason = reason;
+            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
+        }
     }
 
     void PegasusState::unpauseHart()
@@ -282,6 +285,7 @@ namespace pegasus
                 case mavis::InstMetaData::OperandTypes::WORD:
                 case mavis::InstMetaData::OperandTypes::LONG:
                     return getIntRegister(operand->field_value);
+                case mavis::InstMetaData::OperandTypes::HALF:
                 case mavis::InstMetaData::OperandTypes::SINGLE:
                 case mavis::InstMetaData::OperandTypes::DOUBLE:
                 case mavis::InstMetaData::OperandTypes::QUAD:
@@ -425,11 +429,18 @@ namespace pegasus
         observers_.emplace_back(std::move(observer));
     }
 
-    void PegasusState::insertExecuteActions(ActionGroup* action_group)
+    void PegasusState::insertExecuteActions(ActionGroup* action_group, const bool is_memory_inst)
     {
         if (pre_execute_action_)
         {
-            action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
+            if (is_memory_inst)
+            {
+                action_group->insertActionBefore(pre_execute_action_, ActionTags::COMPUTE_ADDR_TAG);
+            }
+            else
+            {
+                action_group->insertActionBefore(pre_execute_action_, ActionTags::EXECUTE_TAG);
+            }
         }
     }
 

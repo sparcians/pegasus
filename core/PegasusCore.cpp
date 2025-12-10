@@ -84,7 +84,10 @@ namespace pegasus
         num_harts_(p->num_harts),
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
-        threads_running_((num_harts_ << 1) - 1),
+        pause_counter_duration_(p->pause_counter_duration),
+        ev_pause_counter_expires_(
+            &unit_event_set_, "pause_counter_expires",
+            CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         isa_string_(p->isa),
@@ -97,6 +100,7 @@ namespace pegasus
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
+        reservations_(num_harts_),
         inst_handlers_(syscall_emulation_enabled_)
     {
         // top.core*.hart*
@@ -161,10 +165,14 @@ namespace pegasus
 
     void PegasusCore::stopSim(const int64_t exit_code)
     {
+        DLOG("Stopping simulation for all harts");
         for (auto & [hart_idx, thread] : threads_)
         {
             thread->stopSim(exit_code);
+            threads_running_.reset(hart_idx);
         }
+
+        ev_pause_counter_expires_.cancel();
     }
 
     void PegasusCore::onBindTreeEarly_()
@@ -211,11 +219,6 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
-
-        // Start simulation with only the main thread running
-        PegasusState* state = threads_.at(0);
-        state->setPc(system_->getStartingPc());
-        state->getSimState()->sim_stopped = false;
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -229,9 +232,13 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
 
             const auto workloads_and_args = system_->getWorkloadsAndArgs();
-            if (false == workloads_and_args.empty())
+            if (hart_idx < workloads_and_args.size())
             {
                 state->setupProgramStack(workloads_and_args.at(hart_idx));
+
+                state->setPc(system_->getStartingPc());
+                state->getSimState()->sim_stopped = false;
+                threads_running_.set(hart_idx);
             }
         }
     }
@@ -296,10 +303,17 @@ namespace pegasus
         }
     }
 
+    // This method will execute a single thread for up to X instructions
+    // where X is the quantum for that thread. The cycle count of all threads
+    // is updated to match the current thread's cycle count. Then this event
+    // is rescheduled at that cycle count.
     void PegasusCore::advanceSim_()
     {
         PegasusState* state = threads_[current_hart_id_];
-        if (state->getSimState()->sim_stopped == false)
+        auto* sim_state = state->getSimState();
+        bool pause_thread = false;
+        if ((sim_state->sim_stopped == false)
+            && (sim_state->sim_pause_reason == SimPauseReason::INVALID))
         {
             DLOG("Running hart" << std::dec << current_hart_id_);
             Fetch* fetch = state->getFetchUnit();
@@ -309,14 +323,44 @@ namespace pegasus
                 next_action_group = next_action_group->execute(state);
             }
 
-            if (state->getSimState()->sim_stopped)
+            if (sim_state->sim_stopped)
             {
                 DLOG("Stopping hart" << std::dec << current_hart_id_);
                 threads_running_.reset(current_hart_id_);
             }
 
-            // TODO: Eventually there will be a switch statement here for the pause reason
-            state->unpauseHart();
+            switch (sim_state->sim_pause_reason)
+            {
+                case SimPauseReason::QUANTUM:
+                    state->unpauseHart();
+                    break;
+                case SimPauseReason::INTERRUPT:
+                    sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
+                    break;
+                case SimPauseReason::PAUSE:
+                    pause_thread = true;
+                    break;
+                case SimPauseReason::FORK:
+                    sparta_assert(false, "Pause reason FORK is not supported yet!");
+                    break;
+                case SimPauseReason::INVALID:
+                    break;
+            }
+        }
+
+        // Update current cycle for all threads
+        const uint64_t current_cycle = sim_state->cycles;
+        for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            threads_[hart_id]->getSimState()->cycles = current_cycle;
+        }
+
+        if (pause_thread)
+        {
+            DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
+            threads_running_.reset(current_hart_id_);
+            ev_pause_counter_expires_.preparePayload(current_hart_id_)
+                ->schedule(current_cycle - getClock()->currentCycle() + pause_counter_duration_);
         }
 
         // Simple round robin
@@ -325,13 +369,33 @@ namespace pegasus
 
         if (threads_running_.any())
         {
-            const uint64_t current_cycle = state->getSimState()->cycles;
+            // Keep going!
             ev_advance_sim_.schedule(current_cycle - getClock()->currentCycle());
+        }
+    }
 
-            // Update current cycle for all threads
-            for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+    // This event will be scheduled if a thread executes an instruction
+    // that pauses it. Once the pause counter expires, this event will
+    // unpause the thread and reschedule the advance sim event.
+    void PegasusCore::pauseCounterExpires_(const HartId & hart_id)
+    {
+        PegasusState* state = threads_[hart_id];
+        if (state->getSimState()->sim_pause_reason == SimPauseReason::PAUSE)
+        {
+            DLOG("Pause counter expired for hart" << std::dec << hart_id);
+            state->unpauseHart();
+            threads_running_.set(hart_id);
+            if (ev_advance_sim_.isScheduled() == false)
             {
-                threads_[hart_id]->getSimState()->cycles = current_cycle;
+                // Update current cycle for all threads
+                const uint64_t current_cycle = getClock()->currentCycle();
+                for (HartId hart_id = 0; hart_id < num_harts_; ++hart_id)
+                {
+                    threads_[hart_id]->getSimState()->cycles = current_cycle;
+                }
+
+                // Keep going!
+                ev_advance_sim_.schedule();
             }
         }
     }

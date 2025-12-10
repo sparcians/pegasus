@@ -19,7 +19,7 @@ ifndef RV_LINKER
 RV_LINKER := $(DEFAULT_LINKER)
 endif
 
-export RISCV_ARCH_FLAGS  := -march=rv64gcv_zba_zbb_zbc_zbs
+export RISCV_ARCH_FLAGS  := -march=rv64gcv_zba_zbb_zbc_zbs_zihintpause
 export RV64_ASM_COMPILER := $(shell which $(RV_ASM))
 export RV64_ASM_LINKER   := $(shell which $(RV_LINKER))
 export RV64_C_COMPILER   := $(shell which $(RV_CC))

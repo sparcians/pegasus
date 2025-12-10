@@ -26,3 +26,6 @@ pegasus_named_test(pegasus_syscall_test pegasus ${LINUX_ARCH_SETUP} "workloads/s
 # Logging tests
 pegasus_named_test(pegasus_inst_logger_test pegasus -l top inst nop.instlog workloads/nop.elf)
 pegasus_named_test(spike_inst_logger_test pegasus -l top inst nop.instlog --spike-formatting workloads/nop.elf)
+
+# Multihart test
+pegasus_named_test(pegasus_multihart_test pegasus -p top.core0.params.num_harts 2 -p top.core0.hart1.params.hart_id 1 workloads/multihart.elf workloads/multihart.elf)
