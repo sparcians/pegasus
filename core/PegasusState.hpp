@@ -241,6 +241,7 @@ namespace pegasus
                 case RegType::INVALID:
                     sparta_assert(false, "Invalid register type!");
             }
+            return nullptr;
         }
 
         sparta::Register* findRegister(const std::string & reg_name, bool must_exist = true) const;
