@@ -511,7 +511,7 @@ namespace pegasus::cosim
     {
         const size_t size = buffer.size();
         const size_t OFFSET = 0;
-        reg->write(buffer.data(), size, OFFSET);
+        reg->poke(buffer.data(), size, OFFSET);
     }
 
     std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
