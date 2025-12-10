@@ -355,6 +355,60 @@ namespace pegasus::cosim
         pokeRegister_(reg, buffer);
     }
 
+    void PegasusCoSim::readRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        uint64_t value = field->read();
+        buffer.resize(sizeof(uint64_t));
+        std::memcpy(buffer.data(), &value, sizeof(uint64_t));
+    }
+
+    void PegasusCoSim::peekRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        uint64_t value = field->peek();
+        buffer.resize(sizeof(uint64_t));
+        std::memcpy(buffer.data(), &value, sizeof(uint64_t));
+    }
+
+    void PegasusCoSim::writeRegisterField(CoreId core_id, HartId hart_id,
+                                          const std::string reg_name, const std::string field_name,
+                                          std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        field->write(value);
+    }
+
+    void PegasusCoSim::pokeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        field->poke(value);
+    }
+
     void PegasusCoSim::setPc(CoreId core_id, HartId hart_id, Addr addr)
     {
         // TODO: Create Event for PC override

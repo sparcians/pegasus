@@ -115,6 +115,18 @@ namespace pegasus::cosim
                            std::vector<uint8_t> & buffer) const override final;
         void pokeRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
                           std::vector<uint8_t> & buffer) const override final;
+        void readRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
+        void peekRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
+        void writeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                const std::string field_name,
+                                std::vector<uint8_t> & buffer) const override final;
+        void pokeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
         void setPc(CoreId core_id, HartId hart_id, Addr pc) override final;
         Addr getPc(CoreId core_id, HartId hart_id) const override final;
         void setPrivilegeMode(CoreId core_id, HartId hart_id, PrivMode priv_mode) override final;
