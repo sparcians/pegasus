@@ -14,7 +14,7 @@ namespace pegasus
     {
         sparta_assert(byte_vector.size() <= sizeof(T), "");
         T value = 0;
-        for (T idx = 0; idx < byte_vector.size(); ++idx)
+        for (size_t idx = 0; idx < byte_vector.size(); ++idx)
         {
             value |= (T)byte_vector[idx] << (idx * 8);
         }

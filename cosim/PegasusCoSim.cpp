@@ -364,7 +364,7 @@ namespace pegasus::cosim
         sparta::Register::Field* field =
             state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
         // All field accesses are 64 bit
-        uint64_t value = field->read();
+        const uint64_t value = field->read();
         buffer.resize(sizeof(uint64_t));
         std::memcpy(buffer.data(), &value, sizeof(uint64_t));
     }
@@ -378,7 +378,7 @@ namespace pegasus::cosim
         sparta::Register::Field* field =
             state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
         // All field accesses are 64 bit
-        uint64_t value = field->peek();
+        const uint64_t value = field->peek();
         buffer.resize(sizeof(uint64_t));
         std::memcpy(buffer.data(), &value, sizeof(uint64_t));
     }
@@ -392,7 +392,7 @@ namespace pegasus::cosim
         sparta::Register::Field* field =
             state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
         // All field accesses are 64 bit
-        uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        const uint64_t value = getValueFromByteVector<uint64_t>(buffer);
         field->write(value);
     }
 
@@ -405,7 +405,7 @@ namespace pegasus::cosim
         sparta::Register::Field* field =
             state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
         // All field accesses are 64 bit
-        uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        const uint64_t value = getValueFromByteVector<uint64_t>(buffer);
         field->poke(value);
     }
 
@@ -486,74 +486,32 @@ namespace pegasus::cosim
 
     void PegasusCoSim::readRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
     {
-        const size_t size = buffer.size();
-        sparta_assert(size == 4 || size == 8,
-                      "Only 4B and 8B reads are supported. Size: " << std::dec << size << "B");
-        if (size == 4)
-        {
-            const uint32_t value = reg->read<uint32_t>();
-            std::memcpy(buffer.data(), &value, size);
-        }
-        else if (size == 8)
-        {
-            const uint64_t value = reg->read<uint64_t>();
-            std::memcpy(buffer.data(), &value, size);
-        }
+        const size_t size = reg->getNumBytes();
+        buffer.resize(size);
+        const size_t OFFSET = 0;
+        reg->read(buffer.data(), size, OFFSET); 
     }
 
     void PegasusCoSim::peekRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
     {
-        const size_t size = buffer.size();
-        sparta_assert(size == 4 || size == 8,
-                      "Only 4B and 8B reads are supported. Size: " << std::dec << size << "B");
-        if (size == 4)
-        {
-            const uint32_t value = reg->peek<uint32_t>();
-            std::memcpy(buffer.data(), &value, size);
-        }
-        else if (size == 8)
-        {
-            const uint64_t value = reg->peek<uint64_t>();
-            std::memcpy(buffer.data(), &value, size);
-        }
+        const size_t size = reg->getNumBytes();
+        buffer.resize(size);
+        const size_t OFFSET = 0;
+        reg->peek(buffer.data(), size, OFFSET); 
     }
 
     void PegasusCoSim::writeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
     {
         const size_t size = buffer.size();
-        sparta_assert(size == 4 || size == 8,
-                      "Only 4B and 8B writes are supported. Size: " << std::dec << size << "B");
-        if (size == 4)
-        {
-            uint32_t value;
-            std::memcpy(&value, buffer.data(), size);
-            reg->write<uint32_t>(value);
-        }
-        else if (size == 8)
-        {
-            uint64_t value;
-            std::memcpy(&value, buffer.data(), size);
-            reg->write<uint64_t>(value);
-        }
+        const size_t OFFSET = 0;
+        reg->write(buffer.data(), size, OFFSET);
     }
 
     void PegasusCoSim::pokeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
     {
         const size_t size = buffer.size();
-        sparta_assert(size == 4 || size == 8,
-                      "Only 4B and 8B writes are supported. Size: " << std::dec << size << "B");
-        if (size == 4)
-        {
-            uint32_t value;
-            std::memcpy(&value, buffer.data(), size);
-            reg->poke<uint32_t>(value);
-        }
-        else if (size == 8)
-        {
-            uint64_t value;
-            std::memcpy(&value, buffer.data(), size);
-            reg->poke<uint64_t>(value);
-        }
+        const size_t OFFSET = 0;
+        reg->write(buffer.data(), size, OFFSET);
     }
 
     std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
