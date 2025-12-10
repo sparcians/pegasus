@@ -286,7 +286,7 @@ class GenRegisterJSON():
             del reg_dict["enabled"]
 
         # Add group num and group name
-        reg_dict["group_num"] = int(self.group)
+        reg_dict["group_num"] = int(self.group) + 1
         reg_dict["group_name"] = GetGroupName(self.group)
 
         return reg_dict
