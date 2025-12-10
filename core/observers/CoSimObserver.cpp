@@ -50,6 +50,14 @@ namespace pegasus::cosim
                                                      dst_reg.reg_prev_value.getByteVector());
         }
 
+        for (auto & [csr_num, csr_write] : csr_writes_)
+        {
+            (void)csr_num;
+            last_event.register_writes_.emplace_back(csr_write.reg_id,
+                                                     csr_write.reg_value.getByteVector(),
+                                                     csr_write.reg_prev_value.getByteVector());
+        }
+
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
 
