@@ -12,6 +12,7 @@
 #include "core/inst_handlers/m/RvmInsts.hpp"
 #include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
 #include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
+#include "core/inst_handlers/zihintpause/RvzihintpauseInsts.hpp"
 #include "core/inst_handlers/zicond/RvzicondInsts.hpp"
 #include "core/inst_handlers/zcmp/RvzcmpInsts.hpp"
 #include "core/inst_handlers/zcmt/RvzcmtInsts.hpp"
@@ -63,6 +64,7 @@ namespace pegasus
         RvdInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzicsrInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzihintpauseInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzicondInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzcmtInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -92,6 +94,7 @@ namespace pegasus
         RvdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicsrInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzifenceiInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzihintpauseInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzicondInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmpInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzcmtInsts::getInstHandlers<RV32>(rv32_inst_actions_);

@@ -9,7 +9,7 @@
 
 namespace pegasus
 {
-    class PegasusState;
+    class PegasusCore;
 
     /*!
      * \class MagicMemory
@@ -75,7 +75,7 @@ namespace pegasus
         // Backend memory
         sparta::memory::MemoryObject memory_;
 
-        PegasusState* state_ = nullptr;
+        PegasusCore* core_ = nullptr;
 
         bool tryRead_(sparta::memory::addr_t addr, sparta::memory::addr_t size, uint8_t* buf,
                       const void* in_supplement, void* out_supplement) override final;

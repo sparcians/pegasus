@@ -174,6 +174,10 @@ namespace pegasus
                                ? (request.getVAddr() + request.getMisalignedBytes())
                                : request.getVAddr();
 
+        // Width in bytes for logging
+        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
+        ILOG("Translating " << HEX(vaddr, width));
+
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
@@ -183,10 +187,6 @@ namespace pegasus
         {
             return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
         }
-
-        // Width in bytes for logging
-        const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
-        ILOG("Translating " << HEX(vaddr, width));
 
         // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096

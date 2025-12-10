@@ -1,5 +1,5 @@
 #include "core/observers/CoSimObserver.hpp"
-#include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "core/PegasusInst.hpp"
 #include "cosim/CoSimEventPipeline.hpp"
 #include "cosim/PegasusCoSim.hpp"
@@ -61,7 +61,8 @@ namespace pegasus::cosim
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
 
-        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        if (const auto & reservation = state->getCore()->getReservation(state->getHartId());
+            reservation.isValid())
         {
             last_event.end_reservation_ = reservation;
         }
@@ -111,7 +112,8 @@ namespace pegasus::cosim
         last_event.curr_ldst_priv_ = state->getLdstPrivMode();
         last_event.prev_excp_code_ = state->getCurrentException();
 
-        if (const auto & reservation = state->getReservation(); reservation.isValid())
+        if (const auto & reservation = state->getCore()->getReservation(state->getHartId());
+            reservation.isValid())
         {
             last_event.start_reservation_ = reservation;
         }
