@@ -489,7 +489,7 @@ namespace pegasus::cosim
         const size_t size = reg->getNumBytes();
         buffer.resize(size);
         const size_t OFFSET = 0;
-        reg->read(buffer.data(), size, OFFSET); 
+        reg->read(buffer.data(), size, OFFSET);
     }
 
     void PegasusCoSim::peekRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
@@ -497,7 +497,7 @@ namespace pegasus::cosim
         const size_t size = reg->getNumBytes();
         buffer.resize(size);
         const size_t OFFSET = 0;
-        reg->peek(buffer.data(), size, OFFSET); 
+        reg->peek(buffer.data(), size, OFFSET);
     }
 
     void PegasusCoSim::writeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
