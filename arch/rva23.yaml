@@ -1,2 +1,2 @@
-top.core*.params.arch_name: "rva23"
+top.core*.params.arch: "rva23"
 top.core*.params.profile: "rva23"

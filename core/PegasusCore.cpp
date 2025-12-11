@@ -119,7 +119,7 @@ namespace pegasus
                 ->setValueFromString(std::to_string(xlen_));
 
             // Set path to register JSONs (from "arch")
-            const std::string reg_json_file_path =
+            const std::string reg_json_file_path = uarch_file_path_ + "/" +
                 arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
             hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
                 ->setValueFromString(reg_json_file_path);

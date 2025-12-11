@@ -227,10 +227,10 @@ namespace pegasus
         const std::vector<std::string> supported_rv64_extensions_;
         const std::vector<std::string> supported_rv32_extensions_;
 
-        // Path to Mavis
+        // Path to Mavis isa JSONs
         const std::string isa_file_path_;
 
-        // Path to Pegasus
+        // Path to Pegasus uarch JSONs
         const std::string uarch_file_path_;
 
         // Get Pegasus arch JSONs for Mavis
