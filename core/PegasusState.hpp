@@ -222,6 +222,24 @@ namespace pegasus
             return csr_rset_->getRegister(reg_num);
         }
 
+        sparta::Register* findRegister(const RegId reg_id)
+        {
+            switch (reg_id.reg_type)
+            {
+                case RegType::INTEGER:
+                    return getIntRegister(reg_id.reg_num);
+                case RegType::FLOATING_POINT:
+                    return getFpRegister(reg_id.reg_num);
+                case RegType::VECTOR:
+                    return getVecRegister(reg_id.reg_num);
+                case RegType::CSR:
+                    return getCsrRegister(reg_id.reg_num);
+                case RegType::INVALID:
+                    sparta_assert(false, "Invalid register type!");
+            }
+            return nullptr;
+        }
+
         sparta::Register* findRegister(const std::string & reg_name, bool must_exist = true) const;
 
         template <typename MemoryType> MemoryType readMemory(const Addr paddr);

@@ -13,16 +13,16 @@ namespace pegasus
 
         switch (reg->getGroupNum())
         {
-            case 0:
+            case 1:
                 reg_id.reg_type = RegType::INTEGER;
                 break;
-            case 1:
+            case 2:
                 reg_id.reg_type = RegType::FLOATING_POINT;
                 break;
-            case 2:
+            case 3:
                 reg_id.reg_type = RegType::VECTOR;
                 break;
-            case 3:
+            case 4:
                 reg_id.reg_type = RegType::CSR;
                 break;
             default:

@@ -11,6 +11,7 @@
 #include "sparta/log/MessageSource.hpp"
 #include "sparta/log/Tap.hpp"
 #include "sparta/utils/SpartaAssert.hpp"
+#include "sparta/functional/Register.hpp"
 
 #include "cosim/CoSimEventPipeline.hpp"
 #include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
@@ -286,24 +287,126 @@ namespace pegasus::cosim
         sparta_assert(false, "CoSim method is not implemented!");
     }
 
-    void PegasusCoSim::readRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::readRegister(CoreId core_id, HartId hart_id, RegId reg_id,
+                                    std::vector<uint8_t> & buffer) const
     {
-        sparta_assert(false, "CoSim method is not implemented!");
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        sparta::Register* reg = state->findRegister(reg_id);
+        readRegister_(reg, buffer);
     }
 
-    void PegasusCoSim::peekRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::peekRegister(CoreId core_id, HartId hart_id, RegId reg_id,
+                                    std::vector<uint8_t> & buffer) const
     {
-        sparta_assert(false, "CoSim method is not implemented!");
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        sparta::Register* reg = state->findRegister(reg_id);
+        peekRegister_(reg, buffer);
     }
 
-    void PegasusCoSim::writeRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::writeRegister(CoreId core_id, HartId hart_id, RegId reg_id,
+                                     std::vector<uint8_t> & buffer) const
     {
-        sparta_assert(false, "CoSim method is not implemented!");
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        sparta::Register* reg = state->findRegister(reg_id);
+        writeRegister_(reg, buffer);
     }
 
-    void PegasusCoSim::pokeRegister(CoreId, HartId, RegId, std::vector<uint8_t> &) const
+    void PegasusCoSim::pokeRegister(CoreId core_id, HartId hart_id, RegId reg_id,
+                                    std::vector<uint8_t> & buffer) const
     {
-        sparta_assert(false, "CoSim method is not implemented!");
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        sparta::Register* reg = state->findRegister(reg_id);
+        pokeRegister_(reg, buffer);
+    }
+
+    void PegasusCoSim::readRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                    std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register* reg = state->findRegister(reg_name, MUST_EXIST);
+        readRegister_(reg, buffer);
+    }
+
+    void PegasusCoSim::peekRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                    std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register* reg = state->findRegister(reg_name, MUST_EXIST);
+        peekRegister_(reg, buffer);
+    }
+
+    void PegasusCoSim::writeRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                     std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register* reg = state->findRegister(reg_name, MUST_EXIST);
+        writeRegister_(reg, buffer);
+    }
+
+    void PegasusCoSim::pokeRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                    std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register* reg = state->findRegister(reg_name, MUST_EXIST);
+        pokeRegister_(reg, buffer);
+    }
+
+    void PegasusCoSim::readRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        const uint64_t value = field->read();
+        buffer.resize(sizeof(uint64_t));
+        std::memcpy(buffer.data(), &value, sizeof(uint64_t));
+    }
+
+    void PegasusCoSim::peekRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        const uint64_t value = field->peek();
+        buffer.resize(sizeof(uint64_t));
+        std::memcpy(buffer.data(), &value, sizeof(uint64_t));
+    }
+
+    void PegasusCoSim::writeRegisterField(CoreId core_id, HartId hart_id,
+                                          const std::string reg_name, const std::string field_name,
+                                          std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        const uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        field->write(value);
+    }
+
+    void PegasusCoSim::pokeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                         const std::string field_name,
+                                         std::vector<uint8_t> & buffer) const
+    {
+        auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
+        constexpr bool MUST_EXIST = true;
+        sparta::Register::Field* field =
+            state->findRegister(reg_name, MUST_EXIST)->getField(field_name);
+        // All field accesses are 64 bit
+        const uint64_t value = getValueFromByteVector<uint64_t>(buffer);
+        field->poke(value);
     }
 
     void PegasusCoSim::setPc(CoreId core_id, HartId hart_id, Addr addr)
@@ -379,6 +482,36 @@ namespace pegasus::cosim
     uint64_t PegasusCoSim::getNumUncommittedWrites(CoreId, HartId) const
     {
         sparta_assert(false, "CoSim method is not implemented!");
+    }
+
+    void PegasusCoSim::readRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
+    {
+        const size_t size = reg->getNumBytes();
+        buffer.resize(size);
+        const size_t OFFSET = 0;
+        reg->read(buffer.data(), size, OFFSET);
+    }
+
+    void PegasusCoSim::peekRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
+    {
+        const size_t size = reg->getNumBytes();
+        buffer.resize(size);
+        const size_t OFFSET = 0;
+        reg->peek(buffer.data(), size, OFFSET);
+    }
+
+    void PegasusCoSim::writeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
+    {
+        const size_t size = buffer.size();
+        const size_t OFFSET = 0;
+        reg->write(buffer.data(), size, OFFSET);
+    }
+
+    void PegasusCoSim::pokeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const
+    {
+        const size_t size = buffer.size();
+        const size_t OFFSET = 0;
+        reg->poke(buffer.data(), size, OFFSET);
     }
 
     std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)

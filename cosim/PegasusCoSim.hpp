@@ -31,6 +31,8 @@ namespace sparta
     {
         class SimpleMemoryMapNode;
     }
+
+    class Register;
 } // namespace sparta
 
 namespace simdb
@@ -105,6 +107,26 @@ namespace pegasus::cosim
                            std::vector<uint8_t> & buffer) const override final;
         void pokeRegister(CoreId core_id, HartId hart_id, RegId reg,
                           std::vector<uint8_t> & buffer) const override final;
+        void readRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                          std::vector<uint8_t> & buffer) const override final;
+        void peekRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                          std::vector<uint8_t> & buffer) const override final;
+        void writeRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                           std::vector<uint8_t> & buffer) const override final;
+        void pokeRegister(CoreId core_id, HartId hart_id, const std::string reg_name,
+                          std::vector<uint8_t> & buffer) const override final;
+        void readRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
+        void peekRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
+        void writeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                                const std::string field_name,
+                                std::vector<uint8_t> & buffer) const override final;
+        void pokeRegisterField(CoreId core_id, HartId hart_id, const std::string reg_name,
+                               const std::string field_name,
+                               std::vector<uint8_t> & buffer) const override final;
         void setPc(CoreId core_id, HartId hart_id, Addr pc) override final;
         Addr getPc(CoreId core_id, HartId hart_id) const override final;
         void setPrivilegeMode(CoreId core_id, HartId hart_id, PrivMode priv_mode) override final;
@@ -128,6 +150,11 @@ namespace pegasus::cosim
         const pegasus::PegasusSim & getPegasusSim() const { return *pegasus_sim_.get(); }
 
       private:
+        void readRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
+        void peekRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
+        void writeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
+        void pokeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
+
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
         // CoSim Logger

@@ -169,6 +169,28 @@ namespace pegasus::cosim
         virtual void pokeRegister(CoreId core_id, HartId hart, RegId reg,
                                   std::vector<uint8_t> & buffer) const = 0;
 
+        virtual void readRegister(CoreId core_id, HartId hart, const std::string reg_name,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void peekRegister(CoreId core_id, HartId hart, const std::string reg_name,
+                                  std::vector<uint8_t> & buffer) const = 0;
+        virtual void writeRegister(CoreId core_id, HartId hart, const std::string reg_name,
+                                   std::vector<uint8_t> & buffer) const = 0;
+        virtual void pokeRegister(CoreId core_id, HartId hart, const std::string reg_name,
+                                  std::vector<uint8_t> & buffer) const = 0;
+
+        virtual void readRegisterField(CoreId core_id, HartId hart, const std::string reg_name,
+                                       const std::string field_name,
+                                       std::vector<uint8_t> & buffer) const = 0;
+        virtual void peekRegisterField(CoreId core_id, HartId hart, const std::string reg_name,
+                                       const std::string field_name,
+                                       std::vector<uint8_t> & buffer) const = 0;
+        virtual void writeRegisterField(CoreId core_id, HartId hart, const std::string reg_name,
+                                        const std::string field_name,
+                                        std::vector<uint8_t> & buffer) const = 0;
+        virtual void pokeRegisterField(CoreId core_id, HartId hart, const std::string reg_name,
+                                       const std::string field_name,
+                                       std::vector<uint8_t> & buffer) const = 0;
+
         virtual void setPc(CoreId core_id, HartId hart, Addr pc) = 0;
         virtual Addr getPc(CoreId core_id, HartId hart_id) const = 0;
 

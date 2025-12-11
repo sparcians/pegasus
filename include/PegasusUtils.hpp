@@ -8,6 +8,19 @@
 
 namespace pegasus
 {
+    // Convert a byte vector any type as long as the size of the type is greater than or equal to
+    // the size of the byte vector
+    template <typename T> inline T getValueFromByteVector(const std::vector<uint8_t> & byte_vector)
+    {
+        sparta_assert(byte_vector.size() <= sizeof(T), "");
+        T value = 0;
+        for (size_t idx = 0; idx < byte_vector.size(); ++idx)
+        {
+            value |= (T)byte_vector[idx] << (idx * 8);
+        }
+        return value;
+    }
+
     template <typename T> inline std::vector<uint8_t> convertToByteVector(const T & value)
     {
         std::vector<uint8_t> byte_vector(sizeof(T));
