@@ -247,7 +247,7 @@ def gen_csr_num_header():
     csr_header_file.close()
     return CSR_HEADER_FILE_NAME
 
-def gen_csr_field_idxs_header(reg_size):
+def gen_csr_field_idxs_header(arch_name, reg_size):
     """Generate the CSR header file with field indexes
     """
     data_width = reg_size*8
