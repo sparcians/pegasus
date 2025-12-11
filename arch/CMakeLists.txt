@@ -10,7 +10,22 @@ list(APPEND DEPENDS_INST_PYTHON_FILES
   ${SIM_BASE}/scripts/GenInstructionJSON.py
 )
 
-add_custom_target(AutogenArchFiles ALL DEPENDS ${DEPENDS_REGISTER_PYTHON_SCRIPTS} ${DEPENDS_INST_PYTHON_FILES})
+set(AUTOGEN_CSR_HEADERS
+  ${SIM_BASE}/include/gen/CSRNums.hpp
+  ${SIM_BASE}/include/gen/CSRBitMasks32.hpp
+  ${SIM_BASE}/include/gen/CSRFieldIdxs32.hpp
+  ${SIM_BASE}/include/gen/CSRBitMasks64.hpp
+  ${SIM_BASE}/include/gen/CSRFieldIdxs64.hpp
+)
+
+set(AUTOGEN_SUPPORTED_ISA_HEADER
+  ${SIM_BASE}/arch/gen/supportedISA.hpp
+)
+
+add_custom_target(AutogenArchFiles ALL
+  SOURCES ${DEPENDS_REGISTER_PYTHON_SCRIPTS} ${DEPENDS_INST_PYTHON_FILES}
+  DEPENDS ${AUTOGEN_CSR_HEADERS} ${AUTOGEN_SUPPORTED_ISA_HEADER}
+)
 
 # Generate register definition JSONs for each arch
 add_custom_command(
@@ -33,14 +48,6 @@ add_custom_command(
 )
 
 # Generate CSR headers
-set(AUTOGEN_CSR_HEADERS
-  ${SIM_BASE}/include/gen/CSRNums.hpp
-  ${SIM_BASE}/include/gen/CSRBitMasks32.hpp
-  ${SIM_BASE}/include/gen/CSRFieldIdxs32.hpp
-  ${SIM_BASE}/include/gen/CSRBitMasks64.hpp
-  ${SIM_BASE}/include/gen/CSRFieldIdxs64.hpp
-)
-
 add_custom_command(
   OUTPUT ${AUTOGEN_CSR_HEADERS}
   COMMAND python3 ${SIM_BASE}/scripts/GenRISCVRegisterDefinitions.py --gen-csr-headers
@@ -48,10 +55,6 @@ add_custom_command(
 )
 
 # Generate supported ISA header
-set(AUTOGEN_SUPPORTED_ISA_HEADER
-  ${SIM_BASE}/arch/gen/supportedISA.hpp
-)
-
 add_custom_command(
   OUTPUT ${AUTOGEN_SUPPORTED_ISA_HEADER}
   COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --gen-supported-isa-header
