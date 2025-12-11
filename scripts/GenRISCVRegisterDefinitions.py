@@ -35,27 +35,27 @@ def setup_arch_dirs(arch_root, arch_name):
 def gen_rva23_reg_defs(rv64_root, rv32_root):
     # Generate rv64g int, fp and CSR registers
     os.chdir(rv64_root)
-    registers = {}
+    rv64_regs = {}
     RV64_XLEN = 8
     SUPPORTED_VLENS = [128, 256, 512, 1024, 2048]
-    registers["int"] = GenRegisterJSON(RegisterGroup.INT, 32, RV64_XLEN)
-    registers["fp"]  = GenRegisterJSON(RegisterGroup.FP,  32, RV64_XLEN)
+    rv64_regs["int"] = GenRegisterJSON(RegisterGroup.INT, 32, RV64_XLEN)
+    rv64_regs["fp"]  = GenRegisterJSON(RegisterGroup.FP,  32, RV64_XLEN)
     for vlen in SUPPORTED_VLENS:
         name = "vec" + str(vlen)
-        registers[name] = GenRegisterJSON(RegisterGroup.VEC, 32, int(vlen/8))
-    registers["csr"] = GenRegisterJSON(RegisterGroup.CSR, 0,  RV64_XLEN)
+        rv64_regs[name] = GenRegisterJSON(RegisterGroup.VEC, 32, int(vlen/8))
+    rv64_regs["csr"] = GenRegisterJSON(RegisterGroup.CSR, 0,  RV64_XLEN)
 
     # Add register for the PC
     num = 32
-    registers["int"].add_custom_register("pc", num, "Program counter", 8, [], {}, True)
+    rv64_regs["int"].add_custom_register("pc", num, "Program counter", 8, [], {}, True)
 
-    # Add registers for atomic load-reservation and store-conditional instructions
+    # Add rv64_regs for atomic load-reservation and store-conditional instructions
     num += 1
-    registers["int"].add_custom_register("resv_addr", num, "Load reservation address", 8, [], {}, True)
+    rv64_regs["int"].add_custom_register("resv_addr", num, "Load reservation address", 8, [], {}, True)
     num += 1
-    registers["int"].add_custom_register("resv_valid", num, "Load reservation valid", 8, [], {}, True)
+    rv64_regs["int"].add_custom_register("resv_valid", num, "Load reservation valid", 8, [], {}, True)
 
-    for name, regs in registers.items():
+    for name, regs in rv64_regs.items():
         contexts = regs.get_reg_ctx()
 
         if len(contexts) > 1:
@@ -68,23 +68,27 @@ def gen_rva23_reg_defs(rv64_root, rv32_root):
 
     # Generate rv32g int, fp and CSR registers
     os.chdir(rv32_root)
+    rv32_regs = {}
     RV32_XLEN = 4
-    registers["int"] = GenRegisterJSON(RegisterGroup.INT, 32, RV32_XLEN)
-    registers["fp"] = GenRegisterJSON(RegisterGroup.FP,  32, RV32_XLEN)
-    # Vector registers are the same for RV32
-    registers["csr"] = GenRegisterJSON(RegisterGroup.CSR, 0,  RV32_XLEN)
+    rv32_regs["int"] = GenRegisterJSON(RegisterGroup.INT, 32, RV32_XLEN)
+    rv32_regs["fp"] = GenRegisterJSON(RegisterGroup.FP,  32, RV32_XLEN)
+    # Vector rv32_regs are the same for RV32
+    for vlen in SUPPORTED_VLENS:
+        name = "vec" + str(vlen)
+        rv32_regs[name] = rv64_regs[name]
+    rv32_regs["csr"] = GenRegisterJSON(RegisterGroup.CSR, 0,  RV32_XLEN)
 
     # Add register for the PC
     num = 32
-    registers["int"].add_custom_register("pc", num, "Program counter", 4, [], {}, True)
+    rv32_regs["int"].add_custom_register("pc", num, "Program counter", 4, [], {}, True)
 
-    # Add registers for atomic load-reservation and store-conditional instructions
+    # Add rv32_regs for atomic load-reservation and store-conditional instructions
     num += 1
-    registers["int"].add_custom_register("resv_addr", num, "Load reservation address", 4, [], {}, True)
+    rv32_regs["int"].add_custom_register("resv_addr", num, "Load reservation address", 4, [], {}, True)
     num += 1
-    registers["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
+    rv32_regs["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
 
-    for name, regs in registers.items():
+    for name, regs in rv32_regs.items():
         contexts = regs.get_reg_ctx()
 
         if len(contexts) > 1:
@@ -94,6 +98,8 @@ def gen_rva23_reg_defs(rv64_root, rv32_root):
         else:
             filename = f'reg_{name}.json'
             regs.write_json(filename)
+
+    return rv64_regs, rv32_regs
 
 
 def main():
@@ -108,10 +114,12 @@ def main():
 
     # RVA23
     rv64_root, rv32_root = setup_arch_dirs(arch_root, "rva23")
-    gen_rva23_reg_defs(rv64_root, rv32_root)
+    rv64_regs, rv32_regs = gen_rva23_reg_defs(rv64_root, rv32_root)
 
     # Generate Pegasus header files
-    # FIXME: Use RVA23 for headers because it includes everything
+    # FIXME: Currently RVA23 includes everything so its ok to use its register
+    # definitions to generate the CSR headers but when multiple architectures
+    # are supported we may need to create a super set of all registers
     if args.gen_csr_headers:
         inc_root = os.path.join(pegasus_root, 'include')
         if not os.path.exists(inc_root):
@@ -122,8 +130,8 @@ def main():
         os.chdir(inc_root)
         csr_num_hpp = gen_csr_num_header()
         csr_helpers_hpp = gen_csr_helpers_header()
-        csr_field_idxs32_hpp = gen_csr_field_idxs_header("rva23", 4)
-        csr_field_idxs64_hpp = gen_csr_field_idxs_header("rva23", 8)
+        csr_field_idxs32_hpp = gen_csr_field_idxs_header(rv32_regs, 4)
+        csr_field_idxs64_hpp = gen_csr_field_idxs_header(rv64_regs, 8)
         csr_bitmasks32_hpp = gen_csr_bitmask_header(4)
         csr_bitmasks64_hpp = gen_csr_bitmask_header(8)
 
