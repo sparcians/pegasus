@@ -59,6 +59,7 @@ namespace pegasus
         hart_id_(p->hart_id),
         vlen_(p->vlen),
         xlen_(p->xlen),
+        reg_json_file_path_(p->reg_json_file_path),
         csr_values_json_(p->csr_values),
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
@@ -74,14 +75,14 @@ namespace pegasus
         pause_sim_action_group_("pause_sim")
     {
         // Set up register sets
-        const auto json_dir = (xlen_ == 32) ? REG32_JSON_DIR : REG64_JSON_DIR;
-        int_rset_ =
-            RegisterSet::create(hart_tn, json_dir + std::string("/reg_int.json"), "int_regs");
-        fp_rset_ = RegisterSet::create(hart_tn, json_dir + std::string("/reg_fp.json"), "fp_regs");
+        int_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + std::string("/reg_int.json"),
+                                        "int_regs");
+        fp_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + std::string("/reg_fp.json"),
+                                       "fp_regs");
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
-        vec_rset_ = RegisterSet::create(hart_tn, json_dir + vec_reg_json, "vec_regs");
-        csr_rset_ =
-            RegisterSet::create(hart_tn, json_dir + std::string("/reg_csr_hart.json"), "csr_regs");
+        vec_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + vec_reg_json, "vec_regs");
+        csr_rset_ = RegisterSet::create(
+            hart_tn, reg_json_file_path_ + std::string("/reg_csr_hart.json"), "csr_regs");
 
         auto add_registers = [this](const auto & reg_set)
         {

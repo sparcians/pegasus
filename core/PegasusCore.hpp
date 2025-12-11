@@ -37,15 +37,29 @@ namespace pegasus
         class PegasusCoreParameters : public sparta::ParameterSet
         {
           public:
-            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
+            {
+                profile.addDependentValidationCallback(&PegasusCoreParameters::validateProfile_,
+                                                       "RISC-V profile constraint");
+            }
 
             PARAMETER(uint32_t, core_id, 0, "Core ID")
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
+            PARAMETER(std::string, profile, "rva23", "RISC-V profile (rva23, rvb23, rvm23)")
             PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
+
+          private:
+            static bool validateProfile_(std::string & profile, const sparta::TreeNode*)
+            {
+                const std::vector<std::string> riscv_profiles_supported{"rva23", "rvb23", "rvm23"};
+                return std::find(riscv_profiles_supported.begin(), riscv_profiles_supported.end(),
+                                 profile)
+                       != riscv_profiles_supported.end();
+            }
         };
 
         PegasusCore(sparta::TreeNode* core_node, const PegasusCoreParameters* p);
@@ -191,6 +205,13 @@ namespace pegasus
 
         // Is system call emulation enabled?
         const bool syscall_emulation_enabled_;
+
+        // Arch name
+        // FIXME: We should be able to get this from Sparta --arch
+        const std::string arch_name_;
+
+        // RISC-V profile
+        const std::string profile_;
 
         // ISA string
         const std::string isa_string_;

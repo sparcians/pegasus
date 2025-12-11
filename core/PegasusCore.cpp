@@ -90,6 +90,8 @@ namespace pegasus
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
+        arch_name_(p->arch_name),
+        profile_(p->profile),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         xlen_(getXlenFromIsaString(isa_string_)),
@@ -115,6 +117,12 @@ namespace pegasus
             // Set XLEN
             hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
                 ->setValueFromString(std::to_string(xlen_));
+
+            // Set path to register JSONs (from "arch")
+            const std::string reg_json_file_path =
+                arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
+            hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
+                ->setValueFromString(reg_json_file_path);
 
             // top.core*.hart*.fetch
             tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(

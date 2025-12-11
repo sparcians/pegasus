@@ -124,10 +124,6 @@ include(stf_lib/cmake/stf_linker_setup.cmake)
 setup_stf_linker(false)
 add_subdirectory(stf_lib)
 
-# 32-bit register JSON directory
-add_compile_definitions(REG32_JSON_DIR="${SIM_BASE}/arch/rv32/gen")
-add_compile_definitions(REG64_JSON_DIR="${SIM_BASE}/arch/rv64/gen")
-
 # Pegasus dependencies
 add_subdirectory(arch)
 add_subdirectory(core)
