@@ -77,25 +77,26 @@ namespace pegasus::cosim
         tbl.addColumn("ZlibBlob", dt::blob_t);
 
         // Index for fast lookup by euid/arch ranges and core/hart ID.
-        tbl.createCompoundIndexOn({"StartEuid", "EndEuid", "StartArchId", "EndArchId", "CoreId", "HartId"});
+        tbl.createCompoundIndexOn(
+            {"StartEuid", "EndEuid", "StartArchId", "EndArchId", "CoreId", "HartId"});
         tbl.disableAutoIncPrimaryKey();
     }
 
     class EventCompressorStage : public simdb::pipeline::Stage
     {
-    public:
+      public:
         using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
 
-        EventCompressorStage(const std::string& name, simdb::pipeline::QueueRepo& queue_repo,
-                             CoSimEventPipeline* pipeline)
-            : simdb::pipeline::Stage(name, queue_repo)
-            , pipeline_(pipeline)
+        EventCompressorStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo,
+                             CoSimEventPipeline* pipeline) :
+            simdb::pipeline::Stage(name, queue_repo),
+            pipeline_(pipeline)
         {
             addInPort_<EventList>("events_in", input_queue_);
             addOutPort_<SerializedEvtsBuffer>("compressed_events_out", output_queue_);
         }
 
-    private:
+      private:
         simdb::pipeline::PipelineAction run_(bool) override
         {
             auto action = simdb::pipeline::PipelineAction::SLEEP;
@@ -167,16 +168,16 @@ namespace pegasus::cosim
 
     class EventWriterStage : public simdb::pipeline::DatabaseStage<CoSimEventPipeline>
     {
-    public:
+      public:
         using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
 
-        EventWriterStage(const std::string& name, simdb::pipeline::QueueRepo& queue_repo)
-            : simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo)
+        EventWriterStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo) :
+            simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo)
         {
             addInPort_<SerializedEvtsBuffer>("compressed_events_in", input_queue_);
         }
 
-    private:
+      private:
         simdb::pipeline::PipelineAction run_(bool) override
         {
             auto action = simdb::pipeline::PipelineAction::SLEEP;
@@ -210,7 +211,8 @@ namespace pegasus::cosim
         pipeline->addStage<EventWriterStage>("write_events");
         pipeline->noMoreStages();
 
-        pipeline->bind("compress_events.compressed_events_out", "write_events.compressed_events_in");
+        pipeline->bind("compress_events.compressed_events_out",
+                       "write_events.compressed_events_in");
         pipeline->noMoreBindings();
 
         // Store the head of the pipeline
@@ -594,7 +596,7 @@ namespace pegasus::cosim
     {
         // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
         return 0;
-    }   
+    }
 
     size_t CoSimEventPipeline::getNumCached() const
     {
@@ -641,7 +643,8 @@ namespace pegasus::cosim
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromDisk_(uint64_t euid)
     {
-        // TODO cnyce: Remove the explicit flush() when pipeline snoopers are re-implemented in SimDB.
+        // TODO cnyce: Remove the explicit flush() when pipeline snoopers are re-implemented in
+        // SimDB.
         pipeline_flusher_->flush();
 
         std::vector<char> compressed_evts_bytes;

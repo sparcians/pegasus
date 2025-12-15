@@ -227,9 +227,9 @@ namespace pegasus::cosim
         //! @{
 
         // Event info
-        sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
-        uint64_t sim_state_current_uid_ = 0;                  //!< Current UID in PegasusState::SimState
-        Type type_ = Type::INVALID;                           //!< Type of Event
+        sparta::utils::ValidValue<uint64_t> event_uid_; //!< Unique ID of Event
+        uint64_t sim_state_current_uid_ = 0;            //!< Current UID in PegasusState::SimState
+        Type type_ = Type::INVALID;                     //!< Type of Event
         CoreId core_id_ = std::numeric_limits<CoreId>::max(); //!< Core ID of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
