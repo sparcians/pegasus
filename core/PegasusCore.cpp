@@ -122,8 +122,8 @@ namespace pegasus
                 ->setValueFromString(std::to_string(xlen_));
 
             // Set path to register JSONs (from "arch")
-            const std::string reg_json_file_path = uarch_file_path_ + "/" +
-                arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
+            const std::string reg_json_file_path =
+                uarch_file_path_ + "/" + arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
             hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
                 ->setValueFromString(reg_json_file_path);
 
@@ -303,9 +303,10 @@ namespace pegasus
         mavis::FileNameListType uarch_files;
 
         const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path = uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
+        const std::string xlen_uarch_file_path =
+            uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
         const std::regex filename_regex("pegasus_uarch_.*json");
-        for (const auto& entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
+        for (const auto & entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
         {
             if (std::regex_search(entry.path().filename().string(), filename_regex))
             {

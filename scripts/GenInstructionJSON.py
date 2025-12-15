@@ -230,7 +230,7 @@ def main():
         return
 
     # RVA23
-    # TODO: At some point, we will read in the Mavis profile JSONs to get the
+    # FIXME: At some point, we will read in the Mavis profile JSONs to get the
     # list of supported extensions. For now, I've hardcoded it here.
     RVA23_RV64_SUPPORTED_EXTENSIONS = ['i', 'c', 'zca', 'zcb', 'm', 'zmmul',
                                        'a', 'zalrsc', 'zaamo', 'f', 'zcf',

@@ -306,8 +306,8 @@ namespace pegasus
         // XLEN (either 32 or 64 bit)
         const uint64_t xlen_ = 64;
 
-	// Path to register JSONs
-	const std::string reg_json_file_path_;
+        // Path to register JSONs
+        const std::string reg_json_file_path_;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
