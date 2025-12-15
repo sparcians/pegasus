@@ -14,7 +14,7 @@
 #include "sparta/functional/Register.hpp"
 
 #include "cosim/CoSimEventPipeline.hpp"
-#include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
 #include "simdb/sqlite/DatabaseManager.hpp"
 #include "simdb/apps/AppManager.hpp"
 
@@ -55,10 +55,8 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
-                               const std::string & db_file, const size_t snapshot_threshold,
-                               const size_t max_cached_windows)
+                               const std::string & db_file, const size_t snapshot_threshold)
     {
-
         // TODO: Assume 1 core, 1 hart for now
         const uint32_t num_cores = 1;
         const uint32_t num_harts = 1;
@@ -132,6 +130,7 @@ namespace pegasus::cosim
         app_mgr_->createEnabledApps();
         app_mgr_->createSchemas();
         app_mgr_->postInit(0, nullptr);
+        app_mgr_->initializePipelines();
         app_mgr_->openPipelines();
 
         fetch_.resize(num_cores);
@@ -161,9 +160,8 @@ namespace pegasus::cosim
 
                 // Initialize PegasusState and take initial snapshot
                 state->boot();
-                checkpointer->setSnapshotThreshold(snapshot_threshold);
-                checkpointer->setMaxCachedWindows(max_cached_windows);
-                cosim_obs->getCheckpointer()->createHead();
+                checkpointer->getFastCheckpointer().setSnapshotThreshold(snapshot_threshold);
+                checkpointer->getFastCheckpointer().createHead();
 
                 // Store observer
                 cosim_observers_.at(core_idx).at(hart_idx) = cosim_obs.get();
