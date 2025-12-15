@@ -135,6 +135,7 @@ add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
 add_subdirectory(test)
+add_subdirectory(scripts)
 
 include(FetchContent)
 

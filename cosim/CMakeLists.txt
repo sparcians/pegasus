@@ -16,3 +16,8 @@ target_link_libraries(pegasuscosimlib
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/arch          ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../core/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
+
+install(FILES ${PROJECT_BINARY_DIR}/libpegasuscosimlib.a DESTINATION lib)
+install(FILES PegasusCoSim.hpp DESTINATION cosim)
+install(FILES Event.hpp DESTINATION cosim)
+install(FILES CoSimApi.hpp DESTINATION cosim)

@@ -22,3 +22,5 @@ target_link_libraries(pegasus pegasussim)
 
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../arch                    ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json              ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
+
+install(TARGETS pegasus DESTINATION bin)
