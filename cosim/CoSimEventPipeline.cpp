@@ -219,7 +219,7 @@ namespace pegasus::cosim
         // Store a pipeline flusher
         pipeline_flusher_ = pipeline->createFlusher({"compress_events", "write_events"});
 
-        // Store the pipeline manager to we can run async DB queries from the main thread
+        // Store the pipeline manager so we can run async DB queries from the main thread
         pipeline_mgr_ = pipeline_mgr;
     }
 
@@ -558,14 +558,43 @@ namespace pegasus::cosim
 
     void CoSimEventPipeline::postTeardown()
     {
-        // TODO cnyce
+        std::cout << "Event accesses for core " << core_id_ << ", hart " << hart_id_ << ":\n";
+        std::cout << "    From cache: " << num_evts_retrieved_from_cache_ << "\n";
+
+        if (avg_us_recreating_evts_from_pipeline_.count())
+        {
+            auto avg_latency_us = avg_us_recreating_evts_from_pipeline_.mean();
+            std::cout << "    From pipeline:  " << avg_us_recreating_evts_from_pipeline_.count();
+            std::cout << " (avg latency " << size_t(avg_latency_us) << " microseconds)\n";
+            std::cout << "        From serialize task queue:  "
+                      << num_pipeline_evts_snooped_in_serialize_task_ << "\n";
+            std::cout << "        From zlib task queue:       "
+                      << num_pipeline_evts_snooped_in_zlib_task_ << "\n";
+            std::cout << "        From DB task queue:         "
+                      << num_pipeline_evts_snooped_in_db_task_ << "\n";
+        }
+        else
+        {
+            std::cout << "    From pipeline:  0\n";
+        }
+
+        if (avg_us_recreating_evts_from_disk_.count())
+        {
+            auto avg_latency_us = avg_us_recreating_evts_from_disk_.mean();
+            std::cout << "    From disk:  " << avg_us_recreating_evts_from_disk_.count();
+            std::cout << " (avg latency " << size_t(avg_latency_us) << " microseconds)\n\n";
+        }
+        else
+        {
+            std::cout << "    From disk:  0\n\n";
+        }
     }
 
     size_t CoSimEventPipeline::getNumSnooped() const
     {
-        // TODO cnyce
+        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
         return 0;
-    }
+    }   
 
     size_t CoSimEventPipeline::getNumCached() const
     {
@@ -605,13 +634,14 @@ namespace pegasus::cosim
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromPipeline_(uint64_t euid)
     {
-        // TODO cnyce
+        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
         (void)euid;
         return nullptr;
     }
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromDisk_(uint64_t euid)
     {
+        // TODO cnyce: Remove the explicit flush() when pipeline snoopers are re-implemented in SimDB.
         pipeline_flusher_->flush();
 
         std::vector<char> compressed_evts_bytes;
