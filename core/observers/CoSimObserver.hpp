@@ -11,10 +11,10 @@
 
 namespace sparta::serialization::checkpoint
 {
-    class DatabaseCheckpointer;
+    class CherryPickFastCheckpointer;
 }
 
-using CoSimCheckpointer = sparta::serialization::checkpoint::DatabaseCheckpointer;
+using CoSimCheckpointer = sparta::serialization::checkpoint::CherryPickFastCheckpointer;
 
 namespace pegasus
 {
@@ -52,10 +52,9 @@ namespace pegasus::cosim
         CoSimCheckpointer* checkpointer_ = nullptr;
         const CoreId core_id_;
         const HartId hart_id_;
-        uint64_t event_uid_ = 0;
         sparta::utils::ValidValue<Event> last_event_;
 
-        // Friend needed to reset event_uid_ during flush
+        // Friend needed to access last_event_
         friend class CoSimEventPipeline;
     };
 } // namespace pegasus::cosim

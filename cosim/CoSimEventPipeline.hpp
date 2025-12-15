@@ -11,7 +11,7 @@
 
 namespace simdb::pipeline
 {
-    class RunnableFlusher;
+    class Flusher;
 }
 
 namespace pegasus
@@ -22,6 +22,8 @@ namespace pegasus
 namespace pegasus::cosim
 {
     class CoSimObserver;
+    class EventCompressorStage;
+    class EventWriterStage;
 
     /// Base class for event listener. Receives EventAccessors for
     /// every cosim step(). Used for testing and validation.
@@ -40,7 +42,7 @@ namespace pegasus::cosim
     /// an event which may live in the pipeline cache or on disk.
     ///
     /// Each CoSimObserver will get their own instance of this class
-    /// along with their own Sparta DatabaseCheckpointer. The reason
+    /// along with their own Sparta CherryPickFastCheckpointer. The reason
     /// they need their own checkpointer is that one checkpointer
     /// is to be used with a specific PegasusState instance, which
     /// is per core / per hart. Each observer is tied 1-to-1 with
@@ -146,11 +148,9 @@ namespace pegasus::cosim
         simdb::DatabaseManager* db_mgr_ = nullptr;
 
         /// Pipeline manager. Used to disable the pipeline while we
-        /// are looking for events in the pipeline or on disk.
+        /// are looking for events in the pipeline or on disk. Also
+        /// used to access the AsyncDatabaseAccessor.
         simdb::pipeline::PipelineManager* pipeline_mgr_ = nullptr;
-
-        /// Used for async DB queries.
-        simdb::pipeline::AsyncDatabaseAccessor* async_eval_ = nullptr;
 
         /// Core ID.
         const CoreId core_id_;
@@ -187,7 +187,7 @@ namespace pegasus::cosim
         simdb::ConcurrentQueue<EventList>* pipeline_head_ = nullptr;
 
         /// Utility to flush the pipeline on demand.
-        std::unique_ptr<simdb::pipeline::RunnableFlusher> pipeline_flusher_;
+        std::unique_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
 
         /// Event uid we are looking for when "snooping" the pipeline for
         /// an event after not finding it in the cache.
@@ -217,9 +217,14 @@ namespace pegasus::cosim
             std::vector<char> evt_bytes;
             uint64_t start_euid = UINT64_MAX;
             uint64_t end_euid = UINT64_MAX;
+            uint64_t start_arch_id = UINT64_MAX;
+            uint64_t end_arch_id = UINT64_MAX;
             CoreId core_id = UINT32_MAX;
             HartId hart_id = UINT32_MAX;
         };
+
+        friend class EventCompressorStage;
+        friend class EventWriterStage;
     };
 
 } // namespace pegasus::cosim
