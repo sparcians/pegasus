@@ -200,3 +200,14 @@ add_custom_target(clangformat-check
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )
+
+################################################################################
+
+# Install
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/install)
+
+# Versioning
+set(MAJOR_VERSION "1")
+set(MINOR_VERSION "0")
+set(MINOR_MINOR_VERSION "0")
+configure_file (include/pegasus_version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/gen/pegasus_version.hpp @ONLY)
