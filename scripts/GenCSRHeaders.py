@@ -247,7 +247,7 @@ def gen_csr_num_header():
     csr_header_file.close()
     return CSR_HEADER_FILE_NAME
 
-def gen_csr_field_idxs_header(reg_size):
+def gen_csr_field_idxs_header(registers, reg_size):
     """Generate the CSR header file with field indexes
     """
     data_width = reg_size*8
@@ -255,35 +255,15 @@ def gen_csr_field_idxs_header(reg_size):
     csr_fi_header_file = open(csr_fi_header_file_name, "w")
     csr_fi_header_file.write(GetCsrNumFileHeader(-1))
 
-    if data_width == 32:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv32", "gen"))
-    elif data_width == 64:
-        json_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "arch", "rv64", "gen"))
-
-    reg_csr_json_filename = glob.glob(os.path.join(json_dir, "reg_csr*.json"))
-    reg_fp_json_filename  = os.path.join(json_dir, "reg_fp.json")
-    reg_int_json_filename = os.path.join(json_dir, "reg_int.json")
-    reg_vec_json_filename = os.path.join(json_dir, "reg_vec128.json")
-
-    def WriteRegisterFieldIdxs(reg_type, reg_json_filename, fout):
-        reg_json = []
-        if isinstance(reg_json_filename,list):
-            # Combine all JSON contents into a single list
-            for _file in reg_json_filename:
-                with open(_file) as reg_json_file:
-                    reg_json.extend(json.load(reg_json_file))
-        else:
-            with open(reg_json_filename) as reg_json_file:
-                reg_json = json.load(reg_json_file)
-
-        def GetWritableFieldsBitMask(reg_json):
-            if 'fields' not in reg_json:
+    def WriteRegisterFieldIdxs(reg_type, registers, fout):
+        def GetWritableFieldsBitMask(reg):
+            if 'fields' not in reg:
                 return 0xffffffffffffffff
 
             if reg_type == 'FP':
                 return 0xffffffffffffffff
 
-            fields = reg_json['fields']
+            fields = reg['fields']
             bit_mask = 0
             for _, field_defn in fields.items():
                 if not field_defn['readonly']:
@@ -298,7 +278,7 @@ def gen_csr_field_idxs_header(reg_size):
 
         fout.write('\n')
         fout.write('    struct {}_{}\n    {{\n\n'.format(reg_type, data_width))
-        for reg in reg_json:
+        for reg in registers:
             # FP registers all have "sp" and "dp" fields
             if reg_type == 'FP':
                 reg['fields']['sp'] = {'low_bit': 0, 'high_bit': 31, 'readonly': False}
@@ -337,10 +317,10 @@ def gen_csr_field_idxs_header(reg_size):
 
         fout.write('\n    };\n')
 
-    WriteRegisterFieldIdxs("CSR", reg_csr_json_filename, csr_fi_header_file)
-    WriteRegisterFieldIdxs("FP",  reg_fp_json_filename,  csr_fi_header_file)
-    WriteRegisterFieldIdxs("INT", reg_int_json_filename, csr_fi_header_file)
-    WriteRegisterFieldIdxs("VEC", reg_vec_json_filename, csr_fi_header_file)
+    WriteRegisterFieldIdxs("CSR", registers["csr"].reg_defs, csr_fi_header_file)
+    WriteRegisterFieldIdxs("FP",  registers["fp"].reg_defs,  csr_fi_header_file)
+    WriteRegisterFieldIdxs("INT", registers["int"].reg_defs, csr_fi_header_file)
+    WriteRegisterFieldIdxs("VEC", registers["vec128"].reg_defs, csr_fi_header_file)
 
     csr_fi_header_file.write(CSR_NUM_FILE_FOOTER)
     csr_fi_header_file.close()
