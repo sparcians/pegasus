@@ -330,7 +330,6 @@ int main(int argc, char** argv)
     const auto db_test = cwd + "/" + workload_fname + "_test.db";
 
     const size_t snapshot_threshold = 10;
-    const size_t max_cached_windows = 10;
 
     sparta::app::SimulationConfiguration config_truth;
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
@@ -364,7 +363,7 @@ int main(int argc, char** argv)
         }
     }
 
-    PegasusCoSim cosim_test(ilimit, workload, db_test, snapshot_threshold, max_cached_windows);
+    PegasusCoSim cosim_test(ilimit, workload, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;

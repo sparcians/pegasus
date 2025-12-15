@@ -73,7 +73,7 @@ namespace pegasus::cosim
       public:
         PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
                      const std::string & db_file = "pegasus-cosim.db",
-                     const size_t snapshot_threshold = 100, const size_t max_cached_windows = 10);
+                     const size_t snapshot_threshold = 100);
 
         ~PegasusCoSim() noexcept;
 

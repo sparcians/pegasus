@@ -143,7 +143,7 @@ namespace pegasus::cosim
 
         uint64_t getEuid() const { return event_uid_; }
 
-        uint64_t getCheckpointId() const { return checkpoint_id_; }
+        uint64_t getSimStateCurrentUID() const { return sim_state_current_uid_; }
 
         Type getEventType() const { return type_; }
 
@@ -227,9 +227,9 @@ namespace pegasus::cosim
         //! @{
 
         // Event info
-        sparta::utils::ValidValue<uint64_t> event_uid_;       //!< Unique ID of Event
-        sparta::utils::ValidValue<uint64_t> checkpoint_id_;   //!< Checkpoint ID of Event
-        Type type_ = Type::INVALID;                           //!< Type of Event
+        sparta::utils::ValidValue<uint64_t> event_uid_; //!< Unique ID of Event
+        uint64_t sim_state_current_uid_ = 0;            //!< Current UID in PegasusState::SimState
+        Type type_ = Type::INVALID;                     //!< Type of Event
         CoreId core_id_ = std::numeric_limits<CoreId>::max(); //!< Core ID of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
@@ -378,7 +378,6 @@ namespace pegasus::cosim
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             ar & event_uid_;
-            ar & checkpoint_id_;
             ar & type_;
             ar & core_id_;
             ar & hart_id_;
@@ -418,6 +417,7 @@ namespace pegasus::cosim
         friend class boost::serialization::access;
         friend class CoSimObserver;
         friend class CoSimEventPipeline;
+        friend class EventCompressorStage;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)

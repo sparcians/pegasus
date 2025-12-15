@@ -6,7 +6,7 @@
 #include "include/PegasusUtils.hpp"
 #include "system/PegasusSystem.hpp"
 #include "simdb/pipeline/Pipeline.hpp"
-#include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
 #include "source/include/softfloat.h"
 
 namespace pegasus::cosim
@@ -60,6 +60,7 @@ namespace pegasus::cosim
 
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
+        last_event.sim_state_current_uid_ = state->getSimState()->current_uid;
 
         if (const auto & reservation = state->getCore()->getReservation(state->getHartId());
             reservation.isValid())
@@ -139,8 +140,7 @@ namespace pegasus::cosim
     {
         auto & last_event = last_event_.getValue();
         sparta_assert(last_event.isDone(), "Last Event is not done yet!");
-        last_event.event_uid_ = ++event_uid_;
-        last_event.checkpoint_id_ = checkpointer_->createCheckpoint();
+        last_event.event_uid_ = checkpointer_->getFastCheckpointer().createCheckpoint();
 
         COSIMLOG(last_event);
         if (last_event.getRegisterReads().empty() == false)

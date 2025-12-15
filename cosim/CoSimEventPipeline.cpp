@@ -4,10 +4,10 @@
 #include "core/PegasusCore.hpp"
 #include "core/Execute.hpp"
 #include "simdb/pipeline/PipelineManager.hpp"
-#include "simdb/pipeline/elements/Function.hpp"
 #include "simdb/pipeline/AsyncDatabaseAccessor.hpp"
+#include "simdb/pipeline/Stage.hpp"
 #include "simdb/utils/Compress.hpp"
-#include "sparta/serialization/checkpoint/DatabaseCheckpointer.hpp"
+#include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
 #include "source/include/softfloat.h"
 
 #include <boost/archive/binary_oarchive.hpp>
@@ -57,9 +57,16 @@ namespace pegasus::cosim
 
         auto & tbl = schema.addTable("CompressedEvents");
 
-        // Contiguous event UID range covered by this blob
+        // Event UID range covered by this blob.
+        // There is no overlap in UIDs between blobs.
+        // These aren't necessarily contiguous (and won't
+        // be if any events were flushed).
         tbl.addColumn("StartEuid", dt::uint64_t);
         tbl.addColumn("EndEuid", dt::uint64_t);
+
+        // Contiguous arch ID range covered by this blob
+        tbl.addColumn("StartArchId", dt::uint64_t);
+        tbl.addColumn("EndArchId", dt::uint64_t);
 
         // Remember that all cores/harts share the same database,
         // so we need to distinguish events by core/hart ID.
@@ -69,193 +76,153 @@ namespace pegasus::cosim
         // The compressed event data blob
         tbl.addColumn("ZlibBlob", dt::blob_t);
 
-        // Index for fast lookup by euid range and core/hart ID.
-        tbl.createCompoundIndexOn({"StartEuid", "EndEuid", "CoreId", "HartId"});
+        // Index for fast lookup by euid/arch ranges and core/hart ID.
+        tbl.createCompoundIndexOn(
+            {"StartEuid", "EndEuid", "StartArchId", "EndArchId", "CoreId", "HartId"});
         tbl.disableAutoIncPrimaryKey();
     }
 
+    class EventCompressorStage : public simdb::pipeline::Stage
+    {
+      public:
+        using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
+
+        EventCompressorStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo,
+                             CoSimEventPipeline* pipeline) :
+            simdb::pipeline::Stage(name, queue_repo),
+            pipeline_(pipeline)
+        {
+            addInPort_<EventList>("events_in", input_queue_);
+            addOutPort_<SerializedEvtsBuffer>("compressed_events_out", output_queue_);
+        }
+
+      private:
+        simdb::pipeline::PipelineAction run_(bool) override
+        {
+            auto action = simdb::pipeline::PipelineAction::SLEEP;
+
+            EventList evts;
+            if (input_queue_->try_pop(evts))
+            {
+                // Validate all core/hart IDs match our expected IDs
+                for (const auto & evt : evts)
+                {
+                    sparta_assert(evt.getCoreId() == pipeline_->core_id_);
+                    sparta_assert(evt.getHartId() == pipeline_->hart_id_);
+                }
+
+                // Assign auto-incrementing arch IDs to each event
+                for (auto & evt : evts)
+                {
+                    evt.arch_id_ = arch_id_++;
+                }
+
+                auto start_euid = UINT64_MAX;
+                auto end_euid = 0ULL;
+                for (const auto & evt : evts)
+                {
+                    if (evt.getEuid() < start_euid)
+                    {
+                        start_euid = evt.getEuid();
+                    }
+                    if (evt.getEuid() > end_euid)
+                    {
+                        end_euid = evt.getEuid();
+                    }
+                }
+
+                // Serialize the events to a byte buffer
+                SerializedEvtsBuffer serialized;
+                serialized.start_euid = start_euid;
+                serialized.end_euid = end_euid;
+                serialized.start_arch_id = evts.front().getArchId();
+                serialized.end_arch_id = evts.back().getArchId();
+                serialized.core_id = pipeline_->core_id_;
+                serialized.hart_id = pipeline_->hart_id_;
+
+                namespace bio = boost::iostreams;
+                bio::back_insert_device<std::vector<char>> inserter(serialized.evt_bytes);
+                bio::stream<bio::back_insert_device<std::vector<char>>> os(inserter);
+                boost::archive::binary_oarchive oa(os);
+                oa << evts;
+                os.flush();
+
+                // Compress the byte buffer
+                std::vector<char> compressed_bytes;
+                simdb::compressData(serialized.evt_bytes, compressed_bytes);
+                std::swap(serialized.evt_bytes, compressed_bytes);
+
+                // Send down the pipeline
+                output_queue_->emplace(std::move(serialized));
+                action = simdb::pipeline::PipelineAction::PROCEED;
+            }
+
+            return action;
+        }
+
+        CoSimEventPipeline* pipeline_ = nullptr;
+        simdb::ConcurrentQueue<EventList>* input_queue_ = nullptr;
+        simdb::ConcurrentQueue<SerializedEvtsBuffer>* output_queue_ = nullptr;
+        uint64_t arch_id_ = 1;
+    };
+
+    class EventWriterStage : public simdb::pipeline::DatabaseStage<CoSimEventPipeline>
+    {
+      public:
+        using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
+
+        EventWriterStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo) :
+            simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo)
+        {
+            addInPort_<SerializedEvtsBuffer>("compressed_events_in", input_queue_);
+        }
+
+      private:
+        simdb::pipeline::PipelineAction run_(bool) override
+        {
+            auto action = simdb::pipeline::PipelineAction::SLEEP;
+
+            SerializedEvtsBuffer serialized;
+            if (input_queue_->try_pop(serialized))
+            {
+                auto inserter = getTableInserter_("CompressedEvents");
+                inserter->setColumnValue(0, serialized.start_euid);
+                inserter->setColumnValue(1, serialized.end_euid);
+                inserter->setColumnValue(2, serialized.start_arch_id);
+                inserter->setColumnValue(3, serialized.end_arch_id);
+                inserter->setColumnValue(4, serialized.core_id);
+                inserter->setColumnValue(5, serialized.hart_id);
+                inserter->setColumnValue(6, serialized.evt_bytes);
+                inserter->createRecord();
+                action = simdb::pipeline::PipelineAction::PROCEED;
+            }
+
+            return action;
+        }
+
+        simdb::ConcurrentQueue<SerializedEvtsBuffer>* input_queue_ = nullptr;
+    };
+
     void CoSimEventPipeline::createPipeline(simdb::pipeline::PipelineManager* pipeline_mgr)
     {
-        auto db_accessor = pipeline_mgr->getAsyncDatabaseAccessor();
-        auto pipeline = pipeline_mgr->createPipeline(NAME);
+        auto pipeline = pipeline_mgr->createPipeline(NAME, this);
 
-        pipeline_mgr_ = pipeline_mgr;
-        async_eval_ = db_accessor;
+        pipeline->addStage<EventCompressorStage>("compress_events", this);
+        pipeline->addStage<EventWriterStage>("write_events");
+        pipeline->noMoreStages();
 
-        // Task 1: Run the incoming events through boost::serialization
-        auto serialize =
-            simdb::pipeline::createTask<simdb::pipeline::Function<EventList, SerializedEvtsBuffer>>(
-                [this](EventList && evts, simdb::ConcurrentQueue<SerializedEvtsBuffer> & out,
-                       bool /*force_flush*/)
-                {
-                    // Validate all core/hart IDs match our expected IDs
-                    for (const auto & evt : evts)
-                    {
-                        sparta_assert(evt.getCoreId() == core_id_);
-                        sparta_assert(evt.getHartId() == hart_id_);
-                    }
-
-                    // Validate that all event UIDs are contiguous
-                    for (size_t i = 1; i < evts.size(); ++i)
-                    {
-                        if (evts[i].getEuid() != evts[i - 1].getEuid() + 1)
-                        {
-                            throw simdb::DBException("Could not validate event IDs");
-                        }
-                    }
-
-                    // Validate that all checkpoint IDs are contiguous
-                    for (size_t i = 1; i < evts.size(); ++i)
-                    {
-                        if (evts[i].getCheckpointId() != evts[i - 1].getCheckpointId() + 1)
-                        {
-                            throw simdb::DBException("Could not validate checkpoint IDs");
-                        }
-                    }
-
-                    SerializedEvtsBuffer serialized;
-                    serialized.start_euid = evts.front().getEuid();
-                    serialized.end_euid = evts.back().getEuid();
-                    serialized.core_id = core_id_;
-                    serialized.hart_id = hart_id_;
-
-                    namespace bio = boost::iostreams;
-                    bio::back_insert_device<std::vector<char>> inserter(serialized.evt_bytes);
-                    bio::stream<bio::back_insert_device<std::vector<char>>> os(inserter);
-                    boost::archive::binary_oarchive oa(os);
-                    oa << evts;
-                    os.flush();
-
-                    out.emplace(std::move(serialized));
-                    return simdb::pipeline::RunnableOutcome::DID_WORK;
-                });
-
-        // Task 2: zlib compress the serialized event buffers
-        auto zlib = simdb::pipeline::createTask<
-            simdb::pipeline::Function<SerializedEvtsBuffer, SerializedEvtsBuffer>>(
-            [](SerializedEvtsBuffer && evts, simdb::ConcurrentQueue<SerializedEvtsBuffer> & out,
-               bool /*force_flush*/)
-            {
-                std::vector<char> compressed_bytes;
-                simdb::compressData(evts.evt_bytes, compressed_bytes);
-                std::swap(evts.evt_bytes, compressed_bytes);
-                out.emplace(std::move(evts));
-                return simdb::pipeline::RunnableOutcome::DID_WORK;
-            });
-
-        // Task 3: Write the compressed event buffers to the database
-        auto db_writer =
-            db_accessor->createAsyncWriter<CoSimEventPipeline, SerializedEvtsBuffer, void>(
-                [](SerializedEvtsBuffer && serialized, simdb::pipeline::AppPreparedINSERTs* tables,
-                   bool /*force_flush*/)
-                {
-                    auto inserter = tables->getPreparedINSERT("CompressedEvents");
-                    inserter->setColumnValue(0, serialized.start_euid);
-                    inserter->setColumnValue(1, serialized.end_euid);
-                    inserter->setColumnValue(2, serialized.core_id);
-                    inserter->setColumnValue(3, serialized.hart_id);
-                    inserter->setColumnValue(4, serialized.evt_bytes);
-                    inserter->createRecord();
-                    return simdb::pipeline::RunnableOutcome::DID_WORK;
-                });
-
-        // Connect the tasks
-        *serialize >> *zlib >> *db_writer;
+        pipeline->bind("compress_events.compressed_events_out",
+                       "write_events.compressed_events_in");
+        pipeline->noMoreBindings();
 
         // Store the head of the pipeline
-        pipeline_head_ = serialize->getTypedInputQueue<EventList>();
+        pipeline_head_ = pipeline->getInPortQueue<EventList>("compress_events.events_in");
 
         // Store a pipeline flusher
-        pipeline_flusher_ = std::make_unique<simdb::pipeline::RunnableFlusher>(*db_mgr_, serialize,
-                                                                               zlib, db_writer);
+        pipeline_flusher_ = pipeline->createFlusher({"compress_events", "write_events"});
 
-        // Attach pipeline task queue snoopers which are used to look for
-        // an event directly from the pipeline. EventAccessor will look
-        // here if an event is not found in the cache.
-        pipeline_flusher_->assignQueueItemSnooper<EventList>(
-            *serialize,
-            [this](const EventList & evts) -> simdb::SnooperCallbackOutcome
-            {
-                auto euid = snooping_for_euid_.getValue();
-                auto index = euid - evts.front().getEuid();
-                if (index < evts.size())
-                {
-                    snooped_event_ = std::make_unique<Event>(evts[index]);
-                    snooping_for_euid_.clearValid();
-                    ++num_pipeline_evts_snooped_in_serialize_task_;
-                    return simdb::SnooperCallbackOutcome::FOUND_STOP;
-                }
-                return simdb::SnooperCallbackOutcome::NOT_FOUND_CONTINUE;
-            });
-
-        pipeline_flusher_->assignQueueItemSnooper<SerializedEvtsBuffer>(
-            *zlib,
-            [this](const SerializedEvtsBuffer & evts) -> simdb::SnooperCallbackOutcome
-            {
-                auto euid = snooping_for_euid_.getValue();
-                if (euid < evts.start_euid || euid > evts.end_euid)
-                {
-                    return simdb::SnooperCallbackOutcome::NOT_FOUND_CONTINUE;
-                }
-
-                // Undo boost::serialization
-                namespace bio = boost::iostreams;
-                bio::array_source src(evts.evt_bytes.data(), evts.evt_bytes.size());
-                bio::stream<bio::array_source> is(src);
-                boost::archive::binary_iarchive ia(is);
-
-                EventList orig_evts;
-                ia >> orig_evts;
-
-                auto index = euid - orig_evts.front().getEuid();
-                sparta_assert(index < orig_evts.size(),
-                              "Event with euid " + std::to_string(euid)
-                                  + " not found in serialized event buffer!");
-
-                snooped_event_ = std::make_unique<Event>(orig_evts[index]);
-                snooping_for_euid_.clearValid();
-                ++num_pipeline_evts_snooped_in_zlib_task_;
-                return simdb::SnooperCallbackOutcome::FOUND_STOP;
-            });
-
-        pipeline_flusher_->assignQueueItemSnooper<SerializedEvtsBuffer>(
-            *db_writer,
-            [this](const SerializedEvtsBuffer & evts) -> simdb::SnooperCallbackOutcome
-            {
-                auto euid = snooping_for_euid_.getValue();
-                if (euid < evts.start_euid || euid > evts.end_euid)
-                {
-                    return simdb::SnooperCallbackOutcome::NOT_FOUND_CONTINUE;
-                }
-
-                // Undo zlib compression
-                std::vector<char> uncompressed_bytes;
-                simdb::decompressData(evts.evt_bytes, uncompressed_bytes);
-
-                // Undo boost::serialization
-                namespace bio = boost::iostreams;
-                bio::array_source src(uncompressed_bytes.data(), uncompressed_bytes.size());
-                bio::stream<bio::array_source> is(src);
-                boost::archive::binary_iarchive ia(is);
-
-                EventList orig_evts;
-                ia >> orig_evts;
-
-                auto index = euid - orig_evts.front().getEuid();
-                sparta_assert(index < orig_evts.size(),
-                              "Event with euid " + std::to_string(euid)
-                                  + " not found in serialized event buffer!");
-
-                snooped_event_ = std::make_unique<Event>(orig_evts[index]);
-                snooping_for_euid_.clearValid();
-                ++num_pipeline_evts_snooped_in_db_task_;
-                return simdb::SnooperCallbackOutcome::FOUND_STOP;
-            });
-
-        // Put non-DB tasks on their own thread
-        pipeline->createTaskGroup("EventPipeline")
-            ->addTask(std::move(serialize))
-            ->addTask(std::move(zlib));
+        // Store the pipeline manager so we can run async DB queries from the main thread
+        pipeline_mgr_ = pipeline_mgr;
     }
 
     simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
@@ -269,9 +236,6 @@ namespace pegasus::cosim
     {
         sparta_assert(core_id_ == evt.getCoreId() && hart_id_ == evt.getHartId(),
                       "Event core/hart ID does not match pipeline core/hart ID!");
-
-        sparta_assert(evt.getEuid() == evt.getCheckpointId(),
-                      "Event UID must match checkpoint ID in CoSimEventPipeline!");
 
         uncommitted_evts_buffer_.emplace_back(std::move(evt));
         last_event_uid_ = uncommitted_evts_buffer_.back().getEuid();
@@ -296,6 +260,7 @@ namespace pegasus::cosim
         if (committed_evts_buffer_.size() == 100)
         {
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
+            observer_->getCheckpointer()->commitCurrentBranch();
         }
     }
 
@@ -474,19 +439,13 @@ namespace pegasus::cosim
                                        "reload state from!");
         }
 
-        sparta_assert(reload_euid.getValue() <= observer->event_uid_,
-                      "Cannot reload state for event uid " + std::to_string(reload_euid.getValue())
-                          + " since current event uid is " + std::to_string(observer->event_uid_)
-                          + "!");
-
         auto reload_event = [&](const Event & reload_evt)
         {
             auto euid = reload_evt.getEuid();
             auto checkpointer = observer->getCheckpointer();
-            checkpointer->loadCheckpoint(euid);
+            checkpointer->getFastCheckpointer().loadCheckpoint(euid);
 
             last_event_uid_ = euid;
-            observer->event_uid_ = euid;
             sim_stopped_ = reload_evt.isLastEvent();
 
             state->setPc(reload_evt.getNextPc());
@@ -509,9 +468,9 @@ namespace pegasus::cosim
             auto sim_state = state->getSimState();
             sim_state->reset();
             sim_state->current_opcode = reload_evt.getOpcode();
-            sim_state->current_uid = reload_evt.getEuid();
+            sim_state->current_uid = reload_evt.getSimStateCurrentUID();
             sim_state->sim_stopped = reload_evt.isLastEvent();
-            sim_state->inst_count = reload_evt.getEuid();
+            sim_state->inst_count = reload_evt.getSimStateCurrentUID();
             sim_state->test_passed = sim_state->workload_exit_code == 0;
             if (!sim_state->sim_stopped)
             {
@@ -635,8 +594,8 @@ namespace pegasus::cosim
 
     size_t CoSimEventPipeline::getNumSnooped() const
     {
-        return num_pipeline_evts_snooped_in_serialize_task_
-               + num_pipeline_evts_snooped_in_zlib_task_ + num_pipeline_evts_snooped_in_db_task_;
+        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
+        return 0;
     }
 
     size_t CoSimEventPipeline::getNumCached() const
@@ -677,33 +636,17 @@ namespace pegasus::cosim
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromPipeline_(uint64_t euid)
     {
-        // Keep track of how long we spend recreating events from the pipeline
-        auto start = std::chrono::high_resolution_clock::now();
-
-        snooping_for_euid_ = euid;
-        auto outcome = pipeline_flusher_->snoopAll();
-        if (outcome.found())
-        {
-            sparta_assert(snooped_event_ != nullptr);
-            sparta_assert(!snooping_for_euid_.isValid());
-
-            // Record how long this took
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> dur = end - start;
-            auto us = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-
-            // Add to the running mean
-            avg_us_recreating_evts_from_pipeline_.add(us);
-
-            return std::move(snooped_event_);
-        }
-
-        snooping_for_euid_.clearValid();
+        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
+        (void)euid;
         return nullptr;
     }
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromDisk_(uint64_t euid)
     {
+        // TODO cnyce: Remove the explicit flush() when pipeline snoopers are re-implemented in
+        // SimDB.
+        pipeline_flusher_->flush();
+
         std::vector<char> compressed_evts_bytes;
 
         auto query_func = [&](simdb::DatabaseManager* db_mgr)
@@ -725,7 +668,8 @@ namespace pegasus::cosim
         // Run the query on the database thread. It will stop what it is doing
         // as quickly as possible to run this query. The eval() method blocks
         // until the query is picked up and run.
-        async_eval_->eval(query_func);
+        auto db_accessor = pipeline_mgr_->getAsyncDatabaseAccessor();
+        db_accessor->eval(query_func);
 
         if (compressed_evts_bytes.empty())
         {
