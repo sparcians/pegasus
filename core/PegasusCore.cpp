@@ -8,6 +8,9 @@
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
+#include <filesystem>
+#include <regex>
+
 namespace pegasus
 {
     std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
@@ -90,6 +93,8 @@ namespace pegasus
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
+        arch_name_(p->arch),
+        profile_(p->profile),
         isa_string_(p->isa),
         supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         xlen_(getXlenFromIsaString(isa_string_)),
@@ -115,6 +120,12 @@ namespace pegasus
             // Set XLEN
             hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
                 ->setValueFromString(std::to_string(xlen_));
+
+            // Set path to register JSONs (from "arch")
+            const std::string reg_json_file_path =
+                uarch_file_path_ + "/" + arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
+            hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
+                ->setValueFromString(reg_json_file_path);
 
             // top.core*.hart*.fetch
             tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
@@ -289,18 +300,22 @@ namespace pegasus
 
     mavis::FileNameListType PegasusCore::getUArchFiles_() const
     {
+        mavis::FileNameListType uarch_files;
+
         const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path = uarch_file_path_ + "/rv" + xlen_str + "/gen";
-        if (xlen_ == 64)
+        const std::string xlen_uarch_file_path =
+            uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
+        const std::regex filename_regex("pegasus_uarch_.*json");
+        for (const auto & entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
         {
-            const mavis::FileNameListType uarch_files = RV64_UARCH_JSON_LIST;
-            return uarch_files;
+            if (std::regex_search(entry.path().filename().string(), filename_regex))
+            {
+                DLOG("Loading: " << entry.path());
+                uarch_files.emplace_back(entry.path());
+            }
         }
-        else
-        {
-            const mavis::FileNameListType uarch_files = RV32_UARCH_JSON_LIST;
-            return uarch_files;
-        }
+
+        return uarch_files;
     }
 
     // This method will execute a single thread for up to X instructions

@@ -17,14 +17,6 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
-#ifndef REG32_JSON_DIR
-#error "REG32_JSON_DIR must be defined"
-#endif
-
-#ifndef REG64_JSON_DIR
-#error "REG64_JSON_DIR must be defined"
-#endif
-
 namespace pegasus
 {
     class PegasusInst;
@@ -80,6 +72,8 @@ namespace pegasus
 
             // Set by PegasusCore
             HIDDEN_PARAMETER(uint32_t, xlen, 64, "XLEN (either 32 or 64 bit)")
+            HIDDEN_PARAMETER(std::string, reg_json_file_path, "",
+                             "Where are the Pegasus register files?")
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
@@ -311,6 +305,9 @@ namespace pegasus
 
         // XLEN (either 32 or 64 bit)
         const uint64_t xlen_ = 64;
+
+        // Path to register JSONs
+        const std::string reg_json_file_path_;
 
         // CSR Initial Values JSON
         const std::string csr_values_json_;
