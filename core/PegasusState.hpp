@@ -57,8 +57,6 @@ namespace pegasus
             PARAMETER(uint32_t, hart_id, 0, "Hart ID")
             PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
-            PARAMETER(std::string, csr_values, "arch/default_csr_values.json",
-                      "Provides initial values of CSRs")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
@@ -308,9 +306,6 @@ namespace pegasus
 
         // Path to register JSONs
         const std::string reg_json_file_path_;
-
-        // CSR Initial Values JSON
-        const std::string csr_values_json_;
 
         // Instruction limit to end simulation
         const uint64_t ilimit_ = 0;
