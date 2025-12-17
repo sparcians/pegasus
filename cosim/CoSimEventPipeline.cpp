@@ -96,6 +96,64 @@ namespace pegasus::cosim
             addOutPort_<SerializedEvtsBuffer>("compressed_events_out", output_queue_);
         }
 
+        bool snoop(const uint64_t & euid, std::unique_ptr<Event> & snooped_event)
+        {
+            sparta_assert(snooped_event == nullptr);
+
+            // Look through the EventList input queue feeding this stage
+            input_queue_->snoop(
+                [&](const EventList & evts)
+                {
+                    // Note that the euids are not necessarily contiguous in the EventList,
+                    // so we have to iterate through to find the event with the given euid.
+                    // The only time these euids will be contiguous is when we run CoSim
+                    // without EVER flushing events.
+                    //
+                    // That being said, it is still quick enough to calculate the index
+                    // and then check that event's euid first before iterating through the
+                    // entire list.
+                    auto index = euid - evts.front().getEuid();
+                    if (index < evts.size() && evts[index].getEuid() == euid)
+                    {
+                        // Found it! Make a copy.
+                        snooped_event = std::make_unique<Event>(evts[index]);
+
+                        // Let the ConcurrentQueue know that we can stop iterating the queue.
+                        // This lambda is called for every queue item until we return true.
+                        return true;
+                    }
+
+                    // Looks like we have to iterate through the entire list.
+                    for (const auto & evt : evts)
+                    {
+                        if (evt.getEuid() == euid)
+                        {
+                            // Found it! Make a copy.
+                            snooped_event = std::make_unique<Event>(evt);
+
+                            // Let the ConcurrentQueue know that we can stop iterating the queue.
+                            // This lambda is called for every queue item until we return true.
+                            return true;
+                        }
+                    }
+
+                    // Keep going.
+                    return false;
+                });
+
+            if (snooped_event != nullptr)
+            {
+                // Increment the appropriate counter for reporting purposes.
+                ++pipeline_->num_pipeline_evts_snooped_in_serialize_queue_;
+
+                // Let the caller know that 'snooped_event' is valid.
+                return true;
+            }
+
+            // Let the caller know that 'snooped_event' is invalid.
+            return false;
+        }
+
       private:
         simdb::pipeline::PipelineAction run_(bool) override
         {
@@ -171,10 +229,91 @@ namespace pegasus::cosim
       public:
         using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
 
-        EventWriterStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo) :
-            simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo)
+        EventWriterStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo,
+                         CoSimEventPipeline* pipeline) :
+            simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo),
+            pipeline_(pipeline)
         {
             addInPort_<SerializedEvtsBuffer>("compressed_events_in", input_queue_);
+        }
+
+        bool snoop(const uint64_t & euid, std::unique_ptr<Event> & snooped_event)
+        {
+            sparta_assert(snooped_event == nullptr);
+
+            // Look through the SerializedEvtsBuffer input queue feeding this stage
+            input_queue_->snoop(
+                [&](const SerializedEvtsBuffer & evts)
+                {
+                    if (euid < evts.start_euid || euid > evts.end_euid)
+                    {
+                        return false;
+                    }
+
+                    // Undo zlib
+                    std::vector<char> uncompressed;
+                    simdb::decompressData(evts.evt_bytes, uncompressed);
+
+                    // Undo boost::serialization
+                    namespace bio = boost::iostreams;
+                    bio::array_source src(uncompressed.data(), uncompressed.size());
+                    bio::stream<bio::array_source> is(src);
+                    boost::archive::binary_iarchive ia(is);
+
+                    EventList orig_evts;
+                    ia >> orig_evts;
+
+                    // Note that the euids are not necessarily contiguous in the EventList,
+                    // so we have to iterate through to find the event with the given euid.
+                    // The only time these euids will be contiguous is when we run CoSim
+                    // without EVER flushing events.
+                    //
+                    // That being said, it is still quick enough to calculate the index
+                    // and then check that event's euid first before iterating through the
+                    // entire list.
+                    auto index = euid - orig_evts.front().getEuid();
+                    if (index < orig_evts.size() && orig_evts[index].getEuid() == euid)
+                    {
+                        // Found it! Make a copy.
+                        snooped_event = std::make_unique<Event>(orig_evts[index]);
+                    }
+
+                    else
+                    {
+                        // Looks like we have to iterate through the entire list.
+                        for (const auto & evt : orig_evts)
+                        {
+                            if (evt.getEuid() == euid)
+                            {
+                                // Found it! Make a copy.
+                                snooped_event = std::make_unique<Event>(evt);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (snooped_event == nullptr)
+                    {
+                        // We should NEVER get here! We already verified that the euid is within
+                        // range.
+                        throw simdb::DBException("Internal error occurred - mismatching EUIDs");
+                    }
+
+                    // Increment the appropriate counter for reporting purposes.
+                    return true;
+                });
+
+            if (snooped_event != nullptr)
+            {
+                // Increment the appropriate counter for reporting purposes.
+                ++pipeline_->num_pipeline_evts_snooped_in_db_queue_;
+
+                // Let the caller know that 'snooped_event' is valid.
+                return true;
+            }
+
+            // Let the caller know that 'snooped_event' is invalid.
+            return false;
         }
 
       private:
@@ -201,14 +340,15 @@ namespace pegasus::cosim
         }
 
         simdb::ConcurrentQueue<SerializedEvtsBuffer>* input_queue_ = nullptr;
+        CoSimEventPipeline* pipeline_ = nullptr;
     };
 
     void CoSimEventPipeline::createPipeline(simdb::pipeline::PipelineManager* pipeline_mgr)
     {
         auto pipeline = pipeline_mgr->createPipeline(NAME, this);
 
-        pipeline->addStage<EventCompressorStage>("compress_events", this);
-        pipeline->addStage<EventWriterStage>("write_events");
+        auto compressor = pipeline->addStage<EventCompressorStage>("compress_events", this);
+        auto db_writer = pipeline->addStage<EventWriterStage>("write_events", this);
         pipeline->noMoreStages();
 
         pipeline->bind("compress_events.compressed_events_out",
@@ -223,6 +363,11 @@ namespace pegasus::cosim
 
         // Store the pipeline manager so we can run async DB queries from the main thread
         pipeline_mgr_ = pipeline_mgr;
+
+        // Configure the pipeline snooper so we can look for events directly in the pipeline
+        // instead of needing to go to the database when the event is not in the cache.
+        pipeline_snooper_.addStage(compressor);
+        pipeline_snooper_.addStage(db_writer);
     }
 
     simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
@@ -568,12 +713,10 @@ namespace pegasus::cosim
             auto avg_latency_us = avg_us_recreating_evts_from_pipeline_.mean();
             std::cout << "    From pipeline:  " << avg_us_recreating_evts_from_pipeline_.count();
             std::cout << " (avg latency " << size_t(avg_latency_us) << " microseconds)\n";
-            std::cout << "        From serialize task queue:  "
-                      << num_pipeline_evts_snooped_in_serialize_task_ << "\n";
-            std::cout << "        From zlib task queue:       "
-                      << num_pipeline_evts_snooped_in_zlib_task_ << "\n";
-            std::cout << "        From DB task queue:         "
-                      << num_pipeline_evts_snooped_in_db_task_ << "\n";
+            std::cout << "        From serialize stage:  "
+                      << num_pipeline_evts_snooped_in_serialize_queue_ << "\n";
+            std::cout << "        From DB stage:         " << num_pipeline_evts_snooped_in_db_queue_
+                      << "\n";
         }
         else
         {
@@ -594,8 +737,8 @@ namespace pegasus::cosim
 
     size_t CoSimEventPipeline::getNumSnooped() const
     {
-        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
-        return 0;
+        return num_pipeline_evts_snooped_in_serialize_queue_
+               + num_pipeline_evts_snooped_in_db_queue_;
     }
 
     size_t CoSimEventPipeline::getNumCached() const
@@ -610,9 +753,20 @@ namespace pegasus::cosim
             if (!evts.empty())
             {
                 auto index = euid - evts.front().getEuid();
-                if (index < evts.size())
+
+                // Optimistically check the calculated index first (no flushes so far).
+                if (index < evts.size() && evts[index].getEuid() == euid)
                 {
                     return &evts[index];
+                }
+
+                // Iterate through the list to find the event (we have done some flushes).
+                for (const auto & evt : evts)
+                {
+                    if (evt.getEuid() == euid)
+                    {
+                        return &evt;
+                    }
                 }
             }
 
@@ -636,17 +790,30 @@ namespace pegasus::cosim
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromPipeline_(uint64_t euid)
     {
-        // TODO cnyce: Put this code back when pipeline snoopers are re-implemented in SimDB.
-        (void)euid;
-        return nullptr;
+        // Keep track of how long we spend recreating events from the pipeline
+        auto start = std::chrono::high_resolution_clock::now();
+
+        std::unique_ptr<Event> snooped_event;
+        pipeline_snooper_.snoopAllStages(euid, snooped_event);
+
+        if (!snooped_event)
+        {
+            return nullptr;
+        }
+
+        // Record how long this took
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> dur = end - start;
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        // Add to the running mean
+        avg_us_recreating_evts_from_pipeline_.add(us);
+
+        return snooped_event;
     }
 
     std::unique_ptr<Event> CoSimEventPipeline::recreateEventFromDisk_(uint64_t euid)
     {
-        // TODO cnyce: Remove the explicit flush() when pipeline snoopers are re-implemented in
-        // SimDB.
-        pipeline_flusher_->flush();
-
         std::vector<char> compressed_evts_bytes;
 
         auto query_func = [&](simdb::DatabaseManager* db_mgr)
@@ -690,29 +857,24 @@ namespace pegasus::cosim
         ia >> evts;
 
         // If we got this far, the event uid must be within the returned list
-        if (euid < evts.front().getEuid())
+        for (const auto & evt : evts)
         {
-            throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
-                << euid << ".";
+            if (evt.getEuid() == euid)
+            {
+                // Record how long this took
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> dur = end - start;
+                auto us = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+                // Add to the running mean
+                avg_us_recreating_evts_from_disk_.add(us);
+
+                return std::make_unique<Event>(evt);
+            }
         }
 
-        auto index = euid - evts.front().getEuid();
-        if (index >= evts.size())
-        {
-            throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
-                << euid << ".";
-        }
-
-        // Record how long this took
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> dur = end - start;
-        auto us = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-
-        // Add to the running mean
-        avg_us_recreating_evts_from_disk_.add(us);
-
-        // Return the requested event
-        return std::make_unique<Event>(evts[index]);
+        throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
+            << euid << ".";
     }
 
     const Event* EventAccessor::operator->() { return get(); }
