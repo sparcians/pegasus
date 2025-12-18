@@ -87,10 +87,7 @@ namespace pegasus::cosim
       public:
         using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
 
-        EventCompressorStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo,
-                             CoSimEventPipeline* pipeline) :
-            simdb::pipeline::Stage(name, queue_repo),
-            pipeline_(pipeline)
+        EventCompressorStage(CoSimEventPipeline* pipeline) : pipeline_(pipeline)
         {
             addInPort_<EventList>("events_in", input_queue_);
             addOutPort_<SerializedEvtsBuffer>("compressed_events_out", output_queue_);
@@ -229,10 +226,7 @@ namespace pegasus::cosim
       public:
         using SerializedEvtsBuffer = CoSimEventPipeline::SerializedEvtsBuffer;
 
-        EventWriterStage(const std::string & name, simdb::pipeline::QueueRepo & queue_repo,
-                         CoSimEventPipeline* pipeline) :
-            simdb::pipeline::DatabaseStage<CoSimEventPipeline>(name, queue_repo),
-            pipeline_(pipeline)
+        EventWriterStage(CoSimEventPipeline* pipeline) : pipeline_(pipeline)
         {
             addInPort_<SerializedEvtsBuffer>("compressed_events_in", input_queue_);
         }
