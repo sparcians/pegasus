@@ -3,6 +3,7 @@
 #include "simdb/apps/App.hpp"
 #include "simdb/utils/ConcurrentQueue.hpp"
 #include "simdb/utils/RunningMean.hpp"
+#include "simdb/pipeline/PipelineSnooper.hpp"
 #include "simdb/Exceptions.hpp"
 #include "cosim/EventAccessor.hpp"
 #include "cosim/Event.hpp"
@@ -123,6 +124,9 @@ namespace pegasus::cosim
 
         /// Get the total number of events successfully snooped
         /// from the pipeline after not finding it in the cache.
+        /// Returns the sum of snooped events from the serialize
+        /// queue and the database queue.
+        ///
         /// Used for testing only.
         size_t getNumSnooped() const;
 
@@ -171,7 +175,7 @@ namespace pegasus::cosim
         /// Last seen event uid.
         sparta::utils::ValidValue<uint64_t> last_event_uid_;
 
-        /// Retain the last commited event uid. We may be asked for the last
+        /// Retain the last committed event uid. We may be asked for the last
         /// committed event, but it may have already been sent to the pipeline.
         sparta::utils::ValidValue<uint64_t> last_committed_event_uid_;
 
@@ -189,9 +193,9 @@ namespace pegasus::cosim
         /// Utility to flush the pipeline on demand.
         std::unique_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
 
-        /// Event uid we are looking for when "snooping" the pipeline for
-        /// an event after not finding it in the cache.
-        sparta::utils::ValidValue<uint64_t> snooping_for_euid_;
+        /// Pipeline snooper used to look for events directly in the pipeline
+        /// instead of needing to go to the database when the event is not in the cache.
+        simdb::pipeline::PipelineSnooper<uint64_t, std::unique_ptr<Event>> pipeline_snooper_;
 
         /// Event recreated from the pipeline snoopers.
         std::unique_ptr<Event> snooped_event_;
@@ -203,9 +207,8 @@ namespace pegasus::cosim
         size_t num_evts_retrieved_from_cache_ = 0;
         simdb::RunningMean avg_us_recreating_evts_from_disk_;
         simdb::RunningMean avg_us_recreating_evts_from_pipeline_;
-        size_t num_pipeline_evts_snooped_in_serialize_task_ = 0;
-        size_t num_pipeline_evts_snooped_in_zlib_task_ = 0;
-        size_t num_pipeline_evts_snooped_in_db_task_ = 0;
+        size_t num_pipeline_evts_snooped_in_serialize_queue_ = 0;
+        size_t num_pipeline_evts_snooped_in_db_queue_ = 0;
 
         /// Listener which inspects events as they come through the pipeline.
         /// Used for testing and validation.
