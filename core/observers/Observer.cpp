@@ -228,9 +228,8 @@ namespace pegasus
     std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state, RegId reg_id) const
     {
         const uint32_t vlen_bits = state->getVectorConfig()->getVLEN();
-        const uint32_t sew_bits = state->getVectorConfig()->getSEW();
 
-        std::vector<uint64_t> raw(vlen_bits / sew_bits);
+        std::vector<uint64_t> raw;
         switch (vlen_bits)
         {
             case 128:

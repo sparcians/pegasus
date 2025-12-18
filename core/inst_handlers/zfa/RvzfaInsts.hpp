@@ -88,7 +88,7 @@ namespace pegasus
             static_assert(std::is_same<SIZE, FLOAT_SP>::value || std::is_same<SIZE, FLOAT_DP>::value
                           || std::is_same<SIZE, FLOAT_HP>::value);
 
-            const Constants<SIZE> & cons = getConst<SIZE>();
+            const FConstants<SIZE> & cons = getConst<SIZE>();
 
             const bool rs1_nan =
                 ((rs1_val & cons.EXP_MASK) == cons.EXP_MASK) && (rs1_val & cons.SIG_MASK);

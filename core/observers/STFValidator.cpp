@@ -9,10 +9,12 @@ namespace pegasus
 #endif
 
     STFValidator::STFValidator(sparta::log::MessageSource & stf_valid_logger,
-                               const ObserverMode arch, const uint64_t initial_pc,
-                               const std::string & stf_filename) :
+                               const ObserverMode arch, const std::string & stf_filename,
+                               const uint64_t validate_trace_begin,
+                               const uint64_t validate_inst_begin) :
         Observer(arch),
-        stf_valid_logger_(stf_valid_logger)
+        stf_valid_logger_(stf_valid_logger),
+        validate_inst_begin_(validate_inst_begin)
     {
         std::ifstream fs;
         std::ios_base::iostate exceptionMask = fs.exceptions() | std::ios::failbit;
@@ -29,31 +31,19 @@ namespace pegasus
         }
 
         stf_reader_.reset(new stf::STFInstReader(stf_filename));
-        next_it_ = stf_reader_->begin();
-
-        uint64_t stf_pc = stf_reader_->getInitialPC();
-        if (initial_pc != stf_pc)
-        {
-            // Traces from Spike have 5 instructions of boot code before entering the actual
-            // workload
-            uint64_t skip_count = 0;
-            while (skip_count < 5)
-            {
-                ++next_it_;
-                stf_pc = next_it_->pc();
-                if (initial_pc == stf_pc)
-                {
-                    break;
-                }
-                ++skip_count;
-            }
-            sparta_assert(initial_pc == stf_pc, "Failed to find initial PC in validation trace!");
-        }
+        next_it_ = stf_reader_->begin(validate_trace_begin - 1);
     }
 
     void STFValidator::postExecute_(PegasusState* state)
     {
         if (next_it_ == stf_reader_->end())
+        {
+            return;
+        }
+
+        // Observer is called after pc/inst_count increment
+        auto inst_count = state->getSimState()->inst_count;
+        if (validate_inst_begin_ > inst_count)
         {
             return;
         }
@@ -65,6 +55,8 @@ namespace pegasus
         {
             STFVALIDLOG("PCs have diverged!");
             STFVALIDLOG(state->getCurrentInst());
+            STFVALIDLOG("  Pegasus INST: " << inst_count);
+            STFVALIDLOG("      STF INST: " << next_it_->index());
             STFVALIDLOG("    Pegasus PC: 0x" << std::hex << pc);
             STFVALIDLOG("        STF PC: 0x" << std::hex << stf_pc);
             STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
@@ -78,6 +70,8 @@ namespace pegasus
             STFVALIDLOG("OPCODEs do not match!");
             STFVALIDLOG(state->getCurrentInst());
             STFVALIDLOG("    PC: 0x" << std::hex << pc);
+            STFVALIDLOG("  Pegasus INST: " << inst_count);
+            STFVALIDLOG("      STF INST: " << next_it_->index());
             STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
             STFVALIDLOG("    STF Opcode: 0x" << std::hex << next_it_->opcode());
             STFVALIDLOG("");
@@ -124,6 +118,8 @@ namespace pegasus
                                         << std::dec << dst_reg.reg_id.reg_name);
                             STFVALIDLOG("0x" << std::hex << pc << std::dec << ":\t"
                                              << state->getCurrentInst());
+                            STFVALIDLOG("     Pegasus INST: " << inst_count);
+                            STFVALIDLOG("         STF INST: " << next_it_->index());
                             STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
                             STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);
                             STFVALIDLOG("");
@@ -142,6 +138,8 @@ namespace pegasus
                                         << std::dec << dst_reg.reg_id.reg_name);
                             STFVALIDLOG("0x" << std::hex << pc << std::dec << ":\t"
                                              << state->getCurrentInst());
+                            STFVALIDLOG("     Pegasus INST: " << inst_count);
+                            STFVALIDLOG("         STF INST: " << next_it_->index());
                             STFVALIDLOG("    Pegasus value: 0x" << formatVectorHex(reg_val));
                             STFVALIDLOG("        STF value: 0x" << formatVectorHex(stf_reg_val));
                             STFVALIDLOG("");

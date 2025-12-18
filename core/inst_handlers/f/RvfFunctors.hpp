@@ -1,7 +1,7 @@
 #pragma once
 
 #include "include/PegasusUtils.hpp"
-#include "core/inst_handlers/finsts_helpers.hpp"
+#include "core/inst_handlers/finst_helpers.hpp"
 
 #include <stdint.h>
 

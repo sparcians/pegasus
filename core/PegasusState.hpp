@@ -66,6 +66,10 @@ namespace pegasus
                       "STF Trace file name (when not given, STF tracing is disabled)")
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
+            PARAMETER(uint64_t, validate_trace_begin, 1,
+                      "STF validation trace file begin instruction number")
+            PARAMETER(uint64_t, validate_inst_begin, 1,
+                      "STF validation pegasus begin instruction number")
             // Typical stack pointer is 8KB on most linux systems
             PARAMETER(uint32_t, ulimit_stack_size, 8192,
                       "Typical ulimit stack size for system call emulation")
@@ -324,6 +328,8 @@ namespace pegasus
         // STF Trace Filename
         const std::string stf_filename_;
         const std::string validation_stf_filename_;
+        const uint64_t validate_trace_begin_ = 0x1;
+        const uint64_t validate_inst_begin_ = 0x1;
 
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
