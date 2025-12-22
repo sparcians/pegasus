@@ -205,7 +205,6 @@ add_custom_target(clangformat-check
 ################################################################################
 
 # Install
-install(TARGETS pegasus DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(FILES ${PROJECT_BINARY_DIR}/softfloat/libsoftfloat.a DESTINATION lib)
 install(FILES ${PROJECT_BINARY_DIR}/stf_lib/lib/libstf.a DESTINATION lib)
 install(FILES ${PROJECT_BINARY_DIR}/mavis/libmavis.a DESTINATION lib)
