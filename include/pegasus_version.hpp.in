@@ -1,0 +1,8 @@
+#ifndef VERSION_H_IN
+#define VERSION_H_IN
+
+const std::string MAJOR_VERSION = "@MAJOR_VERSION@";
+const std::string MINOR_VERSION = "@MINOR_VERSION@";
+const std::string MINOR_MINOR_VERSION = "@MINOR_MINOR_VERSION@";
+
+#endif // VERSION_H_IN

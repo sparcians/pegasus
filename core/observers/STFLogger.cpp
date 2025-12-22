@@ -2,6 +2,7 @@
 #include "arch/RegisterSet.hpp"
 #include "core/PegasusState.hpp"
 #include "core/VecElements.hpp"
+#include "include/gen/pegasus_version.hpp"
 
 namespace pegasus
 {
@@ -21,8 +22,11 @@ namespace pegasus
             throw;
         }
 
-        stf_writer_.addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_TRANSACTION_EXAMPLE, 0, 0,
-                                                      0, "Trace from Pegasus"));
+        const std::string pegasus_version =
+            "Pegasus v" + MAJOR_VERSION + "." + MINOR_VERSION + "." + MINOR_MINOR_VERSION;
+        stf_writer_.addTraceInfo(stf::TraceInfoRecord(
+            stf::STF_GEN::STF_GEN_PEGASUS, std::stoul(MAJOR_VERSION), std::stoul(MINOR_VERSION),
+            std::stoul(MINOR_MINOR_VERSION), pegasus_version));
 
         if (state->getXlen() == 32)
         {
