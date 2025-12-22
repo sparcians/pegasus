@@ -152,12 +152,6 @@ namespace pegasus
             case PrivMode::MACHINE:
                 os << "MACHINE";
                 break;
-            case PrivMode::VIRTUAL_USER:
-                os << "VIRTUAL_USER";
-                break;
-            case PrivMode::VIRTUAL_SUPERVISOR:
-                os << "VIRTUAL_SUPERVISOR";
-                break;
             case PrivMode::INVALID:
                 os << "INVALID";
                 break;
