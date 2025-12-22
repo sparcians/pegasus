@@ -30,7 +30,7 @@ namespace pegasus
     {
         if (state->getVirtualMode())
         {
-            THROW_ILLEGAL_INST;
+            THROW_ILLEGAL_VIRTUAL_INST;
         }
 
         const PrivMode priv_mode = state->getPrivMode();
@@ -42,7 +42,7 @@ namespace pegasus
             if (((tvm == 0) && (priv_mode != PrivMode::HYPERVISOR))
                 || (priv_mode != PrivMode::MACHINE))
             {
-                THROW_ILLEGAL_INST;
+                THROW_ILLEGAL_VIRTUAL_INST;
             }
         }
         else
@@ -50,7 +50,7 @@ namespace pegasus
             // hfence.vvma is only valid in M-mode or HS-mode
             if (priv_mode < PrivMode::HYPERVISOR)
             {
-                THROW_ILLEGAL_INST;
+                THROW_ILLEGAL_VIRTUAL_INST;
             }
         }
 

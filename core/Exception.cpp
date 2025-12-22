@@ -189,6 +189,7 @@ namespace pegasus
             case FaultCause::INST_ADDR_MISALIGNED:
             case FaultCause::INST_ACCESS:
             case FaultCause::INST_PAGE_FAULT:
+            case FaultCause::INST_GUEST_PAGE_FAULT:
                 {
                     const auto request = state->getFetchTranslationState()->getRequest();
                     return (request.getVAddr() + request.getMisalignedBytes());
@@ -199,16 +200,20 @@ namespace pegasus
             case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
+            case FaultCause::LOAD_GUEST_PAGE_FAULT:
+            case FaultCause::STORE_AMO_GUEST_PAGE_FAULT:
                 {
                     const auto vaddr_val =
                         state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
                 }
             case FaultCause::ILLEGAL_INST:
+            case FaultCause::ILLEGAL_VIRTUAL_INST:
                 return state->getSimState()->current_opcode;
             case FaultCause::BREAKPOINT:
             case FaultCause::USER_ECALL:
             case FaultCause::SUPERVISOR_ECALL:
+            case FaultCause::VIRTUAL_SUPERVISOR_ECALL:
             case FaultCause::MACHINE_ECALL:
             case FaultCause::SOFTWARE_CHECK:
             case FaultCause::HARDWARE_ERROR:
@@ -222,11 +227,15 @@ namespace pegasus
         switch (cause)
         {
             case InterruptCause::SUPERVISOR_SOFTWARE:
+            case InterruptCause::VIRTUAL_SUPERVISOR_SOFTWARE:
             case InterruptCause::MACHINE_SOFTWARE:
             case InterruptCause::SUPERVISOR_TIMER:
+            case InterruptCause::VIRTUAL_SUPERVISOR_TIMER:
             case InterruptCause::MACHINE_TIMER:
             case InterruptCause::SUPERVISOR_EXTERNAL:
+            case InterruptCause::VIRTUAL_SUPERVISOR_EXTERNAL:
             case InterruptCause::MACHINE_EXTERNAL:
+            case InterruptCause::SUPERVISOR_GUEST_EXTERNAL:
             case InterruptCause::COUNTER_OVERFLOW:
                 return 0;
         }
@@ -248,11 +257,16 @@ namespace pegasus
                 case FaultCause::STORE_AMO_ACCESS:
                 case FaultCause::LOAD_PAGE_FAULT:
                 case FaultCause::STORE_AMO_PAGE_FAULT:
+                case FaultCause::INST_GUEST_PAGE_FAULT:
+                case FaultCause::LOAD_GUEST_PAGE_FAULT:
+                case FaultCause::STORE_AMO_GUEST_PAGE_FAULT:
                     return 1;
                 case FaultCause::ILLEGAL_INST:
+                case FaultCause::ILLEGAL_VIRTUAL_INST:
                 case FaultCause::BREAKPOINT:
                 case FaultCause::USER_ECALL:
                 case FaultCause::SUPERVISOR_ECALL:
+                case FaultCause::VIRTUAL_SUPERVISOR_ECALL:
                 case FaultCause::MACHINE_ECALL:
                 case FaultCause::SOFTWARE_CHECK:
                 case FaultCause::HARDWARE_ERROR:
@@ -305,6 +319,9 @@ namespace pegasus
             case FaultCause::SUPERVISOR_ECALL:
                 os << "SUPERVISOR_ECALL";
                 break;
+            case FaultCause::VIRTUAL_SUPERVISOR_ECALL:
+                os << "VIRTUAL_SUPERVISOR_ECALL";
+                break;
             case FaultCause::MACHINE_ECALL:
                 os << "MACHINE_ECALL";
                 break;
@@ -313,6 +330,18 @@ namespace pegasus
                 break;
             case FaultCause::HARDWARE_ERROR:
                 os << "HARDWARE_ERROR";
+                break;
+            case FaultCause::INST_GUEST_PAGE_FAULT:
+                os << "INST_GUEST_PAGE_FAULT";
+                break;
+            case FaultCause::LOAD_GUEST_PAGE_FAULT:
+                os << "LOAD_GUEST_PAGE_FAULT";
+                break;
+            case FaultCause::ILLEGAL_VIRTUAL_INST:
+                os << "ILLEGAL_VIRTUAL_INST";
+                break;
+            case FaultCause::STORE_AMO_GUEST_PAGE_FAULT:
+                os << "STORE_AMO_GUEST_PAGE_FAULT";
                 break;
         }
         return os;
