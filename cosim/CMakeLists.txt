@@ -18,6 +18,8 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json ${CMAKE_CURRENT_BINARY_DIR
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../core/rv64  ${CMAKE_CURRENT_BINARY_DIR}/rv64 SYMBOLIC)
 
 install(FILES ${PROJECT_BINARY_DIR}/libpegasuscosimlib.a DESTINATION lib)
-install(FILES PegasusCoSim.hpp DESTINATION cosim)
-install(FILES Event.hpp DESTINATION cosim)
-install(FILES CoSimApi.hpp DESTINATION cosim)
+install(FILES PegasusCoSim.hpp DESTINATION include/pegasus/cosim)
+install(FILES Event.hpp DESTINATION include/pegasus/cosim)
+install(FILES CoSimApi.hpp DESTINATION include/pegasus/cosim)
+install(FILES EventAccessor.hpp DESTINATION include/pegasus/cosim)
+install(FILES MemoryInterface.hpp DESTINATION include/pegasus/cosim)

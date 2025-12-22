@@ -60,3 +60,7 @@ add_custom_command(
   COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --gen-supported-isa-header
   DEPENDS ${DEPENDS_INST_PYTHON_FILES}
 )
+
+# Install
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/rva23.yaml DESTINATION include/pegasus/arch)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rva23 DESTINATION include/pegasus/arch)

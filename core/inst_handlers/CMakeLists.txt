@@ -41,3 +41,5 @@ add_subdirectory(zfa)
 add_subdirectory(zfh)
 
 add_dependencies(pegasusinsts AutogenArchFiles)
+
+install(FILES ${PROJECT_BINARY_DIR}/libpegasusinsts.a DESTINATION lib)
