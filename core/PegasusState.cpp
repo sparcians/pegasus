@@ -65,6 +65,8 @@ namespace pegasus
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
+        validate_trace_begin_(p->validate_trace_begin),
+        validate_inst_begin_(p->validate_inst_begin),
         ulimit_stack_size_(p->ulimit_stack_size),
         priv_mode_(getPrivilegeMode(p->priv_mode)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
@@ -160,6 +162,18 @@ namespace pegasus
             changeMMUMode<RV32>();
         }
 
+        // Update vlenb csr
+        if (xlen_ == 32)
+        {
+            csr_rset_->getRegister(VLENB)->dmiWrite<uint32_t>(vlen_ / 8);
+        }
+        else // 64
+        {
+            csr_rset_->getRegister(VLENB)->dmiWrite<uint64_t>(vlen_ / 8);
+        }
+
+        /* Only after state has been fully initialized can we start creating Observers. */
+
         // FIXME: Does Sparta have a callback notif for when debug icount is reached?
         if (inst_logger_.observed())
         {
@@ -182,13 +196,15 @@ namespace pegasus
         {
             if (xlen_ == 64)
             {
-                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV64,
-                                                           pc_, validation_stf_filename_));
+                addObserver(std::make_unique<STFValidator>(
+                    stf_valid_logger_, ObserverMode::RV64, validation_stf_filename_,
+                    validate_trace_begin_, validate_inst_begin_));
             }
             else
             {
-                addObserver(std::make_unique<STFValidator>(stf_valid_logger_, ObserverMode::RV32,
-                                                           pc_, validation_stf_filename_));
+                addObserver(std::make_unique<STFValidator>(
+                    stf_valid_logger_, ObserverMode::RV32, validation_stf_filename_,
+                    validate_trace_begin_, validate_inst_begin_));
             }
         }
     }

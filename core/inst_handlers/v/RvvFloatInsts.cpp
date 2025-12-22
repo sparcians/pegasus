@@ -2,7 +2,7 @@
 #include <type_traits>
 
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
-#include "core/inst_handlers/finsts_helpers.hpp"
+#include "core/inst_handlers/finst_helpers.hpp"
 #include "core/inst_handlers/f/RvfFunctors.hpp"
 #include "core/PegasusState.hpp"
 #include "core/ActionGroup.hpp"
@@ -1228,7 +1228,7 @@ namespace pegasus
     }
 
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
-    Action::ItrType vmfbinaryHelper(PegasusState* state, Action::ItrType action_it)
+    Action::ItrType vmfBinaryHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs1{state, inst->getVecConfig(), inst->getRs1()};
@@ -1282,17 +1282,17 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
+                return vmfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
                     return Funcs::f16(float16_t{src2}, float16_t{src1});
                 }>(state, action_it);
 
             case 32:
-                return vfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
+                return vmfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
                     return Funcs::f32(float32_t{src2}, float32_t{src1});
                 }>(state, action_it);
 
             case 64:
-                return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
+                return vmfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
                     return Funcs::f64(float64_t{src2}, float64_t{src1});
                 }>(state, action_it);
 

@@ -193,7 +193,10 @@ namespace pegasus
             }
             else
             {
-                unsigned char* string_in_memory = static_cast<unsigned char*>(alloca(string_len));
+                // Systemcall length does not count the "null". But we need to accout for that here.
+                unsigned char* string_in_memory =
+                    static_cast<unsigned char*>(alloca(string_len + 1));
+                string_in_memory[string_len] = '\0';
                 if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
                 {
                     const auto mem_block_size = mem->getBlockSize();
@@ -643,7 +646,7 @@ namespace pegasus
         const auto dirfd = call_stack[1];
         const auto pathname_addr = call_stack[2];
         const auto flags = call_stack[3];
-        const auto mode = call_stack[3];
+        const auto mode = call_stack[4];
 
         const std::string pathname = readString_(mem, pathname_addr);
 
@@ -1146,10 +1149,16 @@ namespace pegasus
         return ret;
     }
 
-    int64_t SysCallHandlers::open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    int64_t SysCallHandlers::open_(const SystemCallStack & call_stack,
+                                   sparta::memory::BlockingMemoryIF* mem)
     {
-        sparta_assert(false, __func__ << " returning -1, i.e. not implemented");
-        int64_t ret = -1;
+        const auto path_addr = call_stack[1];
+        const auto flags = call_stack[2];
+        const auto mode = call_stack[3];
+
+        const std::string path = readString_(mem, path_addr);
+
+        auto ret = ::open(path.c_str(), flags, mode);
         return ret;
     }
 
