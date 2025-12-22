@@ -23,9 +23,12 @@ RV64H_INST = [
     {'mnemonic': 'hlv.h', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hlv.hu', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hlv.w', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'hlv.wu', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_32', 'memory': True, 'cof': False},
+    {'mnemonic': 'hlv.d', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hlvx.hu', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hlvx.wu', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hsv.b', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hsv.h', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
     {'mnemonic': 'hsv.w', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
+    {'mnemonic': 'hsv.d', 'handler': 'unsupported', 'cost': 1, 'tags': 'H_EXT_64', 'memory': True, 'cof': False},
 ]
