@@ -909,6 +909,12 @@ namespace pegasus
                 prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv");
             }
 
+            // If MPP=3, the virtualization mode remains 0
+            if (prev_priv_mode == PrivMode::MACHINE)
+            {
+                prev_virt_mode = false;
+            }
+
             // If the mret instruction changes the privilege mode to a mode less privileged
             // than Machine mode, the MPRV bit is reset to 0
             if (prev_priv_mode != PrivMode::MACHINE)
@@ -939,10 +945,11 @@ namespace pegasus
         }
         else
         {
-            // When TSR=1, attempts to execute SRET in S-mode will
-            // raise an illegal instruction exception
+            // When TSR=1, attempts to execute SRET in S-mode (or HS-mode)
+            // will raise an illegal instruction exception
             const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
-            if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
+            if (tsr_val && (state->getPrivMode() == PrivMode::SUPERVISOR)
+                && (state->getVirtualMode() == false))
             {
                 THROW_ILLEGAL_INST;
             }
