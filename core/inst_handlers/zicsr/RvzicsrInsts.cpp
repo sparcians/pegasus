@@ -102,7 +102,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         auto rd = inst->getRd();
-        const uint32_t csr = inst->getCsr();
+        const uint32_t csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -135,7 +136,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -165,7 +167,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -197,7 +200,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -228,7 +232,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
@@ -261,7 +266,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
         {
