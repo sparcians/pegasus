@@ -28,6 +28,11 @@ namespace pegasus
     Action::ItrType RvhInsts::hfenceHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        if (state->getVirtualMode())
+        {
+            THROW_ILLEGAL_INST;
+        }
+
         const PrivMode priv_mode = state->getPrivMode();
         if constexpr (GUEST)
         {

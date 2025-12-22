@@ -72,8 +72,6 @@ namespace pegasus
         SUPERVISOR = 1,
         HYPERVISOR = 2,
         MACHINE = 3,
-        VIRTUAL_USER = 4,
-        VIRTUAL_SUPERVISOR = 5,
         INVALID
     };
 
