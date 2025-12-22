@@ -149,8 +149,13 @@ namespace pegasus
             const uint64_t mie_val = 0;
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
 
-            const uint64_t mpv_val = 0;
-            const uint64_t gva_val = 0;
+            // Previous virtualization mode
+            const uint64_t mpv_val = prev_virt_mode;
+
+            // Set when a guest virtual address is written to mtval
+            const uint64_t gva_val =
+                !is_interrupt ? determineGvaValue_(fault_cause_.getValue(), prev_virt_mode) : 0;
+
             if constexpr (std::is_same_v<XLEN, RV64>)
             {
                 WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mpv", mpv_val);
@@ -212,6 +217,51 @@ namespace pegasus
         return 0;
     }
 
+    uint64_t Exception::determineTrapValue_(const InterruptCause & cause, PegasusState*)
+    {
+        switch (cause)
+        {
+            case InterruptCause::SUPERVISOR_SOFTWARE:
+            case InterruptCause::MACHINE_SOFTWARE:
+            case InterruptCause::SUPERVISOR_TIMER:
+            case InterruptCause::MACHINE_TIMER:
+            case InterruptCause::SUPERVISOR_EXTERNAL:
+            case InterruptCause::MACHINE_EXTERNAL:
+            case InterruptCause::COUNTER_OVERFLOW:
+                return 0;
+        }
+        return 0;
+    }
+
+    uint64_t Exception::determineGvaValue_(const FaultCause & cause, const bool virt_mode)
+    {
+        if (virt_mode)
+        {
+            switch (cause)
+            {
+                case FaultCause::INST_ADDR_MISALIGNED:
+                case FaultCause::INST_ACCESS:
+                case FaultCause::INST_PAGE_FAULT:
+                case FaultCause::LOAD_ADDR_MISALIGNED:
+                case FaultCause::LOAD_ACCESS:
+                case FaultCause::STORE_AMO_ADDR_MISALIGNED:
+                case FaultCause::STORE_AMO_ACCESS:
+                case FaultCause::LOAD_PAGE_FAULT:
+                case FaultCause::STORE_AMO_PAGE_FAULT:
+                    return 1;
+                case FaultCause::ILLEGAL_INST:
+                case FaultCause::BREAKPOINT:
+                case FaultCause::USER_ECALL:
+                case FaultCause::SUPERVISOR_ECALL:
+                case FaultCause::MACHINE_ECALL:
+                case FaultCause::SOFTWARE_CHECK:
+                case FaultCause::HARDWARE_ERROR:
+                    return 0;
+            }
+        }
+        return 0;
+    }
+
     std::ostream & operator<<(std::ostream & os, const FaultCause & cause)
     {
         switch (cause)
@@ -266,21 +316,5 @@ namespace pegasus
                 break;
         }
         return os;
-    }
-
-    uint64_t Exception::determineTrapValue_(const InterruptCause & cause, PegasusState*)
-    {
-        switch (cause)
-        {
-            case InterruptCause::SUPERVISOR_SOFTWARE:
-            case InterruptCause::MACHINE_SOFTWARE:
-            case InterruptCause::SUPERVISOR_TIMER:
-            case InterruptCause::MACHINE_TIMER:
-            case InterruptCause::SUPERVISOR_EXTERNAL:
-            case InterruptCause::MACHINE_EXTERNAL:
-            case InterruptCause::COUNTER_OVERFLOW:
-                return 0;
-        }
-        return 0;
     }
 } // namespace pegasus
