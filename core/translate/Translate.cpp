@@ -181,16 +181,19 @@ namespace pegasus
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode =
             (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
+        const bool virt_mode = state->getVirtualMode();
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
+            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, virt_mode, vaddr);
         }
 
         // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
-        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
+        const uint64_t satp_val = virt_mode ? READ_CSR_FIELD<XLEN>(state, VSATP, "ppn")
+                                            : READ_CSR_FIELD<XLEN>(state, SATP, "ppn");
+        uint64_t ppn = satp_val << PAGESHIFT;
         while (level > 0)
         {
             // Read PTE from memory
@@ -304,7 +307,8 @@ namespace pegasus
                 paddr |= page_offset_mask & vaddr;
 
                 // Set result and determine whether to keep going or performa translation again
-                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, paddr, level);
+                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, virt_mode, paddr,
+                                                    level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -337,8 +341,8 @@ namespace pegasus
 
     template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
     Action::ItrType Translate::setResult_(PegasusTranslationState* translation_state,
-                                          Action::ItrType action_it, const Addr paddr,
-                                          const uint32_t level)
+                                          Action::ItrType action_it, const bool virt_mode,
+                                          const Addr paddr, const uint32_t level)
     {
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
@@ -374,6 +378,8 @@ namespace pegasus
             translation_state->popRequest();
             translation_state->setResult(vaddr, paddr, access_size);
         }
+
+        sparta_assert(virt_mode, "Guest Physical Address Translation is not supported yet!");
 
         if (is_misaligned || (translation_state->getNumRequests() > 0))
         {

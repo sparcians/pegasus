@@ -262,7 +262,8 @@ namespace pegasus
             MMUMode::SV57     // mode == 10, xlen==64
         };
 
-        const uint32_t satp_val = READ_CSR_FIELD<XLEN>(this, SATP, "mode");
+        const uint32_t satp_val = virtual_mode_ ? READ_CSR_FIELD<XLEN>(this, VSATP, "mode")
+                                                : READ_CSR_FIELD<XLEN>(this, SATP, "mode");
         sparta_assert(satp_val < satp_mmu_mode_map.size());
         const MMUMode mode = satp_mmu_mode_map[satp_val];
 
