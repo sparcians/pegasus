@@ -11,6 +11,28 @@ namespace pegasus
         return extractor_info;
     }
 
+    translate_types::AccessType
+    determineMemoryAccessType(const bool is_store, const bool is_hypervisor_inst,
+                              const mavis::InstructionUniqueID mavis_uid)
+    {
+        if (is_store)
+        {
+            return translate_types::AccessType::STORE;
+        }
+        else
+        {
+            if (SPARTA_EXPECT_FALSE(is_hypervisor_inst))
+            {
+                if ((mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_HU)
+                    || (mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_WU))
+                {
+                    return translate_types::AccessType::EXECUTE;
+                }
+            }
+            return translate_types::AccessType::LOAD;
+        }
+    }
+
     uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)
     {
         return opcode_info->getImmediateType() == mavis::ImmediateType::SIGNED
@@ -43,6 +65,8 @@ namespace pegasus
         extractor_info_(testExtractorPointer(extractor_info, getMnemonic())),
         opcode_size_(((getOpcode() & 0x3) != 0x3) ? 2 : 4),
         is_store_type_(opcode_info->isInstType(mavis::OpcodeInfo::InstructionTypes::STORE)),
+        memory_access_type_(
+            determineMemoryAccessType(is_store_type_, isHypervisorInst(), getMavisUid())),
         immediate_value_(getImmediateValue(opcode_info)),
         veccfg_overrides_(extractor_info->veccfg_),
         rs1_info_(getOperand<mavis::InstMetaData::OperandFieldID::RS1>(

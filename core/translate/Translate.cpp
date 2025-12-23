@@ -21,7 +21,7 @@ namespace pegasus
             // RV32
             registerAction_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (RV32 Baremetal)", ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_);
+                rv32_execute_translation_actions_);
             registerAction_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
                 "Load Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_load_translation_actions_);
@@ -32,7 +32,7 @@ namespace pegasus
             // RV64
             registerAction_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
+                rv64_execute_translation_actions_);
             registerAction_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
                 "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
@@ -46,7 +46,7 @@ namespace pegasus
             // RV32
             registerAction_<RV32, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (RV32 Sv32)", ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_);
+                rv32_execute_translation_actions_);
             registerAction_<RV32, MMUMode::SV32, translate_types::AccessType::LOAD>(
                 "Load Translate (RV32 Sv32)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_load_translation_actions_);
@@ -57,7 +57,7 @@ namespace pegasus
             // RV64
             registerAction_<RV64, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
+                rv64_execute_translation_actions_);
             registerAction_<RV64, MMUMode::SV32, translate_types::AccessType::LOAD>(
                 "Load Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
@@ -69,7 +69,7 @@ namespace pegasus
         {
             registerAction_<RV64, MMUMode::SV39, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv39)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
+                rv64_execute_translation_actions_);
             registerAction_<RV64, MMUMode::SV39, translate_types::AccessType::LOAD>(
                 "Load Translate (Sv39)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
@@ -81,7 +81,7 @@ namespace pegasus
         {
             registerAction_<RV64, MMUMode::SV48, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv48)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
+                rv64_execute_translation_actions_);
             registerAction_<RV64, MMUMode::SV48, translate_types::AccessType::LOAD>(
                 "Load Translate (Sv48)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
@@ -93,7 +93,7 @@ namespace pegasus
         {
             registerAction_<RV64, MMUMode::SV57, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv57)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
+                rv64_execute_translation_actions_);
             registerAction_<RV64, MMUMode::SV57, translate_types::AccessType::LOAD>(
                 "Load Translate (Sv57)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
@@ -103,8 +103,8 @@ namespace pegasus
         }
 
         // Assume we are booting in RV64 Machine mode with translation disabled
-        inst_translate_action_group_.addAction(
-            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+        execute_translate_action_group_.addAction(
+            rv64_execute_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
         load_translate_action_group_.addAction(
             rv64_load_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
         store_translate_action_group_.addAction(
@@ -119,9 +119,9 @@ namespace pegasus
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
-            inst_translate_action_group_.replaceAction(
+            execute_translate_action_group_.replaceAction(
                 ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
+                rv64_execute_translation_actions_.at(static_cast<uint32_t>(mode)));
             load_translate_action_group_.replaceAction(
                 ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
@@ -131,9 +131,9 @@ namespace pegasus
         }
         else
         {
-            inst_translate_action_group_.replaceAction(
+            execute_translate_action_group_.replaceAction(
                 ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
+                rv32_execute_translation_actions_.at(static_cast<uint32_t>(mode)));
             load_translate_action_group_.replaceAction(
                 ActionTags::DATA_TRANSLATE_TAG,
                 rv32_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
@@ -150,6 +150,7 @@ namespace pegasus
     Action::ItrType Translate::translate_(PegasusState* state, Action::ItrType action_it)
     {
         PegasusTranslationState* translation_state = nullptr;
+        bool hyp_inst = false;
         if constexpr (TYPE == translate_types::AccessType::EXECUTE)
         {
             // Translation reqest is from fetch
@@ -159,6 +160,7 @@ namespace pegasus
         {
             const auto & inst = state->getCurrentInst();
             translation_state = inst->getTranslationState();
+            hyp_inst = inst->isHypervisorInst();
         }
 
         // If there is no request, nothing to be done here
@@ -182,7 +184,7 @@ namespace pegasus
         const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
                                    ? state->getPrivMode()
                                    : state->getLdstPrivMode();
-        const bool virt_mode = state->getVirtualMode();
+        const bool virt_mode = hyp_inst ? true : state->getVirtualMode();
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))

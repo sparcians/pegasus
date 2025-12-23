@@ -30,21 +30,33 @@ namespace pegasus
 
         Translate(sparta::TreeNode* translate_node, const TranslateParameters* p);
 
-        ActionGroup* getInstTranslateActionGroup() { return &inst_translate_action_group_; }
+        ActionGroup* getExecuteTranslateActionGroup(const bool hypervisor = false)
+        {
+            (void)hypervisor;
+            return &execute_translate_action_group_;
+        }
 
-        ActionGroup* getLoadTranslateActionGroup() { return &load_translate_action_group_; }
+        ActionGroup* getLoadTranslateActionGroup(const bool hypervisor = false)
+        {
+            (void)hypervisor;
+            return &load_translate_action_group_;
+        }
 
-        ActionGroup* getStoreTranslateActionGroup() { return &store_translate_action_group_; }
+        ActionGroup* getStoreTranslateActionGroup(const bool hypervisor = false)
+        {
+            (void)hypervisor;
+            return &store_translate_action_group_;
+        }
 
         template <typename XLEN> void changeMMUMode(const MMUMode mode, const MMUMode ls_mode);
 
       private:
-        ActionGroup inst_translate_action_group_{"Inst Translate"};
+        ActionGroup execute_translate_action_group_{"Inst Translate"};
         ActionGroup load_translate_action_group_{"Load Translate"};
         ActionGroup store_translate_action_group_{"Store Translate"};
 
-        std::array<Action, N_MMU_MODES> rv64_inst_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_inst_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv64_execute_translation_actions_;
+        std::array<Action, N_MMU_MODES> rv32_execute_translation_actions_;
         std::array<Action, N_MMU_MODES> rv64_load_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_load_translation_actions_;
         std::array<Action, N_MMU_MODES> rv64_store_translation_actions_;
