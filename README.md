@@ -124,7 +124,6 @@ If using Conda, you must install Sparta in the Pegasus Conda environment:
 cmake --install . --prefix $CONDA_PREFIX
 ```
 
-
 ## Clone Pegasus and Build/Regress
 ```
 git clone git@github.com:sparcians/pegasus.git --recursive
@@ -146,6 +145,11 @@ cd release
 cmake .. -DCMAKE_BUILD_TYPE=Release -DSPARTA_SEARCH_DIR=<full path to map/sparta>
 make
 make pegasus_regress
+```
+
+## Install Pegasus
+```
+cmake --install . --prefix <full install path>
 ```
 
 ## Validate

@@ -60,7 +60,6 @@ namespace pegasus
         vlen_(p->vlen),
         xlen_(p->xlen),
         reg_json_file_path_(p->reg_json_file_path),
-        csr_values_json_(p->csr_values),
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
@@ -153,37 +152,6 @@ namespace pegasus
 
     void PegasusState::onBindTreeLate_()
     {
-        // Write initial values to CSR registers
-        const boost::json::array json = mavis::parseJSON(csr_values_json_).as_array();
-        for (uint32_t idx = 0; idx < json.size(); idx++)
-        {
-            const boost::json::object & csr_entry = json.at(idx).as_object();
-            const auto csr_name_it = csr_entry.find("name");
-            sparta_assert(csr_name_it != csr_entry.end());
-            const auto csr_value_it = csr_entry.find("value");
-            sparta_assert(csr_value_it != csr_entry.end());
-
-            const std::string csr_name = boost::json::value_to<std::string>(csr_name_it->value());
-            sparta::Register* csr_reg = findRegister(csr_name);
-            if (csr_reg)
-            {
-                sparta_assert(csr_reg->getGroupNum()
-                                  == (sparta::RegisterBase::group_num_type)RegType::CSR,
-                              "Provided initial value for not-CSR register: " << csr_name);
-                const std::string csr_hex_str =
-                    boost::json::value_to<std::string>(csr_value_it->value());
-                const uint64_t csr_val = std::stoull(csr_hex_str, nullptr, 16);
-                std::cout << csr_name << ": " << HEX16(csr_val) << std::endl;
-                csr_reg->dmiWrite(csr_val);
-            }
-            else
-            {
-                std::cout
-                    << "WARNING: Provided initial value for CSR register that does not exist! "
-                    << csr_name << std::endl;
-            }
-        }
-
         // Set up translation
         if (xlen_ == 64)
         {

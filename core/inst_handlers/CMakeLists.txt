@@ -43,3 +43,5 @@ add_subdirectory(v)
 add_subdirectory(h)
 
 add_dependencies(pegasusinsts AutogenArchFiles)
+
+install(FILES ${PROJECT_BINARY_DIR}/libpegasusinsts.a DESTINATION lib)

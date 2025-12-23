@@ -68,7 +68,9 @@ set(SPARTA_CXX_FLAGS_DEBUG    "${CMAKE_CXX_FLAGS_DEBUG}")
 #
 if(BUILD_SPARTA_FROM_SOURCE)
   message (STATUS "Building SPARTA from source in ${SPARTA_SEARCH_DIR}")
-  add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta")
+  add_subdirectory(${SPARTA_SEARCH_DIR} "${CMAKE_BINARY_DIR}/sparta" EXCLUDE_FROM_ALL)
+  set_property(TARGET sparta PROPERTY EXCLUDE_FROM_ALL FALSE)
+  set_property(TARGET simdb PROPERTY EXCLUDE_FROM_ALL FALSE)
   target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR})
   target_include_directories(pegasuslibs SYSTEM INTERFACE ${SPARTA_SEARCH_DIR}/simdb/include)
   include(${SPARTA_SEARCH_DIR}/cmake/SpartaTestingMacros.cmake)
@@ -131,6 +133,10 @@ add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
 add_subdirectory(test)
+
+# For install only
+add_subdirectory(scripts)
+add_subdirectory(include)
 
 include(FetchContent)
 
@@ -195,3 +201,18 @@ add_custom_target(clangformat-check
   COMMENT
      "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
   )
+
+################################################################################
+
+# Install
+install(FILES ${PROJECT_BINARY_DIR}/softfloat/libsoftfloat.a DESTINATION lib)
+install(FILES ${PROJECT_BINARY_DIR}/stf_lib/lib/libstf.a DESTINATION lib)
+install(FILES ${PROJECT_BINARY_DIR}/mavis/libmavis.a DESTINATION lib)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/mavis/json DESTINATION include/pegasus/mavis)
+
+# Versioning
+set(MAJOR_VERSION "1")
+set(MINOR_VERSION "0")
+set(MINOR_MINOR_VERSION "0")
+configure_file (include/pegasus_version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/gen/pegasus_version.hpp @ONLY)
