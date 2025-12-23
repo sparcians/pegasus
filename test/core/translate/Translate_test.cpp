@@ -342,9 +342,10 @@ class PegasusTranslateTester
 
         // Execute translation
         pegasus::Action::ItrType dummy_action_it;
-        dummy_action_it = translate_unit_->translate_<pegasus::RV64, pegasus::MMUMode::BAREMETAL,
-                                                      pegasus::Translate::AccessType::INSTRUCTION>(
-            state_, dummy_action_it);
+        dummy_action_it =
+            translate_unit_->translate_<pegasus::RV64, pegasus::MMUMode::BAREMETAL,
+                                        pegasus::translate_types::AccessType::EXECUTE>(
+                state_, dummy_action_it);
 
         // Get translation result
         const pegasus::PegasusTranslationState::TranslationResult & result =
@@ -412,9 +413,10 @@ class PegasusTranslateTester
 
         // Translate!
         pegasus::Action::ItrType dummy_action_it;
-        dummy_action_it = translate_unit_->translate_<pegasus::RV32, pegasus::MMUMode::SV32,
-                                                      pegasus::Translate::AccessType::INSTRUCTION>(
-            state_, dummy_action_it);
+        dummy_action_it =
+            translate_unit_->translate_<pegasus::RV32, pegasus::MMUMode::SV32,
+                                        pegasus::translate_types::AccessType::EXECUTE>(
+                state_, dummy_action_it);
 
         // Get translation result
         const pegasus::PegasusTranslationState::TranslationResult & result =

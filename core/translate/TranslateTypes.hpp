@@ -6,6 +6,13 @@
 
 namespace pegasus::translate_types
 {
+    enum class AccessType
+    {
+        EXECUTE,
+        LOAD,
+        STORE
+    };
+
     struct FieldDef
     {
         const uint64_t bitmask;

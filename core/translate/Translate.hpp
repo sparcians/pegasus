@@ -38,13 +38,6 @@ namespace pegasus
 
         template <typename XLEN> void changeMMUMode(const MMUMode mode, const MMUMode ls_mode);
 
-        enum class AccessType
-        {
-            INSTRUCTION,
-            LOAD,
-            STORE
-        };
-
       private:
         ActionGroup inst_translate_action_group_{"Inst Translate"};
         ActionGroup load_translate_action_group_{"Load Translate"};
@@ -57,15 +50,15 @@ namespace pegasus
         std::array<Action, N_MMU_MODES> rv64_store_translation_actions_;
         std::array<Action, N_MMU_MODES> rv32_store_translation_actions_;
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
         Action::ItrType translate_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
         Action::ItrType setResult_(PegasusTranslationState* translation_state,
                                    Action::ItrType action_it, const bool virt_mode,
                                    const Addr paddr, const uint32_t level = 1);
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,
                              std::array<Action, N_MMU_MODES> & xlation_actions)
         {

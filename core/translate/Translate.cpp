@@ -19,24 +19,24 @@ namespace pegasus
         // Baremetal (translation disabled)
         {
             // RV32
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
+            registerAction_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (RV32 Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::LOAD>(
+            registerAction_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
                 "Load Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_load_translation_actions_);
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::STORE>(
+            registerAction_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::STORE>(
                 "Store Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_store_translation_actions_);
 
             // RV64
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
+            registerAction_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::LOAD>(
+            registerAction_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
                 "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::STORE>(
+            registerAction_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::STORE>(
                 "Store Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_store_translation_actions_);
         }
@@ -44,60 +44,60 @@ namespace pegasus
         // Sv32
         {
             // RV32
-            registerAction_<RV32, MMUMode::SV32, AccessType::INSTRUCTION>(
+            registerAction_<RV32, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (RV32 Sv32)", ActionTags::INST_TRANSLATE_TAG,
                 rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, AccessType::LOAD>("Load Translate (RV32 Sv32)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv32_load_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, AccessType::STORE>(
+            registerAction_<RV32, MMUMode::SV32, translate_types::AccessType::LOAD>(
+                "Load Translate (RV32 Sv32)", ActionTags::DATA_TRANSLATE_TAG,
+                rv32_load_translation_actions_);
+            registerAction_<RV32, MMUMode::SV32, translate_types::AccessType::STORE>(
                 "Store Translate (RV32 Sv32)", ActionTags::DATA_TRANSLATE_TAG,
                 rv32_store_translation_actions_);
 
             // RV64
-            registerAction_<RV64, MMUMode::SV32, AccessType::INSTRUCTION>(
+            registerAction_<RV64, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, AccessType::LOAD>("Load Translate (Sv32)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, AccessType::STORE>(
+            registerAction_<RV64, MMUMode::SV32, translate_types::AccessType::LOAD>(
+                "Load Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV32, translate_types::AccessType::STORE>(
                 "Store Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_store_translation_actions_);
         }
         // Sv39
         {
-            registerAction_<RV64, MMUMode::SV39, AccessType::INSTRUCTION>(
+            registerAction_<RV64, MMUMode::SV39, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv39)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV39, AccessType::LOAD>("Load Translate (Sv39)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV39, AccessType::STORE>(
+            registerAction_<RV64, MMUMode::SV39, translate_types::AccessType::LOAD>(
+                "Load Translate (Sv39)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV39, translate_types::AccessType::STORE>(
                 "Store Translate (Sv39)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_store_translation_actions_);
         }
         // Sv48
         {
-            registerAction_<RV64, MMUMode::SV48, AccessType::INSTRUCTION>(
+            registerAction_<RV64, MMUMode::SV48, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv48)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV48, AccessType::LOAD>("Load Translate (Sv48)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV48, AccessType::STORE>(
+            registerAction_<RV64, MMUMode::SV48, translate_types::AccessType::LOAD>(
+                "Load Translate (Sv48)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV48, translate_types::AccessType::STORE>(
                 "Store Translate (Sv48)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_store_translation_actions_);
         }
         // Sv57
         {
-            registerAction_<RV64, MMUMode::SV57, AccessType::INSTRUCTION>(
+            registerAction_<RV64, MMUMode::SV57, translate_types::AccessType::EXECUTE>(
                 "Inst Translate (Sv57)", ActionTags::INST_TRANSLATE_TAG,
                 rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV57, AccessType::LOAD>("Load Translate (Sv57)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV57, AccessType::STORE>(
+            registerAction_<RV64, MMUMode::SV57, translate_types::AccessType::LOAD>(
+                "Load Translate (Sv57)", ActionTags::DATA_TRANSLATE_TAG,
+                rv64_load_translation_actions_);
+            registerAction_<RV64, MMUMode::SV57, translate_types::AccessType::STORE>(
                 "Store Translate (Sv57)", ActionTags::DATA_TRANSLATE_TAG,
                 rv64_store_translation_actions_);
         }
@@ -146,11 +146,11 @@ namespace pegasus
     template void Translate::changeMMUMode<RV32>(const MMUMode, const MMUMode);
     template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
 
-    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::translate_(PegasusState* state, Action::ItrType action_it)
     {
         PegasusTranslationState* translation_state = nullptr;
-        if constexpr (TYPE == AccessType::INSTRUCTION)
+        if constexpr (TYPE == translate_types::AccessType::EXECUTE)
         {
             // Translation reqest is from fetch
             translation_state = state->getFetchTranslationState();
@@ -179,8 +179,9 @@ namespace pegasus
         ILOG("Translating " << HEX(vaddr, width));
 
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
-        const auto priv_mode =
-            (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
+        const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
+                                   ? state->getPrivMode()
+                                   : state->getLdstPrivMode();
         const bool virt_mode = state->getVirtualMode();
 
         // See if translation is disable -- no level walks
@@ -255,21 +256,21 @@ namespace pegasus
                 }
 
                 // Instruction (fetch) accesses must have execute permissions
-                if ((TYPE == AccessType::INSTRUCTION) && (false == pte.canExecute()))
+                if ((TYPE == translate_types::AccessType::EXECUTE) && (false == pte.canExecute()))
                 {
                     DLOG("Translation FAILED! PTE does not have execute access");
                     break;
                 }
 
                 // Load accesses must have read permissions
-                if ((TYPE == AccessType::LOAD) && (false == pte.canRead()))
+                if ((TYPE == translate_types::AccessType::LOAD) && (false == pte.canRead()))
                 {
                     DLOG("Translation FAILED! PTE does not have read access");
                     break;
                 }
 
                 // Store accesses must have write permissions
-                constexpr bool is_store = TYPE == AccessType::STORE;
+                constexpr bool is_store = TYPE == translate_types::AccessType::STORE;
                 if ((is_store) && (false == pte.canWrite()))
                 {
                     DLOG("Translation FAILED! PTE does not have write access");
@@ -330,16 +331,16 @@ namespace pegasus
         // We throw at this point.
         switch (TYPE)
         {
-            case AccessType::INSTRUCTION:
+            case translate_types::AccessType::EXECUTE:
                 THROW_FETCH_PAGE_FAULT;
-            case AccessType::STORE:
+            case translate_types::AccessType::STORE:
                 THROW_STORE_AMO_PAGE_FAULT;
-            case AccessType::LOAD:
+            case translate_types::AccessType::LOAD:
                 THROW_LOAD_PAGE_FAULT;
         }
     }
 
-    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::setResult_(PegasusTranslationState* translation_state,
                                           Action::ItrType action_it, const bool virt_mode,
                                           const Addr paddr, const uint32_t level)
@@ -389,12 +390,12 @@ namespace pegasus
             // performed again.
             switch (TYPE)
             {
-                case AccessType::INSTRUCTION:
+                case translate_types::AccessType::EXECUTE:
                     sparta_assert(is_misaligned,
                                   "Should never receive multiple translation requests from Fetch!");
                     break;
-                case AccessType::STORE:
-                case AccessType::LOAD:
+                case translate_types::AccessType::STORE:
+                case translate_types::AccessType::LOAD:
                     // Execute the translate Action again
                     return action_it;
             }
@@ -406,68 +407,68 @@ namespace pegasus
 
     // Being pedantic
     template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+    Translate::translate_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
         PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(PegasusState*,
-                                                                                 Action::ItrType);
+    Translate::translate_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
+        PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(PegasusState*,
+    Translate::translate_<RV32, MMUMode::BAREMETAL, translate_types::AccessType::STORE>(
+        PegasusState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
+        PegasusState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV32, MMUMode::SV32, translate_types::AccessType::LOAD>(PegasusState*,
                                                                                   Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(PegasusState*,
+    Translate::translate_<RV32, MMUMode::SV32, translate_types::AccessType::STORE>(PegasusState*,
                                                                                    Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
 
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+    Translate::translate_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::EXECUTE>(
         PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(PegasusState*,
-                                                                                 Action::ItrType);
+    Translate::translate_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::LOAD>(
+        PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(PegasusState*,
+    Translate::translate_<RV64, MMUMode::BAREMETAL, translate_types::AccessType::STORE>(
+        PegasusState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV32, translate_types::AccessType::EXECUTE>(
+        PegasusState*, Action::ItrType);
+    template Action::ItrType
+    Translate::translate_<RV64, MMUMode::SV32, translate_types::AccessType::LOAD>(PegasusState*,
                                                                                   Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(PegasusState*,
+    Translate::translate_<RV64, MMUMode::SV32, translate_types::AccessType::STORE>(PegasusState*,
                                                                                    Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV39, translate_types::AccessType::EXECUTE>(
+        PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV39, translate_types::AccessType::LOAD>(PegasusState*,
+                                                                                  Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(PegasusState*,
+    Translate::translate_<RV64, MMUMode::SV39, translate_types::AccessType::STORE>(PegasusState*,
                                                                                    Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV48, translate_types::AccessType::EXECUTE>(
+        PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV48, translate_types::AccessType::LOAD>(PegasusState*,
+                                                                                  Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(PegasusState*,
+    Translate::translate_<RV64, MMUMode::SV48, translate_types::AccessType::STORE>(PegasusState*,
                                                                                    Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV57, translate_types::AccessType::EXECUTE>(
+        PegasusState*, Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
+    Translate::translate_<RV64, MMUMode::SV57, translate_types::AccessType::LOAD>(PegasusState*,
+                                                                                  Action::ItrType);
     template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(PegasusState*,
+    Translate::translate_<RV64, MMUMode::SV57, translate_types::AccessType::STORE>(PegasusState*,
                                                                                    Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
 
 } // namespace pegasus

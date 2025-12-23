@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/InstHandlers.hpp"
+#include "core/translate/TranslateTypes.hpp"
 
 namespace pegasus
 {
@@ -22,7 +23,7 @@ namespace pegasus
         Action::ItrType hfenceHandler_(PegasusState*, Action::ItrType);
 
         // compute address handler
-        template <typename XLEN, typename SIZE>
+        template <typename XLEN, typename SIZE, translate_types::AccessType ACCESS_TYPE>
         Action::ItrType computeAddressHandler_(PegasusState*, Action::ItrType);
 
         // hlv/hlvcx

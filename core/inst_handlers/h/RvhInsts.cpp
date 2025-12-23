@@ -14,59 +14,72 @@ namespace pegasus
 
         inst_handlers.emplace(
             "hlv.b",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint8_t>, RvhInsts>(
-                nullptr, "hlv.b", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<
+                &RvhInsts::computeAddressHandler_<XLEN, uint8_t, translate_types::AccessType::LOAD>,
+                RvhInsts>(nullptr, "hlv.b", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlv.bu",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint8_t>, RvhInsts>(
-                nullptr, "hlv.bu", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<
+                &RvhInsts::computeAddressHandler_<XLEN, uint8_t, translate_types::AccessType::LOAD>,
+                RvhInsts>(nullptr, "hlv.bu", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlv.h",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint16_t>, RvhInsts>(
-                nullptr, "hlv.h", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint16_t, translate_types::AccessType::LOAD>,
+                                 RvhInsts>(nullptr, "hlv.h", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlv.hu",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint16_t>, RvhInsts>(
-                nullptr, "hlv.hu", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint16_t, translate_types::AccessType::LOAD>,
+                                 RvhInsts>(nullptr, "hlv.hu", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlv.w",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint32_t>, RvhInsts>(
-                nullptr, "hlv.w", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint32_t, translate_types::AccessType::LOAD>,
+                                 RvhInsts>(nullptr, "hlv.w", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlvx.hu",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint16_t>, RvhInsts>(
-                nullptr, "hlvx.hu", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint16_t, translate_types::AccessType::EXECUTE>,
+                                 RvhInsts>(nullptr, "hlvx.hu", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hlvx.wu",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint32_t>, RvhInsts>(
-                nullptr, "hlvx.wu", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint32_t, translate_types::AccessType::EXECUTE>,
+                                 RvhInsts>(nullptr, "hlvx.wu", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hsv.b",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint8_t>, RvhInsts>(
-                nullptr, "hsv.b", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint8_t, translate_types::AccessType::STORE>,
+                                 RvhInsts>(nullptr, "hsv.b", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hsv.h",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint16_t>, RvhInsts>(
-                nullptr, "hsv.h", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint16_t, translate_types::AccessType::STORE>,
+                                 RvhInsts>(nullptr, "hsv.h", ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "hsv.w",
-            Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint32_t>, RvhInsts>(
-                nullptr, "hsv.w", ActionTags::COMPUTE_ADDR_TAG));
+            Action::createAction<&RvhInsts::computeAddressHandler_<
+                                     XLEN, uint32_t, translate_types::AccessType::STORE>,
+                                 RvhInsts>(nullptr, "hsv.w", ActionTags::COMPUTE_ADDR_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "hlv.wu",
-                Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint32_t>, RvhInsts>(
-                    nullptr, "hlv.wu", ActionTags::COMPUTE_ADDR_TAG));
+                Action::createAction<&RvhInsts::computeAddressHandler_<
+                                         XLEN, uint32_t, translate_types::AccessType::LOAD>,
+                                     RvhInsts>(nullptr, "hlv.wu", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "hlv.d",
-                Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint64_t>, RvhInsts>(
-                    nullptr, "hlv.d", ActionTags::COMPUTE_ADDR_TAG));
+                Action::createAction<&RvhInsts::computeAddressHandler_<
+                                         XLEN, uint64_t, translate_types::AccessType::LOAD>,
+                                     RvhInsts>(nullptr, "hlv.d", ActionTags::COMPUTE_ADDR_TAG));
             inst_handlers.emplace(
                 "hsv.d",
-                Action::createAction<&RvhInsts::computeAddressHandler_<XLEN, uint64_t>, RvhInsts>(
-                    nullptr, "hsv.d", ActionTags::COMPUTE_ADDR_TAG));
+                Action::createAction<&RvhInsts::computeAddressHandler_<
+                                         XLEN, uint64_t, translate_types::AccessType::STORE>,
+                                     RvhInsts>(nullptr, "hsv.d", ActionTags::COMPUTE_ADDR_TAG));
         }
     }
 
@@ -176,7 +189,7 @@ namespace pegasus
         return ++action_it;
     }
 
-    template <typename XLEN, typename SIZE>
+    template <typename XLEN, typename SIZE, translate_types::AccessType ACCESS_TYPE>
     Action::ItrType RvhInsts::computeAddressHandler_(PegasusState* state, Action::ItrType action_it)
     {
         if (state->getVirtualMode())
