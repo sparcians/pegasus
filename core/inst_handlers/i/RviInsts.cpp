@@ -974,7 +974,7 @@ namespace pegasus
                 // Get the previous privilege mode from the VSPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, VSSTATUS, "spp");
 
-                    // Set SIE = MSTATUS[SPIE] and reset SPIE
+                // Set SIE = MSTATUS[SPIE] and reset SPIE
                 WRITE_CSR_FIELD<XLEN>(state, VSSTATUS, "sie",
                                       READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
                 WRITE_CSR_FIELD<XLEN>(state, VSSTATUS, "spie", (XLEN)1);
@@ -991,7 +991,7 @@ namespace pegasus
                 // Get the previous privilege mode from the SPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
 
-                    // Set SIE = MSTATUS[SPIE] and reset SPIE
+                // Set SIE = MSTATUS[SPIE] and reset SPIE
                 WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
                                       READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
                 WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);

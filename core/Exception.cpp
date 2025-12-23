@@ -64,7 +64,8 @@ namespace pegasus
         // to VS-mode.
         const uint32_t trap_deleg_csr = is_interrupt ? MIDELEG : MEDELEG;
         const XLEN trap_deleg_val = READ_CSR_REG<XLEN>(state, trap_deleg_csr);
-        const PrivMode priv_mode = ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
+        const PrivMode priv_mode =
+            ((1ull << (excp_code)) & trap_deleg_val) ? PrivMode::SUPERVISOR : PrivMode::MACHINE;
         // Traps taken into M-mode or HS-mode set the virtualization mode to 0
         bool virt_mode = false;
         if (state->getVirtualMode() && (priv_mode == PrivMode::SUPERVISOR))
@@ -109,7 +110,7 @@ namespace pegasus
         const XLEN epc_val = state->getPc();
         // Get the exception code, handles interrupts and virtual traps
         const XLEN interrupt_bit = 1 << ((sizeof(XLEN) * 4) - 1);
-	const XLEN cause_val = is_interrupt ? (excp_code & interrupt_bit) : excp_code;
+        const XLEN cause_val = is_interrupt ? (excp_code & interrupt_bit) : excp_code;
         // Depending on the exception type, get the trap value
         const uint64_t trap_val = is_interrupt
                                       ? determineTrapValue_(interrupt_cause_.getValue(), state)
@@ -154,7 +155,7 @@ namespace pegasus
                 WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", spv_val);
 
                 if (prev_virt_mode)
-                    {
+                {
                     WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spvp", xpp_val);
                 }
 
