@@ -379,7 +379,7 @@ namespace pegasus
             translation_state->setResult(vaddr, paddr, access_size);
         }
 
-        sparta_assert(virt_mode, "Guest Physical Address Translation is not supported yet!");
+        sparta_assert(!virt_mode, "Guest Physical Address Translation is not supported yet!");
 
         if (is_misaligned || (translation_state->getNumRequests() > 0))
         {
