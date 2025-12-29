@@ -10,7 +10,8 @@ namespace pegasus::translate_types
     {
         EXECUTE,
         LOAD,
-        STORE
+        STORE,
+        INVALID
     };
 
     struct FieldDef
