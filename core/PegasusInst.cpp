@@ -19,9 +19,9 @@ namespace pegasus
         {
             return translate_types::AccessType::STORE;
         }
-        else if (extractor_info_->isMemoryInst())
+        else if (extractor_info->isMemoryInst())
         {
-            if (SPARTA_EXPECT_FALSE(extractor_info_->isHypervisorInst()))
+            if (SPARTA_EXPECT_FALSE(extractor_info->isHypervisorInst()))
             {
                 if ((mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_HU)
                     || (mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_WU))
@@ -32,8 +32,8 @@ namespace pegasus
             return translate_types::AccessType::LOAD;
         }
 
-	// Not a load or store inst
-	return translate_types::AccessType::INVALID;
+        // Not a load or store inst
+        return translate_types::AccessType::INVALID;
     }
 
     uint64_t getImmediateValue(const mavis::OpcodeInfo::PtrType & opcode_info)

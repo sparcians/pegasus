@@ -46,6 +46,9 @@ namespace pegasus
                     translate_action_group =
                         translate_unit->getStoreTranslateActionGroup(hypervisor_inst);
                     break;
+                case translate_types::AccessType::INVALID:
+                    sparta_assert(false, "Invalid translate access type for inst: " << inst);
+                    break;
             }
 
             for (auto it = translate_action_group->getActions().rbegin();
