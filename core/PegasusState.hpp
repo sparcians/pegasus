@@ -118,7 +118,8 @@ namespace pegasus
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
-        template <typename XLEN> void changeMMUMode();
+        template <typename XLEN>
+        void changeMMUMode(const translate_types::TranslationType, const uint32_t);
 
         struct SimState
         {

@@ -6,6 +6,16 @@
 
 namespace pegasus::translate_types
 {
+    enum class TranslationType
+    {
+        SUPERVISOR,
+        VIRTUAL_SUPERVISOR,
+        GUEST,
+        INVALID
+    };
+
+    static constexpr uint32_t N_TRANS_TYPES = static_cast<uint32_t>(TranslationType::INVALID);
+
     enum class AccessType
     {
         EXECUTE,
@@ -13,6 +23,8 @@ namespace pegasus::translate_types
         STORE,
         INVALID
     };
+
+    static constexpr uint32_t N_ACCESS_TYPES = static_cast<uint32_t>(AccessType::INVALID);
 
     struct FieldDef
     {
@@ -315,5 +327,25 @@ namespace pegasus::translate_types
         };
 
         return get_page_offset_mask(level);
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const TranslationType type)
+    {
+        switch (type)
+        {
+            case TranslationType::SUPERVISOR:
+                os << "SUPERVISOR";
+                break;
+            case TranslationType::VIRTUAL_SUPERVISOR:
+                os << "VIRTUAL_SUPERVISOR";
+                break;
+            case TranslationType::GUEST:
+                os << "GUEST";
+                break;
+            case TranslationType::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
     }
 } // namespace pegasus::translate_types

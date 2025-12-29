@@ -155,11 +155,21 @@ namespace pegasus
         // Set up translation
         if (xlen_ == 64)
         {
-            changeMMUMode<RV64>();
+            changeMMUMode<RV64>(translate_types::TranslationType::SUPERVISOR, SATP);
+            if (pegasus_core_->hasHypervisor())
+            {
+                changeMMUMode<RV64>(translate_types::TranslationType::VIRTUAL_SUPERVISOR, VSATP);
+                changeMMUMode<RV64>(translate_types::TranslationType::GUEST, HGATP);
+            }
         }
         else
         {
-            changeMMUMode<RV32>();
+            changeMMUMode<RV32>(translate_types::TranslationType::SUPERVISOR, SATP);
+            if (pegasus_core_->hasHypervisor())
+            {
+                changeMMUMode<RV32>(translate_types::TranslationType::VIRTUAL_SUPERVISOR, VSATP);
+                changeMMUMode<RV32>(translate_types::TranslationType::GUEST, HGATP);
+            }
         }
 
         // Update vlenb csr
@@ -217,9 +227,11 @@ namespace pegasus
         priv_mode_ = priv_mode;
     }
 
-    template <typename XLEN> void PegasusState::changeMMUMode()
+    template <typename XLEN>
+    void PegasusState::changeMMUMode(const translate_types::TranslationType translation_type,
+                                     const uint32_t ATP_CSR)
     {
-        static const std::vector<MMUMode> satp_mmu_mode_map = {
+        static const std::vector<MMUMode> mmu_mode_map = {
             MMUMode::BAREMETAL, // mode == 0
             MMUMode::SV32,      // mode == 1 xlen==32
             MMUMode::INVALID,   // mode == 2 - 7 -> reserved
