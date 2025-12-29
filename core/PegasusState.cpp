@@ -242,19 +242,18 @@ namespace pegasus
             MMUMode::SV57     // mode == 10, xlen==64
         };
 
-        const uint32_t satp_val = virtual_mode_ ? READ_CSR_FIELD<XLEN>(this, VSATP, "mode")
-                                                : READ_CSR_FIELD<XLEN>(this, SATP, "mode");
-        sparta_assert(satp_val < satp_mmu_mode_map.size());
-        const MMUMode mode = satp_mmu_mode_map[satp_val];
+        const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
+        sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
+        const MMUMode mode = mmu_mode_map[atp_mode_val];
 
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
         const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
         ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
         const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
 
-        DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
-                        DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
-        translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
+        DLOG_CODE_BLOCK(DLOG_OUTPUT(translation_type << " MMU Mode: " << mode);
+                        DLOG_OUTPUT(translation_type << " MMU LS Mode: " << ls_mode););
+        translate_unit_->changeMMUMode<XLEN>(translation_type, mode, ls_mode);
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)
