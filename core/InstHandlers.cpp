@@ -136,7 +136,7 @@ namespace pegasus
         RvzabhaInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvzfhInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
-        RvhInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvhInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         //  RV32 only
         RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 
