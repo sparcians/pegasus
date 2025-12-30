@@ -98,8 +98,8 @@ namespace pegasus
 
         template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
         Action::ItrType setResult_(PegasusTranslationState* translation_state,
-                                   Action::ItrType action_it, const bool virt_mode,
-                                   const Addr paddr, const uint32_t level = 1);
+                                   Action::ItrType action_it, const Addr paddr,
+                                   const uint32_t level = 1);
 
         template <typename XLEN, translate_types::AccessType TYPE>
         Action::ItrType hypervisorTranslate_(pegasus::PegasusState* state,

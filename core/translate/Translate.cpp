@@ -171,7 +171,6 @@ namespace pegasus
     Action::ItrType Translate::translate_(PegasusState* state, Action::ItrType action_it)
     {
         PegasusTranslationState* translation_state = nullptr;
-        bool hyp_inst = false;
         if constexpr (TYPE == translate_types::AccessType::EXECUTE)
         {
             // Translation reqest is from fetch
@@ -181,7 +180,6 @@ namespace pegasus
         {
             const auto & inst = state->getCurrentInst();
             translation_state = inst->getTranslationState();
-            hyp_inst = inst->isHypervisorInst();
         }
 
         // If there is no request, nothing to be done here
@@ -205,19 +203,18 @@ namespace pegasus
         const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
                                    ? state->getPrivMode()
                                    : state->getLdstPrivMode();
-        const bool virt_mode = hyp_inst ? true : state->getVirtualMode();
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, virt_mode, vaddr);
+            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
         }
 
         // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
-        const uint64_t satp_val = virt_mode ? READ_CSR_FIELD<XLEN>(state, VSATP, "ppn")
-                                            : READ_CSR_FIELD<XLEN>(state, SATP, "ppn");
-        uint64_t ppn = satp_val << PAGESHIFT;
+        // FIXME
+        const uint32_t ATP_CSR = SATP;
+        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, ATP_CSR, "ppn") << PAGESHIFT;
         while (level > 0)
         {
             // Read PTE from memory
@@ -331,8 +328,7 @@ namespace pegasus
                 paddr |= page_offset_mask & vaddr;
 
                 // Set result and determine whether to keep going or performa translation again
-                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, virt_mode, paddr,
-                                                    level);
+                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, paddr, level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -365,8 +361,8 @@ namespace pegasus
 
     template <typename XLEN, MMUMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::setResult_(PegasusTranslationState* translation_state,
-                                          Action::ItrType action_it, const bool virt_mode,
-                                          const Addr paddr, const uint32_t level)
+                                          Action::ItrType action_it, const Addr paddr,
+                                          const uint32_t level)
     {
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
@@ -402,8 +398,6 @@ namespace pegasus
             translation_state->popRequest();
             translation_state->setResult(vaddr, paddr, access_size);
         }
-
-        sparta_assert(!virt_mode, "Guest Physical Address Translation is not supported yet!");
 
         if (is_misaligned || (translation_state->getNumRequests() > 0))
         {
@@ -497,15 +491,40 @@ namespace pegasus
     template <typename XLEN, translate_types::AccessType TYPE>
     Action::ItrType Translate::hypervisorTranslate_(PegasusState* state, Action::ItrType action_it)
     {
-        // VS-stage translation
-        const MMUMode vs_stage_mode = mmu_modes_[static_cast<uint32_t>(TYPE)];
-        Action & translate_action = getTranslateAction_<XLEN>(TYPE, vs_stage_mode);
+        const auto & inst = state->getCurrentInst();
+        PegasusTranslationState* translation_state = inst->getTranslationState();
 
-        (void)translate_action;
-        (void)state;
+        // VS-stage translation
+        const MMUMode vs_stage_mode = mmu_modes_[static_cast<uint32_t>(translate_types::TranslationType::VIRTUAL_SUPERVISOR)];
+        Action & translate_action = getTranslateAction_<XLEN>(TYPE, vs_stage_mode);
+        Action::ItrType tmp_action_it;
+        while (translation_state->getNumRequests() != 0)
+        {
+            translate_action.execute(state, tmp_action_it);
+        }
+
         // Make new translation request
+        std::vector<std::pair<Addr, size_t>> h_stage_requests;
+        while (translation_state->getNumResults() != 0)
+        {
+            const PegasusTranslationState::TranslationResult & result =
+                translation_state->getResult();
+            h_stage_requests.emplace_back(result.getPAddr(), result.getSize());
+            translation_state->popResult();
+        }
+
+        for (const auto & [addr, size] : h_stage_requests)
+        {
+            translation_state->makeRequest(addr, size);
+        }
 
         // G-stage translation
+        const MMUMode g_stage_mode = mmu_modes_[static_cast<uint32_t>(translate_types::TranslationType::GUEST)];
+        translate_action = getTranslateAction_<XLEN>(TYPE, g_stage_mode);
+        while (translation_state->getNumRequests() != 0)
+        {
+            translate_action.execute(state, tmp_action_it);
+        }
 
         return ++action_it;
     }
