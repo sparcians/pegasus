@@ -155,20 +155,20 @@ namespace pegasus
         // Set up translation
         if (xlen_ == 64)
         {
-            changeMMUMode<RV64>(translate_types::TranslationType::SUPERVISOR, SATP);
+            changeMMUMode<RV64>(translate_types::TranslationStage::SUPERVISOR, SATP);
             if (pegasus_core_->hasHypervisor())
             {
-                changeMMUMode<RV64>(translate_types::TranslationType::VIRTUAL_SUPERVISOR, VSATP);
-                changeMMUMode<RV64>(translate_types::TranslationType::GUEST, HGATP);
+                changeMMUMode<RV64>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP);
+                changeMMUMode<RV64>(translate_types::TranslationStage::GUEST, HGATP);
             }
         }
         else
         {
-            changeMMUMode<RV32>(translate_types::TranslationType::SUPERVISOR, SATP);
+            changeMMUMode<RV32>(translate_types::TranslationStage::SUPERVISOR, SATP);
             if (pegasus_core_->hasHypervisor())
             {
-                changeMMUMode<RV32>(translate_types::TranslationType::VIRTUAL_SUPERVISOR, VSATP);
-                changeMMUMode<RV32>(translate_types::TranslationType::GUEST, HGATP);
+                changeMMUMode<RV32>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP);
+                changeMMUMode<RV32>(translate_types::TranslationStage::GUEST, HGATP);
             }
         }
 
@@ -228,28 +228,31 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    void PegasusState::changeMMUMode(const translate_types::TranslationType translation_type,
+    void PegasusState::changeMMUMode(const translate_types::TranslationStage translation_type,
                                      const uint32_t ATP_CSR)
     {
-        static const std::vector<MMUMode> mmu_mode_map = {
-            MMUMode::BAREMETAL, // mode == 0
-            MMUMode::SV32,      // mode == 1 xlen==32
-            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
-            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
-            MMUMode::INVALID, // mode ==  7
-            MMUMode::SV39,    // mode ==  8, xlen==64
-            MMUMode::SV48,    // mode ==  9, xlen==64
-            MMUMode::SV57     // mode == 10, xlen==64
+        static const std::vector<translate_types::TranslationMode> mmu_mode_map = {
+            translate_types::TranslationMode::BAREMETAL, // mode == 0
+            translate_types::TranslationMode::SV32,      // mode == 1 xlen==32
+            translate_types::TranslationMode::INVALID,   // mode == 2 - 7 -> reserved
+            translate_types::TranslationMode::INVALID,   translate_types::TranslationMode::INVALID,
+            translate_types::TranslationMode::INVALID,   translate_types::TranslationMode::INVALID,
+            translate_types::TranslationMode::INVALID, // mode ==  7
+            translate_types::TranslationMode::SV39,    // mode ==  8, xlen==64
+            translate_types::TranslationMode::SV48,    // mode ==  9, xlen==64
+            translate_types::TranslationMode::SV57     // mode == 10, xlen==64
         };
 
         const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
-        const MMUMode mode = mmu_mode_map[atp_mode_val];
+        const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
 
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
         const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
         ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
-        const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
+        const translate_types::TranslationMode ls_mode =
+            (ldst_priv_mode_ == PrivMode::MACHINE) ? translate_types::TranslationMode::BAREMETAL
+                                                   : mode;
 
         DLOG_CODE_BLOCK(DLOG_OUTPUT(translation_type << " MMU Mode: " << mode);
                         DLOG_OUTPUT(translation_type << " MMU LS Mode: " << ls_mode););

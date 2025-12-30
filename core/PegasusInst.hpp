@@ -7,7 +7,6 @@
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
 #include "core/translate/PegasusTranslationState.hpp"
-#include "core/translate/TranslateTypes.hpp"
 
 namespace sparta
 {

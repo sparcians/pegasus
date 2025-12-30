@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/InstHandlers.hpp"
-#include "core/translate/TranslateTypes.hpp"
+#include "include/PegasusTranslateTypes.hpp"
 
 namespace pegasus
 {

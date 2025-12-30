@@ -76,25 +76,25 @@ namespace pegasus
 
         // Supervisor Protection and Translation
         csrUpdate_actions.emplace(
-            SATP,
-            pegasus::Action::createAction<
-                &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationType::SUPERVISOR,
-                                                 SATP>,
-                RvzicsrInsts>(nullptr, "satpUpdate"));
+            SATP, pegasus::Action::createAction<
+                      &RvzicsrInsts::atpUpdateHandler_<
+                          XLEN, translate_types::TranslationStage::SUPERVISOR, SATP>,
+                      RvzicsrInsts>(nullptr, "satpUpdate"));
 
         // Virtual Supervisor Protection and Translation
         csrUpdate_actions.emplace(
             VSATP, pegasus::Action::createAction<
                        &RvzicsrInsts::atpUpdateHandler_<
-                           XLEN, translate_types::TranslationType::VIRTUAL_SUPERVISOR, VSATP>,
+                           XLEN, translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP>,
                        RvzicsrInsts>(nullptr, "vsatpUpdate"));
 
         // Guest Supervisor Protection and Translation
         csrUpdate_actions.emplace(
             HGATP,
-            pegasus::Action::createAction<&RvzicsrInsts::atpUpdateHandler_<
-                                              XLEN, translate_types::TranslationType::GUEST, HGATP>,
-                                          RvzicsrInsts>(nullptr, "gatpUpdate"));
+            pegasus::Action::createAction<
+                &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationStage::GUEST,
+                                                 HGATP>,
+                RvzicsrInsts>(nullptr, "gatpUpdate"));
 
         // Machine Trap Setup
         csrUpdate_actions.emplace(
@@ -423,7 +423,7 @@ namespace pegasus
         return mstatusUpdateHandler_<XLEN>(state, action_it);
     }
 
-    template <typename XLEN, translate_types::TranslationType TYPE, uint32_t ATP_CSR>
+    template <typename XLEN, translate_types::TranslationStage TYPE, uint32_t ATP_CSR>
     Action::ItrType RvzicsrInsts::atpUpdateHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
