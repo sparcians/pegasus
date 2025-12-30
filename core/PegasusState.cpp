@@ -252,7 +252,7 @@ namespace pegasus
         translate_types::TranslationMode ls_mode = mode;
         if (mprv_val == 1)
         {
-            if (pegasus_core_->hasHypervisor())
+            if (pegasus_core_->hasHypervisor() == false)
             {
                 const PrivMode prev_priv_mode =
                     (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
