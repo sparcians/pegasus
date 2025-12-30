@@ -89,7 +89,14 @@ namespace pegasus
         {
             const uint32_t type_idx = static_cast<uint32_t>(type);
             const uint32_t mode_idx = static_cast<uint32_t>(mode);
-            return rv64_translation_actions_[type_idx][mode_idx];
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                return rv64_translation_actions_[type_idx][mode_idx];
+            }
+            else
+            {
+                return rv32_translation_actions_[type_idx][mode_idx];
+            }
         }
 
         // Hypervisor Translate Actions
