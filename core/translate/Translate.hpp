@@ -3,6 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "include/PegasusTypes.hpp"
 #include "include/PegasusTranslateTypes.hpp"
+#include "include/gen/CSRNums.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/TreeNode.hpp"
@@ -61,6 +62,26 @@ namespace pegasus
         void updateTranslationMode(const translate_types::TranslationStage type,
                                    const translate_types::TranslationMode mode,
                                    const translate_types::TranslationMode ls_mode);
+
+        inline static int32_t getAtpCsr(const translate_types::TranslationStage stage)
+        {
+            static const std::map<translate_types::TranslationStage, uint32_t>
+                translation_stage_to_atp_csr_map = {
+                    {translate_types::TranslationStage::SUPERVISOR, SATP},
+                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP},
+                    {translate_types::TranslationStage::GUEST, HGATP}};
+            return translation_stage_to_atp_csr_map.at(stage);
+        }
+
+        inline static int32_t getStatusCsr(const translate_types::TranslationStage stage)
+        {
+            static const std::map<translate_types::TranslationStage, uint32_t>
+                translation_stage_to_status_csr_map = {
+                    {translate_types::TranslationStage::SUPERVISOR, MSTATUS},
+                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSSTATUS},
+                    {translate_types::TranslationStage::GUEST, HSTATUS}};
+            return translation_stage_to_status_csr_map.at(stage);
+        }
 
       private:
         // Translation Modes for each stage (S-Stage, HS-Stage and G-Stage)

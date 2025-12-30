@@ -195,7 +195,7 @@ namespace pegasus
         PegasusTranslationState* translation_state = nullptr;
         if constexpr (TYPE == translate_types::AccessType::EXECUTE)
         {
-            // Translation reqest is from fetch
+            // Translation request is from fetch
             translation_state = state->getFetchTranslationState();
         }
         else
