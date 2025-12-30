@@ -199,7 +199,7 @@ namespace pegasus
 
         // From Hypervisor spec:
         // instructions are valid only in M-mode or HS-mode, or in U-mode when hstatus.HU=1
-        if ((state->getPrivMode() != PrivMode::USER) || READ_CSR_FIELD<XLEN>(state, HSTATUS, "hu"))
+        if ((state->getPrivMode() == PrivMode::USER) || READ_CSR_FIELD<XLEN>(state, HSTATUS, "hu"))
         {
             THROW_ILLEGAL_INST;
         }
