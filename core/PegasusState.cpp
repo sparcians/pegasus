@@ -155,11 +155,21 @@ namespace pegasus
         // Set up translation
         if (xlen_ == 64)
         {
-            changeMMUMode<RV64>();
+            updateTranslationMode<RV64>(translate_types::TranslationStage::SUPERVISOR);
+            if (pegasus_core_->hasHypervisor())
+            {
+                updateTranslationMode<RV64>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                updateTranslationMode<RV64>(translate_types::TranslationStage::GUEST);
+            }
         }
         else
         {
-            changeMMUMode<RV32>();
+            updateTranslationMode<RV32>(translate_types::TranslationStage::SUPERVISOR);
+            if (pegasus_core_->hasHypervisor())
+            {
+                updateTranslationMode<RV32>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                updateTranslationMode<RV32>(translate_types::TranslationStage::GUEST);
+            }
         }
 
         // Update vlenb csr
@@ -217,31 +227,49 @@ namespace pegasus
         priv_mode_ = priv_mode;
     }
 
-    template <typename XLEN> void PegasusState::changeMMUMode()
+    template <typename XLEN>
+    void
+    PegasusState::updateTranslationMode(const translate_types::TranslationStage translation_type)
     {
-        static const std::vector<MMUMode> satp_mmu_mode_map = {
-            MMUMode::BAREMETAL, // mode == 0
-            MMUMode::SV32,      // mode == 1 xlen==32
-            MMUMode::INVALID,   // mode == 2 - 7 -> reserved
-            MMUMode::INVALID,   MMUMode::INVALID, MMUMode::INVALID, MMUMode::INVALID,
-            MMUMode::INVALID, // mode ==  7
-            MMUMode::SV39,    // mode ==  8, xlen==64
-            MMUMode::SV48,    // mode ==  9, xlen==64
-            MMUMode::SV57     // mode == 10, xlen==64
+        static const std::vector<translate_types::TranslationMode> mmu_mode_map = {
+            translate_types::TranslationMode::BAREMETAL, // mode == 0
+            translate_types::TranslationMode::SV32,      // mode == 1 xlen==32
+            translate_types::TranslationMode::INVALID,   // mode == 2 - 7 -> reserved
+            translate_types::TranslationMode::INVALID,   translate_types::TranslationMode::INVALID,
+            translate_types::TranslationMode::INVALID,   translate_types::TranslationMode::INVALID,
+            translate_types::TranslationMode::INVALID,
+            translate_types::TranslationMode::SV39, // mode ==  8, xlen==64
+            translate_types::TranslationMode::SV48, // mode ==  9, xlen==64
+            translate_types::TranslationMode::SV57  // mode == 10, xlen==64
         };
 
-        const uint32_t satp_val = READ_CSR_FIELD<XLEN>(this, SATP, "mode");
-        sparta_assert(satp_val < satp_mmu_mode_map.size());
-        const MMUMode mode = satp_mmu_mode_map[satp_val];
+        const uint32_t ATP_CSR = Translate::getAtpCsr(translation_type);
+        const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
+        sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
+        const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
 
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
-        const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
-        ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
-        const MMUMode ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE) ? MMUMode::BAREMETAL : mode;
+        translate_types::TranslationMode ls_mode = mode;
+        if (mprv_val == 1)
+        {
+            if (pegasus_core_->hasHypervisor() == false)
+            {
+                const PrivMode prev_priv_mode =
+                    (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
+                ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
+                ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE)
+                              ? translate_types::TranslationMode::BAREMETAL
+                              : mode;
+            }
+            else
+            {
+                sparta_assert(false, "Hypervisor does not support MPRV yet!");
+            }
+        }
 
-        DLOG_CODE_BLOCK(DLOG_OUTPUT("MMU Mode: " << mode);
-                        DLOG_OUTPUT("MMU LS Mode: " << ls_mode););
-        translate_unit_->changeMMUMode<XLEN>(mode, ls_mode);
+        DLOG_CODE_BLOCK(DLOG_OUTPUT(translation_type << " MMU Mode: " << mode);
+                        DLOG_OUTPUT(translation_type << " MMU LS Mode: " << ls_mode););
+        translate_unit_->updateTranslationMode<XLEN>(translation_type, mode, ls_mode);
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)

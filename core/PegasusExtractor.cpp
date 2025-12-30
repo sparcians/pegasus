@@ -3,12 +3,13 @@
 
 namespace pegasus
 {
-    template <typename ValueType>
+    template <typename ValueType, bool OPTIONAL = false>
     ValueType getUarchJsonValue(const boost::json::object & entry, const std::string & key)
     {
         if (SPARTA_EXPECT_FALSE(entry.find(key) == entry.end()))
         {
-            sparta_assert(false, "Missing key in uarch json: " << key);
+            sparta_assert(OPTIONAL, "Missing key in uarch json: " << key);
+            return ValueType();
         }
         return boost::json::value_to<ValueType>(entry.find(key)->value());
     }
@@ -28,8 +29,9 @@ namespace pegasus
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_unimplemented_(inst_handler_name_ == "unsupported"),
-        is_memory_inst_(getUarchJsonValue<bool>(uarch_json, "memory")),
-        is_cof_inst_(getUarchJsonValue<bool>(uarch_json, "cof")),
+        is_memory_inst_(getUarchJsonValue<bool, true>(uarch_json, "memory")),
+        is_cof_inst_(getUarchJsonValue<bool, true>(uarch_json, "cof")),
+        is_hypervisor_inst_(getUarchJsonValue<bool, true>(uarch_json, "hypervisor")),
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {

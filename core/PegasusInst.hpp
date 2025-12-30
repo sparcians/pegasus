@@ -66,11 +66,15 @@ namespace pegasus
 
         bool isChangeOfFlowInst() const { return extractor_info_->isChangeOfFlowInst(); }
 
+        bool isHypervisorInst() const { return extractor_info_->isHypervisorInst(); }
+
         bool writesCsr() const;
 
         uint32_t getOpcodeSize() const { return opcode_size_; }
 
         uint32_t isStoreType() const { return is_store_type_; }
+
+        translate_types::AccessType getMemoryAccessType() const { return memory_access_type_; }
 
         uint32_t getRs1() const
         {
@@ -233,6 +237,9 @@ namespace pegasus
 
         // Is this a store-type instruction
         const bool is_store_type_;
+
+        // Memory access type (execute, load or store)
+        const translate_types::AccessType memory_access_type_;
 
         // Cache immediate value, unsigned and signed
         const uint64_t immediate_value_;

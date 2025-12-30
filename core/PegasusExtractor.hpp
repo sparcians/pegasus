@@ -30,12 +30,15 @@ namespace pegasus
 
         bool isChangeOfFlowInst() const { return is_cof_inst_; }
 
+        bool isHypervisorInst() const { return is_hypervisor_inst_; }
+
       private:
         const std::string mnemonic_;
         const std::string inst_handler_name_;
         const bool is_unimplemented_;
         const bool is_memory_inst_;
         const bool is_cof_inst_;
+        const bool is_hypervisor_inst_;
         const VecCfgOverrides veccfg_;
 
         ActionGroup inst_action_group_;

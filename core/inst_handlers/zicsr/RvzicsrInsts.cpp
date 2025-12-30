@@ -77,8 +77,23 @@ namespace pegasus
         // Supervisor Protection and Translation
         csrUpdate_actions.emplace(
             SATP,
-            pegasus::Action::createAction<&RvzicsrInsts::satpUpdateHandler_<XLEN>, RvzicsrInsts>(
-                nullptr, "satpUpdate"));
+            pegasus::Action::createAction<&RvzicsrInsts::atpUpdateHandler_<
+                                              XLEN, translate_types::TranslationStage::SUPERVISOR>,
+                                          RvzicsrInsts>(nullptr, "satpUpdate"));
+
+        // Virtual Supervisor Protection and Translation
+        csrUpdate_actions.emplace(
+            VSATP, pegasus::Action::createAction<
+                       &RvzicsrInsts::atpUpdateHandler_<
+                           XLEN, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>,
+                       RvzicsrInsts>(nullptr, "vsatpUpdate"));
+
+        // Guest Supervisor Protection and Translation
+        csrUpdate_actions.emplace(
+            HGATP,
+            pegasus::Action::createAction<
+                &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationStage::GUEST>,
+                RvzicsrInsts>(nullptr, "gatpUpdate"));
 
         // Machine Trap Setup
         csrUpdate_actions.emplace(
@@ -102,7 +117,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         auto rd = inst->getRd();
-        const uint32_t csr = inst->getCsr();
+        const uint32_t csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -135,7 +151,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -165,7 +182,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -197,7 +215,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -228,7 +247,8 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
@@ -261,7 +281,8 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr = inst->getCsr();
+        const int csr =
+            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
         {
@@ -401,11 +422,11 @@ namespace pegasus
         return mstatusUpdateHandler_<XLEN>(state, action_it);
     }
 
-    template <typename XLEN>
-    Action::ItrType RvzicsrInsts::satpUpdateHandler_(pegasus::PegasusState* state,
-                                                     Action::ItrType action_it)
+    template <typename XLEN, translate_types::TranslationStage TYPE>
+    Action::ItrType RvzicsrInsts::atpUpdateHandler_(pegasus::PegasusState* state,
+                                                    Action::ItrType action_it)
     {
-        state->changeMMUMode<XLEN>();
+        state->updateTranslationMode<XLEN>(TYPE);
         return ++action_it;
     }
 
@@ -478,7 +499,8 @@ namespace pegasus
         {
             state->getCore()->changeMavisContext();
         }
-        state->changeMMUMode<XLEN>();
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
+        // FIXME: Hypervisor?
 
         return ++action_it;
     }

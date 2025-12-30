@@ -68,6 +68,9 @@ from insts.RVV_INST import RVZVE32F_INST
 from insts.RVV_INST import RVZVE64D_INST
 from insts.RVV_INST import RVZVE64X_INST
 
+from insts.RVH_INST import RV32H_INST
+from insts.RVH_INST import RV64H_INST
+
 # Mavis extensions
 from insts.RVI_INST import RVI_MAVIS_EXTS
 from insts.RVM_INST import RVM_MAVIS_EXTS
@@ -97,6 +100,8 @@ from insts.RVZILSD_INST import RV32ZILSD_MAVIS_EXTS # RV32 only
 from insts.RVZFA_INST import RVZFA_MAVIS_EXTS
 
 from insts.RVV_INST import RVV_MAVIS_EXTS
+
+from insts.RVH_INST import RVH_MAVIS_EXTS
 
 class InstJSONGenerator():
     """Generates instruction definition JSON files.
@@ -240,7 +245,7 @@ def main():
                                        'zicboz', 'zihintntl', 'zihintpause',
                                        'zicond', 'zcmp', 'zcmt', 'zabha', 'zfa',
                                        'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
-                                       'zve64x']
+                                       'zve64x', 'h']
     RVA23_RV32_SUPPORTED_EXTENSIONS = ['i', 'c', 'zca', 'zcb', 'm', 'zmmul',
                                        'a', 'zalrsc', 'zaamo', 'f', 'zcf',
                                        'd', 'zcd', 'zfh', 'zfhmin', 'zfhmind',
@@ -249,7 +254,7 @@ def main():
                                        'zicboz', 'zihintntl', 'zihintpause',
                                        'zicond', 'zcmp', 'zcmt', 'zabha', 'zilsd', 'zfa',
                                        'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
-                                       'zve64x']
+                                       'zve64x', 'h']
     rva23_r64_exts = [ext for ext in rv64_exts if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]
     rva23_r32_exts = [ext for ext in rv32_exts if ext in RVA23_RV32_SUPPORTED_EXTENSIONS]
     rva23_pegasus_uarch_rv64_jsons = [ext for ext in pegasus_uarch_rv64_jsons if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]

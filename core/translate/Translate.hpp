@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/translate/TranslateTypes.hpp"
 #include "include/PegasusTypes.hpp"
+#include "include/PegasusTranslateTypes.hpp"
+#include "include/gen/CSRNums.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/TreeNode.hpp"
@@ -30,49 +31,122 @@ namespace pegasus
 
         Translate(sparta::TreeNode* translate_node, const TranslateParameters* p);
 
-        ActionGroup* getInstTranslateActionGroup() { return &inst_translate_action_group_; }
-
-        ActionGroup* getLoadTranslateActionGroup() { return &load_translate_action_group_; }
-
-        ActionGroup* getStoreTranslateActionGroup() { return &store_translate_action_group_; }
-
-        template <typename XLEN> void changeMMUMode(const MMUMode mode, const MMUMode ls_mode);
-
-        enum class AccessType
+        ActionGroup* getExecuteTranslateActionGroup(const bool hypervisor = false)
         {
-            INSTRUCTION,
-            LOAD,
-            STORE
-        };
+            if (SPARTA_EXPECT_FALSE(hypervisor))
+            {
+                return &hyp_execute_translate_action_group_;
+            }
+            return &execute_translate_action_group_;
+        }
+
+        ActionGroup* getLoadTranslateActionGroup(const bool hypervisor = false)
+        {
+            if (SPARTA_EXPECT_FALSE(hypervisor))
+            {
+                return &hyp_load_translate_action_group_;
+            }
+            return &load_translate_action_group_;
+        }
+
+        ActionGroup* getStoreTranslateActionGroup(const bool hypervisor = false)
+        {
+            if (SPARTA_EXPECT_FALSE(hypervisor))
+            {
+                return &hyp_store_translate_action_group_;
+            }
+            return &store_translate_action_group_;
+        }
+
+        template <typename XLEN>
+        void updateTranslationMode(const translate_types::TranslationStage type,
+                                   const translate_types::TranslationMode mode,
+                                   const translate_types::TranslationMode ls_mode);
+
+        inline static int32_t getAtpCsr(const translate_types::TranslationStage stage)
+        {
+            static const std::map<translate_types::TranslationStage, uint32_t>
+                translation_stage_to_atp_csr_map = {
+                    {translate_types::TranslationStage::SUPERVISOR, SATP},
+                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP},
+                    {translate_types::TranslationStage::GUEST, HGATP}};
+            return translation_stage_to_atp_csr_map.at(stage);
+        }
+
+        inline static int32_t getStatusCsr(const translate_types::TranslationStage stage)
+        {
+            static const std::map<translate_types::TranslationStage, uint32_t>
+                translation_stage_to_status_csr_map = {
+                    {translate_types::TranslationStage::SUPERVISOR, MSTATUS},
+                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSSTATUS},
+                    {translate_types::TranslationStage::GUEST, HSTATUS}};
+            return translation_stage_to_status_csr_map.at(stage);
+        }
 
       private:
-        ActionGroup inst_translate_action_group_{"Inst Translate"};
+        // Translation Modes for each stage (S-Stage, HS-Stage and G-Stage)
+        std::array<translate_types::TranslationMode, translate_types::N_TRANS_STAGES> mmu_modes_;
+        std::array<translate_types::TranslationMode, translate_types::N_TRANS_STAGES> ls_mmu_modes_;
+
+        // Translate ActionGroups
+        ActionGroup execute_translate_action_group_{"Execute (Inst) Translate"};
         ActionGroup load_translate_action_group_{"Load Translate"};
         ActionGroup store_translate_action_group_{"Store Translate"};
 
-        std::array<Action, N_MMU_MODES> rv64_inst_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_inst_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv64_load_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_load_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv64_store_translation_actions_;
-        std::array<Action, N_MMU_MODES> rv32_store_translation_actions_;
+        // Hypervisor Translate ActionGroups
+        ActionGroup hyp_execute_translate_action_group_{"Hypervisor Execute Translate"};
+        ActionGroup hyp_load_translate_action_group_{"Hypervisor Load Translate"};
+        ActionGroup hyp_store_translate_action_group_{"Hypervisor Store Translate"};
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        // Translate Actions
+        using TranslateActionsType = std::array<std::array<Action, translate_types::N_TRANS_MODES>,
+                                                translate_types::N_ACCESS_TYPES>;
+        TranslateActionsType rv64_translation_actions_;
+        TranslateActionsType rv32_translation_actions_;
+
+        template <typename XLEN>
+        Action & getTranslateAction_(translate_types::AccessType type,
+                                     translate_types::TranslationMode mode)
+        {
+            const uint32_t type_idx = static_cast<uint32_t>(type);
+            const uint32_t mode_idx = static_cast<uint32_t>(mode);
+            if constexpr (std::is_same_v<XLEN, RV64>)
+            {
+                return rv64_translation_actions_[type_idx][mode_idx];
+            }
+            else
+            {
+                return rv32_translation_actions_[type_idx][mode_idx];
+            }
+        }
+
+        // Hypervisor Translate Actions
+        std::array<Action, translate_types::N_ACCESS_TYPES> rv64_hyp_translation_actions_;
+        std::array<Action, translate_types::N_ACCESS_TYPES> rv32_hyp_translation_actions_;
+
+        template <typename XLEN, translate_types::TranslationMode MODE,
+                  translate_types::AccessType TYPE>
         Action::ItrType translate_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        template <typename XLEN, translate_types::TranslationMode MODE,
+                  translate_types::AccessType TYPE>
         Action::ItrType setResult_(PegasusTranslationState* translation_state,
                                    Action::ItrType action_it, const Addr paddr,
                                    const uint32_t level = 1);
 
-        template <typename XLEN, MMUMode MODE, AccessType TYPE>
+        template <typename XLEN, translate_types::AccessType TYPE>
+        Action::ItrType hypervisorTranslate_(pegasus::PegasusState* state,
+                                             Action::ItrType action_it);
+
+        template <typename XLEN, translate_types::TranslationMode MODE,
+                  translate_types::AccessType TYPE>
         void registerAction_(const char* desc, const ActionTagType tags,
-                             std::array<Action, N_MMU_MODES> & xlation_actions)
+                             TranslateActionsType & xlation_actions)
         {
             Action action =
                 Action::createAction<&pegasus::Translate::translate_<XLEN, MODE, TYPE>>(this, desc);
             action.addTag(tags);
-            xlation_actions[static_cast<uint32_t>(MODE)] = action;
+            xlation_actions[static_cast<uint32_t>(TYPE)][static_cast<uint32_t>(MODE)] = action;
         }
 
         friend class ::PegasusTranslateTester;

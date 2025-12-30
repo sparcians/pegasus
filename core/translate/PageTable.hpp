@@ -9,13 +9,13 @@
 namespace pegasus
 {
 
-    uint32_t determineMaxNumPteEntries(MMUMode mode)
+    uint32_t determineMaxNumPteEntries(translate_types::TranslationMode mode)
     {
-        if (mode == MMUMode::SV32)
+        if (mode == translate_types::TranslationMode::SV32)
         {
             return 1024;
         }
-        else if (mode == MMUMode::SV39)
+        else if (mode == translate_types::TranslationMode::SV39)
         {
             return 512;
         }
@@ -25,7 +25,7 @@ namespace pegasus
         }
     }
 
-    template <typename XLEN, MMUMode Mode> class PageTable
+    template <typename XLEN, translate_types::TranslationMode Mode> class PageTable
     {
       public:
         using PageTableType = std::map<uint32_t, PageTableEntry<XLEN, Mode>>;
@@ -112,7 +112,7 @@ namespace pegasus
         bool isValidIndex_(uint32_t idx) const { return idx < max_entries_; }
     };
 
-    template <typename XLEN, MMUMode Mode>
+    template <typename XLEN, translate_types::TranslationMode Mode>
     std::ostream & operator<<(std::ostream & os, const PageTable<XLEN, Mode> & pt)
     {
         for (const auto & [idx, entry] : pt.getPageTable())
