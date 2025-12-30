@@ -58,9 +58,9 @@ namespace pegasus
         }
 
         template <typename XLEN>
-        void changeMMUMode(const translate_types::TranslationStage type,
-                           const translate_types::TranslationMode mode,
-                           const translate_types::TranslationMode ls_mode);
+        void updateTranslationMode(const translate_types::TranslationStage type,
+                                   const translate_types::TranslationMode mode,
+                                   const translate_types::TranslationMode ls_mode);
 
       private:
         // Translation Modes for each stage (S-Stage, HS-Stage and G-Stage)

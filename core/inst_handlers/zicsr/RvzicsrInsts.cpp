@@ -76,24 +76,23 @@ namespace pegasus
 
         // Supervisor Protection and Translation
         csrUpdate_actions.emplace(
-            SATP, pegasus::Action::createAction<
-                      &RvzicsrInsts::atpUpdateHandler_<
-                          XLEN, translate_types::TranslationStage::SUPERVISOR, SATP>,
-                      RvzicsrInsts>(nullptr, "satpUpdate"));
+            SATP,
+            pegasus::Action::createAction<&RvzicsrInsts::atpUpdateHandler_<
+                                              XLEN, translate_types::TranslationStage::SUPERVISOR>,
+                                          RvzicsrInsts>(nullptr, "satpUpdate"));
 
         // Virtual Supervisor Protection and Translation
         csrUpdate_actions.emplace(
             VSATP, pegasus::Action::createAction<
                        &RvzicsrInsts::atpUpdateHandler_<
-                           XLEN, translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP>,
+                           XLEN, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>,
                        RvzicsrInsts>(nullptr, "vsatpUpdate"));
 
         // Guest Supervisor Protection and Translation
         csrUpdate_actions.emplace(
             HGATP,
             pegasus::Action::createAction<
-                &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationStage::GUEST,
-                                                 HGATP>,
+                &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationStage::GUEST>,
                 RvzicsrInsts>(nullptr, "gatpUpdate"));
 
         // Machine Trap Setup
@@ -423,11 +422,11 @@ namespace pegasus
         return mstatusUpdateHandler_<XLEN>(state, action_it);
     }
 
-    template <typename XLEN, translate_types::TranslationStage TYPE, uint32_t ATP_CSR>
+    template <typename XLEN, translate_types::TranslationStage TYPE>
     Action::ItrType RvzicsrInsts::atpUpdateHandler_(pegasus::PegasusState* state,
                                                     Action::ItrType action_it)
     {
-        state->changeMMUMode<XLEN>(TYPE, ATP_CSR);
+        state->updateTranslationMode<XLEN>(TYPE);
         return ++action_it;
     }
 
@@ -500,7 +499,8 @@ namespace pegasus
         {
             state->getCore()->changeMavisContext();
         }
-        state->changeMMUMode<XLEN>();
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
+        // FIXME: Hypervisor?
 
         return ++action_it;
     }

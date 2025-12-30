@@ -215,7 +215,9 @@ namespace pegasus
 
         state->setNextPc(trap_handler_address);
         state->setPrivMode(priv_mode, virt_mode);
-        state->changeMMUMode<XLEN>();
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);
 
         fault_cause_.clearValid();
         interrupt_cause_.clearValid();

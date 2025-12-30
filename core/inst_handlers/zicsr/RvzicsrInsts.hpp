@@ -44,7 +44,7 @@ namespace pegasus
         Action::ItrType sstatusUpdateHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it);
 
-        template <typename XLEN, translate_types::TranslationStage TYPE, uint32_t ATP_CSR>
+        template <typename XLEN, translate_types::TranslationStage TYPE>
         Action::ItrType atpUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         template <typename XLEN>

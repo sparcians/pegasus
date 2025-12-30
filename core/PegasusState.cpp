@@ -155,20 +155,20 @@ namespace pegasus
         // Set up translation
         if (xlen_ == 64)
         {
-            changeMMUMode<RV64>(translate_types::TranslationStage::SUPERVISOR, SATP);
+            updateTranslationMode<RV64>(translate_types::TranslationStage::SUPERVISOR);
             if (pegasus_core_->hasHypervisor())
             {
-                changeMMUMode<RV64>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP);
-                changeMMUMode<RV64>(translate_types::TranslationStage::GUEST, HGATP);
+                updateTranslationMode<RV64>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                updateTranslationMode<RV64>(translate_types::TranslationStage::GUEST);
             }
         }
         else
         {
-            changeMMUMode<RV32>(translate_types::TranslationStage::SUPERVISOR, SATP);
+            updateTranslationMode<RV32>(translate_types::TranslationStage::SUPERVISOR);
             if (pegasus_core_->hasHypervisor())
             {
-                changeMMUMode<RV32>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP);
-                changeMMUMode<RV32>(translate_types::TranslationStage::GUEST, HGATP);
+                updateTranslationMode<RV32>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                updateTranslationMode<RV32>(translate_types::TranslationStage::GUEST);
             }
         }
 
@@ -228,9 +228,15 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    void PegasusState::changeMMUMode(const translate_types::TranslationStage translation_type,
-                                     const uint32_t ATP_CSR)
+    void
+    PegasusState::updateTranslationMode(const translate_types::TranslationStage translation_type)
     {
+        static const std::map<translate_types::TranslationStage, uint32_t>
+            translation_stage_to_atp_csr_map = {
+                {translate_types::TranslationStage::SUPERVISOR, SATP},
+                {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP},
+                {translate_types::TranslationStage::GUEST, HGATP}};
+
         static const std::vector<translate_types::TranslationMode> mmu_mode_map = {
             translate_types::TranslationMode::BAREMETAL, // mode == 0
             translate_types::TranslationMode::SV32,      // mode == 1 xlen==32
@@ -243,6 +249,7 @@ namespace pegasus
             translate_types::TranslationMode::SV57     // mode == 10, xlen==64
         };
 
+        const uint32_t ATP_CSR = translation_stage_to_atp_csr_map.at(translation_type);
         const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
         const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
@@ -256,7 +263,7 @@ namespace pegasus
 
         DLOG_CODE_BLOCK(DLOG_OUTPUT(translation_type << " MMU Mode: " << mode);
                         DLOG_OUTPUT(translation_type << " MMU LS Mode: " << ls_mode););
-        translate_unit_->changeMMUMode<XLEN>(translation_type, mode, ls_mode);
+        translate_unit_->updateTranslationMode<XLEN>(translation_type, mode, ls_mode);
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)

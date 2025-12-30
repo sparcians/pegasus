@@ -145,9 +145,9 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    void Translate::changeMMUMode(const translate_types::TranslationStage type,
-                                  const translate_types::TranslationMode mode,
-                                  const translate_types::TranslationMode ls_mode)
+    void Translate::updateTranslationMode(const translate_types::TranslationStage type,
+                                          const translate_types::TranslationMode mode,
+                                          const translate_types::TranslationMode ls_mode)
     {
         sparta_assert(mode != translate_types::TranslationMode::INVALID);
         sparta_assert(ls_mode != translate_types::TranslationMode::INVALID);
@@ -181,12 +181,12 @@ namespace pegasus
         }
     }
 
-    template void Translate::changeMMUMode<RV32>(const translate_types::TranslationStage,
-                                                 const translate_types::TranslationMode,
-                                                 const translate_types::TranslationMode);
-    template void Translate::changeMMUMode<RV64>(const translate_types::TranslationStage,
-                                                 const translate_types::TranslationMode,
-                                                 const translate_types::TranslationMode);
+    template void Translate::updateTranslationMode<RV32>(const translate_types::TranslationStage,
+                                                         const translate_types::TranslationMode,
+                                                         const translate_types::TranslationMode);
+    template void Translate::updateTranslationMode<RV64>(const translate_types::TranslationStage,
+                                                         const translate_types::TranslationMode,
+                                                         const translate_types::TranslationMode);
 
     template <typename XLEN, translate_types::TranslationMode MODE,
               translate_types::AccessType TYPE>

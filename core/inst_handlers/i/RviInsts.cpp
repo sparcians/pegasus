@@ -1018,7 +1018,10 @@ namespace pegasus
         state->setPrivMode(prev_priv_mode, prev_virt_mode);
 
         // Update the MMU Mode from SATP and MSTATUS
-        state->changeMMUMode<XLEN>();
+        // FIXME: Figure out which ones actually need to be updated
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);
 
         // Clear the current exception (check for back to back)
         state->clearCurrentException();
