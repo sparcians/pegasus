@@ -351,7 +351,8 @@ class PegasusTranslateTester
         pegasus::Action::ItrType dummy_action_it;
         dummy_action_it =
             translate_unit_
-                ->translate_<pegasus::RV64, pegasus::translate_types::TranslationMode::BAREMETAL,
+                ->translate_<pegasus::RV64, pegasus::translate_types::TranslationStage::SUPERVISOR,
+                             pegasus::translate_types::TranslationMode::BAREMETAL,
                              pegasus::translate_types::AccessType::EXECUTE>(state_,
                                                                             dummy_action_it);
 
@@ -427,7 +428,8 @@ class PegasusTranslateTester
         pegasus::Action::ItrType dummy_action_it;
         dummy_action_it =
             translate_unit_
-                ->translate_<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32,
+                ->translate_<pegasus::RV32, pegasus::translate_types::TranslationStage::SUPERVISOR,
+                             pegasus::translate_types::TranslationMode::SV32,
                              pegasus::translate_types::AccessType::EXECUTE>(state_,
                                                                             dummy_action_it);
 

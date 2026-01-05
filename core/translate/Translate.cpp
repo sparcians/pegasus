@@ -34,6 +34,26 @@ namespace pegasus
         store_translate_action_group_.addAction(
             getTranslateAction_<RV64, translate_types::TranslationStage::SUPERVISOR>(
                 translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
+
+	hyp_execute_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
+        hyp_load_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::LOAD, translate_types::TranslationMode::BAREMETAL));
+        hyp_store_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
+
+	hyp_execute_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
+        hyp_load_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::LOAD, translate_types::TranslationMode::BAREMETAL));
+        hyp_store_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
     }
 
     template <typename XLEN, translate_types::TranslationStage STAGE>
