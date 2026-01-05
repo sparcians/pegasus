@@ -98,6 +98,7 @@ namespace pegasus
         ActionGroup hyp_store_translate_action_group_{"Hypervisor Store Translate"};
 
         // Translate Actions
+        // Indexed by mode (baremetal, sv32, sv39, etc.) and access type (execute, load, or store)
         using TranslateActionsType = std::array<std::array<Action, translate_types::N_TRANS_MODES>,
                                                 translate_types::N_ACCESS_TYPES>;
         TranslateActionsType rv64_s_stage_translation_actions_;
@@ -147,8 +148,8 @@ namespace pegasus
                   translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
         Action::ItrType translate_(pegasus::PegasusState* state, Action::ItrType action_it);
 
-        template <typename XLEN, translate_types::TranslationMode MODE,
-                  translate_types::AccessType TYPE>
+        template <typename XLEN, translate_types::TranslationStage STAGE,
+                  translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
         Action::ItrType setResult_(PegasusTranslationState* translation_state,
                                    Action::ItrType action_it, const Addr paddr,
                                    const uint32_t level = 1);
@@ -168,7 +169,7 @@ namespace pegasus
         template <translate_types::TranslationStage STAGE>
         void registerTranslateActions_(TranslateActionsType & rv32_xlation_actions,
                                        TranslateActionsType & rv64_xlation_actions,
-                                       ActionTags inst_tag, ActionTags data_tag)
+                                       ActionTagType inst_tag, ActionTagType data_tag)
         {
             // Baremetal (translation disabled)
             registerAction_<RV32, STAGE, translate_types::TranslationMode::BAREMETAL,

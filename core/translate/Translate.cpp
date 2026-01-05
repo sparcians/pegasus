@@ -46,8 +46,8 @@ namespace pegasus
         if constexpr (STAGE == translate_types::TranslationStage::SUPERVISOR)
         {
             execute_translate_action_group_.replaceAction(
-                ActionTags::INST_S_STAGE_TRANSLATE_TAG getTranslateAction_<XLEN, STAGE>(
-                    translate_types::AccessType::EXECUTE, mode));
+                ActionTags::INST_S_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
             load_translate_action_group_.replaceAction(
                 ActionTags::DATA_S_STAGE_TRANSLATE_TAG,
                 getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
@@ -58,8 +58,8 @@ namespace pegasus
         else if constexpr (STAGE == translate_types::TranslationStage::VIRTUAL_SUPERVISOR)
         {
             hyp_execute_translate_action_group_.replaceAction(
-                ActionTags::INST_VS_STAGE_TRANSLATE_TAG getTranslateAction_<XLEN, STAGE>(
-                    translate_types::AccessType::EXECUTE, mode));
+                ActionTags::INST_VS_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
             hyp_load_translate_action_group_.replaceAction(
                 ActionTags::DATA_VS_STAGE_TRANSLATE_TAG,
                 getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
@@ -70,8 +70,8 @@ namespace pegasus
         else if (STAGE == translate_types::TranslationStage::GUEST)
         {
             hyp_execute_translate_action_group_.replaceAction(
-                ActionTags::INST_G_STAGE_TRANSLATE_TAG getTranslateAction_<XLEN, STAGE>(
-                    translate_types::AccessType::EXECUTE, mode));
+                ActionTags::INST_G_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
             hyp_load_translate_action_group_.replaceAction(
                 ActionTags::DATA_G_STAGE_TRANSLATE_TAG,
                 getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
@@ -143,7 +143,7 @@ namespace pegasus
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
+            return setResult_<XLEN, STAGE, MODE, TYPE>(translation_state, action_it, vaddr);
         }
 
         // Smallest page size is 4K for both RV32 and RV64
@@ -265,7 +265,8 @@ namespace pegasus
                 paddr |= page_offset_mask & vaddr;
 
                 // Set result and determine whether to keep going or performa translation again
-                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, paddr, level);
+                return setResult_<XLEN, STAGE, MODE, TYPE>(translation_state, action_it, paddr,
+                                                           level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -296,8 +297,8 @@ namespace pegasus
         }
     }
 
-    template <typename XLEN, translate_types::TranslationMode MODE,
-              translate_types::AccessType TYPE>
+    template <typename XLEN, translate_types::TranslationStage STAGE,
+              translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::setResult_(PegasusTranslationState* translation_state,
                                           Action::ItrType action_it, const Addr paddr,
                                           const uint32_t level)
