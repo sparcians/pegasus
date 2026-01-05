@@ -27,22 +27,22 @@ namespace pegasus
             return ((TYPE == AccessType::READ) || is_writable) && (priv_mode >= lowest_priv_level);
         }
 
-        uint32_t getVirtualCsrNum_(const uint32_t csr_num)
+        uint32_t getVirtualCsrNum_(const PegasusState* state, const uint32_t csr_num) const
         {
             // For Hypervisor spec:
             // When V=1, the VS CSRs substitute for the corresponding supervisor CSRs, taking over
             // all functions of the usual supervisor CSRs except as specified otherwise.
             // Instructions that normally read or modify a supervisor CSR shall instead access the
             // corresponding VS CSR.
-            const auto virtual_csr_num_it = virtual_csrs_.find(csr_num);
-            if (virtual_csr_num_it != virtual_csrs_.end())
+            if (state->getVirtualMode())
             {
-                return virtual_csr_num_it->second;
+                const auto virtual_csr_num_it = virtual_csrs_.find(csr_num);
+                if (virtual_csr_num_it != virtual_csrs_.end())
+                {
+                    return virtual_csr_num_it->second;
+                }
             }
-            else
-            {
-                return csr_num;
-            }
+            return csr_num;
         }
 
         template <typename XLEN> bool checkStateEn0_(PegasusState* state, const char* field_name)

@@ -66,22 +66,9 @@ namespace pegasus
 
         inline static int32_t getAtpCsr(const translate_types::TranslationStage stage)
         {
-            static const std::map<translate_types::TranslationStage, uint32_t>
-                translation_stage_to_atp_csr_map = {
-                    {translate_types::TranslationStage::SUPERVISOR, SATP},
-                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSATP},
-                    {translate_types::TranslationStage::GUEST, HGATP}};
-            return translation_stage_to_atp_csr_map.at(stage);
-        }
-
-        inline static int32_t getStatusCsr(const translate_types::TranslationStage stage)
-        {
-            static const std::map<translate_types::TranslationStage, uint32_t>
-                translation_stage_to_status_csr_map = {
-                    {translate_types::TranslationStage::SUPERVISOR, MSTATUS},
-                    {translate_types::TranslationStage::VIRTUAL_SUPERVISOR, VSSTATUS},
-                    {translate_types::TranslationStage::GUEST, HSTATUS}};
-            return translation_stage_to_status_csr_map.at(stage);
+            static const std::array<uint32_t, translate_types::N_TRANS_STAGES> atp_csrs = {
+                SATP, VSATP, HGATP};
+            return atp_csrs.at(static_cast<uint32_t>(stage));
         }
 
       private:

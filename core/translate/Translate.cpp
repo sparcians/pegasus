@@ -153,7 +153,7 @@ namespace pegasus
 
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
-        ILOG("Translating " << HEX(vaddr, width));
+        DLOG("Starting " << STAGE << " translation for VA: " << HEX(vaddr, width));
 
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
@@ -168,8 +168,7 @@ namespace pegasus
 
         // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
-        // FIXME
-        const uint32_t ATP_CSR = SATP;
+        const uint32_t ATP_CSR = getAtpCsr(STAGE);
         uint64_t ppn = READ_CSR_FIELD<XLEN>(state, ATP_CSR, "ppn") << PAGESHIFT;
         while (level > 0)
         {

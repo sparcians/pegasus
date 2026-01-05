@@ -117,8 +117,7 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         auto rd = inst->getRd();
-        const uint32_t csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const uint32_t csr = getVirtualCsrNum_(state, inst->getCsr());
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -151,8 +150,7 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -182,8 +180,7 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -215,8 +212,7 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
         {
@@ -247,8 +243,7 @@ namespace pegasus
 
         const auto rs1 = inst->getRs1();
         const auto rd = inst->getRd();
-        const int csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
@@ -281,8 +276,7 @@ namespace pegasus
 
         const XLEN imm = inst->getImmediate();
         const auto rd = inst->getRd();
-        const int csr =
-            state->getVirtualMode() ? getVirtualCsrNum_(inst->getCsr()) : inst->getCsr();
+        const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
         if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
         {
@@ -499,8 +493,11 @@ namespace pegasus
         {
             state->getCore()->changeMavisContext();
         }
+
+        // Updating the MPRV field can affect all translation stages
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
-        // FIXME: Hypervisor?
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);
 
         return ++action_it;
     }
