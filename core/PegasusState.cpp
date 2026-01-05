@@ -228,8 +228,7 @@ namespace pegasus
     }
 
     template <typename XLEN>
-    void
-    PegasusState::updateTranslationMode(const translate_types::TranslationStage translation_type)
+    void PegasusState::updateTranslationMode(const translate_types::TranslationStage stage)
     {
         static const std::vector<translate_types::TranslationMode> mmu_mode_map = {
             translate_types::TranslationMode::BAREMETAL, // mode == 0
@@ -243,7 +242,7 @@ namespace pegasus
             translate_types::TranslationMode::SV57  // mode == 10, xlen==64
         };
 
-        const uint32_t ATP_CSR = Translate::getAtpCsr(translation_type);
+        const uint32_t ATP_CSR = Translate::getAtpCsr(stage);
         const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
         const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
@@ -267,9 +266,27 @@ namespace pegasus
             }
         }
 
-        DLOG_CODE_BLOCK(DLOG_OUTPUT(translation_type << " MMU Mode: " << mode);
-                        DLOG_OUTPUT(translation_type << " MMU LS Mode: " << ls_mode););
-        translate_unit_->updateTranslationMode<XLEN>(translation_type, mode, ls_mode);
+        DLOG_CODE_BLOCK(DLOG_OUTPUT(stage << " MMU Mode: " << mode);
+                        DLOG_OUTPUT(stage << " MMU LS Mode: " << ls_mode););
+        switch (stage)
+        {
+            case translate_types::TranslationStage::SUPERVISOR:
+                translate_unit_
+                    ->updateTranslationMode<XLEN, translate_types::TranslationStage::SUPERVISOR>(
+                        mode, ls_mode);
+                break;
+            case translate_types::TranslationStage::VIRTUAL_SUPERVISOR:
+                translate_unit_->updateTranslationMode<
+                    XLEN, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(mode, ls_mode);
+                break;
+            case translate_types::TranslationStage::GUEST:
+                translate_unit_
+                    ->updateTranslationMode<XLEN, translate_types::TranslationStage::GUEST>(
+                        mode, ls_mode);
+                break;
+            case translate_types::TranslationStage::INVALID:
+                sparta_assert(false, "Translation stage cannot be INVALID!");
+        }
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)
