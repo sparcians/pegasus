@@ -247,24 +247,15 @@ namespace pegasus
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
         const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
 
+        // FIXME: Hypervisor does not support MPRV yet
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
-        translate_types::TranslationMode ls_mode = mode;
-        if (mprv_val == 1)
-        {
-            if (pegasus_core_->hasHypervisor() == false)
-            {
-                const PrivMode prev_priv_mode =
-                    (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
-                ldst_priv_mode_ = (mprv_val == 1) ? prev_priv_mode : priv_mode_;
-                ls_mode = (ldst_priv_mode_ == PrivMode::MACHINE)
-                              ? translate_types::TranslationMode::BAREMETAL
-                              : mode;
-            }
-            else
-            {
-                sparta_assert(false, "Hypervisor does not support MPRV yet!");
-            }
-        }
+        const PrivMode prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(this, MSTATUS, "mpp");
+        ldst_priv_modes_.at(static_cast<uint32_t>(stage)) =
+            (mprv_val == 1) ? prev_priv_mode : priv_mode_;
+        const translate_types::TranslationMode ls_mode =
+            (ldst_priv_modes_.at(static_cast<uint32_t>(stage)) == PrivMode::MACHINE)
+                ? translate_types::TranslationMode::BAREMETAL
+                : mode;
 
         DLOG_CODE_BLOCK(DLOG_OUTPUT(stage << " MMU Mode: " << mode);
                         DLOG_OUTPUT(stage << " MMU LS Mode: " << ls_mode););

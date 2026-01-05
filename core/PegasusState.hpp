@@ -110,7 +110,11 @@ namespace pegasus
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
-        PrivMode getLdstPrivMode() const { return ldst_priv_mode_; }
+        PrivMode getLdstPrivMode(translate_types::TranslationStage stage =
+                                     translate_types::TranslationStage::SUPERVISOR) const
+        {
+            return ldst_priv_modes_.at(static_cast<uint32_t>(stage));
+        }
 
         bool getVirtualMode() const { return virtual_mode_; }
 
@@ -343,7 +347,7 @@ namespace pegasus
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
         //! Current privilege mode for LS translation
-        PrivMode ldst_priv_mode_ = PrivMode::MACHINE;
+        std::array<PrivMode, translate_types::N_TRANS_STAGES> ldst_priv_modes_{PrivMode::MACHINE};
 
         //! Current virtual translation mode
         bool virtual_mode_ = false;

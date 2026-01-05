@@ -35,7 +35,7 @@ namespace pegasus
             getTranslateAction_<RV64, translate_types::TranslationStage::SUPERVISOR>(
                 translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
 
-	hyp_execute_translate_action_group_.addAction(
+        hyp_execute_translate_action_group_.addAction(
             getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
                 translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
         hyp_load_translate_action_group_.addAction(
@@ -45,7 +45,7 @@ namespace pegasus
             getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
                 translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
 
-	hyp_execute_translate_action_group_.addAction(
+        hyp_execute_translate_action_group_.addAction(
             getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
                 translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
         hyp_load_translate_action_group_.addAction(
@@ -158,7 +158,7 @@ namespace pegasus
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
         const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
                                    ? state->getPrivMode()
-                                   : state->getLdstPrivMode();
+                                   : state->getLdstPrivMode(STAGE);
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
