@@ -2,7 +2,7 @@
 
 #
 # This script is copied the install location for standalone execution
-# of Pegasus.  It can be run in the build directory of Pegasus
+# of Pegasus.
 #
 
 #
