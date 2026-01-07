@@ -210,7 +210,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
 | **Zfhmin** Half-precision floating-point. | :x: |
 | **Zkt** Data-independent execution latency. | :x: |
-| **V** Vector extension. | :x: |
+| **V** Vector extension. | :white_check_mark: |
 | **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
 | **Zvbb** Vector basic bit-manipulation instructions. | :x: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
@@ -233,7 +233,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
 | **Zvbc** Vector carryless multiplication. | :x: |
 | **Zama16b** Misaligned loads, stores, and AMOs to main memory regions that do not cross a naturally aligned 16-byte boundary are atomic. | :x: |
-| **Zfh** Scalar half-precision floating-point. | :x: |
+| **Zfh** Scalar half-precision floating-point. | :white_check_mark: |
 | **Zbc** Scalar carryless multiply. | :x: |
 | **Zicfilp** Landing Pads. | :x: |
 | **Zicfiss** Shadow Stack. | :x: |
