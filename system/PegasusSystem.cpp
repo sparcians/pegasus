@@ -327,7 +327,6 @@ namespace pegasus
 
     void PegasusSystem::registerMemoryCallbacks(Observer* observer)
     {
-        observer->registerReadWriteMemCallbacks(getSystemMemory());
         using BMOIfNode = sparta::memory::BlockingMemoryIFNode;
         for (const auto & n : tree_nodes_)
         {

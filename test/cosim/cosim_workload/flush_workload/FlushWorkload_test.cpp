@@ -195,9 +195,13 @@ bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, Ha
     const auto & mem_writes_truth = inst_logger->getMemoryWrites();
     for (const auto & mem_write : mem_writes_truth)
     {
-        auto mem_value_truth = state_truth->readMemory<uint64_t>(mem_write.addr);
-        auto mem_value_test = state_test->readMemory<uint64_t>(mem_write.addr);
-        EXPECT_EQUAL(mem_value_truth, mem_value_test);
+        auto mem_paddr_truth = state_truth->readMemory<uint64_t>(mem_write.paddr);
+        auto mem_paddr_test = state_test->readMemory<uint64_t>(mem_write.paddr);
+        EXPECT_EQUAL(mem_paddr_truth, mem_paddr_test);
+
+        auto mem_vaddr_truth = state_truth->readMemory<uint64_t>(mem_write.vaddr);
+        auto mem_vaddr_test = state_test->readMemory<uint64_t>(mem_write.vaddr);
+        EXPECT_EQUAL(mem_vaddr_truth, mem_vaddr_test);
     }
 
     // Compare enabled extensions
