@@ -541,7 +541,10 @@ namespace pegasus::cosim
             change_mmu_mode |= evt.curr_ldst_priv_ != evt.next_ldst_priv_;
             if (!change_mmu_mode && evt.inst_csr_ != std::numeric_limits<uint32_t>::max())
             {
-                change_mmu_mode |= evt.inst_csr_ == MSTATUS || evt.inst_csr_ == SATP;
+                change_mmu_mode |= evt.inst_csr_ == MSTATUS || evt.inst_csr_ == SSTATUS
+                                   || evt.inst_csr_ == VSSTATUS || evt.inst_csr_ == HSTATUS;
+                change_mmu_mode |=
+                    evt.inst_csr_ == SATP || evt.inst_csr_ == VSATP || evt.inst_csr_ == HGATP;
             }
 
             return true;
@@ -621,11 +624,21 @@ namespace pegasus::cosim
             {
                 if (observer->getRegWidth() == 8)
                 {
-                    state->changeMMUMode<uint32_t>();
+                    state->updateTranslationMode<uint32_t>(
+                        translate_types::TranslationStage::SUPERVISOR);
+                    state->updateTranslationMode<uint32_t>(
+                        translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                    state->updateTranslationMode<uint32_t>(
+                        translate_types::TranslationStage::GUEST);
                 }
                 else
                 {
-                    state->changeMMUMode<uint64_t>();
+                    state->updateTranslationMode<uint64_t>(
+                        translate_types::TranslationStage::SUPERVISOR);
+                    state->updateTranslationMode<uint64_t>(
+                        translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+                    state->updateTranslationMode<uint64_t>(
+                        translate_types::TranslationStage::GUEST);
                 }
             }
         };

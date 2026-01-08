@@ -8,6 +8,10 @@ import math
 
 from RV64_CSR import CSR64_DEFS
 from RV32_CSR import CSR32_DEFS
+from RV64H_CSR import CSR64H_DEFS
+from RV32H_CSR import CSR32H_DEFS
+CSR64_DEFS.update(CSR64H_DEFS)
+CSR32_DEFS.update(CSR32H_DEFS)
 
 class RegisterGroup(IntEnum):
     INT = 0

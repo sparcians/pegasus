@@ -200,7 +200,8 @@ class PegasusTranslateTester
                 | (r << pegasus::translate_types::Sv32::PteFields::read.lsb) | (v);
 
             std::cout << "Creating sv32 PTE: " << HEX8(pte_val) << std::endl;
-            pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte(pte_val);
+            pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+                sv32_pte(pte_val);
 
             EXPECT_TRUE(sv32_pte.isValid());
             EXPECT_TRUE(sv32_pte.canRead());
@@ -242,7 +243,8 @@ class PegasusTranslateTester
                 | (r << pegasus::translate_types::Sv39::PteFields::read.lsb) | (v);
 
             std::cout << "Creating sv64 PTE: " << HEX16(pte_val) << std::endl;
-            pegasus::PageTableEntry<pegasus::RV64, pegasus::MMUMode::SV39> sv39_pte(pte_val);
+            pegasus::PageTableEntry<pegasus::RV64, pegasus::translate_types::TranslationMode::SV39>
+                sv39_pte(pte_val);
 
             EXPECT_TRUE(sv39_pte.isValid());
             EXPECT_TRUE(sv39_pte.canRead());
@@ -264,16 +266,21 @@ class PegasusTranslateTester
         std::cout << "\nTesting PageTable class" << std::endl;
         constexpr uint32_t PTE_SIZE = sizeof(pegasus::RV32);
         const uint32_t base_addr = 0x1000;
-        pegasus::PageTable<pegasus::RV32, pegasus::MMUMode::SV32> pt(base_addr);
+        pegasus::PageTable<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32> pt(
+            base_addr);
 
         // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte1(0x7B1EEFF);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            sv32_pte1(0x7B1EEFF);
         // Valid, Readable, Writable, and Executable (0000 1010 1011 1100 0001 0010 1111 0000 1111)
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte2(0xABC12FF);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            sv32_pte2(0xABC12FF);
         // Valid, Read-only (0111 1111 0000 0011 1101 0100 1100 0011)
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte3(0x7F03D4C3);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            sv32_pte3(0x7F03D4C3);
         // Valid,
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> sv32_pte4(0xABC12FF);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            sv32_pte4(0xABC12FF);
 
         std::cout << "Creating page table with 4 PTEs:" << std::endl;
         std::cout << "    PTE1: " << sv32_pte1 << std::endl;
@@ -342,9 +349,12 @@ class PegasusTranslateTester
 
         // Execute translation
         pegasus::Action::ItrType dummy_action_it;
-        dummy_action_it = translate_unit_->translate_<pegasus::RV64, pegasus::MMUMode::BAREMETAL,
-                                                      pegasus::Translate::AccessType::INSTRUCTION>(
-            state_, dummy_action_it);
+        dummy_action_it =
+            translate_unit_
+                ->translate_<pegasus::RV64, pegasus::translate_types::TranslationStage::SUPERVISOR,
+                             pegasus::translate_types::TranslationMode::BAREMETAL,
+                             pegasus::translate_types::AccessType::EXECUTE>(state_,
+                                                                            dummy_action_it);
 
         // Get translation result
         const pegasus::PegasusTranslationState::TranslationResult & result =
@@ -373,8 +383,10 @@ class PegasusTranslateTester
         // First-level page table
         uint32_t satp_ppn = 0x10;
         const uint32_t lvl1_base_paddr = satp_ppn << 12; // 0x10000
-        pegasus::PageTable<pegasus::RV32, pegasus::MMUMode::SV32> lvl1_pagetable(lvl1_base_paddr);
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> lvl1_pte{0x8031};
+        pegasus::PageTable<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            lvl1_pagetable(lvl1_base_paddr);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            lvl1_pte{0x8031};
         const uint32_t lvl1_index = (vaddr & 0xFFC00000) >> 22;
         const uint32_t lvl1_paddr = lvl1_pagetable.getAddrOfIndex(lvl1_index);
         std::cout << "Loading Level 1 PTE at address 0x" << std::hex << lvl1_paddr
@@ -384,8 +396,10 @@ class PegasusTranslateTester
 
         // Second-level page table
         const uint32_t lvl2_base_paddr = 0x20000;
-        pegasus::PageTable<pegasus::RV32, pegasus::MMUMode::SV32> lvl2_pagetable(lvl2_base_paddr);
-        pegasus::PageTableEntry<pegasus::RV32, pegasus::MMUMode::SV32> lvl2_pte{0x8000002f};
+        pegasus::PageTable<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            lvl2_pagetable(lvl2_base_paddr);
+        pegasus::PageTableEntry<pegasus::RV32, pegasus::translate_types::TranslationMode::SV32>
+            lvl2_pte{0x8000002f};
         lvl2_pte.setAccessed();
         const uint32_t lvl2_index = (vaddr & 0x3FF000) >> 12;
         const uint32_t lvl2_paddr = lvl2_pagetable.getAddrOfIndex(lvl2_index);
@@ -412,9 +426,12 @@ class PegasusTranslateTester
 
         // Translate!
         pegasus::Action::ItrType dummy_action_it;
-        dummy_action_it = translate_unit_->translate_<pegasus::RV32, pegasus::MMUMode::SV32,
-                                                      pegasus::Translate::AccessType::INSTRUCTION>(
-            state_, dummy_action_it);
+        dummy_action_it =
+            translate_unit_
+                ->translate_<pegasus::RV32, pegasus::translate_types::TranslationStage::SUPERVISOR,
+                             pegasus::translate_types::TranslationMode::SV32,
+                             pegasus::translate_types::AccessType::EXECUTE>(state_,
+                                                                            dummy_action_it);
 
         // Get translation result
         const pegasus::PegasusTranslationState::TranslationResult & result =

@@ -148,7 +148,6 @@ namespace pegasus
                 sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
         }
 
-        sparta_assert(false == hypervisor_enabled_, "Hypervisor is not supported yet");
         sparta_assert(xlen_ == extension_manager_.getXLEN());
 
         extension_manager_.setISA(isa_string_);

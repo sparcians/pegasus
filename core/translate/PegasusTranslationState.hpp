@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "include/PegasusTypes.hpp"
+#include "include/PegasusTranslateTypes.hpp"
 
 namespace pegasus
 {
