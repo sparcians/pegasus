@@ -32,7 +32,8 @@ add_library(pegasuslibs INTERFACE)
 target_compile_options (pegasuslibs INTERFACE -Werror
   -Wall -Wextra -Winline -Winit-self -Wunused-function
   -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
-  -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
+  -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers
+  -fPIC -pipe)
 
 # Use lld for linking clang and gcc builds
 if (NOT APPLE)

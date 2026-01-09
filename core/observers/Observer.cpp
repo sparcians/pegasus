@@ -194,12 +194,12 @@ namespace pegasus
             final_val |= static_cast<uint64_t>(buf[i]) << (i * 8);
         }
 
-        MemWrite mem_write;
-        mem_write.addr = data.addr;
-        mem_write.size = data.size;
-        mem_write.value = final_val;
-        mem_write.prior_value = prior_val;
-        mem_writes_.push_back(mem_write);
+        // Get vaddr and source
+        const PegasusState::MemorySupplement* supplement =
+            reinterpret_cast<const PegasusState::MemorySupplement*>(data.in_supplement);
+
+        mem_writes_.emplace_back(data.addr, supplement->vaddr, data.size, final_val, prior_val,
+                                 supplement->source);
     }
 
     void Observer::postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
@@ -210,11 +210,11 @@ namespace pegasus
             val |= static_cast<uint64_t>(data.data[i]) << (i * 8);
         }
 
-        MemRead mem_read;
-        mem_read.addr = data.addr;
-        mem_read.size = data.size;
-        mem_read.value = val;
-        mem_reads_.push_back(mem_read);
+        // Get vaddr and source
+        const PegasusState::MemorySupplement* supplement =
+            reinterpret_cast<const PegasusState::MemorySupplement*>(data.in_supplement);
+
+        mem_reads_.emplace_back(data.addr, supplement->vaddr, data.size, val, supplement->source);
     }
 
     std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)
@@ -277,10 +277,9 @@ namespace pegasus
         return oss.str();
     }
 
-    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value)
+    std::ostream & operator<<(std::ostream & os, const Observer::ObservedValue & value)
     {
-        os << "0x"
-           << sparta::utils::bin_to_hexstr(reg_value.getByteVector().data(), reg_value.size(), "");
+        os << "0x" << sparta::utils::bin_to_hexstr(value.getByteVector().data(), value.size(), "");
         return os;
     }
 

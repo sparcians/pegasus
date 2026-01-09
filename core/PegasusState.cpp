@@ -343,7 +343,9 @@ namespace pegasus
         return reg;
     }
 
-    template <typename MemoryType> MemoryType PegasusState::readMemory(const Addr paddr)
+    template <typename MemoryType>
+    MemoryType PegasusState::readMemory(const PegasusTranslationState::TranslationResult & result,
+                                        const MemAccessSource source)
     {
         auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
@@ -351,17 +353,28 @@ namespace pegasus
         static_assert(std::is_standard_layout<MemoryType>());
         const size_t size = sizeof(MemoryType);
         std::vector<uint8_t> buffer(sizeof(MemoryType) / sizeof(uint8_t), 0);
-        const bool success = memory->tryRead(paddr, size, buffer.data());
-        sparta_assert(success, "Failed to read from memory at address 0x" << std::hex << paddr);
+        const MemorySupplement supplement{result.getVAddr(), source};
+        const bool success = memory->tryRead(result.getPAddr(), size, buffer.data(), &supplement);
+        sparta_assert(success,
+                      "Failed to read from memory at address 0x" << std::hex << result.getPAddr());
 
         const MemoryType value = convertFromByteVector<MemoryType>(buffer);
-        ILOG("Memory read (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
-                             << (uint64_t)value);
+        ILOG("Memory read (" << source << ", " << std::dec << size << "B) to 0x" << std::hex
+                             << result.getPAddr() << ": 0x" << (uint64_t)value);
         return value;
     }
 
     template <typename MemoryType>
-    void PegasusState::writeMemory(const Addr paddr, const MemoryType value)
+    MemoryType PegasusState::readMemory(const Addr paddr, const MemAccessSource source)
+    {
+        const Addr vaddr = 0;
+        const PegasusTranslationState::TranslationResult result{vaddr, paddr, sizeof(MemoryType)};
+        return readMemory<MemoryType>(result, source);
+    }
+
+    template <typename MemoryType>
+    void PegasusState::writeMemory(const PegasusTranslationState::TranslationResult & result,
+                                   const MemoryType value, const MemAccessSource source)
     {
         auto* memory = pegasus_core_->getSystem()->getSystemMemory();
 
@@ -369,25 +382,47 @@ namespace pegasus
         static_assert(std::is_standard_layout<MemoryType>());
         const size_t size = sizeof(MemoryType);
         const std::vector<uint8_t> buffer = convertToByteVector<MemoryType>(value);
-        const bool success = memory->tryWrite(paddr, size, buffer.data());
-        sparta_assert(success, "Failed to write to memory at address 0x" << std::hex << paddr);
+        const MemorySupplement supplement{result.getVAddr(), source};
+        const bool success = memory->tryWrite(result.getPAddr(), size, buffer.data(), &supplement);
+        sparta_assert(success,
+                      "Failed to write to memory at address 0x" << std::hex << result.getPAddr());
 
-        ILOG("Memory write (" << std::dec << size << "B) to 0x" << std::hex << paddr << ": 0x"
-                              << (uint64_t)value);
+        ILOG("Memory write (" << source << ", " << std::dec << size << "B) to 0x" << std::hex
+                              << result.getPAddr() << ": 0x" << (uint64_t)value);
     }
 
-    template int8_t PegasusState::readMemory<int8_t>(const Addr);
-    template uint8_t PegasusState::readMemory<uint8_t>(const Addr);
-    template int16_t PegasusState::readMemory<int16_t>(const Addr);
-    template uint16_t PegasusState::readMemory<uint16_t>(const Addr);
-    template int32_t PegasusState::readMemory<int32_t>(const Addr);
-    template uint32_t PegasusState::readMemory<uint32_t>(const Addr);
-    template int64_t PegasusState::readMemory<int64_t>(const Addr);
-    template uint64_t PegasusState::readMemory<uint64_t>(const Addr);
-    template void PegasusState::writeMemory<uint8_t>(const Addr, const uint8_t);
-    template void PegasusState::writeMemory<uint16_t>(const Addr, const uint16_t);
-    template void PegasusState::writeMemory<uint32_t>(const Addr, const uint32_t);
-    template void PegasusState::writeMemory<uint64_t>(const Addr, const uint64_t);
+    template <typename MemoryType>
+    void PegasusState::writeMemory(const Addr paddr, const MemoryType value,
+                                   const MemAccessSource source)
+    {
+        const Addr vaddr = 0;
+        const PegasusTranslationState::TranslationResult result{vaddr, paddr, sizeof(MemoryType)};
+        writeMemory<MemoryType>(result, value, source);
+    }
+
+#define INSTANTIATE_READ_MEMORY_METHODS(SIZE)                                                      \
+    template SIZE PegasusState::readMemory<SIZE>(                                                  \
+        const PegasusTranslationState::TranslationResult &, const MemAccessSource);                \
+    template SIZE PegasusState::readMemory<SIZE>(const Addr, const MemAccessSource);
+
+    INSTANTIATE_READ_MEMORY_METHODS(int8_t)
+    INSTANTIATE_READ_MEMORY_METHODS(uint8_t)
+    INSTANTIATE_READ_MEMORY_METHODS(int16_t)
+    INSTANTIATE_READ_MEMORY_METHODS(uint16_t)
+    INSTANTIATE_READ_MEMORY_METHODS(int32_t)
+    INSTANTIATE_READ_MEMORY_METHODS(uint32_t)
+    INSTANTIATE_READ_MEMORY_METHODS(int64_t)
+    INSTANTIATE_READ_MEMORY_METHODS(uint64_t)
+
+#define INSTANTIATE_WRITE_MEMORY_METHODS(SIZE)                                                     \
+    template void PegasusState::writeMemory<SIZE>(                                                 \
+        const PegasusTranslationState::TranslationResult &, const SIZE, const MemAccessSource);    \
+    template void PegasusState::writeMemory<SIZE>(const Addr, const SIZE, const MemAccessSource);
+
+    INSTANTIATE_WRITE_MEMORY_METHODS(uint8_t)
+    INSTANTIATE_WRITE_MEMORY_METHODS(uint16_t)
+    INSTANTIATE_WRITE_MEMORY_METHODS(uint32_t)
+    INSTANTIATE_WRITE_MEMORY_METHODS(uint64_t)
 
     void PegasusState::addObserver(std::unique_ptr<Observer> observer)
     {

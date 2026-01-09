@@ -10,19 +10,19 @@
 #
 # $INSTALL_DIR/
 #     bin/
-#        run_pegasus.sh <-- Users run this
-#     share/
-#        pegasus/
-#           cfg/
-#              arch/       <-- Pegasus arch files
-#              mavis_json/ <-- Mavis json files used by Pegasus
-#           exe/
-#              pegasus     <-- The binary
+#         pegasus           <-- The binary
+#         run_pegasus.sh    <-- Users run this
+#     include/
+#         pegasus/
+#             mavis/
+#                 arch/     <-- Pegasus uarch files
+#                 mavis/
+#                     json/ <-- Mavis json files used by Pegasus
 
 PEGASUS_BIN_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
-PEGASUS_CFGS="$PEGASUS_BIN_PATH/../share/pegasus/cfg"
-"$PEGASUS_BIN_PATH/../share/pegasus/exe/pegasus" \
-    --arch-search-dir               $PEGASUS_CFGS/arch \
-    -p top.*.params.isa_file_path   $PEGASUS_CFGS/mavis_json \
-    -p top.*.params.uarch_file_path $PEGASUS_CFGS/arch \
+PEGASUS_INC="$PEGASUS_BIN_PATH/../include/pegasus"
+"$PEGASUS_BIN_PATH/pegasus" \
+    --arch-search-dir               $PEGASUS_INC/arch \
+    -p top.*.params.isa_file_path   $PEGASUS_INC/mavis/json \
+    -p top.*.params.uarch_file_path $PEGASUS_INC/arch \
     "${@}"

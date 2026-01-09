@@ -669,7 +669,7 @@ namespace pegasus
                         {
                             const auto & mem_read = mem_reads_[idx];
                             std::stringstream ss;
-                            ss << "0x" << std::hex << mem_read.addr << " 0x" << mem_read.value;
+                            ss << "0x" << std::hex << mem_read.paddr << " " << mem_read.mem_value;
                             json += ss.str();
                             if (idx < mem_reads_.size() - 1)
                             {
@@ -694,8 +694,8 @@ namespace pegasus
                         {
                             const auto & mem_write = mem_writes_[idx];
                             std::stringstream ss;
-                            ss << "0x" << std::hex << mem_write.addr << " 0x"
-                               << mem_write.prior_value << " 0x" << mem_write.value;
+                            ss << "0x" << std::hex << mem_write.paddr << " "
+                               << mem_write.mem_prev_value << " " << mem_write.mem_value;
                             json += ss.str();
                             if (idx < mem_writes_.size() - 1)
                             {

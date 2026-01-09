@@ -58,6 +58,20 @@ namespace pegasus::cosim
                                                      csr_write.reg_prev_value.getByteVector());
         }
 
+        for (auto & mem_read : mem_reads_)
+        {
+            last_event.memory_reads_.emplace_back(mem_read.source, mem_read.paddr, mem_read.vaddr,
+                                                  mem_read.size,
+                                                  mem_read.mem_value.getByteVector());
+        }
+
+        for (auto & mem_write : mem_writes_)
+        {
+            last_event.memory_writes_.emplace_back(
+                mem_write.source, mem_write.paddr, mem_write.vaddr, mem_write.size,
+                mem_write.mem_value.getByteVector(), mem_write.mem_prev_value.getByteVector());
+        }
+
         last_event.done_ = true;
         last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
         last_event.sim_state_current_uid_ = state->getSimState()->current_uid;
@@ -150,6 +164,14 @@ namespace pegasus::cosim
         if (last_event.getRegisterWrites().empty() == false)
         {
             COSIMLOG("    " << last_event.getRegisterWrites());
+        }
+        if (last_event.getMemoryReads().empty() == false)
+        {
+            COSIMLOG("    " << last_event.getMemoryReads());
+        }
+        if (last_event.getMemoryWrites().empty() == false)
+        {
+            COSIMLOG("    " << last_event.getMemoryWrites());
         }
 
         evt_pipeline_->onStep(std::move(last_event));

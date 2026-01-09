@@ -197,7 +197,8 @@ namespace pegasus
             const auto indexed_level = level - 1;
             const auto & vpn_field = translate_types::getVpnField<MODE>(indexed_level);
             const uint64_t pte_paddr = ppn + vpn_field.calcPTEOffset(vaddr) * sizeof(XLEN);
-            PageTableEntry<XLEN, MODE> pte = state->readMemory<XLEN>(pte_paddr);
+            PageTableEntry<XLEN, MODE> pte =
+                state->readMemory<XLEN>(pte_paddr, MemAccessSource::HARDWARE);
             DLOG_CODE_BLOCK(DLOG_OUTPUT("Level " << level << " Page Walk");
                             DLOG_OUTPUT("    Addr: " << HEX(pte_paddr, width));
                             DLOG_OUTPUT("     PTE: " << pte););
@@ -284,7 +285,8 @@ namespace pegasus
                             DLOG("Setting PTE dirty: " << pte);
                         }
                         pte.setAccessed();
-                        state->writeMemory<XLEN>(pte_paddr, pte.getPte());
+                        state->writeMemory<XLEN>(pte_paddr, pte.getPte(),
+                                                 MemAccessSource::HARDWARE);
                     }
                     else
                     {

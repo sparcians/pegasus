@@ -661,18 +661,19 @@ namespace pegasus
     Action::ItrType RviInsts::loadHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
-        inst->getTranslationState()->popResult();
+        const auto & result = inst->getTranslationState()->getResult();
         if constexpr (SIGN_EXTEND)
         {
-            const XLEN rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(paddr));
+            const XLEN rd_val = signExtend<SIZE, XLEN>(
+                state->readMemory<SIZE>(result, MemAccessSource::INSTRUCTION));
             WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
         else
         {
-            const XLEN rd_val = state->readMemory<SIZE>(paddr);
+            const XLEN rd_val = state->readMemory<SIZE>(result, MemAccessSource::INSTRUCTION);
             WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
+        inst->getTranslationState()->popResult();
         return ++action_it;
     }
 
@@ -681,9 +682,9 @@ namespace pegasus
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        const auto & result = inst->getTranslationState()->getResult();
+        state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION);
         inst->getTranslationState()->popResult();
-        state->writeMemory<SIZE>(paddr, rs2_val);
         return ++action_it;
     }
 
