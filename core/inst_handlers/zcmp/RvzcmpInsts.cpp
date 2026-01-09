@@ -50,7 +50,7 @@ namespace pegasus
         {
             const auto dst = dst_reg_list[idx];
             addr -= sizeof(XLEN);
-            const XLEN dst_reg_val = state->readMemory<XLEN>(addr);
+            const XLEN dst_reg_val = state->readMemory<XLEN>(addr, MemAccessSource::INSTRUCTION);
             WRITE_INT_REG<XLEN>(state, dst.field_value, dst_reg_val);
         }
 
@@ -74,7 +74,7 @@ namespace pegasus
             const auto src = src_reg_list[idx];
             addr -= sizeof(XLEN);
             const XLEN src_reg_val = READ_INT_REG<XLEN>(state, src.field_value);
-            state->writeMemory<XLEN>(addr, src_reg_val);
+            state->writeMemory<XLEN>(addr, src_reg_val, MemAccessSource::INSTRUCTION);
         }
 
         // Update stack pointer
