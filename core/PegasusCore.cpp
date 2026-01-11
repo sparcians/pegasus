@@ -251,6 +251,13 @@ namespace pegasus
                 threads_running_.set(hart_idx);
             }
         }
+
+        // FIXME: This is a workaround to get the "--opcode" command line option
+        // to work, assume hart0 is always running at boot
+        PegasusState* state = threads_.at(0);
+        state->setPc(system_->getStartingPc());
+        state->getSimState()->sim_stopped = false;
+        threads_running_.set(0);
     }
 
     void PegasusCore::changeMavisContext()
