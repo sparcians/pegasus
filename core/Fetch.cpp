@@ -30,7 +30,7 @@ namespace pegasus
         Translate* translate_unit = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         Execute* execute_unit = hart_tn->getChild("execute")->getResourceAs<Execute*>();
 
-        ActionGroup* inst_translate_action_group = translate_unit->getInstTranslateActionGroup();
+        ActionGroup* inst_translate_action_group = translate_unit->getExecuteTranslateActionGroup();
         ActionGroup* execute_action_group = execute_unit->getActionGroup();
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);

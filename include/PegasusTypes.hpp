@@ -73,8 +73,6 @@ namespace pegasus
         SUPERVISOR = 1,
         HYPERVISOR = 2,
         MACHINE = 3,
-        VIRTUAL_USER = 4,
-        VIRTUAL_SUPERVISOR = 5,
         INVALID
     };
 
@@ -103,27 +101,6 @@ namespace pegasus
         }
 
         bool operator==(const RegId & other) const = default;
-    };
-
-    enum class MMUMode : uint32_t
-    {
-        BAREMETAL,
-        SV32,
-        SV39,
-        SV48,
-        SV57,
-        INVALID
-    };
-
-    enum class PageSize : uint32_t
-    {
-        SIZE_4K,
-        SIZE_2M,   // Megapage (Sv39, Sv48, Sv57)
-        SIZE_4M,   // Megapage (Sv32 only)
-        SIZE_1G,   // Gigapage (Sv39, Sv48, Sv57)
-        SIZE_512G, // Terapage (Sv48, Sv57)
-        SIZE_256T, // Petapage (Sv57)
-        INVALID
     };
 
     enum class RoundingMode
@@ -175,68 +152,7 @@ namespace pegasus
             case PrivMode::MACHINE:
                 os << "MACHINE";
                 break;
-            case PrivMode::VIRTUAL_USER:
-                os << "VIRTUAL_USER";
-                break;
-            case PrivMode::VIRTUAL_SUPERVISOR:
-                os << "VIRTUAL_SUPERVISOR";
-                break;
             case PrivMode::INVALID:
-                os << "INVALID";
-                break;
-        }
-        return os;
-    }
-
-    inline std::ostream & operator<<(std::ostream & os, const MMUMode mode)
-    {
-        switch (mode)
-        {
-            case MMUMode::BAREMETAL:
-                os << "BAREMETAL";
-                break;
-            case MMUMode::SV32:
-                os << "SV32";
-                break;
-            case MMUMode::SV39:
-                os << "SV39";
-                break;
-            case MMUMode::SV48:
-                os << "SV48";
-                break;
-            case MMUMode::SV57:
-                os << "SV57";
-                break;
-            case MMUMode::INVALID:
-                os << "INVALID";
-                break;
-        }
-        return os;
-    }
-
-    inline std::ostream & operator<<(std::ostream & os, const PageSize page_size)
-    {
-        switch (page_size)
-        {
-            case PageSize::SIZE_4K:
-                os << "4K";
-                break;
-            case PageSize::SIZE_2M:
-                os << "2M";
-                break;
-            case PageSize::SIZE_4M:
-                os << "4M";
-                break;
-            case PageSize::SIZE_1G:
-                os << "1G";
-                break;
-            case PageSize::SIZE_512G:
-                os << "512G";
-                break;
-            case PageSize::SIZE_256T:
-                os << "256T";
-                break;
-            case PageSize::INVALID:
                 os << "INVALID";
                 break;
         }

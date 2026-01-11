@@ -28,9 +28,29 @@ namespace pegasus
         // handler and the execute handler
         if (inst->isMemoryInst())
         {
-            const ActionGroup* translate_action_group =
-                inst->isStoreType() ? state->getTranslateUnit()->getStoreTranslateActionGroup()
-                                    : state->getTranslateUnit()->getLoadTranslateActionGroup();
+            const ActionGroup* translate_action_group = nullptr;
+            Translate* translate_unit = state->getTranslateUnit();
+            const translate_types::AccessType access_type = inst->getMemoryAccessType();
+            const bool hypervisor_inst = inst->isHypervisorInst();
+            switch (access_type)
+            {
+                case translate_types::AccessType::EXECUTE:
+                    translate_action_group =
+                        translate_unit->getExecuteTranslateActionGroup(hypervisor_inst);
+                    break;
+                case translate_types::AccessType::LOAD:
+                    translate_action_group =
+                        translate_unit->getLoadTranslateActionGroup(hypervisor_inst);
+                    break;
+                case translate_types::AccessType::STORE:
+                    translate_action_group =
+                        translate_unit->getStoreTranslateActionGroup(hypervisor_inst);
+                    break;
+                case translate_types::AccessType::INVALID:
+                    sparta_assert(false, "Invalid translate access type for inst: " << inst);
+                    break;
+            }
+
             for (auto it = translate_action_group->getActions().rbegin();
                  it != translate_action_group->getActions().rend(); ++it)
             {

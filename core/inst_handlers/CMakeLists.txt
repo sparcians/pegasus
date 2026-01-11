@@ -20,6 +20,7 @@ target_link_libraries(pegasusinsts
     rvzfa
     rvzfh
     rvv
+    rvh
 )
 
 add_subdirectory(i)
@@ -28,7 +29,6 @@ add_subdirectory(a)
 add_subdirectory(f)
 add_subdirectory(d)
 add_subdirectory(b)
-add_subdirectory(v)
 add_subdirectory(zicsr)
 add_subdirectory(zifencei)
 add_subdirectory(zihintpause)
@@ -39,6 +39,8 @@ add_subdirectory(zabha)
 add_subdirectory(zilsd)
 add_subdirectory(zfa)
 add_subdirectory(zfh)
+add_subdirectory(v)
+add_subdirectory(h)
 
 add_dependencies(pegasusinsts AutogenArchFiles)
 
