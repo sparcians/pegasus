@@ -285,7 +285,7 @@ namespace pegasus
                     translate_types::getPageOffsetMask<MODE>(indexed_level);
                 paddr |= page_offset_mask & vaddr;
 
-                // Set result and determine whether to keep going or performa translation again
+                // Set result and determine whether to keep going or perform translation again
                 return setResult_<XLEN, STAGE, MODE, TYPE>(translation_state, action_it, paddr,
                                                            level);
             }

@@ -115,7 +115,7 @@ namespace pegasus
         const uint64_t trap_val = is_interrupt
                                       ? determineTrapValue_(interrupt_cause_.getValue(), state)
                                       : determineTrapValue_(fault_cause_.getValue(), state);
-        // Values for updating VSSTATUS/SSTATUSS
+        // Values for updating VSSTATUS/SSTATUS
         const auto mstatus_sie = READ_CSR_FIELD<XLEN>(state, MSTATUS, "sie");
         const auto xpp_val = static_cast<XLEN>(state->getPrivMode());
         const uint64_t sie_val = 0;
