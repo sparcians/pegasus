@@ -899,14 +899,23 @@ namespace pegasus
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
 
-            // Get the previous virtual mode from the MPV field of MSTATUS
-            if constexpr (std::is_same_v<XLEN, RV64>)
+            if (state->getCore()->hasHypervisor())
             {
-                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
-            }
-            else
-            {
-                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv");
+                // Get the previous virtual mode from the MPV field of MSTATUS
+                if constexpr (std::is_same_v<XLEN, RV64>)
+                {
+                    prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpv");
+                }
+                else
+                {
+                    prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, MSTATUSH, "mpv");
+                }
+
+                // If MPP=3, the virtualization mode remains 0
+                if (prev_priv_mode == PrivMode::MACHINE)
+                {
+                    prev_virt_mode = false;
+                }
             }
 
             // If the mret instruction changes the privilege mode to a mode less privileged
@@ -939,39 +948,68 @@ namespace pegasus
         }
         else
         {
-            // When TSR=1, attempts to execute SRET in S-mode will
-            // raise an illegal instruction exception
+            const bool virt_mode = state->getVirtualMode();
+
+            const uint32_t vtsr_val = READ_CSR_FIELD<XLEN>(state, HSTATUS, "vtsr");
+            if (virt_mode && (vtsr_val || (state->getPrivMode() == PrivMode::USER)))
+            {
+                THROW_ILLEGAL_VIRTUAL_INST;
+            }
+
+            // When TSR=1, attempts to execute SRET in S-mode (or HS-mode)
+            // will raise an illegal instruction exception
             const uint32_t tsr_val = READ_CSR_FIELD<XLEN>(state, MSTATUS, "tsr");
-            if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tsr_val)
+            if (tsr_val && !virt_mode && (state->getPrivMode() == PrivMode::SUPERVISOR))
             {
                 THROW_ILLEGAL_INST;
             }
 
-            // Update the PC with SEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC)
-                             & state->getCore()->getPcAlignmentMask());
-
-            // Get the previous privilege mode from the SPP field of MSTATUS
-            prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "spp");
-
-            if (state->getCore()->hasHypervisor())
+            // Returning to a virtual mode, either VU-mode or VS-mode
+            if (virt_mode)
             {
-                prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
-                WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
+                // Update the PC with VSEPC value
+                state->setNextPc(READ_CSR_REG<XLEN>(state, VSEPC)
+                                 & state->getCore()->getPcAlignmentMask());
+
+                // Get the previous privilege mode from the VSPP field of MSTATUS
+                prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, VSSTATUS, "spp");
+
+                // Set SIE = MSTATUS[SPIE] and reset SPIE
+                WRITE_CSR_FIELD<XLEN>(state, VSSTATUS, "sie",
+                                      READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
+                WRITE_CSR_FIELD<XLEN>(state, VSSTATUS, "spie", (XLEN)1);
+
+                // Reset SPP
+                WRITE_CSR_FIELD<XLEN>(state, VSSTATUS, "spp", (XLEN)PrivMode::USER);
             }
+            else
+            {
+                // Update the PC with SEPC value
+                state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC)
+                                 & state->getCore()->getPcAlignmentMask());
 
-            // Reset the MPRV bit
-            // TODO: Will need to update the load/store translation mode when translation is
-            // supported
-            WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
+                // Get the previous privilege mode from the SPP field of MSTATUS
+                prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
 
-            // Set SIE = MSTATUS[SPIE] and reset SPIE
-            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
-                                  READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
-            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);
+                // Set SIE = MSTATUS[SPIE] and reset SPIE
+                WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie",
+                                      READ_CSR_FIELD<XLEN>(state, MSTATUS, "spie"));
+                WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spie", (XLEN)1);
 
-            // Reset MPP
-            WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spp", (XLEN)PrivMode::USER);
+                // Reset SPP
+                WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spp", (XLEN)PrivMode::USER);
+
+                if (state->getCore()->hasHypervisor())
+                {
+                    prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
+                    WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
+                }
+
+                // Reset the MPRV bit
+                // TODO: Will need to update the load/store translation mode when translation is
+                // supported
+                WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mprv", (XLEN)0);
+            }
         }
 
         // TODO: Update MSTATUSH
@@ -980,7 +1018,10 @@ namespace pegasus
         state->setPrivMode(prev_priv_mode, prev_virt_mode);
 
         // Update the MMU Mode from SATP and MSTATUS
-        state->changeMMUMode<XLEN>();
+        // FIXME: Figure out which ones actually need to be updated
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
+        state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);
 
         // Clear the current exception (check for back to back)
         state->clearCurrentException();

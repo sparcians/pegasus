@@ -6,6 +6,49 @@
 
 namespace pegasus::translate_types
 {
+    enum class TranslationStage
+    {
+        SUPERVISOR,
+        VIRTUAL_SUPERVISOR,
+        GUEST,
+        INVALID
+    };
+
+    static constexpr uint32_t N_TRANS_STAGES = static_cast<uint32_t>(TranslationStage::INVALID);
+
+    enum class TranslationMode : uint32_t
+    {
+        BAREMETAL,
+        SV32,
+        SV39,
+        SV48,
+        SV57,
+        INVALID
+    };
+
+    static constexpr uint32_t N_TRANS_MODES = static_cast<uint32_t>(TranslationMode::INVALID);
+
+    enum class AccessType
+    {
+        EXECUTE,
+        LOAD,
+        STORE,
+        INVALID
+    };
+
+    static constexpr uint32_t N_ACCESS_TYPES = static_cast<uint32_t>(AccessType::INVALID);
+
+    enum class PageSize : uint32_t
+    {
+        SIZE_4K,
+        SIZE_2M,   // Megapage (Sv39, Sv48, Sv57)
+        SIZE_4M,   // Megapage (Sv32 only)
+        SIZE_1G,   // Gigapage (Sv39, Sv48, Sv57)
+        SIZE_512G, // Terapage (Sv48, Sv57)
+        SIZE_256T, // Petapage (Sv57)
+        INVALID
+    };
+
     struct FieldDef
     {
         const uint64_t bitmask;
@@ -196,25 +239,25 @@ namespace pegasus::translate_types
         };
     } // namespace Sv57
 
-    template <MMUMode MODE> inline uint32_t getNumPageWalkLevels()
+    template <TranslationMode MODE> inline uint32_t getNumPageWalkLevels()
     {
-        if constexpr (MODE == MMUMode::BAREMETAL)
+        if constexpr (MODE == TranslationMode::BAREMETAL)
         {
             return 0;
         }
-        else if constexpr (MODE == MMUMode::SV32)
+        else if constexpr (MODE == TranslationMode::SV32)
         {
             return translate_types::Sv32::num_pagewalk_levels;
         }
-        else if constexpr (MODE == MMUMode::SV39)
+        else if constexpr (MODE == TranslationMode::SV39)
         {
             return translate_types::Sv39::num_pagewalk_levels;
         }
-        else if constexpr (MODE == MMUMode::SV48)
+        else if constexpr (MODE == TranslationMode::SV48)
         {
             return translate_types::Sv48::num_pagewalk_levels;
         }
-        else if constexpr (MODE == MMUMode::SV57)
+        else if constexpr (MODE == TranslationMode::SV57)
         {
             return translate_types::Sv57::num_pagewalk_levels;
         }
@@ -224,7 +267,7 @@ namespace pegasus::translate_types
         }
     }
 
-    template <MMUMode MODE> inline PageSize getPageSize(const uint32_t level)
+    template <TranslationMode MODE> inline PageSize getPageSize(const uint32_t level)
     {
         static const std::map<uint32_t, PageSize> level_to_pagesize = {{1, PageSize::SIZE_4K},
                                                                        {2, PageSize::SIZE_2M},
@@ -232,11 +275,11 @@ namespace pegasus::translate_types
                                                                        {4, PageSize::SIZE_512G},
                                                                        {5, PageSize::SIZE_256T}};
 
-        if constexpr (MODE == MMUMode::BAREMETAL)
+        if constexpr (MODE == TranslationMode::BAREMETAL)
         {
             return PageSize::INVALID;
         }
-        else if constexpr (MODE == MMUMode::SV32)
+        else if constexpr (MODE == TranslationMode::SV32)
         {
             sparta_assert(level <= translate_types::Sv32::num_pagewalk_levels);
             return (level == 2) ? PageSize::SIZE_4M : PageSize::SIZE_4K;
@@ -247,23 +290,23 @@ namespace pegasus::translate_types
         }
     }
 
-    template <MMUMode MODE> inline auto getVpnField(const uint32_t level)
+    template <TranslationMode MODE> inline auto getVpnField(const uint32_t level)
     {
         auto get_vpn_field = [](const uint32_t level) -> const translate_types::FieldDef &
         {
-            if constexpr (MODE == MMUMode::SV32)
+            if constexpr (MODE == TranslationMode::SV32)
             {
                 return translate_types::Sv32::vpn_fields.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV39)
+            else if constexpr (MODE == TranslationMode::SV39)
             {
                 return translate_types::Sv39::vpn_fields.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV48)
+            else if constexpr (MODE == TranslationMode::SV48)
             {
                 return translate_types::Sv48::vpn_fields.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV57)
+            else if constexpr (MODE == TranslationMode::SV57)
             {
                 return translate_types::Sv57::vpn_fields.at(level);
             }
@@ -276,27 +319,27 @@ namespace pegasus::translate_types
         return get_vpn_field(level);
     }
 
-    template <MMUMode MODE> inline uint64_t getPageOffsetMask(const uint32_t level)
+    template <TranslationMode MODE> inline uint64_t getPageOffsetMask(const uint32_t level)
     {
         auto get_page_offset_mask = [](const uint32_t level) -> uint64_t
         {
-            if constexpr (MODE == MMUMode::BAREMETAL)
+            if constexpr (MODE == TranslationMode::BAREMETAL)
             {
                 return translate_types::Sv32::page_offset_masks.at(0);
             }
-            else if constexpr (MODE == MMUMode::SV32)
+            else if constexpr (MODE == TranslationMode::SV32)
             {
                 return translate_types::Sv32::page_offset_masks.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV39)
+            else if constexpr (MODE == TranslationMode::SV39)
             {
                 return translate_types::Sv39::page_offset_masks.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV48)
+            else if constexpr (MODE == TranslationMode::SV48)
             {
                 return translate_types::Sv48::page_offset_masks.at(level);
             }
-            else if constexpr (MODE == MMUMode::SV57)
+            else if constexpr (MODE == TranslationMode::SV57)
             {
                 return translate_types::Sv57::page_offset_masks.at(level);
             }
@@ -307,5 +350,80 @@ namespace pegasus::translate_types
         };
 
         return get_page_offset_mask(level);
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const TranslationStage type)
+    {
+        switch (type)
+        {
+            case TranslationStage::SUPERVISOR:
+                os << "SUPERVISOR";
+                break;
+            case TranslationStage::VIRTUAL_SUPERVISOR:
+                os << "VIRTUAL_SUPERVISOR";
+                break;
+            case TranslationStage::GUEST:
+                os << "GUEST";
+                break;
+            case TranslationStage::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const TranslationMode mode)
+    {
+        switch (mode)
+        {
+            case TranslationMode::BAREMETAL:
+                os << "BAREMETAL";
+                break;
+            case TranslationMode::SV32:
+                os << "SV32";
+                break;
+            case TranslationMode::SV39:
+                os << "SV39";
+                break;
+            case TranslationMode::SV48:
+                os << "SV48";
+                break;
+            case TranslationMode::SV57:
+                os << "SV57";
+                break;
+            case TranslationMode::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const PageSize page_size)
+    {
+        switch (page_size)
+        {
+            case PageSize::SIZE_4K:
+                os << "4K";
+                break;
+            case PageSize::SIZE_2M:
+                os << "2M";
+                break;
+            case PageSize::SIZE_4M:
+                os << "4M";
+                break;
+            case PageSize::SIZE_1G:
+                os << "1G";
+                break;
+            case PageSize::SIZE_512G:
+                os << "512G";
+                break;
+            case PageSize::SIZE_256T:
+                os << "256T";
+                break;
+            case PageSize::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
     }
 } // namespace pegasus::translate_types
