@@ -30,9 +30,9 @@ endif()
 add_library(pegasuslibs INTERFACE)
 
 target_compile_options (pegasuslibs INTERFACE -Werror
-    -Wall -Wextra -Winline -Winit-self -Wunused-function
-    -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
-    -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
+  -Wall -Wextra -Winline -Winit-self -Wunused-function
+  -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
+  -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers -pipe)
 
 # Use lld for linking clang and gcc builds
 if (NOT APPLE)
@@ -109,9 +109,10 @@ find_package (Boost REQUIRED COMPONENTS json)
 target_include_directories(pegasuslibs INTERFACE ${Boost_INCLUDE_DIRS})
 
 # Mavis
-target_include_directories(pegasuslibs SYSTEM INTERFACE mavis)
-target_include_directories(pegasuslibs SYSTEM INTERFACE mavis/elfio)
+set(MAVIS_CXX_STANDARD 23)
 add_subdirectory(mavis SYSTEM)
+get_target_property(MAVIS_INCLUDES mavis INCLUDE_DIRECTORIES)
+include_directories(${MAVIS_INCLUDES})
 
 # SoftFloat
 target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)

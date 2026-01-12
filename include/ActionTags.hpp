@@ -9,11 +9,15 @@ namespace pegasus
       public:
         // Core Actions
         static const ActionTagType FETCH_TAG;
-        static const ActionTagType INST_TRANSLATE_TAG;
+        static const ActionTagType INST_S_STAGE_TRANSLATE_TAG;
+        static const ActionTagType INST_VS_STAGE_TRANSLATE_TAG;
+        static const ActionTagType INST_G_STAGE_TRANSLATE_TAG;
         static const ActionTagType DECODE_TAG;
         static const ActionTagType EXECUTE_TAG;
         static const ActionTagType COMPUTE_ADDR_TAG;
-        static const ActionTagType DATA_TRANSLATE_TAG;
+        static const ActionTagType DATA_S_STAGE_TRANSLATE_TAG;
+        static const ActionTagType DATA_VS_STAGE_TRANSLATE_TAG;
+        static const ActionTagType DATA_G_STAGE_TRANSLATE_TAG;
         static const ActionTagType EXCEPTION_TAG;
 
         // Stop Simulation

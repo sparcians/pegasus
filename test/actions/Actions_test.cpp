@@ -150,7 +150,7 @@ int main()
     pegasus::Action translate_action =
         pegasus::Action::createAction<&TranslateUnit::translate_addr>(
             &translate_unit, translate_unit.getName().c_str());
-    translate_action.addTag(pegasus::ActionTags::INST_TRANSLATE_TAG);
+    translate_action.addTag(pegasus::ActionTags::INST_S_STAGE_TRANSLATE_TAG);
     translate->addAction(translate_action);
     // fetch -> translate -> decode
     fetch->setNextActionGroup(translate);

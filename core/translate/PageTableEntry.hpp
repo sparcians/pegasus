@@ -2,13 +2,13 @@
 
 #include <stdint.h>
 #include "include/PegasusTypes.hpp"
-#include "core/translate/TranslateTypes.hpp"
+#include "include/PegasusTranslateTypes.hpp"
 
 #include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
 {
-    template <typename XLEN, MMUMode Mode> class PageTableEntry
+    template <typename XLEN, translate_types::TranslationMode Mode> class PageTableEntry
     {
       public:
         PageTableEntry(XLEN pte) : pte_val_(pte) { decodePteFields_(); }
@@ -87,7 +87,7 @@ namespace pegasus
 
         void decodePteFields_()
         {
-            if constexpr (Mode == MMUMode::SV32)
+            if constexpr (Mode == translate_types::TranslationMode::SV32)
             {
                 ppn_fields_.resize(translate_types::Sv32::num_ppn_fields);
                 ppn_fields_[0] = (pte_val_ & translate_types::Sv32::PteFields::ppn0.bitmask)
@@ -101,7 +101,7 @@ namespace pegasus
                            | translate_types::Sv32::PteFields::ppn0.bitmask))
                        >> translate_types::Sv32::PteFields::ppn0.lsb;
             }
-            else if constexpr (Mode == MMUMode::SV39)
+            else if constexpr (Mode == translate_types::TranslationMode::SV39)
             {
                 ppn_fields_.resize(translate_types::Sv39::num_ppn_fields);
                 ppn_fields_[0] = (pte_val_ & translate_types::Sv39::PteFields::ppn0.bitmask)
@@ -118,7 +118,7 @@ namespace pegasus
                            | translate_types::Sv39::PteFields::ppn0.bitmask))
                        >> translate_types::Sv39::PteFields::ppn0.lsb;
             }
-            else if constexpr (Mode == MMUMode::SV48)
+            else if constexpr (Mode == translate_types::TranslationMode::SV48)
             {
                 ppn_fields_.resize(translate_types::Sv48::num_ppn_fields);
                 ppn_fields_[0] = (pte_val_ & translate_types::Sv48::PteFields::ppn0.bitmask)
@@ -138,7 +138,7 @@ namespace pegasus
                            | translate_types::Sv48::PteFields::ppn0.bitmask))
                        >> translate_types::Sv48::PteFields::ppn0.lsb;
             }
-            else if constexpr (Mode == MMUMode::SV57)
+            else if constexpr (Mode == translate_types::TranslationMode::SV57)
             {
                 ppn_fields_.resize(translate_types::Sv57::num_ppn_fields);
                 ppn_fields_[0] = (pte_val_ & translate_types::Sv57::PteFields::ppn0.bitmask)
@@ -168,7 +168,7 @@ namespace pegasus
         }
     };
 
-    template <typename XLEN, MMUMode Mode>
+    template <typename XLEN, translate_types::TranslationMode Mode>
     std::ostream & operator<<(std::ostream & os, const PageTableEntry<XLEN, Mode> & pte)
     {
         if constexpr (std::is_same_v<XLEN, RV64>)
