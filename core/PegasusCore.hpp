@@ -158,6 +158,8 @@ namespace pegasus
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
 
+        std::string getISAString() const { return isa_string_; }
+
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusCore* core) const;
 
       private:
