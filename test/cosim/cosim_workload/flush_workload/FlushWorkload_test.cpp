@@ -363,7 +363,9 @@ int main(int argc, char** argv)
         }
     }
 
-    PegasusCoSim cosim_test(ilimit, workload, db_test, snapshot_threshold);
+    const std::map<std::string, std::string> params = {
+        {"top.core*.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh"}};
+    PegasusCoSim cosim_test(ilimit, workload, params, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;

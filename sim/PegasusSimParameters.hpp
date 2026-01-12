@@ -30,6 +30,8 @@ namespace pegasus
         {
             sparta::ParameterSet* ps = getParameters();
 
+            num_cores_.reset(
+                new sparta::Parameter<uint32_t>("num_cores", 1, "Number of cores", ps));
             workloads_.reset(
                 new WorkloadsParam("workloads", {}, "Workload(s) to run with arguments", ps));
             inst_limit_.reset(new sparta::Parameter<uint64_t>(
@@ -71,6 +73,7 @@ namespace pegasus
         }
 
       private:
+        std::unique_ptr<sparta::Parameter<uint32_t>> num_cores_;
         std::unique_ptr<WorkloadsParam> workloads_;
         std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;
         std::unique_ptr<sparta::Parameter<bool>> syscall_emulation_;
