@@ -114,8 +114,6 @@ namespace pegasus
         DYN
     };
 
-    static constexpr uint32_t N_MMU_MODES = static_cast<uint32_t>(MMUMode::INVALID);
-
     inline std::ostream & operator<<(std::ostream & os, const MemAccessSource source)
     {
         switch (source)
