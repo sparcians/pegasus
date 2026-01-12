@@ -26,6 +26,11 @@ jobs:
       COMPILER: ${{matrix.COMPILER}}
 
     steps:
+      - name: Setup Git Identity
+        run: |
+          git config --global user.email "runner@github.com"
+          git config --global user.name "Github Runner"
+
       # Get Pegasus
       - name: Clone Pegasus
         uses: actions/checkout@v4

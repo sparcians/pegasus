@@ -6,8 +6,6 @@
 #include "core/PegasusInst.hpp"
 #include "core/PegasusState.hpp"
 
-#include "include/ActionTags.hpp"
-
 #include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
@@ -16,143 +14,122 @@ namespace pegasus
     Translate::Translate(sparta::TreeNode* translate_node, const TranslateParameters*) :
         sparta::Unit(translate_node)
     {
-        // Baremetal (translation disabled)
-        {
-            // RV32
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
-                "Inst Translate (RV32 Baremetal)", ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::LOAD>(
-                "Load Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv32_load_translation_actions_);
-            registerAction_<RV32, MMUMode::BAREMETAL, AccessType::STORE>(
-                "Store Translate (RV32 Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv32_store_translation_actions_);
-
-            // RV64
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::INSTRUCTION>(
-                "Inst Translate (Baremetal)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::LOAD>(
-                "Load Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::BAREMETAL, AccessType::STORE>(
-                "Store Translate (Baremetal)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_);
-        }
-
-        // Sv32
-        {
-            // RV32
-            registerAction_<RV32, MMUMode::SV32, AccessType::INSTRUCTION>(
-                "Inst Translate (RV32 Sv32)", ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, AccessType::LOAD>("Load Translate (RV32 Sv32)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv32_load_translation_actions_);
-            registerAction_<RV32, MMUMode::SV32, AccessType::STORE>(
-                "Store Translate (RV32 Sv32)", ActionTags::DATA_TRANSLATE_TAG,
-                rv32_store_translation_actions_);
-
-            // RV64
-            registerAction_<RV64, MMUMode::SV32, AccessType::INSTRUCTION>(
-                "Inst Translate (Sv32)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, AccessType::LOAD>("Load Translate (Sv32)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV32, AccessType::STORE>(
-                "Store Translate (Sv32)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_);
-        }
-        // Sv39
-        {
-            registerAction_<RV64, MMUMode::SV39, AccessType::INSTRUCTION>(
-                "Inst Translate (Sv39)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV39, AccessType::LOAD>("Load Translate (Sv39)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV39, AccessType::STORE>(
-                "Store Translate (Sv39)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_);
-        }
-        // Sv48
-        {
-            registerAction_<RV64, MMUMode::SV48, AccessType::INSTRUCTION>(
-                "Inst Translate (Sv48)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV48, AccessType::LOAD>("Load Translate (Sv48)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV48, AccessType::STORE>(
-                "Store Translate (Sv48)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_);
-        }
-        // Sv57
-        {
-            registerAction_<RV64, MMUMode::SV57, AccessType::INSTRUCTION>(
-                "Inst Translate (Sv57)", ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_);
-            registerAction_<RV64, MMUMode::SV57, AccessType::LOAD>("Load Translate (Sv57)",
-                                                                   ActionTags::DATA_TRANSLATE_TAG,
-                                                                   rv64_load_translation_actions_);
-            registerAction_<RV64, MMUMode::SV57, AccessType::STORE>(
-                "Store Translate (Sv57)", ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_);
-        }
+        registerTranslateActions_<translate_types::TranslationStage::SUPERVISOR>(
+            rv32_s_stage_translation_actions_, rv64_s_stage_translation_actions_,
+            ActionTags::INST_S_STAGE_TRANSLATE_TAG, ActionTags::DATA_S_STAGE_TRANSLATE_TAG);
+        registerTranslateActions_<translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+            rv32_vs_stage_translation_actions_, rv64_vs_stage_translation_actions_,
+            ActionTags::INST_VS_STAGE_TRANSLATE_TAG, ActionTags::DATA_VS_STAGE_TRANSLATE_TAG);
+        registerTranslateActions_<translate_types::TranslationStage::GUEST>(
+            rv32_g_stage_translation_actions_, rv64_g_stage_translation_actions_,
+            ActionTags::INST_G_STAGE_TRANSLATE_TAG, ActionTags::DATA_G_STAGE_TRANSLATE_TAG);
 
         // Assume we are booting in RV64 Machine mode with translation disabled
-        inst_translate_action_group_.addAction(
-            rv64_inst_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+        execute_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::SUPERVISOR>(
+                translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
         load_translate_action_group_.addAction(
-            rv64_load_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+            getTranslateAction_<RV64, translate_types::TranslationStage::SUPERVISOR>(
+                translate_types::AccessType::LOAD, translate_types::TranslationMode::BAREMETAL));
         store_translate_action_group_.addAction(
-            rv64_store_translation_actions_[static_cast<uint32_t>(MMUMode::BAREMETAL)]);
+            getTranslateAction_<RV64, translate_types::TranslationStage::SUPERVISOR>(
+                translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
+
+        hyp_execute_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
+        hyp_load_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::LOAD, translate_types::TranslationMode::BAREMETAL));
+        hyp_store_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+                translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
+
+        hyp_execute_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::EXECUTE, translate_types::TranslationMode::BAREMETAL));
+        hyp_load_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::LOAD, translate_types::TranslationMode::BAREMETAL));
+        hyp_store_translate_action_group_.addAction(
+            getTranslateAction_<RV64, translate_types::TranslationStage::GUEST>(
+                translate_types::AccessType::STORE, translate_types::TranslationMode::BAREMETAL));
     }
 
-    template <typename XLEN>
-    void Translate::changeMMUMode(const MMUMode mode, const MMUMode ls_mode)
+    template <typename XLEN, translate_types::TranslationStage STAGE>
+    void Translate::updateTranslationMode(const translate_types::TranslationMode mode,
+                                          const translate_types::TranslationMode ls_mode)
     {
-        sparta_assert(mode != MMUMode::INVALID);
-        sparta_assert(ls_mode != MMUMode::INVALID);
+        sparta_assert(mode != translate_types::TranslationMode::INVALID);
+        sparta_assert(ls_mode != translate_types::TranslationMode::INVALID);
 
-        if constexpr (std::is_same_v<XLEN, RV64>)
+        if constexpr (STAGE == translate_types::TranslationStage::SUPERVISOR)
         {
-            inst_translate_action_group_.replaceAction(
-                ActionTags::INST_TRANSLATE_TAG,
-                rv64_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
+            execute_translate_action_group_.replaceAction(
+                ActionTags::INST_S_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
             load_translate_action_group_.replaceAction(
-                ActionTags::DATA_TRANSLATE_TAG,
-                rv64_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
+                ActionTags::DATA_S_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
             store_translate_action_group_.replaceAction(
-                ActionTags::DATA_TRANSLATE_TAG,
-                rv64_store_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
+                ActionTags::DATA_S_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::STORE, ls_mode));
+        }
+        else if constexpr (STAGE == translate_types::TranslationStage::VIRTUAL_SUPERVISOR)
+        {
+            hyp_execute_translate_action_group_.replaceAction(
+                ActionTags::INST_VS_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
+            hyp_load_translate_action_group_.replaceAction(
+                ActionTags::DATA_VS_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
+            hyp_store_translate_action_group_.replaceAction(
+                ActionTags::DATA_VS_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::STORE, ls_mode));
+        }
+        else if (STAGE == translate_types::TranslationStage::GUEST)
+        {
+            hyp_execute_translate_action_group_.replaceAction(
+                ActionTags::INST_G_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::EXECUTE, mode));
+            hyp_load_translate_action_group_.replaceAction(
+                ActionTags::DATA_G_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::LOAD, ls_mode));
+            hyp_store_translate_action_group_.replaceAction(
+                ActionTags::DATA_G_STAGE_TRANSLATE_TAG,
+                getTranslateAction_<XLEN, STAGE>(translate_types::AccessType::STORE, ls_mode));
         }
         else
         {
-            inst_translate_action_group_.replaceAction(
-                ActionTags::INST_TRANSLATE_TAG,
-                rv32_inst_translation_actions_.at(static_cast<uint32_t>(mode)));
-            load_translate_action_group_.replaceAction(
-                ActionTags::DATA_TRANSLATE_TAG,
-                rv32_load_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
-            store_translate_action_group_.replaceAction(
-                ActionTags::DATA_TRANSLATE_TAG,
-                rv32_store_translation_actions_.at(static_cast<uint32_t>(ls_mode)));
+            sparta_assert(false, "Translation stage cannot be INVALID!");
         }
     }
 
-    template void Translate::changeMMUMode<RV32>(const MMUMode, const MMUMode);
-    template void Translate::changeMMUMode<RV64>(const MMUMode, const MMUMode);
+    template void
+    Translate::updateTranslationMode<RV32, translate_types::TranslationStage::SUPERVISOR>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
+    template void
+    Translate::updateTranslationMode<RV64, translate_types::TranslationStage::SUPERVISOR>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
+    template void
+    Translate::updateTranslationMode<RV32, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
+    template void
+    Translate::updateTranslationMode<RV64, translate_types::TranslationStage::VIRTUAL_SUPERVISOR>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
+    template void Translate::updateTranslationMode<RV32, translate_types::TranslationStage::GUEST>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
+    template void Translate::updateTranslationMode<RV64, translate_types::TranslationStage::GUEST>(
+        const translate_types::TranslationMode, const translate_types::TranslationMode);
 
-    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    template <typename XLEN, translate_types::TranslationStage STAGE,
+              translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::translate_(PegasusState* state, Action::ItrType action_it)
     {
         PegasusTranslationState* translation_state = nullptr;
-        if constexpr (TYPE == AccessType::INSTRUCTION)
+        if constexpr (TYPE == translate_types::AccessType::EXECUTE)
         {
-            // Translation reqest is from fetch
+            // Translation request is from fetch
             translation_state = state->getFetchTranslationState();
         }
         else
@@ -176,21 +153,23 @@ namespace pegasus
 
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
-        ILOG("Translating " << HEX(vaddr, width));
+        DLOG("Starting " << STAGE << " translation for VA: " << HEX(vaddr, width));
 
         uint32_t level = translate_types::getNumPageWalkLevels<MODE>();
-        const auto priv_mode =
-            (TYPE == AccessType::INSTRUCTION) ? state->getPrivMode() : state->getLdstPrivMode();
+        const auto priv_mode = (TYPE == translate_types::AccessType::EXECUTE)
+                                   ? state->getPrivMode()
+                                   : state->getLdstPrivMode(STAGE);
 
         // See if translation is disable -- no level walks
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
-            return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, vaddr);
+            return setResult_<XLEN, STAGE, MODE, TYPE>(translation_state, action_it, vaddr);
         }
 
         // Smallest page size is 4K for both RV32 and RV64
         constexpr uint64_t PAGESHIFT = 12; // 4096
-        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, SATP, "ppn") << PAGESHIFT;
+        const uint32_t ATP_CSR = getAtpCsr(STAGE);
+        uint64_t ppn = READ_CSR_FIELD<XLEN>(state, ATP_CSR, "ppn") << PAGESHIFT;
         while (level > 0)
         {
             // Read PTE from memory
@@ -214,13 +193,14 @@ namespace pegasus
             // If PTE is a leaf, perform address translation
             if (pte.isLeaf())
             {
-                const PageSize page_size = translate_types::getPageSize<MODE>(level);
+                const translate_types::PageSize page_size =
+                    translate_types::getPageSize<MODE>(level);
                 DLOG("    Size: " << page_size);
 
                 // TODO: Check page alignment
 
                 // If page is a super page, unused PPN fields should be zero
-                if (page_size != PageSize::SIZE_4K)
+                if (page_size != translate_types::PageSize::SIZE_4K)
                 {
                     bool throw_page_fault = false;
                     for (int32_t ppn_field_idx = indexed_level - 1; ppn_field_idx >= 0;
@@ -252,21 +232,21 @@ namespace pegasus
                 }
 
                 // Instruction (fetch) accesses must have execute permissions
-                if ((TYPE == AccessType::INSTRUCTION) && (false == pte.canExecute()))
+                if ((TYPE == translate_types::AccessType::EXECUTE) && (false == pte.canExecute()))
                 {
                     DLOG("Translation FAILED! PTE does not have execute access");
                     break;
                 }
 
                 // Load accesses must have read permissions
-                if ((TYPE == AccessType::LOAD) && (false == pte.canRead()))
+                if ((TYPE == translate_types::AccessType::LOAD) && (false == pte.canRead()))
                 {
                     DLOG("Translation FAILED! PTE does not have read access");
                     break;
                 }
 
                 // Store accesses must have write permissions
-                constexpr bool is_store = TYPE == AccessType::STORE;
+                constexpr bool is_store = TYPE == translate_types::AccessType::STORE;
                 if ((is_store) && (false == pte.canWrite()))
                 {
                     DLOG("Translation FAILED! PTE does not have write access");
@@ -304,7 +284,8 @@ namespace pegasus
                 paddr |= page_offset_mask & vaddr;
 
                 // Set result and determine whether to keep going or performa translation again
-                return setResult_<XLEN, MODE, TYPE>(translation_state, action_it, paddr, level);
+                return setResult_<XLEN, STAGE, MODE, TYPE>(translation_state, action_it, paddr,
+                                                           level);
             }
             // If PTE is NOT a leaf, keep walking the page table
             else
@@ -326,16 +307,17 @@ namespace pegasus
         // We throw at this point.
         switch (TYPE)
         {
-            case AccessType::INSTRUCTION:
+            case translate_types::AccessType::EXECUTE:
                 THROW_FETCH_PAGE_FAULT;
-            case AccessType::STORE:
+            case translate_types::AccessType::STORE:
                 THROW_STORE_AMO_PAGE_FAULT;
-            case AccessType::LOAD:
+            case translate_types::AccessType::LOAD:
                 THROW_LOAD_PAGE_FAULT;
         }
     }
 
-    template <typename XLEN, MMUMode MODE, Translate::AccessType TYPE>
+    template <typename XLEN, translate_types::TranslationStage STAGE,
+              translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
     Action::ItrType Translate::setResult_(PegasusTranslationState* translation_state,
                                           Action::ItrType action_it, const Addr paddr,
                                           const uint32_t level)
@@ -383,14 +365,33 @@ namespace pegasus
             // performed again.
             switch (TYPE)
             {
-                case AccessType::INSTRUCTION:
+                case translate_types::AccessType::EXECUTE:
                     sparta_assert(is_misaligned,
                                   "Should never receive multiple translation requests from Fetch!");
                     break;
-                case AccessType::STORE:
-                case AccessType::LOAD:
+                case translate_types::AccessType::STORE:
+                case translate_types::AccessType::LOAD:
                     // Execute the translate Action again
                     return action_it;
+            }
+        }
+
+        // FIXME: Document!!!
+        if constexpr (STAGE == translate_types::TranslationStage::VIRTUAL_SUPERVISOR)
+        {
+            // Make new translation request
+            std::vector<std::pair<Addr, size_t>> h_stage_requests;
+            while (translation_state->getNumResults() != 0)
+            {
+                const PegasusTranslationState::TranslationResult & result =
+                    translation_state->getResult();
+                h_stage_requests.emplace_back(result.getPAddr(), result.getSize());
+                translation_state->popResult();
+            }
+
+            for (const auto & [addr, size] : h_stage_requests)
+            {
+                translation_state->makeRequest(addr, size);
             }
         }
 
@@ -398,70 +399,80 @@ namespace pegasus
         return ++action_it;
     }
 
-    // Being pedantic
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
+    // Being pedantic with template instantiation
+#define INSTANTIATE_TRANSLATE_METHOD(XLEN, STAGE, MODE, TYPE)                                      \
+    template Action::ItrType Translate::translate_<XLEN, translate_types::TranslationStage::STAGE, \
+                                                   translate_types::TranslationMode::MODE,         \
+                                                   translate_types::AccessType::TYPE>(             \
         PegasusState*, Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(PegasusState*,
-                                                                                 Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::BAREMETAL, Translate::AccessType::STORE>(PegasusState*,
-                                                                                  Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(PegasusState*,
-                                                                                   Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV32, MMUMode::SV32, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
 
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::INSTRUCTION>(
-        PegasusState*, Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::LOAD>(PegasusState*,
-                                                                                 Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::BAREMETAL, Translate::AccessType::STORE>(PegasusState*,
-                                                                                  Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::INSTRUCTION>(PegasusState*,
-                                                                                   Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV32, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::INSTRUCTION>(PegasusState*,
-                                                                                   Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV39, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::INSTRUCTION>(PegasusState*,
-                                                                                   Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV48, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::INSTRUCTION>(PegasusState*,
-                                                                                   Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::LOAD>(PegasusState*,
-                                                                            Action::ItrType);
-    template Action::ItrType
-    Translate::translate_<RV64, MMUMode::SV57, Translate::AccessType::STORE>(PegasusState*,
-                                                                             Action::ItrType);
-
+    // RV32 S-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, SUPERVISOR, SV32, STORE)
+    // RV64 S-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV32, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV39, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV39, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV39, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV48, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV48, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV48, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV57, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV57, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, SUPERVISOR, SV57, STORE)
+    // RV32 VS-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, VIRTUAL_SUPERVISOR, SV32, STORE)
+    // RV64 VS-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV32, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV39, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV39, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV39, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV48, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV48, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV48, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV57, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV57, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, VIRTUAL_SUPERVISOR, SV57, STORE)
+    // RV32 G-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV32, GUEST, SV32, STORE)
+    // RV64 G-Stage
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, BAREMETAL, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, BAREMETAL, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, BAREMETAL, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV32, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV32, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV32, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV39, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV39, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV39, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV48, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV48, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV48, STORE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV57, EXECUTE)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV57, LOAD)
+    INSTANTIATE_TRANSLATE_METHOD(RV64, GUEST, SV57, STORE)
 } // namespace pegasus

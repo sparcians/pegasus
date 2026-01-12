@@ -114,7 +114,9 @@ namespace pegasus
             MAVIS_UID_CSRRC,
             MAVIS_UID_CSRRWI,
             MAVIS_UID_CSRRSI,
-            MAVIS_UID_CSRRCI
+            MAVIS_UID_CSRRCI,
+            MAVIS_UID_HLVX_HU,
+            MAVIS_UID_HLVX_WU
         };
 
         void changeMavisContext();
@@ -245,9 +247,10 @@ namespace pegasus
         std::unique_ptr<MavisType> mavis_;
 
         static inline mavis::InstUIDList mavis_uid_list_{
-            {"csrrw", MAVIS_UID_CSRRW},   {"csrrs", MAVIS_UID_CSRRS},
-            {"csrrc", MAVIS_UID_CSRRC},   {"csrrwi", MAVIS_UID_CSRRWI},
-            {"csrrsi", MAVIS_UID_CSRRSI}, {"csrrci", MAVIS_UID_CSRRCI}};
+            {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
+            {"csrrc", MAVIS_UID_CSRRC},     {"csrrwi", MAVIS_UID_CSRRWI},
+            {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
+            {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
 
         inline bool validateISAString_(std::string & unsupportedExt);
 

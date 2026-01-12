@@ -90,6 +90,8 @@ namespace pegasus
 
         uint64_t determineTrapValue_(const FaultCause & trap_cause, PegasusState* state);
         uint64_t determineTrapValue_(const InterruptCause & trap_cause, PegasusState* state);
+
+        uint64_t determineGvaValue_(const FaultCause & trap_cause, const bool virt_mode);
     };
 
 } // namespace pegasus
