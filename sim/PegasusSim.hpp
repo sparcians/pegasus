@@ -53,9 +53,6 @@ namespace pegasus
         std::unique_ptr<PegasusAllocators> allocators_tn_;
         std::vector<std::unique_ptr<sparta::TreeNode>> tns_to_delete_;
 
-        // TODO: Make this a parameter
-        const uint32_t num_cores_ = 1;
-
         // Pegasus Core for each core
         std::map<CoreId, PegasusCore*> cores_;
 
