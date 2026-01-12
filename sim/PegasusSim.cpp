@@ -124,39 +124,45 @@ namespace pegasus
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
-        // top.core*
-        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
-        {
-            sparta::TreeNode* core_tn = nullptr;
-            const std::string core_name = "core" + std::to_string(core_idx);
-            tns_to_delete_.emplace_back(
-                core_tn = new sparta::ResourceTreeNode(root_tn, core_name, "cores", core_idx,
-                                                       "Core", &core_factory_));
-        }
-
         getRoot()->addExtensionFactory(PegasusSimParameters::name,
                                        [&]() -> sparta::TreeNode::ExtensionsBase*
                                        { return new PegasusSimParameters(); });
     }
 
-    void PegasusSim::configureTree_() {}
+    void PegasusSim::configureTree_()
+    {
+        // Get number of cores
+        const uint32_t num_cores =
+            PegasusSimParameters::getParameter<uint32_t>(getRoot(), "num_cores");
+
+        // top.core*
+        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
+        {
+            sparta::TreeNode* core_tn = nullptr;
+            const std::string core_name = "core" + std::to_string(core_idx);
+            tns_to_delete_.emplace_back(
+                core_tn = new sparta::ResourceTreeNode(getRoot(), core_name, "cores", core_idx,
+                                                       "Core", &core_factory_));
+        }
+    }
 
     void PegasusSim::bindTree_()
     {
         // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
 
-        for (CoreId core_idx = 0; core_idx < num_cores_; ++core_idx)
+        const uint32_t num_cores =
+            PegasusSimParameters::getParameter<uint32_t>(getRoot(), "num_cores");
+        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
             const std::string core_name = "core" + std::to_string(core_idx);
             PegasusCore* core = getRoot()->getChild(core_name)->getResourceAs<PegasusCore*>();
             cores_.emplace(core_idx, core);
         }
 
-        auto extension = sparta::notNull(getRoot()->getExtension("sim"));
-        const auto & reg_overrides = extension->getParameters()
-                                         ->getParameter("reg_overrides")
-                                         ->getValueAs<PegasusSimParameters::RegisterOverrides>();
+        const auto & reg_overrides =
+            PegasusSimParameters::getParameter<PegasusSimParameters::RegisterOverrides>(
+                getRoot(), "reg_overrides");
         for (const auto & reg_override : reg_overrides)
         {
             sparta_assert(reg_override.size() == 2, "Register override param is malformed!");
@@ -173,7 +179,7 @@ namespace pegasus
             const std::string core_num = core.substr(4);
             if (core_num == "*")
             {
-                core_ids.resize(num_cores_);
+                core_ids.resize(num_cores);
                 std::iota(core_ids.begin(), core_ids.end(), 0);
             }
             else

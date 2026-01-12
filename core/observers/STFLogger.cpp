@@ -3,6 +3,7 @@
 #include "core/PegasusState.hpp"
 #include "core/VecElements.hpp"
 #include "include/gen/pegasus_version.hpp"
+#include "core/PegasusCore.hpp"
 
 namespace pegasus
 {
@@ -41,8 +42,11 @@ namespace pegasus
         // TODO: Add support for PTE
         // stf_writer_.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PTE);
 
+        const auto & isa = state->getCore()->getISAString();
+
         stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
         stf_writer_.setISA(stf::ISA::RISCV);
+        stf_writer_.setISAExtendedInfo(isa);
         stf_writer_.setHeaderPC(inital_pc);
         stf_writer_.finalizeHeader();
         if (state->getXlen() == 32)
