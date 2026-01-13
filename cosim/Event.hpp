@@ -111,7 +111,7 @@ namespace pegasus::cosim
             MemReadAccess() = default;
 
             MemReadAccess(MemAccessSource source, Addr paddr, Addr vaddr, size_t size,
-                          const std::vector<uint8_t>& value) :
+                          const std::vector<uint8_t> & value) :
                 source(source),
                 paddr(paddr),
                 vaddr(vaddr),
@@ -140,8 +140,8 @@ namespace pegasus::cosim
             MemWriteAccess() = default;
 
             MemWriteAccess(MemAccessSource source, Addr paddr, Addr vaddr, size_t size,
-                           const std::vector<uint8_t>& value,
-                           const std::vector<uint8_t>& prev_value) :
+                           const std::vector<uint8_t> & value,
+                           const std::vector<uint8_t> & prev_value) :
                 MemReadAccess(source, paddr, vaddr, size, value),
                 prev_value(prev_value)
             {
