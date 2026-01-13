@@ -210,7 +210,7 @@ namespace pegasus
             const Addr paddr;
             const Addr vaddr;
             const size_t size;
-            ObservedValue mem_value;
+            const ObservedValue mem_value;
             const MemAccessSource source;
         };
 
@@ -244,7 +244,7 @@ namespace pegasus
                 return mem_prev_value.getValue<TYPE>();
             }
 
-            ObservedValue mem_prev_value;
+            const ObservedValue mem_prev_value;
         };
 
         void registerReadWriteCsrCallbacks(sparta::RegisterBase* reg)
