@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "cosim/CoSimApi.hpp"
 
@@ -72,6 +73,7 @@ namespace pegasus::cosim
     {
       public:
         PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
+                     const std::map<std::string, std::string> pegasus_params = {},
                      const std::string & db_file = "pegasus-cosim.db",
                      const size_t snapshot_threshold = 100);
 
@@ -166,6 +168,9 @@ namespace pegasus::cosim
 
         // The main simulator
         std::unique_ptr<pegasus::PegasusSim> pegasus_sim_;
+
+        // Number of harts per core (indexed by core)
+        std::vector<uint32_t> num_harts_per_core_;
 
         // Handy list of fetching blocks
         std::vector<std::vector<Fetch*>> fetch_;

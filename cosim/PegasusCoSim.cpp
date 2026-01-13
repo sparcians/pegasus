@@ -55,25 +55,26 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
+                               const std::map<std::string, std::string> pegasus_params,
                                const std::string & db_file, const size_t snapshot_threshold)
     {
-        // TODO: Assume 1 core, 1 hart for now
-        const uint32_t num_cores = 1;
-        const uint32_t num_harts = 1;
-
         sim_config_.reset(new sparta::app::SimulationConfiguration);
 
-        for (uint32_t core_id = 0; core_id < num_cores; ++core_id)
+        for (auto [param, value] : pegasus_params)
         {
-            std::string path = "top.core" + std::to_string(core_id) + ".params.isa";
-            sim_config_->processParameter(path, "rv64gcbv_zicsr_zifencei_zicond_zfh", false);
+            constexpr bool OPTIONAL = false;
+            sim_config_->processParameter(param, value, OPTIONAL);
         }
 
+        // Instruction count limit
         sim_config_->processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+
+        // Workload
         PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
         const std::string wkld_param =
             PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
         sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
+
         sim_config_->copyTreeNodeExtensionsFromArchAndConfigPTrees();
 
         scheduler_.reset(new sparta::Scheduler());
@@ -87,17 +88,33 @@ namespace pegasus::cosim
         pegasus_sim_->finalizeTree();
         pegasus_sim_->finalizeFramework();
 
+        // Get number of cores
+        const uint32_t num_cores =
+            PegasusSimParameters::getParameter<uint32_t>(pegasus_sim_->getRoot(), "num_cores");
         cosim_observers_.resize(num_cores);
-        for (auto & core_cosim_observers : cosim_observers_)
+
+        // Get total number of harts across all cores
+        uint32_t total_num_harts = 0;
+        for (uint32_t core_idx = 0; core_idx < num_cores; core_idx++)
         {
-            core_cosim_observers.resize(num_harts, nullptr);
+            const std::string core_name = "core" + std::to_string(core_idx);
+            const sparta::ParameterSet* core_params =
+                pegasus_sim_->getRoot()
+                    ->getChildAs<sparta::ResourceTreeNode*>(core_name)
+                    ->getParameterSet();
+            const uint32_t num_harts =
+                core_params->getParameter("num_harts")->getValueAs<uint32_t>();
+
+            num_harts_per_core_.emplace_back(num_harts);
+            total_num_harts += num_harts;
+            cosim_observers_.at(core_idx).resize(num_harts, nullptr);
         }
 
         db_mgr_ = std::make_shared<simdb::DatabaseManager>(db_file, true);
         app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
 
         // Enable CoSimEventPipeline and CoSimCheckpointer apps. Every core/hart needs their own.
-        const uint32_t num_pipelines = num_cores * num_harts;
+        const uint32_t num_pipelines = total_num_harts;
         app_mgr_->enableApp(CoSimEventPipeline::NAME, num_pipelines);
         app_mgr_->enableApp(CoSimCheckpointer::NAME, num_pipelines);
 
@@ -109,10 +126,10 @@ namespace pegasus::cosim
         checkpointer_factory->setScheduler(*scheduler_.get());
 
         size_t pipeline_idx =
-            (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
+            (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
         for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
-            for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+            for (HartId hart_idx = 0; hart_idx < num_harts_per_core_.at(core_idx); ++hart_idx)
             {
                 auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
                 auto system = pegasus_sim_->getPegasusCore(core_idx)->getSystem();
@@ -134,10 +151,10 @@ namespace pegasus::cosim
         app_mgr_->openPipelines();
 
         fetch_.resize(num_cores);
-        pipeline_idx = (num_cores * num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
+        pipeline_idx = (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
         for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
-            for (HartId hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+            for (HartId hart_idx = 0; hart_idx < num_harts_per_core_.at(core_idx); ++hart_idx)
             {
                 // Get Fetch for each hart
                 const std::string core_name = "core" + std::to_string(core_idx) + ".";
