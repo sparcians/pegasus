@@ -335,6 +335,16 @@ namespace pegasus
                 observer->registerReadWriteMemCallbacks(bm_if_node);
             }
         }
+
+        // Register callbacks to system memory
+        auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
+                                 [this](const std::unique_ptr<sparta::TreeNode> & tnode)
+                                 { return tnode.get() == getSystemMemory(); });
+
+        if (iter != tree_nodes_.end())
+        {
+            observer->registerReadWriteMemCallbacks(getSystemMemory());
+        }
     }
 
     void PegasusSystem::enableEOTPassFailMode()
