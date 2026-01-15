@@ -79,6 +79,8 @@ namespace pegasus
     void Observer::inspectInitialState_(PegasusState* state)
     {
         pc_ = state->getPc();
+        priv_mode_ = state->getPrivMode();
+        virtual_mode_ = state->getVirtualMode();
         PegasusInstPtr inst = state->getCurrentInst();
 
         if (inst)
@@ -198,8 +200,8 @@ namespace pegasus
         const PegasusState::MemorySupplement* supplement =
             reinterpret_cast<const PegasusState::MemorySupplement*>(data.in_supplement);
 
-        mem_writes_.emplace_back(data.addr, supplement->vaddr, data.size, final_val, prior_val,
-                                 supplement->source);
+        mem_writes_.emplace_back(supplement->paddr, supplement->vaddr, data.size, final_val,
+                                 prior_val, supplement->source);
     }
 
     void Observer::postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess & data)
@@ -214,7 +216,8 @@ namespace pegasus
         const PegasusState::MemorySupplement* supplement =
             reinterpret_cast<const PegasusState::MemorySupplement*>(data.in_supplement);
 
-        mem_reads_.emplace_back(data.addr, supplement->vaddr, data.size, val, supplement->source);
+        mem_reads_.emplace_back(supplement->paddr, supplement->vaddr, data.size, val,
+                                supplement->source);
     }
 
     std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)

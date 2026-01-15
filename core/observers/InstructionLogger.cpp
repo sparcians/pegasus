@@ -34,8 +34,11 @@ namespace pegasus
 
         virtual void writeSymbols(const std::string & symbols) { (void)symbols; }
 
-        virtual void writeInstHeader(const PegasusInst* inst, uint64_t pc, uint64_t opcode)
+        virtual void writeInstHeader(const PrivMode mode, const bool virt, const PegasusInst* inst,
+                                     uint64_t pc, uint64_t opcode)
         {
+            (void)mode;
+            (void)virt;
             (void)inst;
             (void)pc;
             (void)opcode;
@@ -97,13 +100,15 @@ namespace pegasus
             postExecute_(inst_oss_.str());
         }
 
-        void writeInstHeader(const PegasusInst* inst, uint64_t pc, uint64_t opcode) override
+        void writeInstHeader(const PrivMode mode, const bool virt, const PegasusInst* inst,
+                             uint64_t pc, uint64_t opcode) override
         {
             reset_();
             if (inst)
             {
-                inst_oss_ << HEX(pc, getRegWidth()) << " " << inst->dasmString() << " ("
-                          << HEX8(opcode) << ") uid:" << inst->getUid();
+                inst_oss_ << (virt ? "V" : "") << mode << " " << HEX(pc, getRegWidth()) << " "
+                          << inst->dasmString() << " (" << HEX8(opcode)
+                          << ") uid:" << inst->getUid();
             }
             else
             {
@@ -333,7 +338,7 @@ namespace pegasus
             inst_log_writer_->writeSymbols(symbols.at(pc_));
         }
 
-        inst_log_writer_->writeInstHeader(inst.get(), pc_, opcode_);
+        inst_log_writer_->writeInstHeader(priv_mode_, virtual_mode_, inst.get(), pc_, opcode_);
 
         if (fault_cause_.isValid())
         {

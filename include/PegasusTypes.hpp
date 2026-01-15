@@ -139,16 +139,16 @@ namespace pegasus
         switch (mode)
         {
             case PrivMode::USER:
-                os << "USER";
+                os << "U";
                 break;
             case PrivMode::SUPERVISOR:
-                os << "SUPERVISOR";
+                os << "S";
                 break;
             case PrivMode::HYPERVISOR:
-                os << "HYPERVISOR";
+                os << "H";
                 break;
             case PrivMode::MACHINE:
-                os << "MACHINE";
+                os << "M";
                 break;
             case PrivMode::INVALID:
                 os << "INVALID";

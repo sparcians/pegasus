@@ -17,6 +17,7 @@ CSR32H_DEFS = {
                'GVA'   : { 'high_bit':  6, 'low_bit':   6, 'readonly': False, 'desc': 'Guest Virtual Address' },
                'VSBE'  : { 'high_bit':  5, 'low_bit':   5, 'readonly': True , 'desc': 'Controls endianness of explicit memory accesses made from VS-mode' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x602: {
@@ -32,6 +33,7 @@ CSR32H_DEFS = {
                'VSECALL'  : { 'high_bit': 10, 'low_bit':  10, 'readonly': True , 'desc': 'Virtual supervisor-mode environment call' },
                'HSECALL'  : { 'high_bit':  9, 'low_bit':   9, 'readonly': True , 'desc': 'Supervisor-mode environment call' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x603: {
@@ -53,6 +55,7 @@ CSR32H_DEFS = {
                'SSI'  : { 'high_bit':  1, 'low_bit':   1, 'readonly': True , 'desc': 'Supervisor-mode software interrupts' },
                'USI'  : { 'high_bit':  0, 'low_bit':   0, 'readonly': True , 'desc': 'User-mode software interrupts' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x604: {
@@ -65,18 +68,21 @@ CSR32H_DEFS = {
                'VSTIE' : { 'high_bit':  6, 'low_bit':   6, 'readonly': False, 'desc': 'Enable virtuall supervisor-mode timer interrupts' },
                'VSSIE' : { 'high_bit':  2, 'low_bit':   2, 'readonly': False, 'desc': 'Enable virtual supervisor-mode software interrupts' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x606: {
              'name': 'hcounteren',
              'desc': 'Hypervisor counter-enable register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x607: {
              'name': 'hgeie',
              'desc': 'Hypervisor guest external interrupt-enable register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x612: {
@@ -92,6 +98,7 @@ CSR32H_DEFS = {
                'VSECALL'  : { 'high_bit': 10, 'low_bit':  10, 'readonly': True , 'desc': 'Virtual supervisor-mode environment call' },
                'HSECALL'  : { 'high_bit':  9, 'low_bit':   9, 'readonly': True , 'desc': 'Supervisor-mode environment call' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -100,6 +107,7 @@ CSR32H_DEFS = {
              'name': 'htval',
              'desc': 'Hypervisor trap value register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x644: {
@@ -112,6 +120,7 @@ CSR32H_DEFS = {
                'VSTIP' : { 'high_bit':  6, 'low_bit':   6, 'readonly': False, 'desc': 'Virtual supervisor-mode timer interrupt pending' },
                'VSSIP' : { 'high_bit':  2, 'low_bit':   2, 'readonly': False, 'desc': 'Virtual supervisor-mode software interrupt pending' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x645: {
@@ -123,18 +132,21 @@ CSR32H_DEFS = {
                'VSTIP' : { 'high_bit':  6, 'low_bit':   6, 'readonly': False, 'desc': 'Virtual supervisor-mode timer interrupt pending' },
                'VSSIP' : { 'high_bit':  2, 'low_bit':   2, 'readonly': False, 'desc': 'Virtual supervisor-mode software interrupt pending' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x64a: {
              'name': 'htinst',
              'desc': 'Hypervisor trap instruction register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0xe12: {
              'name': 'hgeip',
              'desc': 'Hypervisor guest external interrupt pending',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -149,12 +161,14 @@ CSR32H_DEFS = {
                'CBIE'  : { 'high_bit':  5, 'low_bit':   4, 'readonly': False, 'desc': 'Cache block invalidate instruction enable' },
                'FIOM'  : { 'high_bit':  0, 'low_bit':   0, 'readonly': False, 'desc': 'Fence of I/O implies Memory' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x61a: {
              'name': 'henvcfgh',
              'desc': 'Additional hypervisor environment configuration register, RV32 only',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -168,6 +182,7 @@ CSR32H_DEFS = {
                'VMID' : { 'high_bit': 28, 'low_bit':  22, 'readonly': False, 'desc': 'Virtual machine identifier' },
                'PPN'  : { 'high_bit': 21, 'low_bit':   0, 'readonly': False, 'desc': 'Physical page number' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -176,6 +191,7 @@ CSR32H_DEFS = {
              'name': 'hcontext',
              'desc': 'Hypervisor mode context register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -184,12 +200,14 @@ CSR32H_DEFS = {
              'name': 'htimedelta',
              'desc': 'Hypervisor time delta register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x615: {
              'name': 'htimedeltah',
              'desc': 'Upper 32 bits of htimedelta, HSXLEN=32 only',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
 
@@ -203,28 +221,28 @@ CSR32H_DEFS = {
                'FCSR' : { 'high_bit':  1, 'low_bit':   1, 'readonly': False, 'desc': 'FCSR register access' },
                'C'    : { 'high_bit':  0, 'low_bit':   0, 'readonly': True , 'desc': 'Custom state access' },
              },
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x60d: {
              'name': 'hstateen1',
              'desc': 'Hypervisor State Enable Register 1',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x60e: {
              'name': 'hstateen2',
              'desc': 'Hypervisor State Enable Register 2',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x60f: {
              'name': 'hstateen3',
              'desc': 'Hypervisor State Enable Register 3',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
 
@@ -242,28 +260,28 @@ CSR32H_DEFS = {
                'CTR'     : { 'high_bit': 22, 'low_bit':  22, 'readonly': False, 'desc': 'CTR register access' },
                'CLIC'    : { 'high_bit': 21, 'low_bit':  21, 'readonly': False, 'desc': 'CLIC registers access' },
              },
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x61d: {
              'name': 'hstateen1h',
              'desc': 'Hypervisor State Enable Register 1, RV32 only',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x61e: {
              'name': 'hstateen2h',
              'desc': 'Hypervisor State Enable Register 2, RV32 only',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
     0x61f: {
              'name': 'hstateen3h',
              'desc': 'Hypervisor State Enable Register 3, RV32 only',
              'fields': {},
-             'extension': 'Smstateen',
+             'extension': ['h', 'Smstateen'],
              'context': 'HART',
            },
 
@@ -284,6 +302,7 @@ CSR32H_DEFS = {
                'SPIE' : { 'high_bit':  5, 'low_bit':   5, 'readonly': False, 'desc': 'Indicates whether S-mode interrupts were enabled prior to trapping into S-mode' },
                'SIE'  : { 'high_bit':  1, 'low_bit':   1, 'readonly': False, 'desc': 'Enable/Disable interrupts in S-mode' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x204: {
@@ -298,6 +317,7 @@ CSR32H_DEFS = {
                'SSIE' : { 'high_bit':  1, 'low_bit':   1, 'readonly': False, 'desc': 'Enable supervisor-mode software interrupts' },
                'USIE' : { 'high_bit':  0, 'low_bit':   0, 'readonly': False, 'desc': 'Enable user-mode software interrupts' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x205: {
@@ -307,18 +327,21 @@ CSR32H_DEFS = {
                'BASE' : { 'high_bit': 31, 'low_bit':   2, 'readonly': False, 'desc': 'Vector base address' },
                'MODE' : { 'high_bit':  1, 'low_bit':   0, 'readonly': False, 'desc': '0 - Direct, 1 - Vectored' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x240: {
              'name': 'vsscratch',
              'desc': 'Virtual supervisor scratch register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x241: {
              'name': 'vsepc',
              'desc': 'Virtual supervisor exception program counter',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x242: {
@@ -328,12 +351,14 @@ CSR32H_DEFS = {
                'Interrupt' : { 'high_bit': 31, 'low_bit':  31, 'readonly': False, 'desc': 'Bit to set a trap' },
                'Code'      : { 'high_bit': 30, 'low_bit':   0, 'readonly': False, 'desc': 'The exception code' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x243: {
              'name': 'vstval',
              'desc': 'Virtual supervisor trap value register',
              'fields': {},
+             'extension': ['h'],
              'context': 'HART',
            },
     0x244: {
@@ -348,6 +373,7 @@ CSR32H_DEFS = {
                'SSIP' : { 'high_bit':  1, 'low_bit':   1, 'readonly': False, 'desc': 'Supervisor-mode software interrupt pending' },
                'USIP' : { 'high_bit':  0, 'low_bit':   0, 'readonly': False, 'desc': 'User-mode software interrupt pending' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
     0x280: {
@@ -358,6 +384,7 @@ CSR32H_DEFS = {
                'ASID' : { 'high_bit': 30, 'low_bit':  22, 'readonly': False, 'desc': 'Address space identifier' },
                'PPN'  : { 'high_bit': 21, 'low_bit':   0, 'readonly': False, 'desc': 'Physical page number' },
              },
+             'extension': ['h'],
              'context': 'HART',
            },
 }

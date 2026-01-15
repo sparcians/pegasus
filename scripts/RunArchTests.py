@@ -10,7 +10,7 @@ import functools
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [265, 265]
 PASSING_STATUS_RISCV_ARCH_RV64 = [345, 345]
-PASSING_STATUS_TENSTORRENT_RV64 = [4383, 4383]
+PASSING_STATUS_TENSTORRENT_RV64 = [13155, 13155]
 
 # Verbosity
 be_noisy = False
@@ -58,11 +58,18 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
     tenstorrent_tests.sort()
 
     tests = []
-    base_dir = "bare_metal"
+    bm_base_dir = "bare_metal"
+    h_base_dir = "h_ext"
 
     for test in tenstorrent_tests:
         dirs = test.split('/')
-        prefixes = dirs[dirs.index(base_dir)+1:-1]
+        prefixes = []
+        if (bm_base_dir in dirs):
+            prefixes = dirs[dirs.index(bm_base_dir):-1]
+        elif (h_base_dir in dirs):
+            prefixes = dirs[dirs.index(h_base_dir):-1]
+        else:
+            print("WARNING: Bad test path", test)
         prefix = "_".join(prefixes) + "_"
         testname = prefix + os.path.basename(test)
         testname = testname.replace("rv32", "rv64")
@@ -78,7 +85,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbv_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbv_zicsr_zifencei_zicond_zfh"
+    isa_string = "rv32gcbvh_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbvh_zicsr_zifencei_zicond_zfh"
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, "-w", wkld]

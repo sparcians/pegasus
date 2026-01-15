@@ -50,7 +50,7 @@ namespace pegasus
         XLEN mask = (XLEN)JVT_64_bitmasks::BASE;
         XLEN modeMask = (XLEN)JVT_64_bitmasks::MODE;
 
-        if (!isAccessLegal_<AccessType::READ>(JVT, state->getPrivMode()))
+        if (!isAccessLegal_<AccessType::READ>(state, JVT))
         {
             THROW_ILLEGAL_INST;
         }

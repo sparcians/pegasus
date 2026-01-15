@@ -1002,7 +1002,7 @@ namespace pegasus
 
                 if (state->getCore()->hasHypervisor())
                 {
-                    prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spv");
+                    prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spvp");
                     WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);
                 }
 

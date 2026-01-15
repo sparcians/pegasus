@@ -28,7 +28,7 @@ RISCV_ARCH_TESTS=$GITHUB_WORKSPACE/riscv-tests/isa
 # Extract Tenstorrent tests
 cd tenstorrent-tests
 tar -xf release.tar
-TENSTORRENT_TESTS=$GITHUB_WORKSPACE/tenstorrent-tests/release/bare_metal/user
+TENSTORRENT_TESTS=$GITHUB_WORKSPACE/tenstorrent-tests/release/
 cd ../
 
 # Run Full Regression

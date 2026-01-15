@@ -271,6 +271,8 @@ namespace pegasus
 
       protected:
         uint64_t pc_;
+        PrivMode priv_mode_;
+        bool virtual_mode_;
         uint64_t opcode_;
 
         // Mavis pointer for getting the disassembly string
@@ -330,6 +332,8 @@ namespace pegasus
         void reset_()
         {
             pc_ = 0;
+            priv_mode_ = PrivMode::INVALID;
+            virtual_mode_ = false;
             opcode_ = std::numeric_limits<uint64_t>::max();
             src_regs_.clear();
             dst_regs_.clear();
