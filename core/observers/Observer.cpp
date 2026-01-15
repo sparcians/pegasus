@@ -79,6 +79,8 @@ namespace pegasus
     void Observer::inspectInitialState_(PegasusState* state)
     {
         pc_ = state->getPc();
+        priv_mode_ = state->getPrivMode();
+        virtual_mode_ = state->getVirtualMode();
         PegasusInstPtr inst = state->getCurrentInst();
 
         if (inst)
