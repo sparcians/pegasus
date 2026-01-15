@@ -389,7 +389,7 @@ namespace pegasus
         static_assert(std::is_standard_layout<MemoryType>());
         const size_t size = sizeof(MemoryType);
         std::vector<uint8_t> buffer(sizeof(MemoryType) / sizeof(uint8_t), 0);
-        const MemorySupplement supplement{result.getVAddr(), source};
+        const MemorySupplement supplement{result.getPAddr(), result.getVAddr(), source};
         const bool success = memory->tryRead(result.getPAddr(), size, buffer.data(), &supplement);
         sparta_assert(success,
                       "Failed to read from memory at address 0x" << std::hex << result.getPAddr());
@@ -418,7 +418,7 @@ namespace pegasus
         static_assert(std::is_standard_layout<MemoryType>());
         const size_t size = sizeof(MemoryType);
         const std::vector<uint8_t> buffer = convertToByteVector<MemoryType>(value);
-        const MemorySupplement supplement{result.getVAddr(), source};
+        const MemorySupplement supplement{result.getPAddr(), result.getVAddr(), source};
         const bool success = memory->tryWrite(result.getPAddr(), size, buffer.data(), &supplement);
         sparta_assert(success,
                       "Failed to write to memory at address 0x" << std::hex << result.getPAddr());

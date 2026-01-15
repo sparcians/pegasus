@@ -246,10 +246,12 @@ namespace pegasus
         // Memory supplement for observing memory reads and writes
         struct MemorySupplement
         {
+            const Addr paddr;
             const Addr vaddr;
             const MemAccessSource source;
 
-            MemorySupplement(Addr vaddr, const MemAccessSource source) :
+            MemorySupplement(Addr paddr, Addr vaddr, const MemAccessSource source) :
+                paddr(paddr),
                 vaddr(vaddr),
                 source(source)
             {
