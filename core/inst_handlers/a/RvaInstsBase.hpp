@@ -49,22 +49,24 @@ namespace pegasus
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         const XLEN paddr = inst->getTranslationState()->getResult().getPAddr();
-        inst->getTranslationState()->popResult();
-
         XLEN rd_val = 0;
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
-            rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(paddr));
+            rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(
+                inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION));
         }
         else
         {
-            rd_val = state->readMemory<SIZE>(paddr);
+            rd_val = state->readMemory<SIZE>(inst->getTranslationState()->getResult(),
+                                             MemAccessSource::INSTRUCTION);
         }
+        inst->getTranslationState()->popResult();
+
         // Must read the RS2 value before writing the Rd (might be the
         // same register!)
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-        state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val));
+        state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val), MemAccessSource::INSTRUCTION);
         return ++action_it;
     }
 
@@ -83,8 +85,9 @@ namespace pegasus
         state->getCore()->makeReservation(state->getHartId(), paddr);
 
         // Get the memory
+        const XLEN rd_val =
+            state->readMemory<SIZE>(xlation_state->getResult(), MemAccessSource::INSTRUCTION);
         xlation_state->popResult();
-        const XLEN rd_val = state->readMemory<SIZE>(paddr);
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
             WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(rd_val));
@@ -113,9 +116,9 @@ namespace pegasus
         {
             if (resv == xlation_state->getResult().getPAddr())
             {
-                const uint64_t paddr = xlation_state->getResult().getPAddr();
                 const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-                state->writeMemory<SIZE>(paddr, rs2_val);
+                state->writeMemory<SIZE>(xlation_state->getResult(), rs2_val,
+                                         MemAccessSource::INSTRUCTION);
                 fail_code = 0;
             }
         }

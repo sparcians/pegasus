@@ -45,23 +45,23 @@ namespace pegasus
 
         virtual void writeImmediate(const uint64_t imm) { (void)imm; }
 
-        virtual void writeSrcRegister(const std::string &, const Observer::RegValue &) {}
+        virtual void writeSrcRegister(const std::string &, const Observer::ObservedValue &) {}
 
-        virtual void writeDstRegister(const std::string &, const Observer::RegValue &,
-                                      const Observer::RegValue &)
+        virtual void writeDstRegister(const std::string &, const Observer::ObservedValue &,
+                                      const Observer::ObservedValue &)
         {
         }
 
-        virtual void writeCsrRead(const std::string &, const Observer::RegValue &) {}
+        virtual void writeCsrRead(const std::string &, const Observer::ObservedValue &) {}
 
-        virtual void writeCsrWrite(const std::string &, const Observer::RegValue &,
-                                   const Observer::RegValue &)
+        virtual void writeCsrWrite(const std::string &, const Observer::ObservedValue &,
+                                   const Observer::ObservedValue &)
         {
         }
 
         virtual void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
-                                 const Observer::RegValue & reg_value,
-                                 const Observer::RegValue & reg_prev_value)
+                                 const Observer::ObservedValue & reg_value,
+                                 const Observer::ObservedValue & reg_prev_value)
         {
             (void)reg_num;
             writeDstRegister(reg_name, reg_value, reg_prev_value);
@@ -142,7 +142,7 @@ namespace pegasus
         }
 
         void writeSrcRegister(const std::string & reg_name,
-                              const Observer::RegValue & reg_value) override
+                              const Observer::ObservedValue & reg_value) override
         {
             reset_();
             inst_oss_ << "   src " << std::setfill(' ') << std::setw(3) << reg_name << ": "
@@ -150,8 +150,9 @@ namespace pegasus
             postExecute_(inst_oss_.str());
         }
 
-        void writeDstRegister(const std::string & reg_name, const Observer::RegValue & reg_value,
-                              const Observer::RegValue & reg_prev_value) override
+        void writeDstRegister(const std::string & reg_name,
+                              const Observer::ObservedValue & reg_value,
+                              const Observer::ObservedValue & reg_prev_value) override
         {
             reset_();
             inst_oss_ << "   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
@@ -160,7 +161,7 @@ namespace pegasus
         }
 
         void writeCsrRead(const std::string & reg_name,
-                          const Observer::RegValue & reg_value) override
+                          const Observer::ObservedValue & reg_value) override
         {
             reset_();
             inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
@@ -168,8 +169,8 @@ namespace pegasus
             postExecute_(inst_oss_.str());
         }
 
-        void writeCsrWrite(const std::string & reg_name, const Observer::RegValue & reg_value,
-                           const Observer::RegValue & reg_prev_value) override
+        void writeCsrWrite(const std::string & reg_name, const Observer::ObservedValue & reg_value,
+                           const Observer::ObservedValue & reg_prev_value) override
         {
             reset_();
             inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
@@ -180,19 +181,21 @@ namespace pegasus
         void writeMemRead(const Observer::MemRead & mem_read) override
         {
             reset_();
-            inst_oss_ << "   mem read addr: " << HEX(mem_read.addr, getRegWidth())
-                      << " size: " << mem_read.size
-                      << " value: " << HEX(mem_read.value, getRegWidth());
+            inst_oss_ << "   mem read " << mem_read.source
+                      << " paddr: " << HEX(mem_read.paddr, getRegWidth())
+                      << " vaddr: " << HEX(mem_read.vaddr, getRegWidth())
+                      << " size: " << mem_read.size << " value: " << mem_read.mem_value;
             postExecute_(inst_oss_.str());
         }
 
         void writeMemWrite(const Observer::MemWrite & mem_write) override
         {
             reset_();
-            inst_oss_ << "   mem write addr: " << HEX(mem_write.addr, getRegWidth())
-                      << " size: " << mem_write.size
-                      << " value: " << HEX(mem_write.value, getRegWidth())
-                      << " (prev: " << HEX(mem_write.prior_value, getRegWidth()) << ")";
+            inst_oss_ << "   mem write " << mem_write.source
+                      << " paddr: " << HEX(mem_write.paddr, getRegWidth())
+                      << " vaddr: " << HEX(mem_write.vaddr, getRegWidth())
+                      << " size: " << mem_write.size << " value: " << mem_write.mem_value
+                      << " (prev: " << mem_write.mem_prev_value << ")";
             postExecute_(inst_oss_.str());
         }
 
@@ -244,16 +247,17 @@ namespace pegasus
                       << HEX(state->getPrevPc(), getRegWidth()) << " (" << HEX8(opcode) << ")";
         }
 
-        void writeDstRegister(const std::string & reg_name, const Observer::RegValue & reg_value,
-                              const Observer::RegValue & reg_prev_value) override
+        void writeDstRegister(const std::string & reg_name,
+                              const Observer::ObservedValue & reg_value,
+                              const Observer::ObservedValue & reg_prev_value) override
         {
             (void)reg_prev_value;
-            inst_oss_ << " " << std::setw(4) << std::left << reg_name << reg_value;
+            inst_oss_ << " " << std::setw(4) << std::left << reg_name << " t" << reg_value;
         }
 
         void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
-                         const Observer::RegValue & reg_value,
-                         const Observer::RegValue & reg_prev_value) override
+                         const Observer::ObservedValue & reg_value,
+                         const Observer::ObservedValue & reg_prev_value) override
         {
             (void)reg_prev_value;
             inst_oss_ << " c" << reg_num << "_" << reg_name << " " << reg_value;
@@ -261,13 +265,13 @@ namespace pegasus
 
         void writeMemRead(const Observer::MemRead & mem_read) override
         {
-            inst_oss_ << " mem " << HEX(mem_read.addr, getRegWidth());
+            inst_oss_ << " mem " << HEX(mem_read.paddr, getRegWidth());
         }
 
         void writeMemWrite(const Observer::MemWrite & mem_write) override
         {
-            inst_oss_ << " mem " << HEX(mem_write.addr, getRegWidth()) << " "
-                      << HEX8(mem_write.value);
+            inst_oss_ << " mem " << HEX(mem_write.paddr, getRegWidth()) << " "
+                      << mem_write.mem_value;
         }
 
         void finishInst() override { postExecute_(inst_oss_.str()); }

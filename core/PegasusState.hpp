@@ -243,9 +243,32 @@ namespace pegasus
 
         sparta::Register* findRegister(const std::string & reg_name, bool must_exist = true) const;
 
-        template <typename MemoryType> MemoryType readMemory(const Addr paddr);
+        // Memory supplement for observing memory reads and writes
+        struct MemorySupplement
+        {
+            const Addr vaddr;
+            const MemAccessSource source;
 
-        template <typename MemoryType> void writeMemory(const Addr paddr, const MemoryType value);
+            MemorySupplement(Addr vaddr, const MemAccessSource source) :
+                vaddr(vaddr),
+                source(source)
+            {
+            }
+        };
+
+        template <typename MemoryType>
+        MemoryType readMemory(const PegasusTranslationState::TranslationResult & result,
+                              const MemAccessSource source = MemAccessSource::INVALID);
+        template <typename MemoryType>
+        MemoryType readMemory(const Addr paddr,
+                              const MemAccessSource source = MemAccessSource::INVALID);
+        template <typename MemoryType>
+        void writeMemory(const PegasusTranslationState::TranslationResult & result,
+                         const MemoryType value,
+                         const MemAccessSource source = MemAccessSource::INVALID);
+        template <typename MemoryType>
+        void writeMemory(const Addr paddr, const MemoryType value,
+                         const MemAccessSource source = MemAccessSource::INVALID);
 
         void addObserver(std::unique_ptr<Observer> observer);
 

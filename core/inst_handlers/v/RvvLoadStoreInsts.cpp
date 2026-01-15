@@ -749,18 +749,17 @@ namespace pegasus
                 }
                 if constexpr (isLoad)
                 {
-                    UintType<elemWidth> value =
-                        state->readMemory<UintType<elemWidth>>(transtate->getResult().getPAddr());
-                    transtate->popResult();
+                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
+                        transtate->getResult(), MemAccessSource::INSTRUCTION);
                     elems.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
                     UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
-                    state->writeMemory<UintType<elemWidth>>(transtate->getResult().getPAddr(),
-                                                            value);
-                    transtate->popResult();
+                    state->writeMemory<UintType<elemWidth>>(transtate->getResult(), value,
+                                                            MemAccessSource::INSTRUCTION);
                 }
+                transtate->popResult();
             }
         };
 
@@ -814,17 +813,16 @@ namespace pegasus
             if constexpr (isLoad)
             {
                 UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
-                    inst->getTranslationState()->getResult().getPAddr());
-                inst->getTranslationState()->popResult();
+                    inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION);
                 elems.getElement(iter.getIndex()).setVal(value);
             }
             else
             {
                 UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
-                state->writeMemory<UintType<elemWidth>>(
-                    inst->getTranslationState()->getResult().getPAddr(), value);
-                inst->getTranslationState()->popResult();
+                state->writeMemory<UintType<elemWidth>>(inst->getTranslationState()->getResult(),
+                                                        value, MemAccessSource::INSTRUCTION);
             }
+            inst->getTranslationState()->popResult();
         }
 
         return ++action_it;
@@ -847,17 +845,16 @@ namespace pegasus
             if constexpr (isLoad)
             {
                 UintType<BYTESIZE> value = state->readMemory<UintType<BYTESIZE>>(
-                    inst->getTranslationState()->getResult().getPAddr());
-                inst->getTranslationState()->popResult();
+                    inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION);
                 elems.getElement(iter.getIndex()).setVal(value);
             }
             else
             {
                 UintType<BYTESIZE> value = elems.getElement(iter.getIndex()).getVal();
-                state->writeMemory<UintType<BYTESIZE>>(
-                    inst->getTranslationState()->getResult().getPAddr(), value);
-                inst->getTranslationState()->popResult();
+                state->writeMemory<UintType<BYTESIZE>>(inst->getTranslationState()->getResult(),
+                                                       value, MemAccessSource::INSTRUCTION);
             }
+            inst->getTranslationState()->popResult();
         }
 
         return ++action_it;

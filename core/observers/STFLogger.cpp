@@ -322,16 +322,16 @@ namespace pegasus
 
         for (const auto & mem_write : mem_writes_)
         {
-            stf_writer_ << stf::InstMemAccessRecord(mem_write.addr, mem_write.size, 0,
+            stf_writer_ << stf::InstMemAccessRecord(mem_write.paddr, mem_write.size, 0,
                                                     stf::INST_MEM_ACCESS::WRITE);
-            stf_writer_ << stf::InstMemContentRecord(mem_write.value);
+            stf_writer_ << stf::InstMemContentRecord(mem_write.mem_value.getValue<uint64_t>());
         }
 
         for (const auto & mem_read : mem_reads_)
         {
-            stf_writer_ << stf::InstMemAccessRecord(mem_read.addr, mem_read.size, 0,
+            stf_writer_ << stf::InstMemAccessRecord(mem_read.paddr, mem_read.size, 0,
                                                     stf::INST_MEM_ACCESS::READ);
-            stf_writer_ << stf::InstMemContentRecord(mem_read.value);
+            stf_writer_ << stf::InstMemContentRecord(mem_read.mem_value.getValue<uint64_t>());
         }
 
         auto get_stf_reg_type = [](const RegType reg_type)

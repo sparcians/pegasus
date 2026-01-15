@@ -108,6 +108,18 @@ namespace pegasus::cosim
             size_t size;
             std::vector<uint8_t> value;
 
+            MemReadAccess() = default;
+
+            MemReadAccess(MemAccessSource source, Addr paddr, Addr vaddr, size_t size,
+                          const std::vector<uint8_t> & value) :
+                source(source),
+                paddr(paddr),
+                vaddr(vaddr),
+                size(size),
+                value(value)
+            {
+            }
+
             /// Called to/from char buffer (boost::serialization)
             template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
             {
@@ -124,6 +136,16 @@ namespace pegasus::cosim
         struct MemWriteAccess : public MemReadAccess
         {
             std::vector<uint8_t> prev_value;
+
+            MemWriteAccess() = default;
+
+            MemWriteAccess(MemAccessSource source, Addr paddr, Addr vaddr, size_t size,
+                           const std::vector<uint8_t> & value,
+                           const std::vector<uint8_t> & prev_value) :
+                MemReadAccess(source, paddr, vaddr, size, value),
+                prev_value(prev_value)
+            {
+            }
 
             /// Called to/from char buffer (boost::serialization)
             template <typename Archive> void serialize(Archive & ar, const unsigned int version)
@@ -538,10 +560,10 @@ namespace pegasus::cosim
     inline std::ostream & operator<<(std::ostream & os,
                                      const Event::MemReadAccess & mem_read_access)
     {
-        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_read_access.paddr
-           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_read_access.vaddr
-           << " Size: " << std::dec << mem_read_access.size << " Value: " << std::setw(16)
-           << std::setfill('0') << std::hex
+        os << mem_read_access.source << " PA: 0x" << std::setw(16) << std::setfill('0') << std::hex
+           << mem_read_access.paddr << " VA: 0x" << std::setw(16) << std::setfill('0') << std::hex
+           << mem_read_access.vaddr << " Size: " << std::dec << mem_read_access.size << " Value: 0x"
+           << std::setw(16) << std::setfill('0') << std::hex
            << convertFromByteVector<uint64_t>(mem_read_access.value) << std::dec << "\n";
 
         return os;
@@ -550,14 +572,42 @@ namespace pegasus::cosim
     inline std::ostream & operator<<(std::ostream & os,
                                      const Event::MemWriteAccess & mem_write_access)
     {
-        os << "PAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_write_access.paddr
-           << " VAddr: " << std::setw(16) << std::setfill('0') << std::hex << mem_write_access.vaddr
-           << " Size: " << std::dec << mem_write_access.size << " Value: " << std::setw(16)
-           << std::setfill('0') << std::hex
-           << convertFromByteVector<uint64_t>(mem_write_access.value) << " [Prev: " << std::setw(16)
-           << std::setfill('0') << std::hex
+        os << mem_write_access.source << " PA: 0x" << std::setw(16) << std::setfill('0') << std::hex
+           << mem_write_access.paddr << " VA: 0x" << std::setw(16) << std::setfill('0') << std::hex
+           << mem_write_access.vaddr << " Size: " << std::dec << mem_write_access.size
+           << " Value: 0x" << std::setw(16) << std::setfill('0') << std::hex
+           << convertFromByteVector<uint64_t>(mem_write_access.value) << " [Prev: 0x"
+           << std::setw(16) << std::setfill('0') << std::hex
            << convertFromByteVector<uint64_t>(mem_write_access.prev_value) << std::dec << "]\n";
 
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os,
+                                     const std::vector<Event::MemReadAccess> & mem_read_accesses)
+    {
+        if (!mem_read_accesses.empty())
+        {
+            os << "Memory Reads:" << std::endl;
+            for (const auto & mem_read_access : mem_read_accesses)
+            {
+                os << " " << mem_read_access << "\n";
+            }
+        }
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os,
+                                     const std::vector<Event::MemWriteAccess> & mem_write_accesses)
+    {
+        if (!mem_write_accesses.empty())
+        {
+            os << "Memory Writes:" << std::endl;
+            for (const auto & mem_write_access : mem_write_accesses)
+            {
+                os << " " << mem_write_access << "\n";
+            }
+        }
         return os;
     }
 

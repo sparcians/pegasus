@@ -63,7 +63,8 @@ namespace pegasus
     {
         FETCH,       //! Memory access from fetching an instruction
         INSTRUCTION, //! Memory access made by an instruction (load or store)
-        HARDWARE     //! Memory access made by hardware (e.g. page table walk)
+        HARDWARE,    //! Memory access made by hardware (e.g. page table walk)
+        INVALID
     };
 
     enum class PrivMode
@@ -112,6 +113,26 @@ namespace pegasus
         ODD = 6,
         DYN
     };
+
+    inline std::ostream & operator<<(std::ostream & os, const MemAccessSource source)
+    {
+        switch (source)
+        {
+            case MemAccessSource::FETCH:
+                os << "FETCH";
+                break;
+            case MemAccessSource::INSTRUCTION:
+                os << "INSTRUCTION";
+                break;
+            case MemAccessSource::HARDWARE:
+                os << "HARDWARE";
+                break;
+            case MemAccessSource::INVALID:
+                os << "INVALID";
+                break;
+        }
+        return os;
+    }
 
     inline std::ostream & operator<<(std::ostream & os, const PrivMode mode)
     {

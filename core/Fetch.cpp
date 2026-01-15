@@ -98,7 +98,7 @@ namespace pegasus
         if (SPARTA_EXPECT_TRUE(!page_crossing_access))
         {
             // TBD: Opcode opcode = result.readMemory<Opcode>(result.physical_addr);
-            opcode = state->readMemory<uint32_t>(result.getPAddr());
+            opcode = state->readMemory<uint32_t>(result, MemAccessSource::FETCH);
 
             // Compression detection
             if ((opcode & 0x3) != 0x3)
@@ -112,7 +112,7 @@ namespace pegasus
             if (opcode == 0)
             {
                 // Load the first 2B, could be a valid 2B compressed inst
-                opcode = state->readMemory<uint16_t>(result.getPAddr());
+                opcode = state->readMemory<uint16_t>(result, MemAccessSource::FETCH);
                 opcode_size = 2;
 
                 if ((opcode & 0x3) == 0x3)
@@ -124,7 +124,7 @@ namespace pegasus
             else
             {
                 // Load the second 2B of a possible 4B inst
-                opcode |= state->readMemory<uint16_t>(result.getPAddr()) << 16;
+                opcode |= state->readMemory<uint16_t>(result, MemAccessSource::FETCH) << 16;
             }
         }
 

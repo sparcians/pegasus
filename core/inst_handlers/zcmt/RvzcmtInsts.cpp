@@ -87,9 +87,10 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
 
         // Load jump address
-        const XLEN paddr = inst->getTranslationState()->getResult().getPAddr();
+        const XLEN jump_target = state->readMemory<XLEN>(inst->getTranslationState()->getResult(),
+                                                         MemAccessSource::INSTRUCTION)
+                                 & ~0x1;
         inst->getTranslationState()->popResult();
-        const XLEN jump_target = state->readMemory<XLEN>(paddr) & ~0x1;
 
         // Jump
         state->setNextPc(jump_target);

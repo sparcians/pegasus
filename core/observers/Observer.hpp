@@ -57,14 +57,16 @@ namespace pegasus
         virtual ~Observer() = default;
 
         // Holds a register's value as a byte vector
-        class RegValue
+        class ObservedValue
         {
           public:
-            RegValue() = default;
+            ObservedValue() = default;
 
-            RegValue(const std::vector<uint8_t> & value) : value_(value) {}
+            ObservedValue(const std::vector<uint8_t> & value) : value_(value) {}
 
-            template <typename TYPE> RegValue(TYPE value) { setValue<TYPE>(value); }
+            template <typename TYPE> ObservedValue(TYPE value) { setValue<TYPE>(value); }
+
+            ObservedValue(const ObservedValue & other) : value_(other.value_) {}
 
             void setValue(const std::vector<uint8_t> & value) { value_ = value; }
 
@@ -119,7 +121,7 @@ namespace pegasus
           private:
             std::vector<uint8_t> value_;
 
-            friend std::ostream & operator<<(std::ostream & os, const RegValue & reg_value);
+            friend std::ostream & operator<<(std::ostream & os, const ObservedValue & value);
         };
 
         struct ObservedReg
@@ -134,7 +136,7 @@ namespace pegasus
             template <typename TYPE> TYPE getRegValue() const { return reg_value.getValue<TYPE>(); }
 
             const RegId reg_id;
-            RegValue reg_value;
+            ObservedValue reg_value;
         };
 
         struct SrcReg : ObservedReg
@@ -142,7 +144,7 @@ namespace pegasus
             using ObservedReg::ObservedReg;
 
             // store LMUL-wide register values // only for sources
-            std::vector<RegValue> lmul_values;
+            std::vector<ObservedValue> lmul_values;
         };
 
         struct DestReg : ObservedReg
@@ -164,7 +166,7 @@ namespace pegasus
                 return reg_value.getValue<TYPE>();
             }
 
-            RegValue reg_prev_value;
+            ObservedValue reg_prev_value;
         };
 
         void preExecute(PegasusState* state);
@@ -177,16 +179,72 @@ namespace pegasus
 
         struct ObservedMemAccess
         {
-            Addr addr;
-            size_t size;
-            uint64_t value;
+            template <typename TYPE>
+            ObservedMemAccess(const Addr paddr, const Addr vaddr, const size_t size,
+                              const TYPE value, const MemAccessSource source) :
+                paddr(paddr),
+                vaddr(vaddr),
+                size(size),
+                mem_value(value),
+                source(source)
+            {
+            }
+
+            ObservedMemAccess(const ObservedMemAccess & other) :
+                paddr(other.paddr),
+                vaddr(other.vaddr),
+                size(other.size),
+                mem_value(other.mem_value),
+                source(other.source)
+            {
+            }
+
+            ObservedMemAccess & operator=(ObservedMemAccess other)
+            {
+                std::swap(*this, other);
+                return *this;
+            }
+
+            template <typename TYPE> TYPE getMemValue() const { return mem_value.getValue<TYPE>(); }
+
+            const Addr paddr;
+            const Addr vaddr;
+            const size_t size;
+            const ObservedValue mem_value;
+            const MemAccessSource source;
         };
 
         using MemRead = ObservedMemAccess;
 
         struct MemWrite : ObservedMemAccess
         {
-            uint64_t prior_value;
+            template <typename TYPE>
+            MemWrite(const Addr paddr, const Addr vaddr, const size_t size, const TYPE value,
+                     const TYPE prev_value, const MemAccessSource source) :
+                ObservedMemAccess(paddr, vaddr, size, value, source),
+                mem_prev_value(prev_value)
+            {
+            }
+
+            MemWrite(const MemWrite & other) :
+                ObservedMemAccess(other.paddr, other.vaddr, other.size, other.mem_value,
+                                  other.source),
+                mem_prev_value(other.mem_prev_value)
+            {
+            }
+
+            MemWrite & operator=(MemWrite other)
+            {
+                std::swap(*this, other);
+                return *this;
+            }
+
+            template <typename TYPE> TYPE getMemPrevValue() const
+            {
+                return mem_prev_value.getValue<TYPE>();
+            }
+
+            const ObservedValue mem_prev_value;
         };
 
         void registerReadWriteCsrCallbacks(sparta::RegisterBase* reg)
@@ -301,6 +359,6 @@ namespace pegasus
         void postMemRead_(const sparta::memory::BlockingMemoryIFNode::ReadAccess &);
     };
 
-    std::ostream & operator<<(std::ostream & os, const Observer::RegValue & reg_value);
+    std::ostream & operator<<(std::ostream & os, const Observer::ObservedValue & value);
 
 } // namespace pegasus

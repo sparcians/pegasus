@@ -172,19 +172,20 @@ namespace pegasus
                           || std::is_same_v<SIZE, FLOAT_HP>);
 
             const PegasusInstPtr & inst = state->getCurrentInst();
-            const Addr paddr = inst->getTranslationState()->getResult().getPAddr();
-            inst->getTranslationState()->popResult();
-
             if constexpr (LOAD)
             {
-                RV64 value = state->readMemory<SIZE>(paddr);
+                RV64 value = state->readMemory<SIZE>(inst->getTranslationState()->getResult(),
+                                                     MemAccessSource::INSTRUCTION);
                 value = nanBoxing<RV64, SIZE>(value);
                 WRITE_FP_REG<RV64>(state, inst->getRd(), value);
             }
             else
             {
-                state->writeMemory<SIZE>(paddr, READ_FP_REG<RV64>(state, inst->getRs2()));
+                state->writeMemory<SIZE>(inst->getTranslationState()->getResult(),
+                                         READ_FP_REG<RV64>(state, inst->getRs2()),
+                                         MemAccessSource::INSTRUCTION);
             }
+            inst->getTranslationState()->popResult();
             return ++action_it;
         }
     }; // class RvfInstsBase

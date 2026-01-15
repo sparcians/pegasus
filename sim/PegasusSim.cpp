@@ -49,7 +49,8 @@ namespace pegasus
         std::cout.precision(12);
         std::cout << "Instructions executed: " << std::dec << inst_count << std::endl;
         std::cout << "Raw time (seconds): " << std::dec << (sim_time / 1000000.0) << std::endl;
-        std::cout << "MIPS: " << std::dec << (inst_count / (sim_time / 1000000.0)) << std::endl;
+        std::cout << "MIPS: " << std::dec << ((inst_count / (sim_time / 1000000.0)) / 1000000.0)
+                  << std::endl;
 
         // TODO: mem usage, workload exit code
     }
