@@ -864,6 +864,11 @@ namespace pegasus
                 POKE_CSR_FIELD<RV64>(this, MSTATUS, "uxl", xlen_val);
                 POKE_CSR_FIELD<RV64>(this, MSTATUS, "sxl", xlen_val);
                 POKE_CSR_FIELD<RV64>(this, SSTATUS, "uxl", xlen_val);
+
+                if (pegasus_core_->hasHypervisor())
+                {
+                    POKE_CSR_FIELD<RV64>(this, VSSTATUS, "uxl", xlen_val);
+                }
             }
             else
             {
