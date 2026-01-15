@@ -14,7 +14,7 @@ namespace pegasus
         };
 
         template <AccessType TYPE>
-        bool isAccessLegal_(const uint32_t csr_num, const PrivMode priv_mode)
+        bool isAccessLegal_(const PegasusState* state, const uint32_t csr_num)
         {
             // From RISC-V spec:
             // The upper 4 bits of the CSR address (csr[11:8]) are used to encode the read and write
@@ -23,6 +23,11 @@ namespace pegasus
             // next two bits (csr[9:8]) encode the lowest privilege level that can access the CSR.
             const bool is_writable = (csr_num & 0xc00) != 0xc00;
             const PrivMode lowest_priv_level = (PrivMode)((csr_num & 0x300) >> 8);
+
+            const PrivMode priv_mode =
+                (state->getPrivMode() == PrivMode::SUPERVISOR) && (state->getVirtualMode() == false)
+                    ? PrivMode::HYPERVISOR
+                    : state->getPrivMode();
 
             return ((TYPE == AccessType::READ) || is_writable) && (priv_mode >= lowest_priv_level);
         }

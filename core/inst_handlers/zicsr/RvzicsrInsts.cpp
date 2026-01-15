@@ -119,7 +119,7 @@ namespace pegasus
         auto rd = inst->getRd();
         const uint32_t csr = getVirtualCsrNum_(state, inst->getCsr());
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -128,7 +128,7 @@ namespace pegasus
         // Don't write CSR is rs1=x0
         if (rs1 != 0)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -152,7 +152,7 @@ namespace pegasus
         const auto rd = inst->getRd();
         const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -160,7 +160,7 @@ namespace pegasus
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -182,7 +182,7 @@ namespace pegasus
         const auto rd = inst->getRd();
         const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -190,7 +190,7 @@ namespace pegasus
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (rs1 != 0)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -214,7 +214,7 @@ namespace pegasus
         const auto rd = inst->getRd();
         const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -222,7 +222,7 @@ namespace pegasus
         const XLEN csr_val = READ_CSR_REG<XLEN>(state, csr);
         if (imm)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -247,7 +247,7 @@ namespace pegasus
 
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, rs1);
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -255,7 +255,7 @@ namespace pegasus
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
@@ -278,7 +278,7 @@ namespace pegasus
         const auto rd = inst->getRd();
         const int csr = getVirtualCsrNum_(state, inst->getCsr());
 
-        if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(csr, state->getPrivMode()))
+        if (!isAccessLegal_<RvCsrAccess::AccessType::WRITE>(state, csr))
         {
             THROW_ILLEGAL_INST;
         }
@@ -286,7 +286,7 @@ namespace pegasus
         // Only read CSR if rd!=x0
         if (rd != 0)
         {
-            if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(csr, state->getPrivMode()))
+            if (!isAccessLegal_<RvCsrAccess::AccessType::READ>(state, csr))
             {
                 THROW_ILLEGAL_INST;
             }
