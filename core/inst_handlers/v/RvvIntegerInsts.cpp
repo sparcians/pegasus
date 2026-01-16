@@ -1776,7 +1776,14 @@ namespace pegasus
             {
                 c = static_cast<decltype(b)>(elems_v0.getBit(index));
             }
-            elems_vd.getElement(index).setVal(detectFunc(a, b, c));
+            if (detectFunc(a, b, c))
+            {
+                elems_vd.setBit(index);
+            }
+            else
+            {
+                elems_vd.clearBit(index);
+            }
         }
 
         return ++action_it;

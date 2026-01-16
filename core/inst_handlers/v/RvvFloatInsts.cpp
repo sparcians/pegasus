@@ -1245,15 +1245,28 @@ namespace pegasus
                 auto index = iter.getIndex();
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
-                    elems_vd.getElement(index).setBit(func(elems_vs2.getElement(index).getVal(),
-                                                           elems_vs1.getElement(index).getVal()));
+                    if (func(elems_vs2.getElement(index).getVal(),
+                             elems_vs1.getElement(index).getVal()))
+                    {
+                        elems_vd.setBit(index);
+                    }
+                    else
+                    {
+                        elems_vd.clearBit(index);
+                    }
                 }
                 else if constexpr (opMode.src1 == OperandMode::Mode::F)
                 {
-                    elems_vd.getElement(index).setBit(
-                        func(elems_vs2.getElement(index).getVal(),
+                    if (func(elems_vs2.getElement(index).getVal(),
                              static_cast<UintType<elemWidth>>(
-                                 READ_FP_REG<RV64>(state, inst->getRs1()))));
+                                 READ_FP_REG<RV64>(state, inst->getRs1()))))
+                    {
+                        elems_vd.setBit(index);
+                    }
+                    else
+                    {
+                        elems_vd.clearBit(index);
+                    }
                 }
             }
         };
