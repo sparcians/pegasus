@@ -13,10 +13,14 @@ namespace pegasus
             PegasusSimParameters::getParameter<PegasusSimParameters::WorkloadsAndArgs>(sys_node,
                                                                                        "workloads"))
     {
-        if (false == workloads_and_args_.empty())
+        for (auto & wkld_and_args : workloads_and_args_)
         {
-            // Get first workload
-            loadWorkload_(workloads_and_args_.at(0).at(0));
+            loadWorkload_(wkld_and_args.at(0));
+        }
+
+        if (starting_pc_.isValid())
+        {
+            std::cout << "Starting PC: 0x" << std::hex << starting_pc_ << std::endl;
         }
 
         if (p->enable_uart)
@@ -38,20 +42,9 @@ namespace pegasus
         createMemoryMappings_(sys_node);
 
         // Initialize memory with ELF contents
-        for (const auto & memory_section : memory_sections_)
+        for (auto & wkld_and_args : workloads_and_args_)
         {
-            if (memory_section.data != nullptr)
-            {
-                std::cout << "  -- Loading section " << memory_section.name << " (" << std::dec
-                          << memory_section.file_size << "B) "
-                          << " to 0x" << std::hex << memory_section.start_address << std::endl;
-                bool success = memory_map_->tryPoke(memory_section.start_address,
-                                                    memory_section.file_size, memory_section.data);
-                if (!success)
-                {
-                    std::cout << "FAILED!\n";
-                }
-            }
+            initMemoryWithElf_(wkld_and_args.at(0));
         }
     }
 
@@ -95,15 +88,32 @@ namespace pegasus
 
                     if (name == "tohost")
                     {
-                        sparta_assert(tohost_addr_.isValid() == false,
-                                      "Found multiple tohost symbols in ELF!");
-                        tohost_addr_ = addr;
+                        if (tohost_addr_.isValid())
+                        {
+                            std::cout << "WARNING: Found multiple tohost symbols in ELF!\n\tFirst "
+                                         "one (stashed): "
+                                      << HEX16(tohost_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                      << std::endl;
+                        }
+                        else
+                        {
+                            tohost_addr_ = addr;
+                        }
                     }
                     else if (name == "fromhost")
                     {
-                        sparta_assert(fromhost_addr_.isValid() == false,
-                                      "Found multiple fromhost symbols in ELF!");
-                        fromhost_addr_ = addr;
+                        if (fromhost_addr_.isValid())
+                        {
+                            std::cout
+                                << "WARNING: Found multiple fromhost symbols in ELF!\n\tFirst "
+                                   "one (stashed): "
+                                << HEX16(fromhost_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                << std::endl;
+                        }
+                        else
+                        {
+                            fromhost_addr_ = addr;
+                        }
                     }
                     else if (name == "pass")
                     {
@@ -165,40 +175,12 @@ namespace pegasus
             magic_memory_section_ = MemorySection("MAGIC_MEM", 0, size_aligned, base_addr, nullptr);
         }
 
-        for (const auto & segment : elf_reader_.segments)
+        // Get entrypoint from first ELF only
+        // TODO: Assign ELFs to specific harts that can each have their own PCs
+        if (starting_pc_.isValid() == false)
         {
-            // Ignore empty segments
-            if (segment->get_file_size() == 0)
-            {
-                continue;
-            }
-
-            // Bug in ELFIO where segment name is incorrect, so use the section name instead
-            std::string segment_name;
-            for (const auto & section : elf_reader_.sections)
-            {
-                if (section->get_address() == segment->get_virtual_address())
-                {
-                    segment_name = section->get_name();
-                    break;
-                }
-            }
-
-            // Round up segment size to Sparta memory block size
-            const sparta::memory::addr_t size_aligned =
-                ((segment->get_memory_size() - 1) & ~(PEGASUS_SYSTEM_BLOCK_SIZE - 1))
-                + PEGASUS_SYSTEM_BLOCK_SIZE;
-
-            MemorySection section = {(segment_name.empty() ? "?" : segment_name),
-                                     segment->get_file_size(), size_aligned,
-                                     segment->get_physical_address(),
-                                     reinterpret_cast<const uint8_t*>(segment->get_data())};
-            memory_sections_.emplace_back(section);
+            starting_pc_ = elf_reader_.get_entry();
         }
-
-        // Get entrypoint
-        starting_pc_ = elf_reader_.get_entry();
-        std::cout << "Starting PC: 0x" << std::hex << starting_pc_ << std::endl;
     }
 
     void PegasusSystem::createMemoryMappings_(sparta::TreeNode* sys_node)
@@ -323,6 +305,50 @@ namespace pegasus
         memory_map_->addMapping(addr_block_start, PEGASUS_SYSTEM_TOTAL_MEMORY, memory_if,
                                 0x0 /* Additional offset */);
         memory_map_->dumpMappings(std::cout);
+    }
+
+    void PegasusSystem::initMemoryWithElf_(const std::string & workload)
+    {
+        if (elf_reader_.load(workload) == false)
+        {
+            throw sparta::SpartaException()
+                << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
+        }
+
+        for (const auto & segment : elf_reader_.segments)
+        {
+            // Ignore empty segments
+            if (segment->get_file_size() == 0)
+            {
+                continue;
+            }
+
+            // Bug in ELFIO where segment name is incorrect, so use the section name instead
+            std::string segment_name = "?";
+            for (const auto & section : elf_reader_.sections)
+            {
+                if (section->get_address() == segment->get_virtual_address())
+                {
+                    segment_name = section->get_name();
+                    break;
+                }
+            }
+
+            const uint8_t* data = reinterpret_cast<const uint8_t*>(segment->get_data());
+            if (data != nullptr)
+            {
+                std::cout << "  -- Loading section " << segment_name << " (" << std::dec
+                          << segment->get_file_size() << "B) "
+                          << " to 0x" << std::hex << segment->get_memory_size() << std::endl;
+
+                bool success = memory_map_->tryPoke(segment->get_physical_address(),
+                                                    segment->get_file_size(), data);
+                if (!success)
+                {
+                    std::cout << "FAILED!\n";
+                }
+            }
+        }
     }
 
     void PegasusSystem::registerMemoryCallbacks(Observer* observer)

@@ -49,7 +49,7 @@ namespace pegasus
         void registerMemoryCallbacks(Observer* observer);
 
         // Get starting PC from ELF
-        Addr getStartingPc() const { return starting_pc_; }
+        Addr getStartingPc() const { return starting_pc_.isValid() ? starting_pc_.getValue() : 0; }
 
         // Tell the system we're using pass/fail criteria for stopping simulation
         void enableEOTPassFailMode();
@@ -113,8 +113,9 @@ namespace pegasus
         // Workload and workload arguments
         const PegasusSimParameters::WorkloadsAndArgs workloads_and_args_;
         void loadWorkload_(const std::string & workload);
+        void initMemoryWithElf_(const std::string & workload);
         ELFIO::elfio elf_reader_;
-        Addr starting_pc_;
+        sparta::utils::ValidValue<Addr> starting_pc_;
         std::unordered_map<Addr, std::string> symbols_;
         sparta::utils::ValidValue<Addr> tohost_addr_;
         sparta::utils::ValidValue<Addr> fromhost_addr_;
