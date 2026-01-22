@@ -48,6 +48,9 @@ from insts.RVZICBOM_INST import RV64ZICBOM_INST
 from insts.RVZICBOZ_INST import RV32ZICBOZ_INST
 from insts.RVZICBOZ_INST import RV64ZICBOZ_INST
 
+from insts.RVZIMOP_INST import RV32ZIMOP_INST
+from insts.RVZIMOP_INST import RV64ZIMOP_INST
+
 from insts.RVZIHINTNTL_INST import RV32ZIHINTNTL_INST         # Zihintntl
 from insts.RVZIHINTNTL_INST import RV64ZIHINTNTL_INST         # Zihintntl
 from insts.RVZIHINTPAUSE_INST import RV32ZIHINTPAUSE_INST     # Zihintpause
@@ -88,6 +91,8 @@ from insts.RVZIFENCEI_INST  import RVZIFENCEI_MAVIS_EXTS
 from insts.RVZICBOP_INST import RVZICBOP_MAVIS_EXTS
 from insts.RVZICBOM_INST import RVZICBOM_MAVIS_EXTS
 from insts.RVZICBOZ_INST import RVZICBOZ_MAVIS_EXTS
+
+from insts.RVZIMOP_INST import RVZIMOP_MAVIS_EXTS
 
 from insts.RVZIHINTNTL_INST import RVZIHINTNTL_MAVIS_EXTS
 from insts.RVZIHINTPAUSE_INST import RVZIHINTPAUSE_MAVIS_EXTS
@@ -242,7 +247,7 @@ def main():
                                        'd', 'zcd', 'zfh', 'zfhmin', 'zfhmind',
                                        'b', 'zba', 'zbb', 'zbc', 'zbs', 'zbkb',
                                        'zicsr', 'zifencei', 'zicbop', 'zicbom',
-                                       'zicboz', 'zihintntl', 'zihintpause',
+                                       'zicboz', 'zimop', 'zihintntl', 'zihintpause',
                                        'zicond', 'zcmp', 'zcmt', 'zabha', 'zfa',
                                        'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
                                        'zve64x', 'h']
@@ -251,7 +256,7 @@ def main():
                                        'd', 'zcd', 'zfh', 'zfhmin', 'zfhmind',
                                        'b', 'zba', 'zbb', 'zbc', 'zbs', 'zbkb',
                                        'zicsr', 'zifencei', 'zicbop', 'zicbom',
-                                       'zicboz', 'zihintntl', 'zihintpause',
+                                       'zicboz', 'zimop', 'zihintntl', 'zihintpause',
                                        'zicond', 'zcmp', 'zcmt', 'zabha', 'zilsd', 'zfa',
                                        'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
                                        'zve64x', 'h']
