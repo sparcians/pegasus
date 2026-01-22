@@ -254,7 +254,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Sstvala** stval must be written with the faulting virtual address for load, store, and instruction page-fault, access-fault, and misaligned exceptions, and for breakpoint exceptions other than those caused by execution of the EBREAK or C.EBREAK instructions. For virtual-instruction and illegal-instruction exceptions, stval must be written with the faulting instruction. | :white_check_mark: |
 | **Sscounterenw** For any hpmcounter that is not read-only zero, the corresponding bit in scounteren must be writable. | :x: |
 | **Svpbmt** Page-based memory types
-| **Svinval** Fine-grained address-translation cache invalidation. | :x: |
+| **Svinval** Fine-grained address-translation cache invalidation. | :white_check_mark: |
 | **Svnapot** NAPOT translation contiguity. | :x: |
 | **Sstc** supervisor-mode timer interrupts. | :x: |
 | **Sscofpmf** count overflow and mode-based filtering. | :x: |

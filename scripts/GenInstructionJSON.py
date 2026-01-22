@@ -74,6 +74,10 @@ from insts.RVV_INST import RVZVE64X_INST
 from insts.RVH_INST import RV32H_INST
 from insts.RVH_INST import RV64H_INST
 
+
+from insts.RVSVINVAL_INST import RV32SVINVAL_INST
+from insts.RVSVINVAL_INST import RV64SVINVAL_INST
+
 # Mavis extensions
 from insts.RVI_INST import RVI_MAVIS_EXTS
 from insts.RVM_INST import RVM_MAVIS_EXTS
@@ -107,6 +111,8 @@ from insts.RVZFA_INST import RVZFA_MAVIS_EXTS
 from insts.RVV_INST import RVV_MAVIS_EXTS
 
 from insts.RVH_INST import RVH_MAVIS_EXTS
+
+from insts.RVSVINVAL_INST import RVSVINVAL_MAVIS_EXTS
 
 class InstJSONGenerator():
     """Generates instruction definition JSON files.
@@ -241,25 +247,9 @@ def main():
 
     # RVA23
     # FIXME: At some point, we will read in the Mavis profile JSONs to get the
-    # list of supported extensions. For now, I've hardcoded it here.
-    RVA23_RV64_SUPPORTED_EXTENSIONS = ['i', 'c', 'zca', 'zcb', 'm', 'zmmul',
-                                       'a', 'zalrsc', 'zaamo', 'f', 'zcf',
-                                       'd', 'zcd', 'zfh', 'zfhmin', 'zfhmind',
-                                       'b', 'zba', 'zbb', 'zbc', 'zbs', 'zbkb',
-                                       'zicsr', 'zifencei', 'zicbop', 'zicbom',
-                                       'zicboz', 'zimop', 'zihintntl', 'zihintpause',
-                                       'zicond', 'zcmp', 'zcmt', 'zabha', 'zfa',
-                                       'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
-                                       'zve64x', 'h']
-    RVA23_RV32_SUPPORTED_EXTENSIONS = ['i', 'c', 'zca', 'zcb', 'm', 'zmmul',
-                                       'a', 'zalrsc', 'zaamo', 'f', 'zcf',
-                                       'd', 'zcd', 'zfh', 'zfhmin', 'zfhmind',
-                                       'b', 'zba', 'zbb', 'zbc', 'zbs', 'zbkb',
-                                       'zicsr', 'zifencei', 'zicbop', 'zicbom',
-                                       'zicboz', 'zimop', 'zihintntl', 'zihintpause',
-                                       'zicond', 'zcmp', 'zcmt', 'zabha', 'zilsd', 'zfa',
-                                       'v', 'zve32x', 'zve32f', 'zve64f', 'zve64d',
-                                       'zve64x', 'h']
+    # list of supported extensions. For now, just assume everything is included.
+    RVA23_RV64_SUPPORTED_EXTENSIONS = rv64_exts
+    RVA23_RV32_SUPPORTED_EXTENSIONS = rv32_exts
     rva23_r64_exts = [ext for ext in rv64_exts if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]
     rva23_r32_exts = [ext for ext in rv32_exts if ext in RVA23_RV32_SUPPORTED_EXTENSIONS]
     rva23_pegasus_uarch_rv64_jsons = [ext for ext in pegasus_uarch_rv64_jsons if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]
