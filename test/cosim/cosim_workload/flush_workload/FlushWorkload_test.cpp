@@ -247,7 +247,8 @@ bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId c
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
 //   --> '--db-stem' specifies the database stem name
-std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** argv)
+std::tuple<std::string, std::string, size_t, size_t>
+ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params)
 {
     if (argc == 1)
     {
@@ -258,6 +259,8 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
     std::string db_stem;
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
+
+    pegasus::PegasusSimParameters::RegisterOverrides reg_overrides;
 
     for (int i = 1; i < argc;)
     {
@@ -282,8 +285,19 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
         }
         else if (arg == "-p")
         {
-            // Only used by the RunArchTests.py core ISA tests (Pegasus simulator, not cosim)
+            sim_params[argv[i + 1]] = argv[i + 2];
             i += 3;
+            continue;
+        }
+        else if (arg == "--reg")
+        {
+            const std::string reg_override_str = argv[i + 1];
+            const auto space_pos = reg_override_str.find(" ");
+            const std::string reg = reg_override_str.substr(0, space_pos);
+            const std::string value = reg_override_str.substr(space_pos + 1);
+            const pegasus::PegasusSimParameters::RegisterOverride reg_override{reg, value};
+            reg_overrides.emplace_back(reg_override);
+            i += 2;
             continue;
         }
         else if (arg == "--max-steps-before-flush")
@@ -309,13 +323,20 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
         throw std::invalid_argument("Must supply workload");
     }
 
+    if (reg_overrides.empty() == false)
+    {
+        sim_params["top.extension.sim.reg_overrides"] =
+            pegasus::PegasusSimParameters::convertVectorToStringParam(reg_overrides);
+    }
+
     return {workload, db_stem, max_steps_before_flush, fast_forward_steps};
 }
 
 int main(int argc, char** argv)
 {
+    std::map<std::string, std::string> sim_params;
     const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] =
-        ParseArgs(argc, argv);
+        ParseArgs(argc, argv, sim_params);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
@@ -332,9 +353,13 @@ int main(int argc, char** argv)
     const size_t snapshot_threshold = 10;
 
     sparta::app::SimulationConfiguration config_truth;
+
+    for (auto & [param_name, param_value] : sim_params)
+    {
+        config_truth.processParameter(param_name, param_value, false);
+    }
+
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
-    config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
-                                  false);
     pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
     const std::string wkld_param =
         pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
