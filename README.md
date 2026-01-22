@@ -216,8 +216,8 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zvkt** Vector data-independent execution latency. | :x: |
 | **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
 | **Zicond** Integer conditional operations. | :white_check_mark: |
-| **Zimop** may-be-operations. | :x: |
-| **Zcmop** Compressed may-be-operations. | :x: |
+| **Zimop** may-be-operations. | :white_check_mark: |
+| **Zcmop** Compressed may-be-operations. | :white_check_mark: |
 | **Zcb** Additional compressed instructions. | :white_check_mark: |
 | **Zfa** Additional floating-Point instructions. | :white_check_mark: |
 | **Zawrs** Wait-on-reservation-set instructions. | :x: |
