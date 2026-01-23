@@ -247,7 +247,7 @@ bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId c
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
 //   --> '--db-stem' specifies the database stem name
-std::tuple<std::string, std::string, size_t, size_t>
+std::tuple<std::string, uint64_t, std::string, size_t, size_t>
 ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params)
 {
     if (argc == 1)
@@ -256,6 +256,7 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
     }
 
     std::string workload;
+    uint64_t ilimit = 0;
     std::string db_stem;
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
@@ -268,6 +269,12 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
         if (arg == "-w")
         {
             workload = argv[i + 1];
+            i += 2;
+            continue;
+        }
+        else if (arg == "-i")
+        {
+            ilimit = std::stoi(argv[i + 1]);
             i += 2;
             continue;
         }
@@ -329,20 +336,18 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
             pegasus::PegasusSimParameters::convertVectorToStringParam(reg_overrides);
     }
 
-    return {workload, db_stem, max_steps_before_flush, fast_forward_steps};
+    return {workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps};
 }
 
 int main(int argc, char** argv)
 {
     std::map<std::string, std::string> sim_params;
-    const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] =
+    const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps] =
         ParseArgs(argc, argv, sim_params);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
     sparta::SleeperThread::disableForever();
-
-    const uint64_t ilimit = 0;
 
     const auto cwd = std::filesystem::current_path().string();
     const auto workload_fname =

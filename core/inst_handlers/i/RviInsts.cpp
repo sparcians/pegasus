@@ -1046,6 +1046,10 @@ namespace pegasus
             const XLEN ret_code = state->emulateSystemCall<XLEN>();
             WRITE_INT_REG<XLEN>(state, 10, ret_code);
         }
+        else
+        {
+            (void)call_stack;
+        }
         return ++action_it;
     }
 

@@ -12,7 +12,7 @@ cosim_named_test(CoSimFlushWorkload_test_run FlushWorkload_test -w rv64mi-p-csr 
 set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
                       --reg "core0.hart0.gp 0x77000"
                       --reg "core0.hart0.tp 0x7d000" -p top.extension.sim.enable_syscall_emulation true)
-cosim_named_test(CoSimFlushSysCall_test_run FlushWorkload_test -w workloads/dhry.elf ${LINUX_ARCH_SETUP})
+cosim_named_test(CoSimFlushSysCall_test_run FlushWorkload_test -w workloads/dhry.elf -i 10000 ${LINUX_ARCH_SETUP})
 
 # Exhaustive test for "make pegasus_cosim_regress" to run all ISA tests in parallel
 find_package(Python3 REQUIRED)
