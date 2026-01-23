@@ -19,7 +19,8 @@ def main():
                 memory = "load" in inst['type'] or "store" in inst['type']
             entry['memory'] = memory
             entry['cof'] = False
-            print(entry + ",")
+            print(entry, end="")
+            print(",")
             #print(json.dumps(entry, indent=4))
 
 
