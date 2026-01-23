@@ -107,7 +107,7 @@ namespace pegasus
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         reservations_(num_harts_),
-        inst_handlers_(syscall_emulation_enabled_ && !cosim_mode_)
+        inst_handlers_(syscall_emulation_enabled_)
     {
         // top.core*.hart*
         for (HartId hart_idx = 0; hart_idx < num_harts_; ++hart_idx)

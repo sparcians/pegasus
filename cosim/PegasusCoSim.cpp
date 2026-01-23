@@ -75,6 +75,9 @@ namespace pegasus::cosim
             PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
         sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
 
+        // Put all cores in CoSim mode
+        sim_config_->processParameter("top.core*.params.cosim_mode", "true");
+
         sim_config_->copyTreeNodeExtensionsFromArchAndConfigPTrees();
 
         scheduler_.reset(new sparta::Scheduler());

@@ -53,7 +53,7 @@ namespace pegasus
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
 
-            HIDDEN_PARAMTER(bool, cosim_mode, false, "Set by PegasusCoSim");
+            HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
 
           private:
             static bool validateProfile_(std::string & profile, const sparta::TreeNode*)

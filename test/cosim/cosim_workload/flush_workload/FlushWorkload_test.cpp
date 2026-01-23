@@ -388,9 +388,7 @@ int main(int argc, char** argv)
         }
     }
 
-    const std::map<std::string, std::string> params = {
-        {"top.core*.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh"}};
-    PegasusCoSim cosim_test(ilimit, workload, params, db_test, snapshot_threshold);
+    PegasusCoSim cosim_test(ilimit, workload, sim_params, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
@@ -410,12 +408,16 @@ int main(int argc, char** argv)
             {
                 if (ERROR_CODE)
                 {
-                    std::cout << "Mismatch detected at step " << step_count << std::endl;
+                    std::cout << "Mismatch detected at step " << std::dec << step_count
+                              << std::endl;
+                    std::cout << "Last cosim Event: "
+                              << cosim_test.getLastCommittedEvent(core_id, hart_id).get()
+                              << std::endl;
                 }
                 break;
             }
         }
-        std::cout << "Completed " << step_count << " steps." << std::endl;
+        std::cout << "Completed " << std::dec << step_count << " steps." << std::endl;
     }
     catch (const std::exception & ex)
     {

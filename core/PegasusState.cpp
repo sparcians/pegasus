@@ -9,6 +9,7 @@
 #include "include/ActionTags.hpp"
 #include "include/PegasusUtils.hpp"
 #include "system/PegasusSystem.hpp"
+#include "system/SystemCallEmulator.hpp"
 #include "core/observers/SimController.hpp"
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
@@ -677,6 +678,24 @@ namespace pegasus
 
         return true;
     }
+
+    template <typename XLEN> XLEN PegasusState::emulateSystemCall()
+    {
+        // x10 -> x16 are the function arguments.
+        // x17 holds the system call number, first item on the stack
+        SystemCallStack call_stack = {READ_INT_REG<XLEN>(this, 17), READ_INT_REG<XLEN>(this, 10),
+                                      READ_INT_REG<XLEN>(this, 11), READ_INT_REG<XLEN>(this, 12),
+                                      READ_INT_REG<XLEN>(this, 13), READ_INT_REG<XLEN>(this, 14),
+                                      READ_INT_REG<XLEN>(this, 15), READ_INT_REG<XLEN>(this, 16)};
+
+        auto mem = getCore()->getSystem()->getSystemMemory();
+        auto emulator = getCore()->getSystemCallEmulator();
+        const XLEN ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
+        return ret_code;
+    }
+
+    template RV64 PegasusState::emulateSystemCall<RV64>();
+    template RV32 PegasusState::emulateSystemCall<RV32>();
 
     // Initialize a program stack (argc, argv, envp, auxv, etc)
     // Useful info about ELF binaries: https://lwn.net/Articles/631631/
