@@ -1034,21 +1034,10 @@ namespace pegasus
     Action::ItrType RviInsts::ecallHandlerSystemEmulation_(pegasus::PegasusState* state,
                                                            Action::ItrType action_it)
     {
-        // x10 -> x16 are the function arguments.
-        // x17 holds the system call number, first item on the stack
-        SystemCallStack call_stack = {READ_INT_REG<XLEN>(state, 17), READ_INT_REG<XLEN>(state, 10),
-                                      READ_INT_REG<XLEN>(state, 11), READ_INT_REG<XLEN>(state, 12),
-                                      READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
-                                      READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
-
         if (state->getCore()->inCoSimMode() == false)
         {
             const XLEN ret_code = state->emulateSystemCall<XLEN>();
             WRITE_INT_REG<XLEN>(state, 10, ret_code);
-        }
-        else
-        {
-            (void)call_stack;
         }
         return ++action_it;
     }
