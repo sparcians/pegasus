@@ -5,6 +5,7 @@
 #include "core/inst_handlers/b/RvzbbInsts.hpp"
 #include "core/inst_handlers/b/RvzbcInsts.hpp"
 #include "core/inst_handlers/b/RvzbkbInsts.hpp"
+#include "core/inst_handlers/zbkb/ZbkbInsts.hpp"
 #include "core/inst_handlers/b/RvzbsInsts.hpp"
 #include "core/inst_handlers/d/RvdInsts.hpp"
 #include "core/inst_handlers/f/RvfInsts.hpp"
@@ -56,7 +57,7 @@ namespace pegasus
         RvzbaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        RvzbkbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        ZbkbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -87,7 +88,7 @@ namespace pegasus
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvzbkbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        ZbkbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
