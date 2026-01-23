@@ -87,12 +87,6 @@ namespace pegasus
     template void ZbkbInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void ZbkbInsts::getInstHandlers<RV64>(std::map<std::string, Action>&);
 
-    // template void ZbkbInsts::getInstHandlers<unsigned int>(std::map<std::basic_string<char>, Action>&);
-    // template void ZbkbInsts::getInstHandlers<unsigned long>(std::map<std::basic_string<char>, Action>&);
-    // ──────────────────────────────────────────────────────────────────────────────
-    // Implementation of handlers (non-static member functions)
-    // ──────────────────────────────────────────────────────────────────────────────
-
     template <typename XLEN>
     Action::ItrType ZbkbInsts::andnHandler_(PegasusState* state, Action::ItrType itr)
     {

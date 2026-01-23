@@ -68,7 +68,6 @@ private:
     template <typename XLEN>
     Action::ItrType unzipHandler_(PegasusState* state, Action::ItrType itr);
 
-    // Helpers (can stay static inline)
     template <typename T>
     static inline T ror_(T value, unsigned int shift) {
         constexpr unsigned int bits = sizeof(T) * 8;
