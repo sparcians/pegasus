@@ -29,6 +29,7 @@
 #include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
 #include "core/inst_handlers/zfh/RvzfhInsts.hpp"
 #include "core/inst_handlers/h/RvhInsts.hpp"
+#include "core/inst_handlers/zbkx/RvzbkxInsts.hpp"
 
 namespace pegasus
 {
@@ -73,6 +74,7 @@ namespace pegasus
         RvzfaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzfhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzbkxInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -104,6 +106,7 @@ namespace pegasus
         RvzfaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzfhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzbkxInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);

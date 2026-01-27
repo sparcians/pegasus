@@ -35,6 +35,8 @@ from insts.RVB_INST    import RV32ZBS_INST
 from insts.RVB_INST    import RV64ZBS_INST
 from insts.RVZBKB_INST import RV32ZBKB_INST
 from insts.RVZBKB_INST import RV64ZBKB_INST
+from insts.RVZBKX_INST import RV32ZBKX_INST
+from insts.RVZBKX_INST import RV64ZBKX_INST
 
 from insts.RVZICSR_INST     import RV32ZICSR_INST
 from insts.RVZICSR_INST     import RV64ZICSR_INST
@@ -88,6 +90,7 @@ from insts.RVZFH_INST import RVZFH_MAVIS_EXTS
 
 from insts.RVB_INST   import RVB_MAVIS_EXTS
 from insts.RVZBKB_INST  import RVZBKB_MAVIS_EXTS
+from insts.RVZBKX_INST import RVZBKX_MAVIS_EXTS
 
 from insts.RVZICSR_INST     import RVZICSR_MAVIS_EXTS
 from insts.RVZIFENCEI_INST  import RVZIFENCEI_MAVIS_EXTS
