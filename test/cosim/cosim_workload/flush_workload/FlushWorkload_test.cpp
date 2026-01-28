@@ -7,6 +7,7 @@
 #include "sparta/utils/SpartaTester.hpp"
 #include <filesystem>
 #include <regex>
+#include <boost/algorithm/string/split.hpp>
 
 /// In this test, we will be running the same workload through two PegasusCoSim
 /// instances. One will ONLY step forward and serve as the "truth" against which
@@ -299,9 +300,8 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
         else if (arg == "--reg")
         {
             const std::string reg_override_str = argv[i + 1];
-            const auto space_pos = reg_override_str.find(" ");
-            const std::string reg = reg_override_str.substr(0, space_pos);
-            const std::string value = reg_override_str.substr(space_pos + 1);
+            boost::split(parts, reg_override_str, boost::is_any_of(" "));
+            const auto & [reg, value] = parts;
             const pegasus::PegasusSimParameters::RegisterOverride reg_override{reg, value};
             reg_overrides.emplace_back(reg_override);
             i += 2;
