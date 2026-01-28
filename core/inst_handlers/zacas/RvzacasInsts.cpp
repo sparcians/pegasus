@@ -13,22 +13,22 @@ namespace pegasus
 
         inst_handlers.emplace(
             "amocas_w",
-            pegasus::Action::createAction<
-                &RvzacasInsts::computeAddressHandler_<XLEN, RvzacasInsts::AccessSize::Word>,
-                RvzacasInsts>(nullptr, "amocas_w", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvzacasInsts::computeAddressHandler_<XLEN, W>,
+                                          RvzacasInsts>(nullptr, "amocas_w",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
             "amocas_d",
-            pegasus::Action::createAction<
-                &RvzacasInsts::computeAddressHandler_<XLEN, RvzacasInsts::AccessSize::Double>,
-                RvzacasInsts>(nullptr, "amocas_d", ActionTags::COMPUTE_ADDR_TAG));
+            pegasus::Action::createAction<&RvzacasInsts::computeAddressHandler_<XLEN, D>,
+                                          RvzacasInsts>(nullptr, "amocas_d",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "amocas_q",
-                pegasus::Action::createAction<
-                    &RvzacasInsts::computeAddressHandler_<XLEN, RvzacasInsts::AccessSize::Quadword>,
-                    RvzacasInsts>(nullptr, "amocas_q", ActionTags::COMPUTE_ADDR_TAG));
+                pegasus::Action::createAction<&RvzacasInsts::computeAddressHandler_<XLEN, Q>,
+                                              RvzacasInsts>(nullptr, "amocas_q",
+                                                            ActionTags::COMPUTE_ADDR_TAG));
         }
     }
 
@@ -39,21 +39,19 @@ namespace pegasus
 
         inst_handlers.emplace(
             "amocas_w",
-            pegasus::Action::createAction<
-                &RvzacasInsts::amocasHandler_<XLEN, RvzacasInsts::AccessSize::Word>, RvzacasInsts>(
+            pegasus::Action::createAction<&RvzacasInsts::amocasHandler_<XLEN, W>, RvzacasInsts>(
                 nullptr, "amocas_w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
-            "amocas_d", pegasus::Action::createAction<
-                            &RvzacasInsts::amocasHandler_<XLEN, RvzacasInsts::AccessSize::Double>,
-                            RvzacasInsts>(nullptr, "amocas_d", ActionTags::EXECUTE_TAG));
+            "amocas_d",
+            pegasus::Action::createAction<&RvzacasInsts::amocasHandler_<XLEN, D>, RvzacasInsts>(
+                nullptr, "amocas_d", ActionTags::EXECUTE_TAG));
 
         if constexpr (std::is_same_v<XLEN, RV64>)
         {
             inst_handlers.emplace(
                 "amocas_q",
-                pegasus::Action::createAction<
-                    &RvzacasInsts::amocasHandler_<XLEN, RvzacasInsts::AccessSize::Quadword>,
-                    RvzacasInsts>(nullptr, "amocas_q", ActionTags::EXECUTE_TAG));
+                pegasus::Action::createAction<&RvzacasInsts::amocasHandler_<XLEN, Q>, RvzacasInsts>(
+                    nullptr, "amocas_q", ActionTags::EXECUTE_TAG));
         }
     }
 
@@ -64,7 +62,7 @@ namespace pegasus
     template void RvzacasInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
     template void RvzacasInsts::getInstHandlers<RV64>(InstHandlers::InstHandlersMap &);
 
-    template <typename XLEN, RvzacasInsts::AccessSize accessSize>
+    template <typename XLEN, typename AccessType>
     Action::ItrType RvzacasInsts::computeAddressHandler_(pegasus::PegasusState* state,
                                                          Action::ItrType action_it)
     {
@@ -72,13 +70,15 @@ namespace pegasus
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
-        sparta_assert(!(rs1_val % static_cast<size_t>(accessSize)),
-                      "memory access is not naturally aligned.");
-        inst->getTranslationState()->makeRequest(rs1_val, static_cast<size_t>(accessSize));
+        if (rs1_val % sizeof(AccessType))
+        {
+            THROW_ILLEGAL_INST;
+        }
+        inst->getTranslationState()->makeRequest(rs1_val, sizeof(AccessType));
         return ++action_it;
     }
 
-    template <typename XLEN, RvzacasInsts::AccessSize accessSize>
+    template <typename XLEN, typename AccessType>
     Action::ItrType RvzacasInsts::amocasHandler_(PegasusState* state, Action::ItrType action_it)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
@@ -88,17 +88,15 @@ namespace pegasus
         const uint64_t paddr = xlation_state->getResult().getPAddr();
         xlation_state->popResult();
 
-        if constexpr (sizeof(XLEN) >= static_cast<size_t>(accessSize))
+        if constexpr (sizeof(XLEN) >= sizeof(AccessType))
         {
-            using AcessType = UintType<static_case<size_t>(accessSize) * 8>;
-
-            const AcessType temp =
-                state->readMemory<AcessType>(paddr, MemAccessSource::INSTRUCTION);
-            const AcessType comp = READ_INT_REG<XLEN>(state, inst->getRd());
-            const AcessType swap = READ_INT_REG<XLEN>(state, inst->getRs2());
+            const AccessType temp =
+                state->readMemory<AccessType>(paddr, MemAccessSource::INSTRUCTION);
+            const AccessType comp = READ_INT_REG<XLEN>(state, inst->getRd());
+            const AccessType swap = READ_INT_REG<XLEN>(state, inst->getRs2());
             if (temp == comp)
             {
-                state->writeMemory<AcessType>(paddr, swap, MemAccessSource::INSTRUCTION);
+                state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION);
             }
             WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<AccessType, XLEN>(temp));
         }

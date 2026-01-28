@@ -1,4 +1,4 @@
-RVA_MAVIS_EXTS = ["zacas"]
+RVZACAS_MAVIS_EXTS = ["zacas"]
 
 RV32ZACAS_INST = [
     {'mnemonic': 'amocas.w', 'handler': 'amocas_w', 'cost': 1, 'tags': 'A_EXT_32', 'memory': True, 'cof': False},
