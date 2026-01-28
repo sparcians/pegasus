@@ -402,6 +402,25 @@ namespace pegasus::cosim
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
             observer_->getCheckpointer()->commitCurrentBranch();
         }
+
+        // Handle syscall emulation
+        if (state_->getCore()->isSystemCallEmulationEnabled() && (evt.getOpcode() == ECALL_OPCODE))
+        {
+            sparta_assert(
+                uncommitted_evts_buffer_.empty(),
+                "Cannot emulate a system call with uncommitted Events! Num uncommitted events: "
+                    << uncommitted_evts_buffer_.size());
+            if (state_->getXlen() == 64)
+            {
+                const RV64 ret_code = state_->emulateSystemCall<RV64>();
+                WRITE_INT_REG<RV64>(state_, 10, ret_code);
+            }
+            else
+            {
+                const RV32 ret_code = state_->emulateSystemCall<RV32>();
+                WRITE_INT_REG<RV32>(state_, 10, ret_code);
+            }
+        }
     }
 
     void CoSimEventPipeline::commitUpTo(uint64_t euid)

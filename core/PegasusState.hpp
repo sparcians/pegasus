@@ -295,6 +295,8 @@ namespace pegasus
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
+        template <typename XLEN> XLEN emulateSystemCall();
+
         // Initialze a program stack (argc, argv, envp, auxv, etc)
         void setupProgramStack(const std::vector<std::string> & program_arguments);
 
