@@ -70,8 +70,8 @@ namespace pegasus::cosim
 
         // Remember that all cores/harts share the same database,
         // so we need to distinguish events by core/hart ID.
-        tbl.addColumn("CoreId", dt::int32_t);
-        tbl.addColumn("HartId", dt::int32_t);
+        tbl.addColumn("CoreId", dt::uint32_t);
+        tbl.addColumn("HartId", dt::uint32_t);
 
         // The compressed event data blob
         tbl.addColumn("ZlibBlob", dt::blob_t);
@@ -360,8 +360,9 @@ namespace pegasus::cosim
 
         // Configure the pipeline snooper so we can look for events directly in the pipeline
         // instead of needing to go to the database when the event is not in the cache.
-        pipeline_snooper_.addStage(compressor);
-        pipeline_snooper_.addStage(db_writer);
+        pipeline_snooper_ = pipeline_mgr->createSnooper<uint64_t, std::unique_ptr<Event>>();
+        pipeline_snooper_->addStage(compressor);
+        pipeline_snooper_->addStage(db_writer);
     }
 
     simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
@@ -820,7 +821,7 @@ namespace pegasus::cosim
         auto start = std::chrono::high_resolution_clock::now();
 
         std::unique_ptr<Event> snooped_event;
-        pipeline_snooper_.snoopAllStages(euid, snooped_event);
+        pipeline_snooper_->snoopAllStages(euid, snooped_event);
 
         if (!snooped_event)
         {

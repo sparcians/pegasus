@@ -28,7 +28,7 @@ namespace pegasus
 {
     uint64_t getInstLimit(sparta::TreeNode* rtn, uint64_t ilimit)
     {
-        auto extension = sparta::notNull(rtn->getExtension("sim"));
+        auto extension = sparta::notNull(rtn->createExtension("sim"));
         const uint64_t sim_ilimit =
             extension->getParameters()->getParameter("inst_limit")->getValueAs<uint64_t>();
         // Hart ilimit overrides the sim ilimit
