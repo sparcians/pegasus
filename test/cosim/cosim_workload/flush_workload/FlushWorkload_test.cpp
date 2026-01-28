@@ -302,7 +302,8 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
             const std::string reg_override_str = argv[i + 1];
             std::vector<std::string> parts;
             boost::split(parts, reg_override_str, boost::is_any_of(" "));
-            const pegasus::PegasusSimParameters::RegisterOverride reg_override{parts.at(0), parts.at(1)};
+            const pegasus::PegasusSimParameters::RegisterOverride reg_override{parts.at(0),
+                                                                               parts.at(1)};
             reg_overrides.emplace_back(reg_override);
             i += 2;
             continue;
