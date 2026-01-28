@@ -19,7 +19,8 @@ namespace pegasus
         using WorkloadsAndArgs = std::vector<WorkloadAndArgs>;
         using WorkloadsParam = sparta::Parameter<WorkloadsAndArgs>;
 
-        using RegisterOverrides = std::vector<std::vector<std::string>>;
+        using RegisterOverride = std::vector<std::string>;
+        using RegisterOverrides = std::vector<RegisterOverride>;
         using RegisterOverridesParam = sparta::Parameter<RegisterOverrides>;
 
         PegasusSimParameters() : sparta::ExtensionsParamsOnly() {}

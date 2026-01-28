@@ -160,6 +160,7 @@ namespace pegasus
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;
     constexpr uint64_t NOP_OPCODE = 0x00000013;
+    constexpr uint64_t ECALL_OPCODE = 0x00000073;
 
     // System Call emulation
     using SystemCallStack = std::array<uint64_t, 8>;
