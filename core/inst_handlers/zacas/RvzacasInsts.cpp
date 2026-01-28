@@ -69,7 +69,7 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint64_t rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         if (rs1_val % sizeof(AccessType))
         {
             THROW_ILLEGAL_INST;
@@ -98,22 +98,28 @@ namespace pegasus
             {
                 state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION);
             }
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<AccessType, XLEN>(temp));
+            if constexpr (sizeof(XLEN) > sizeof(AccessType))
+            {
+                WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<AccessType, XLEN>(temp));
+            }
+            else
+            {
+                WRITE_INT_REG<XLEN>(state, inst->getRd(), temp);
+            }
         }
         else // amocas.q for RV64 and amocas.d for RV32
         {
-            sparta_assert(!(rs2_val % 1), "rs2 value is not even.");
-            sparta_assert(!(rd_val % 1), "rd value is not even.");
-            const XLEN temp0 = state->readMemory < XLEN >> (paddr, MemAccessSource::INSTRUCTION);
+            sparta_assert(!(inst->getRs2() % 1), "rs2 value is not even.");
+            sparta_assert(!(inst->getRd() % 1), "rd value is not even.");
+            const XLEN temp0 = state->readMemory<XLEN>(paddr, MemAccessSource::INSTRUCTION);
             const XLEN temp1 =
-                state->readMemory < XLEN >> (paddr + sizeof(XLEN), MemAccessSource::INSTRUCTION);
-            const XLEN comp0 = inst->getRd() == 0 || ? 0 : READ_INT_REG<XLEN>(state, inst->getRd());
+                state->readMemory<XLEN>(paddr + sizeof(XLEN), MemAccessSource::INSTRUCTION);
+            const XLEN comp0 = inst->getRd() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRd());
             const XLEN comp1 =
-                inst->getRd() == 0 || ? 0 : READ_INT_REG<XLEN>(state, inst->getRd() + 1);
-            const XLEN swap0 =
-                inst->getRs2() == 0 || ? 0 : READ_INT_REG<XLEN>(state, inst->getRs2());
+                inst->getRd() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRd() + 1);
+            const XLEN swap0 = inst->getRs2() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRs2());
             const XLEN swap1 =
-                inst->getRs2() == 0 || ? 0 : READ_INT_REG<XLEN>(state, inst->getRs2() + 1);
+                inst->getRs2() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRs2() + 1);
             if (temp0 == comp0 && temp1 == comp1)
             {
                 state->writeMemory<XLEN>(paddr, swap0, MemAccessSource::INSTRUCTION);
