@@ -348,7 +348,7 @@ namespace pegasus
 
     const std::string getWorkloadParam(sparta::TreeNode* rtn)
     {
-        auto extension = sparta::notNull(rtn->getExtension("sim"));
+        auto extension = sparta::notNull(rtn->createExtension("sim"));
         const auto & workloads_and_args =
             extension->getParameters()
                 ->getParameter("workloads")

@@ -47,7 +47,8 @@ namespace pegasus
         template <typename T>
         static T getParameter(sparta::TreeNode* node, const std::string & param)
         {
-            auto ext = sparta::notNull(node->getRoot()->getExtension(PegasusSimParameters::name));
+            auto ext =
+                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::name));
             auto ext_params = ext->getParameters();
             return ext_params->getParameter(param)->getValueAs<T>();
         }

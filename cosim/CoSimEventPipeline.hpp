@@ -195,7 +195,8 @@ namespace pegasus::cosim
 
         /// Pipeline snooper used to look for events directly in the pipeline
         /// instead of needing to go to the database when the event is not in the cache.
-        simdb::pipeline::PipelineSnooper<uint64_t, std::unique_ptr<Event>> pipeline_snooper_;
+        using Snooper = simdb::pipeline::PipelineSnooper<uint64_t, std::unique_ptr<Event>>;
+        std::unique_ptr<Snooper> pipeline_snooper_;
 
         /// Event recreated from the pipeline snoopers.
         std::unique_ptr<Event> snooped_event_;
