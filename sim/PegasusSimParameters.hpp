@@ -19,6 +19,10 @@ namespace pegasus
         using WorkloadsAndArgs = std::vector<WorkloadAndArgs>;
         using WorkloadsParam = sparta::Parameter<WorkloadsAndArgs>;
 
+        using BinaryWithLoadAddr = std::vector<std::string>;
+        using Binaries = std::vector<BinaryWithLoadAddr>;
+        using LoadBinaryParam = sparta::Parameter<Binaries>;
+
         using RegisterOverride = std::vector<std::string>;
         using RegisterOverrides = std::vector<RegisterOverride>;
         using RegisterOverridesParam = sparta::Parameter<RegisterOverrides>;
@@ -35,6 +39,8 @@ namespace pegasus
                 new sparta::Parameter<uint32_t>("num_cores", 1, "Number of cores", ps));
             workloads_.reset(
                 new WorkloadsParam("workloads", {}, "Workload(s) to run with arguments", ps));
+            load_binaries_.reset(new LoadBinaryParam(
+                "load_binaries", {}, "Binaries to load into memory at a specific address", ps));
             inst_limit_.reset(new sparta::Parameter<uint64_t>(
                 "inst_limit", 0, "Instruction limit for all harts", ps));
             syscall_emulation_.reset(new sparta::Parameter<bool>(
@@ -76,6 +82,7 @@ namespace pegasus
       private:
         std::unique_ptr<sparta::Parameter<uint32_t>> num_cores_;
         std::unique_ptr<WorkloadsParam> workloads_;
+        std::unique_ptr<LoadBinaryParam> load_binaries_;
         std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;
         std::unique_ptr<sparta::Parameter<bool>> syscall_emulation_;
         std::unique_ptr<RegisterOverridesParam> reg_overrides_;
