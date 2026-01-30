@@ -36,6 +36,8 @@ namespace pegasus
         INTERRUPT, //! Interrupt
         PAUSE,     //! Pause
         FORK,      //! New thread
+        WRS_NTO,   //! Wait on reservation set, with no timeout
+        WRS_STO,   //! Wait on reservation set, with short timeout
         INVALID    //! Invalid
     };
 
