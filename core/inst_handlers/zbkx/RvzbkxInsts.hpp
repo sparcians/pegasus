@@ -2,29 +2,29 @@
 
 #include "core/InstHandlers.hpp"
 
-namespace pegasus {
+namespace pegasus
+{
     class PegasusState;
 
-    class RvzbkxInsts{
-    public:
+    class RvzbkxInsts
+    {
+      public:
         using base_type = RvzbkxInsts;
 
-        template<typename XLEN>
-        static void getInstHandlers(InstHandlers::InstHandlersMap &);
+        template <typename XLEN> static void getInstHandlers(InstHandlers::InstHandlersMap &);
 
-    private:
-
-        template<typename XLEN, typename OPERATOR>
+      private:
+        template <typename XLEN, typename OPERATOR>
         Action::ItrType xpermHandler_(PegasusState* state, Action::ItrType action_it);
 
-        struct Xperm8Op {
-            template<typename XLEN>
+        template <typename XLEN> struct Xperm8Op
+        {
             XLEN operator()(XLEN rs1, XLEN rs2) const;
         };
 
-        struct Xperm4Op{
-            template <typename XLEN>
+        template <typename XLEN> struct Xperm4Op
+        {
             XLEN operator()(XLEN rs1, XLEN rs2) const;
         };
     };
-}
+} // namespace pegasus
