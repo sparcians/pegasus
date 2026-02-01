@@ -70,8 +70,8 @@ namespace pegasus::cosim
 
         // Remember that all cores/harts share the same database,
         // so we need to distinguish events by core/hart ID.
-        tbl.addColumn("CoreId", dt::int32_t);
-        tbl.addColumn("HartId", dt::int32_t);
+        tbl.addColumn("CoreId", dt::uint32_t);
+        tbl.addColumn("HartId", dt::uint32_t);
 
         // The compressed event data blob
         tbl.addColumn("ZlibBlob", dt::blob_t);
@@ -360,8 +360,9 @@ namespace pegasus::cosim
 
         // Configure the pipeline snooper so we can look for events directly in the pipeline
         // instead of needing to go to the database when the event is not in the cache.
-        pipeline_snooper_.addStage(compressor);
-        pipeline_snooper_.addStage(db_writer);
+        pipeline_snooper_ = pipeline_mgr->createSnooper<uint64_t, std::unique_ptr<Event>>();
+        pipeline_snooper_->addStage(compressor);
+        pipeline_snooper_->addStage(db_writer);
     }
 
     simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
@@ -400,6 +401,25 @@ namespace pegasus::cosim
         {
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
             observer_->getCheckpointer()->commitCurrentBranch();
+        }
+
+        // Handle syscall emulation
+        if (state_->getCore()->isSystemCallEmulationEnabled() && (evt.getOpcode() == ECALL_OPCODE))
+        {
+            sparta_assert(
+                uncommitted_evts_buffer_.empty(),
+                "Cannot emulate a system call with uncommitted Events! Num uncommitted events: "
+                    << uncommitted_evts_buffer_.size());
+            if (state_->getXlen() == 64)
+            {
+                const RV64 ret_code = state_->emulateSystemCall<RV64>();
+                WRITE_INT_REG<RV64>(state_, 10, ret_code);
+            }
+            else
+            {
+                const RV32 ret_code = state_->emulateSystemCall<RV32>();
+                WRITE_INT_REG<RV32>(state_, 10, ret_code);
+            }
         }
     }
 
@@ -801,7 +821,7 @@ namespace pegasus::cosim
         auto start = std::chrono::high_resolution_clock::now();
 
         std::unique_ptr<Event> snooped_event;
-        pipeline_snooper_.snoopAllStages(euid, snooped_event);
+        pipeline_snooper_->snoopAllStages(euid, snooped_event);
 
         if (!snooped_event)
         {

@@ -91,6 +91,7 @@ namespace pegasus
         ev_pause_counter_expires_(
             &unit_event_set_, "pause_counter_expires",
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
+        cosim_mode_(p->cosim_mode),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         arch_name_(p->arch),

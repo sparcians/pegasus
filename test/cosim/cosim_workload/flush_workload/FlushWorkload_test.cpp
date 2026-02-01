@@ -7,6 +7,7 @@
 #include "sparta/utils/SpartaTester.hpp"
 #include <filesystem>
 #include <regex>
+#include <boost/algorithm/string/split.hpp>
 
 /// In this test, we will be running the same workload through two PegasusCoSim
 /// instances. One will ONLY step forward and serve as the "truth" against which
@@ -247,7 +248,8 @@ bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId c
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
 //   --> '--db-stem' specifies the database stem name
-std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** argv)
+std::tuple<std::string, uint64_t, std::string, size_t, size_t>
+ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params)
 {
     if (argc == 1)
     {
@@ -255,9 +257,12 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
     }
 
     std::string workload;
+    uint64_t ilimit = 0;
     std::string db_stem;
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
+
+    pegasus::PegasusSimParameters::RegisterOverrides reg_overrides;
 
     for (int i = 1; i < argc;)
     {
@@ -265,6 +270,12 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
         if (arg == "-w")
         {
             workload = argv[i + 1];
+            i += 2;
+            continue;
+        }
+        else if (arg == "-i")
+        {
+            ilimit = std::stoi(argv[i + 1]);
             i += 2;
             continue;
         }
@@ -282,8 +293,19 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
         }
         else if (arg == "-p")
         {
-            // Only used by the RunArchTests.py core ISA tests (Pegasus simulator, not cosim)
+            sim_params[argv[i + 1]] = argv[i + 2];
             i += 3;
+            continue;
+        }
+        else if (arg == "--reg")
+        {
+            const std::string reg_override_str = argv[i + 1];
+            std::vector<std::string> parts;
+            boost::split(parts, reg_override_str, boost::is_any_of(" "));
+            const pegasus::PegasusSimParameters::RegisterOverride reg_override{parts.at(0),
+                                                                               parts.at(1)};
+            reg_overrides.emplace_back(reg_override);
+            i += 2;
             continue;
         }
         else if (arg == "--max-steps-before-flush")
@@ -309,19 +331,24 @@ std::tuple<std::string, std::string, size_t, size_t> ParseArgs(int argc, char** 
         throw std::invalid_argument("Must supply workload");
     }
 
-    return {workload, db_stem, max_steps_before_flush, fast_forward_steps};
+    if (reg_overrides.empty() == false)
+    {
+        sim_params["top.extension.sim.reg_overrides"] =
+            pegasus::PegasusSimParameters::convertVectorToStringParam(reg_overrides);
+    }
+
+    return {workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps};
 }
 
 int main(int argc, char** argv)
 {
-    const auto [workload, db_stem, max_steps_before_flush, fast_forward_steps] =
-        ParseArgs(argc, argv);
+    std::map<std::string, std::string> sim_params;
+    const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps] =
+        ParseArgs(argc, argv, sim_params);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
     sparta::SleeperThread::disableForever();
-
-    const uint64_t ilimit = 0;
 
     const auto cwd = std::filesystem::current_path().string();
     const auto workload_fname =
@@ -332,9 +359,13 @@ int main(int argc, char** argv)
     const size_t snapshot_threshold = 10;
 
     sparta::app::SimulationConfiguration config_truth;
+
+    for (auto & [param_name, param_value] : sim_params)
+    {
+        config_truth.processParameter(param_name, param_value, false);
+    }
+
     config_truth.enableLogging("top", "inst", workload_fname + ".log");
-    config_truth.processParameter("top.core0.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh",
-                                  false);
     pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
     const std::string wkld_param =
         pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
@@ -363,9 +394,7 @@ int main(int argc, char** argv)
         }
     }
 
-    const std::map<std::string, std::string> params = {
-        {"top.core*.params.isa", "rv64gcbv_zicsr_zifencei_zicond_zfh"}};
-    PegasusCoSim cosim_test(ilimit, workload, params, db_test, snapshot_threshold);
+    PegasusCoSim cosim_test(ilimit, workload, sim_params, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
@@ -385,12 +414,16 @@ int main(int argc, char** argv)
             {
                 if (ERROR_CODE)
                 {
-                    std::cout << "Mismatch detected at step " << step_count << std::endl;
+                    std::cout << "Mismatch detected at step " << std::dec << step_count
+                              << std::endl;
+                    std::cout << "Last cosim Event: "
+                              << cosim_test.getLastCommittedEvent(core_id, hart_id).get()
+                              << std::endl;
                 }
                 break;
             }
         }
-        std::cout << "Completed " << step_count << " steps." << std::endl;
+        std::cout << "Completed " << std::dec << step_count << " steps." << std::endl;
     }
     catch (const std::exception & ex)
     {

@@ -19,7 +19,8 @@ namespace pegasus
         using WorkloadsAndArgs = std::vector<WorkloadAndArgs>;
         using WorkloadsParam = sparta::Parameter<WorkloadsAndArgs>;
 
-        using RegisterOverrides = std::vector<std::vector<std::string>>;
+        using RegisterOverride = std::vector<std::string>;
+        using RegisterOverrides = std::vector<RegisterOverride>;
         using RegisterOverridesParam = sparta::Parameter<RegisterOverrides>;
 
         PegasusSimParameters() : sparta::ExtensionsParamsOnly() {}
@@ -46,7 +47,8 @@ namespace pegasus
         template <typename T>
         static T getParameter(sparta::TreeNode* node, const std::string & param)
         {
-            auto ext = sparta::notNull(node->getRoot()->getExtension(PegasusSimParameters::name));
+            auto ext =
+                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::name));
             auto ext_params = ext->getParameters();
             return ext_params->getParameter(param)->getValueAs<T>();
         }
