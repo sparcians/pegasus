@@ -25,7 +25,7 @@ namespace std
     {
         return is >> std::skipws >> into.first >> into.second;
     }
-}
+} // namespace std
 
 int main(int argc, char** argv)
 {
