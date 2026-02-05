@@ -40,7 +40,8 @@ namespace pegasus
 
         void addSimListener(SimListener* listener)
         {
-            if (std::find(sim_listeners_.begin(), sim_listeners_.end(), listener) == sim_listeners_.end())
+            if (std::find(sim_listeners_.begin(), sim_listeners_.end(), listener)
+                == sim_listeners_.end())
             {
                 sim_listeners_.push_back(listener);
             }

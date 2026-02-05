@@ -70,8 +70,7 @@ namespace pegasus::cosim
     class CoSimObserver;
     class CoSimEventPipeline;
 
-    class PegasusCoSim : public pegasus::cosim::CoSim
-                       , private pegasus::SimListener
+    class PegasusCoSim : public pegasus::cosim::CoSim, private pegasus::SimListener
     {
       public:
         PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",

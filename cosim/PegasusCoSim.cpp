@@ -526,8 +526,8 @@ namespace pegasus::cosim
                 chkptr_arch_data_roots.push_back(state->getContainer());
                 chkptr_arch_data_roots.push_back(system->getContainer());
 
-                app_mgr->parameterizeAppFactoryInstance<CoSimEventPipeline>(
-                    pipeline_idx, core_idx, hart_idx, state);
+                app_mgr->parameterizeAppFactoryInstance<CoSimEventPipeline>(pipeline_idx, core_idx,
+                                                                            hart_idx, state);
 
                 app_mgr->parameterizeAppFactoryInstance<CoSimCheckpointer>(
                     pipeline_idx, chkptr_arch_data_roots, scheduler_.get());
