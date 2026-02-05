@@ -112,6 +112,11 @@ namespace pegasus
 
     void PegasusSim::buildTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeEarly();
+        }
+
         auto root_tn = getRoot();
 
         // top.allocators
@@ -128,10 +133,20 @@ namespace pegasus
         getRoot()->addExtensionFactory(PegasusSimParameters::name,
                                        [&]() -> sparta::TreeNode::ExtensionsBase*
                                        { return new PegasusSimParameters(); });
+
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeLate();
+        }
     }
 
     void PegasusSim::configureTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onConfigureTreeEarly();
+        }
+
         // Get number of cores
         const uint32_t num_cores =
             PegasusSimParameters::getParameter<uint32_t>(getRoot(), "num_cores");
@@ -145,10 +160,20 @@ namespace pegasus
                 core_tn = new sparta::ResourceTreeNode(getRoot(), core_name, "cores", core_idx,
                                                        "Core", &core_factory_));
         }
+
+        for (auto listener : sim_listeners_)
+        {
+            listener->onConfigureTreeLate();
+        }
     }
 
     void PegasusSim::bindTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeEarly();
+        }
+
         // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
 
@@ -280,6 +305,27 @@ namespace pegasus
                     }
                 }
             }
+        }
+
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeLate();
+        }
+    }
+
+    void PegasusSim::parameterizeApps_(simdb::AppManager* app_mgr)
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onParameterizeAppsRequest(app_mgr);
+        }
+    }
+
+    void PegasusSim::postFinalizeFramework_()
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onFrameworkFinalized();
         }
     }
 

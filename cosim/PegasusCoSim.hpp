@@ -6,6 +6,7 @@
 #include <map>
 
 #include "cosim/CoSimApi.hpp"
+#include "core/SimListener.hpp"
 
 namespace pegasus
 {
@@ -70,6 +71,7 @@ namespace pegasus::cosim
     class CoSimEventPipeline;
 
     class PegasusCoSim : public pegasus::cosim::CoSim
+                       , private pegasus::SimListener
     {
       public:
         PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
@@ -156,6 +158,7 @@ namespace pegasus::cosim
         void peekRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
         void writeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
         void pokeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
+        void onParameterizeAppsRequest(simdb::AppManager* app_mgr) override;
 
         static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
 
@@ -181,11 +184,8 @@ namespace pegasus::cosim
         // Sim config for sparta::app::Simulation base class
         std::unique_ptr<sparta::app::SimulationConfiguration> sim_config_;
 
-        // SimDB instance to hold all events and checkpoints
-        std::shared_ptr<simdb::DatabaseManager> db_mgr_;
-
         // SimDB app manager to manage the CoSimEventPipeline and CoSimCheckpointer apps
-        std::shared_ptr<simdb::AppManager> app_mgr_;
+        simdb::AppManager* app_mgr_ = nullptr;
 
         // Cached cosim observers for each hart
         std::vector<std::vector<CoSimObserver*>> cosim_observers_;

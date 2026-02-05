@@ -6,6 +6,7 @@
 
 #include "sim/PegasusSimParameters.hpp"
 #include "core/PegasusCore.hpp"
+#include "core/SimListener.hpp"
 #include "system/PegasusSystem.hpp"
 #include "sparta/app/Simulation.hpp"
 #include "system/SystemCallEmulator.hpp"
@@ -37,10 +38,20 @@ namespace pegasus
 
         void endSimulation(int64_t exit_code);
 
+        void addSimListener(SimListener* listener)
+        {
+            if (std::find(sim_listeners_.begin(), sim_listeners_.end(), listener) == sim_listeners_.end())
+            {
+                sim_listeners_.push_back(listener);
+            }
+        }
+
       private:
         void buildTree_() override;
         void configureTree_() override;
         void bindTree_() override;
+        void parameterizeApps_(simdb::AppManager* app_mgr) override;
+        void postFinalizeFramework_() override;
 
         sparta::ResourceFactory<pegasus::PegasusCore, pegasus::PegasusCore::PegasusCoreParameters>
             core_factory_;
@@ -58,6 +69,9 @@ namespace pegasus
 
         // Pegasus system
         PegasusSystem* system_ = nullptr;
+
+        // Simulation callback listeners (buildTree_, etc.)
+        std::vector<SimListener*> sim_listeners_;
 
         friend class PegasusCoSim;
     };
