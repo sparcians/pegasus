@@ -11,6 +11,9 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.hart0.params.stop_sim_on_wfi true workloads/nop.elf)
 pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart true workloads/uart.elf)
 
+# Load binary test
+pegasus_named_test(pegasus_nop_bin_test pegasus -l top.core0.hart0.params.stop_sim_on_wfi true --load-binary "workloads/nop.bin 0x80000000")
+
 # Linux Tests
 set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
                       --reg "core0.hart0.gp 0x77000"
