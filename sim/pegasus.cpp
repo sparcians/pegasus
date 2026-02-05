@@ -12,20 +12,19 @@ const char USAGE[] = "Usage:\n"
                      "[--spike-formatting] <workloads>"
                      "\n";
 
-struct StringPairParam
-{
-    std::string first;
-    std::string second;
-};
+using StringPairParam = std::pair<std::string, std::string>;
 
-inline std::ostream & operator<<(std::ostream & os, StringPairParam const & p)
+namespace std
 {
-    return os << "StringPairParam {" << p.first << ", " << p.second << "}";
-}
+    inline std::ostream & operator<<(std::ostream & os, StringPairParam const & p)
+    {
+        return os << "StringPairParam {" << p.first << ", " << p.second << "}";
+    }
 
-static inline std::istream & operator>>(std::istream & is, StringPairParam & into)
-{
-    return is >> std::skipws >> into.first >> into.second;
+    static inline std::istream & operator>>(std::istream & is, StringPairParam & into)
+    {
+        return is >> std::skipws >> into.first >> into.second;
+    }
 }
 
 int main(int argc, char** argv)
