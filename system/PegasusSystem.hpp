@@ -115,6 +115,11 @@ namespace pegasus
         void loadWorkload_(const std::string & workload);
         void initMemoryWithElf_(const std::string & workload);
         ELFIO::elfio elf_reader_;
+
+        // Binaries
+        const PegasusSimParameters::Binaries binaries_;
+        void loadBinary_(const std::string & binary, const Addr load_addr);
+
         sparta::utils::ValidValue<Addr> starting_pc_;
         std::unordered_map<Addr, std::string> symbols_;
         sparta::utils::ValidValue<Addr> tohost_addr_;
