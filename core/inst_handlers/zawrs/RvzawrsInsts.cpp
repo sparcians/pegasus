@@ -29,7 +29,7 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         state->pauseHart(SimPauseReason::WRS_NTO);
-        state->registerWaitOnReservationSet();
+        state->registerWaitOnReservationSetCB();
 
         return ++action_it;
     }
@@ -40,7 +40,7 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         state->pauseHart(SimPauseReason::WRS_STO);
-        state->registerWaitOnReservationSet();
+        state->registerWaitOnReservationSetCB();
 
         return ++action_it;
     }

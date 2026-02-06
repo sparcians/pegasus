@@ -453,7 +453,7 @@ namespace pegasus
     {
         pauseCounterExpires_(hart_id);
         PegasusState* state = threads_[hart_id];
-        state->unregisterWaitOnReservationSet();
+        state->unregisterWaitOnReservationSetCB();
     }
 
     template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const

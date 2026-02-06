@@ -147,6 +147,9 @@ namespace pegasus
                 }
             }
             reservations_.at(hart_id) = paddr;
+            auto & state = threads_.at(hart_id);
+            state->storeOnReservationSet(false);
+            state->registerStoreOnReservationSetCB();
         }
 
         Reservation & getReservation(HartId hart_id) { return reservations_.at(hart_id); }
@@ -156,12 +159,16 @@ namespace pegasus
             return reservations_.at(hart_id);
         }
 
-        void clearReservations()
+        void clearReservation(HartId hart_id)
         {
-            for (auto & reservation : reservations_)
+            auto & reservation = reservations_.at(hart_id);
+            auto & state = threads_.at(hart_id);
+            reservation.clearValid();
+            if (!state->storeOnReservationSetOccurred()) // Callback has not been unregistered
             {
-                reservation.clearValid();
+                state->unregisterStoreOnReservationSetCB();
             }
+            state->storeOnReservationSet(false);
         }
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
