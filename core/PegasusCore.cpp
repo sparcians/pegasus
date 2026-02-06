@@ -91,6 +91,9 @@ namespace pegasus
         ev_pause_counter_expires_(
             &unit_event_set_, "pause_counter_expires",
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
+        ev_wrssto_counter_expires_(
+            &unit_event_set_, "wrssto_counter_expires",
+            CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, wrsstoCounterExpires_, HartId)),
         cosim_mode_(p->cosim_mode),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
@@ -121,6 +124,10 @@ namespace pegasus
             // Set XLEN
             hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
                 ->setValueFromString(std::to_string(xlen_));
+
+            // Set hart_id
+            hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id")
+                ->setValueFromString(std::to_string(hart_idx));
 
             // Set path to register JSONs (from "arch")
             const std::string reg_json_file_path =
@@ -184,6 +191,7 @@ namespace pegasus
         }
 
         ev_pause_counter_expires_.cancel();
+        ev_wrssto_counter_expires_.cancel();
     }
 
     void PegasusCore::onBindTreeEarly_()
@@ -333,7 +341,7 @@ namespace pegasus
     {
         PegasusState* state = threads_[current_hart_id_];
         auto* sim_state = state->getSimState();
-        bool pause_thread = false;
+        bool timed_pause = false;
         if ((sim_state->sim_stopped == false)
             && (sim_state->sim_pause_reason == SimPauseReason::INVALID))
         {
@@ -360,12 +368,13 @@ namespace pegasus
                     sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
                     break;
                 case SimPauseReason::PAUSE:
-                    pause_thread = true;
+                case SimPauseReason::WRS_STO:
+                    timed_pause = true;
                     break;
                 case SimPauseReason::FORK:
                     sparta_assert(false, "Pause reason FORK is not supported yet!");
                     break;
-                case SimPauseReason::INVALID:
+                default:
                     break;
             }
         }
@@ -377,12 +386,22 @@ namespace pegasus
             threads_[hart_id]->getSimState()->cycles = current_cycle;
         }
 
-        if (pause_thread)
+        if (timed_pause)
         {
             DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
             threads_running_.reset(current_hart_id_);
-            ev_pause_counter_expires_.preparePayload(current_hart_id_)
-                ->schedule(current_cycle - getClock()->currentCycle() + pause_counter_duration_);
+            if (sim_state->sim_pause_reason == SimPauseReason::PAUSE)
+            {
+                ev_pause_counter_expires_.preparePayload(current_hart_id_)
+                    ->schedule(current_cycle - getClock()->currentCycle()
+                               + pause_counter_duration_);
+            }
+            else // SimPauseReason::WRS_STO
+            {
+                ev_wrssto_counter_expires_.preparePayload(current_hart_id_)
+                    ->schedule(current_cycle - getClock()->currentCycle()
+                               + pause_counter_duration_);
+            }
         }
 
         // Simple round robin
@@ -402,7 +421,8 @@ namespace pegasus
     void PegasusCore::pauseCounterExpires_(const HartId & hart_id)
     {
         PegasusState* state = threads_[hart_id];
-        if (state->getSimState()->sim_pause_reason == SimPauseReason::PAUSE)
+        const auto pause_reason = state->getSimState()->sim_pause_reason;
+        if (pause_reason == SimPauseReason::PAUSE || pause_reason == SimPauseReason::WRS_STO)
         {
             DLOG("Pause counter expired for hart" << std::dec << hart_id);
             state->unpauseHart();
@@ -420,6 +440,15 @@ namespace pegasus
                 ev_advance_sim_.schedule();
             }
         }
+    }
+
+    // Besides thread rescheduling and unpause, WRS.STO wakening by counter
+    // will also cancel the memory write notification on reservation set.
+    void PegasusCore::wrsstoCounterExpires_(const HartId & hart_id)
+    {
+        pauseCounterExpires_(hart_id);
+        PegasusState* state = threads_[hart_id];
+        state->unregisterWaitOnReservationSet();
     }
 
     template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const

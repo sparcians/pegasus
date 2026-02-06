@@ -37,4 +37,5 @@ add_subdirectory(register)
 add_subdirectory(cosim)
 add_subdirectory(utils)
 add_subdirectory(stf)
+add_subdirectory(zacas)
 

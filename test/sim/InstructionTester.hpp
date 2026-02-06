@@ -8,12 +8,16 @@ class PegasusInstructionTester
 {
 
   public:
-    PegasusInstructionTester()
+    PegasusInstructionTester(const std::string & isa)
     {
         // Create the simulator
         pegasus_sim_.reset(new pegasus::PegasusSim(&scheduler_));
 
         sparta::app::SimulationConfiguration config;
+        if (!isa.empty()) // isa string override
+        {
+            config.processParameter("top.core0.params.isa", isa);
+        }
         pegasus_sim_->configure(0, nullptr, &config);
         pegasus_sim_->buildTree();
         pegasus_sim_->configureTree();
@@ -23,6 +27,8 @@ class PegasusInstructionTester
         fetch_unit_ = state_->getFetchUnit();
         execute_unit_ = state_->getExecuteUnit();
     }
+
+    PegasusInstructionTester() : PegasusInstructionTester("") {}
 
     virtual ~PegasusInstructionTester() = default;
 
