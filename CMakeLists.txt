@@ -134,7 +134,7 @@ add_subdirectory(core)
 add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
-add_subdirectory(test)
+add_subdirectory(test EXCLUDE_FROM_ALL)
 
 # For install only
 add_subdirectory(scripts)

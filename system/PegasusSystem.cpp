@@ -5,22 +5,24 @@
 #include "sparta/memory/MemoryObject.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
+#include <filesystem>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
 namespace pegasus
 {
     PegasusSystem::PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p) :
         sparta::Unit(sys_node),
         workloads_and_args_(
-            PegasusSimParameters::getParameter<PegasusSimParameters::WorkloadsAndArgs>(sys_node,
-                                                                                       "workloads"))
+            PegasusSimParameters::getParameter<PegasusSimParameters::WorkloadsAndArgs>(
+                sys_node, "workloads")),
+        binaries_(PegasusSimParameters::getParameter<PegasusSimParameters::Binaries>(
+            sys_node, "load_binaries"))
     {
         for (auto & wkld_and_args : workloads_and_args_)
         {
             loadWorkload_(wkld_and_args.at(0));
-        }
-
-        if (starting_pc_.isValid())
-        {
-            std::cout << "Starting PC: 0x" << std::hex << starting_pc_ << std::endl;
         }
 
         if (p->enable_uart)
@@ -45,6 +47,17 @@ namespace pegasus
         for (auto & wkld_and_args : workloads_and_args_)
         {
             initMemoryWithElf_(wkld_and_args.at(0));
+        }
+
+        for (auto & binary : binaries_)
+        {
+            const Addr load_addr = std::stoull(binary.at(1), nullptr, 16);
+            loadBinary_(binary.at(0), load_addr);
+        }
+
+        if (starting_pc_.isValid())
+        {
+            std::cout << "Starting PC: 0x" << std::hex << starting_pc_ << std::endl;
         }
     }
 
@@ -348,6 +361,34 @@ namespace pegasus
                     std::cout << "FAILED!\n";
                 }
             }
+        }
+    }
+
+    void PegasusSystem::loadBinary_(const std::string & binary, const Addr load_addr)
+    {
+        std::cout << "Loading binary at address 0x" << std::hex << load_addr << ": " << binary
+                  << std::endl;
+
+        // Open binary file
+        int fd = open(binary.c_str(), O_RDONLY);
+        sparta_assert(fd != -1, "Failed to open binary file: " << binary);
+
+        // Determine file size
+        const uint64_t file_size = std::filesystem::file_size(binary);
+
+        // Write file to memory
+        void* data = mmap(NULL, file_size, PROT_READ, MAP_SHARED, fd, 0);
+        bool success =
+            memory_map_->tryPoke(load_addr, file_size, static_cast<const uint8_t*>(data));
+        if (!success)
+        {
+            std::cout << "FAILED!\n";
+        }
+        close(fd);
+
+        if (starting_pc_.isValid() == false)
+        {
+            starting_pc_ = load_addr;
         }
     }
 
