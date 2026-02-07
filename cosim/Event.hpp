@@ -535,28 +535,6 @@ namespace pegasus::cosim
         return os;
     }
 
-    inline std::ostream & operator<<(std::ostream & os, const Event & event)
-    {
-        os << "euid: " << std::dec << event.getEuid() << " PC: " << std::setw(16)
-           << std::setfill('0') << std::hex << event.getPc() << " " << event.getDisassemblyStr()
-           << " (" << std::setw(8) << std::setfill('0') << std::hex << event.getOpcode() << ")"
-           << "\n";
-        return os;
-    }
-
-    inline std::ostream & operator<<(std::ostream & os, const Event* event)
-    {
-        if (event)
-        {
-            os << *event;
-        }
-        else
-        {
-            os << "null";
-        }
-        return os;
-    }
-
     inline std::ostream & operator<<(std::ostream & os,
                                      const Event::MemReadAccess & mem_read_access)
     {
@@ -611,4 +589,25 @@ namespace pegasus::cosim
         return os;
     }
 
+    inline std::ostream & operator<<(std::ostream & os, const Event & event)
+    {
+        os << "euid: " << std::dec << event.getEuid() << " PC: " << std::setw(16)
+           << std::setfill('0') << std::hex << event.getPc() << " " << event.getDisassemblyStr()
+           << " (" << std::setw(8) << std::setfill('0') << std::hex << event.getOpcode() << ")"
+           << "\n";
+        return os;
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const Event* event)
+    {
+        if (event)
+        {
+            os << *event;
+        }
+        else
+        {
+            os << "null";
+        }
+        return os;
+    }
 } // namespace pegasus::cosim

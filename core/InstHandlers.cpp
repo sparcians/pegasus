@@ -30,6 +30,7 @@
 #include "core/inst_handlers/zfh/RvzfhInsts.hpp"
 #include "core/inst_handlers/h/RvhInsts.hpp"
 #include "core/inst_handlers/zbkx/RvzbkxInsts.hpp"
+#include "core/inst_handlers/zacas/RvzacasInsts.hpp"
 
 namespace pegasus
 {
@@ -75,6 +76,7 @@ namespace pegasus
         RvzfhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbkxInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzacasInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -107,6 +109,7 @@ namespace pegasus
         RvzfhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbkxInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzacasInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -129,6 +132,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvzfhInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
         RvhInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
+        RvzacasInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
 
         // Get RV32 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
@@ -140,6 +144,7 @@ namespace pegasus
         RvvLoadStoreInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvzfhInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         RvhInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+        RvzacasInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         //  RV32 only
         RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 

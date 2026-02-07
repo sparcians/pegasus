@@ -53,6 +53,8 @@ namespace pegasus
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
 
+            HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
+
           private:
             static bool validateProfile_(std::string & profile, const sparta::TreeNode*)
             {
@@ -83,6 +85,8 @@ namespace pegasus
         PegasusSystem* getSystem() const { return system_; }
 
         SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
+
+        bool inCoSimMode() const { return cosim_mode_; }
 
         bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
@@ -207,6 +211,9 @@ namespace pegasus
         // Status of each thread
         HartId current_hart_id_ = 0;
         std::bitset<8> threads_running_;
+
+        // Is this a PegasusCoSim run?
+        const bool cosim_mode_;
 
         // Is system call emulation enabled?
         const bool syscall_emulation_enabled_;

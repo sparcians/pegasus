@@ -4,6 +4,7 @@
 #include <string>
 #include <ostream>
 #include <array>
+#include <boost/int128/int128.hpp>
 
 namespace pegasus
 {
@@ -23,6 +24,7 @@ namespace pegasus
     using H = uint16_t;
     using W = uint32_t;
     using D = uint64_t;
+    using Q = boost::int128::uint128_t;
 
     using FLOAT_HP = uint16_t;
     using FLOAT_SP = uint32_t;
@@ -160,6 +162,7 @@ namespace pegasus
     // Common opcodes
     constexpr uint64_t WFI_OPCODE = 0x10500073;
     constexpr uint64_t NOP_OPCODE = 0x00000013;
+    constexpr uint64_t ECALL_OPCODE = 0x00000073;
 
     // System Call emulation
     using SystemCallStack = std::array<uint64_t, 8>;
