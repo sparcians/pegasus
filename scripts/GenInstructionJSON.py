@@ -116,6 +116,10 @@ from insts.RVH_INST import RVH_MAVIS_EXTS
 
 from insts.RVSVINVAL_INST import RVSVINVAL_MAVIS_EXTS
 
+from insts.RVZKND_INST import RV32ZKND_INST
+from insts.RVZKND_INST import RV64ZKND_INST
+from insts.RVZKND_INST import RVZKND_MAVIS_EXTS
+
 class InstJSONGenerator():
     """Generates instruction definition JSON files.
 

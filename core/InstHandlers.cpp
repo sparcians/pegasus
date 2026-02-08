@@ -30,6 +30,7 @@
 #include "core/inst_handlers/zfh/RvzfhInsts.hpp"
 #include "core/inst_handlers/h/RvhInsts.hpp"
 #include "core/inst_handlers/zacas/RvzacasInsts.hpp"
+#include "core/inst_handlers/zknd/RvzkndInsts.hpp"
 
 namespace pegasus
 {
@@ -84,6 +85,7 @@ namespace pegasus
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzkndInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -118,6 +120,7 @@ namespace pegasus
         RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // RV32 only
         RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzkndInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
