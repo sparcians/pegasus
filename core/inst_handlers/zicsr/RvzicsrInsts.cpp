@@ -104,6 +104,11 @@ namespace pegasus
             MISA,
             pegasus::Action::createAction<&RvzicsrInsts::misaUpdateHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "misaUpdate"));
+        csrUpdate_actions.emplace(
+            MTVEC,
+            pegasus::Action::createAction<&RvzicsrInsts::mtvecUpdateHandler_<XLEN>, RvzicsrInsts>(
+                nullptr, "mtvecUpdate"));
+
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(InstHandlers::CsrUpdateActionsMap &);
@@ -573,6 +578,18 @@ namespace pegasus
         ext_manager.disableExtensions(exts_to_disable);
         ext_manager.enableExtensions(exts_to_enable);
         state->getCore()->changeMavisContext();
+
+        return ++action_it;
+    }
+
+    template <typename XLEN>
+    Action::ItrType RvzicsrInsts::mtvecUpdateHandler_(pegasus::PegasusState* state,
+                                                     Action::ItrType action_it)
+    {    
+        const XLEN mode_val = READ_CSR_FIELD<XLEN>(state, MTVEC, "mode");
+        if (!state->getCore()->isTrapModeSupported((int) mode_val)) {
+            WRITE_CSR_FIELD<XLEN>(state, MTVEC, "mode", 0);
+        }
 
         return ++action_it;
     }

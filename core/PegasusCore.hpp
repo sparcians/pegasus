@@ -52,6 +52,7 @@ namespace pegasus
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
+            PARAMETER(std::vector<int>, supported_trap_modes, {0}, "Supported RISC-V trap modes (0: Direct, 1: Vectored)")
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
 
@@ -93,6 +94,11 @@ namespace pegasus
         bool isPrivilegeModeSupported(const PrivMode mode) const
         {
             return supported_priv_modes_.contains(mode);
+        }
+
+        bool isTrapModeSupported(const int mode) const
+        {
+            return supported_trap_modes_.contains(mode);
         }
 
         uint64_t getXlen() const { return xlen_; }
@@ -237,6 +243,9 @@ namespace pegasus
         // Supported ISA string
         const std::vector<std::string> supported_rv64_extensions_;
         const std::vector<std::string> supported_rv32_extensions_;
+
+        // Supported Trap Modes
+        const std::unordered_set<int> supported_trap_modes_;
 
         // Path to Mavis isa JSONs
         const std::string isa_file_path_;
