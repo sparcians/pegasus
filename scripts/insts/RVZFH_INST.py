@@ -69,3 +69,6 @@ RV64ZFH_INST = [
     {'mnemonic': 'fle.h', 'handler': 'fle_h', 'cost': 1, 'tags': 'ZFH_EXT_64', 'memory': False, 'cof': False},
     {'mnemonic': 'fclass.h', 'handler': 'fclass_h', 'cost': 1, 'tags': 'ZFH_EXT_64', 'memory': False, 'cof': False},
 ]
+
+RV32ZFHMIN_INST = RV32ZFH_INST
+RV64ZFHMIN_INST = RV64ZFH_INST

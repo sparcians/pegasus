@@ -25,7 +25,11 @@ from insts.RVZFA_INST import RV32ZFA_INST
 from insts.RVZFA_INST import RV64ZFA_INST
 from insts.RVZFH_INST import RV32ZFH_INST
 from insts.RVZFH_INST import RV64ZFH_INST
+from insts.RVZFH_INST import RV32ZFHMIN_INST
+from insts.RVZFH_INST import RV64ZFHMIN_INST
 
+from insts.RVB_INST    import RV32B_INST
+from insts.RVB_INST    import RV64B_INST
 from insts.RVB_INST    import RV32ZBA_INST
 from insts.RVB_INST    import RV64ZBA_INST
 from insts.RVB_INST    import RV32ZBB_INST
@@ -71,15 +75,11 @@ from insts.RVZACAS_INST import RV32ZACAS_INST
 from insts.RVZACAS_INST import RV64ZACAS_INST
 from insts.RVZILSD_INST import RV32ZILSD_INST
 
-from insts.RVV_INST import RVV_INST
-#from insts.RVV_INST import RVZVE32X_INST
-#from insts.RVV_INST import RVZVE32F_INST
-#from insts.RVV_INST import RVZVE64D_INST
-#from insts.RVV_INST import RVZVE64X_INST
+from insts.RVV_INST import RV32V_INST
+from insts.RVV_INST import RV64V_INST
 
 from insts.RVH_INST import RV32H_INST
 from insts.RVH_INST import RV64H_INST
-
 
 from insts.RVSVINVAL_INST import RV32SVINVAL_INST
 from insts.RVSVINVAL_INST import RV64SVINVAL_INST
@@ -229,7 +229,7 @@ def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts
                 fh.write( f'    \"{ext}\", \\\n')
 
 
-def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, pegasus_uarch_rv64_jsons, pegasus_uarch_rv32_jsons):
+def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SUPPORTED_EXTENSIONS, RV32_SUPPORTED_EXTENSIONS):
     with open(mavis_profile_json, 'r') as file:
         data = json.load(file)
 
@@ -260,32 +260,19 @@ def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, pegasus
         exts.append(ext)
 
     print(exts)
-    return
 
-    for ext in data["meta_extensions"]:
-        xlens = ext["xlen"] if isinstance(ext["xlen"], list) else [ext["xlen"]]
-        if 64 in xlens:
-            RV64_SUPPORTED_EXTENSIONS.add(ext["extension"])
-        if 32 in xlens:
-            RV32_SUPPORTED_EXTENSIONS.add(ext["extension"])
+    SUPPORTED_EXTENSIONS = RV64_SUPPORTED_EXTENSIONS if (xlen == 64) else RV32_SUPPORTED_EXTENSIONS
+    pegasus_uarch_jsons = []
 
-    for ext in data["extensions"]:
-        xlens = ext["xlen"] if isinstance(ext["xlen"], list) else [ext["xlen"]]
-        if 64 in xlens:
-            RV64_SUPPORTED_EXTENSIONS.add(ext["extension"])
-        if 32 in xlens:
-            RV32_SUPPORTED_EXTENSIONS.add(ext["extension"])
+    for ext in exts:
+        if ext in SUPPORTED_EXTENSIONS:
+            pegasus_uarch_jsons.append(ext)
+        #else:
+        #    print("WARNING: Extension not supported by Pegasus:", ext)
 
-    pegasus_uarch_rv64_jsons = [ext for ext in pegasus_uarch_rv64_jsons if ext in RV64_SUPPORTED_EXTENSIONS]
-    pegasus_uarch_rv32_jsons = [ext for ext in pegasus_uarch_rv32_jsons if ext in RV32_SUPPORTED_EXTENSIONS]
-
-    # Instruction uarch jsons
-    if (pegasus_uarch_rv64_jsons):
-        inst_handler_gen = InstJSONGenerator("64", pegasus_uarch_rv64_jsons)
-        inst_handler_gen.write_jsons(profile)
-    if (pegasus_uarch_rv32_jsons):
-        inst_handler_gen = InstJSONGenerator("32", pegasus_uarch_rv32_jsons)
-        inst_handler_gen.write_jsons(profile)
+    print(pegasus_uarch_jsons)
+    inst_handler_gen = InstJSONGenerator(xlen, pegasus_uarch_jsons)
+    inst_handler_gen.write_jsons(profile_name)
 
 
 def main():

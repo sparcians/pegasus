@@ -5,6 +5,7 @@
 from enum import Enum
 import os, shutil
 import argparse
+import copy
 
 from GenRegisterJSON import GenRegisterJSON
 from GenRegisterJSON import RegisterGroup
@@ -14,27 +15,43 @@ from GenCSRHeaders import gen_csr_helpers_header
 from GenCSRHeaders import gen_csr_bitmask_header
 from GenCSRHeaders import gen_csr_field_idxs_header
 
-def setup_arch_dirs(arch_root, arch_name):
+def write_reg_jsons(arch_root, arch_name, xlen, regs):
     arch_name_root = os.path.join(arch_root, arch_name)
     if not os.path.exists(arch_name_root):
         os.makedirs(arch_name_root)
 
     os.chdir(arch_name_root)
 
-    rv64_root = os.path.join(arch_name_root, 'rv64', 'gen')
-    if not os.path.exists(rv64_root):
-        os.makedirs(rv64_root)
+    reg_dir_name = "rv" + str(xlen)
+    reg_dir = os.path.join(arch_name_root, reg_dir_name, 'gen')
+    if not os.path.exists(reg_dir):
+        os.makedirs(reg_dir)
 
-    rv32_root = os.path.join(arch_name_root, 'rv32', 'gen')
-    if not os.path.exists(rv32_root):
-        os.makedirs(rv32_root)
+    os.chdir(reg_dir)
 
-    return rv64_root, rv32_root
+    for name, regset in regs.items():
+        contexts = regset.get_reg_ctx()
+
+        if len(contexts) > 1:
+            for ctx in contexts:
+                filename = f'reg_{name}_{ctx.lower()}.json'
+                regset.write_json(filename, ctx)
+        else:
+            filename = f'reg_{name}.json'
+            regset.write_json(filename)
 
 
-def gen_rva23_reg_defs(rv64_root, rv32_root):
-    # Generate rv64g int, fp and CSR registers
-    os.chdir(rv64_root)
+def main():
+    parser = argparse.ArgumentParser(description="RISC-V Helper script for generating register JSONs")
+    parser.add_argument("--gen-csr-headers", action="store_true",
+                        help="Only generates the CSR header files")
+    args = parser.parse_args()
+
+    pegasus_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    arch_root = os.path.join(pegasus_root, 'arch')
+    os.chdir(arch_root)
+
+    # All RV64 regs
     rv64_regs = {}
     RV64_XLEN = 8
     SUPPORTED_VLENS = [128, 256, 512, 1024, 2048]
@@ -55,19 +72,7 @@ def gen_rva23_reg_defs(rv64_root, rv32_root):
     num += 1
     rv64_regs["int"].add_custom_register("resv_valid", num, "Load reservation valid", 8, [], {}, True)
 
-    for name, regs in rv64_regs.items():
-        contexts = regs.get_reg_ctx()
-
-        if len(contexts) > 1:
-            for ctx in contexts:
-                filename = f'reg_{name}_{ctx.lower()}.json'
-                regs.write_json(filename, ctx)
-        else:
-            filename = f'reg_{name}.json'
-            regs.write_json(filename)
-
-    # Generate rv32g int, fp and CSR registers
-    os.chdir(rv32_root)
+    # All RV32 regs
     rv32_regs = {}
     RV32_XLEN = 4
     rv32_regs["int"] = GenRegisterJSON(RegisterGroup.INT, 32, RV32_XLEN)
@@ -88,33 +93,14 @@ def gen_rva23_reg_defs(rv64_root, rv32_root):
     num += 1
     rv32_regs["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
 
-    for name, regs in rv32_regs.items():
-        contexts = regs.get_reg_ctx()
-
-        if len(contexts) > 1:
-            for ctx in contexts:
-                filename = f'reg_{name}_{ctx.lower()}.json'
-                regs.write_json(filename, ctx)
-        else:
-            filename = f'reg_{name}.json'
-            regs.write_json(filename)
-
-    return rv64_regs, rv32_regs
-
-
-def main():
-    parser = argparse.ArgumentParser(description="RISC-V Helper script for generating register JSONs")
-    parser.add_argument("--gen-csr-headers", action="store_true",
-                        help="Only generates the CSR header files")
-    args = parser.parse_args()
-
-    pegasus_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    arch_root = os.path.join(pegasus_root, 'arch')
-    os.chdir(arch_root)
-
     # RVA23
-    rv64_root, rv32_root = setup_arch_dirs(arch_root, "rva23")
-    rv64_regs, rv32_regs = gen_rva23_reg_defs(rv64_root, rv32_root)
+    write_reg_jsons(arch_root, "rva23", 64, rv64_regs)
+
+    # RVB23
+    write_reg_jsons(arch_root, "rvb23", 64, rv64_regs)
+
+    # RVM23
+    write_reg_jsons(arch_root, "rvm23", 32, rv64_regs)
 
     # Generate Pegasus header files
     # FIXME: Currently RVA23 includes everything so its ok to use its register
