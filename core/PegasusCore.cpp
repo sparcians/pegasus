@@ -151,6 +151,7 @@ namespace pegasus
 
         sparta_assert(xlen_ == extension_manager_.getXLEN());
 
+        extension_manager_.setProfile(profile_);
         extension_manager_.setISA(isa_string_);
 
         std::string unsupportedExt;
