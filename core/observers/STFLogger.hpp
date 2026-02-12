@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/observers/Observer.hpp"
-#include "stf-inc/stf_record_types.hpp"
-#include "stf-inc/stf_writer.hpp"
+#include "stf_record_types.hpp"
+#include "stf_writer.hpp"
 #include "core/PegasusInst.hpp"
 
 namespace pegasus

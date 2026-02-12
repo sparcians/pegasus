@@ -33,12 +33,7 @@ target_compile_options (pegasuslibs INTERFACE -Werror
   -Wall -Wextra -Winline -Winit-self -Wunused-function
   -Wuninitialized -Wsequence-point -Wno-inline -Wunknown-pragmas
   -Woverloaded-virtual -Wunused-parameter -Wmissing-field-initializers
-  -fPIC -pipe)
-
-# Use lld for linking clang and gcc builds
-if (NOT APPLE)
-  target_link_options(pegasuslibs INTERFACE -fuse-ld=lld)
-endif ()
+  -fPIC -pipe -Wno-unused-private-field)
 
 # Use ccache if installed
 find_program (CCACHE_PROGRAM ccache)
@@ -83,6 +78,9 @@ else()
   elseif(DEFINED ENV{CONDA_PREFIX})
     message (STATUS "Looking for SPARTA in the conda environment: '$ENV{CONDA_PREFIX}'")
     set(SPARTA_SEARCH_DIR $ENV{CONDA_PREFIX})
+  elseif(DEFINED ENV{SPACK_ENV})
+    message (STATUS "Looking for SPARTA in the Spack environment: '$ENV{SPACK_ENV}'")
+    set(SPARTA_SEARCH_DIR $ENV{SPACK_ENV}/.spack-env/view)
   else()
     message (STATUS "If needed, please provide the location where sparta is installed: -DSPARTA_SEARCH_DIR=<directory>")
   endif()
@@ -105,28 +103,31 @@ endif()
 target_include_directories(pegasuslibs INTERFACE ${SIM_BASE})
 target_include_directories(pegasuslibs INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
-# Boost
-find_package (Boost REQUIRED COMPONENTS json)
-target_include_directories(pegasuslibs INTERFACE ${Boost_INCLUDE_DIRS})
-
+if (NOT PEGASUS_USE_PARENT_MAVIS)
 # Mavis
-set(MAVIS_CXX_STANDARD 23)
-add_subdirectory(mavis SYSTEM)
-get_target_property(MAVIS_INCLUDES mavis INCLUDE_DIRECTORIES)
-include_directories(${MAVIS_INCLUDES})
+  set(MAVIS_CXX_STANDARD 23)
+  add_subdirectory(mavis SYSTEM)
+  include_directories($<TARGET_PROPERTY:mavis,INCLUDE_DIRECTORIES>)
+endif()
 
 # SoftFloat
 target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)
 target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat/source/include)
 add_subdirectory(softfloat)
 
-# STF Library
-set(DISABLE_STF_DOXYGEN 1)
-set(DISABLE_STF_TESTS 1)
-target_include_directories(pegasuslibs SYSTEM INTERFACE stf_lib)
-include(stf_lib/cmake/stf_linker_setup.cmake)
-setup_stf_linker(false)
-add_subdirectory(stf_lib)
+if (NOT PEGASUS_USE_PARENT_STF_LIB)
+  # STF Library
+  set(DISABLE_STF_DOXYGEN True)
+  set(DISABLE_STF_TESTS True)
+  if (NOT CMAKE_BUILD_TYPE MATCHES "^[Rr]elease")
+      set(NO_STF_LTO True)
+  endif()
+  add_subdirectory(stf_lib)
+endif()
+
+target_link_libraries(pegasuslibs INTERFACE stf)
+
+enable_lto()
 
 # Pegasus dependencies
 add_subdirectory(arch)
@@ -134,7 +135,10 @@ add_subdirectory(core)
 add_subdirectory(system)
 add_subdirectory(sim)
 add_subdirectory(cosim)
-add_subdirectory(test EXCLUDE_FROM_ALL)
+
+if (PROJECT_IS_TOP_LEVEL)
+  add_subdirectory(test EXCLUDE_FROM_ALL)
+endif()
 
 # For install only
 add_subdirectory(scripts)
@@ -153,63 +157,71 @@ FetchContent_MakeAvailable(spike)
 
 ################################################################################
 
-find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
+if (PROJECT_IS_TOP_LEVEL)
+  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
 
-execute_process (
-  COMMAND
-     bash -c "${CLANGFORMAT_EXECUTABLE} --version"
-  OUTPUT_VARIABLE
-     CLANGFORMAT_VERSION_OUTPUT
-)
+  execute_process (
+    COMMAND
+       bash -c "${CLANGFORMAT_EXECUTABLE} --version"
+    OUTPUT_VARIABLE
+       CLANGFORMAT_VERSION_OUTPUT
+  )
 
-set(REQUIRED_CLANGFORMAT_VERSION "15")
+  set(REQUIRED_CLANGFORMAT_VERSION "15")
 
-# Extract the version number from the output
-string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})
+  # Extract the version number from the output
+  string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})
 
-# Compare the found version with the required version
-if (CLANGFORMAT_VERSION VERSION_LESS REQUIRED_CLANGFORMAT_VERSION)
-    message(FATAL_ERROR "clang-format version ${CLANGFORMAT_VERSION} found. Version ${REQUIRED_CLANGFORMAT_VERSION} or later is required.")
-else()
-    message(STATUS "clang-format version ${CLANGFORMAT_VERSION} found.")
+  # Compare the found version with the required version
+  if (CLANGFORMAT_VERSION VERSION_LESS REQUIRED_CLANGFORMAT_VERSION)
+      message(FATAL_ERROR "clang-format version ${CLANGFORMAT_VERSION} found. Version ${REQUIRED_CLANGFORMAT_VERSION} or later is required.")
+  else()
+      message(STATUS "clang-format version ${CLANGFORMAT_VERSION} found.")
+  endif()
+
+  execute_process (
+    COMMAND
+       find core system sim arch include cosim test -name "*.[ch]pp"
+    OUTPUT_FILE
+       ${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
+    WORKING_DIRECTORY
+       ${SIM_BASE}
+  )
+
+  # CPUTopology is pretty clean as it is.  There's an option to NOT
+  # collapse the array of structures in clang-format v16, but we're not
+  # there yet
+  add_custom_target(clangformat
+    COMMAND
+       ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
+    WORKING_DIRECTORY
+       ${SIM_BASE}
+    COMMENT
+       "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
+    )
+
+  add_custom_target(clangformat-check
+    COMMAND
+       ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
+    WORKING_DIRECTORY
+       ${SIM_BASE}
+    COMMENT
+       "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
+    )
 endif()
-
-execute_process (
-  COMMAND
-     find core system sim arch include cosim test -name "*.[ch]pp"
-  OUTPUT_FILE
-     ${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
-  WORKING_DIRECTORY
-     ${SIM_BASE}
-)
-
-# CPUTopology is pretty clean as it is.  There's an option to NOT
-# collapse the array of structures in clang-format v16, but we're not
-# there yet
-add_custom_target(clangformat
-  COMMAND
-     ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
-  WORKING_DIRECTORY
-     ${SIM_BASE}
-  COMMENT
-     "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
-  )
-
-add_custom_target(clangformat-check
-  COMMAND
-     ${CLANGFORMAT_EXECUTABLE} --Werror -n --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
-  WORKING_DIRECTORY
-     ${SIM_BASE}
-  COMMENT
-     "Formatting Pegasus with ${CLANGFORMAT_EXECUTABLE} ..."
-  )
 
 ################################################################################
 
 # Install
 install(FILES ${PROJECT_BINARY_DIR}/softfloat/libsoftfloat.a DESTINATION lib)
-install(FILES ${PROJECT_BINARY_DIR}/stf_lib/lib/libstf.a DESTINATION lib)
-install(FILES ${PROJECT_BINARY_DIR}/mavis/libmavis.a DESTINATION lib)
+
+if (NOT PEGASUS_USE_PARENT_STF_LIB)
+  install(FILES ${PROJECT_BINARY_DIR}/stf_lib/lib/libstf.a DESTINATION lib)
+endif()
+
+if (NOT PEGASUS_USE_PARENT_MAVIS)
+  install(FILES ${PROJECT_BINARY_DIR}/mavis/libmavis.a DESTINATION lib)
+endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/mavis/json DESTINATION include/pegasus/mavis)
 

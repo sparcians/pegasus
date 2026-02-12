@@ -15,7 +15,7 @@
 #include "core/observers/STFLogger.hpp"
 #include "core/observers/STFValidator.hpp"
 
-#include "mavis/mavis/Mavis.h"
+#include "mavis/Mavis.h"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/memory/SimpleMemoryMapNode.hpp"
