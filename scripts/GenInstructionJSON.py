@@ -141,6 +141,8 @@ class InstJSONGenerator():
                     inst['xlen'] = self.xlen
                 # Sort alphabetically
                 self.isa_map[ext] = sorted(self.isa_map[ext], key=lambda x: x['mnemonic'])
+            #else:
+            #    print("WARNING: Missing:", global_str)
 
     def write_jsons(self, arch_name):
         """Write register definitions to a JSON file in the given directory"""
