@@ -1,0 +1,4 @@
+top.core*.params:
+  arch: "rvm23"
+  profile: "rvm23u32"
+  isa: "rv32imb_zicond_zihintpause_zihintntl_zca_zcb_zcmp_zicbop_zimop_zcmop"

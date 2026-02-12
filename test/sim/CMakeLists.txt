@@ -7,6 +7,11 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../arch                     ${CMAKE_C
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../mavis/json               ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_CURRENT_BINARY_DIR}/workloads SYMBOLIC)
 
+# Supported architectures
+pegasus_named_test(pegasus_rva23_test pegasus --arch rva23 --no-run)
+pegasus_named_test(pegasus_rvb23_test pegasus --arch rvb23 --no-run)
+pegasus_named_test(pegasus_rvm23_test pegasus --arch rvm23 --no-run)
+
 # ASM Tests
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.hart0.params.stop_sim_on_wfi true workloads/nop.elf)
 pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart true workloads/uart.elf)

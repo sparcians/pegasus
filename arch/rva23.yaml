@@ -1,2 +1,3 @@
-top.core*.params.arch: "rva23"
-top.core*.params.profile: "rva23s64"
+top.core*.params:
+  arch: "rva23"
+  profile: "rva23s64"
