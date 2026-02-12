@@ -8,6 +8,7 @@ import math
 import sys
 import os
 import argparse
+import copy
 
 from insts.RVI_INST import RV32I_INST
 from insts.RVI_INST import RV64I_INST
@@ -70,10 +71,11 @@ from insts.RVZACAS_INST import RV32ZACAS_INST
 from insts.RVZACAS_INST import RV64ZACAS_INST
 from insts.RVZILSD_INST import RV32ZILSD_INST
 
-from insts.RVV_INST import RVZVE32X_INST
-from insts.RVV_INST import RVZVE32F_INST
-from insts.RVV_INST import RVZVE64D_INST
-from insts.RVV_INST import RVZVE64X_INST
+from insts.RVV_INST import RVV_INST
+#from insts.RVV_INST import RVZVE32X_INST
+#from insts.RVV_INST import RVZVE32F_INST
+#from insts.RVV_INST import RVZVE64D_INST
+#from insts.RVV_INST import RVZVE64X_INST
 
 from insts.RVH_INST import RV32H_INST
 from insts.RVH_INST import RV64H_INST
@@ -114,7 +116,6 @@ from insts.RVZILSD_INST import RV32ZILSD_MAVIS_EXTS # RV32 only
 from insts.RVZFA_INST import RVZFA_MAVIS_EXTS
 
 from insts.RVV_INST import RVV_MAVIS_EXTS
-
 from insts.RVH_INST import RVH_MAVIS_EXTS
 
 from insts.RVSVINVAL_INST import RVSVINVAL_MAVIS_EXTS
@@ -134,12 +135,12 @@ class InstJSONGenerator():
         for ext in self.pegasus_uarch_jsons:
             xlen_str = "" if "zve" in ext else str(self.xlen)
             global_str = "RV" + xlen_str + ext.upper() + "_INST"
-            self.isa_map[ext] = globals()[global_str]
-            for inst in self.isa_map[ext]:
-                inst['xlen'] = self.xlen
-
-            # Sort alphabetically
-            self.isa_map[ext] = sorted(self.isa_map[ext], key=lambda x: x['mnemonic'])
+            if global_str in globals().keys():
+                self.isa_map[ext] = globals()[global_str]
+                for inst in self.isa_map[ext]:
+                    inst['xlen'] = self.xlen
+                # Sort alphabetically
+                self.isa_map[ext] = sorted(self.isa_map[ext], key=lambda x: x['mnemonic'])
 
     def write_jsons(self, arch_name):
         """Write register definitions to a JSON file in the given directory"""
@@ -149,12 +150,12 @@ class InstJSONGenerator():
         if not os.path.isdir(gen_path):
             os.makedirs(gen_path)
 
-        for ext in self.pegasus_uarch_jsons:
+        for ext, insts in self.isa_map.items():
             filename = os.path.join(gen_path, "pegasus_uarch_" + xlen_str + ext.lower() + ".json")
             with open(filename,"w") as fh:
                 json.dump(self.isa_map[ext], fh, indent=4)
 
-def get_exts():
+def get_supported_exts():
     ''' Generates a string with all of the available extensions imported.
         The format of the returned string is xlen_extension1_extension2_...'''
     rv64_exts = list()
@@ -227,6 +228,66 @@ def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts
             else:
                 fh.write( f'    \"{ext}\", \\\n')
 
+
+def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, pegasus_uarch_rv64_jsons, pegasus_uarch_rv32_jsons):
+    with open(mavis_profile_json, 'r') as file:
+        data = json.load(file)
+
+    isa = data["profiles"][profile]
+    print(isa)
+
+    exts = isa.split("_")
+    base_isa = copy.deepcopy(exts[0])
+
+    # Validate ISA string, always starts with rv
+    if (base_isa[0:2] != "rv"):
+        print("ERROR: Invalid RISC-V profile:", profile)
+        sys.exit(1)
+    base_isa = base_isa[2:]
+
+    # XLEN
+    xlen = 64
+    try:
+        xlen = int(base_isa[0:2])
+    except ValueError:
+        print("ERROR: Invalid RISC-V profile:", profile)
+        sys.exit(1)
+    base_isa = base_isa[2:]
+
+    exts[0] = base_isa[0]
+    base_isa = base_isa[1:]
+    for ext in base_isa:
+        exts.append(ext)
+
+    print(exts)
+    return
+
+    for ext in data["meta_extensions"]:
+        xlens = ext["xlen"] if isinstance(ext["xlen"], list) else [ext["xlen"]]
+        if 64 in xlens:
+            RV64_SUPPORTED_EXTENSIONS.add(ext["extension"])
+        if 32 in xlens:
+            RV32_SUPPORTED_EXTENSIONS.add(ext["extension"])
+
+    for ext in data["extensions"]:
+        xlens = ext["xlen"] if isinstance(ext["xlen"], list) else [ext["xlen"]]
+        if 64 in xlens:
+            RV64_SUPPORTED_EXTENSIONS.add(ext["extension"])
+        if 32 in xlens:
+            RV32_SUPPORTED_EXTENSIONS.add(ext["extension"])
+
+    pegasus_uarch_rv64_jsons = [ext for ext in pegasus_uarch_rv64_jsons if ext in RV64_SUPPORTED_EXTENSIONS]
+    pegasus_uarch_rv32_jsons = [ext for ext in pegasus_uarch_rv32_jsons if ext in RV32_SUPPORTED_EXTENSIONS]
+
+    # Instruction uarch jsons
+    if (pegasus_uarch_rv64_jsons):
+        inst_handler_gen = InstJSONGenerator("64", pegasus_uarch_rv64_jsons)
+        inst_handler_gen.write_jsons(profile)
+    if (pegasus_uarch_rv32_jsons):
+        inst_handler_gen = InstJSONGenerator("32", pegasus_uarch_rv32_jsons)
+        inst_handler_gen.write_jsons(profile)
+
+
 def main():
     SUPPORTED_XLEN = ['rv32', 'rv64']
 
@@ -243,31 +304,21 @@ def main():
 
     os.chdir(arch_root)
 
-    rv64_exts, rv32_exts = get_exts()
+    RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS = get_supported_exts()
     pegasus_uarch_rv64_jsons, pegasus_uarch_rv32_jsons = get_pegasus_uarch_jsons()
 
     if args.gen_supported_isa_header:
-        gen_supported_isa_header(arch_root, rv64_exts, rv32_exts, pegasus_uarch_rv64_jsons, pegasus_uarch_rv32_jsons)
+        gen_supported_isa_header(arch_root, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS, pegasus_uarch_rv64_jsons, pegasus_uarch_rv32_jsons)
         return
 
+    MAVIS_RISCV_JSON = "../mavis/json/riscv_isa_spec.json"
+
     # RVA23
-    # FIXME: At some point, we will read in the Mavis profile JSONs to get the
-    # list of supported extensions. For now, just assume everything is included.
-    RVA23_RV64_SUPPORTED_EXTENSIONS = rv64_exts
-    RVA23_RV32_SUPPORTED_EXTENSIONS = rv32_exts
-    rva23_r64_exts = [ext for ext in rv64_exts if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]
-    rva23_r32_exts = [ext for ext in rv32_exts if ext in RVA23_RV32_SUPPORTED_EXTENSIONS]
-    rva23_pegasus_uarch_rv64_jsons = [ext for ext in pegasus_uarch_rv64_jsons if ext in RVA23_RV64_SUPPORTED_EXTENSIONS]
-    rva23_pegasus_uarch_rv32_jsons = [ext for ext in pegasus_uarch_rv32_jsons if ext in RVA23_RV32_SUPPORTED_EXTENSIONS]
-
-    # Instruction uarch jsons
-    if (args.xlen == "rv64"):
-        inst_handler_gen = InstJSONGenerator("64", rva23_pegasus_uarch_rv64_jsons)
-        inst_handler_gen.write_jsons("rva23")
-    else:
-        inst_handler_gen = InstJSONGenerator("32", rva23_pegasus_uarch_rv32_jsons)
-        inst_handler_gen.write_jsons("rva23")
-
+    write_pegasus_uarch_jsons("rva23", "rva23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    # RVB23
+    write_pegasus_uarch_jsons("rvb23", "rvb23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    # RVM23
+    write_pegasus_uarch_jsons("rvm23", "rvm23u32", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
 
 if __name__ == "__main__":
     main()
