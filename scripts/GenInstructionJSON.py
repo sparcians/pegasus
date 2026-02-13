@@ -230,14 +230,14 @@ def gen_supported_isa_header(arch_root, supported_rv64_exts, supported_rv32_exts
                 fh.write( f'    \"{ext}\", \\\n')
 
 
-def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SUPPORTED_EXTENSIONS, RV32_SUPPORTED_EXTENSIONS):
+def get_profile_supported_exts(profile, mavis_profile_json, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS):
     with open(mavis_profile_json, 'r') as file:
         data = json.load(file)
 
     isa = data["profiles"][profile]
 
-    exts = isa.split("_")
-    base_isa = copy.deepcopy(exts[0])
+    profile_exts = isa.split("_")
+    base_isa = copy.deepcopy(profile_exts[0])
 
     # Validate ISA string, always starts with rv
     if (base_isa[0:2] != "rv"):
@@ -246,27 +246,25 @@ def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SU
     base_isa = base_isa[2:]
 
     # XLEN
-    xlen = 64
+    profile_xlen = 64
     try:
-        xlen = int(base_isa[0:2])
+        profile_xlen = int(base_isa[0:2])
     except ValueError:
         print("ERROR: Invalid RISC-V profile:", profile)
         sys.exit(1)
     base_isa = base_isa[2:]
 
-    exts[0] = base_isa[0]
+    profile_exts[0] = base_isa[0]
     base_isa = base_isa[1:]
     for ext in base_isa:
-        exts.append(ext)
+        profile_exts.append(ext)
 
-    SUPPORTED_EXTENSIONS = RV64_SUPPORTED_EXTENSIONS if (xlen == 64) else RV32_SUPPORTED_EXTENSIONS
-    pegasus_uarch_jsons = []
-
-    for ext in exts:
+    SUPPORTED_EXTENSIONS = RV64_PEGASUS_SUPPORTED_EXTS if (profile_xlen == 64) else RV64_PEGASUS_SUPPORTED_EXTS
+    exts = []
+    for ext in profile_exts:
         if ext in SUPPORTED_EXTENSIONS:
-            pegasus_uarch_jsons.append(ext)
+            exts.append(ext)
         #else:
         #    print("WARNING: Extension not supported by Pegasus:", ext)
 
-    inst_handler_gen = InstJSONGenerator(xlen, pegasus_uarch_jsons)
-    inst_handler_gen.write_jsons(profile_name)
+    return exts

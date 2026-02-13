@@ -94,6 +94,10 @@ def main():
     rv32_regs["int"].add_custom_register("resv_valid", num, "Load reservation valid", 4, [], {}, True)
 
     # RVA23
+    write_reg_jsons(arch_root, "default", 32, rv32_regs)
+    write_reg_jsons(arch_root, "default", 64, rv64_regs)
+
+    # RVA23
     write_reg_jsons(arch_root, "rva23", 64, rv64_regs)
 
     # RVB23

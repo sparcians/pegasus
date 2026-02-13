@@ -41,7 +41,7 @@ namespace pegasus
 
             PARAMETER(uint32_t, core_id, 0, "Core ID")
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
-            PARAMETER(std::string, arch, "rva23", "Architecture name")
+            PARAMETER(std::string, arch, "default", "Architecture name")
             PARAMETER(std::string, profile, "", "RISC-V profile (defined in Mavis)")
             PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")

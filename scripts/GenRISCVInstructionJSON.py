@@ -8,7 +8,8 @@ import argparse
 from GenInstructionJSON import get_supported_exts
 from GenInstructionJSON import get_pegasus_uarch_jsons
 from GenInstructionJSON import gen_supported_isa_header
-from GenInstructionJSON import write_pegasus_uarch_jsons
+from GenInstructionJSON import get_profile_supported_exts
+from GenInstructionJSON import InstJSONGenerator
 
 def main():
     SUPPORTED_XLEN = ['rv32', 'rv64']
@@ -33,16 +34,24 @@ def main():
 
     MAVIS_RISCV_JSON = "../mavis/json/riscv_isa_spec.json"
 
-    # RVA23
-    write_pegasus_uarch_jsons("rva23", "rva23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
-    # RVB23
-    write_pegasus_uarch_jsons("rvb23", "rvb23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
-    # RVM23
-    write_pegasus_uarch_jsons("rvm23", "rvm23u32", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    # Default (everything included)
+    inst_handler_gen = InstJSONGenerator(32, RV32_PEGASUS_SUPPORTED_EXTS)
+    inst_handler_gen.write_jsons("default")
+    inst_handler_gen = InstJSONGenerator(64, RV64_PEGASUS_SUPPORTED_EXTS)
+    inst_handler_gen.write_jsons("default")
 
-    # default
-    if not os.path.isdir("default"):
-        os.symlink("rva23", "default")
+    # RVA23
+    rva23_supported_exts = get_profile_supported_exts("rva23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    inst_handler_gen = InstJSONGenerator(64, rva23_supported_exts)
+    inst_handler_gen.write_jsons("rva23")
+    # RVB23
+    rvb23_supported_exts = get_profile_supported_exts("rvb23s64", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    inst_handler_gen = InstJSONGenerator(64, rvb23_supported_exts)
+    inst_handler_gen.write_jsons("rvb23")
+    # RVM23
+    rvm23_supported_exts = get_profile_supported_exts("rvm23u32", MAVIS_RISCV_JSON, RV64_PEGASUS_SUPPORTED_EXTS, RV32_PEGASUS_SUPPORTED_EXTS)
+    inst_handler_gen = InstJSONGenerator(32, rvm23_supported_exts)
+    inst_handler_gen.write_jsons("rvm23")
 
 if __name__ == "__main__":
     main()
