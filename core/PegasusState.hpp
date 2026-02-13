@@ -308,9 +308,18 @@ namespace pegasus
         void cleanup();
 
         // Register a WaitOnReservationSet notification.
-        void registerWaitOnReservationSet();
+        void registerWaitOnReservationSetCB();
         // Unregister a WaitOnReservationSet notification.
-        void unregisterWaitOnReservationSet();
+        void unregisterWaitOnReservationSetCB();
+
+        // Register a StoreOnReservationSet notification.
+        void registerStoreOnReservationSetCB();
+        // Unregister a StoreOnReservationSet notification.
+        void unregisterStoreOnReservationSetCB();
+
+        bool storeOnReservationSetOccurred() { return storeOnReservationSet_; };
+
+        void storeOnReservationSet(bool v) { storeOnReservationSet_ = v; }
 
       private:
         void onBindTreeEarly_() override;
@@ -337,7 +346,12 @@ namespace pegasus
         Action::ItrType pauseSim_(PegasusState*, Action::ItrType action_it) { return ++action_it; }
 
         void
-        waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
+        waitOnReservationSetCB_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
+
+        // This callback is only registered when Reservation is valid and storeOnReservation has not
+        // occurred.
+        void storeOnReservationSetCB_(
+            const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
 
         //! Hart ID
         const HartId hart_id_;
@@ -451,6 +465,9 @@ namespace pegasus
         // Co-simulation debug utils
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
+
+        // Whether a store has occured on reservation set.
+        bool storeOnReservationSet_ = false;
 
         // Event friend class for cosim. Allows direct state manipulation
         // during flush (rollback) operations.

@@ -924,19 +924,19 @@ namespace pegasus
         }
     }
 
-    void PegasusState::registerWaitOnReservationSet()
+    void PegasusState::registerWaitOnReservationSetCB()
     {
         auto m = pegasus_core_->getSystem()->getSystemMemory();
-        m->getPostWriteNotificationSource().REGISTER_FOR_THIS(waitOnReservationSet_);
+        m->getPostWriteNotificationSource().REGISTER_FOR_THIS(waitOnReservationSetCB_);
     }
 
-    void PegasusState::unregisterWaitOnReservationSet()
+    void PegasusState::unregisterWaitOnReservationSetCB()
     {
         auto m = pegasus_core_->getSystem()->getSystemMemory();
-        m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(waitOnReservationSet_);
+        m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(waitOnReservationSetCB_);
     }
 
-    void PegasusState::waitOnReservationSet_(
+    void PegasusState::waitOnReservationSetCB_(
         const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
     {
         const auto reservation = pegasus_core_->getReservation(hart_id_);
@@ -948,9 +948,32 @@ namespace pegasus
             // awakening thread must be set to run in order for similation to proceed.
             pegasus_core_->unpauseHart(hart_id_);
 
-            unregisterWaitOnReservationSet();
+            unregisterWaitOnReservationSetCB();
             // Cancel the WRS.STO timeout event if scheduled.
             pegasus_core_->cancelWrsstoEvent(hart_id_);
+        }
+    }
+
+    void PegasusState::registerStoreOnReservationSetCB()
+    {
+        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        m->getPostWriteNotificationSource().REGISTER_FOR_THIS(storeOnReservationSetCB_);
+    }
+
+    void PegasusState::unregisterStoreOnReservationSetCB()
+    {
+        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(storeOnReservationSetCB_);
+    }
+
+    void PegasusState::storeOnReservationSetCB_(
+        const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
+    {
+        const auto reservation = pegasus_core_->getReservation(hart_id_);
+        if (reservation.isValid() && (reservation.getValue() == data.addr))
+        {
+            storeOnReservationSet_ = true;
+            unregisterStoreOnReservationSetCB();
         }
     }
 
