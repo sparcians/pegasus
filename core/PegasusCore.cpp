@@ -88,6 +88,7 @@ namespace pegasus
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
         pause_counter_duration_(p->pause_counter_duration),
+        wrssto_counter_duration_(p->wrssto_counter_duration),
         ev_pause_counter_expires_(
             &unit_event_set_, "pause_counter_expires",
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
@@ -125,9 +126,12 @@ namespace pegasus
             hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
                 ->setValueFromString(std::to_string(xlen_));
 
-            // Set hart_id
-            hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id")
-                ->setValueFromString(std::to_string(hart_idx));
+            // Set hart_id if not explicitly set
+            auto hart_id = hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id");
+            if (hart_id->isDefault())
+            {
+                hart_id->setValueFromString(std::to_string(hart_idx));
+            }
 
             // Set path to register JSONs (from "arch")
             const std::string reg_json_file_path =
@@ -374,7 +378,8 @@ namespace pegasus
                 case SimPauseReason::FORK:
                     sparta_assert(false, "Pause reason FORK is not supported yet!");
                     break;
-                default:
+                case SimPauseReason::WRS_NTO:
+                case SimPauseReason::INVALID:
                     break;
             }
         }
@@ -400,7 +405,7 @@ namespace pegasus
             {
                 ev_wrssto_counter_expires_.preparePayload(current_hart_id_)
                     ->schedule(current_cycle - getClock()->currentCycle()
-                               + pause_counter_duration_);
+                               + wrssto_counter_duration_);
             }
         }
 
