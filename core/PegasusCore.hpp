@@ -48,6 +48,8 @@ namespace pegasus
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
+            PARAMETER(uint64_t, wrssto_counter_duration, 256,
+                      "WRS.STO pause counter duration in cycles")
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
         };
@@ -153,6 +155,10 @@ namespace pegasus
 
         const std::string & getISAString() const { return isa_string_; }
 
+        void unpauseHart(HartId hart_id) { threads_running_.set(hart_id); }
+
+        void cancelWrsstoEvent(HartId hart_id) { ev_wrssto_counter_expires_.cancelIf(hart_id); }
+
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusCore* core) const;
 
       private:
@@ -192,8 +198,11 @@ namespace pegasus
 
         // Pause counter
         const uint64_t pause_counter_duration_;
+        const uint64_t wrssto_counter_duration_;
         void pauseCounterExpires_(const HartId & hart_id);
         sparta::PayloadEvent<HartId> ev_pause_counter_expires_;
+        void wrsstoCounterExpires_(const HartId & hart_id);
+        sparta::PayloadEvent<HartId> ev_wrssto_counter_expires_;
 
         // Status of each thread
         HartId current_hart_id_ = 0;

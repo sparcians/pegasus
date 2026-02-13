@@ -1,5 +1,5 @@
 
-ASM_TESTS ?= b_ext nop uart multihart
+ASM_TESTS ?= b_ext nop uart multihart wrs
 
 include ../common.mk
 
