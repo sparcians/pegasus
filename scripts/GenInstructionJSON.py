@@ -236,7 +236,6 @@ def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SU
         data = json.load(file)
 
     isa = data["profiles"][profile]
-    print(isa)
 
     exts = isa.split("_")
     base_isa = copy.deepcopy(exts[0])
@@ -261,8 +260,6 @@ def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SU
     for ext in base_isa:
         exts.append(ext)
 
-    print(exts)
-
     SUPPORTED_EXTENSIONS = RV64_SUPPORTED_EXTENSIONS if (xlen == 64) else RV32_SUPPORTED_EXTENSIONS
     pegasus_uarch_jsons = []
 
@@ -272,7 +269,6 @@ def write_pegasus_uarch_jsons(profile_name, profile, mavis_profile_json, RV64_SU
         #else:
         #    print("WARNING: Extension not supported by Pegasus:", ext)
 
-    print(pegasus_uarch_jsons)
     inst_handler_gen = InstJSONGenerator(xlen, pegasus_uarch_jsons)
     inst_handler_gen.write_jsons(profile_name)
 
