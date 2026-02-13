@@ -54,7 +54,7 @@ namespace pegasus
                                                     "VLEN constraint");
             }
 
-            PARAMETER(uint32_t, hart_id, 0, "Hart ID")
+            PARAMETER(uint32_t, hart_id, UINT32_MAX, "Hart ID")
             PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
@@ -307,6 +307,11 @@ namespace pegasus
         // One-time cleanup phase after simulation end.
         void cleanup();
 
+        // Register a WaitOnReservationSet notification.
+        void registerWaitOnReservationSet();
+        // Unregister a WaitOnReservationSet notification.
+        void unregisterWaitOnReservationSet();
+
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
@@ -330,6 +335,9 @@ namespace pegasus
         }
 
         Action::ItrType pauseSim_(PegasusState*, Action::ItrType action_it) { return ++action_it; }
+
+        void
+        waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
 
         //! Hart ID
         const HartId hart_id_;

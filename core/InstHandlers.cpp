@@ -31,6 +31,7 @@
 #include "core/inst_handlers/h/RvhInsts.hpp"
 #include "core/inst_handlers/zbkx/RvzbkxInsts.hpp"
 #include "core/inst_handlers/zacas/RvzacasInsts.hpp"
+#include "core/inst_handlers/zawrs/RvzawrsInsts.hpp"
 
 namespace pegasus
 {
@@ -77,6 +78,7 @@ namespace pegasus
         RvhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzbkxInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzacasInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzawrsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -110,6 +112,7 @@ namespace pegasus
         RvhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzbkxInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzacasInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzawrsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // Vector
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvIntegerInsts::getInstHandlers<RV32>(rv32_inst_actions_);
