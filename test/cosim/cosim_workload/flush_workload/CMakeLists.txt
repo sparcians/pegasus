@@ -8,7 +8,7 @@ file (CREATE_LINK ${SIM_BASE}/test/sim/workloads ${CMAKE_CURRENT_BINARY_DIR}/wor
 
 # Quick-running tests for "make pegasus_regress"
 file (CREATE_LINK ${SIM_BASE}/test/cosim/cosim_workload/rv64mi-p-csr ${CMAKE_CURRENT_BINARY_DIR}/rv64mi-p-csr SYMBOLIC)
-cosim_named_test(CoSimFlushWorkload_test_run FlushWorkload_test -w rv64mi-p-csr -p top.core0.params.isa rv64gcbv_zicsr_zifencei_zicond_zfh)
+cosim_named_test(CoSimFlushWorkload_test_run FlushWorkload_test -w rv64mi-p-csr -p top.core0.params.isa rv64imafdcbv_zicsr_zifencei_zicond_zfh)
 set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
                       --reg "core0.hart0.gp 0x77000"
                       --reg "core0.hart0.tp 0x7d000" -p top.extension.sim.enable_syscall_emulation true)

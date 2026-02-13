@@ -283,11 +283,8 @@ namespace pegasus
 
     void PegasusState::pauseHart(const SimPauseReason reason)
     {
-        if (sim_state_.sim_pause_reason == SimPauseReason::INVALID)
-        {
-            sim_state_.sim_pause_reason = reason;
-            finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
-        }
+        sim_state_.sim_pause_reason = reason;
+        finish_action_group_.setNextActionGroup(&pause_sim_action_group_);
     }
 
     void PegasusState::unpauseHart()
@@ -924,6 +921,36 @@ namespace pegasus
         if (sim_controller_)
         {
             sim_controller_->onSimulationFinished(this);
+        }
+    }
+
+    void PegasusState::registerWaitOnReservationSet()
+    {
+        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        m->getPostWriteNotificationSource().REGISTER_FOR_THIS(waitOnReservationSet_);
+    }
+
+    void PegasusState::unregisterWaitOnReservationSet()
+    {
+        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(waitOnReservationSet_);
+    }
+
+    void PegasusState::waitOnReservationSet_(
+        const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data)
+    {
+        const auto reservation = pegasus_core_->getReservation(hart_id_);
+        if (reservation.isValid() && (reservation.getValue() == data.addr))
+        {
+            unpauseHart();
+            // If the thread triggering the WRS is the last running thread,
+            // before triggering thread goes into pause, given current implementation,
+            // awakening thread must be set to run in order for similation to proceed.
+            pegasus_core_->unpauseHart(hart_id_);
+
+            unregisterWaitOnReservationSet();
+            // Cancel the WRS.STO timeout event if scheduled.
+            pegasus_core_->cancelWrsstoEvent(hart_id_);
         }
     }
 

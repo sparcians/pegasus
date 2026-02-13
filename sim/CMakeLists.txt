@@ -25,3 +25,14 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../arch                    ${CMAKE_CURRE
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json              ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 
 install(FILES ${PROJECT_BINARY_DIR}/libpegasussim.a DESTINATION lib)
+
+
+execute_process (
+  COMMAND
+     ${PROJECT_BINARY_DIR}/pegasus --write-final-config pegasus_base_config.yaml --no-run
+  OUTPUT_FILE
+     ${PROJECT_BINARY_DIR}/pegasus_base_config.yaml
+  WORKING_DIRECTORY
+     ${PROJECT_BINARY_DIR}
+)
+install(FILES ${PROJECT_BINARY_DIR}/base.yaml DESTINATION bin)

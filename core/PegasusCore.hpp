@@ -37,32 +37,21 @@ namespace pegasus
         class PegasusCoreParameters : public sparta::ParameterSet
         {
           public:
-            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
-            {
-                profile.addDependentValidationCallback(&PegasusCoreParameters::validateProfile_,
-                                                       "RISC-V profile constraint");
-            }
+            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, core_id, 0, "Core ID")
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
-            PARAMETER(std::string, arch, "rva23", "Architecture name")
-            PARAMETER(std::string, profile, "rva23", "RISC-V profile (rva23, rvb23, rvm23)")
+            PARAMETER(std::string, arch, "default", "Architecture name")
+            PARAMETER(std::string, profile, "", "RISC-V profile (defined in Mavis)")
             PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
+            PARAMETER(uint64_t, wrssto_counter_duration, 256,
+                      "WRS.STO pause counter duration in cycles")
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
-
-          private:
-            static bool validateProfile_(std::string & profile, const sparta::TreeNode*)
-            {
-                const std::vector<std::string> riscv_profiles_supported{"rva23", "rvb23", "rvm23"};
-                return std::find(riscv_profiles_supported.begin(), riscv_profiles_supported.end(),
-                                 profile)
-                       != riscv_profiles_supported.end();
-            }
         };
 
         PegasusCore(sparta::TreeNode* core_node, const PegasusCoreParameters* p);
@@ -166,6 +155,10 @@ namespace pegasus
 
         const std::string & getISAString() const { return isa_string_; }
 
+        void unpauseHart(HartId hart_id) { threads_running_.set(hart_id); }
+
+        void cancelWrsstoEvent(HartId hart_id) { ev_wrssto_counter_expires_.cancelIf(hart_id); }
+
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusCore* core) const;
 
       private:
@@ -205,8 +198,11 @@ namespace pegasus
 
         // Pause counter
         const uint64_t pause_counter_duration_;
+        const uint64_t wrssto_counter_duration_;
         void pauseCounterExpires_(const HartId & hart_id);
         sparta::PayloadEvent<HartId> ev_pause_counter_expires_;
+        void wrsstoCounterExpires_(const HartId & hart_id);
+        sparta::PayloadEvent<HartId> ev_wrssto_counter_expires_;
 
         // Status of each thread
         HartId current_hart_id_ = 0;
