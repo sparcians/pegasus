@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
-    DEFAULTS.arch_arg_default = "rva23";
+    DEFAULTS.arch_arg_default = "default";
     DEFAULTS.arch_search_dirs = {"arch"}; // Where --arch will be resolved by default
 
     const std::string pegasus_version =
