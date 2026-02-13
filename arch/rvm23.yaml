@@ -1,3 +1,4 @@
+# RVM23 with RVM23U32 mandatory base extensions enabled
 top.core*.params:
   arch: "rvm23"
   profile: "rvm23u32"
