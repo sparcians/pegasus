@@ -1,6 +1,6 @@
 project(FlushWorkload_Test)
 
-add_executable(FlushWorkload_test FlushWorkload_test.cpp)
+pegasus_add_cosim_test_executable(FlushWorkload_test FlushWorkload_test.cpp)
 
 file (CREATE_LINK ${SIM_BASE}/arch               ${CMAKE_CURRENT_BINARY_DIR}/arch SYMBOLIC)
 file (CREATE_LINK ${SIM_BASE}/mavis/json         ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
