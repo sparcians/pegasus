@@ -186,6 +186,24 @@ CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug
 ## Python IDE
 See [Python IDE for Pegasus](IDE/README.md)
 
+## Using Pegasus As A Submodule
+The Pegasus co-simulation library can be integrated into other projects for co-simulation. Add Pegasus as a submodule, then add the following to your CMake config:
+```
+add_subdirectory(pegasus)
+target_link_libraries(my_target pegasuscosimlib)
+```
+
+If your project already uses the [stf_lib](https://github.com/sparcians/stf_lib) or [mavis](https://github.com/sparcians/mavis) libraries, you should set these options before the `add_subdirectory` directive to prevent conflicts:
+```
+set(PEGASUS_USE_PARENT_MAVIS True)
+set(PEGASUS_USE_PARENT_STF_LIB True)
+```
+
+To speed up builds, you can also skip building the standalone pegasus executable with this setting:
+```
+set(PEGASUS_DISABLE_STANDALONE True)
+```
+
 ## RISC-V Profile Support
 | RVA23U64 Mandatory Extensions | Status |
 | :---------------------------- | :----: |

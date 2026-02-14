@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "sim/PegasusSim.hpp"
+#include "include/gen/pegasus_version.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
 const char USAGE[] = "Usage:\n"
@@ -36,11 +37,13 @@ int main(int argc, char** argv)
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
-    DEFAULTS.arch_arg_default = "rva23";
+    DEFAULTS.arch_arg_default = "default";
     DEFAULTS.arch_search_dirs = {"arch"}; // Where --arch will be resolved by default
 
-    sparta::SimulationInfo::getInstance() =
-        sparta::SimulationInfo("Pegasus RISC-V Functional Model", argc, argv, "v0.0.0", "", {});
+    const std::string pegasus_version =
+        "v" + MAJOR_VERSION + "." + MINOR_VERSION + "." + MINOR_MINOR_VERSION;
+    sparta::SimulationInfo::getInstance() = sparta::SimulationInfo(
+        "Pegasus RISC-V Functional Model", argc, argv, pegasus_version, "", {});
     const bool show_field_names = true;
     sparta::SimulationInfo::getInstance().write(std::cout, "# ", "\n", show_field_names);
     std::cout << "# Sparta Version: " << sparta::SimulationInfo::sparta_version << std::endl;
