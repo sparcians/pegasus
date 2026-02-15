@@ -70,7 +70,6 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const uint32_t imm = inst->getImmediate();
         const XLEN rd_val = OPERATOR{}(rs1_val, 0, imm);
-        printf("rs1_val : %lu, imm : %d and the result is : %lu", rs1_val, imm, rd_val);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         return ++action_it;
     }
