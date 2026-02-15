@@ -1,4 +1,6 @@
 #pragma once
+#include "include/PegasusTypes.hpp"
+#include "core/Action.hpp"
 
 #include "core/InstHandlers.hpp"
 
@@ -15,47 +17,11 @@ namespace pegasus
         static void getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers);
 
       private:
-        template <typename XLEN, typename OPERATOR>
-        Action::ItrType aesHandler_(PegasusState* state, Action::ItrType action_it);
+        template <typename XLEN, typename OPERATOR> // For I type instruction handling
+        Action::ItrType aesIHandler_(PegasusState* state, Action::ItrType action_it);
 
-        template <typename XLEN> struct Aes32DsiOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes32DsmiOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes64DsOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes64DsmOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes64ImOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes64Ks1iOp
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        template <typename XLEN> struct Aes64Ks2Op
-        {
-            XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const;
-        };
-
-        static uint8_t aes_sbox_inv(uint8_t x);
-        static uint32_t aes_mixcolumn_inv_byte(uint8_t byte);
-        static uint64_t aes_rv64_shiftrows_inv(uint64_t rs2, uint64_t rs1);
+        template <typename XLEN, typename OPERATOR> // for R type instruction handling
+        Action::ItrType aesRHandler_(PegasusState* state, Action::ItrType action_it);
     };
 
-} 
+} // namespace pegasus
