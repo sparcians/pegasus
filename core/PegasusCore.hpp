@@ -12,7 +12,7 @@
 #include "core/Execute.hpp"
 #include "core/Exception.hpp"
 
-#include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
+#include "mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ResourceFactory.hpp"
 #include "sparta/events/Event.hpp"
@@ -37,16 +37,12 @@ namespace pegasus
         class PegasusCoreParameters : public sparta::ParameterSet
         {
           public:
-            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node)
-            {
-                profile.addDependentValidationCallback(&PegasusCoreParameters::validateProfile_,
-                                                       "RISC-V profile constraint");
-            }
+            PegasusCoreParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             PARAMETER(uint32_t, core_id, 0, "Core ID")
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
-            PARAMETER(std::string, arch, "rva23", "Architecture name")
-            PARAMETER(std::string, profile, "rva23", "RISC-V profile (rva23, rvb23, rvm23)")
+            PARAMETER(std::string, arch, "default", "Architecture name")
+            PARAMETER(std::string, profile, "", "RISC-V profile (defined in Mavis)")
             PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
@@ -57,15 +53,6 @@ namespace pegasus
             PARAMETER(std::vector<int>, supported_trap_modes, {0}, "Supported RISC-V trap modes (0: Direct, 1: Vectored)")
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
-
-          private:
-            static bool validateProfile_(std::string & profile, const sparta::TreeNode*)
-            {
-                const std::vector<std::string> riscv_profiles_supported{"rva23", "rvb23", "rvm23"};
-                return std::find(riscv_profiles_supported.begin(), riscv_profiles_supported.end(),
-                                 profile)
-                       != riscv_profiles_supported.end();
-            }
         };
 
         PegasusCore(sparta::TreeNode* core_node, const PegasusCoreParameters* p);

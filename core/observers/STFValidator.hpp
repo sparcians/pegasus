@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/observers/Observer.hpp"
-#include "stf-inc/stf_inst_reader.hpp"
+#include "stf_inst_reader.hpp"
 
 namespace pegasus
 {

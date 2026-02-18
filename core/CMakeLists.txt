@@ -25,8 +25,4 @@ add_library(pegasuscore
 target_link_libraries(pegasuscore PUBLIC pegasuslibs)
 add_dependencies(pegasuscore AutogenArchFiles)
 
-# Tell cmake that stf_lib is a system include directory
-# This suppresses warnings from the stf_lib headers
-target_include_directories(pegasuscore SYSTEM PUBLIC stf_lib)
-
 add_subdirectory(inst_handlers)

@@ -37,13 +37,7 @@ add_custom_command(
 # Generate instruction definition JSONs for rv32 and rv64 each arch
 add_custom_command(
   TARGET AutogenArchFiles
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv32
-  DEPENDS ${DEPENDS_INST_PYTHON_FILES}
-)
-
-add_custom_command(
-  TARGET AutogenArchFiles
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py rv64
+  COMMAND python3 ${SIM_BASE}/scripts/GenRISCVInstructionJSON.py
   DEPENDS ${DEPENDS_INST_PYTHON_FILES}
 )
 
@@ -57,7 +51,7 @@ add_custom_command(
 # Generate supported ISA header
 add_custom_command(
   OUTPUT ${AUTOGEN_SUPPORTED_ISA_HEADER}
-  COMMAND python3 ${SIM_BASE}/scripts/GenInstructionJSON.py --gen-supported-isa-header
+  COMMAND python3 ${SIM_BASE}/scripts/GenRISCVInstructionJSON.py --gen-supported-isa-header
   DEPENDS ${DEPENDS_INST_PYTHON_FILES}
 )
 
