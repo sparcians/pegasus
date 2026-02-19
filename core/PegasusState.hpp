@@ -312,6 +312,10 @@ namespace pegasus
         // Unregister a WaitOnReservationSet notification.
         void unregisterWaitOnReservationSet();
 
+        bool storeOnReservationSetOccurred() { return storeOnReservationSet_; };
+
+        void storeOnReservationSet(bool v) { storeOnReservationSet_ = v; }
+
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
@@ -451,6 +455,9 @@ namespace pegasus
         // Co-simulation debug utils
         std::unordered_map<std::string, int> reg_ids_by_name_;
         SimController* sim_controller_ = nullptr;
+
+        // Whether a store has occured on reservation set.
+        bool storeOnReservationSet_ = false;
 
         // Event friend class for cosim. Allows direct state manipulation
         // during flush (rollback) operations.

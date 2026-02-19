@@ -534,6 +534,45 @@ namespace pegasus
         return true;
     }
 
+    void PegasusCore::makeReservation(HartId hart_id, Addr paddr)
+    {
+        for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            auto & reservation = reservations_.at(hart_id);
+            if (reservation.isValid() && (reservation.getValue() == paddr))
+            {
+                reservation.clearValid();
+            }
+        }
+        reservations_.at(hart_id) = paddr;
+        auto & state = threads_.at(hart_id);
+        state->storeOnReservationSet(false);
+        system_->switchSystemMemory(true);
+    }
+
+    void PegasusCore::clearReservation(HartId hart_id)
+    {
+        auto & reservation = reservations_.at(hart_id);
+        auto & state = threads_.at(hart_id);
+        reservation.clearValid();
+        state->storeOnReservationSet(false);
+
+        bool no_reservation = true;
+        for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            auto & reservation = reservations_.at(hart_id);
+            if (reservation.isValid())
+            {
+                no_reservation = false;
+                break;
+            }
+        }
+        if (no_reservation)
+        {
+            system_->switchSystemMemory(false);
+        }
+    }
+
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;
     template bool PegasusCore::compare<true>(const PegasusCore* core) const;
 } // namespace pegasus
