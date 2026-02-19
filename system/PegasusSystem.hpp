@@ -6,6 +6,7 @@
 #include "sim/PegasusSimParameters.hpp"
 #include "system/SimpleUART.hpp"
 #include "system/MagicMemory.hpp"
+#include "system/ReservationMemory.hpp"
 
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
@@ -43,7 +44,13 @@ namespace pegasus
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
         // Get pointer to system memory
-        sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
+        sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return current_map_.get(); }
+
+        // TODO: it would be very different if SimpleMemoryMapNode has copy constructor..
+        void switchSystemMemory(bool resv)
+        {
+            current_map_ = resv ? reservation_memory_map_ : memory_map_;
+        }
 
         // Give observers their callbacks to read/write memory operations
         void registerMemoryCallbacks(Observer* observer);
@@ -80,7 +87,9 @@ namespace pegasus
         MagicMemory* magic_mem_ = nullptr;
 
         // Memory and memory maps
-        std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
+        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> current_map_;
+        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
+        std::shared_ptr<ReservationMemory> reservation_memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
 
         struct MemorySection
