@@ -4,7 +4,7 @@ namespace simdb
 {
     class AppManager;
     class AppRegistrations;
-}
+} // namespace simdb
 
 namespace pegasus
 {
