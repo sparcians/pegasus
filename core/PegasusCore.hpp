@@ -50,7 +50,8 @@ namespace pegasus
             PARAMETER(uint64_t, pause_counter_duration, 256, "Pause counter duration in cycles")
             PARAMETER(uint64_t, wrssto_counter_duration, 256,
                       "WRS.STO pause counter duration in cycles")
-            PARAMETER(std::vector<int>, supported_trap_modes, {0}, "Supported RISC-V trap modes (0: Direct, 1: Vectored)")
+            PARAMETER(std::vector<int>, supported_trap_modes, {0},
+                      "Supported RISC-V trap modes (0: Direct, 1: Vectored)")
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
         };
@@ -87,7 +88,12 @@ namespace pegasus
 
         bool isTrapModeSupported(const int mode) const
         {
-            return supported_trap_modes_.contains(mode);
+            for (int m : supported_trap_modes_)
+            {
+                if (m == mode)
+                    return true;
+            }
+            return false;
         }
 
         uint64_t getXlen() const { return xlen_; }
@@ -241,7 +247,7 @@ namespace pegasus
         const std::vector<std::string> supported_rv32_extensions_;
 
         // Supported Trap Modes
-        const std::unordered_set<int> supported_trap_modes_;
+        const std::vector<int> supported_trap_modes_;
 
         // Path to Mavis isa JSONs
         const std::string isa_file_path_;

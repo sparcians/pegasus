@@ -108,7 +108,6 @@ namespace pegasus
             MTVEC,
             pegasus::Action::createAction<&RvzicsrInsts::mtvecUpdateHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "mtvecUpdate"));
-
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(InstHandlers::CsrUpdateActionsMap &);
@@ -584,10 +583,11 @@ namespace pegasus
 
     template <typename XLEN>
     Action::ItrType RvzicsrInsts::mtvecUpdateHandler_(pegasus::PegasusState* state,
-                                                     Action::ItrType action_it)
-    {    
+                                                      Action::ItrType action_it)
+    {
         const XLEN mode_val = READ_CSR_FIELD<XLEN>(state, MTVEC, "mode");
-        if (!state->getCore()->isTrapModeSupported((int) mode_val)) {
+        if (!state->getCore()->isTrapModeSupported((int)mode_val))
+        {
             WRITE_CSR_FIELD<XLEN>(state, MTVEC, "mode", 0);
         }
 
