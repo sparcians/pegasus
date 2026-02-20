@@ -31,7 +31,7 @@ namespace sparta
 
     namespace memory
     {
-        class SimpleMemoryMapNode;
+        class BlockingMemoryIFNode;
     }
 
     class Register;
@@ -50,7 +50,7 @@ namespace pegasus::cosim
     class CoSimMemoryInterface : public cosim::MemoryInterface
     {
       public:
-        CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode* memory_map);
+        CoSimMemoryInterface(sparta::memory::BlockingMemoryIFNode* memory_map);
 
         ~CoSimMemoryInterface() {}
 
@@ -64,7 +64,7 @@ namespace pegasus::cosim
                    std::vector<uint8_t> & buffer) const override;
 
       private:
-        sparta::memory::SimpleMemoryMapNode* memory_ = nullptr;
+        sparta::memory::BlockingMemoryIFNode* memory_ = nullptr;
     };
 
     class CoSimObserver;

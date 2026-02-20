@@ -546,7 +546,10 @@ namespace pegasus
         }
         reservations_.at(hart_id) = paddr;
         auto & state = threads_.at(hart_id);
+
+        // FIXME: iterate through cores for multi-core support.
         state->storeOnReservationSet(false);
+
         system_->switchSystemMemory(true);
     }
 
@@ -558,6 +561,7 @@ namespace pegasus
         state->storeOnReservationSet(false);
 
         bool no_reservation = true;
+        // FIXME: iterate through cores for multi-core support.
         for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
         {
             auto & reservation = reservations_.at(hart_id);

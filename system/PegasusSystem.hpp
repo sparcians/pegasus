@@ -44,13 +44,20 @@ namespace pegasus
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
         // Get pointer to system memory
-        sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return current_map_.get(); }
-
-        // TODO: it would be very different if SimpleMemoryMapNode has copy constructor..
-        void switchSystemMemory(bool resv)
+        sparta::memory::BlockingMemoryIFNode* getSystemMemory()
         {
-            current_map_ = resv ? reservation_memory_map_ : memory_map_;
+            if (using_reservation_memory_)
+            {
+                return reservation_memory_.get();
+            }
+            else
+            {
+                return reservation_memory_->getMemoryMap().get();
+            }
         }
+
+        // Switch between ReservationMemory and original memory
+        void switchSystemMemory(bool resv) { using_reservation_memory_ = resv; }
 
         // Give observers their callbacks to read/write memory operations
         void registerMemoryCallbacks(Observer* observer);
@@ -86,11 +93,10 @@ namespace pegasus
         SimpleUART* uart_ = nullptr;
         MagicMemory* magic_mem_ = nullptr;
 
-        // Memory and memory maps
-        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> current_map_;
-        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
-        std::shared_ptr<ReservationMemory> reservation_memory_map_;
+        // Memory maps
+        std::unique_ptr<ReservationMemory> reservation_memory_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
+        bool using_reservation_memory_ = false;
 
         struct MemorySection
         {

@@ -312,7 +312,7 @@ namespace pegasus
         // Unregister a WaitOnReservationSet notification.
         void unregisterWaitOnReservationSet();
 
-        bool storeOnReservationSetOccurred() { return storeOnReservationSet_; };
+        bool storeOnReservationSetOccurred() const { return storeOnReservationSet_; };
 
         void storeOnReservationSet(bool v) { storeOnReservationSet_ = v; }
 
