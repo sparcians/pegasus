@@ -52,7 +52,7 @@ namespace pegasus
             }
             else
             {
-                return reservation_memory_->getMemoryMap().get();
+                return reservation_memory_->getMemoryMap();
             }
         }
 
