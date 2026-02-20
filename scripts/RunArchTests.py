@@ -8,20 +8,14 @@ import multiprocessing
 import functools
 
 # Passing and total
-PASSING_STATUS_RISCV_ARCH_RV32 = [265, 265]
-PASSING_STATUS_RISCV_ARCH_RV64 = [345, 345]
+PASSING_STATUS_RISCV_ARCH_RV32 = [284, 284]
+PASSING_STATUS_RISCV_ARCH_RV64 = [364, 364]
 PASSING_STATUS_TENSTORRENT_RV64 = [13155, 13155]
 
 # Verbosity
 be_noisy = False
 
-def get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
-    RISCV_ARCH_SUPPORTED_EXTENSIONS = []
-    for xlen in SUPPORTED_XLEN:
-        RISCV_ARCH_SUPPORTED_EXTENSIONS.extend([xlen+"u"+ext for ext in SUPPORTED_EXTENSIONS])
-        if "i" in SUPPORTED_EXTENSIONS:
-            RISCV_ARCH_SUPPORTED_EXTENSIONS.extend([xlen+"mi", xlen+"si"])
-
+def get_riscv_arch_tests(SUPPORTED_XLEN, directory):
     regex = re.compile(r'rv[36][24]')
     riscv_arch_tests = []
     for root, dirs, files in os.walk(directory):
@@ -29,7 +23,7 @@ def get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
             if regex.match(file) and "dump" not in file:
                 riscv_arch_tests.append(os.path.abspath(os.path.join(root, file)))
 
-    riscv_arch_tests = [test for test in riscv_arch_tests if any(ext+"-" in test for ext in RISCV_ARCH_SUPPORTED_EXTENSIONS)]
+    riscv_arch_tests = [test for test in riscv_arch_tests if any(xlen in test for xlen in SUPPORTED_XLEN)]
     riscv_arch_tests.sort()
 
     tests = []
@@ -85,7 +79,8 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     logname = output_dir + testname + ".log"
     instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "rv32gcbvh_zicsr_zifencei_zicond_zfh" if rv32_test else "rv64gcbvh_zicsr_zifencei_zicond_zfh"
+    isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz"
+    isa_string = "rv32"+isa_string if rv32_test else "rv64"+isa_string
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, "-w", wkld]
@@ -233,12 +228,7 @@ def main():
 
     ###########################################################################
     # Process arguments
-    SUPPORTED_EXTENSIONS = ["i", "m", "a", "f", "d", "c", "zba", "zbb", "zbc", "zbs", "v", "zfh"]
     SUPPORTED_XLEN = ["rv32", "rv64"]
-    if args.extensions:
-        assert all([ext in SUPPORTED_EXTENSIONS for ext in args.extensions]), "Unsupported extension(s) provided"
-        SUPPORTED_EXTENSIONS = args.extensions
-
     if args.rv32_only:
         print("Skipping RV64 tests")
         SUPPORTED_XLEN = ["rv32"]
@@ -272,17 +262,20 @@ def main():
     # Get tests
     tests = []
     if args.riscv_arch:
-        tests.extend(get_riscv_arch_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.riscv_arch))
+        tests.extend(get_riscv_arch_tests(SUPPORTED_XLEN, args.riscv_arch))
     if args.tenstorrent:
-        tests.extend(get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, args.tenstorrent))
+        tests.extend(get_tenstorrent_tests(SUPPORTED_XLEN, args.tenstorrent))
+
+    if args.extensions:
+        tests = [test for test in tests if any(ext in test[0] for ext in args.extensions)]
 
     skip_tests = [
-        "rv64mi-p-breakpoint", # Pegasus does not support external debug support
-        "rv64mi-v-breakpoint",
+        "rv64mi-p-breakpoint",       # Not supported yet
         "rv32mi-p-breakpoint",
-        "rv32mi-v-breakpoint",
-        "rv64mi-p-access",     # BAD TEST: Has check for max paddr size restriction which has been lifted
-        "rv64mi-v-access",
+        "rv64mi-p-instret_overflow", # Not supported yet
+        "rv32mi-p-instret_overflow",
+        "rv64ssvnapot-p-napot",      # Not supported yet
+        "rv64mzicbo-p-zero"          # Need to debug
     ]
     for skip_test in skip_tests:
         if be_noisy:
