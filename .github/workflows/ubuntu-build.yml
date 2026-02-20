@@ -43,7 +43,7 @@ jobs:
           repository: sparcians/map
           submodules: recursive
           path: map
-          ref: map_v2.1.17
+          ref: map_v2.1.19
 
       # Setup CCache to cache builds
       - name: ccache

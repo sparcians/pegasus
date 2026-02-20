@@ -116,10 +116,16 @@ namespace pegasus::cosim
             cosim_observers_.at(core_idx).resize(num_harts, nullptr);
         }
 
-        // Enable CoSimEventPipeline and CoSimCheckpointer apps. Every core/hart needs their own.
-        const uint32_t num_pipelines = total_num_harts;
-        sim_config_->simdb_config.enableApp(CoSimEventPipeline::NAME, db_file, num_pipelines);
-        sim_config_->simdb_config.enableApp(CoSimCheckpointer::NAME, db_file, num_pipelines);
+        // Since we are not using CommandLineSimulator to handle the SimulationConfiguration,
+        // we need to manually make the calls that the CLS would have.
+        auto & simdb_config = sim_config_->simdb_config;
+        simdb_config.setSimExecutable("pegasus_cosim");
+        simdb_config.enableApp(CoSimEventPipeline::NAME);
+        simdb_config.enableApp(CoSimCheckpointer::NAME);
+        simdb_config.setAppCount(CoSimEventPipeline::NAME, total_num_harts);
+        simdb_config.setAppCount(CoSimCheckpointer::NAME, total_num_harts);
+        simdb_config.setAppDatabase(CoSimEventPipeline::NAME, db_file);
+        simdb_config.setAppDatabase(CoSimCheckpointer::NAME, db_file);
 
         // Finish setting up the simulator
         pegasus_sim_->finalizeFramework();
@@ -502,6 +508,12 @@ namespace pegasus::cosim
         const size_t size = buffer.size();
         const size_t OFFSET = 0;
         reg->poke(buffer.data(), size, OFFSET);
+    }
+
+    void PegasusCoSim::onRegisterAppsRequest(simdb::AppRegistrations* app_registrations)
+    {
+        app_registrations->registerApp<CoSimEventPipeline>();
+        app_registrations->registerApp<CoSimCheckpointer>();
     }
 
     void PegasusCoSim::onParameterizeAppsRequest(simdb::AppManager* app_mgr)

@@ -313,7 +313,15 @@ namespace pegasus
         }
     }
 
-    void PegasusSim::parameterizeApps_(simdb::AppManager* app_mgr)
+    void PegasusSim::registerSimDbApps_(simdb::AppRegistrations* app_registrations)
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onRegisterAppsRequest(app_registrations);
+        }
+    }
+
+    void PegasusSim::parameterizeSimDbApps_(simdb::AppManager* app_mgr)
     {
         for (auto listener : sim_listeners_)
         {
