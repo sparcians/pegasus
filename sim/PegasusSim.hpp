@@ -51,7 +51,8 @@ namespace pegasus
         void buildTree_() override;
         void configureTree_() override;
         void bindTree_() override;
-        void parameterizeApps_(simdb::AppManager* app_mgr) override;
+        void registerSimDbApps_(simdb::AppRegistrations* app_registrations) override;
+        void parameterizeSimDbApps_(simdb::AppManager* app_mgr) override;
         void postFinalizeFramework_() override;
 
         sparta::ResourceFactory<pegasus::PegasusCore, pegasus::PegasusCore::PegasusCoreParameters>

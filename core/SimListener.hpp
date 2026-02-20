@@ -3,7 +3,8 @@
 namespace simdb
 {
     class AppManager;
-}
+    class AppRegistrations;
+} // namespace simdb
 
 namespace pegasus
 {
@@ -25,6 +26,8 @@ namespace pegasus
         virtual void onBindTreeEarly() {}
 
         virtual void onBindTreeLate() {}
+
+        virtual void onRegisterAppsRequest(simdb::AppRegistrations*) {}
 
         virtual void onParameterizeAppsRequest(simdb::AppManager*) {}
 

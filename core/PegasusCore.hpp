@@ -12,7 +12,7 @@
 #include "core/Execute.hpp"
 #include "core/Exception.hpp"
 
-#include "mavis/mavis/extension_managers/RISCVExtensionManager.hpp"
+#include "mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include "sparta/simulation/ResourceFactory.hpp"
 #include "sparta/events/Event.hpp"
