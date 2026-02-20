@@ -79,7 +79,7 @@ namespace pegasus::cosim
         // Index for fast lookup by euid/arch ranges and core/hart ID.
         tbl.createCompoundIndexOn(
             {"StartEuid", "EndEuid", "StartArchId", "EndArchId", "CoreId", "HartId"});
-        tbl.disableAutoIncPrimaryKey();
+        tbl.unsetPrimaryKey();
     }
 
     class EventCompressorStage : public simdb::pipeline::Stage
@@ -947,6 +947,3 @@ namespace pegasus::cosim
     }
 
 } // namespace pegasus::cosim
-
-#include "simdb/apps/AppRegistration.hpp"
-REGISTER_SIMDB_APPLICATION(pegasus::cosim::CoSimEventPipeline);
