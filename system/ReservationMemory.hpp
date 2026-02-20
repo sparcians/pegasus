@@ -24,9 +24,9 @@ namespace pegasus
         {
         }
 
-        virtual ~ReservationMemory() = default;
+        virtual ~ReservationMemory() { delete memory_map_; }
 
-        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> getMemoryMap() { return memory_map_; }
+        sparta::memory::SimpleMemoryMapNode* getMemoryMap() { return memory_map_; }
 
       protected:
         virtual bool tryRead_(addr_t addr, addr_t size, uint8_t* buf,
@@ -59,6 +59,6 @@ namespace pegasus
         }
 
       private:
-        std::shared_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
+        sparta::memory::SimpleMemoryMapNode* memory_map_ = nullptr;
     }; // class ReservationMemory
 } // namespace pegasus
