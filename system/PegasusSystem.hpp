@@ -44,7 +44,7 @@ namespace pegasus
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
         // Get pointer to system memory
-        sparta::memory::BlockingMemoryIFNode* getSystemMemory()
+        sparta::memory::BlockingMemoryIF* getSystemMemory()
         {
             if (using_reservation_memory_)
             {
@@ -54,6 +54,12 @@ namespace pegasus
             {
                 return reservation_memory_->getMemoryMap();
             }
+        }
+
+        // Get pointer to memory map
+        sparta::memory::SimpleMemoryMapNode* getMemoryMap()
+        {
+            return reservation_memory_->getMemoryMap();
         }
 
         // Switch between ReservationMemory and original memory
