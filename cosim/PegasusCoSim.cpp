@@ -5,7 +5,7 @@
 #include "core/observers/CoSimObserver.hpp"
 #include "include/ActionTags.hpp"
 
-#include "sparta/memory/SimpleMemoryMapNode.hpp"
+#include "sparta/memory/BlockingMemoryIF.hpp"
 #include "sparta/app/SimulationConfiguration.hpp"
 #include "sparta/kernel/Scheduler.hpp"
 #include "sparta/log/MessageSource.hpp"
@@ -20,7 +20,7 @@
 
 namespace pegasus::cosim
 {
-    CoSimMemoryInterface::CoSimMemoryInterface(sparta::memory::SimpleMemoryMapNode* memory) :
+    CoSimMemoryInterface::CoSimMemoryInterface(sparta::memory::BlockingMemoryIF* memory) :
         memory_(memory)
     {
     }

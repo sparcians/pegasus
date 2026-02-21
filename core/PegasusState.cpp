@@ -926,13 +926,13 @@ namespace pegasus
 
     void PegasusState::registerWaitOnReservationSet()
     {
-        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        auto m = pegasus_core_->getSystem()->getMemoryMap();
         m->getPostWriteNotificationSource().REGISTER_FOR_THIS(waitOnReservationSet_);
     }
 
     void PegasusState::unregisterWaitOnReservationSet()
     {
-        auto m = pegasus_core_->getSystem()->getSystemMemory();
+        auto m = pegasus_core_->getSystem()->getMemoryMap();
         m->getPostWriteNotificationSource().DEREGISTER_FOR_THIS(waitOnReservationSet_);
     }
 

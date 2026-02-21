@@ -122,19 +122,7 @@ namespace pegasus
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
-        void makeReservation(HartId hart_id, Addr paddr)
-        {
-
-            for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
-            {
-                auto & reservation = reservations_.at(hart_id);
-                if (reservation.isValid() && (reservation.getValue() == paddr))
-                {
-                    reservation.clearValid();
-                }
-            }
-            reservations_.at(hart_id) = paddr;
-        }
+        void makeReservation(HartId hart_id, Addr paddr);
 
         Reservation & getReservation(HartId hart_id) { return reservations_.at(hart_id); }
 
@@ -143,13 +131,7 @@ namespace pegasus
             return reservations_.at(hart_id);
         }
 
-        void clearReservations()
-        {
-            for (auto & reservation : reservations_)
-            {
-                reservation.clearValid();
-            }
-        }
+        void clearReservation(HartId hart_id);
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
 
