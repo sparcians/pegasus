@@ -35,10 +35,9 @@ namespace pegasus
         }
 
         // Initialize memory
-        reservation_memory_.reset(
-            new ReservationMemory(sys_node, "reservation_memory", sparta::TreeNode::GROUP_NAME_NONE,
-                                  sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map",
-                                  PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
+        reservation_memory_.reset(new ReservationMemory(
+            sys_node, sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
+            "Pegasus System Memory Map", PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
 
         // Create memory objects and add them to the memory map
         createMemoryMappings_(sys_node);
@@ -409,11 +408,11 @@ namespace pegasus
         // Register callbacks to system memory
         auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
                                  [this](const std::unique_ptr<sparta::TreeNode> & tnode)
-                                 { return tnode.get() == getSystemMemory(); });
+                                 { return tnode.get() == getMemoryMap(); });
 
         if (iter != tree_nodes_.end())
         {
-            observer->registerReadWriteMemCallbacks(getSystemMemory());
+            observer->registerReadWriteMemCallbacks(getMemoryMap());
         }
     }
 
