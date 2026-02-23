@@ -101,6 +101,7 @@ namespace pegasus
 
         // Memory maps
         std::unique_ptr<ReservationMemory> reservation_memory_;
+        std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
         bool using_reservation_memory_ = false;
 

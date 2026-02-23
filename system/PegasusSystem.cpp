@@ -34,10 +34,16 @@ namespace pegasus
             uart_ = uart_rtn->getResourceAs<SimpleUART>();
         }
 
-        // Initialize memory
-        reservation_memory_.reset(new ReservationMemory(
-            sys_node, sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
-            "Pegasus System Memory Map", PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
+        // Initialize memory map
+        memory_map_.reset(new sparta::memory::SimpleMemoryMapNode(
+            sys_node, "memory_map", sparta::TreeNode::GROUP_NAME_NONE,
+            sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map",
+            PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
+
+        // Initialize memory interface
+        reservation_memory_.reset(
+            new ReservationMemory("Pegasus System Memory Interface", PEGASUS_SYSTEM_BLOCK_SIZE,
+                                  PEGASUS_SYSTEM_TOTAL_MEMORY, memory_map_.get()));
 
         // Create memory objects and add them to the memory map
         createMemoryMappings_(sys_node);

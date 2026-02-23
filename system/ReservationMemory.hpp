@@ -13,18 +13,15 @@ namespace pegasus
         using Reservation = sparta::utils::ValidValue<addr_t>;
 
       public:
-        ReservationMemory(sparta::TreeNode* parent, const std::string & group,
-                          sparta::TreeNode::group_idx_type group_idx, const std::string & desc,
-                          addr_t block_size, addr_t total_size) :
+        ReservationMemory(const std::string & desc, addr_t block_size, addr_t total_size,
+                          sparta::memory::SimpleMemoryMapNode* memory_map) :
             BlockingMemoryIF(desc, block_size,
                              sparta::memory::DebugMemoryIF::AccessWindow(0, total_size)),
-            memory_map_(new sparta::memory::SimpleMemoryMapNode(
-                parent, "memory_map", group, group_idx, "Pegasus System Memory Map", block_size,
-                total_size))
+            memory_map_(memory_map)
         {
         }
 
-        virtual ~ReservationMemory() { delete memory_map_; }
+        virtual ~ReservationMemory() = default;
 
         sparta::memory::SimpleMemoryMapNode* getMemoryMap() { return memory_map_; }
 
