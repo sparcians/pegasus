@@ -41,9 +41,9 @@ namespace pegasus
             PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
 
         // Initialize memory interface
-        reservation_memory_.reset(
-            new ReservationMemory("Pegasus System Memory Interface", PEGASUS_SYSTEM_BLOCK_SIZE,
-                                  PEGASUS_SYSTEM_TOTAL_MEMORY, memory_map_.get()));
+        reservation_memory_.reset(new ReservationMemory(
+            sys_node, "Pegasus System Memory Interface", PEGASUS_SYSTEM_BLOCK_SIZE,
+            PEGASUS_SYSTEM_TOTAL_MEMORY, memory_map_.get()));
 
         // Create memory objects and add them to the memory map
         createMemoryMappings_(sys_node);
@@ -259,9 +259,8 @@ namespace pegasus
 
             mm_rtn->finalize();
             magic_mem_ = mm_rtn->getResourceAs<MagicMemory>();
-            reservation_memory_->getMemoryMap()->addMapping(
-                magic_mem_->getBaseAddr(), magic_mem_->getHighEnd(), magic_mem_,
-                0x0 /* Additional offset -- not used */);
+            memory_map_->addMapping(magic_mem_->getBaseAddr(), magic_mem_->getHighEnd(), magic_mem_,
+                                    0x0 /* Additional offset -- not used */);
             allocated_blocks.emplace(magic_mem_->getBaseAddr(), magic_mem_->getSize());
         }
 
@@ -269,9 +268,8 @@ namespace pegasus
         // UART
         if (nullptr != uart_)
         {
-            reservation_memory_->getMemoryMap()->addMapping(
-                uart_->getBaseAddr(), uart_->getHighEnd(), uart_,
-                0x0 /* Additional offset -- not used */);
+            memory_map_->addMapping(uart_->getBaseAddr(), uart_->getHighEnd(), uart_,
+                                    0x0 /* Additional offset -- not used */);
             allocated_blocks.emplace(uart_->getBaseAddr(), uart_->getSize());
         }
 
@@ -300,9 +298,8 @@ namespace pegasus
                                              sparta::TreeNode::GROUP_NAME_NONE,
                                              sparta::TreeNode::GROUP_IDX_NONE,
                                              "mb_" + std::to_string(block_num), nullptr, *mem_obj));
-                reservation_memory_->getMemoryMap()->addMapping(
-                    addr_block_start, addr_block_start + block_size, memory_if,
-                    0x0 /* Additional offset */);
+                memory_map_->addMapping(addr_block_start, addr_block_start + block_size, memory_if,
+                                        0x0 /* Additional offset */);
             }
 
             // Determine the next large block of memory
@@ -323,9 +320,9 @@ namespace pegasus
                 new BMOIfNode(sys_node, "mb_" + std::to_string(block_num),
                               sparta::TreeNode::GROUP_NAME_NONE, sparta::TreeNode::GROUP_IDX_NONE,
                               "mb_" + std::to_string(block_num), nullptr, *mem_obj));
-        reservation_memory_->getMemoryMap()->addMapping(
-            addr_block_start, PEGASUS_SYSTEM_TOTAL_MEMORY, memory_if, 0x0 /* Additional offset */);
-        reservation_memory_->getMemoryMap()->dumpMappings(std::cout);
+        memory_map_->addMapping(addr_block_start, PEGASUS_SYSTEM_TOTAL_MEMORY, memory_if,
+                                0x0 /* Additional offset */);
+        memory_map_->dumpMappings(std::cout);
     }
 
     void PegasusSystem::initMemoryWithElf_(const std::string & workload)
@@ -362,8 +359,8 @@ namespace pegasus
                           << segment->get_file_size() << "B) "
                           << " to 0x" << std::hex << segment->get_memory_size() << std::endl;
 
-                bool success = reservation_memory_->getMemoryMap()->tryPoke(
-                    segment->get_physical_address(), segment->get_file_size(), data);
+                bool success = memory_map_->tryPoke(segment->get_physical_address(),
+                                                    segment->get_file_size(), data);
                 if (!success)
                 {
                     std::cout << "FAILED!\n";
@@ -386,8 +383,8 @@ namespace pegasus
 
         // Write file to memory
         void* data = mmap(NULL, file_size, PROT_READ, MAP_SHARED, fd, 0);
-        bool success = reservation_memory_->getMemoryMap()->tryPoke(
-            load_addr, file_size, static_cast<const uint8_t*>(data));
+        bool success =
+            memory_map_->tryPoke(load_addr, file_size, static_cast<const uint8_t*>(data));
         if (!success)
         {
             std::cout << "FAILED!\n";
@@ -414,11 +411,11 @@ namespace pegasus
         // Register callbacks to system memory
         auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
                                  [this](const std::unique_ptr<sparta::TreeNode> & tnode)
-                                 { return tnode.get() == getMemoryMap(); });
+                                 { return tnode.get() == memory_map_.get(); });
 
         if (iter != tree_nodes_.end())
         {
-            observer->registerReadWriteMemCallbacks(getMemoryMap());
+            observer->registerReadWriteMemCallbacks(memory_map_.get());
         }
     }
 

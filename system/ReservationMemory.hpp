@@ -13,17 +13,16 @@ namespace pegasus
         using Reservation = sparta::utils::ValidValue<addr_t>;
 
       public:
-        ReservationMemory(const std::string & desc, addr_t block_size, addr_t total_size,
-                          sparta::memory::SimpleMemoryMapNode* memory_map) :
+        ReservationMemory(sparta::TreeNode* system_tn, const std::string & desc, addr_t block_size,
+                          addr_t total_size, sparta::memory::SimpleMemoryMapNode* memory_map) :
             BlockingMemoryIF(desc, block_size,
                              sparta::memory::DebugMemoryIF::AccessWindow(0, total_size)),
+            system_tn_(system_tn),
             memory_map_(memory_map)
         {
         }
 
         virtual ~ReservationMemory() = default;
-
-        sparta::memory::SimpleMemoryMapNode* getMemoryMap() { return memory_map_; }
 
       protected:
         virtual bool tryRead_(addr_t addr, addr_t size, uint8_t* buf,
@@ -38,7 +37,7 @@ namespace pegasus
                                void* out_supplement = nullptr) override
         {
             // FIXME: iterate through cores for multi-core support.
-            auto core = getMemoryMap()->getRoot()->getChild("core0")->getResourceAs<PegasusCore*>();
+            auto core = system_tn_->getRoot()->getChild("core0")->getResourceAs<PegasusCore*>();
             for (uint32_t hart_id = 0; hart_id < core->getNumThreads(); ++hart_id)
             {
                 auto resv = core->getReservation(hart_id);
@@ -56,6 +55,7 @@ namespace pegasus
         }
 
       private:
-        sparta::memory::SimpleMemoryMapNode* memory_map_ = nullptr;
+        sparta::TreeNode* system_tn_ = nullptr;
+        sparta::memory::BlockingMemoryIF* memory_map_ = nullptr;
     }; // class ReservationMemory
 } // namespace pegasus

@@ -52,15 +52,12 @@ namespace pegasus
             }
             else
             {
-                return reservation_memory_->getMemoryMap();
+                return memory_map_.get();
             }
         }
 
         // Get pointer to memory map
-        sparta::memory::SimpleMemoryMapNode* getMemoryMap()
-        {
-            return reservation_memory_->getMemoryMap();
-        }
+        sparta::memory::SimpleMemoryMapNode* getMemoryMap() { return memory_map_.get(); }
 
         // Switch between ReservationMemory and original memory
         void switchSystemMemory(bool resv) { using_reservation_memory_ = resv; }
