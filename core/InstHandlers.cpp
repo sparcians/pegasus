@@ -27,6 +27,7 @@
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
 #include "core/inst_handlers/v/RvvPermuteInsts.hpp"
 #include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
+#include "core/inst_handlers/v/RvvZvbbInsts.hpp"
 #include "core/inst_handlers/zfh/RvzfhInsts.hpp"
 #include "core/inst_handlers/h/RvhInsts.hpp"
 #include "core/inst_handlers/zbkx/RvzbkxInsts.hpp"
@@ -90,6 +91,7 @@ namespace pegasus
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzkndInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvZvbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvzbaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -124,6 +126,7 @@ namespace pegasus
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvZvbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         // RV32 only
         RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzkndInsts::getInstHandlers<RV32>(rv32_inst_actions_);
