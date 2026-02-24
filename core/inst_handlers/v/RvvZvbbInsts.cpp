@@ -57,6 +57,16 @@ namespace pegasus
                 RvvIntegerInsts>(nullptr, "vbrev8.v", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
+            "vrev8.v",
+            pegasus::Action::createAction<
+                &RvvZvbbInsts::viUnaryHandler_<XLEN,
+                                                OperandMode{.dst = OperandMode::Mode::V,
+                                                            .src2 = OperandMode::Mode::V,
+                                                            .src1 = OperandMode::Mode::N},
+                                                false, ByteSwap>,
+                RvvIntegerInsts>(nullptr, "vrev8.v", ActionTags::EXECUTE_TAG));
+
+        inst_handlers.emplace(
             "vclz.v",
             pegasus::Action::createAction<
                 &RvvZvbbInsts::viUnaryHandler_<XLEN,
