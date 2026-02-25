@@ -4,6 +4,7 @@
 #include "core/Execute.hpp"
 #include "core/translate/Translate.hpp"
 #include "include/ActionTags.hpp"
+#include "include/PegasusUtils.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
@@ -97,8 +98,12 @@ namespace pegasus
         OpcodeSize opcode_size = 4;
         if (SPARTA_EXPECT_TRUE(!page_crossing_access))
         {
-            // TBD: Opcode opcode = result.readMemory<Opcode>(result.physical_addr);
-            opcode = state->readMemory<uint32_t>(result, MemAccessSource::FETCH);
+            std::vector<uint8_t> buffer;
+            if (state->readMemory<uint32_t>(result, buffer, MemAccessSource::FETCH) == false)
+            {
+                THROW_FETCH_ACCESS;
+            }
+            opcode = convertFromByteVector<uint32_t>(buffer);
 
             // Compression detection
             if ((opcode & 0x3) != 0x3)
@@ -112,7 +117,12 @@ namespace pegasus
             if (opcode == 0)
             {
                 // Load the first 2B, could be a valid 2B compressed inst
-                opcode = state->readMemory<uint16_t>(result, MemAccessSource::FETCH);
+                std::vector<uint8_t> buffer;
+                if (state->readMemory<uint16_t>(result, buffer, MemAccessSource::FETCH) == false)
+                {
+                    THROW_FETCH_ACCESS;
+                }
+                opcode = convertFromByteVector<uint16_t>(buffer);
                 opcode_size = 2;
 
                 if ((opcode & 0x3) == 0x3)
@@ -124,7 +134,12 @@ namespace pegasus
             else
             {
                 // Load the second 2B of a possible 4B inst
-                opcode |= state->readMemory<uint16_t>(result, MemAccessSource::FETCH) << 16;
+                std::vector<uint8_t> buffer;
+                if (state->readMemory<uint16_t>(result, buffer, MemAccessSource::FETCH) == false)
+                {
+                    THROW_FETCH_ACCESS;
+                }
+                opcode |= convertFromByteVector<uint16_t>(buffer) << 16;
             }
         }
 
