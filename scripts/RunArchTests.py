@@ -10,7 +10,7 @@ import functools
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [284, 284]
 PASSING_STATUS_RISCV_ARCH_RV64 = [364, 364]
-PASSING_STATUS_TENSTORRENT_RV64 = [13155, 13155]
+PASSING_STATUS_TENSTORRENT_RV64 = [14255, 14255]
 
 # Verbosity
 be_noisy = False
@@ -33,13 +33,9 @@ def get_riscv_arch_tests(SUPPORTED_XLEN, directory):
     return tests
 
 
-def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
-    TENSTORRENT_SUPPORTED_EXTENSIONS = []
+def get_tenstorrent_tests(SUPPORTED_XLEN, directory):
     # Tenstorrent tests are all RV64 even if name contains "rv32"
-    if "rv64" in SUPPORTED_XLEN:
-        TENSTORRENT_SUPPORTED_EXTENSIONS.extend(["rv64"+ext for ext in SUPPORTED_EXTENSIONS])
-        TENSTORRENT_SUPPORTED_EXTENSIONS.extend(["rv32"+ext for ext in SUPPORTED_EXTENSIONS])
-    else:
+    if "rv32" == SUPPORTED_XLEN:
         return []
 
     regex = re.compile(r'rv[36][24]')
@@ -48,7 +44,6 @@ def get_tenstorrent_tests(SUPPORTED_EXTENSIONS, SUPPORTED_XLEN, directory):
         for file in files:
             if regex.match(file) and "dump" not in file:
                 tenstorrent_tests.append(os.path.abspath(os.path.join(root, file)))
-    tenstorrent_tests = [test for test in tenstorrent_tests if any(ext+"_" in test for ext in TENSTORRENT_SUPPORTED_EXTENSIONS)]
     tenstorrent_tests.sort()
 
     tests = []
