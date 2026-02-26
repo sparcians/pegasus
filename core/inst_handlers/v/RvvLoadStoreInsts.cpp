@@ -747,17 +747,29 @@ namespace pegasus
                     inst->getVecConfig()->setVL(iter.getIndex());
                     return;
                 }
+
+                const auto & result = transtate->getResult();
                 if constexpr (isLoad)
                 {
-                    UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
-                        transtate->getResult(), MemAccessSource::INSTRUCTION);
+                    std::vector<uint8_t> buffer;
+                    if (state->readMemory<UintType<elemWidth>>(result, buffer,
+                                                               MemAccessSource::INSTRUCTION)
+                        == false)
+                    {
+                        THROW_LOAD_ACCESS;
+                    }
+                    UintType<elemWidth> value = convertFromByteVector<UintType<elemWidth>>(buffer);
                     elems.getElement(iter.getIndex()).setVal(value);
                 }
                 else
                 {
                     UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
-                    state->writeMemory<UintType<elemWidth>>(transtate->getResult(), value,
-                                                            MemAccessSource::INSTRUCTION);
+                    if (state->writeMemory<UintType<elemWidth>>(result, value,
+                                                                MemAccessSource::INSTRUCTION)
+                        == false)
+                    {
+                        THROW_STORE_AMO_ACCESS;
+                    }
                 }
                 transtate->popResult();
             }
@@ -810,17 +822,28 @@ namespace pegasus
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
         {
+            const auto & result = transtate->getResult();
             if constexpr (isLoad)
             {
-                UintType<elemWidth> value = state->readMemory<UintType<elemWidth>>(
-                    inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION);
+                std::vector<uint8_t> buffer;
+                if (state->readMemory<UintType<elemWidth>>(result, buffer,
+                                                           MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_LOAD_ACCESS;
+                }
+                UintType<elemWidth> value = convertFromByteVector<UintType<elemWidth>>(buffer);
                 elems.getElement(iter.getIndex()).setVal(value);
             }
             else
             {
                 UintType<elemWidth> value = elems.getElement(iter.getIndex()).getVal();
-                state->writeMemory<UintType<elemWidth>>(inst->getTranslationState()->getResult(),
-                                                        value, MemAccessSource::INSTRUCTION);
+                if (state->writeMemory<UintType<elemWidth>>(result, value,
+                                                            MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
             }
             inst->getTranslationState()->popResult();
         }
@@ -842,17 +865,28 @@ namespace pegasus
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
         {
+            const auto & result = inst->getTranslationState()->getResult();
             if constexpr (isLoad)
             {
-                UintType<BYTESIZE> value = state->readMemory<UintType<BYTESIZE>>(
-                    inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION);
+                std::vector<uint8_t> buffer;
+                if (state->readMemory<UintType<BYTESIZE>>(result, buffer,
+                                                          MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_LOAD_ACCESS;
+                }
+                UintType<BYTESIZE> value = convertFromByteVector<UintType<BYTESIZE>>(buffer);
                 elems.getElement(iter.getIndex()).setVal(value);
             }
             else
             {
                 UintType<BYTESIZE> value = elems.getElement(iter.getIndex()).getVal();
-                state->writeMemory<UintType<BYTESIZE>>(inst->getTranslationState()->getResult(),
-                                                       value, MemAccessSource::INSTRUCTION);
+                if (state->writeMemory<UintType<BYTESIZE>>(result, value,
+                                                           MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
             }
             inst->getTranslationState()->popResult();
         }
