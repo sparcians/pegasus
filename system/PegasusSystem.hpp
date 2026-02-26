@@ -44,7 +44,7 @@ namespace pegasus
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
         // Get pointer to system memory
-        sparta::memory::BlockingMemoryIF* getSystemMemory()
+        sparta::memory::BlockingMemoryIF* getSystemMemory() const
         {
             if (using_reservation_memory_)
             {
@@ -57,10 +57,10 @@ namespace pegasus
         }
 
         // Get pointer to memory map
-        sparta::memory::SimpleMemoryMapNode* getMemoryMap() { return memory_map_.get(); }
+        sparta::memory::SimpleMemoryMapNode* getMemoryMap() const { return memory_map_.get(); }
 
         // Switch between ReservationMemory and original memory
-        void switchSystemMemory(bool resv) { using_reservation_memory_ = resv; }
+        void useReservationMemory(bool use_resv) { using_reservation_memory_ = use_resv; }
 
         // Give observers their callbacks to read/write memory operations
         void registerMemoryCallbacks(Observer* observer);

@@ -551,7 +551,7 @@ namespace pegasus
         // FIXME: iterate through cores for multi-core support.
         state->storeOnReservationSet(false);
 
-        system_->switchSystemMemory(true);
+        system_->useReservationMemory(true);
     }
 
     void PegasusCore::clearReservation(HartId hart_id)
@@ -561,20 +561,10 @@ namespace pegasus
         reservation.clearValid();
         state->storeOnReservationSet(false);
 
-        bool no_reservation = true;
-        // FIXME: iterate through cores for multi-core support.
-        for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
+        if (std::all_of(reservations_.begin(), reservations_.end(),
+                        [](const Reservation & reservation) { return !reservation.isValid(); }))
         {
-            auto & reservation = reservations_.at(hart_id);
-            if (reservation.isValid())
-            {
-                no_reservation = false;
-                break;
-            }
-        }
-        if (no_reservation)
-        {
-            system_->switchSystemMemory(false);
+            system_->useReservationMemory(false);
         }
     }
 

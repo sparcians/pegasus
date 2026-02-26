@@ -24,7 +24,7 @@ namespace pegasus
 
         virtual ~ReservationMemory() = default;
 
-      protected:
+      private:
         virtual bool tryRead_(addr_t addr, addr_t size, uint8_t* buf,
                               const void* in_supplement = nullptr,
                               void* out_supplement = nullptr) override
@@ -40,7 +40,7 @@ namespace pegasus
             auto core = system_tn_->getRoot()->getChild("core0")->getResourceAs<PegasusCore*>();
             for (uint32_t hart_id = 0; hart_id < core->getNumThreads(); ++hart_id)
             {
-                auto resv = core->getReservation(hart_id);
+                auto & resv = core->getReservation(hart_id);
                 if (resv.isValid() && resv == addr)
                 {
                     core->getPegasusState(hart_id)->storeOnReservationSet(true);
