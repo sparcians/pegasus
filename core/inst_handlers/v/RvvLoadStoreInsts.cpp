@@ -822,7 +822,7 @@ namespace pegasus
 
         for (auto iter = elems.begin(); iter != elems.end(); ++iter)
         {
-            const auto & result = transtate->getResult();
+            const auto & result = inst->getTranslationState()->getResult();
             if constexpr (isLoad)
             {
                 std::vector<uint8_t> buffer;

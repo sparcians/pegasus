@@ -100,8 +100,8 @@ namespace pegasus
             const AccessType swap = READ_INT_REG<XLEN>(state, inst->getRs2());
             if (temp == comp)
             {
-                if (state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION) =
-                        false)
+                if (state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION)
+                    == false)
                 {
                     THROW_STORE_AMO_ACCESS;
                 }
