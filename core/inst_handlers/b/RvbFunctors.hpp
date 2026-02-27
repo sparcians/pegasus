@@ -34,8 +34,24 @@ namespace pegasus
             {
                 return __builtin_bswap64(rs1_val);
             }
-            else
+            else if constexpr (std::is_same_v<XLEN, RV32>)
+            {
                 return __builtin_bswap32(rs1_val);
+            }
+            else if constexpr (sizeof(XLEN) == 2)
+            {
+                return __builtin_bswap16(rs1_val);
+            }
+            else if constexpr (sizeof(XLEN) == 1)
+            {
+                return rs1_val;
+            }
+            else
+            {
+                assert(false);
+            }
+
+            return 0;
         }
     };
 

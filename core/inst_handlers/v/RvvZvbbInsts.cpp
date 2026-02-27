@@ -188,6 +188,11 @@ namespace pegasus
         Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
         Elements<Element<2 * elemWidth>, false> elems_vd{state, inst->getVecConfig(),
                                                          inst->getRd()};
+        const XLEN mask = (2 * elemWidth == 64) ? (1 << 6) - 1 :
+                          (2 * elemWidth == 32) ? (1 << 5) - 1 :
+                          (2 * elemWidth == 16) ? (1 << 4) - 1 :
+                          0;
+                          
 
         auto execute = [&](auto iter, const auto & end)
         {
@@ -198,17 +203,20 @@ namespace pegasus
                 if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
                     elems_vd.getElement(index).setVal(
-                        sext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
-                        * zext<UintType<2 * elemWidth>>(elems_vs1.getElement(index).getVal()));
+                        zext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
+                        << (elems_vs1.getElement(index).getVal() & mask));
                 }
                 else if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
                     elems_vd.getElement(index).setVal(
-                        sext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
-                        * zext<UintType<2 * elemWidth>>(READ_INT_REG<XLEN>(state, inst->getRs1())));
+                        zext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
+                        << (READ_INT_REG<XLEN>(state, inst->getRs1()) & mask));
                 }
                 else // opMode.src1 == OperandMode::Mode::I)
                 {
+                    elems_vd.getElement(index).setVal(
+                        zext<UintType<2 * elemWidth>>(elems_vs2.getElement(index).getVal())
+                        << (inst->getImmediate() & mask));
                 }
             }
         };
