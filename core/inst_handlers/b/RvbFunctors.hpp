@@ -6,19 +6,9 @@
 
 namespace pegasus
 {
-    // Invert operand 2
     template <typename XLEN> struct Andn
     {
         inline XLEN operator()(XLEN rs1_val, XLEN rs2_val) const { return rs1_val & (~rs2_val); }
-    };
-
-    // Invert operand 1
-    template <typename T> struct AndnOp1
-    {
-        inline T operator()(const T & op1, const T & op2) const
-        {
-            return ~op1 & op2;
-        }
     };
 
     template <typename XLEN> struct CountlZero

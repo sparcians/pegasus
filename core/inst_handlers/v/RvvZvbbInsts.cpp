@@ -23,7 +23,7 @@ namespace pegasus
                                                 OperandMode{.dst = OperandMode::Mode::V,
                                                             .src2 = OperandMode::Mode::V,
                                                             .src1 = OperandMode::Mode::V},
-                                                false, AndnOp1>,
+                                                false, Andn>,
                 RvvIntegerInsts>(nullptr, "vandn.vv", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
@@ -33,7 +33,7 @@ namespace pegasus
                                                 OperandMode{.dst = OperandMode::Mode::V,
                                                             .src2 = OperandMode::Mode::V,
                                                             .src1 = OperandMode::Mode::X},
-                                                false, AndnOp1>,
+                                                false, Andn>,
                 RvvIntegerInsts>(nullptr, "vandn.vx", ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
