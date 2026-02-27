@@ -119,8 +119,7 @@ namespace pegasus
 
     template <typename XLEN, OperandMode opMode, bool isSigned,
               template <typename> typename FunctorTemp>
-    Action::ItrType RvvIntegerInsts::viUnaryHandler_(PegasusState* state,
-                                                     Action::ItrType action_it)
+    Action::ItrType RvvIntegerInsts::viUnaryHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
         const VectorConfig* vector_config = inst->getVecConfig();
@@ -158,7 +157,7 @@ namespace pegasus
                     else
                     {
                         return viUnaryHelper<XLEN, 64, opMode, FunctorTemp, int64_t>(state,
-                                                                                      action_it);
+                                                                                     action_it);
                     }
                     break;
                 default:

@@ -184,46 +184,46 @@ namespace pegasus
 
     template <typename XLEN> struct Brev
     {
-        private:
+      private:
         inline uint8_t _BitReverse8(uint8_t x) const
         {
-            x = ((x >> 1)  & 0x55 ) | (x & 0x55) << 1;
-            x = ((x >> 2)  & 0x33 ) | (x & 0x33) << 2;
-            x = (x >> 4)  | (x << 4);
+            x = ((x >> 1) & 0x55) | (x & 0x55) << 1;
+            x = ((x >> 2) & 0x33) | (x & 0x33) << 2;
+            x = (x >> 4) | (x << 4);
             return x;
         }
 
         inline uint16_t _BitReverse16(uint16_t x) const
         {
-            x = ((x >> 1) & 0x5555 ) | (x & 0x5555) << 1;
-            x = ((x >> 2) & 0x3333 ) | (x & 0x3333) << 2;
-            x = ((x >> 4) & 0x0F0F ) | (x & 0x0F0F) << 4;
+            x = ((x >> 1) & 0x5555) | (x & 0x5555) << 1;
+            x = ((x >> 2) & 0x3333) | (x & 0x3333) << 2;
+            x = ((x >> 4) & 0x0F0F) | (x & 0x0F0F) << 4;
             x = (x >> 8) | (x << 8);
             return x;
         }
 
         inline uint32_t _BitReverse32(uint32_t x) const
         {
-            x = ((x >> 1)  & 0x55555555 ) | (x & 0x55555555) << 1;
-            x = ((x >> 2)  & 0x33333333 ) | (x & 0x33333333) << 2;
-            x = ((x >> 4)  & 0x0F0F0F0F ) | (x & 0x0F0F0F0F) << 4;
-            x = ((x >> 8)  & 0x00FF00FF ) | (x & 0x00FF00FF) << 8;
+            x = ((x >> 1) & 0x55555555) | (x & 0x55555555) << 1;
+            x = ((x >> 2) & 0x33333333) | (x & 0x33333333) << 2;
+            x = ((x >> 4) & 0x0F0F0F0F) | (x & 0x0F0F0F0F) << 4;
+            x = ((x >> 8) & 0x00FF00FF) | (x & 0x00FF00FF) << 8;
             x = (x >> 16) | (x << 16);
             return x;
         }
 
         inline uint64_t _BitReverse64(uint64_t x) const
         {
-            x = ((x >> 1)   & 0x5555555555555555 ) | (x & 0x5555555555555555) << 1;
-            x = ((x >> 2)   & 0x3333333333333333 ) | (x & 0x3333333333333333) << 2;
-            x = ((x >> 4)   & 0x0F0F0F0F0F0F0F0F ) | (x & 0x0F0F0F0F0F0F0F0F) << 4;
-            x = ((x >> 8)   & 0x00FF00FF00FF00FF ) | (x & 0x00FF00FF00FF00FF) << 8;
-            x = ((x >> 16)  & 0x0000FFFF0000FFFF ) | (x & 0x0000FFFF0000FFFF) << 16;
+            x = ((x >> 1) & 0x5555555555555555) | (x & 0x5555555555555555) << 1;
+            x = ((x >> 2) & 0x3333333333333333) | (x & 0x3333333333333333) << 2;
+            x = ((x >> 4) & 0x0F0F0F0F0F0F0F0F) | (x & 0x0F0F0F0F0F0F0F0F) << 4;
+            x = ((x >> 8) & 0x00FF00FF00FF00FF) | (x & 0x00FF00FF00FF00FF) << 8;
+            x = ((x >> 16) & 0x0000FFFF0000FFFF) | (x & 0x0000FFFF0000FFFF) << 16;
             x = (x >> 32) | (x << 32);
             return x;
         }
 
-        public:
+      public:
         inline XLEN operator()(XLEN rs1_val) const
         {
             using U = std::make_unsigned_t<XLEN>;
@@ -234,19 +234,19 @@ namespace pegasus
             // bit-reverse
             if constexpr (sizeof(U) == 8)
             {
-                return (U) _BitReverse64(rs1);
+                return (U)_BitReverse64(rs1);
             }
             if constexpr (sizeof(U) == 4)
             {
-                return (U) _BitReverse32(rs1);
+                return (U)_BitReverse32(rs1);
             }
             if constexpr (sizeof(U) == 2)
             {
-                return (U) _BitReverse16(rs1);
+                return (U)_BitReverse16(rs1);
             }
             if constexpr (sizeof(U) == 1)
             {
-                return (U) _BitReverse8(rs1);
+                return (U)_BitReverse8(rs1);
             }
 
             return 0;

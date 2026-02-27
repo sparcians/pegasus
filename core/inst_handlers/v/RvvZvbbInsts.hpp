@@ -21,7 +21,6 @@ namespace pegasus
         // Integer Widening Shift Left Logical
         template <typename XLEN, OperandMode opMode>
         Action::ItrType viwsllHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
-
     };
 
 } // namespace pegasus
