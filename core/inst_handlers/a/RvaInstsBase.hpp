@@ -134,16 +134,15 @@ namespace pegasus
         // reservation set can be observed to have occurred between the LR and the SC,
         // and if there is no other SC between the LR and itself in program order.
         if (const auto & resv = state->getCore()->getReservation(state->getHartId());
-            resv.isValid() && resv == xlation_state->getResult().getPAddr()
-            && !state->storeOnReservationSetOccurred())
+            resv.isValid() && resv == result.getPAddr() && !state->storeOnReservationSetOccurred())
         {
 
             const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-            if (state->writeMemory<SIZE>(xlation_state->getResult().getPAddr(), rs2_val,
-                                     MemAccessSource::INSTRUCTION) == false)
-                                     {
-                                        THROW_STORE_AMO_ACCESS;
-                                     }
+            if (state->writeMemory<SIZE>(result.getPAddr(), rs2_val, MemAccessSource::INSTRUCTION)
+                == false)
+            {
+                THROW_STORE_AMO_ACCESS;
+            }
             fail_code = 0;
         }
         xlation_state->popResult();

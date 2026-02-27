@@ -6,7 +6,6 @@
 #include "sim/PegasusSimParameters.hpp"
 #include "system/SimpleUART.hpp"
 #include "system/MagicMemory.hpp"
-#include "system/ReservationMemory.hpp"
 
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/simulation/ParameterSet.hpp"
@@ -43,24 +42,8 @@ namespace pegasus
         // Constructor
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
-        // Get pointer to system memory
-        sparta::memory::BlockingMemoryIF* getSystemMemory() const
-        {
-            if (using_reservation_memory_)
-            {
-                return reservation_memory_.get();
-            }
-            else
-            {
-                return memory_map_.get();
-            }
-        }
-
         // Get pointer to memory map
-        sparta::memory::SimpleMemoryMapNode* getMemoryMap() const { return memory_map_.get(); }
-
-        // Switch between ReservationMemory and original memory
-        void useReservationMemory(bool use_resv) { using_reservation_memory_ = use_resv; }
+        sparta::memory::SimpleMemoryMapNode* getSystemMemory() const { return memory_map_.get(); }
 
         // Give observers their callbacks to read/write memory operations
         void registerMemoryCallbacks(Observer* observer);
@@ -97,10 +80,8 @@ namespace pegasus
         MagicMemory* magic_mem_ = nullptr;
 
         // Memory maps
-        std::unique_ptr<ReservationMemory> reservation_memory_;
         std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
-        bool using_reservation_memory_ = false;
 
         struct MemorySection
         {

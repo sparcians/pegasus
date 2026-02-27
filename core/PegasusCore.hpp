@@ -20,9 +20,15 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
+namespace sparta::memory
+{
+    class BlockingMemoryIF;
+} // namespace sparta::memory
+
 namespace pegasus
 {
     class PegasusSystem;
+    class ReservationMemory;
 
     using MavisType =
         Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
@@ -74,6 +80,8 @@ namespace pegasus
         std::map<HartId, PegasusState*> & getThreads() { return threads_; }
 
         PegasusSystem* getSystem() const { return system_; }
+
+        sparta::memory::BlockingMemoryIF* getMemory() const { return current_memory_view_; }
 
         SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
@@ -272,5 +280,12 @@ namespace pegasus
 
         // Instruction Actions
         InstHandlers inst_handlers_;
+
+        // Current active BlockingMemoryIF for this core
+        sparta::memory::BlockingMemoryIF* current_memory_view_ = nullptr;
+
+        // ReservationMemory
+        std::unique_ptr<ReservationMemory> reservation_memory_bmi_;
+        ;
     };
 } // namespace pegasus

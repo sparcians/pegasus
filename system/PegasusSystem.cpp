@@ -40,11 +40,6 @@ namespace pegasus
             sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map",
             PEGASUS_SYSTEM_BLOCK_SIZE, PEGASUS_SYSTEM_TOTAL_MEMORY));
 
-        // Initialize memory interface
-        reservation_memory_.reset(new ReservationMemory(
-            sys_node, "Pegasus System Memory Interface", PEGASUS_SYSTEM_BLOCK_SIZE,
-            PEGASUS_SYSTEM_TOTAL_MEMORY, memory_map_.get()));
-
         // Create memory objects and add them to the memory map
         createMemoryMappings_(sys_node);
 
