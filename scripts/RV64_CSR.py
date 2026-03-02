@@ -785,7 +785,7 @@ CSR64_DEFS = {
              'desc': 'Machine trap-handler base address.',
              'fields': {
                'BASE' : { 'high_bit': 63, 'low_bit':   2, 'readonly': False, 'desc': 'Vector base address' },
-               'MODE' : { 'high_bit':  1, 'low_bit':   0, 'readonly': True , 'desc': '0 - Direct, 1 - Vectored' },
+               'MODE' : { 'high_bit':  1, 'low_bit':   0, 'readonly': False , 'desc': '0 - Direct, 1 - Vectored' },
              },
              'context': 'HART',
            },

@@ -90,6 +90,13 @@ namespace pegasus
         INVALID
     };
 
+    enum class TrapVectorMode
+    {
+        DIRECT = 0,   //! All traps set pc to BASE.
+        VECTORED = 1, //! Asynchronous interrupts set pc to BASE+4×cause
+        RESERVED
+    };
+
     struct RegId
     {
         RegType reg_type;

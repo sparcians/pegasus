@@ -123,7 +123,17 @@ namespace pegasus
         // VS-mode
         if (virt_mode && (priv_mode == PrivMode::SUPERVISOR))
         {
-            trap_handler_address = (READ_CSR_REG<XLEN>(state, VSTVEC) & ~(XLEN)1);
+            const TrapVectorMode vstvec_mode =
+                (TrapVectorMode)READ_CSR_FIELD<XLEN>(state, VSTVEC, "mode");
+            const XLEN vstvec_base = READ_CSR_FIELD<XLEN>(state, VSTVEC, "base") << 2;
+            if (vstvec_mode == TrapVectorMode::DIRECT)
+            {
+                trap_handler_address = vstvec_base;
+            }
+            if (vstvec_mode == TrapVectorMode::VECTORED)
+            {
+                trap_handler_address = vstvec_base + 4 * cause_val * (XLEN)is_interrupt;
+            }
 
             WRITE_CSR_REG<XLEN>(state, VSEPC, epc_val);
             WRITE_CSR_REG<XLEN>(state, VSCAUSE, cause_val);
@@ -137,7 +147,17 @@ namespace pegasus
         // HS-mode
         else if (priv_mode == PrivMode::SUPERVISOR)
         {
-            trap_handler_address = (READ_CSR_REG<XLEN>(state, STVEC) & ~(XLEN)1);
+            const TrapVectorMode stvec_mode =
+                (TrapVectorMode)READ_CSR_FIELD<XLEN>(state, STVEC, "mode");
+            const XLEN stvec_base = READ_CSR_FIELD<XLEN>(state, STVEC, "base") << 2;
+            if (stvec_mode == TrapVectorMode::DIRECT)
+            {
+                trap_handler_address = stvec_base;
+            }
+            if (stvec_mode == TrapVectorMode::VECTORED)
+            {
+                trap_handler_address = stvec_base + 4 * cause_val * (XLEN)is_interrupt;
+            }
 
             WRITE_CSR_REG<XLEN>(state, SEPC, epc_val);
             WRITE_CSR_REG<XLEN>(state, SCAUSE, cause_val);
@@ -174,7 +194,17 @@ namespace pegasus
         // M-mode
         else if (priv_mode == PrivMode::MACHINE)
         {
-            trap_handler_address = (READ_CSR_REG<XLEN>(state, MTVEC) & ~(XLEN)1);
+            const TrapVectorMode mtvec_mode =
+                (TrapVectorMode)READ_CSR_FIELD<XLEN>(state, MTVEC, "mode");
+            const XLEN mtvec_base = READ_CSR_FIELD<XLEN>(state, MTVEC, "base") << 2;
+            if (mtvec_mode == TrapVectorMode::DIRECT)
+            {
+                trap_handler_address = mtvec_base;
+            }
+            if (mtvec_mode == TrapVectorMode::VECTORED)
+            {
+                trap_handler_address = mtvec_base + 4 * cause_val * (XLEN)is_interrupt;
+            }
 
             WRITE_CSR_REG<XLEN>(state, MEPC, epc_val);
             WRITE_CSR_REG<XLEN>(state, MCAUSE, cause_val);
