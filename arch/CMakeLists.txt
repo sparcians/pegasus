@@ -56,5 +56,11 @@ add_custom_command(
 )
 
 # Install
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/default.yaml DESTINATION include/pegasus/arch)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/default DESTINATION include/pegasus/arch)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/rva23.yaml DESTINATION include/pegasus/arch)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rva23 DESTINATION include/pegasus/arch)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/rvb23.yaml DESTINATION include/pegasus/arch)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rvb23 DESTINATION include/pegasus/arch)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/rvm23.yaml DESTINATION include/pegasus/arch)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rvm23 DESTINATION include/pegasus/arch)
