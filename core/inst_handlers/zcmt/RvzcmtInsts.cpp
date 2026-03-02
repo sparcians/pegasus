@@ -4,6 +4,7 @@
 #include "core/Action.hpp"
 #include "include/ActionTags.hpp"
 #include "include/IntNums.hpp"
+#include "include/PegasusUtils.hpp"
 #include "include/gen/CSRHelpers.hpp"
 #include "include/gen/CSRBitMasks64.hpp"
 
@@ -87,9 +88,13 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
 
         // Load jump address
-        const XLEN jump_target = state->readMemory<XLEN>(inst->getTranslationState()->getResult(),
-                                                         MemAccessSource::INSTRUCTION)
-                                 & ~0x1;
+        const auto & result = inst->getTranslationState()->getResult();
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<XLEN>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_LOAD_ACCESS;
+        }
+        const XLEN jump_target = convertFromByteVector<XLEN>(buffer) & ~0x1;
         inst->getTranslationState()->popResult();
 
         // Jump

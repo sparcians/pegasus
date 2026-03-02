@@ -35,7 +35,10 @@ class AmocasInstructionTester : public PegasusInstructionTester
 
         const XLEN rd_v = READ_INT_REG<XLEN>(state, rd);
         EXPECT_EQUAL(rd_v, 0x80000000);
-        const WORD mem_v = state->readMemory<WORD>(rs1_val);
+        std::vector<uint8_t> buffer;
+        const bool success = state->readMemory<WORD>(rs1_val, buffer);
+        EXPECT_TRUE(success);
+        const WORD mem_v = pegasus::convertFromByteVector<WORD>(buffer);
         EXPECT_EQUAL(mem_v, rs2_val); // Value swapped
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
