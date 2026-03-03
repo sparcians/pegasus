@@ -220,14 +220,21 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
         inst->getTranslationState()->popResult();
+
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<SIZE>(paddr, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_LOAD_ACCESS;
+        }
+
         if constexpr (SIGN_EXTEND)
         {
-            const XLEN rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(paddr));
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+            const XLEN rd_val = signExtend<SIZE, XLEN>(convertFromByteVector<SIZE>(buffer));
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(rd_val));
         }
         else
         {
-            const XLEN rd_val = state->readMemory<SIZE>(paddr);
+            const XLEN rd_val = convertFromByteVector<SIZE>(buffer);
             WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
         }
         return ++action_it;
@@ -237,10 +244,13 @@ namespace pegasus
     Action::ItrType RvhInsts::storeHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
+        const auto & result = inst->getTranslationState()->getResult();
         const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-        const uint64_t paddr = inst->getTranslationState()->getResult().getPAddr();
+        if (state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
         inst->getTranslationState()->popResult();
-        state->writeMemory<SIZE>(paddr, rs2_val);
         return ++action_it;
     }
 } // namespace pegasus

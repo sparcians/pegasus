@@ -196,8 +196,11 @@ bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, Ha
     const auto & mem_writes_truth = inst_logger->getMemoryWrites();
     for (const auto & mem_write : mem_writes_truth)
     {
-        auto mem_paddr_truth = state_truth->readMemory<uint64_t>(mem_write.paddr);
-        auto mem_paddr_test = state_test->readMemory<uint64_t>(mem_write.paddr);
+        std::vector<uint8_t> buffer;
+        sparta_assert(state_truth->readMemory<uint64_t>(mem_write.paddr, buffer));
+        auto mem_paddr_truth = pegasus::convertFromByteVector<uint64_t>(buffer);
+        sparta_assert(state_test->readMemory<uint64_t>(mem_write.paddr, buffer));
+        auto mem_paddr_test = pegasus::convertFromByteVector<uint64_t>(buffer);
         EXPECT_EQUAL(mem_paddr_truth, mem_paddr_test);
     }
 

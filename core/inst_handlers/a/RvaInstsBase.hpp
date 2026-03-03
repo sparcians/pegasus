@@ -48,25 +48,34 @@ namespace pegasus
         static_assert(sizeof(XLEN) >= sizeof(SIZE));
 
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const XLEN paddr = inst->getTranslationState()->getResult().getPAddr();
-        XLEN rd_val = 0;
+
+        // Access memory
+        const auto & result = inst->getTranslationState()->getResult();
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<SIZE>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
+
+        XLEN rd_val = convertFromByteVector<SIZE>(buffer);
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
-            rd_val = signExtend<SIZE, XLEN>(state->readMemory<SIZE>(
-                inst->getTranslationState()->getResult(), MemAccessSource::INSTRUCTION));
+            rd_val = signExtend<SIZE, XLEN>(rd_val);
         }
-        else
-        {
-            rd_val = state->readMemory<SIZE>(inst->getTranslationState()->getResult(),
-                                             MemAccessSource::INSTRUCTION);
-        }
-        inst->getTranslationState()->popResult();
 
         // Must read the RS2 value before writing the Rd (might be the
         // same register!)
         const XLEN rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
-        state->writeMemory<SIZE>(paddr, OP()(rd_val, rs2_val), MemAccessSource::INSTRUCTION);
+
+        if (state->writeMemory<SIZE>(result.getPAddr(), OP()(rd_val, rs2_val),
+                                     MemAccessSource::INSTRUCTION)
+            == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
+
+        inst->getTranslationState()->popResult();
         return ++action_it;
     }
 
@@ -85,9 +94,15 @@ namespace pegasus
         state->getCore()->makeReservation(state->getHartId(), paddr);
 
         // Get the memory
-        const XLEN rd_val =
-            state->readMemory<SIZE>(xlation_state->getResult(), MemAccessSource::INSTRUCTION);
+        const auto & result = xlation_state->getResult();
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<SIZE>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
+        const XLEN rd_val = convertFromByteVector<SIZE>(buffer);
         xlation_state->popResult();
+
         if constexpr (sizeof(XLEN) > sizeof(SIZE))
         {
             WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(rd_val));
@@ -109,16 +124,20 @@ namespace pegasus
 
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto xlation_state = inst->getTranslationState();
+        const auto & result = xlation_state->getResult();
 
         XLEN fail_code = 1; // assume bad
         if (const auto & resv = state->getCore()->getReservation(state->getHartId());
             resv.isValid())
         {
-            if (resv == xlation_state->getResult().getPAddr())
+            if (resv == result.getPAddr())
             {
                 const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-                state->writeMemory<SIZE>(xlation_state->getResult(), rs2_val,
-                                         MemAccessSource::INSTRUCTION);
+                if (state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
                 fail_code = 0;
             }
         }

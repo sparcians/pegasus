@@ -3,6 +3,7 @@
 #include "core/Trap.hpp"
 #include "include/ActionTags.hpp"
 #include "include/IntNums.hpp"
+#include "include/PegasusUtils.hpp"
 
 namespace pegasus
 {
@@ -50,7 +51,12 @@ namespace pegasus
         {
             const auto dst = dst_reg_list[idx];
             addr -= sizeof(XLEN);
-            const XLEN dst_reg_val = state->readMemory<XLEN>(addr, MemAccessSource::INSTRUCTION);
+            std::vector<uint8_t> buffer;
+            if (state->readMemory<XLEN>(addr, buffer, MemAccessSource::INSTRUCTION) == false)
+            {
+                THROW_LOAD_ACCESS;
+            }
+            const XLEN dst_reg_val = convertFromByteVector<XLEN>(buffer);
             WRITE_INT_REG<XLEN>(state, dst.field_value, dst_reg_val);
         }
 
@@ -74,7 +80,10 @@ namespace pegasus
             const auto src = src_reg_list[idx];
             addr -= sizeof(XLEN);
             const XLEN src_reg_val = READ_INT_REG<XLEN>(state, src.field_value);
-            state->writeMemory<XLEN>(addr, src_reg_val, MemAccessSource::INSTRUCTION);
+            if (state->writeMemory<XLEN>(addr, src_reg_val, MemAccessSource::INSTRUCTION) == false)
+            {
+                THROW_STORE_AMO_ACCESS;
+            }
         }
 
         // Update stack pointer

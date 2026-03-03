@@ -90,13 +90,21 @@ namespace pegasus
 
         if constexpr (sizeof(XLEN) >= sizeof(AccessType))
         {
-            const AccessType temp =
-                state->readMemory<AccessType>(paddr, MemAccessSource::INSTRUCTION);
+            std::vector<uint8_t> buffer;
+            if (state->readMemory<AccessType>(paddr, buffer, MemAccessSource::INSTRUCTION) == false)
+            {
+                THROW_STORE_AMO_ACCESS;
+            }
+            const AccessType temp = convertFromByteVector<AccessType>(buffer);
             const AccessType comp = READ_INT_REG<XLEN>(state, inst->getRd());
             const AccessType swap = READ_INT_REG<XLEN>(state, inst->getRs2());
             if (temp == comp)
             {
-                state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION);
+                if (state->writeMemory<AccessType>(paddr, swap, MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
             }
             if constexpr (sizeof(XLEN) > sizeof(AccessType))
             {
@@ -111,9 +119,21 @@ namespace pegasus
         {
             sparta_assert(!(inst->getRs2() % 1), "rs2 value is not even.");
             sparta_assert(!(inst->getRd() % 1), "rd value is not even.");
-            const XLEN temp0 = state->readMemory<XLEN>(paddr, MemAccessSource::INSTRUCTION);
-            const XLEN temp1 =
-                state->readMemory<XLEN>(paddr + sizeof(XLEN), MemAccessSource::INSTRUCTION);
+
+            std::vector<uint8_t> buffer;
+            if (state->readMemory<XLEN>(paddr, buffer, MemAccessSource::INSTRUCTION) == false)
+            {
+                THROW_STORE_AMO_ACCESS;
+            }
+            const XLEN temp0 = convertFromByteVector<XLEN>(buffer);
+
+            if (state->readMemory<XLEN>(paddr + sizeof(XLEN), buffer, MemAccessSource::INSTRUCTION)
+                == false)
+            {
+                THROW_STORE_AMO_ACCESS;
+            }
+            const XLEN temp1 = convertFromByteVector<XLEN>(buffer);
+
             const XLEN comp0 = inst->getRd() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRd());
             const XLEN comp1 =
                 inst->getRd() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRd() + 1);
@@ -122,8 +142,16 @@ namespace pegasus
                 inst->getRs2() == 0 ? 0 : READ_INT_REG<XLEN>(state, inst->getRs2() + 1);
             if (temp0 == comp0 && temp1 == comp1)
             {
-                state->writeMemory<XLEN>(paddr, swap0, MemAccessSource::INSTRUCTION);
-                state->writeMemory<XLEN>(paddr + sizeof(XLEN), swap1, MemAccessSource::INSTRUCTION);
+                if (state->writeMemory<XLEN>(paddr, swap0, MemAccessSource::INSTRUCTION) == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
+                if (state->writeMemory<XLEN>(paddr + sizeof(XLEN), swap1,
+                                             MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
             }
             if (inst->getRd() != 0)
             {

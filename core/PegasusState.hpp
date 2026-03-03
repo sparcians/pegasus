@@ -259,17 +259,18 @@ namespace pegasus
         };
 
         template <typename MemoryType>
-        MemoryType readMemory(const PegasusTranslationState::TranslationResult & result,
-                              const MemAccessSource source = MemAccessSource::INVALID);
+        bool readMemory(const PegasusTranslationState::TranslationResult & result,
+                        std::vector<uint8_t> & buffer,
+                        const MemAccessSource source = MemAccessSource::INVALID);
         template <typename MemoryType>
-        MemoryType readMemory(const Addr paddr,
-                              const MemAccessSource source = MemAccessSource::INVALID);
+        bool readMemory(const Addr paddr, std::vector<uint8_t> & buffer,
+                        const MemAccessSource source = MemAccessSource::INVALID);
         template <typename MemoryType>
-        void writeMemory(const PegasusTranslationState::TranslationResult & result,
+        bool writeMemory(const PegasusTranslationState::TranslationResult & result,
                          const MemoryType value,
                          const MemAccessSource source = MemAccessSource::INVALID);
         template <typename MemoryType>
-        void writeMemory(const Addr paddr, const MemoryType value,
+        bool writeMemory(const Addr paddr, const MemoryType value,
                          const MemAccessSource source = MemAccessSource::INVALID);
 
         void addObserver(std::unique_ptr<Observer> observer);
