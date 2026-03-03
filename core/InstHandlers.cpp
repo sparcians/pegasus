@@ -41,19 +41,19 @@ namespace pegasus
         // Handler for unsupported instructions
         rv64_inst_actions_.emplace(
             "unsupported",
-            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler_, InstHandlers>(
+            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler, InstHandlers>(
                 nullptr, "unsupported", ActionTags::EXECUTE_TAG));
         rv32_inst_actions_.emplace(
             "unsupported",
-            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler_, InstHandlers>(
+            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler, InstHandlers>(
                 nullptr, "unsupported", ActionTags::EXECUTE_TAG));
         rv64_inst_compute_address_actions_.emplace(
             "unsupported",
-            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler_, InstHandlers>(
+            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler, InstHandlers>(
                 nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
         rv32_inst_compute_address_actions_.emplace(
             "unsupported",
-            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler_, InstHandlers>(
+            pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler, InstHandlers>(
                 nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
 
         // Get RV64 instruction handlers
@@ -166,8 +166,8 @@ namespace pegasus
     template const InstHandlers::InstHandlersMap*
     InstHandlers::getInstComputeAddressHandlersMap<RV32>() const;
 
-    Action::ItrType InstHandlers::unsupportedInstHandler_(pegasus::PegasusState* state,
-                                                          Action::ItrType action_it)
+    Action::ItrType InstHandlers::unsupportedInstHandler(pegasus::PegasusState* state,
+                                                         Action::ItrType action_it)
     {
         sparta_assert(false,
                       "Failed to execute. Instruction is unsupported: " << state->getCurrentInst());
