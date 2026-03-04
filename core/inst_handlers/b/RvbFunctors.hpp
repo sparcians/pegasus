@@ -48,7 +48,7 @@ namespace pegasus
             }
             else
             {
-                assert(false);
+                static_assert(false);
             }
 
             return 0;
