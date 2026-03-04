@@ -28,21 +28,21 @@ def main():
     ext = mavis_json_rv64.split('/')[-1]
     ext = ext.removeprefix("isa_rv64")
     ext = ext.removesuffix(".json")
-    ext = ext.upper()
 
-    print("RV"+ext+"_MAVIS_EXTS = []")
+    print("RV"+ext.upper()+"_MAVIS_EXTS = [\""+ext+"\"]")
     print()
     
+    ext = ext.upper()
     if (mavis_json_rv32):
         print("RV32"+ext+"_INST = [")
 
         tag = ext+"_EXT_32"
         print_entry(mavis_json_rv32, tag)
         
-    print("]")
-    print()
+        print("]")
+        print()
 
-    if (mavis_json_rv32):
+    if (mavis_json_rv64):
         print("RV64"+ext+"_INST = [")
 
         tag = ext+"_EXT_64"
