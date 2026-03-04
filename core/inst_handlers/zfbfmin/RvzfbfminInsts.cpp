@@ -10,8 +10,10 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         (void)inst_handlers;
-        //inst_handlers.emplace("fcvt_bf16_s", pegasus::Action::createAction<&RvzfbfminInsts::, RvzfbfminInsts>("fcvt_bf16_s", ActionTags::EXECUTE_TAG));
-        //inst_handlers.emplace("fcvt_s_bf16", pegasus::Action::createAction<&RvzfbfminInsts::, RvzfbfminInsts>("fcvt_s_bf16", ActionTags::EXECUTE_TAG));
+        // inst_handlers.emplace("fcvt_bf16_s", pegasus::Action::createAction<&RvzfbfminInsts::,
+        // RvzfbfminInsts>("fcvt_bf16_s", ActionTags::EXECUTE_TAG));
+        // inst_handlers.emplace("fcvt_s_bf16", pegasus::Action::createAction<&RvzfbfminInsts::,
+        // RvzfbfminInsts>("fcvt_s_bf16", ActionTags::EXECUTE_TAG));
     }
 
     template void RvzfbfminInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);

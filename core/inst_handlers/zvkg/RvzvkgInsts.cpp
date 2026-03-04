@@ -10,8 +10,10 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         (void)inst_handlers;
-        //inst_handlers.emplace("vghsh_vv", pegasus::Action::createAction<&RvzvkgInsts::, RvzvkgInsts>("vghsh_vv", ActionTags::EXECUTE_TAG));
-        //inst_handlers.emplace("vgmul_vv", pegasus::Action::createAction<&RvzvkgInsts::, RvzvkgInsts>("vgmul_vv", ActionTags::EXECUTE_TAG));
+        // inst_handlers.emplace("vghsh_vv", pegasus::Action::createAction<&RvzvkgInsts::,
+        // RvzvkgInsts>("vghsh_vv", ActionTags::EXECUTE_TAG)); inst_handlers.emplace("vgmul_vv",
+        // pegasus::Action::createAction<&RvzvkgInsts::, RvzvkgInsts>("vgmul_vv",
+        // ActionTags::EXECUTE_TAG));
     }
 
     template void RvzvkgInsts::getInstHandlers<RV32>(InstHandlers::InstHandlersMap &);
