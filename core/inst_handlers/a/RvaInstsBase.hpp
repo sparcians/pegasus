@@ -127,19 +127,23 @@ namespace pegasus
         const auto & result = xlation_state->getResult();
 
         XLEN fail_code = 1; // assume bad
+
+        // From RISC-V spec:
+        //
+        // An SC may succeed only if no store from another hart to the
+        // reservation set can be observed to have occurred between the LR and the SC,
+        // and if there is no other SC between the LR and itself in program order.
         if (const auto & resv = state->getCore()->getReservation(state->getHartId());
-            resv.isValid())
+            resv.isValid() && resv == result.getPAddr() && !state->storeOnReservationSetOccurred())
         {
-            if (resv == result.getPAddr())
+
+            const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
+            if (state->writeMemory<SIZE>(result.getPAddr(), rs2_val, MemAccessSource::INSTRUCTION)
+                == false)
             {
-                const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
-                if (state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION)
-                    == false)
-                {
-                    THROW_STORE_AMO_ACCESS;
-                }
-                fail_code = 0;
+                THROW_STORE_AMO_ACCESS;
             }
+            fail_code = 0;
         }
         xlation_state->popResult();
 
@@ -147,14 +151,7 @@ namespace pegasus
         //
         // Regardless of success or failure, executing an SC instruction invalidates
         // any reservation held by this hart.
-        //
-        // An SC may succeed only if no store from another hart to the
-        // reservation set can be observed to have occurred between the LR and the SC,
-        // and if there is no other SC between the LR and itself in program order.
-        // FIXME: All store instructions can invalidate a reservation, not just a SC
-
-        // Always clear all reservations after a SC
-        state->getCore()->clearReservations();
+        state->getCore()->clearReservation(state->getHartId());
 
         WRITE_INT_REG<XLEN>(state, inst->getRd(), fail_code);
         return ++action_it;
