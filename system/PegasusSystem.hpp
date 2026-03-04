@@ -42,8 +42,8 @@ namespace pegasus
         // Constructor
         PegasusSystem(sparta::TreeNode* sys_node, const PegasusSystemParameters* p);
 
-        // Get pointer to system memory
-        sparta::memory::SimpleMemoryMapNode* getSystemMemory() { return memory_map_.get(); }
+        // Get pointer to memory map
+        sparta::memory::SimpleMemoryMapNode* getSystemMemory() const { return memory_map_.get(); }
 
         // Give observers their callbacks to read/write memory operations
         void registerMemoryCallbacks(Observer* observer);
@@ -79,7 +79,7 @@ namespace pegasus
         SimpleUART* uart_ = nullptr;
         MagicMemory* magic_mem_ = nullptr;
 
-        // Memory and memory maps
+        // Memory maps
         std::unique_ptr<sparta::memory::SimpleMemoryMapNode> memory_map_;
         std::vector<std::unique_ptr<sparta::memory::MemoryObject>> memory_objects_;
 

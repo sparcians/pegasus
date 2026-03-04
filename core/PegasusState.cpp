@@ -381,7 +381,7 @@ namespace pegasus
     bool PegasusState::readMemory(const PegasusTranslationState::TranslationResult & result,
                                   std::vector<uint8_t> & buffer, const MemAccessSource source)
     {
-        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
+        auto* memory = pegasus_core_->getMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -407,7 +407,7 @@ namespace pegasus
     bool PegasusState::writeMemory(const PegasusTranslationState::TranslationResult & result,
                                    const MemoryType value, const MemAccessSource source)
     {
-        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
+        auto* memory = pegasus_core_->getMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -683,7 +683,7 @@ namespace pegasus
                                       READ_INT_REG<XLEN>(this, 13), READ_INT_REG<XLEN>(this, 14),
                                       READ_INT_REG<XLEN>(this, 15), READ_INT_REG<XLEN>(this, 16)};
 
-        auto mem = getCore()->getSystem()->getSystemMemory();
+        auto mem = getCore()->getMemory();
         auto emulator = getCore()->getSystemCallEmulator();
         const XLEN ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
         return ret_code;
