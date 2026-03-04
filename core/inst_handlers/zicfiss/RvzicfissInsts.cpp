@@ -13,8 +13,6 @@ namespace pegasus
         //inst_handlers.emplace("sspush", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("sspush", ActionTags::EXECUTE_TAG));
         //inst_handlers.emplace("sspopchk", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("sspopchk", ActionTags::EXECUTE_TAG));
         //inst_handlers.emplace("ssrdp", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("ssrdp", ActionTags::EXECUTE_TAG));
-        //inst_handlers.emplace("c_sspush", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("c_sspush", ActionTags::EXECUTE_TAG));
-        //inst_handlers.emplace("c_sspopchk", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("c_sspopchk", ActionTags::EXECUTE_TAG));
         //inst_handlers.emplace("ssamoswap_w", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("ssamoswap_w", ActionTags::EXECUTE_TAG));
         //inst_handlers.emplace("ssamoswap_d", pegasus::Action::createAction<&RvzicfissInsts::, RvzicfissInsts>("ssamoswap_d", ActionTags::EXECUTE_TAG));
     }
