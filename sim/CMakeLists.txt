@@ -35,4 +35,4 @@ execute_process (
   WORKING_DIRECTORY
      ${PROJECT_BINARY_DIR}
 )
-install(FILES ${PROJECT_BINARY_DIR}/base.yaml DESTINATION bin)
+install(FILES ${PROJECT_BINARY_DIR}/pegasus_base_config.yaml DESTINATION bin)
