@@ -13,7 +13,7 @@ namespace pegasus
     class PegasusSimParameters : public sparta::ExtensionsParamsOnly
     {
       public:
-        static constexpr char name[] = "sim";
+        static constexpr char NAME[] = "sim";
 
         using WorkloadAndArgs = std::vector<std::string>;
         using WorkloadsAndArgs = std::vector<WorkloadAndArgs>;
@@ -54,9 +54,8 @@ namespace pegasus
         static T getParameter(sparta::TreeNode* node, const std::string & param)
         {
             auto ext =
-                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::name));
-            auto ext_params = ext->getParameters();
-            return ext_params->getParameter(param)->getValueAs<T>();
+                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::NAME));
+            return ext->getParameterValueAs<T>(param);
         }
 
         template <typename T>

@@ -25,15 +25,7 @@ namespace pegasus::cosim
     class CoSimObserver;
     class EventCompressorStage;
     class EventWriterStage;
-
-    /// Base class for event listener. Receives EventAccessors for
-    /// every cosim step(). Used for testing and validation.
-    class EventListener
-    {
-      public:
-        virtual ~EventListener() = default;
-        virtual void onNewEvent(EventAccessor && evt) = 0;
-    };
+    class CoSimEventReplayer;
 
     /// This class implements a performant pipeline to process
     /// cosim events. A series of transformations will occur on
@@ -101,9 +93,6 @@ namespace pegasus::cosim
         /// Allow EventAccessor to use the PipelineManager to disable threads
         /// while recreating events as needed (when not found in cache).
         simdb::pipeline::PipelineManager* getPipelineManager() const;
-
-        /// Called by unit tests to validate async event retrieval.
-        void setListener(EventListener* listener);
 
         /// Process a new event from cosim step(). Called during postExecute().
         void onStep(Event && evt);
@@ -173,6 +162,10 @@ namespace pegasus::cosim
         /// Recreate an old event from disk when it is no longer in the cache.
         std::unique_ptr<Event> recreateEventFromDisk_(uint64_t euid);
 
+        /// On postTeardown, ensure that all but the last event on disk
+        /// says isLastEvent()=true.
+        void ensureOnlyOneLastEventOnDisk_();
+
         /// SimDB instance.
         simdb::DatabaseManager* db_mgr_ = nullptr;
 
@@ -216,7 +209,7 @@ namespace pegasus::cosim
         simdb::ConcurrentQueue<EventList>* pipeline_head_ = nullptr;
 
         /// Utility to flush the pipeline on demand.
-        std::unique_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
+        std::shared_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
 
         /// Pipeline snooper used to look for events directly in the pipeline
         /// instead of needing to go to the database when the event is not in the cache.
@@ -236,10 +229,6 @@ namespace pegasus::cosim
         size_t num_pipeline_evts_snooped_in_serialize_queue_ = 0;
         size_t num_pipeline_evts_snooped_in_db_queue_ = 0;
 
-        /// Listener which inspects events as they come through the pipeline.
-        /// Used for testing and validation.
-        EventListener* listener_ = nullptr;
-
         /// Structure which holds a range of events serialized to a byte buffer.
         struct SerializedEvtsBuffer
         {
@@ -254,6 +243,7 @@ namespace pegasus::cosim
 
         friend class EventCompressorStage;
         friend class EventWriterStage;
+        friend class CoSimEventReplayer;
     };
 
 } // namespace pegasus::cosim
