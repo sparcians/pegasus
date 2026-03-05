@@ -54,8 +54,7 @@ namespace pegasus::cosim
         using CheckpointReplayer = sparta::serialization::checkpoint::CherryPickFastCheckpointer::
             DatabaseCheckpointReplayer;
 
-        template <typename XLEN>
-        static void apply_(const Event & reload_evt, PegasusState* state);
+        template <typename XLEN> static void apply_(const Event & reload_evt, PegasusState* state);
 
         std::shared_ptr<simdb::DatabaseManager> db_mgr_;
         std::shared_ptr<sparta::Scheduler> scheduler_;

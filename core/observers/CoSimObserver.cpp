@@ -193,7 +193,8 @@ namespace pegasus::cosim
 
         auto sim_stopped = state->getSimState()->sim_stopped;
         evt_pipeline_->onStep(std::move(last_event));
-        if (sim_stopped) {
+        if (sim_stopped)
+        {
             stopSim();
         }
         last_event_.clearValid();

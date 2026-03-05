@@ -211,9 +211,15 @@ namespace pegasus::cosim
 
         PrivMode getNextPrivilegeMode() const { return next_priv_; }
 
-        PrivMode getLdStPrivilegeMode(translate_types::TranslationStage stage) const { return curr_ldst_priv_.at(static_cast<uint32_t>(stage)); }
+        PrivMode getLdStPrivilegeMode(translate_types::TranslationStage stage) const
+        {
+            return curr_ldst_priv_.at(static_cast<uint32_t>(stage));
+        }
 
-        PrivMode getNextLdStPrivilegeMode(translate_types::TranslationStage stage) const { return next_ldst_priv_.at(static_cast<uint32_t>(stage)); }
+        PrivMode getNextLdStPrivilegeMode(translate_types::TranslationStage stage) const
+        {
+            return next_ldst_priv_.at(static_cast<uint32_t>(stage));
+        }
 
         ExcpType getExceptionType() const { return excp_type_; }
 
@@ -297,8 +303,10 @@ namespace pegasus::cosim
         PrivMode next_priv_ = PrivMode::INVALID; //!< Next privilege mode
 
         // Load/Store Privilege mode
-        std::array<PrivMode, translate_types::N_TRANS_STAGES> curr_ldst_priv_{PrivMode::INVALID}; //!< Current load/store privilege mode
-        std::array<PrivMode, translate_types::N_TRANS_STAGES> next_ldst_priv_{PrivMode::INVALID}; //!< Next load/store privilege mode
+        std::array<PrivMode, translate_types::N_TRANS_STAGES> curr_ldst_priv_{
+            PrivMode::INVALID}; //!< Current load/store privilege mode
+        std::array<PrivMode, translate_types::N_TRANS_STAGES> next_ldst_priv_{
+            PrivMode::INVALID}; //!< Next load/store privilege mode
 
         // Exceptions (traps and interrupts)
         ExcpType excp_type_ = ExcpType::INVALID; //!< The exception type for faulting instructions

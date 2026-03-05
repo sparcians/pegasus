@@ -329,14 +329,10 @@ namespace pegasus::cosim
             if (input_queue_->try_pop(serialized))
             {
                 auto inserter = getTableInserter_("CompressedEvents");
-                inserter->createRecordWithColValues(
-                    serialized.start_euid,
-                    serialized.end_euid,
-                    serialized.start_arch_id,
-                    serialized.end_arch_id,
-                    serialized.core_id,
-                    serialized.hart_id,
-                    serialized.evt_bytes);
+                inserter->createRecordWithColValues(serialized.start_euid, serialized.end_euid,
+                                                    serialized.start_arch_id,
+                                                    serialized.end_arch_id, serialized.core_id,
+                                                    serialized.hart_id, serialized.evt_bytes);
                 action = simdb::pipeline::PipelineAction::PROCEED;
             }
 
@@ -923,7 +919,7 @@ namespace pegasus::cosim
         // and so on.
         class LastEventWindow
         {
-        public:
+          public:
             LastEventWindow(uint32_t core_id, uint32_t hart_id) :
                 core_id_(core_id),
                 hart_id_(hart_id)
@@ -936,32 +932,46 @@ namespace pegasus::cosim
                 end_euid_ = std::max(end_euid_, end_euid);
                 db_ids_to_delete_.push_back(db_id_to_delete);
 
-                if (evts_.empty()) {
+                if (evts_.empty())
+                {
                     evts_ = std::move(evts);
-                } else if (evts.front().getEuid() > evts_.back().getEuid()) {
+                }
+                else if (evts.front().getEuid() > evts_.back().getEuid())
+                {
                     evts_.insert(evts_.end(), evts.begin(), evts.end());
-                } else if (evts.back().getEuid() < evts_.front().getEuid()) {
+                }
+                else if (evts.back().getEuid() < evts_.front().getEuid())
+                {
                     std::swap(evts, evts_);
                     evts_.insert(evts_.end(), evts.begin(), evts.end());
-                } else {
+                }
+                else
+                {
                     throw sparta::SpartaException("Invalid event uids (overlapping)");
                 }
             }
 
             void overwriteLastWindow(simdb::DatabaseManager* db_mgr)
             {
-                for (auto db_id : db_ids_to_delete_) {
+                for (auto db_id : db_ids_to_delete_)
+                {
                     db_mgr->removeRecordFromTable("CompressedEvents", db_id);
                 }
 
                 // Clear all but the last workload exit code ValidValue
                 bool clear_vv = false;
-                for (auto rit = evts_.rbegin(); rit != evts_.rend(); ++rit) {
-                    if (!rit->workload_exit_code_.isValid()) {
+                for (auto rit = evts_.rbegin(); rit != evts_.rend(); ++rit)
+                {
+                    if (!rit->workload_exit_code_.isValid())
+                    {
                         break;
-                    } else if (clear_vv) {
+                    }
+                    else if (clear_vv)
+                    {
                         rit->workload_exit_code_.clearValid();
-                    } else {
+                    }
+                    else
+                    {
                         clear_vv = true;
                     }
                 }
@@ -994,7 +1004,7 @@ namespace pegasus::cosim
                                           serialized.evt_bytes));
             }
 
-        private:
+          private:
             EventList evts_;
             const uint32_t core_id_;
             const uint32_t hart_id_;
@@ -1044,7 +1054,8 @@ namespace pegasus::cosim
             // Add this window to the last event window
             last_event_window.add(std::move(evts), start_euid, end_euid, db_id);
 
-            if (stop) {
+            if (stop)
+            {
                 break;
             }
         }
