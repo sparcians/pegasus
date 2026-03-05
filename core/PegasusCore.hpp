@@ -20,9 +20,15 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
+namespace sparta::memory
+{
+    class BlockingMemoryIF;
+} // namespace sparta::memory
+
 namespace pegasus
 {
     class PegasusSystem;
+    class ReservationMemory;
 
     using MavisType =
         Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
@@ -75,6 +81,8 @@ namespace pegasus
         std::map<HartId, PegasusState*> & getThreads() { return threads_; }
 
         PegasusSystem* getSystem() const { return system_; }
+
+        sparta::memory::BlockingMemoryIF* getMemory() const { return current_memory_view_; }
 
         SystemCallEmulator* getSystemCallEmulator() const { return system_call_emulator_; }
 
@@ -131,19 +139,7 @@ namespace pegasus
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
-        void makeReservation(HartId hart_id, Addr paddr)
-        {
-
-            for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
-            {
-                auto & reservation = reservations_.at(hart_id);
-                if (reservation.isValid() && (reservation.getValue() == paddr))
-                {
-                    reservation.clearValid();
-                }
-            }
-            reservations_.at(hart_id) = paddr;
-        }
+        void makeReservation(HartId hart_id, Addr paddr);
 
         Reservation & getReservation(HartId hart_id) { return reservations_.at(hart_id); }
 
@@ -152,13 +148,7 @@ namespace pegasus
             return reservations_.at(hart_id);
         }
 
-        void clearReservations()
-        {
-            for (auto & reservation : reservations_)
-            {
-                reservation.clearValid();
-            }
-        }
+        void clearReservation(HartId hart_id);
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
 
@@ -294,5 +284,12 @@ namespace pegasus
 
         // Instruction Actions
         InstHandlers inst_handlers_;
+
+        // Current active BlockingMemoryIF for this core
+        sparta::memory::BlockingMemoryIF* current_memory_view_ = nullptr;
+
+        // ReservationMemory
+        std::unique_ptr<ReservationMemory> reservation_memory_bmi_;
+        ;
     };
 } // namespace pegasus

@@ -1,12 +1,14 @@
 #include "PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
+#include "system/ReservationMemory.hpp"
 #include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/utils/SpartaTester.hpp"
+#include "sparta/memory/BlockingMemoryIF.hpp"
 
 #include <filesystem>
 #include <regex>
@@ -248,6 +250,11 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        reservation_memory_bmi_.reset(new ReservationMemory(
+            this, "Pegasus System Memory Interface", PegasusSystem::PEGASUS_SYSTEM_BLOCK_SIZE,
+            PegasusSystem::PEGASUS_SYSTEM_TOTAL_MEMORY, system_->getSystemMemory()));
+        current_memory_view_ = system_->getSystemMemory();
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -534,6 +541,38 @@ namespace pegasus
         }
 
         return true;
+    }
+
+    void PegasusCore::makeReservation(HartId hart_id, Addr paddr)
+    {
+        for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            auto & reservation = reservations_.at(hart_id);
+            if (reservation.isValid() && (reservation.getValue() == paddr))
+            {
+                reservation.clearValid();
+            }
+        }
+        reservations_.at(hart_id) = paddr;
+        auto & state = threads_.at(hart_id);
+
+        // FIXME: iterate through cores for multi-core support.
+        state->storeOnReservationSet(false);
+        current_memory_view_ = reservation_memory_bmi_.get();
+    }
+
+    void PegasusCore::clearReservation(HartId hart_id)
+    {
+        auto & reservation = reservations_.at(hart_id);
+        auto & state = threads_.at(hart_id);
+        reservation.clearValid();
+        state->storeOnReservationSet(false);
+
+        if (std::all_of(reservations_.begin(), reservations_.end(),
+                        [](const Reservation & reservation) { return !reservation.isValid(); }))
+        {
+            current_memory_view_ = system_->getSystemMemory();
+        }
     }
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;
