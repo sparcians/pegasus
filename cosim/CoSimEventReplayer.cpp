@@ -43,9 +43,9 @@ namespace pegasus::cosim
         auto num_evts_query = db_mgr_->createQuery("CompressedEvents");
         num_evts_query->select("EndArchId", num_events_on_disk_);
         num_evts_query->orderBy("EndArchId", simdb::QueryOrder::DESC);
-        num_evts_query->getResultSet().getNextRecord();
 
-        if (num_events_on_disk_ == 0)
+        auto result_set = num_evts_query->getResultSet();
+        if (!result_set.getNextRecord())
         {
             throw sparta::SpartaException("Cannot run cosim event replayer - no events on disk!");
         }
@@ -86,10 +86,12 @@ namespace pegasus::cosim
         std::vector<sparta::TreeNode*> core_tns;
         pegasus_sim_->getRoot()->findChildren("core*", core_tns);
         checkpoint_replayers_.resize(core_tns.size());
+        last_event_.resize(core_tns.size());
         for (CoreId core_id = 0; core_id < core_tns.size(); ++core_id)
         {
             auto core = core_tns[core_id]->getResourceAs<pegasus::PegasusCore*>();
             checkpoint_replayers_.at(core_id).resize(core->getNumThreads());
+            last_event_.at(core_id).resize(core->getNumThreads());
             for (HartId hart_id = 0; hart_id < core->getNumThreads(); ++hart_id)
             {
                 auto state = core->getPegasusState(hart_id);
@@ -121,6 +123,7 @@ namespace pegasus::cosim
 
         auto state = pegasus_sim_->getPegasusCore(core_id)->getPegasusState(hart_id);
         auto event = recreateEventFromDisk_(next_arch_id_++, core_id, hart_id);
+        last_event_.at(core_id).at(hart_id) = event;
 
         // Load memory/registers prior to applying the Event. Needed for things
         // that rely on CSRs e.g. updating the translation mode.
@@ -141,13 +144,10 @@ namespace pegasus::cosim
 
     const Event* CoSimEventReplayer::getLastEvent(CoreId core_id, HartId hart_id) const
     {
-        // TODO cnyce
-        (void)core_id;
-        (void)hart_id;
-        return nullptr;
+        return last_event_.at(core_id).at(hart_id).get();
     }
 
-    std::unique_ptr<Event>
+    std::shared_ptr<Event>
     CoSimEventReplayer::recreateEventFromDisk_(uint64_t arch_id, CoreId core_id, HartId hart_id)
     {
         auto get_from_cache = [&]() -> Event*
@@ -170,7 +170,7 @@ namespace pegasus::cosim
         // See if the requested event is already in our cache
         if (auto evt = get_from_cache())
         {
-            return std::make_unique<Event>(*evt);
+            return std::make_shared<Event>(*evt);
         }
 
         std::vector<char> compressed_evts_bytes;
@@ -206,7 +206,7 @@ namespace pegasus::cosim
         // If we got this far, the event uid must be within the returned list
         if (auto evt = get_from_cache())
         {
-            return std::make_unique<Event>(*evt);
+            return std::make_shared<Event>(*evt);
         }
 
         throw simdb::DBException("Internal error occurred. Cannot find event with arch ID ")

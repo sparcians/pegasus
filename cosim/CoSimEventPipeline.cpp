@@ -399,7 +399,7 @@ namespace pegasus::cosim
         if (committed_evts_buffer_.size() == 100)
         {
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
-            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped;
+            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
             observer_->getCheckpointer()->commitCurrentBranch(force_branch);
         }
 

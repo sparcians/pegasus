@@ -48,7 +48,7 @@ namespace pegasus::cosim
         const Event* getLastEvent(CoreId core_id, HartId hart_id) const;
 
       private:
-        std::unique_ptr<Event> recreateEventFromDisk_(uint64_t arch_id, CoreId core_id,
+        std::shared_ptr<Event> recreateEventFromDisk_(uint64_t arch_id, CoreId core_id,
                                                       HartId hart_id);
 
         using CheckpointReplayer = sparta::serialization::checkpoint::CherryPickFastCheckpointer::
@@ -61,6 +61,7 @@ namespace pegasus::cosim
         std::shared_ptr<pegasus::PegasusSim> pegasus_sim_;
         std::shared_ptr<sparta::app::SimulationConfiguration> sim_config_;
         std::vector<std::vector<std::shared_ptr<CheckpointReplayer>>> checkpoint_replayers_;
+        std::vector<std::vector<std::shared_ptr<Event>>> last_event_;
 
         uint64_t next_arch_id_ = 0;
         uint64_t num_events_on_disk_ = 0;

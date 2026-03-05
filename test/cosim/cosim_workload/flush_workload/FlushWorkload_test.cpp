@@ -218,8 +218,7 @@ template <typename XLEN> bool Compare(PegasusState* state_truth, PegasusState* s
     {
         const auto & ext_name = it->first;
         const auto truth_ext_enabled = extensions_map_truth.isEnabled(ext_name);
-        const auto test_ext_enabled = extensions_map_test.isEnabled(ext_name);
-        EXPECT_EQUAL(test_ext_enabled, truth_ext_enabled);
+        EXPECT_EQUAL(extensions_map_test.isEnabled(ext_name), truth_ext_enabled);
     }
 
     return ERROR_CODE == 0;
@@ -290,11 +289,7 @@ bool AdvanceAndCompareReplayer(PegasusSim & sim_truth, CoSimEventReplayer & sim_
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
 //   --> '--stop-inst-count' says how many steps at most to take before ending the test
 //   --> '--db-stem' specifies the database stem name
-//
-// The typical harness configuration uses:
-//   - PegasusSim as the truth
-//   - PegasusCoSim as the sim under test, which produces a database file
-std::tuple<std::string, uint64_t, std::string, size_t, size_t, size_t>
+std::tuple<std::string, uint64_t, std::string, size_t, size_t>
 ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params)
 {
     if (argc == 1)
@@ -307,7 +302,6 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
     std::string db_stem;
     size_t max_steps_before_flush = 3;
     size_t fast_forward_steps = 0;
-    size_t stop_inst_count = std::numeric_limits<size_t>::max();
 
     pegasus::PegasusSimParameters::RegisterOverrides reg_overrides;
 
@@ -367,12 +361,6 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
             i += 2;
             continue;
         }
-        else if (arg == "--stop-inst-count")
-        {
-            stop_inst_count = std::stoul(argv[i + 1]);
-            i += 2;
-            continue;
-        }
         else
         {
             throw std::invalid_argument("Unknown argument: " + arg);
@@ -390,14 +378,14 @@ ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params
             pegasus::PegasusSimParameters::convertVectorToStringParam(reg_overrides);
     }
 
-    return {workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps, stop_inst_count};
+    return {workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps};
 }
 
 int main(int argc, char** argv)
 {
     std::map<std::string, std::string> sim_params;
-    const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps,
-                stop_inst_count] = ParseArgs(argc, argv, sim_params);
+    const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps] =
+        ParseArgs(argc, argv, sim_params);
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
@@ -479,11 +467,6 @@ int main(int argc, char** argv)
                               << cosim_test.getLastCommittedEvent(core_id, hart_id).get()
                               << std::endl;
                 }
-                break;
-            }
-
-            if (step_count == stop_inst_count)
-            {
                 break;
             }
         }
@@ -580,10 +563,6 @@ int main(int argc, char** argv)
                         std::cout << "Last cosim Event: "
                                   << replayer_test.getLastEvent(core_id, hart_id) << std::endl;
                     }
-                    break;
-                }
-                if (step_count == stop_inst_count)
-                {
                     break;
                 }
             }

@@ -127,17 +127,12 @@ namespace pegasus::cosim
         simdb_config.setAppDatabase(CoSimEventPipeline::NAME, db_file);
         simdb_config.setAppDatabase(CoSimCheckpointer::NAME, db_file);
 
-        // Set the file logger before creating apps (done in finalizeFramework)
-        // TODO cnyce: refine this api so we can call it at any time.
-        pegasus_sim_->getAppManagers()->useThreadSafeFileLogger("cosim.out");
-
         // Finish setting up the simulator
         pegasus_sim_->finalizeFramework();
 
         // Now that apps / AppManager's are created, let SimDB know that the
         // event pipeline needs to have its preTeardown hook called before
         // the checkpoint pipeline's preTeardown.
-        // TODO cnyce: refine this api so we can call it at any time.
         auto & app_mgr = pegasus_sim_->getAppManagers()->getAppManager(db_file);
         app_mgr.setAppOrderingForHooks(CoSimEventPipeline::NAME, CoSimCheckpointer::NAME);
 
@@ -562,12 +557,6 @@ namespace pegasus::cosim
 
     void PegasusCoSim::onFrameworkFinalized()
     {
-        // In order to support the CoSimEventReplayer, we need to write to the
-        // database all the stuff it will need to configure the replayer:
-        //   - final simulation config, e.g. from processParameter() calls
-        //   - num harts per core
-        //   - all extensions
-
         auto & db_mgr = *app_mgr_->getDatabaseManager();
         db_mgr.safeTransaction(
             [&]()
@@ -589,9 +578,8 @@ namespace pegasus::cosim
                                 return false; // same as 'return true' since we have no more leaves
                             }
 
-                            ptree_inserter->setColumnValue(0, leaf->getPath());
-                            ptree_inserter->setColumnValue(1, leaf->getValue());
-                            ptree_inserter->createRecord();
+                            ptree_inserter->createRecordWithColValues(leaf->getPath(),
+                                                                      leaf->getValue());
                             return true; // keep going
                         });
                 };
