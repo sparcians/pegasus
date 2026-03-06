@@ -47,6 +47,11 @@ std::string GetArchFromPath(const std::string & path)
         return match.str(0);
     }
 
+    if (path.find("dhry.elf") != std::string::npos)
+    {
+        return "rv64";
+    }
+
     return "unknown";
 }
 
