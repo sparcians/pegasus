@@ -414,6 +414,8 @@ namespace pegasus::cosim
                 ar & diff_;
             }
 
+            bool operator==(const ECallX10Changes &) = default;
+
           private:
             std::pair<sparta::utils::ValidValue<uint64_t>, sparta::utils::ValidValue<uint64_t>>
                 diff_;
