@@ -37,7 +37,7 @@ def load_inst_headers():
 
 # Inject all INST lists and MAVIS_EXTS from insts/*_INST.py into this module's globals
 for name, value in load_inst_headers().items():
-    globals()[_name] = _value
+    globals()[name] = value
 
 
 class InstJSONGenerator():
