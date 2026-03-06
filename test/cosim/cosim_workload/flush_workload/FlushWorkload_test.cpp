@@ -47,6 +47,11 @@ std::string GetArchFromPath(const std::string & path)
         return match.str(0);
     }
 
+    if (path.find("dhry.elf") != std::string::npos)
+    {
+        return "rv64";
+    }
+
     return "unknown";
 }
 
@@ -386,12 +391,6 @@ int main(int argc, char** argv)
     std::map<std::string, std::string> sim_params;
     const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps] =
         ParseArgs(argc, argv, sim_params);
-
-    // TODO cnyce: get the syscall emulation test
-    if (workload.find("dhry.elf") != std::string::npos)
-    {
-        return 0;
-    }
 
     const auto arch = GetArchFromPath(workload);
 

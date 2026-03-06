@@ -374,6 +374,57 @@ namespace pegasus::cosim
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////////////////////////
+        //! \name Before-and-after changes when invoking the "ecall" handler (opcode 0x73)
+        //! @{
+
+        class ECallX10Changes
+        {
+          public:
+            void preExecute(uint64_t reg_value)
+            {
+                diff_.first = reg_value;
+                diff_.second.clearValid();
+            }
+
+            void postExecute(uint64_t reg_value)
+            {
+                sparta_assert(diff_.first.isValid());
+                diff_.second = reg_value;
+            }
+
+            bool changed() const
+            {
+                auto before_valid = diff_.first.isValid();
+                auto after_valid = diff_.second.isValid();
+                sparta_assert(before_valid == after_valid);
+
+                if (!before_valid && !after_valid)
+                {
+                    return false;
+                }
+                return diff_.first != diff_.second;
+            }
+
+            uint64_t getX10Before() const { return diff_.first; }
+
+            uint64_t getX10After() const { return diff_.second; }
+
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & diff_;
+            }
+
+          private:
+            std::pair<sparta::utils::ValidValue<uint64_t>, sparta::utils::ValidValue<uint64_t>>
+                diff_;
+        };
+
+        ECallX10Changes ecall_x10_changes_;
+
+        //! @}
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
         //! \name Extension changes
         //! @{
 
@@ -450,6 +501,7 @@ namespace pegasus::cosim
             ar & register_writes_;
             ar & memory_reads_;
             ar & memory_writes_;
+            ar & ecall_x10_changes_;
             ar & extension_changes_;
             ar & dasm_string_;
         }

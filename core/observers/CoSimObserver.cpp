@@ -66,6 +66,13 @@ namespace pegasus::cosim
                                                   mem_read.mem_value.getByteVector());
         }
 
+        if (last_event.opcode_ == ECALL_OPCODE)
+        {
+            const uint64_t x10_value = state->getXlen() == 64 ? READ_INT_REG<RV64>(state, 10)
+                                                              : READ_INT_REG<RV32>(state, 10);
+            last_event.ecall_x10_changes_.postExecute(x10_value);
+        }
+
         for (auto & mem_write : mem_writes_)
         {
             last_event.memory_writes_.emplace_back(
@@ -122,6 +129,12 @@ namespace pegasus::cosim
             last_event.opcode_ = inst->getOpcode();
             last_event.opcode_size_ = inst->getOpcodeSize();
             last_event.dasm_string_ = inst->getMavisOpcodeInfo()->dasmString();
+            if (last_event.opcode_ == ECALL_OPCODE)
+            {
+                const uint64_t curr_x10 = state->getXlen() == 64 ? READ_INT_REG<RV64>(state, 10)
+                                                                 : READ_INT_REG<RV32>(state, 10);
+                last_event.ecall_x10_changes_.preExecute(curr_x10);
+            }
             // TODO: inst_type_
         }
         else

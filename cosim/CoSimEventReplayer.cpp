@@ -279,6 +279,20 @@ namespace pegasus::cosim
         // current exception
         state->setCurrentException(reload_evt.getExceptionCode());
 
+        // x10 changes due to syscall
+        if (reload_evt.ecall_x10_changes_.changed())
+        {
+            auto x10_value = reload_evt.ecall_x10_changes_.getX10After();
+            if (state->getXlen() == 64)
+            {
+                WRITE_INT_REG<RV64>(state, 10, x10_value);
+            }
+            else
+            {
+                WRITE_INT_REG<RV32>(state, 10, static_cast<RV32>(x10_value));
+            }
+        }
+
         // enabled extensions
         std::vector<std::string> exts_to_enable;
         std::vector<std::string> exts_to_disable;

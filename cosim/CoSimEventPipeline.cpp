@@ -395,14 +395,6 @@ namespace pegasus::cosim
         uncommitted_evts_buffer_.pop_front();
         last_committed_event_uid_ = evt.getEuid();
 
-        committed_evts_buffer_.emplace_back(std::move(evt));
-        if (committed_evts_buffer_.size() == 100)
-        {
-            pipeline_head_->emplace(std::move(committed_evts_buffer_));
-            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
-            observer_->getCheckpointer()->commitCurrentBranch(force_branch);
-        }
-
         // Handle syscall emulation
         if (state_->getCore()->isSystemCallEmulationEnabled() && (evt.getOpcode() == ECALL_OPCODE))
         {
@@ -414,12 +406,22 @@ namespace pegasus::cosim
             {
                 const RV64 ret_code = state_->emulateSystemCall<RV64>();
                 WRITE_INT_REG<RV64>(state_, 10, ret_code);
+                evt.ecall_x10_changes_.postExecute(ret_code);
             }
             else
             {
                 const RV32 ret_code = state_->emulateSystemCall<RV32>();
                 WRITE_INT_REG<RV32>(state_, 10, ret_code);
+                evt.ecall_x10_changes_.postExecute(ret_code);
             }
+        }
+
+        committed_evts_buffer_.emplace_back(std::move(evt));
+        if (committed_evts_buffer_.size() == 100)
+        {
+            pipeline_head_->emplace(std::move(committed_evts_buffer_));
+            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
+            observer_->getCheckpointer()->commitCurrentBranch(force_branch);
         }
     }
 
