@@ -226,11 +226,11 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zicbom** Cache-block management instructions. | :white_check_mark: |
 | **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
 | **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
-| **Zfhmin** Half-precision floating-point. | :x: |
+| **Zfhmin** Half-precision floating-point. | :white_check_mark: |
 | **Zkt** Data-independent execution latency. | :x: |
 | **V** Vector extension. | :white_check_mark: |
 | **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
-| **Zvbb** Vector basic bit-manipulation instructions. | :x: |
+| **Zvbb** Vector basic bit-manipulation instructions. | :white_check_mark: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
 | **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
 | **Zicond** Integer conditional operations. | :white_check_mark: |
@@ -238,7 +238,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zcmop** Compressed may-be-operations. | :white_check_mark: |
 | **Zcb** Additional compressed instructions. | :white_check_mark: |
 | **Zfa** Additional floating-Point instructions. | :white_check_mark: |
-| **Zawrs** Wait-on-reservation-set instructions. | :x: |
+| **Zawrs** Wait-on-reservation-set instructions. | :white_check_mark: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
 
@@ -247,7 +247,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zvkng** Vector crypto NIST algorithms with GCM. | :x: |
 | **Zvksg** Vector crypto ShangMi algorithms with GCM. | :x: |
 | **Zabha** Byte and halfword atomic memory operations. | :white_check_mark: |
-| **Zacas** Compare-and-Swap instructions. | :x: |
+| **Zacas** Compare-and-Swap instructions. | :white_check_mark: |
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
 | **Zvbc** Vector carryless multiplication. | :x: |
 | **Zama16b** Misaligned loads, stores, and AMOs to main memory regions that do not cross a naturally aligned 16-byte boundary are atomic. | :x: |
