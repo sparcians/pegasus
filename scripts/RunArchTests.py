@@ -323,15 +323,11 @@ def main():
     if args.rv32_only:
         print("Skipping RV64 tests")
         SUPPORTED_XLEN = ["rv32"]
-    elif args.rv64_only:
+    if args.rv64_only:
         print("Skipping RV32 tests")
         SUPPORTED_XLEN = ["rv64"]
 
     output_dir = get_output_dir(args)
-
-    if args.rv32_only and args.rv64_only:
-        print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
-        sys.exit(1)
 
     be_noisy = args.verbose
 
