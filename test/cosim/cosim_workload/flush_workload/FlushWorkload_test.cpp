@@ -47,11 +47,6 @@ std::string GetArchFromPath(const std::string & path)
         return match.str(0);
     }
 
-    if (path.find("dhry.elf") != std::string::npos)
-    {
-        return "rv64";
-    }
-
     return "unknown";
 }
 
@@ -403,6 +398,30 @@ int main(int argc, char** argv)
     const auto db_truth = cwd + "/" + workload_fname + "_truth.db";
     const auto db_test = cwd + "/" + workload_fname + "_test.db";
 
+    // File cleanup helper (RAII)
+    class FileCleanup
+    {
+      public:
+        void cleanup(const std::string & filename) { files_.emplace_back(filename); }
+
+        ~FileCleanup()
+        {
+            for (const auto & fname : files_)
+            {
+                if (std::filesystem::exists(fname))
+                {
+                    std::filesystem::remove(fname);
+                }
+            }
+        }
+
+      private:
+        std::vector<std::filesystem::path> files_;
+    } file_cleanup;
+
+    file_cleanup.cleanup(db_truth);
+    file_cleanup.cleanup(db_test);
+
     const size_t snapshot_threshold = 10;
 
     auto initSimConfig = [&]() -> sparta::app::SimulationConfiguration*
@@ -416,6 +435,7 @@ int main(int argc, char** argv)
         }
 
         config_truth->enableLogging("top", "inst", workload_fname + ".log");
+        file_cleanup.cleanup(workload_fname + ".log");
         pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
         const std::string wkld_param =
             pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);

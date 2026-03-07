@@ -28,7 +28,7 @@ set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
 set (SYSCALL_LOG -l top syscall ${CMAKE_CURRENT_BINARY_DIR}/syscall.log -l top inst ${CMAKE_CURRENT_BINARY_DIR}/inst.log)
 
 set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
-pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/dhry.elf)
+pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/rv64_dhry.elf)
 pegasus_named_test(pegasus_fstatat_test pegasus ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
 pegasus_named_test(pegasus_syscall_test pegasus ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
 

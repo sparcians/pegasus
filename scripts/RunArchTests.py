@@ -6,6 +6,7 @@ import argparse
 import subprocess
 import multiprocessing
 import functools
+from pathlib import Path
 
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [284, 284]
@@ -92,7 +93,7 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
 
     if test_passed:
         # Remove log files if test passed
-        os.remove(logname)
+        Path(logname).unlink(missing_ok=True)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'
