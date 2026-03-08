@@ -130,10 +130,6 @@ namespace pegasus
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
-        getRoot()->addExtensionFactory(PegasusSimParameters::name,
-                                       [&]() -> sparta::TreeNode::ExtensionsBase*
-                                       { return new PegasusSimParameters(); });
-
         for (auto listener : sim_listeners_)
         {
             listener->onBindTreeLate();
@@ -346,3 +342,5 @@ namespace pegasus
     }
 
 } // namespace pegasus
+
+REGISTER_TREE_NODE_EXTENSION(pegasus::PegasusSimParameters);

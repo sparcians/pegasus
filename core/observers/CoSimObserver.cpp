@@ -4,6 +4,7 @@
 #include "cosim/CoSimEventPipeline.hpp"
 #include "cosim/PegasusCoSim.hpp"
 #include "include/PegasusUtils.hpp"
+#include "include/PegasusTranslateTypes.hpp"
 #include "system/PegasusSystem.hpp"
 #include "simdb/pipeline/Pipeline.hpp"
 #include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
@@ -65,6 +66,13 @@ namespace pegasus::cosim
                                                   mem_read.mem_value.getByteVector());
         }
 
+        if (last_event.opcode_ == ECALL_OPCODE)
+        {
+            const uint64_t x10_value = state->getXlen() == 64 ? READ_INT_REG<RV64>(state, 10)
+                                                              : READ_INT_REG<RV32>(state, 10);
+            last_event.ecall_x10_changes_.postExecute(x10_value);
+        }
+
         for (auto & mem_write : mem_writes_)
         {
             last_event.memory_writes_.emplace_back(
@@ -73,7 +81,6 @@ namespace pegasus::cosim
         }
 
         last_event.done_ = true;
-        last_event.event_ends_sim_ = state->getSimState()->sim_stopped;
         last_event.sim_state_current_uid_ = state->getSimState()->current_uid;
 
         if (const auto & reservation = state->getCore()->getReservation(state->getHartId());
@@ -89,13 +96,22 @@ namespace pegasus::cosim
 
         last_event.next_pc_ = state->getPc();
         last_event.next_priv_ = state->getPrivMode();
-        last_event.next_ldst_priv_ = state->getLdstPrivMode();
+
+        using TStage = pegasus::translate_types::TranslationStage;
+        auto s_priv_mode = state->getLdstPrivMode(TStage::SUPERVISOR);
+        auto v_priv_mode = state->getLdstPrivMode(TStage::VIRTUAL_SUPERVISOR);
+        auto g_priv_mode = state->getLdstPrivMode(TStage::GUEST);
+        last_event.next_ldst_priv_[static_cast<uint32_t>(TStage::SUPERVISOR)] = s_priv_mode;
+        last_event.next_ldst_priv_[static_cast<uint32_t>(TStage::VIRTUAL_SUPERVISOR)] = v_priv_mode;
+        last_event.next_ldst_priv_[static_cast<uint32_t>(TStage::GUEST)] = g_priv_mode;
+
+        last_event.excp_code_ = state->getCurrentException();
         sparta_assert(
             last_event.next_pc_ != last_event.curr_pc_,
             "Next PC is the same as the current PC! Check ordering of post-execute Events");
         // TODO: for branches, is_change_of_flow_, alternate_next_pc_
 
-        sendLastEvent_();
+        sendLastEvent_(state);
     }
 
     void CoSimObserver::preException_(PegasusState* state) { resetLastEvent_(state); }
@@ -113,6 +129,12 @@ namespace pegasus::cosim
             last_event.opcode_ = inst->getOpcode();
             last_event.opcode_size_ = inst->getOpcodeSize();
             last_event.dasm_string_ = inst->getMavisOpcodeInfo()->dasmString();
+            if (last_event.opcode_ == ECALL_OPCODE)
+            {
+                const uint64_t curr_x10 = state->getXlen() == 64 ? READ_INT_REG<RV64>(state, 10)
+                                                                 : READ_INT_REG<RV32>(state, 10);
+                last_event.ecall_x10_changes_.preExecute(curr_x10);
+            }
             // TODO: inst_type_
         }
         else
@@ -124,7 +146,15 @@ namespace pegasus::cosim
 
         last_event.curr_pc_ = state->getPc();
         last_event.curr_priv_ = state->getPrivMode();
-        last_event.curr_ldst_priv_ = state->getLdstPrivMode();
+
+        using TStage = pegasus::translate_types::TranslationStage;
+        auto s_priv_mode = state->getLdstPrivMode(TStage::SUPERVISOR);
+        auto v_priv_mode = state->getLdstPrivMode(TStage::VIRTUAL_SUPERVISOR);
+        auto g_priv_mode = state->getLdstPrivMode(TStage::GUEST);
+        last_event.curr_ldst_priv_[static_cast<uint32_t>(TStage::SUPERVISOR)] = s_priv_mode;
+        last_event.curr_ldst_priv_[static_cast<uint32_t>(TStage::VIRTUAL_SUPERVISOR)] = v_priv_mode;
+        last_event.curr_ldst_priv_[static_cast<uint32_t>(TStage::GUEST)] = g_priv_mode;
+
         last_event.prev_excp_code_ = state->getCurrentException();
 
         if (const auto & reservation = state->getCore()->getReservation(state->getHartId());
@@ -150,7 +180,7 @@ namespace pegasus::cosim
         }
     }
 
-    void CoSimObserver::sendLastEvent_()
+    void CoSimObserver::sendLastEvent_(PegasusState* state)
     {
         auto & last_event = last_event_.getValue();
         sparta_assert(last_event.isDone(), "Last Event is not done yet!");
@@ -174,7 +204,12 @@ namespace pegasus::cosim
             COSIMLOG("    " << last_event.getMemoryWrites());
         }
 
+        auto sim_stopped = state->getSimState()->sim_stopped;
         evt_pipeline_->onStep(std::move(last_event));
+        if (sim_stopped)
+        {
+            stopSim();
+        }
         last_event_.clearValid();
     }
 
