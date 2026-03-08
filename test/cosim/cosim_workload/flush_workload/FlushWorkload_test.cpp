@@ -287,7 +287,6 @@ bool AdvanceAndCompareReplayer(PegasusSim & sim_truth, CoSimEventReplayer & sim_
 //   <steps>] [--db-stem <stem>]
 //   --> '--max-steps-before-flush' controls how many steps to take (N) before flushing (N-1)
 //   --> '--fast-forward-steps' says how many steps to take before starting flush comparisons
-//   --> '--stop-inst-count' says how many steps at most to take before ending the test
 //   --> '--db-stem' specifies the database stem name
 std::tuple<std::string, uint64_t, std::string, size_t, size_t>
 ParseArgs(int argc, char** argv, std::map<std::string, std::string> & sim_params)
@@ -539,7 +538,7 @@ int main(int argc, char** argv)
     // Only valid if the first test passed.
     if (ERROR_CODE)
     {
-        std::cout << "Cannot rerun harness using the database as the checkpoint source since the . "
+        std::cout << "Cannot rerun harness using the database as the checkpoint source since the "
                   << "original test failed. We cannot assume the database is any good."
                   << std::endl;
     }
