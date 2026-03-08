@@ -67,8 +67,8 @@ def get_tenstorrent_tests(SUPPORTED_XLEN, directory):
     return tests
 
 
-# Function to run a single test and append to the appropriate queue
-def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable):
+# Generate Pegasus command to run a test
+def get_pegasus_cmd(testname, wkld, output_dir, executable):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
@@ -80,7 +80,12 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
                  "-p", "top.core0.params.isa", isa_string, "-w", wkld]
+    return pegasus_cmd
 
+
+# Function to run a single test and append to the appropriate queue
+def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, timeout_tests):
+    logname = output_dir + testname + ".log"
     test_passed = False
     try:
         with open(logname, "w") as f:
@@ -93,7 +98,10 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
 
     if test_passed:
         # Remove log files if test passed
-        Path(logname).unlink(missing_ok=True)
+        if os.path.exists(logname):
+            os.remove(logname)
+        else:
+            print("WARNING: Test passed but Pegasus log is missing:", logname)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'
@@ -106,15 +114,17 @@ def run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_t
         failing_tests.append([testname, error])
 
 
-def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
+def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir):
     import concurrent.futures
 
     # Limit number of concurrent tests running to the number of CPUs on this machine
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
     jobs = []
-    for testname, wkld in tests:
+    for test in tests:
         # Submit job
-        jobs.append(executor.submit(run_test, testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable))
+        testname = test[0]
+        pegasus_cmd = test[1]
+        jobs.append(executor.submit(run_test, testname, pegasus_cmd, output_dir, passing_tests, failing_tests, timeout_tests))
 
     # Wait for jobs to complete with a timeout of 5 minutes
     for j in concurrent.futures.as_completed(jobs):
@@ -196,7 +206,8 @@ def print_sparta_failures():
 
     print()
 
-def main():
+
+def get_args():
     parser = argparse.ArgumentParser(description="Script to run the Tenstorrent architecture tests on Pegasus")
     parser.add_argument("--extensions", type=str, nargs="+", help="The extensions to test (e.g. i, m, a, f, d)")
     parser.add_argument("--output", type=str, help="Where logs and error files should go")
@@ -209,6 +220,91 @@ def main():
     parser.add_argument("--pegasus-exe", type=str, default="./pegasus", help="Path to the Pegasus executable (default: ./pegasus)")
     parser.add_argument("--serial", action='store_true', default=False, help="Run tests serially instead of in parallel")
     parser.add_argument("--expected-pass-rate", type=float, help="Expected pass rate (for CI purposes only)")
+    return parser
+
+
+def get_output_dir(args):
+    output_dir = "./"
+    if args.output:
+        output_dir = args.output
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            output_dir += '/'
+        except Exception as e:
+            print("ERROR: Could not make output directory", output_dir, e)
+            sys.exit(1)
+
+    return os.path.abspath(output_dir) + "/"
+
+
+def get_tests(args, SUPPORTED_XLEN):
+    tests = []
+    if args.riscv_arch:
+        tests.extend(get_riscv_arch_tests(SUPPORTED_XLEN, args.riscv_arch))
+    if args.tenstorrent:
+        tests.extend(get_tenstorrent_tests(SUPPORTED_XLEN, args.tenstorrent))
+
+    if args.extensions:
+        tests = [test for test in tests if any(ext in test[0] for ext in args.extensions)]
+
+    skip_tests = [
+        "rv64mi-p-breakpoint",       # Not supported yet
+        "rv32mi-p-breakpoint",
+        "rv64mi-p-instret_overflow", # Not supported yet
+        "rv32mi-p-instret_overflow",
+        "rv64ssvnapot-p-napot",      # Not supported yet
+        "rv64mzicbo-p-zero"          # Need to debug
+    ]
+
+    for skip_test in skip_tests:
+        if be_noisy:
+            print("Skipping", skip_test)
+        tests = [test for test in tests if skip_test not in test]
+
+    return tests
+
+
+def run(tests, output_dir, serial=False):
+    print("Running " + str(len(tests)) + " arch tests...")
+    passing_tests = []
+    failing_tests = []
+    timeout_tests = []
+
+    if serial:
+        run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir)
+    else:
+        run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir)
+
+    return passing_tests, failing_tests, timeout_tests
+
+
+def report_results(passing_tests, failing_tests, timeout_tests):
+    num_tests = len(passing_tests) + len(failing_tests) + len(failing_tests)
+    num_passed = 0
+    if passing_tests:
+        print("PASSED:")
+        for test in passing_tests:
+            print("\t" + test)
+            num_passed += 1
+
+    if failing_tests:
+        print("FAILED:")
+        for test,error in failing_tests:
+            print("\t" + test + ": " + error)
+
+    if timeout_tests:
+        print("TIMED OUT:")
+        for test in timeout_tests:
+            print("\t" + test)
+    print()
+
+    pass_rate = num_passed/num_tests
+    print("PASS RATE: {:.2%} ({}/{})".format(pass_rate, num_passed, num_tests))
+    return pass_rate
+
+
+def main():
+    parser = get_args()
     args = parser.parse_args()
 
     # Extract the RISC-V tarball if needed
@@ -228,23 +324,11 @@ def main():
     if args.rv32_only:
         print("Skipping RV64 tests")
         SUPPORTED_XLEN = ["rv32"]
-    elif args.rv64_only:
+    if args.rv64_only:
         print("Skipping RV32 tests")
         SUPPORTED_XLEN = ["rv64"]
 
-    output_dir = "./"
-    if args.output:
-        output_dir = args.output
-        try:
-            os.makedirs(output_dir, exist_ok=True)
-            output_dir += '/'
-        except Exception as e:
-            print("ERROR: Could not make output directory", output_dir, e)
-            sys.exit(1)
-
-    if args.rv32_only and args.rv64_only:
-        print("ERROR: Cannot set both \'--rv32-only\' and \'--rv64-only\'")
-        sys.exit(1)
+    output_dir = get_output_dir(args)
 
     be_noisy = args.verbose
 
@@ -253,71 +337,36 @@ def main():
     if not os.path.isfile(args.pegasus_exe):
         print("ERROR: Pegasus executable not found:", args.pegasus_exe)
         sys.exit(1)
+    pegasus_exe = os.path.abspath(args.pegasus_exe)
 
     ###########################################################################
     # Get tests
-    tests = []
-    if args.riscv_arch:
-        tests.extend(get_riscv_arch_tests(SUPPORTED_XLEN, args.riscv_arch))
-    if args.tenstorrent:
-        tests.extend(get_tenstorrent_tests(SUPPORTED_XLEN, args.tenstorrent))
-
-    if args.extensions:
-        tests = [test for test in tests if any(ext in test[0] for ext in args.extensions)]
-
-    skip_tests = [
-        "rv64mi-p-breakpoint",       # Not supported yet
-        "rv32mi-p-breakpoint",
-        "rv64mi-p-instret_overflow", # Not supported yet
-        "rv32mi-p-instret_overflow",
-        "rv64ssvnapot-p-napot",      # Not supported yet
-        "rv64mzicbo-p-zero"          # Need to debug
-    ]
-    for skip_test in skip_tests:
-        if be_noisy:
-            print("Skipping", skip_test)
-        tests = [test for test in tests if skip_test not in test]
+    tests = get_tests(args, SUPPORTED_XLEN)
 
     if len(tests) == 0:
         print("Failed to find any tests to run! Need to specify --riscv-arch <dir> or --tenstorrent <dir>")
         sys.exit(1)
 
     ###########################################################################
-    # Run!
-    print("Running " + str(len(tests)) + " arch tests...")
-    passing_tests = []
-    failing_tests = []
-    timeout_tests = []
-
-    if args.serial:
-        run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
-    else:
-        run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, output_dir, args.pegasus_exe)
+    # Generate Pegasus commands to run
+    pegasus_cmds = []
+    for test in tests:
+        testname = test[0]
+        wkld = test[1]
+        pegasus_cmd = get_pegasus_cmd(testname, wkld, output_dir, pegasus_exe)
+        pegasus_cmds.append([testname, pegasus_cmd])
 
     ###########################################################################
-    # Report results
-    num_passed = 0
-    if passing_tests:
-        print("PASSED:")
-        for test in passing_tests:
-            print("\t" + test)
-            num_passed += 1
+    # Run!
+    pegasus_dir = os.path.dirname(pegasus_exe)
+    print("Changing dir:", pegasus_dir)
+    os.chdir(pegasus_dir)
 
-    if failing_tests:
-        print("FAILED:")
-        for test,error in failing_tests:
-            print("\t" + test + ": " + error)
+    passing_tests, failing_tests, timeout_tests = run(pegasus_cmds, output_dir, args.serial)
 
-    if timeout_tests:
-        print("TIMED OUT:")
-        for test in timeout_tests:
-            print("\t" + test)
-    print()
-
-    print_sparta_failures()
-
-    pass_rate = num_passed/len(tests)
-    print("PASS RATE: {:.2%} ({}/{})".format(pass_rate, num_passed, len(tests)))
+    ###########################################################################
+    # Report Results + Pass Rate
+    pass_rate = report_results(passing_tests, failing_tests, timeout_tests)
 
     expected_passing_tests = 0
     total_tests = 0
@@ -339,7 +388,7 @@ def main():
         if round(pass_rate*100, 2) < args.expected_pass_rate:
             print(f"ERROR: Pass rate {pass_rate:.2%} is below expected pass rate of {args.expected_pass_rate}!")
             sys.exit(1)
-    elif (num_passed < expected_passing_tests):
+    elif (len(passing_tests) < expected_passing_tests):
         print("ERROR: failed!")
 
 if __name__ == "__main__":

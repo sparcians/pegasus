@@ -26,12 +26,9 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../mavis/json              ${CMAKE_CURRE
 
 install(FILES ${PROJECT_BINARY_DIR}/libpegasussim.a DESTINATION lib)
 
-
 execute_process (
   COMMAND
      ${PROJECT_BINARY_DIR}/pegasus --write-final-config pegasus_base_config.yaml --no-run
-  OUTPUT_FILE
-     ${PROJECT_BINARY_DIR}/pegasus_base_config.yaml
   WORKING_DIRECTORY
      ${PROJECT_BINARY_DIR}
 )
