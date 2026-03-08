@@ -6,7 +6,6 @@ import argparse
 import subprocess
 import multiprocessing
 import functools
-from pathlib import Path
 
 # Passing and total
 PASSING_STATUS_RISCV_ARCH_RV32 = [284, 284]
