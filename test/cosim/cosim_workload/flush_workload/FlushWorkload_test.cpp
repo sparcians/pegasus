@@ -401,21 +401,40 @@ int main(int argc, char** argv)
     class FileCleanup
     {
       public:
-        void cleanup(const std::string & filename) { files_.emplace_back(filename); }
+        void cleanup(const std::string & filename) { delete_always_.emplace(filename); }
+
+        void cleanupOnSuccess(const std::string & filename)
+        {
+            delete_on_success_.emplace(filename);
+        }
 
         ~FileCleanup()
         {
-            for (const auto & fname : files_)
+            for (const auto & fname : delete_always_)
             {
-                if (std::filesystem::exists(fname))
+                deleteFile_(fname);
+            }
+
+            if (ERROR_CODE == 0)
+            {
+                for (const auto & fname : delete_on_success_)
                 {
-                    std::filesystem::remove(fname);
+                    deleteFile_(fname);
                 }
             }
         }
 
       private:
-        std::vector<std::filesystem::path> files_;
+        static void deleteFile_(const std::filesystem::path & file)
+        {
+            if (std::filesystem::exists(file))
+            {
+                std::filesystem::remove(file);
+            }
+        }
+
+        std::set<std::filesystem::path> delete_on_success_;
+        std::set<std::filesystem::path> delete_always_;
     } file_cleanup;
 
     file_cleanup.cleanup(db_truth);
@@ -434,7 +453,7 @@ int main(int argc, char** argv)
         }
 
         config_truth->enableLogging("top", "inst", workload_fname + ".log");
-        file_cleanup.cleanup(workload_fname + ".log");
+        file_cleanup.cleanupOnSuccess(workload_fname + ".log");
         pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
         const std::string wkld_param =
             pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
