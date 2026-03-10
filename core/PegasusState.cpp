@@ -1017,46 +1017,46 @@ namespace pegasus
     }
 
     template <typename XLEN, uint32_t XISELECT, uint32_t XIIDX>
-    PegasusState::Csrind_regType PegasusState::validate_xiselect(int & offset)
+    Csrind_regType PegasusState::validate_xiselect(int & offset)
     {
         const XLEN xiselect_val = READ_CSR_REG<XLEN>(this, XISELECT);
 
         // Try to match the xiselect value, also use isMiselect for the decoding
-        if (xiselect_val > 0x1000 && xiselect_val < 0x13ff)
+        if (IS_CLICINT_CTL_ATTR(xiselect_val))
         {
             if constexpr (XIIDX == 1)
             {
-                offset = xiselect_val - 0x1000;
+                offset = xiselect_val - CLICINT_CTL_ATTR_LO;
                 return Csrind_regType::CLICINTCTL;
             }
             if constexpr (XIIDX == 2)
             {
-                offset = xiselect_val - 0x1000;
+                offset = xiselect_val - CLICINT_CTL_ATTR_LO;
                 return Csrind_regType::CLICINTATTR;
             }
         }
-        else if (xiselect_val > 0x1400 && xiselect_val < 0x147f)
+        else if (IS_CLICINT_IP_IE(xiselect_val))
         {
             if constexpr (XIIDX == 1)
             {
-                offset = xiselect_val - 0x1400;
+                offset = xiselect_val - CLICINT_IP_IE_LO;
                 return Csrind_regType::CLICINTIP;
             }
             if constexpr (XIIDX == 2)
             {
-                offset = xiselect_val - 0x1400;
+                offset = xiselect_val - CLICINT_IP_IE_LO;
                 return Csrind_regType::CLICINTIE;
             }
         }
-        else if (xiselect_val > 0x1480 && xiselect_val < 0x149f)
+        else if (IS_CLICINT_TRIG(xiselect_val))
         {
             if constexpr (XIIDX == 1)
             {
-                offset = xiselect_val - 0x1480;
+                offset = xiselect_val - CLICINT_TRIG_LO;
                 return Csrind_regType::CLICINTTRIG;
             }
         }
-        else if (xiselect_val == 0x14A0)
+        else if (IS_CLICINT_CFG(xiselect_val))
         {
             if constexpr (XIIDX == 1)
             {
