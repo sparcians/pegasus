@@ -17,6 +17,8 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
+#include "inst_handlers/zicsrind/Zicsr_constants.h"
+
 namespace pegasus
 {
     class PegasusInst;
