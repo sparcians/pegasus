@@ -7,9 +7,12 @@
 #include "sparta/app/CommandLineSimulator.hpp"
 
 const char USAGE[] = "Usage:\n"
-                     "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode "
-                     "opcode] [--interactive] "
-                     "--load-binary \"binary load_addr\"]"
+                     "./pegasus [-i inst limit] "
+                     "[--reg \"core*.hart*.name value\"] "
+                     "[--opcode opcode] "
+                     "[--interactive] "
+                     "[--ignore-wkld-exit-code] "
+                     "[--load-binary \"binary load_addr\"] "
                      "[--spike-formatting] <workloads>"
                      "\n";
 
@@ -67,6 +70,7 @@ int main(int argc, char** argv)
             ("reg", po::value<std::vector<StringPairParam>>()->multitoken(), "Override initial value of a register e.g. \"core0.hart0.sp 0x1000\"")
             ("opcode", po::value<std::string>(&opcode), "Executes a single opcode")
             ("interactive", "Enable interactive mode (IDE)")
+            ("ignore-wkld-exit-code", "Don't pass the workload's exit code as the Pegasus sim's exit code")
             ("load-binary", po::value<std::vector<StringPairParam>>()->multitoken(), "Binary to load into memory at the specified address e.g. \"example.bin 0x80000000\"")
             ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
@@ -159,6 +163,11 @@ int main(int argc, char** argv)
             sim_cfg.processParameter("top.extension.sim.load_binaries", load_binaries_param_value);
         }
 
+        if (vm.count("ignore-wkld-exit-code"))
+        {
+            sim_cfg.processParameter("top.extension.sim.ignore_wkld_exit_code", "true");
+        }
+
         // Create the simulator
         sparta::Scheduler scheduler;
         pegasus::PegasusSim sim(&scheduler);
@@ -203,6 +212,16 @@ int main(int argc, char** argv)
             sim.getPegasusCore(core_idx)->getPegasusState(hart_idx)->getSimState();
         exit_code = sim_state->workload_exit_code;
         std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
+
+        auto extension = sparta::notNull(sim.getRoot()->createExtension("sim"));
+        const uint64_t return_wkld_exit_code =
+            extension->getParameters()->getParameter("ignore_wkld_exit_code")->getValueAs<bool>()
+            == false;
+        // Return wkld exit code
+        if (return_wkld_exit_code)
+        {
+            return exit_code;
+        }
     }
     catch (...)
     {
@@ -210,5 +229,5 @@ int main(int argc, char** argv)
         throw;
     }
 
-    return exit_code;
+    return 0;
 }

@@ -64,11 +64,12 @@ namespace pegasus
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
         validate_trace_begin_(p->validate_trace_begin),
         validate_inst_begin_(p->validate_inst_begin),
-        ulimit_stack_size_(p->ulimit_stack_size),
+        validate_fail_on_first_diff_(p->validate_fail_on_first_diff),
         priv_mode_(getPrivilegeMode(p->priv_mode)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
@@ -222,13 +223,13 @@ namespace pegasus
             {
                 addObserver(std::make_unique<STFValidator>(
                     stf_valid_logger_, ObserverMode::RV64, validation_stf_filename_,
-                    validate_trace_begin_, validate_inst_begin_));
+                    validate_trace_begin_, validate_inst_begin_, validate_fail_on_first_diff_));
             }
             else
             {
                 addObserver(std::make_unique<STFValidator>(
                     stf_valid_logger_, ObserverMode::RV32, validation_stf_filename_,
-                    validate_trace_begin_, validate_inst_begin_));
+                    validate_trace_begin_, validate_inst_begin_, validate_fail_on_first_diff_));
             }
         }
     }
@@ -394,7 +395,7 @@ namespace pegasus
     bool PegasusState::readMemory(const PegasusTranslationState::TranslationResult & result,
                                   std::vector<uint8_t> & buffer, const MemAccessSource source)
     {
-        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
+        auto* memory = pegasus_core_->getMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -420,7 +421,7 @@ namespace pegasus
     bool PegasusState::writeMemory(const PegasusTranslationState::TranslationResult & result,
                                    const MemoryType value, const MemAccessSource source)
     {
-        auto* memory = pegasus_core_->getSystem()->getSystemMemory();
+        auto* memory = pegasus_core_->getMemory();
 
         static_assert(std::is_trivial<MemoryType>());
         static_assert(std::is_standard_layout<MemoryType>());
@@ -696,7 +697,7 @@ namespace pegasus
                                       READ_INT_REG<XLEN>(this, 13), READ_INT_REG<XLEN>(this, 14),
                                       READ_INT_REG<XLEN>(this, 15), READ_INT_REG<XLEN>(this, 16)};
 
-        auto mem = getCore()->getSystem()->getSystemMemory();
+        auto mem = getCore()->getMemory();
         auto emulator = getCore()->getSystemCallEmulator();
         const XLEN ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
         return ret_code;

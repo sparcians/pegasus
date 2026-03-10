@@ -1,4 +1,5 @@
 #include "cosim/PegasusCoSim.hpp"
+#include "cosim/CoSimEventReplayer.hpp"
 #include "sim/PegasusSim.hpp"
 #include "cosim/CoSimEventPipeline.hpp"
 #include "core/observers/InstructionLogger.hpp"
@@ -18,7 +19,9 @@
 using pegasus::CoreId;
 using pegasus::HartId;
 using pegasus::PegasusSim;
+using pegasus::PegasusState;
 using pegasus::RegisterSet;
+using pegasus::cosim::CoSimEventReplayer;
 using pegasus::cosim::EventAccessor;
 using pegasus::cosim::PegasusCoSim;
 
@@ -65,6 +68,11 @@ bool StepSim(PegasusCoSim & sim, CoreId core_id, HartId hart_id)
     auto event = sim.step(core_id, hart_id);
     sim.commit(event);
     return true;
+}
+
+bool StepSim(CoSimEventReplayer & sim, CoreId core_id, HartId hart_id)
+{
+    return sim.step(core_id, hart_id);
 }
 
 bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
@@ -122,12 +130,8 @@ bool StepSimWithFlush(PegasusCoSim & sim, CoreId core_id, HartId hart_id,
     return true;
 }
 
-template <typename XLEN>
-bool Compare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id, HartId hart_id)
+template <typename XLEN> bool Compare(PegasusState* state_truth, PegasusState* state_test)
 {
-    auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
-    auto state_test = sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
-
     // Compare PegasusState
     state_truth->compare<true>(state_test);
 
@@ -224,6 +228,15 @@ template <typename XLEN>
 bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId core_id,
                        HartId hart_id, size_t max_steps_before_flush)
 {
+    // Verify that we are entering with the same state
+    auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state_test = sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+
+    if (!Compare<XLEN>(state_truth, state_test))
+    {
+        return false;
+    }
+
     auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
     auto stepped_test = max_steps_before_flush > 0
                             ? StepSimWithFlush(sim_test, core_id, hart_id, max_steps_before_flush)
@@ -232,7 +245,31 @@ bool AdvanceAndCompare(PegasusSim & sim_truth, PegasusCoSim & sim_test, CoreId c
     EXPECT_EQUAL(stepped_truth, stepped_test);
     if (stepped_truth && stepped_test)
     {
-        return Compare<XLEN>(sim_truth, sim_test, core_id, hart_id);
+        return Compare<XLEN>(state_truth, state_test);
+    }
+    return false;
+}
+
+template <typename XLEN>
+bool AdvanceAndCompareReplayer(PegasusSim & sim_truth, CoSimEventReplayer & sim_test,
+                               CoreId core_id, HartId hart_id)
+{
+    // Verify that we are entering with the same state
+    auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+    auto state_test = sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+
+    if (!Compare<XLEN>(state_truth, state_test))
+    {
+        return false;
+    }
+
+    auto stepped_truth = StepSim(sim_truth, core_id, hart_id);
+    auto stepped_test = StepSim(sim_test, core_id, hart_id);
+
+    EXPECT_EQUAL(stepped_truth, stepped_test);
+    if (stepped_truth && stepped_test)
+    {
+        return Compare<XLEN>(state_truth, state_test);
     }
     return false;
 }
@@ -348,6 +385,7 @@ int main(int argc, char** argv)
     std::map<std::string, std::string> sim_params;
     const auto [workload, ilimit, db_stem, max_steps_before_flush, fast_forward_steps] =
         ParseArgs(argc, argv, sim_params);
+
     const auto arch = GetArchFromPath(workload);
 
     // Disable sleeper thread so we can run two simulations at once.
@@ -359,27 +397,77 @@ int main(int argc, char** argv)
     const auto db_truth = cwd + "/" + workload_fname + "_truth.db";
     const auto db_test = cwd + "/" + workload_fname + "_test.db";
 
+    // File cleanup helper (RAII)
+    class FileCleanup
+    {
+      public:
+        void cleanup(const std::string & filename) { delete_always_.emplace(filename); }
+
+        void cleanupOnSuccess(const std::string & filename)
+        {
+            delete_on_success_.emplace(filename);
+        }
+
+        ~FileCleanup()
+        {
+            for (const auto & fname : delete_always_)
+            {
+                deleteFile_(fname);
+            }
+
+            if (ERROR_CODE == 0)
+            {
+                for (const auto & fname : delete_on_success_)
+                {
+                    deleteFile_(fname);
+                }
+            }
+        }
+
+      private:
+        static void deleteFile_(const std::filesystem::path & file)
+        {
+            if (std::filesystem::exists(file))
+            {
+                std::filesystem::remove(file);
+            }
+        }
+
+        std::set<std::filesystem::path> delete_on_success_;
+        std::set<std::filesystem::path> delete_always_;
+    } file_cleanup;
+
+    file_cleanup.cleanup(db_truth);
+    file_cleanup.cleanup(db_test);
+
     const size_t snapshot_threshold = 10;
 
-    sparta::app::SimulationConfiguration config_truth;
-
-    for (auto & [param_name, param_value] : sim_params)
+    auto initSimConfig = [&]() -> sparta::app::SimulationConfiguration*
     {
-        config_truth.processParameter(param_name, param_value, false);
-    }
+        static std::unique_ptr<sparta::app::SimulationConfiguration> config_truth;
+        config_truth.reset(new sparta::app::SimulationConfiguration);
 
-    config_truth.enableLogging("top", "inst", workload_fname + ".log");
-    pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
-    const std::string wkld_param =
-        pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
-    config_truth.processParameter("top.extension.sim.workloads", wkld_param);
-    config_truth.processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
-    config_truth.copyTreeNodeExtensionsFromArchAndConfigPTrees();
+        for (auto & [param_name, param_value] : sim_params)
+        {
+            config_truth->processParameter(param_name, param_value, false);
+        }
+
+        config_truth->enableLogging("top", "inst", workload_fname + ".log");
+        file_cleanup.cleanupOnSuccess(workload_fname + ".log");
+        pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+        const std::string wkld_param =
+            pegasus::PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
+        config_truth->processParameter("top.extension.sim.workloads", wkld_param);
+        config_truth->processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
+        config_truth->copyTreeNodeExtensionsFromArchAndConfigPTrees();
+
+        return config_truth.get();
+    };
 
     sparta::Scheduler scheduler_truth;
     PegasusSim cosim_truth(&scheduler_truth);
 
-    cosim_truth.configure(0, nullptr, &config_truth);
+    cosim_truth.configure(0, nullptr, initSimConfig());
     cosim_truth.buildTree();
     cosim_truth.configureTree();
     cosim_truth.finalizeTree();
@@ -439,9 +527,9 @@ int main(int argc, char** argv)
     cosim_test.finish();
 
     // Final validation
-    auto validate_final_state = [&](PegasusSim & cosim_truth, PegasusCoSim & cosim_test)
+    auto validate_final_state = [&](PegasusSim & sim_truth, const auto & sim_test)
     {
-        auto state_truth = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_truth = sim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_truth = state_truth->getSimState();
         auto workload_exit_code_truth = sim_state_truth->workload_exit_code;
         auto test_passed_truth = sim_state_truth->test_passed;
@@ -449,7 +537,7 @@ int main(int argc, char** argv)
         auto inst_count_truth = sim_state_truth->inst_count;
 
         auto state_test =
-            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+            sim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
         auto sim_state_test = state_test->getSimState();
         auto workload_exit_code_test = sim_state_test->workload_exit_code;
         auto test_passed_test = sim_state_test->test_passed;
@@ -464,6 +552,76 @@ int main(int argc, char** argv)
 
     validate_final_state(cosim_truth, cosim_test);
     EXPECT_EQUAL(exception_str, "");
+
+    // Rerun the harness using the database produced from the first test above.
+    // Only valid if the first test passed.
+    if (ERROR_CODE)
+    {
+        std::cout << "Cannot rerun harness using the database as the checkpoint source since the "
+                  << "original test failed. We cannot assume the database is any good."
+                  << std::endl;
+    }
+    else
+    {
+        sparta::Scheduler replayer_scheduler_truth;
+        PegasusSim replayer_truth(&replayer_scheduler_truth);
+
+        replayer_truth.configure(0, nullptr, initSimConfig());
+        replayer_truth.buildTree();
+        replayer_truth.configureTree();
+        replayer_truth.finalizeTree();
+        replayer_truth.finalizeFramework();
+
+        // Assume 1 core, 1 hart for now
+        const pegasus::CoreId num_cores = 1;
+        const pegasus::HartId num_harts = 1;
+        for (pegasus::CoreId core_id = 0; core_id < num_cores; ++core_id)
+        {
+            for (pegasus::HartId hart_id = 0; hart_id < num_harts; ++hart_id)
+            {
+                auto state = replayer_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+                state->boot();
+            }
+        }
+
+        CoSimEventReplayer replayer_test(db_test, arch);
+
+        exception_str.clear();
+        step_count = 0;
+
+        auto advance_and_compare_replayer = (arch == "rv32") ? AdvanceAndCompareReplayer<uint32_t>
+                                                             : AdvanceAndCompareReplayer<uint64_t>;
+
+        std::cout << "Running CoSim event replayer..." << std::endl;
+        try
+        {
+            while (true)
+            {
+                ++step_count;
+                if (!advance_and_compare_replayer(replayer_truth, replayer_test, core_id, hart_id))
+                {
+                    if (ERROR_CODE)
+                    {
+                        std::cout << "Mismatch detected at step " << std::dec << step_count
+                                  << std::endl;
+                        std::cout << "Last cosim Event: "
+                                  << replayer_test.getLastEvent(core_id, hart_id) << std::endl;
+                    }
+                    break;
+                }
+            }
+            std::cout << "Completed " << std::dec << step_count << " steps." << std::endl;
+        }
+        catch (const std::exception & ex)
+        {
+            exception_str = ex.what();
+            std::cout << "Exception caught on step " << step_count << ": " << exception_str
+                      << std::endl;
+        }
+
+        validate_final_state(replayer_truth, replayer_test);
+        EXPECT_EQUAL(exception_str, "");
+    }
 
     REPORT_ERROR;
     return ERROR_CODE;
