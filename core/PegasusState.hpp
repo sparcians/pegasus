@@ -17,6 +17,8 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
+#include "inst_handlers/zicsrind/Zicsr_constants.h"
+
 namespace pegasus
 {
     class PegasusInst;
@@ -348,6 +350,24 @@ namespace pegasus
         void
         waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
 
+        /*!
+         *  \brief Installs register read/write callback functions to specail registers
+         */
+        template <typename XLEN> void addCSRRegisterCallbacks_();
+
+        /*!
+         * \brief Make sure the xiselect value is valid for the specified xiregN,
+         * offset returns the index of the decoded xiselect register
+         */
+        template <typename XLEN, uint32_t XISELECT, uint32_t XIIDX>
+        Csrind_regType validate_xiselect(int & offset);
+
+        // Custom register read/write callback functions
+        template <typename XLEN, int XIIDX> XLEN miregR(sparta::RegisterBase* reg);
+        template <typename XLEN, int XIIDX> void miregW(sparta::RegisterBase* reg, XLEN val);
+        template <typename XLEN, int XIIDX> XLEN siregR(sparta::RegisterBase* reg);
+        template <typename XLEN, int XIIDX> void siregW(sparta::RegisterBase* reg, XLEN val);
+
         //! Hart ID
         const HartId hart_id_;
 
@@ -529,7 +549,7 @@ namespace pegasus
     static inline XLEN READ_CSR_REG(PegasusState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        return state->getCsrRegister(reg_ident)->read<XLEN>();
+        return state->getCsrRegister(reg_ident)->readWithCheck();
     }
 
     template <typename XLEN>
@@ -542,11 +562,11 @@ namespace pegasus
             auto reg = state->getCsrRegister(reg_ident);
             const auto old_value = reg->dmiRead<XLEN>();
             const auto write_val = (old_value & ~mask) | (reg_value & mask);
-            reg->write<XLEN>(write_val);
+            reg->writeWithCheck<XLEN>(write_val);
         }
         else
         {
-            state->getCsrRegister(reg_ident)->write<XLEN>(reg_value);
+            state->getCsrRegister(reg_ident)->writeWithCheck<XLEN>(reg_value);
         }
     }
 
@@ -590,7 +610,7 @@ namespace pegasus
                                        const char* field_name, uint64_t field_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+        XLEN csr_value = PEEK_CSR_REG<XLEN>(state, reg_ident);
 
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
@@ -618,7 +638,7 @@ namespace pegasus
                                       const char* field_name, uint64_t field_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-        XLEN csr_value = READ_CSR_REG<XLEN>(state, reg_ident);
+        XLEN csr_value = PEEK_CSR_REG<XLEN>(state, reg_ident);
 
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
