@@ -25,6 +25,8 @@
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
+#include "inst_handlers/zicsrind/Zicsr_constants.h"
+
 namespace pegasus
 {
     class PegasusInst;
