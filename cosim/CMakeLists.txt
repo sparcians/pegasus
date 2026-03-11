@@ -3,6 +3,7 @@ project(PegasusCoSim)
 add_library(pegasuscosimlib
     STATIC
     PegasusCoSim.cpp
+    CoSimEventReplayer.cpp
     CoSimEventPipeline.cpp
 )
 
@@ -19,6 +20,7 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../core/rv64  ${CMAKE_CURRENT_BINARY_DIR
 
 install(FILES ${PROJECT_BINARY_DIR}/libpegasuscosimlib.a DESTINATION lib)
 install(FILES PegasusCoSim.hpp DESTINATION include/pegasus/cosim)
+install(FILES CoSimEventReplayer.hpp DESTINATION include/pegasus/cosim)
 install(FILES Event.hpp DESTINATION include/pegasus/cosim)
 install(FILES CoSimApi.hpp DESTINATION include/pegasus/cosim)
 install(FILES EventAccessor.hpp DESTINATION include/pegasus/cosim)

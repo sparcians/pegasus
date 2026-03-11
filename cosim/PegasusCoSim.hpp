@@ -159,8 +159,7 @@ namespace pegasus::cosim
         void pokeRegister_(sparta::Register* reg, std::vector<uint8_t> & buffer) const;
         void onRegisterAppsRequest(simdb::AppRegistrations* app_registrations) override;
         void onParameterizeAppsRequest(simdb::AppManager* app_mgr) override;
-
-        static std::vector<std::string> getWorkloadArgs_(const std::string & workload);
+        void onFrameworkFinalized() override;
 
         // CoSim Logger
         std::unique_ptr<sparta::log::MessageSource> cosim_logger_;

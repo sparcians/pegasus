@@ -1,54 +1,25 @@
 project(Pegasus)
 
-add_library(pegasusinsts)
-target_link_libraries(pegasusinsts
-    rvi
-    rvm
-    rva
-    rvf
-    rvd
-    rvb
-    rvv
-    rvzicsr
-    rvzifencei
-    rvzihintpause
-    rvzicond
-    rvzcmp
-    rvzcmt
-    rvzabha
-    rvzilsd
-    rvzfa
-    rvzfh
-    rvv
-    rvh
-    rvzbkx
-    rvzacas
-    rvzknd
-    rvzawrs
-)
+file(GLOB FILES LIST_DIRECTORIES true ${CMAKE_CURRENT_LIST_DIR} "${CMAKE_CURRENT_LIST_DIR}/*")
 
-add_subdirectory(i)
-add_subdirectory(m)
-add_subdirectory(a)
-add_subdirectory(f)
-add_subdirectory(d)
-add_subdirectory(b)
-add_subdirectory(zicsr)
-add_subdirectory(zifencei)
-add_subdirectory(zihintpause)
-add_subdirectory(zicond)
-add_subdirectory(zcmp)
-add_subdirectory(zcmt)
-add_subdirectory(zabha)
-add_subdirectory(zilsd)
-add_subdirectory(zfa)
-add_subdirectory(zfh)
-add_subdirectory(v)
-add_subdirectory(h)
-add_subdirectory(zbkx)
-add_subdirectory(zacas)
-add_subdirectory(zknd)
-add_subdirectory(zawrs)
+# Each subdirectory is a supported extension
+set(EXTS "")
+foreach(FILE ${FILES})
+  if(IS_DIRECTORY ${FILE})
+    cmake_path(GET FILE FILENAME EXT)
+    list(APPEND EXTS ${EXT})
+  endif()
+endforeach()
+list(REMOVE_ITEM EXTS "inst_handlers")
+
+set(LIBS "")
+foreach(EXT ${EXTS})
+  list(APPEND LIBS rv${EXT})
+  add_subdirectory(${EXT})
+endforeach()
+
+add_library(pegasusinsts)
+target_link_libraries(pegasusinsts ${LIBS})
 
 add_dependencies(pegasusinsts AutogenArchFiles)
 

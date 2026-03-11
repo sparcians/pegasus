@@ -13,7 +13,7 @@ namespace pegasus
     class PegasusSimParameters : public sparta::ExtensionsParamsOnly
     {
       public:
-        static constexpr char name[] = "sim";
+        static constexpr char NAME[] = "sim";
 
         using WorkloadAndArgs = std::vector<std::string>;
         using WorkloadsAndArgs = std::vector<WorkloadAndArgs>;
@@ -48,15 +48,17 @@ namespace pegasus
             reg_overrides_.reset(new RegisterOverridesParam(
                 "reg_overrides", {},
                 "Override initial values of registers e.g. \"core0.hart0.sp 0x1000\"", ps));
+            ignore_wkld_exit_code_.reset(new sparta::Parameter<bool>(
+                "ignore_wkld_exit_code", false,
+                "Don't pass the workload's exit code as the Pegasus sim's exit code", ps));
         }
 
         template <typename T>
         static T getParameter(sparta::TreeNode* node, const std::string & param)
         {
             auto ext =
-                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::name));
-            auto ext_params = ext->getParameters();
-            return ext_params->getParameter(param)->getValueAs<T>();
+                sparta::notNull(node->getRoot()->createExtension(PegasusSimParameters::NAME));
+            return ext->getParameterValueAs<T>(param);
         }
 
         template <typename T>
@@ -87,5 +89,6 @@ namespace pegasus
         std::unique_ptr<sparta::Parameter<uint64_t>> inst_limit_;
         std::unique_ptr<sparta::Parameter<bool>> syscall_emulation_;
         std::unique_ptr<RegisterOverridesParam> reg_overrides_;
+        std::unique_ptr<sparta::Parameter<bool>> ignore_wkld_exit_code_;
     };
 } // namespace pegasus

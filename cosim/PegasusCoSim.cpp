@@ -130,6 +130,12 @@ namespace pegasus::cosim
         // Finish setting up the simulator
         pegasus_sim_->finalizeFramework();
 
+        // Now that apps / AppManager's are created, let SimDB know that the
+        // event pipeline needs to have its preTeardown hook called before
+        // the checkpoint pipeline's preTeardown.
+        auto & app_mgr = pegasus_sim_->getAppManagers()->getAppManager(db_file);
+        app_mgr.setAppOrderingForHooks(CoSimEventPipeline::NAME, CoSimCheckpointer::NAME);
+
         fetch_.resize(num_cores);
         size_t pipeline_idx =
             (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
@@ -549,11 +555,43 @@ namespace pegasus::cosim
         }
     }
 
-    std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
+    void PegasusCoSim::onFrameworkFinalized()
     {
-        std::vector<std::string> workload_args;
-        sparta::utils::tokenize_on_whitespace(workload, workload_args);
-        return workload_args;
+        auto & db_mgr = *app_mgr_->getDatabaseManager();
+        db_mgr.safeTransaction(
+            [&]()
+            {
+                // Helper to write arch/config/extension parameter trees to the database
+                auto serialize_ptree =
+                    [&](const char* table_name, const sparta::ParameterTree & ptree)
+                {
+                    // Prepared inserter for performance
+                    auto ptree_inserter = db_mgr.prepareINSERT(
+                        SQL_TABLE(table_name), SQL_COLUMNS("PTreePath", "PTreeValue"));
+
+                    ptree.visitLeaves(
+                        [&](const sparta::ParameterTree::Node* leaf)
+                        {
+                            // Early return if the ptree has no leaves (except the unnamed root)
+                            if (leaf->getName().empty())
+                            {
+                                return false; // same as 'return true' since we have no more leaves
+                            }
+
+                            ptree_inserter->createRecordWithColValues(leaf->getPath(),
+                                                                      leaf->getValue());
+                            return true; // keep going
+                        });
+                };
+
+                auto sim_config = pegasus_sim_->getSimulationConfiguration();
+
+                // Write arch ptree
+                serialize_ptree("ArchParameterTree", sim_config->getArchUnboundParameterTree());
+
+                // Write config ptree
+                serialize_ptree("ConfigParameterTree", sim_config->getUnboundParameterTree());
+            });
     }
 
     void PegasusCoSim::finish()
