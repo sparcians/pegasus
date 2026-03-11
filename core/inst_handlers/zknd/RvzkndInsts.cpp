@@ -1,6 +1,7 @@
 #include <cstdint>
 #include "core/inst_handlers/zknd/RvzkndInsts.hpp"
 #include "core/PegasusState.hpp"
+#include "core/Trap.hpp"
 #include "core/inst_handlers/zknd/RvzkndFunctors.hpp"
 #include "include/ActionTags.hpp"
 #include "core/PegasusInst.hpp"
@@ -11,7 +12,6 @@ namespace pegasus
     template <typename XLEN>
     void RvzkndInsts::getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers)
     {
-
         if constexpr (sizeof(XLEN) == 4)
         {
             inst_handlers.emplace(
@@ -39,7 +39,7 @@ namespace pegasus
                                      RvzkndInsts>(nullptr, "aes64im", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "aes64ks1i",
-                Action::createAction<&RvzkndInsts::aesIHandler_<XLEN, Aes64Ks1iOp<XLEN>>,
+                Action::createAction<&RvzkndInsts::aesKsiOpHandler_<XLEN, Aes64Ks1iOp<XLEN>>,
                                      RvzkndInsts>(nullptr, "aes64ks1i", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "aes64ks2",
@@ -74,6 +74,22 @@ namespace pegasus
         return ++action_it;
     }
 
+    template <typename XLEN, typename OPERATOR>
+    Action::ItrType RvzkndInsts::aesKsiOpHandler_(PegasusState* state, Action::ItrType action_it)
+    {
+        const auto & inst = state->getCurrentInst();
+        const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
+        const uint32_t imm = inst->getImmediate();
+        const uint32_t rnum = imm & 0xF;
+        if (rnum > 10)
+        {
+            THROW_ILLEGAL_INST;
+        }
+        const XLEN rd_val = OPERATOR{}(rs1_val, 0, imm);
+        WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+        return ++action_it;
+    }
+
     template Action::ItrType RvzkndInsts::aesRHandler_<RV32, Aes32DsiOp<RV32>>(PegasusState*,
                                                                                Action::ItrType);
 
@@ -89,8 +105,8 @@ namespace pegasus
     template Action::ItrType RvzkndInsts::aesIHandler_<RV64, Aes64ImOp<RV64>>(PegasusState*,
                                                                               Action::ItrType);
 
-    template Action::ItrType RvzkndInsts::aesIHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*,
-                                                                                Action::ItrType);
+    template Action::ItrType
+    RvzkndInsts::aesKsiOpHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*, Action::ItrType);
 
     template Action::ItrType RvzkndInsts::aesRHandler_<RV64, Aes64Ks2Op<RV64>>(PegasusState*,
                                                                                Action::ItrType);

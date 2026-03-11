@@ -24,7 +24,7 @@ namespace pegasus
             const uint32_t bs = imm & 0x3;
             uint8_t byte = (rs2 >> (bs * 8)) & 0xFF;
             uint8_t sbox_out = aes_sbox_inv(byte);
-            return rs1 ^ (static_cast<XLEN>(sbox_out) << (bs * 8));
+            return rs1 ^ (std::rotl(static_cast<XLEN>(sbox_out), bs * 8));
         }
     };
 
@@ -36,7 +36,7 @@ namespace pegasus
             uint8_t byte = (rs2 >> (bs * 8)) & 0xFF;
             uint8_t sbox_out = aes_sbox_inv(byte);
             uint32_t mixed = aes_mixcolumn_inv_byte(sbox_out);
-            return rs1 ^ (static_cast<XLEN>(mixed) << (bs * 8));
+            return rs1 ^ (std::rotl(static_cast<XLEN>(mixed), (bs * 8)));
         }
     };
 
@@ -50,7 +50,7 @@ namespace pegasus
             {
                 uint8_t byte = (shifted_low >> (i * 8)) & 0xFF;
                 uint8_t inv_sbox = aes_sbox_inv(byte);
-                result |= inv_sbox << (i * 8);
+                result |= (uint64_t)inv_sbox << (i * 8);
             }
             return result;
         }
@@ -67,7 +67,7 @@ namespace pegasus
             {
                 uint8_t byte = (shifted_low >> (i * 8)) & 0xFF;
                 uint8_t inv_sbox = aes_sbox_inv(byte);
-                subbed |= inv_sbox << (i * 8);
+                subbed |= (uint64_t)inv_sbox << (i * 8);
             }
 
             uint32_t low_col = (subbed & 0xFFFFFFFF);
@@ -107,7 +107,7 @@ namespace pegasus
             for (int i = 0; i < 4; i++)
             {
                 uint8_t byte = (temp >> (i * 8)) & 0xFF;
-                uint8_t sbox_out = aes_sbox_inv(byte);
+                uint8_t sbox_out = aes_sbox_fwd(byte);
                 subbed |= (uint32_t)sbox_out << (i * 8);
             }
 
@@ -125,7 +125,7 @@ namespace pegasus
         XLEN operator()(XLEN rs1, XLEN rs2, uint32_t /*imm*/) const
         {
             uint32_t w0 = (rs1 >> 32) ^ (rs2 & 0xFFFFFFFF);
-            uint32_t w1 = (rs1 >> 32) ^ w0 ^ ((rs2 >> 32) & 0xFFFFFFFF);
+            uint32_t w1 = (rs1 >> 32) ^ rs2 ^ (rs2 >> 32);
             return ((XLEN)w1 << 32) | (XLEN)w0;
         }
     };
