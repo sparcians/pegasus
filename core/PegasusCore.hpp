@@ -112,6 +112,8 @@ namespace pegasus
 
         bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 
+        bool getMisalignmentSupport() const { return misalignment_support_; }
+
         // Is the "H" extension enabled?
         bool hasHypervisor() const { return hypervisor_enabled_; }
 
