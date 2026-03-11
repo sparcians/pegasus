@@ -100,11 +100,16 @@ namespace pegasus
             }
         };
 
+        registers_by_name_.reserve(int_rset_->size() + fp_rset_->size() + vec_rset_->size() + csr_rset_->size());
         add_registers(int_rset_);
         add_registers(fp_rset_);
         add_registers(vec_rset_);
         add_registers(csr_rset_);
 
+        // Add register enabled/disabled
+        init_csr_enabled_state();
+
+        // Add register read/write callback for special registers
         if (xlen_ == 32)
         {
             addCSRRegisterCallbacks_<RV32>();

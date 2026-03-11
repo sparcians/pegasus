@@ -99,6 +99,7 @@ namespace pegasus
         }
 
         uint32_t getNumRegisters() const { return registers_by_reg_num_.size(); }
+        uint32_t size() const { return registers_by_reg_num_.size(); }
 
         const std::unordered_map<std::string, sparta::Register*> & getRegistersByName() const
         {
@@ -117,6 +118,14 @@ namespace pegasus
         template <typename T> inline T readRegister(uint32_t reg_num, uint32_t idx = 0)
         {
             return getRegister(reg_num)->read<T>(idx);
+        }
+
+        /*!
+         *  \brief Returns the registers that contain an extesion dependency
+         */
+        const std::map<uint32_t, std::vector<std::string>> & getRegisterExtensionDep() const
+        {
+            return defs_from_json_->getRegisterExtensionDep();
         }
 
       private:

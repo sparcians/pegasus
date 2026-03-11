@@ -92,6 +92,16 @@ namespace pegasus
                 true};
 
             register_defns_.push_back(defn);
+
+            // Extract the extesion field (array) if present
+            if (auto value = reg.as_object().if_contains("extension"); value)
+            {
+                for (auto & ext : value->as_array())
+                {
+                    register_extension_dep_[static_cast<uint32_t>(reg.at("num").as_uint64())].push_back(
+                        std::string(ext.as_string()));
+                }
+            }
         }
     }
 } // namespace pegasus

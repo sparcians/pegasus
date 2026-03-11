@@ -36,6 +36,14 @@ namespace pegasus
 
         size_t getNumDefns() const { return register_defns_.size() - 1; }
 
+        /*!
+         *  \brief Returns the registers that contain an extesion dependency
+         */
+        const std::map<uint32_t, std::vector<std::string>> & getRegisterExtensionDep() const
+        {
+            return register_extension_dep_;
+        }
+
       private:
         void parse_(const std::string & register_defns_json_filename);
 
@@ -139,6 +147,9 @@ namespace pegasus
         std::deque<InitialValueRef> cached_initial_values_;
         std::deque<FieldDefnConverter> cached_field_defns_;
         std::vector<sparta::RegisterBase::Definition> register_defns_;
+
+        // Track if a register depends on an extension
+        std::map<uint32_t, std::vector<std::string>> register_extension_dep_;
 
         // TODO: Find the official way to handle group_idx. For now we will just use
         // a map of auto-incrementing group_idx values for each group_num
