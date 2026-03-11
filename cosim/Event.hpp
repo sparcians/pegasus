@@ -2,6 +2,7 @@
 
 #include "include/PegasusTypes.hpp"
 #include "include/PegasusUtils.hpp"
+#include "include/PegasusTranslateTypes.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/ValidValue.hpp"
 
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 
 namespace pegasus
@@ -20,6 +22,7 @@ namespace pegasus::cosim
 {
     class CoSimEventPipeline;
     class CoSimObserver;
+    class CoSimEventReplayer;
 
     /*!
      * \class Event
@@ -175,7 +178,12 @@ namespace pegasus::cosim
 
         bool isDone() const { return done_; }
 
-        bool isLastEvent() const { return event_ends_sim_; }
+        bool isLastEvent() const { return workload_exit_code_.isValid(); }
+
+        int getWorkloadExitCode() const
+        {
+            return workload_exit_code_.isValid() ? workload_exit_code_.getValue() : 0;
+        }
 
         bool isEventInRoi() const { return is_in_region_of_interest_; }
 
@@ -203,9 +211,15 @@ namespace pegasus::cosim
 
         PrivMode getNextPrivilegeMode() const { return next_priv_; }
 
-        PrivMode getLdStPrivilegeMode() const { return curr_ldst_priv_; }
+        PrivMode getLdStPrivilegeMode(translate_types::TranslationStage stage) const
+        {
+            return curr_ldst_priv_.at(static_cast<uint32_t>(stage));
+        }
 
-        PrivMode getNextLdStPrivilegeMode() const { return next_ldst_priv_; }
+        PrivMode getNextLdStPrivilegeMode(translate_types::TranslationStage stage) const
+        {
+            return next_ldst_priv_.at(static_cast<uint32_t>(stage));
+        }
 
         ExcpType getExceptionType() const { return excp_type_; }
 
@@ -255,7 +269,8 @@ namespace pegasus::cosim
         CoreId core_id_ = std::numeric_limits<CoreId>::max(); //!< Core ID of Event
         HartId hart_id_ = std::numeric_limits<HartId>::max(); //!< Hart ID of Event
         bool done_{false};                                    //!< Is the Event finished executing?
-        bool event_ends_sim_{false}; //!< Will committing this Event end simulation?
+        sparta::utils::ValidValue<int>
+            workload_exit_code_; //!< Workload exit code; also used for isLastEvent() if invalid
 
         // Region of interest
         bool is_in_region_of_interest_{
@@ -288,8 +303,10 @@ namespace pegasus::cosim
         PrivMode next_priv_ = PrivMode::INVALID; //!< Next privilege mode
 
         // Load/Store Privilege mode
-        PrivMode curr_ldst_priv_ = PrivMode::INVALID; //!< Current load/store privilege mode
-        PrivMode next_ldst_priv_ = PrivMode::INVALID; //!< Next load/store privilege mode
+        std::array<PrivMode, translate_types::N_TRANS_STAGES> curr_ldst_priv_{
+            PrivMode::INVALID}; //!< Current load/store privilege mode
+        std::array<PrivMode, translate_types::N_TRANS_STAGES> next_ldst_priv_{
+            PrivMode::INVALID}; //!< Next load/store privilege mode
 
         // Exceptions (traps and interrupts)
         ExcpType excp_type_ = ExcpType::INVALID; //!< The exception type for faulting instructions
@@ -357,6 +374,59 @@ namespace pegasus::cosim
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////////////////////////
+        //! \name Before-and-after changes when invoking the "ecall" handler (opcode 0x73)
+        //! @{
+
+        class ECallX10Changes
+        {
+          public:
+            void preExecute(uint64_t reg_value)
+            {
+                diff_.first = reg_value;
+                diff_.second.clearValid();
+            }
+
+            void postExecute(uint64_t reg_value)
+            {
+                sparta_assert(diff_.first.isValid());
+                diff_.second = reg_value;
+            }
+
+            bool changed() const
+            {
+                auto before_valid = diff_.first.isValid();
+                auto after_valid = diff_.second.isValid();
+                sparta_assert(before_valid == after_valid);
+
+                if (!before_valid && !after_valid)
+                {
+                    return false;
+                }
+                return diff_.first != diff_.second;
+            }
+
+            uint64_t getX10Before() const { return diff_.first; }
+
+            uint64_t getX10After() const { return diff_.second; }
+
+            template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
+            {
+                ar & diff_;
+            }
+
+            bool operator==(const ECallX10Changes &) const = default;
+
+          private:
+            std::pair<sparta::utils::ValidValue<uint64_t>, sparta::utils::ValidValue<uint64_t>>
+                diff_;
+        };
+
+        ECallX10Changes ecall_x10_changes_;
+
+        //! @}
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
         //! \name Extension changes
         //! @{
 
@@ -400,11 +470,12 @@ namespace pegasus::cosim
         template <typename Archive> void serialize(Archive & ar, const unsigned int /*version*/)
         {
             ar & event_uid_;
+            ar & sim_state_current_uid_;
             ar & type_;
             ar & core_id_;
             ar & hart_id_;
             ar & done_;
-            ar & event_ends_sim_;
+            ar & workload_exit_code_;
             ar & is_in_region_of_interest_;
             ar & is_entering_region_of_interest_;
             ar & is_exiting_region_of_interest_;
@@ -432,6 +503,7 @@ namespace pegasus::cosim
             ar & register_writes_;
             ar & memory_reads_;
             ar & memory_writes_;
+            ar & ecall_x10_changes_;
             ar & extension_changes_;
             ar & dasm_string_;
         }
@@ -440,6 +512,7 @@ namespace pegasus::cosim
         friend class CoSimObserver;
         friend class CoSimEventPipeline;
         friend class EventCompressorStage;
+        friend class CoSimEventReplayer;
     };
 
     inline std::ostream & operator<<(std::ostream & os, const Event::Type & type)

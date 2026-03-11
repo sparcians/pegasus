@@ -34,7 +34,7 @@ namespace pegasus
             uart_ = uart_rtn->getResourceAs<SimpleUART>();
         }
 
-        // Initialize memory
+        // Initialize memory map
         memory_map_.reset(new sparta::memory::SimpleMemoryMapNode(
             sys_node, "memory_map", sparta::TreeNode::GROUP_NAME_NONE,
             sparta::TreeNode::GROUP_IDX_NONE, "Pegasus System Memory Map",
@@ -406,11 +406,11 @@ namespace pegasus
         // Register callbacks to system memory
         auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
                                  [this](const std::unique_ptr<sparta::TreeNode> & tnode)
-                                 { return tnode.get() == getSystemMemory(); });
+                                 { return tnode.get() == memory_map_.get(); });
 
         if (iter != tree_nodes_.end())
         {
-            observer->registerReadWriteMemCallbacks(getSystemMemory());
+            observer->registerReadWriteMemCallbacks(memory_map_.get());
         }
     }
 

@@ -93,7 +93,7 @@ namespace pegasus
             HGATP,
             pegasus::Action::createAction<
                 &RvzicsrInsts::atpUpdateHandler_<XLEN, translate_types::TranslationStage::GUEST>,
-                RvzicsrInsts>(nullptr, "gatpUpdate"));
+                RvzicsrInsts>(nullptr, "hgatpUpdate"));
 
         // Machine Trap Setup
         csrUpdate_actions.emplace(
@@ -104,6 +104,15 @@ namespace pegasus
             MISA,
             pegasus::Action::createAction<&RvzicsrInsts::misaUpdateHandler_<XLEN>, RvzicsrInsts>(
                 nullptr, "misaUpdate"));
+        csrUpdate_actions.emplace(
+            MTVEC, pegasus::Action::createAction<&RvzicsrInsts::tvecUpdateHandler_<XLEN, MTVEC>,
+                                                 RvzicsrInsts>(nullptr, "mtvecUpdate"));
+        csrUpdate_actions.emplace(
+            STVEC, pegasus::Action::createAction<&RvzicsrInsts::tvecUpdateHandler_<XLEN, STVEC>,
+                                                 RvzicsrInsts>(nullptr, "stvecUpdate"));
+        csrUpdate_actions.emplace(
+            VSTVEC, pegasus::Action::createAction<&RvzicsrInsts::tvecUpdateHandler_<XLEN, VSTVEC>,
+                                                  RvzicsrInsts>(nullptr, "vstvecUpdate"));
     }
 
     template void RvzicsrInsts::getCsrUpdateActions<RV32>(InstHandlers::CsrUpdateActionsMap &);
@@ -573,6 +582,20 @@ namespace pegasus
         ext_manager.disableExtensions(exts_to_disable);
         ext_manager.enableExtensions(exts_to_enable);
         state->getCore()->changeMavisContext();
+
+        return ++action_it;
+    }
+
+    template <typename XLEN, uint32_t TVEC_CSR_ADDR>
+    Action::ItrType RvzicsrInsts::tvecUpdateHandler_(pegasus::PegasusState* state,
+                                                     Action::ItrType action_it)
+    {
+        const TrapVectorMode mode_val =
+            (TrapVectorMode)READ_CSR_FIELD<XLEN>(state, TVEC_CSR_ADDR, "mode");
+        if (!state->getCore()->isTrapModeSupported(mode_val))
+        {
+            WRITE_CSR_FIELD<XLEN>(state, TVEC_CSR_ADDR, "mode", 0);
+        }
 
         return ++action_it;
     }

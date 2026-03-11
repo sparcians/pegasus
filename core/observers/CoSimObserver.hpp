@@ -44,7 +44,7 @@ namespace pegasus::cosim
         void postExecute_(PegasusState*) override;
         void preException_(PegasusState*) override;
         void resetLastEvent_(PegasusState* state);
-        void sendLastEvent_();
+        void sendLastEvent_(PegasusState*);
         void stopSim() override;
 
         sparta::log::MessageSource & cosim_logger_;

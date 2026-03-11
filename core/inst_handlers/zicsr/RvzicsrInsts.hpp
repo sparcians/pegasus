@@ -52,5 +52,8 @@ namespace pegasus
                                               Action::ItrType action_it);
         template <typename XLEN>
         Action::ItrType misaUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        template <typename XLEN, uint32_t TVEC_CSR_ADDR>
+        Action::ItrType tvecUpdateHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 } // namespace pegasus

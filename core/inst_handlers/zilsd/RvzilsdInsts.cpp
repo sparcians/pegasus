@@ -3,6 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
+#include "include/PegasusUtils.hpp"
 
 namespace pegasus
 {
@@ -59,16 +60,21 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         PegasusTranslationState* translation_state = inst->getTranslationState();
 
-        const uint64_t result = state->readMemory<uint64_t>(translation_state->getResult(),
-                                                            MemAccessSource::INSTRUCTION);
+        const auto & result = translation_state->getResult();
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<uint64_t>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_LOAD_ACCESS;
+        }
+        const uint64_t val = convertFromByteVector<uint64_t>(buffer);
         translation_state->popResult();
 
         // Write bits 31:0 to the lower-numbered register
-        const RV32 rd1_val = ((1ull << 33) - 1) & result;
+        const RV32 rd1_val = ((1ull << 33) - 1) & val;
         WRITE_INT_REG<RV32>(state, inst->getRd(), rd1_val);
 
         // Write bits 63:32 to the higher-numbered register
-        const RV32 rd2_val = result >> 32;
+        const RV32 rd2_val = val >> 32;
         WRITE_INT_REG<RV32>(state, inst->getRd2(), rd2_val);
 
         return ++action_it;
@@ -83,12 +89,14 @@ namespace pegasus
         const RV32 rs2_val = READ_INT_REG<RV32>(state, inst->getRs2());
         const RV32 rs3_val = READ_INT_REG<RV32>(state, inst->getRs3());
 
+        const auto & result = translation_state->getResult();
         // lower-numbered register holds bits 31:0
         // higher-numbered register holds bits 63:32
         const uint64_t value = ((uint64_t)rs3_val << 32) | rs2_val;
-
-        state->writeMemory<uint64_t>(translation_state->getResult(), value,
-                                     MemAccessSource::INSTRUCTION);
+        if (state->writeMemory<uint64_t>(result, value, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
         translation_state->popResult();
 
         return ++action_it;
