@@ -260,7 +260,7 @@ namespace pegasus
 
         inline bool isRegEnabled(uint32_t id) const
         {
-            return csr_enabled_state_[id];
+            return (id >= csr_enabled_state_.size()) ? false : csr_enabled_state_[id];
         }
 
         // Memory supplement for observing memory reads and writes
