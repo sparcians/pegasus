@@ -58,6 +58,7 @@ namespace pegasus
                       "WRS.STO pause counter duration in cycles")
             PARAMETER(std::vector<int>, supported_trap_modes, {0},
                       "Supported RISC-V trap modes (0: Direct, 1: Vectored)")
+            PARAMETER(bool, misalignment_support, true, "Misalignment Support");
 
             HIDDEN_PARAMETER(bool, cosim_mode, false, "Set by PegasusCoSim");
         };
@@ -110,6 +111,8 @@ namespace pegasus
         bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
 
         bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
+
+        bool isMisalignmentSupported() const { return misalignment_support_; }
 
         // Is the "H" extension enabled?
         bool hasHypervisor() const { return hypervisor_enabled_; }
@@ -234,6 +237,9 @@ namespace pegasus
 
         // Supported Trap Modes
         const std::vector<int> supported_trap_modes_;
+
+        // Does the config support address misalignment
+        const bool misalignment_support_;
 
         // Path to Mavis isa JSONs
         const std::string isa_file_path_;
