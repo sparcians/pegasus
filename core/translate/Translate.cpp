@@ -150,6 +150,7 @@ namespace pegasus
         const PegasusTranslationState::TranslationRequest & request =
             translation_state->getRequest();
 
+        // Check for misaligment and misalignment support
         if (request.isMisaligned() && !state->getCore()->isMisalignmentSupported())
         {
             switch (TYPE)
