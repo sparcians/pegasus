@@ -14,6 +14,7 @@
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
 #include "core/observers/STFValidator.hpp"
+#include "inst_handlers/zicsrind/Rvzicsrind.hpp"
 
 #include "mavis/Mavis.h"
 
@@ -103,6 +104,19 @@ namespace pegasus
         add_registers(fp_rset_);
         add_registers(vec_rset_);
         add_registers(csr_rset_);
+
+        if (xlen_ == 32)
+        {
+            addCSRRegisterCallbacks_<RV32>();
+        }
+        else if (xlen_ == 64)
+        {
+            addCSRRegisterCallbacks_<RV64>();
+        }
+        else
+        {
+            sparta_assert(false, "Unsupported XLEN");
+        }
 
         // Increment PC Action
         const bool CHECK_ILIMIT = ilimit_ > 0;
@@ -958,5 +972,13 @@ namespace pegasus
 
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
+
+    // Install register callback functions
+    template <typename XLEN> void PegasusState::addCSRRegisterCallbacks_()
+    {
+        static_assert(sizeof(XLEN) == 4 || sizeof(XLEN) == 8);
+
+        Rvzicsrind::addCSRRegisterCallbacks<XLEN>(this);
+    }
 
 } // namespace pegasus
