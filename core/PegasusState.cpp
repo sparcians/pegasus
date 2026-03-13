@@ -14,6 +14,7 @@
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
 #include "core/observers/STFValidator.hpp"
+#include "inst_handlers/zicsrind/Rvzicsrind.hpp"
 
 #include "mavis/Mavis.h"
 
@@ -972,164 +973,12 @@ namespace pegasus
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
 
-    // CSRIND register callback functions
-    // This macro registers a read/write callback function into the register
-    // with name REGNAME, the helper functions must be of the form
-    //   template <typename XLEN, int IDX> XLEN <HELPER>R(sparta::RegisterBase*)
-    //   template <typename XLEN, int IDX> void <HELPER>W(sparta::RegisterBase*, XLEN)
-#define INSTALL_REG_CB(REGNAME, HELPER, NUM)                                                       \
-    do                                                                                             \
-    {                                                                                              \
-        auto REGNAME##_reg = findRegister(#REGNAME, false);                                        \
-        if (REGNAME##_reg)                                                                         \
-        {                                                                                          \
-            REGNAME##_reg->addReadCB(                                                              \
-                [this](sparta::RegisterBase* r)                                                    \
-                {                                                                                  \
-                    XLEN value = this->HELPER##R<XLEN, NUM>(r);                                    \
-                    return sparta::utils::ValidValue<uint64_t>(static_cast<uint64_t>(value));      \
-                });                                                                                \
-                                                                                                   \
-            REGNAME##_reg->addWriteCB(                                                             \
-                [this](sparta::RegisterBase* r, uint64_t v)                                        \
-                {                                                                                  \
-                    this->HELPER##W<XLEN, NUM>(r, static_cast<XLEN>(v));                           \
-                    return true;                                                                   \
-                });                                                                                \
-        }                                                                                          \
-    } while (0)
-
+    // Install register callback functions
     template <typename XLEN> void PegasusState::addCSRRegisterCallbacks_()
     {
         static_assert(sizeof(XLEN) == 4 || sizeof(XLEN) == 8);
 
-        INSTALL_REG_CB(mireg, mireg, 1);
-        INSTALL_REG_CB(mireg2, mireg, 2);
-        INSTALL_REG_CB(mireg3, mireg, 3);
-        INSTALL_REG_CB(mireg4, mireg, 4);
-        INSTALL_REG_CB(mireg5, mireg, 5);
-        INSTALL_REG_CB(mireg6, mireg, 6);
-        INSTALL_REG_CB(sireg, sireg, 1);
-        INSTALL_REG_CB(sireg2, sireg, 2);
-        INSTALL_REG_CB(sireg3, sireg, 3);
-        INSTALL_REG_CB(sireg4, sireg, 4);
-        INSTALL_REG_CB(sireg5, sireg, 5);
-        INSTALL_REG_CB(sireg6, sireg, 6);
-    }
-
-    template <typename XLEN, uint32_t XISELECT, uint32_t XIIDX>
-    Csrind_regType PegasusState::validate_xiselect(int & offset)
-    {
-        const XLEN xiselect_val = READ_CSR_REG<XLEN>(this, XISELECT);
-
-        // Try to match the xiselect value, also use isMiselect for the decoding
-        if (IS_CLICINT_CTL_ATTR(xiselect_val))
-        {
-            if constexpr (XIIDX == 1)
-            {
-                offset = xiselect_val - CLICINT_CTL_ATTR_LO;
-                return Csrind_regType::CLICINTCTL;
-            }
-            if constexpr (XIIDX == 2)
-            {
-                offset = xiselect_val - CLICINT_CTL_ATTR_LO;
-                return Csrind_regType::CLICINTATTR;
-            }
-        }
-        else if (IS_CLICINT_IP_IE(xiselect_val))
-        {
-            if constexpr (XIIDX == 1)
-            {
-                offset = xiselect_val - CLICINT_IP_IE_LO;
-                return Csrind_regType::CLICINTIP;
-            }
-            if constexpr (XIIDX == 2)
-            {
-                offset = xiselect_val - CLICINT_IP_IE_LO;
-                return Csrind_regType::CLICINTIE;
-            }
-        }
-        else if (IS_CLICINT_TRIG(xiselect_val))
-        {
-            if constexpr (XIIDX == 1)
-            {
-                offset = xiselect_val - CLICINT_TRIG_LO;
-                return Csrind_regType::CLICINTTRIG;
-            }
-        }
-        else if (IS_CLICINT_CFG(xiselect_val))
-        {
-            if constexpr (XIIDX == 1)
-            {
-                offset = 0;
-                return Csrind_regType::CLICCFG;
-            }
-        }
-
-        offset = -1;
-        return Csrind_regType::INVALID;
-    }
-
-    template <typename XLEN, int XIIDX> XLEN PegasusState::miregR(sparta::RegisterBase* reg)
-    {
-        int offset;
-        auto reg_type = validate_xiselect<XLEN, MISELECT, XIIDX>(offset);
-
-        if (reg_type == Csrind_regType::INVALID)
-        {
-            auto exception_unit = getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
-        }
-
-        return reg->read<XLEN>();
-    }
-
-    template <typename XLEN, int XIIDX>
-    void PegasusState::miregW(sparta::RegisterBase* reg, XLEN val)
-    {
-        int offset;
-        auto reg_type = validate_xiselect<XLEN, MISELECT, XIIDX>(offset);
-
-        if (reg_type == Csrind_regType::INVALID)
-        {
-            auto exception_unit = getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
-        }
-
-        reg->write<XLEN>(val);
-    }
-
-    template <typename XLEN, int XIIDX> XLEN PegasusState::siregR(sparta::RegisterBase* reg)
-    {
-        int offset;
-        auto reg_type = validate_xiselect<XLEN, SISELECT, XIIDX>(offset);
-
-        if (reg_type == Csrind_regType::INVALID)
-        {
-            auto exception_unit = getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
-        }
-
-        return reg->read<XLEN>();
-    }
-
-    template <typename XLEN, int XIIDX>
-    void PegasusState::siregW(sparta::RegisterBase* reg, XLEN val)
-    {
-        int offset;
-        auto reg_type = validate_xiselect<XLEN, SISELECT, XIIDX>(offset);
-
-        if (reg_type == Csrind_regType::INVALID)
-        {
-            auto exception_unit = getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
-        }
-
-        reg->write<XLEN>(val);
+        Rvzicsrind::addCSRRegisterCallbacks<XLEN>(this);
     }
 
 } // namespace pegasus

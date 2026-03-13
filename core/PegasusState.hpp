@@ -17,8 +17,6 @@
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
-#include "inst_handlers/zicsrind/Zicsr_constants.h"
-
 namespace pegasus
 {
     class PegasusInst;
@@ -354,19 +352,6 @@ namespace pegasus
          *  \brief Installs register read/write callback functions to specail registers
          */
         template <typename XLEN> void addCSRRegisterCallbacks_();
-
-        /*!
-         * \brief Make sure the xiselect value is valid for the specified xiregN,
-         * offset returns the index of the decoded xiselect register
-         */
-        template <typename XLEN, uint32_t XISELECT, uint32_t XIIDX>
-        Csrind_regType validate_xiselect(int & offset);
-
-        // Custom register read/write callback functions
-        template <typename XLEN, int XIIDX> XLEN miregR(sparta::RegisterBase* reg);
-        template <typename XLEN, int XIIDX> void miregW(sparta::RegisterBase* reg, XLEN val);
-        template <typename XLEN, int XIIDX> XLEN siregR(sparta::RegisterBase* reg);
-        template <typename XLEN, int XIIDX> void siregW(sparta::RegisterBase* reg, XLEN val);
 
         //! Hart ID
         const HartId hart_id_;
