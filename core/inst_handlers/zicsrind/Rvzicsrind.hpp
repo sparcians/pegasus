@@ -5,7 +5,8 @@
 
 namespace pegasus
 {
-    class Rvzicsrind{
+    class Rvzicsrind
+    {
         /*!
          * \brief Make sure the xiselect value is valid for the specified xiregN,
          * offset returns the index of the decoded xiselect register
@@ -27,6 +28,6 @@ namespace pegasus
         /*!
          *  \brief Installs callback funcitons to xiselect/xiregN registers
          */
-        template <typename XLEN> static void addCSRRegisterCallbacks(PegasusState *state);
+        template <typename XLEN> static void addCSRRegisterCallbacks(PegasusState* state);
     };
-}
+} // namespace pegasus

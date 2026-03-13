@@ -62,8 +62,9 @@ namespace pegasus
     // Install register callback functions
     // This macro registers a read/write callback function into the register
     // with name REGNAME, the helper functions must be of the form
-    //   template <typename XLEN, int IDX> XLEN <HELPER>R(PegasusState* state, sparta::RegisterBase*)
-    //   template <typename XLEN, int IDX> void <HELPER>W(PegasusState* state, sparta::RegisterBase*, XLEN)
+    //   template <typename XLEN, int IDX> XLEN <HELPER>R(PegasusState* state,
+    //   sparta::RegisterBase*) template <typename XLEN, int IDX> void <HELPER>W(PegasusState*
+    //   state, sparta::RegisterBase*, XLEN)
 #define INSTALL_REG_CB(REGNAME, HELPER, NUM)                                                       \
     do                                                                                             \
     {                                                                                              \
@@ -86,7 +87,7 @@ namespace pegasus
         }                                                                                          \
     } while (0)
 
-    template <typename XLEN> void Rvzicsrind::addCSRRegisterCallbacks(PegasusState *state)
+    template <typename XLEN> void Rvzicsrind::addCSRRegisterCallbacks(PegasusState* state)
     {
         static_assert(sizeof(XLEN) == 4 || sizeof(XLEN) == 8);
 
@@ -104,10 +105,11 @@ namespace pegasus
         INSTALL_REG_CB(sireg6, sireg, 6);
     }
 
-    template void Rvzicsrind::addCSRRegisterCallbacks<RV32>(PegasusState *state);
-    template void Rvzicsrind::addCSRRegisterCallbacks<RV64>(PegasusState *state);
+    template void Rvzicsrind::addCSRRegisterCallbacks<RV32>(PegasusState* state);
+    template void Rvzicsrind::addCSRRegisterCallbacks<RV64>(PegasusState* state);
 
-    template <typename XLEN, int XIIDX> XLEN Rvzicsrind::miregR(PegasusState* state, sparta::RegisterBase* reg)
+    template <typename XLEN, int XIIDX>
+    XLEN Rvzicsrind::miregR(PegasusState* state, sparta::RegisterBase* reg)
     {
         int offset;
         auto reg_type = validate_xiselect<XLEN, MISELECT, XIIDX>(state, offset);
@@ -144,7 +146,8 @@ namespace pegasus
         reg->write<XLEN>(val);
     }
 
-    template <typename XLEN, int XIIDX> XLEN Rvzicsrind::siregR(PegasusState* state, sparta::RegisterBase* reg)
+    template <typename XLEN, int XIIDX>
+    XLEN Rvzicsrind::siregR(PegasusState* state, sparta::RegisterBase* reg)
     {
         int offset;
         auto reg_type = validate_xiselect<XLEN, MISELECT, XIIDX>(state, offset);
