@@ -5,6 +5,7 @@
 #include "core/translate/PageTableEntry.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/PegasusState.hpp"
+#include "core/PegasusCore.hpp"
 #include "include/PegasusUtils.hpp"
 
 #include "sparta/utils/LogUtils.hpp"
@@ -148,6 +149,20 @@ namespace pegasus
         // Get request from the request queue
         const PegasusTranslationState::TranslationRequest & request =
             translation_state->getRequest();
+
+        // Check for misaligment and misalignment support
+        if (request.isMisaligned() && !state->getCore()->isMisalignmentSupported())
+        {
+            switch (TYPE)
+            {
+                case translate_types::AccessType::EXECUTE:
+                    THROW_MISALIGNED_FETCH;
+                case translate_types::AccessType::STORE:
+                    THROW_MISALIGNED_STORE_AMO;
+                case translate_types::AccessType::LOAD:
+                    THROW_MISALIGNED_LOAD;
+            }
+        }
         const XLEN vaddr = request.isMisaligned()
                                ? (request.getVAddr() + request.getMisalignedBytes())
                                : request.getVAddr();

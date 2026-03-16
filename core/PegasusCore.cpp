@@ -108,6 +108,7 @@ namespace pegasus
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
         supported_trap_modes_(p->supported_trap_modes),
+        misalignment_support_(p->misalignment_support),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
