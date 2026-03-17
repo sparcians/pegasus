@@ -11,7 +11,6 @@ foreach(FILE ${FILES})
   endif()
 endforeach()
 list(REMOVE_ITEM EXTS "inst_handlers")
-list(REMOVE_ITEM EXTS "zicsrind")
 
 set(LIBS "")
 foreach(EXT ${EXTS})
