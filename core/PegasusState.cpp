@@ -106,9 +106,6 @@ namespace pegasus
         add_registers(vec_rset_);
         add_registers(csr_rset_);
 
-        // Add register enabled/disabled
-        init_csr_enabled_state();
-
         // Add register read/write callback for special registers
         if (xlen_ == 32)
         {
