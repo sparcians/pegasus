@@ -10,7 +10,7 @@ namespace pegasus
     class PegasusTranslationState
     {
       public:
-        static const uint32_t MAX_TRANSLATION = 256;
+        static const uint32_t MAX_TRANSLATION = 1024;
 
         struct TranslationRequest
         {
