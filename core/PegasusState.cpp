@@ -978,6 +978,30 @@ namespace pegasus
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
 
+    void PegasusState::init_csr_enabled_state()
+    {
+        const auto & extensionManager = getCore()->getExtensionManager();
+
+        // Enable all register by default
+        csr_enabled_state_.resize(csr_rset_->size(), true);
+
+        // Check for disabled extensions
+        for (auto &dep : csr_rset_->getRegisterExtensionDep())
+        {
+            auto reg = dep.first;
+            auto extensions = dep.second;
+
+            for (auto ext : extensions)
+            {
+                if(!extensionManager.isEnabled(ext))
+                {
+                    csr_enabled_state_[reg] = false;
+                    break;
+                }
+            }
+        }
+    }
+
     // Install register callback functions
     template <typename XLEN> void PegasusState::addCSRRegisterCallbacks_()
     {

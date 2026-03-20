@@ -222,6 +222,7 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
+            state->init_csr_enabled_state();
         }
 
         // Initialize Mavis

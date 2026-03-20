@@ -258,7 +258,12 @@ namespace pegasus
 
         inline bool isRegEnabled(uint32_t id) const
         {
-            return (id >= csr_enabled_state_.size()) ? false : csr_enabled_state_[id];
+            if (id >= csr_enabled_state_.size())
+            {
+              return false;
+            }
+
+            return  csr_enabled_state_[id];
         }
 
         // Memory supplement for observing memory reads and writes
@@ -335,6 +340,11 @@ namespace pegasus
 
         void storeOnReservationSet(bool occurred) { store_on_resvset_ = occurred; }
 
+        /*!
+         *  \brief Track registers that are enabled/disabled
+         */
+        void init_csr_enabled_state();
+
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
@@ -361,11 +371,6 @@ namespace pegasus
 
         void
         waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
-
-        /*!
-         *  \brief Track registers that are enabled/disabled
-         */
-        void init_csr_enabled_state();
   
         /*!
          *  \brief Installs register read/write callback functions to specail registers
@@ -612,11 +617,6 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        if (!state->isRegEnabled(reg_ident))
-        {
-            state->throwException(FaultCause::ILLEGAL_INST);
-        }
-
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
@@ -638,11 +638,6 @@ namespace pegasus
                                        const char* field_name, uint64_t field_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
-
-        if (!state->isRegEnabled(reg_ident))
-        {
-            state->throwException(FaultCause::ILLEGAL_INST);
-        }
 
         XLEN csr_value = PEEK_CSR_REG<XLEN>(state, reg_ident);
 
