@@ -347,15 +347,13 @@ namespace pegasus
             }
         };
 
-        bool invalid_opcode = false;
-
         if (state->getXlen() == 32)
         {
             if (state->getCurrentInst() != nullptr)
             {
                 writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
             }
-            writeEventRecord_<uint32_t>(state, invalid_opcode);
+            writeEventRecord_<uint32_t>(state);
         }
         else
         {
@@ -375,7 +373,7 @@ namespace pegasus
         }
         else
         {
-            opcode = state->getSimState().current_opcode;
+            opcode = state->getSimState()->current_opcode;
         }
 
         if (opcode_size == 2)
