@@ -315,11 +315,6 @@ namespace pegasus
 
     void STFLogger::postExecute_(PegasusState* state)
     {
-        if (state->getCurrentInst() == nullptr)
-        {
-            return;
-        }
-
         for (const auto & mem_write : mem_writes_)
         {
             stf_writer_ << stf::InstMemAccessRecord(mem_write.paddr, mem_write.size, 0,
@@ -361,23 +356,30 @@ namespace pegasus
 
         if (state->getXlen() == 32)
         {
-            writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
+            if (state->getCurrentInst() != nullptr)
+            {
+                writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
+            }
             writeEventRecord_<uint32_t>(state, invalid_opcode);
         }
         else
         {
-            writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
+            if (state->getCurrentInst() != nullptr)
+            {
+                writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
+            }
             writeEventRecord_<uint64_t>(state, invalid_opcode);
         }
 
-        uint64_t opcode = state->getCurrentInst()->getOpcode();
-
-        if (invalid_opcode)
+        uint32_t opcode = 0;
+        uint32_t opcode_size = 4;
+        if (!invalid_opcode)
         {
-            opcode = 0;
+            opcode = state->getCurrentInst()->getOpcode();
+            opcode_size = state->getCurrentInst()->getOpcodeSize();
         }
 
-        if (state->getCurrentInst()->getOpcodeSize() == 2)
+        if (opcode_size == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(opcode);
         }
