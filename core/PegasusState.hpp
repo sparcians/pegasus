@@ -56,7 +56,7 @@ namespace pegasus
 
             PARAMETER(uint32_t, hart_id, UINT32_MAX, "Hart ID")
             PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
-            PARAMETER(uint32_t, vlen, 256, "Vector register size in bits")
+            PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
@@ -83,7 +83,7 @@ namespace pegasus
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
-                const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024, 2048};
+                const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024};
                 return std::find(valid_vlen_values.begin(), valid_vlen_values.end(), vlen_val)
                        != valid_vlen_values.end();
             }
