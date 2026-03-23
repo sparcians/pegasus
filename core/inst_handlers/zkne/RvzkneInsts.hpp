@@ -8,15 +8,14 @@ namespace pegasus
 
     class RvzkneInsts
     {
-        public:
-            using base_type = RvzkneInsts;
-            
-            template <typename XLEN>
-            static void getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers);
+      public:
+        using base_type = RvzkneInsts;
 
-        private:
+        template <typename XLEN>
+        static void getInstHandlers(InstHandlers::InstHandlersMap & inst_handlers);
 
-            template <typename XLEN, typename OPERATOR>
-            Action::ItrType aesHandler_(PegasusState* state, Action::ItrType action_it);
+      private:
+        template <typename XLEN, typename OPERATOR>
+        Action::ItrType aesHandler_(PegasusState* state, Action::ItrType action_it);
     };
-}
+} // namespace pegasus

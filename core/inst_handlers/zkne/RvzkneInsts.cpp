@@ -74,7 +74,9 @@ namespace pegasus
     template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64esmHandler<RV64>>(PegasusState*,
                                                                                    Action::ItrType);
 
-    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*, Action::ItrType);
+    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*,
+                                                                               Action::ItrType);
 
-    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks2Op<RV64>>(PegasusState*, Action::ItrType);
+    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks2Op<RV64>>(PegasusState*,
+                                                                              Action::ItrType);
 } // namespace pegasus

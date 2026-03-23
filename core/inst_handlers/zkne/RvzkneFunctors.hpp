@@ -7,7 +7,7 @@ namespace pegasus
 {
     template <typename XLEN> struct Aes32esHandler
     {
-        XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const 
+        XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const
         {
             const uint32_t bs = imm & 0x3;
             const uint8_t shamt = bs << 3;
@@ -28,7 +28,7 @@ namespace pegasus
             const uint32_t so = aes_sbox_fwd(si);
             const uint32_t mixed = aes_mixcolumn_byte_fwd(so);
             const XLEN result = static_cast<XLEN>(rs1) ^ std::rotl(mixed, shamt);
-            return static_cast<XLEN>(static_cast<uint32_t>(result));
+            return static_cast<uint32_t>(result);
         }
     };
 
@@ -43,21 +43,20 @@ namespace pegasus
         }
     };
 
-    
-
-    template<typename XLEN> struct Aes64esmHandler
+    template <typename XLEN> struct Aes64esmHandler
     {
-        XLEN operator()(XLEN rs1, XLEN rs2, uint32_t /*imm*/)
+        XLEN operator()(XLEN rs1, XLEN rs2, uint32_t /*imm*/) const
         {
-            const XLEN  sr = aes_rv64_shiftrows_fwd(rs2, rs1);
+            const XLEN sr = aes_rv64_shiftrows_fwd(rs2, rs1);
             const XLEN wd = sr;
             const XLEN sb = aes_apply_fwd_sbox_to_each_byte(wd);
             const uint32_t lower_half = static_cast<uint32_t>(sb & 0xFFFFFFFF);
             const uint32_t upper_half = static_cast<uint32_t>(sb >> 32);
 
-            const XLEN result = static_cast<uint64_t>(aes_mixcolumn_fwd(upper_half)) << 32 | aes_mixcolumn_fwd(lower_half);
+            const XLEN result = static_cast<uint64_t>(aes_mixcolumn_fwd(upper_half)) << 32
+                                | aes_mixcolumn_fwd(lower_half);
 
             return result;
         }
     };
-}
+} // namespace pegasus
