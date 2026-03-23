@@ -70,7 +70,7 @@ namespace pegasus
         return result;
     }
 
-    static uint32_t aes_mixcolumn_inv_byte(uint8_t byte)
+    static constexpr uint32_t aes_mixcolumn_inv_byte(uint8_t byte)
     {
         uint8_t x0e = gf_mul(byte, 0x0E);
         uint8_t x09 = gf_mul(byte, 0x09);
@@ -80,7 +80,16 @@ namespace pegasus
         return (uint32_t)x0e | ((uint32_t)x09 << 8) | ((uint32_t)x0d << 16) | ((uint32_t)x0b << 24);
     }
 
-    static uint64_t aes_rv64_shiftrows_inv(uint64_t rs2, uint64_t rs1)
+    static constexpr uint32_t aes_mixcolumn_byte_fwd(uint8_t byte)
+    {
+        uint8_t x02 = gf_mul(byte, 0x02);
+        uint8_t x01 = byte;
+        uint8_t x03 = gf_mul(byte, 0x03);
+
+        return (uint32_t)x02 | ((uint32_t)x01 << 8) | ((uint32_t)x01 << 16) | ((uint32_t)x03 << 24);
+    }
+
+    static constexpr uint64_t aes_rv64_shiftrows_inv(uint64_t rs2, uint64_t rs1)
     {
         auto get_byte = [](uint64_t val, int idx) -> uint8_t { return (val >> (idx * 8)) & 0xFF; };
 
@@ -102,11 +111,11 @@ namespace pegasus
         return output;
     }
 
-    static uint8_t aes_sbox_inv(uint8_t x) { return AES_SBOX_INV[x]; }
+    static constexpr uint8_t aes_sbox_inv(uint8_t x) { return AES_SBOX_INV[x]; }
 
-    static uint8_t aes_sbox_fwd(uint8_t x) { return AES_SBOX_FWD[x]; }
+    static constexpr uint8_t aes_sbox_fwd(uint8_t x) { return AES_SBOX_FWD[x]; }
 
-    static uint32_t aes_mixcolumn_inv(uint32_t col)
+    static constexpr uint32_t aes_mixcolumn_inv(uint32_t col)
     {
         const uint8_t s0 = (col >> 0) & 0xFF;
         const uint8_t s1 = (col >> 8) & 0xFF;
@@ -123,5 +132,53 @@ namespace pegasus
             gf_mul(s0, 0x0B) ^ gf_mul(s1, 0x0D) ^ gf_mul(s2, 0x09) ^ gf_mul(s3, 0x0E);
 
         return (uint32_t)b0 | ((uint32_t)b1 << 8) | ((uint32_t)b2 << 16) | ((uint32_t)b3 << 24);
+    }
+
+    static constexpr uint32_t aes_mixcolumn_fwd(uint32_t col)
+    {
+        uint8_t s0 = (col >> 0) & 0xFF, s1 = (col >> 8) & 0xFF;
+        uint8_t s2 = (col >> 16) & 0xFF, s3 = (col >> 24) & 0xFF;
+
+        uint8_t b0 = gf_mul(s0, 0x02) ^ gf_mul(s1, 0x03) ^ s2 ^ s3;
+        uint8_t b1 = s0 ^ gf_mul(s1, 0x02) ^ gf_mul(s2, 0x03) ^ s3;
+        uint8_t b2 = s0 ^ s1 ^ gf_mul(s2, 0x02) ^ gf_mul(s3, 0x03);
+        uint8_t b3 = gf_mul(s0, 0x03) ^ s1 ^ s2 ^ gf_mul(s3, 0x02);
+
+        return (uint32_t)b0 | ((uint32_t)b1 << 8) | ((uint32_t)b2 << 16) | ((uint32_t)b3 << 24);
+    }
+
+    static constexpr uint64_t aes_apply_fwd_sbox_to_each_byte(uint64_t x)
+    {
+        uint64_t res = 0;
+        for (int i = 0; i < 8; i++)
+            res |= (uint64_t)AES_SBOX_FWD[(x >> (i * 8)) & 0xFF] << (i * 8);
+        return res;
+    }
+
+    static constexpr uint64_t aes_apply_inv_sbox_to_each_byte(uint64_t x)
+    {
+        uint64_t res = 0;
+        for (int i = 0; i < 8; i++)
+            res |= (uint64_t)AES_SBOX_INV[(x >> (i * 8)) & 0xFF] << (i * 8);
+        return res;
+    }
+
+    static constexpr uint64_t aes_rv64_shiftrows_fwd(uint64_t rs2, uint64_t rs1)
+    {
+        auto get = [](uint64_t val, int i) { return (val >> (i * 8)) & 0xFF; };
+
+        // The Sail Mapping is
+        //  b0=rs1[0], b1=rs1[5], b2=rs2[2], b3=rs2[7],
+        //  b4=rs1[4], b5=rs2[1], b6=rs2[6], b7=rs1[3]
+        uint64_t res = 0;
+        res |= (uint64_t)get(rs1, 0) << 0;
+        res |= (uint64_t)get(rs1, 5) << 8;
+        res |= (uint64_t)get(rs2, 2) << 16;
+        res |= (uint64_t)get(rs2, 7) << 24;
+        res |= (uint64_t)get(rs1, 4) << 32;
+        res |= (uint64_t)get(rs2, 1) << 40;
+        res |= (uint64_t)get(rs2, 6) << 48;
+        res |= (uint64_t)get(rs1, 3) << 56;
+        return res;
     }
 } // namespace pegasus
