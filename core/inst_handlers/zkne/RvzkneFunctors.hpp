@@ -28,7 +28,7 @@ namespace pegasus
             const uint32_t so = aes_sbox_fwd(si);
             const uint32_t mixed = aes_mixcolumn_byte_fwd(so);
             const XLEN result = static_cast<XLEN>(rs1) ^ std::rotl(mixed, shamt);
-            return static_cast<uint32_t>(result);
+            return static_cast<XLEN>(result);
         }
     };
 
@@ -39,7 +39,7 @@ namespace pegasus
             const XLEN sr = aes_rv64_shiftrows_fwd(rs2, rs1);
             const XLEN wd = sr;
             const XLEN result = aes_apply_fwd_sbox_to_each_byte(wd);
-            return result;
+            return static_cast<XLEN>(result);
         }
     };
 
@@ -56,7 +56,7 @@ namespace pegasus
             const XLEN result = static_cast<uint64_t>(aes_mixcolumn_fwd(upper_half)) << 32
                                 | aes_mixcolumn_fwd(lower_half);
 
-            return result;
+            return static_cast<XLEN>(result);
         }
     };
 } // namespace pegasus
