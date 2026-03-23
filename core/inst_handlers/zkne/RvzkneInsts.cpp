@@ -28,7 +28,7 @@ namespace pegasus
             inst_handlers.emplace(
                 "aes64es",
                 Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes64esHandler<XLEN>>,
-                                     RvzkneInsts>(nullptr, "aes364es", ActionTags::EXECUTE_TAG));
+                                     RvzkneInsts>(nullptr, "aes64es", ActionTags::EXECUTE_TAG));
 
             inst_handlers.emplace(
                 "aes64esm",
@@ -73,4 +73,8 @@ namespace pegasus
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64esmHandler<RV64>>(PegasusState*,
                                                                                    Action::ItrType);
+
+    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*, Action::ItrType);
+
+    template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks2Op<RV64>>(PegasusState*, Action::ItrType);
 } // namespace pegasus
