@@ -596,19 +596,19 @@ namespace pegasus::cosim
 
     void PegasusCoSim::finish()
     {
-        // Send remaining committed events down the pipeline(s) and shut down threads.
-        pegasus_sim_->getAppManagers()->postSimLoopTeardown();
-
         std::cout << "Pegasus co-sim finished." << std::endl;
         for (CoreId core_id = 0; core_id < cosim_observers_.size(); ++core_id)
         {
-            for (HartId hart_id = 0; hart_id < cosim_observers_.at(core_id).size(); ++hart_id)
+            const auto & cos = cosim_observers_.at(core_id);
+            for (HartId hart_id = 0; hart_id < cos.size(); ++hart_id)
             {
-                auto evt_pipeline = getEventPipeline(core_id, hart_id);
+                auto evt_pipeline = cos[hart_id]->getEventPipeline();
                 const auto euid = evt_pipeline->getLastEventUID();
                 std::cout << "  Core " << core_id << ", Hart " << hart_id << ": ";
                 std::cout << euid << " events processed." << std::endl;
             }
         }
+        // Send remaining committed events down the pipeline(s) and shut down threads.
+        pegasus_sim_->getAppManagers()->postSimLoopTeardown();
     }
 } // namespace pegasus::cosim
