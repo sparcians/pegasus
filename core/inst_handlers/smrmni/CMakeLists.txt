@@ -1,9 +1,9 @@
 project(Pegasus)
 
 file(GLOB SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
-add_library(smrmni
+add_library(rvsmrmni
     OBJECT
     ${SOURCES}
 )
-add_dependencies(smrmni AutogenArchFiles)
-target_link_libraries(smrmni PUBLIC pegasuslibs)
+add_dependencies(rvsmrmni AutogenArchFiles)
+target_link_libraries(rvsmrmni PUBLIC pegasuslibs)

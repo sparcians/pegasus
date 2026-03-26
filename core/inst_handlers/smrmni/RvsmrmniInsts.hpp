@@ -1,8 +1,8 @@
 #pragma once
 
-#include "include/PegasusTypes.hpp"
-#include "core/Action.hpp"
-#include <map>
+#include "core/InstHandlers.hpp"
+#include "core/PegasusCore.hpp"
+#include "core/ActionGroup.hpp"
 
 namespace pegasus
 {
@@ -11,8 +11,11 @@ namespace pegasus
     class RvsmrmniInsts
     {
       public:
-        using base_type = RvsmrmniInsts!;
+        using base_type = RvsmrmniInsts;
 
+        template <typename XLEN> static void getInstHandlers(InstHandlers::InstHandlersMap &);
+
+      private:
         template <typename XLEN, PrivMode PRIV_MODE>
         Action::ItrType xretHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
