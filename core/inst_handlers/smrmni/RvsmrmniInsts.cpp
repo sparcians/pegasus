@@ -23,21 +23,24 @@ namespace pegasus
             inst_handlers.emplace(
                 "mnret",
                 pegasus::Action::createAction<&RvsmrmniInsts::xretHandler_<RV64, PrivMode::MACHINE>,
-                RvsmrmniInsts>(nullptr, "mnret", ActionTags::EXECUTE_TAG));
+                                              RvsmrmniInsts>(nullptr, "mnret",
+                                                             ActionTags::EXECUTE_TAG));
         }
         else if constexpr (std::is_same_v<XLEN, RV32>)
         {
             inst_handlers.emplace(
                 "mnret",
                 pegasus::Action::createAction<&RvsmrmniInsts::xretHandler_<RV32, PrivMode::MACHINE>,
-                RvsmrmniInsts>(nullptr, "mnret", ActionTags::EXECUTE_TAG));
+                                              RvsmrmniInsts>(nullptr, "mnret",
+                                                             ActionTags::EXECUTE_TAG));
         }
     }
 
     template <typename XLEN, PrivMode PRIV_MODE>
-    Action::ItrType RvsmrmniInsts::xretHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
+    Action::ItrType RvsmrmniInsts::xretHandler_(pegasus::PegasusState* state,
+                                                Action::ItrType action_it)
     {
-        (void) state;
+        (void)state;
         sparta_assert(false, "mnret is not implemented");
         return ++action_it;
     }
