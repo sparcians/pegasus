@@ -16,6 +16,15 @@
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+#include "core/PegasusAllocatorWrapper.hpp"
+
+
+#include "mavis/extension_managers/RISCVExtensionManager.hpp"
+
+#include <filesystem>
+#include <regex>
+
+template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
 namespace pegasus
 {
@@ -37,6 +46,11 @@ namespace pegasus
     {
         class Event;
     }
+
+    using MavisType =
+        Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
+              PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
+
 
     class PegasusState : public sparta::Unit
     {
@@ -111,6 +125,11 @@ namespace pegasus
         void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
 
         Addr getNextPc() const { return next_pc_; }
+
+        uint64_t getPcAlignment() const { return pc_alignment_; }
+
+        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
+
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
@@ -198,6 +217,31 @@ namespace pegasus
         PegasusCore* getCore() const { return pegasus_core_; }
 
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
+
+        MavisType* getMavis() { return mavis_.get(); }
+
+        enum MavisUIDs : mavis::InstructionUniqueID
+        {
+            MAVIS_UID_CSRRW = 1,
+            MAVIS_UID_CSRRS,
+            MAVIS_UID_CSRRC,
+            MAVIS_UID_CSRRWI,
+            MAVIS_UID_CSRRSI,
+            MAVIS_UID_CSRRCI,
+            MAVIS_UID_HLVX_HU,
+            MAVIS_UID_HLVX_WU
+        };
+
+        void changeMavisContext();
+
+        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
+        {
+            return extension_manager_;
+        }
+
+        bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
+
+        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 
         void enableInteractiveMode();
 
@@ -340,11 +384,6 @@ namespace pegasus
 
         void storeOnReservationSet(bool occurred) { store_on_resvset_ = occurred; }
 
-        /*!
-         *  \brief Track registers that are enabled/disabled
-         */
-        void init_csr_enabled_state();
-
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
@@ -417,6 +456,20 @@ namespace pegasus
         //! Previous pc
         Addr prev_pc_ = 0x0;
 
+        //! PC alignment
+        uint64_t pc_alignment_ = 4;
+
+        //! PC alignment
+        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
+
+        void setPcAlignment_(uint64_t pc_alignment)
+        {
+            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
+                          "Invalid PC alignment value! " << pc_alignment);
+            pc_alignment_ = pc_alignment;
+            pc_alignment_mask_ = ~(pc_alignment - 1);
+        }
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
@@ -449,6 +502,32 @@ namespace pegasus
         //! PegasusCore
         PegasusCore* pegasus_core_ = nullptr;
 
+        // ISA string
+        const std::string isa_string_;
+        const std::string isa_file_path_;
+
+        // Arch name
+        // FIXME: We should be able to get this from Sparta --arch
+        const std::string arch_name_;
+
+        // Path to Pegasus uarch JSONs
+        const std::string uarch_file_path_;
+
+        // Get Pegasus arch JSONs for Mavis
+        mavis::FileNameListType getUArchFiles_() const;
+
+        // Mavis extension manager
+        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        static inline mavis::InstUIDList mavis_uid_list_{
+            {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
+            {"csrrc", MAVIS_UID_CSRRC},     {"csrrwi", MAVIS_UID_CSRRWI},
+            {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
+            {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
+
+        // Mavis
+        std::unique_ptr<MavisType> mavis_;
+
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
 
@@ -472,6 +551,11 @@ namespace pegasus
 
         // Register enabled/disabled state
         std::vector<bool> csr_enabled_state_;
+
+        /*!
+         *  \brief Track registers that are enabled/disabled
+         */
+        void init_csr_enabled_state_();
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;

@@ -905,7 +905,7 @@ namespace pegasus
         {
             // Update the PC with MEPC value
             state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC)
-                             & state->getCore()->getPcAlignmentMask());
+                             & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
@@ -980,7 +980,7 @@ namespace pegasus
             {
                 // Update the PC with VSEPC value
                 state->setNextPc(READ_CSR_REG<XLEN>(state, VSEPC)
-                                 & state->getCore()->getPcAlignmentMask());
+                                 & state->getPcAlignmentMask());
 
                 // Get the previous privilege mode from the VSPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, VSSTATUS, "spp");
@@ -997,7 +997,7 @@ namespace pegasus
             {
                 // Update the PC with SEPC value
                 state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC)
-                                 & state->getCore()->getPcAlignmentMask());
+                                 & state->getPcAlignmentMask());
 
                 // Get the previous privilege mode from the SPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");

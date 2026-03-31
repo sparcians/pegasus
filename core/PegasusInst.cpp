@@ -1,5 +1,5 @@
 #include "core/PegasusInst.hpp"
-#include "core/PegasusCore.hpp"
+#include "core/PegasusState.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
 namespace pegasus
@@ -23,8 +23,8 @@ namespace pegasus
         {
             if (SPARTA_EXPECT_FALSE(extractor_info->isHypervisorInst()))
             {
-                if ((mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_HU)
-                    || (mavis_uid == PegasusCore::MavisUIDs::MAVIS_UID_HLVX_WU))
+                if ((mavis_uid == PegasusState::MavisUIDs::MAVIS_UID_HLVX_HU)
+                    || (mavis_uid == PegasusState::MavisUIDs::MAVIS_UID_HLVX_WU))
                 {
                     return translate_types::AccessType::EXECUTE;
                 }
@@ -99,16 +99,16 @@ namespace pegasus
         switch (getMavisUid())
         {
             // csrrw/csrrwi always writes
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRW:
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRWI:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRW:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRWI:
                 return true;
             // csrrs/csrrc write if rs1 != 0
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRS:
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRC:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRS:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRC:
                 return rs1_info_ && (rs1_info_->field_value != 0);
             // csrrsi/csrrci writes if imm != 0
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRSI:
-            case PegasusCore::MavisUIDs::MAVIS_UID_CSRRCI:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRSI:
+            case PegasusState::MavisUIDs::MAVIS_UID_CSRRCI:
                 return getImmediate() != 0;
             default:
                 sparta_assert(hasCsr() == false, "Unknown instruction with CSR: " << *this);

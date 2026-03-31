@@ -10,9 +10,6 @@
 #include "sparta/utils/SpartaTester.hpp"
 #include "sparta/memory/BlockingMemoryIF.hpp"
 
-#include <filesystem>
-#include <regex>
-
 namespace pegasus
 {
     std::unordered_set<PrivMode> initSupportedPrivilegeModes(const std::string & priv)
@@ -222,34 +219,6 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
-            state->init_csr_enabled_state();
-        }
-
-        // Initialize Mavis
-        DLOG("Initializing Mavis with ISA string " << isa_string_);
-
-        mavis_ = std::make_unique<MavisType>(
-            extension_manager_.constructMavis<
-                PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>(
-                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
-                {},                                    // inclusions
-                {},                                    // exclusions
-                PegasusInstAllocatorWrapper<PegasusInstAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
-                        ->inst_allocator),
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
-                        ->extractor_allocator,
-                    this)));
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
         }
 
         reservation_memory_bmi_.reset(new ReservationMemory(
@@ -287,20 +256,6 @@ namespace pegasus
         threads_running_.set(0);
     }
 
-    void PegasusCore::changeMavisContext()
-    {
-        extension_manager_.switchMavisContext(*mavis_.get());
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
-    }
-
     template <typename XLEN> uint32_t PegasusCore::getMisaExtFieldValue() const
     {
         uint32_t ext_val = 0;
@@ -330,26 +285,6 @@ namespace pegasus
 
     template uint32_t PegasusCore::getMisaExtFieldValue<RV32>() const;
     template uint32_t PegasusCore::getMisaExtFieldValue<RV64>() const;
-
-    mavis::FileNameListType PegasusCore::getUArchFiles_() const
-    {
-        mavis::FileNameListType uarch_files;
-
-        const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path =
-            uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
-        const std::regex filename_regex("pegasus_uarch_.*json");
-        for (const auto & entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
-        {
-            if (std::regex_search(entry.path().filename().string(), filename_regex))
-            {
-                DLOG("Loading: " << entry.path());
-                uarch_files.emplace_back(entry.path());
-            }
-        }
-
-        return uarch_files;
-    }
 
     // This method will execute a single thread for up to X instructions
     // where X is the quantum for that thread. The cycle count of all threads
@@ -481,17 +416,6 @@ namespace pegasus
             return false;
         }
 
-        auto compression_enabled = isCompressionEnabled();
-        auto other_compression_enabled = core->isCompressionEnabled();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(compression_enabled, other_compression_enabled);
-        }
-        else if (compression_enabled != other_compression_enabled)
-        {
-            return false;
-        }
-
         auto has_hypervisor = hasHypervisor();
         auto other_has_hypervisor = core->hasHypervisor();
         if constexpr (IS_UNIT_TEST)
@@ -499,28 +423,6 @@ namespace pegasus
             EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
         }
         else if (has_hypervisor != other_has_hypervisor)
-        {
-            return false;
-        }
-
-        auto pc_alignment = getPcAlignment();
-        auto other_pc_alignment = core->getPcAlignment();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(pc_alignment, other_pc_alignment);
-        }
-        else if (pc_alignment != other_pc_alignment)
-        {
-            return false;
-        }
-
-        auto pc_alignment_mask = getPcAlignmentMask();
-        auto other_pc_alignment_mask = core->getPcAlignmentMask();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(pc_alignment_mask, other_pc_alignment_mask);
-        }
-        else if (pc_alignment_mask != other_pc_alignment_mask)
         {
             return false;
         }

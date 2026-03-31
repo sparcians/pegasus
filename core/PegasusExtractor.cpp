@@ -1,4 +1,5 @@
 #include "core/PegasusExtractor.hpp"
+#include "core/PegasusState.hpp"
 #include "core/PegasusCore.hpp"
 
 namespace pegasus
@@ -25,7 +26,7 @@ namespace pegasus
     }
 
     PegasusExtractor::PegasusExtractor(const boost::json::object & uarch_json,
-                                       const PegasusCore* core) :
+                                       const PegasusState* state) :
         mnemonic_(getUarchJsonValue<std::string>(uarch_json, "mnemonic")),
         inst_handler_name_(getUarchJsonValue<std::string>(uarch_json, "handler")),
         is_unimplemented_(inst_handler_name_ == "unsupported"),
@@ -35,10 +36,10 @@ namespace pegasus
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {
-        const auto xlen = core->getXlen();
+        const auto xlen = state->getXlen();
         const InstHandlers::InstHandlersMap* inst_compute_address_handlers =
-            (xlen == 64) ? core->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
-                         : core->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
+            (xlen == 64) ? state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
+                         : state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
             try
@@ -57,8 +58,8 @@ namespace pegasus
         }
 
         const InstHandlers::InstHandlersMap* inst_handlers =
-            (xlen == 64) ? core->getInstHandlers()->getInstHandlersMap<RV64>()
-                         : core->getInstHandlers()->getInstHandlersMap<RV32>();
+            (xlen == 64) ? state->getCore()->getInstHandlers()->getInstHandlersMap<RV64>()
+                         : state->getCore()->getInstHandlers()->getInstHandlersMap<RV32>();
         try
         {
             const Action & inst_handler = inst_handlers->at(inst_handler_name_);
