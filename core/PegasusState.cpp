@@ -72,12 +72,20 @@ namespace pegasus
         validate_inst_begin_(p->validate_inst_begin),
         validate_fail_on_first_diff_(p->validate_fail_on_first_diff),
         priv_mode_(getPrivilegeMode(p->priv_mode)),
-        isa_string_(hart_tn->getParent()->getChildAs<sparta::ParameterSet>("params")->getParameterValueAs<std::string>("isa")),
-        isa_file_path_(hart_tn->getParent()->getChildAs<sparta::ParameterSet>("params")->getParameterValueAs<std::string>("isa_file_path")),
-        arch_name_(hart_tn->getParent()->getChildAs<sparta::ParameterSet>("params")->getParameterValueAs<std::string>("arch")),
-        uarch_file_path_(hart_tn->getParent()->getChildAs<sparta::ParameterSet>("params")->getParameterValueAs<std::string>("uarch_file_path")),
-        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(isa_string_,
-            isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
+        isa_string_(hart_tn->getParent()
+                        ->getChildAs<sparta::ParameterSet>("params")
+                        ->getParameterValueAs<std::string>("isa")),
+        isa_file_path_(hart_tn->getParent()
+                           ->getChildAs<sparta::ParameterSet>("params")
+                           ->getParameterValueAs<std::string>("isa_file_path")),
+        arch_name_(hart_tn->getParent()
+                       ->getChildAs<sparta::ParameterSet>("params")
+                       ->getParameterValueAs<std::string>("arch")),
+        uarch_file_path_(hart_tn->getParent()
+                             ->getChildAs<sparta::ParameterSet>("params")
+                             ->getParameterValueAs<std::string>("uarch_file_path")),
+        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
+            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -106,7 +114,8 @@ namespace pegasus
             }
         };
 
-        registers_by_name_.reserve(int_rset_->size() + fp_rset_->size() + vec_rset_->size() + csr_rset_->size());
+        registers_by_name_.reserve(int_rset_->size() + fp_rset_->size() + vec_rset_->size()
+                                   + csr_rset_->size());
         add_registers(int_rset_);
         add_registers(fp_rset_);
         add_registers(vec_rset_);
@@ -187,7 +196,6 @@ namespace pegasus
         return uarch_files;
     }
 
-
     // Not default -- defined in source file to reduce massive inlining
     PegasusState::~PegasusState() {}
 
@@ -222,7 +230,6 @@ namespace pegasus
                     sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
                         ->extractor_allocator,
                     this)));
-
     }
 
     void PegasusState::onBindTreeLate_()
@@ -1057,14 +1064,14 @@ namespace pegasus
         csr_enabled_state_.resize(csr_rset_->size(), true);
 
         // Check for disabled extensions
-        for (auto &dep : csr_rset_->getRegisterExtensionDep())
+        for (auto & dep : csr_rset_->getRegisterExtensionDep())
         {
             auto reg = dep.first;
             auto extensions = dep.second;
 
             for (auto ext : extensions)
             {
-                if(!extensionManager.isEnabled(ext))
+                if (!extensionManager.isEnabled(ext))
                 {
                     csr_enabled_state_[reg] = false;
                     break;

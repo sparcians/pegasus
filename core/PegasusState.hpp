@@ -18,7 +18,6 @@
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 #include "core/PegasusAllocatorWrapper.hpp"
 
-
 #include "mavis/extension_managers/RISCVExtensionManager.hpp"
 
 #include <filesystem>
@@ -50,7 +49,6 @@ namespace pegasus
     using MavisType =
         Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
               PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
-
 
     class PegasusState : public sparta::Unit
     {
@@ -129,7 +127,6 @@ namespace pegasus
         uint64_t getPcAlignment() const { return pc_alignment_; }
 
         uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
-
 
         PrivMode getPrivMode() const { return priv_mode_; }
 
@@ -304,10 +301,10 @@ namespace pegasus
         {
             if (id >= csr_enabled_state_.size())
             {
-              return false;
+                return false;
             }
 
-            return  csr_enabled_state_[id];
+            return csr_enabled_state_[id];
         }
 
         // Memory supplement for observing memory reads and writes
@@ -410,7 +407,7 @@ namespace pegasus
 
         void
         waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
-  
+
         /*!
          *  \brief Installs register read/write callback functions to specail registers
          */

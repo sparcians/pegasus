@@ -76,8 +76,7 @@ class PegasusInstructionTester
     {
         pegasus::PegasusState* state = getPegasusState();
         mavis::ExtractorDirectInfo ex_info(args...);
-        pegasus::PegasusInst::PtrType instPtr =
-            state->getMavis()->makeInstDirectly(ex_info, state);
+        pegasus::PegasusInst::PtrType instPtr = state->getMavis()->makeInstDirectly(ex_info, state);
         std::cout << instPtr->dasmString() << std::endl;
         return instPtr;
     }

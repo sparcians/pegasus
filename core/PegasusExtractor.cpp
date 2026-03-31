@@ -38,8 +38,9 @@ namespace pegasus
     {
         const auto xlen = state->getXlen();
         const InstHandlers::InstHandlersMap* inst_compute_address_handlers =
-            (xlen == 64) ? state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
-                         : state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
+            (xlen == 64)
+                ? state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV64>()
+                : state->getCore()->getInstHandlers()->getInstComputeAddressHandlersMap<RV32>();
         if (is_memory_inst_)
         {
             try
