@@ -18,22 +18,11 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            inst_handlers.emplace(
-                "mnret",
-                pegasus::Action::createAction<&RvsmrmniInsts::xretHandler_<RV64, PrivMode::MACHINE>,
-                                              RvsmrmniInsts>(nullptr, "mnret",
-                                                             ActionTags::EXECUTE_TAG));
-        }
-        else if constexpr (std::is_same_v<XLEN, RV32>)
-        {
-            inst_handlers.emplace(
-                "mnret",
-                pegasus::Action::createAction<&RvsmrmniInsts::xretHandler_<RV32, PrivMode::MACHINE>,
-                                              RvsmrmniInsts>(nullptr, "mnret",
-                                                             ActionTags::EXECUTE_TAG));
-        }
+        inst_handlers.emplace(
+            "mnret",
+            pegasus::Action::createAction<&RvsmrmniInsts::xretHandler_<XLEN, PrivMode::MACHINE>,
+                                          RvsmrmniInsts>(nullptr, "mnret",
+                                                         ActionTags::EXECUTE_TAG));
     }
 
     template <typename XLEN, PrivMode PRIV_MODE>
