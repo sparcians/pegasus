@@ -411,7 +411,7 @@ namespace pegasus
         waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
 
         /*!
-         *  \brief Installs register read/write callback functions to specail registers
+         *  \brief Installs register read/write callback functions to special registers
          */
         template <typename XLEN> void addCSRRegisterCallbacks_();
 

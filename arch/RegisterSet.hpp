@@ -121,7 +121,7 @@ namespace pegasus
         }
 
         /*!
-         *  \brief Returns the registers that contain an extesion dependency
+         *  \brief Returns the registers that contain an extension dependency
          */
         const std::map<uint32_t, std::vector<std::string>> & getRegisterExtensionDep() const
         {
