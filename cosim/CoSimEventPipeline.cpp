@@ -582,27 +582,6 @@ namespace pegasus::cosim
             }
         }
 
-        // Reload state to the youngest uncommitted event. If there are none left,
-        // then reload to the last committed event.
-        sparta::utils::ValidValue<uint64_t> reload_euid;
-        if (!uncommitted_evts_buffer_.empty())
-        {
-            reload_euid = uncommitted_evts_buffer_.back().getEuid();
-        }
-        else if (last_committed_event_uid_.isValid())
-        {
-            reload_euid = last_committed_event_uid_.getValue();
-        }
-        else
-        {
-            // Not sure what to do. Throw for now.
-            throw simdb::DBException("After flushing event with euid " + std::to_string(euid)
-                                     + " for core " + std::to_string(core_id_) + ", hart "
-                                     + std::to_string(hart_id_)
-                                     + ", there are no uncommitted or committed events to "
-                                       "reload state from!");
-        }
-
         auto reload_event = [&](const Event & reload_evt)
         {
             auto euid = reload_evt.getEuid();
@@ -665,18 +644,40 @@ namespace pegasus::cosim
             }
         };
 
+        // Reload state to the youngest uncommitted event. If there are none left,
+        // then reload to the last committed event.
         if (!uncommitted_evts_buffer_.empty())
         {
             const auto & reload_evt = uncommitted_evts_buffer_.back();
-            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
+            reload_event(reload_evt);
+        }
+        else if (last_committed_event_uid_.isValid())
+        {
+            auto reload_evt_accessor = getLastCommittedEvent();
+            const auto & reload_evt = *reload_evt_accessor.get();
             reload_event(reload_evt);
         }
         else
         {
-            auto reload_evt_accessor = getLastCommittedEvent();
-            const auto & reload_evt = *reload_evt_accessor.get();
-            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
-            reload_event(reload_evt);
+            // We are flushing the very first event (nothing committed yet).
+            auto checkpointer = observer->getCheckpointer();
+            checkpointer->getFastCheckpointer().loadCheckpoint(0);
+
+            last_event_uid_.clearValid();
+            sim_stopped_ = false;
+
+            auto sim_state = state->getSimState();
+            sim_state->reset();
+            sim_state->current_uid = 0;
+            sim_state->inst_count = 0;
+            sim_state->cycles = 0;
+            sim_state->sim_pause_reason = SimPauseReason::INVALID;
+            sim_state->test_passed = true;
+            sim_state->workload_exit_code = 0;
+
+            // sim_stopped is left alone since it is set
+            // to true as early as bindTree(), and flushing
+            // the first event does not mean "unbind tree".
         }
     }
 
