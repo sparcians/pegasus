@@ -497,6 +497,23 @@ int main(int argc, char** argv)
     size_t step_count = 0;
     try
     {
+        // Always start every test with a step-flush-compare at time 0 (nothing committed).
+        auto first_event = cosim_test.step(core_id, hart_id);
+        constexpr bool flush_younger_only = false;
+        cosim_test.flush(first_event, flush_younger_only);
+
+        auto state_truth = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_test =
+            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+        if (arch == "rv32")
+        {
+            Compare<uint32_t>(state_truth, state_test);
+        }
+        else
+        {
+            Compare<uint64_t>(state_truth, state_test);
+        }
+
         while (true)
         {
             ++step_count;
