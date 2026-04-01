@@ -503,7 +503,8 @@ int main(int argc, char** argv)
         cosim_test.flush(first_event, flush_younger_only);
 
         auto state_truth = cosim_truth.getPegasusCore(core_id)->getPegasusState(hart_id);
-        auto state_test = cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
+        auto state_test =
+            cosim_test.getPegasusSim().getPegasusCore(core_id)->getPegasusState(hart_id);
         if (arch == "rv32")
         {
             Compare<uint32_t>(state_truth, state_test);
