@@ -99,7 +99,8 @@ def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, ti
         # Remove log files if test passed
         if os.path.exists(logname):
             os.remove(logname)
-        else:
+        # Warn if test passed but log is missing (does not apply to CoSim harness)
+        elif pegasus_cmd[0].find('FlushWorkload_test') == -1:
             print("WARNING: Test passed but Pegasus log is missing:", logname)
         passing_tests.append(testname)
     else:
@@ -134,11 +135,12 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
             continue
 
 
-def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
-    for testname, wkld in tests:
+def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir):
+    for test in tests:
+        testname = test[0]
+        pegasus_cmd = test[1]
         print ("Running test:", testname)
-        run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable)
-
+        run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, timeout_tests)
 
 def extract_sparta_failures(log_file, failure_dict):
     with open(log_file, 'r') as fin:
