@@ -5,7 +5,7 @@
 
 namespace pegasus
 {
-    template <typename XLEN> struct Aes32esHandler
+    template <typename XLEN> struct Aes32esOp
     {
         XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const
         {
@@ -18,7 +18,7 @@ namespace pegasus
         }
     };
 
-    template <typename XLEN> struct Aes32esmHandler
+    template <typename XLEN> struct Aes32esmOp
     {
         XLEN operator()(XLEN rs1, XLEN rs2, uint32_t imm) const
         {
@@ -32,7 +32,7 @@ namespace pegasus
         }
     };
 
-    template <typename XLEN> struct Aes64esHandler
+    template <typename XLEN> struct Aes64esOp
     {
         XLEN operator()(XLEN rs1, XLEN rs2, uint32_t /*imm*/) const
         {
@@ -43,7 +43,7 @@ namespace pegasus
         }
     };
 
-    template <typename XLEN> struct Aes64esmHandler
+    template <typename XLEN> struct Aes64esmOp
     {
         XLEN operator()(XLEN rs1, XLEN rs2, uint32_t /*imm*/) const
         {
