@@ -99,6 +99,7 @@ namespace pegasus
         }
 
         uint32_t getNumRegisters() const { return registers_by_reg_num_.size(); }
+
         uint32_t size() const { return registers_by_reg_num_.size(); }
 
         const std::unordered_map<std::string, sparta::Register*> & getRegistersByName() const
