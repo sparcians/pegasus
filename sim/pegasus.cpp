@@ -6,15 +6,18 @@
 #include "include/gen/pegasus_version.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] = "Usage:\n"
-                     "./pegasus [-i inst limit] "
-                     "[--reg \"core*.hart*.name value\"] "
-                     "[--opcode opcode] "
-                     "[--interactive] "
-                     "[--ignore-wkld-exit-code] "
-                     "[--load-binary \"binary load_addr\"] "
-                     "[--spike-formatting] <workloads>"
-                     "\n";
+const char USAGE[] =
+    "Usage:\n"
+    "./pegasus [-i inst limit] "
+    "[--reg \"core*.hart*.name value\"] "
+    "[--opcode opcode] "
+    "[--interactive] "
+    "[--ignore-wkld-exit-code] "
+    "[--load-binary \"binary load_addr\"] "
+    "[--spike-formatting] <workloads>"
+    "\n"
+    "Example: ./pegasus -p top.core0.params.isa rv64imafdcbv_zicsr_zifencei_zbkb zbkb.elf"
+    "\n";
 
 using StringPairParam = std::pair<std::string, std::string>;
 
@@ -86,6 +89,13 @@ int main(int argc, char** argv)
         if (!cls.parse(argc, argv, err_code))
         {
             return err_code; // Any errors already printed to cerr
+        }
+
+        if (argc < 2)
+        {
+            std::cout << cls.getUsage() << std::endl;
+            std::cout << cls.getApplicationOptions().getVerboseOptions() << std::endl;
+            return 0;
         }
 
         const auto & vm = cls.getVariablesMap();
@@ -223,10 +233,16 @@ int main(int argc, char** argv)
             return exit_code;
         }
     }
-    catch (...)
+    catch (std::filesystem::filesystem_error const & ex)
+    {
+        std::cout << "Invalid file path " << ex.what() << std::endl;
+        return -1;
+    }
+    catch (std::exception const & ex)
     {
         // Could still handle or log the exception here
-        throw;
+        std::cout << ex.what() << std::endl;
+        return -1;
     }
 
     return 0;
