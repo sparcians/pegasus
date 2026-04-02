@@ -236,13 +236,13 @@ int main(int argc, char** argv)
     catch (std::filesystem::filesystem_error const & ex)
     {
         std::cout << "Invalid file path " << ex.what() << std::endl;
-        return -1;
+        throw;
     }
     catch (std::exception const & ex)
     {
         // Could still handle or log the exception here
         std::cout << ex.what() << std::endl;
-        return -1;
+        throw;
     }
 
     return 0;
