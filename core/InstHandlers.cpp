@@ -12,6 +12,7 @@
 #include "core/inst_handlers/i/RviInsts.hpp"
 #include "core/inst_handlers/m/RvmInsts.hpp"
 #include "core/inst_handlers/svinval/RvsvinvalInsts.hpp"
+#include "core/inst_handlers/smrmni/RvsmrmniInsts.hpp"
 #include "core/inst_handlers/v/RvvConfigSettingInsts.hpp"
 #include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
@@ -78,6 +79,7 @@ namespace pegasus
         RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvsvinvalInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvsmrmniInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -126,6 +128,7 @@ namespace pegasus
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvsvinvalInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvsmrmniInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);

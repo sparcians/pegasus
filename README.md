@@ -300,3 +300,7 @@ must be writable. | |
 | **Svvptc** Transitions from invalid to valid PTEs will be visible in bounded time without an explicit memory-management fence. | |
 | **Sspm** Supervisor-mode pointer masking, with the supervisor execution environment providing a
 means to select PMLEN=0 and PMLEN=7 at minimum. | |
+
+| RV32 and RV64 "Other" Extensions | Status |
+| :--------------------------- | :----: |
+| **Smrmni** Extension for Resumable Non-Maskable Interrupts, | :white_check_mark: |

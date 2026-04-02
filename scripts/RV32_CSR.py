@@ -1148,6 +1148,42 @@ CSR32_DEFS = {
              },
              'context': 'HART',
            },
+    0x740: {
+             'name': 'mnscratch',
+             'desc': 'Resumable NMI scratch register',
+             'fields' : {},
+             'context': 'HART',
+             'extension': ['Smrmni']
+           },
+    0x741: {
+             'name': 'mnepc',
+             'desc': 'Resumable NMI program counter',
+             'fields' : {},
+             'context': 'HART',
+             'extension': ['Smrmni']
+           },
+    0x742: {
+             'name': 'mncause',
+             'desc': 'Resumable NMI cause',
+             'fields': {
+                 'Interrupt' : { 'high_bit': 31, 'low_bit':  31, 'readonly': False, 'desc': 'Bit to set a trap' },
+                 'Code'      : { 'high_bit': 30, 'low_bit':   0, 'readonly': False, 'desc': 'The exception code' },
+             },
+             'context': 'HART',
+             'extension': ['Smrmni']
+           },
+    0x744: {
+             'name': 'mnstatus',
+             'desc': 'Resumable NMI status',
+             'fields': {
+               'MNPP'   : { 'high_bit': 12, 'low_bit':  11, 'readonly': False, 'desc': 'Privilege mode of the interrupt context' },
+               'MNPELP' : { 'high_bit':  9, 'low_bit':   9, 'readonly': False, 'desc': 'Expected landing pad' },
+               'MNRV'   : { 'high_bit':  7, 'low_bit':   7, 'readonly': False, 'desc': 'Modify privilege' },
+               'NMIE'   : { 'high_bit':  3, 'low_bit':   3, 'readonly': False, 'desc': 'Enable/Disable Non-maskable interrupts in M-mode' }
+             },
+             'context': 'HART',
+             'extension': ['Smrmni']
+           },
     0x747: {
              'name': 'mseccfg',
              'desc': 'Machine security configuration register.',
