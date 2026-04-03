@@ -1,5 +1,5 @@
-#include "core/inst_handlers/v/RvvZvbcInsts.hpp"
-#include "core/inst_handlers/v/RvvZvbcFunctors.hpp"
+#include "core/inst_handlers/zvbc/RvvZvbcInsts.hpp"
+#include "core/inst_handlers/zvbc/RvvZvbcFunctors.hpp"
 #include "include/ActionTags.hpp"
 
 namespace pegasus
