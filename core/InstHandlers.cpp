@@ -41,7 +41,7 @@
 #include "core/inst_handlers/zihintpause/RvzihintpauseInsts.hpp"
 #include "core/inst_handlers/zilsd/RvzilsdInsts.hpp"
 #include "core/inst_handlers/zknd/RvzkndInsts.hpp"
-#include "core/inst_handlers/zvbc/RvzvbcInsts.hpp"
+#include "core/inst_handlers/zvbc/RvvZvbcInsts.hpp"
 #include "core/inst_handlers/zvfbfwma/RvzvfbfwmaInsts.hpp"
 #include "core/inst_handlers/zvkg/RvzvkgInsts.hpp"
 #include "core/inst_handlers/zvkned/RvzvknedInsts.hpp"
@@ -89,6 +89,7 @@ namespace pegasus
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvReductionInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvZvbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzabhaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzacasInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzawrsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -112,7 +113,7 @@ namespace pegasus
         RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzihintpauseInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzkndInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        RvzvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvfbfwmaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvkgInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvknedInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -138,6 +139,7 @@ namespace pegasus
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvReductionInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvZvbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzabhaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzacasInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzawrsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -161,7 +163,7 @@ namespace pegasus
         RvzihintpauseInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_); // RV32 only
         RvzkndInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvzvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvfbfwmaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvkgInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvknedInsts::getInstHandlers<RV32>(rv32_inst_actions_);
