@@ -514,6 +514,9 @@ namespace pegasus
     template <bool CHECK_ILIMIT>
     Action::ItrType PegasusState::incrementPc_(PegasusState*, Action::ItrType action_it)
     {
+        // Clear inst translation state
+        inst_translation_state_.reset();
+
         // Set PC
         prev_pc_ = pc_;
         pc_ = next_pc_;

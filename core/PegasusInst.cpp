@@ -87,6 +87,7 @@ namespace pegasus
         rs3_reg_(state->getSpartaRegister(rs3_info_)),
         rd_reg_(state->getSpartaRegister(rd_info_)),
         rd2_reg_(state->getSpartaRegister(rd2_info_)),
+        translation_state_(state->getInstTranslationState()),
         inst_action_group_(extractor_info_->inst_action_group_)
     {
     }
