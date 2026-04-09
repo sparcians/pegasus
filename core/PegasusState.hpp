@@ -186,6 +186,8 @@ namespace pegasus
 
         PegasusTranslationState* getFetchTranslationState() { return &fetch_translation_state_; }
 
+        PegasusTranslationState* getInstTranslationState() { return &inst_translation_state_; }
+
         PegasusCore* getCore() const { return pegasus_core_; }
 
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
@@ -416,8 +418,11 @@ namespace pegasus
         Action::ItrType incrementPc_(PegasusState* state, Action::ItrType action_it);
         pegasus::Action increment_pc_action_;
 
-        // Translation/MMU state
+        // Fetch translation state
         PegasusTranslationState fetch_translation_state_;
+
+        // Instruction translation state
+        PegasusTranslationState inst_translation_state_;
 
         //! PegasusCore
         PegasusCore* pegasus_core_ = nullptr;
