@@ -4,6 +4,8 @@
 
 namespace pegasus
 {
+    PegasusTranslationState global_translation_state_;
+
     const PegasusExtractorPtr testExtractorPointer(const PegasusExtractorPtr & extractor_info,
                                                    const std::string & mnemonic)
     {
@@ -87,6 +89,7 @@ namespace pegasus
         rs3_reg_(state->getSpartaRegister(rs3_info_)),
         rd_reg_(state->getSpartaRegister(rd_info_)),
         rd2_reg_(state->getSpartaRegister(rd2_info_)),
+        translation_state_(&global_translation_state_),
         inst_action_group_(extractor_info_->inst_action_group_)
     {
     }

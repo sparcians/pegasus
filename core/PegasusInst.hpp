@@ -28,6 +28,8 @@ namespace pegasus
 
         ~PegasusInst();
 
+        PegasusInst(const PegasusInst&) = default;
+
         uint64_t getUid() const { return uid_; }
 
         void setUid(const uint64_t uid) { uid_ = uid; }
@@ -216,7 +218,7 @@ namespace pegasus
 
         // Translation information.  Specifically, this is for data
         // accesses
-        PegasusTranslationState* getTranslationState() { return &translation_state_; }
+        PegasusTranslationState* getTranslationState() { return translation_state_; }
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusInst* inst) const;
 
@@ -263,7 +265,7 @@ namespace pegasus
         sparta::Register* rd2_reg_;
 
         // Translation state for load/store instructions
-        PegasusTranslationState translation_state_;
+        PegasusTranslationState * translation_state_ = nullptr;
 
         ActionGroup inst_action_group_;
 
