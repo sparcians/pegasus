@@ -18,8 +18,6 @@
 #include "sparta/events/Event.hpp"
 #include "sparta/events/PayloadEvent.hpp"
 
-template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
-
 namespace sparta::memory
 {
     class BlockingMemoryIF;
@@ -29,10 +27,6 @@ namespace pegasus
 {
     class PegasusSystem;
     class ReservationMemory;
-
-    using MavisType =
-        Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-              PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
 
     class PegasusCore : public sparta::Unit
     {
@@ -103,41 +97,12 @@ namespace pegasus
 
         uint64_t getXlen() const { return xlen_; }
 
-        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
-        {
-            return extension_manager_;
-        }
-
-        bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
-
-        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
-
         bool isMisalignmentSupported() const { return misalignment_support_; }
 
         // Is the "H" extension enabled?
         bool hasHypervisor() const { return hypervisor_enabled_; }
 
-        MavisType* getMavis() { return mavis_.get(); }
-
-        enum MavisUIDs : mavis::InstructionUniqueID
-        {
-            MAVIS_UID_CSRRW = 1,
-            MAVIS_UID_CSRRS,
-            MAVIS_UID_CSRRC,
-            MAVIS_UID_CSRRWI,
-            MAVIS_UID_CSRRSI,
-            MAVIS_UID_CSRRCI,
-            MAVIS_UID_HLVX_HU,
-            MAVIS_UID_HLVX_WU
-        };
-
-        void changeMavisContext();
-
         template <typename XLEN> uint32_t getMisaExtFieldValue() const;
-
-        uint64_t getPcAlignment() const { return pc_alignment_; }
-
-        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
@@ -247,39 +212,13 @@ namespace pegasus
         // Path to Pegasus uarch JSONs
         const std::string uarch_file_path_;
 
-        // Get Pegasus arch JSONs for Mavis
-        mavis::FileNameListType getUArchFiles_() const;
-
         // Mavis extension manager
         mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
-
-        // Mavis
-        std::unique_ptr<MavisType> mavis_;
-
-        static inline mavis::InstUIDList mavis_uid_list_{
-            {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
-            {"csrrc", MAVIS_UID_CSRRC},     {"csrrwi", MAVIS_UID_CSRRWI},
-            {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
-            {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
 
         inline bool validateISAString_(std::string & unsupportedExt);
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
-
-        //! PC alignment
-        uint64_t pc_alignment_ = 4;
-
-        //! PC alignment
-        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
-
-        void setPcAlignment_(uint64_t pc_alignment)
-        {
-            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
-                          "Invalid PC alignment value! " << pc_alignment);
-            pc_alignment_ = pc_alignment;
-            pc_alignment_mask_ = ~(pc_alignment - 1);
-        }
 
         //! LR/SC Reservations
         std::vector<Reservation> reservations_;

@@ -16,6 +16,14 @@
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+#include "core/PegasusAllocatorWrapper.hpp"
+
+#include "mavis/extension_managers/RISCVExtensionManager.hpp"
+
+#include <filesystem>
+#include <regex>
+
+template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
 namespace pegasus
 {
@@ -37,6 +45,10 @@ namespace pegasus
     {
         class Event;
     }
+
+    using MavisType =
+        Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
+              PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
 
     class PegasusState : public sparta::Unit
     {
@@ -112,6 +124,10 @@ namespace pegasus
 
         Addr getNextPc() const { return next_pc_; }
 
+        uint64_t getPcAlignment() const { return pc_alignment_; }
+
+        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
+
         PrivMode getPrivMode() const { return priv_mode_; }
 
         PrivMode getLdstPrivMode(translate_types::TranslationStage stage =
@@ -178,6 +194,13 @@ namespace pegasus
             sim_state_.current_inst = inst;
         }
 
+        void throwException(FaultCause cause)
+        {
+            auto exception_unit = getExceptionUnit();
+            exception_unit->setUnhandledException(cause);
+            throw ActionException(exception_unit->getActionGroup());
+        }
+
         void setCurrentException(uint64_t excp_code) { current_exception_ = excp_code; }
 
         void clearCurrentException() { current_exception_ = std::numeric_limits<ExcpCode>::max(); }
@@ -191,6 +214,38 @@ namespace pegasus
         PegasusCore* getCore() const { return pegasus_core_; }
 
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
+
+        MavisType* getMavis() { return mavis_.get(); }
+
+        const MavisType* getMavis() const { return mavis_.get(); }
+
+        enum MavisUIDs : mavis::InstructionUniqueID
+        {
+            MAVIS_UID_CSRRW = 1,
+            MAVIS_UID_CSRRS,
+            MAVIS_UID_CSRRC,
+            MAVIS_UID_CSRRWI,
+            MAVIS_UID_CSRRSI,
+            MAVIS_UID_CSRRCI,
+            MAVIS_UID_HLVX_HU,
+            MAVIS_UID_HLVX_WU
+        };
+
+        void changeMavisContext();
+
+        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
+        {
+            return extension_manager_;
+        }
+
+        const mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager() const
+        {
+            return extension_manager_;
+        }
+
+        bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
+
+        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 
         void enableInteractiveMode();
 
@@ -248,6 +303,16 @@ namespace pegasus
         }
 
         sparta::Register* findRegister(const std::string & reg_name, bool must_exist = true) const;
+
+        inline bool isRegEnabled(uint32_t id) const
+        {
+            if (id >= csr_enabled_state_.size())
+            {
+                return false;
+            }
+
+            return csr_enabled_state_[id];
+        }
 
         // Memory supplement for observing memory reads and writes
         struct MemorySupplement
@@ -351,7 +416,7 @@ namespace pegasus
         waitOnReservationSet_(const sparta::memory::BlockingMemoryIFNode::PostWriteAccess & data);
 
         /*!
-         *  \brief Installs register read/write callback functions to specail registers
+         *  \brief Installs register read/write callback functions to special registers
          */
         template <typename XLEN> void addCSRRegisterCallbacks_();
 
@@ -395,6 +460,20 @@ namespace pegasus
         //! Previous pc
         Addr prev_pc_ = 0x0;
 
+        //! PC alignment
+        uint64_t pc_alignment_ = 4;
+
+        //! PC alignment
+        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
+
+        void setPcAlignment_(uint64_t pc_alignment)
+        {
+            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
+                          "Invalid PC alignment value! " << pc_alignment);
+            pc_alignment_ = pc_alignment;
+            pc_alignment_mask_ = ~(pc_alignment - 1);
+        }
+
         //! Current privilege mode
         PrivMode priv_mode_ = PrivMode::MACHINE;
 
@@ -427,6 +506,32 @@ namespace pegasus
         //! PegasusCore
         PegasusCore* pegasus_core_ = nullptr;
 
+        // ISA string
+        const std::string isa_string_;
+        const std::string isa_file_path_;
+
+        // Arch name
+        // FIXME: We should be able to get this from Sparta --arch
+        const std::string arch_name_;
+
+        // Path to Pegasus uarch JSONs
+        const std::string uarch_file_path_;
+
+        // Get Pegasus arch JSONs for Mavis
+        mavis::FileNameListType getUArchFiles_() const;
+
+        // Mavis extension manager
+        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        static inline mavis::InstUIDList mavis_uid_list_{
+            {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
+            {"csrrc", MAVIS_UID_CSRRC},     {"csrrwi", MAVIS_UID_CSRRWI},
+            {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
+            {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
+
+        // Mavis
+        std::unique_ptr<MavisType> mavis_;
+
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
 
@@ -447,6 +552,14 @@ namespace pegasus
 
         // Cached registers by name
         std::unordered_map<std::string, sparta::Register*> registers_by_name_;
+
+        // Register enabled/disabled state
+        std::vector<bool> csr_enabled_state_;
+
+        /*!
+         *  \brief Track registers that are enabled/disabled
+         */
+        void initCsrEnabledState_();
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
@@ -539,6 +652,12 @@ namespace pegasus
     static inline XLEN READ_CSR_REG(PegasusState* state, uint32_t reg_ident)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+
+        if (SPARTA_EXPECT_FALSE(!state->isRegEnabled(reg_ident)))
+        {
+            state->throwException(FaultCause::ILLEGAL_INST);
+        }
+
         return state->getCsrRegister(reg_ident)->readWithCheck();
     }
 
@@ -546,6 +665,12 @@ namespace pegasus
     static inline void WRITE_CSR_REG(PegasusState* state, uint32_t reg_ident, uint64_t reg_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+
+        if (SPARTA_EXPECT_FALSE(!state->isRegEnabled(reg_ident)))
+        {
+            state->throwException(FaultCause::ILLEGAL_INST);
+        }
+
         if (const auto mask = pegasus::getCsrBitMask<XLEN>(reg_ident);
             mask != std::numeric_limits<XLEN>::max())
         {
@@ -579,6 +704,7 @@ namespace pegasus
                                       const char* field_name)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);
         const XLEN field_lsb = csr_bit_range.first;
         const XLEN field_msb = csr_bit_range.second;
@@ -600,6 +726,7 @@ namespace pegasus
                                        const char* field_name, uint64_t field_value)
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
+
         XLEN csr_value = PEEK_CSR_REG<XLEN>(state, reg_ident);
 
         const auto & csr_bit_range = pegasus::getCsrBitRange<XLEN>(reg_ident, field_name);

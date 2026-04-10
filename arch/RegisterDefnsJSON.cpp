@@ -92,6 +92,21 @@ namespace pegasus
                 true};
 
             register_defns_.push_back(defn);
+
+            // Extract the extesion field (array) if present
+            if (auto value = reg.as_object().if_contains("extension"); value)
+            {
+                for (auto & ext : value->as_array())
+                {
+                    const uint32_t num = static_cast<uint32_t>(reg.at("num").as_int64());
+
+                    std::string lower_ext(ext.as_string());
+                    std::transform(lower_ext.begin(), lower_ext.end(), lower_ext.begin(),
+                                   [](unsigned char c) { return std::tolower(c); });
+
+                    register_extension_dep_[num].push_back(std::move(lower_ext));
+                }
+            }
         }
     }
 } // namespace pegasus
