@@ -527,30 +527,24 @@ namespace pegasus
 
     template <typename XLEN> void PegasusState::incrCycleCsrs_()
     {
-        XLEN cycle = getCsrRegister(CYCLE)->dmiRead<XLEN>() + 1;
-        XLEN mcycle = getCsrRegister(MCYCLE)->dmiRead<XLEN>() + 1;
+        const XLEN cycle = getCsrRegister(CYCLE)->dmiRead<XLEN>();
+        const XLEN mcycle = getCsrRegister(MCYCLE)->dmiRead<XLEN>();
         if constexpr (std::is_same_v<XLEN, RV32>)
         {
-            XLEN cycleh = getCsrRegister(CYCLE)->dmiRead<XLEN>();
-            XLEN mcycleh = getCsrRegister(MCYCLE)->dmiRead<XLEN>();
-
             if (SPARTA_EXPECT_FALSE(cycle == std::numeric_limits<XLEN>::max()))
             {
-                cycle = 0;
-                ++cycleh;
+                const XLEN cycleh = getCsrRegister(CYCLE)->dmiRead<XLEN>();
+                getCsrRegister(CYCLEH)->dmiWrite<XLEN>(cycleh + 1);
             }
 
             if (SPARTA_EXPECT_FALSE(mcycle == std::numeric_limits<XLEN>::max()))
             {
-                mcycle = 0;
-                ++mcycleh;
+                const XLEN mcycleh = getCsrRegister(MCYCLE)->dmiRead<XLEN>();
+                getCsrRegister(MCYCLEH)->dmiWrite<XLEN>(mcycleh + 1);
             }
-
-            getCsrRegister(CYCLEH)->dmiWrite<XLEN>(cycleh);
-            getCsrRegister(MCYCLEH)->dmiWrite<XLEN>(mcycleh);
         }
-        getCsrRegister(CYCLE)->dmiWrite<XLEN>(cycle);
-        getCsrRegister(MCYCLE)->dmiWrite<XLEN>(mcycle);
+        getCsrRegister(CYCLE)->dmiWrite<XLEN>(cycle + 1);
+        getCsrRegister(MCYCLE)->dmiWrite<XLEN>(mcycle + 1);
     }
 
     template <typename XLEN> void PegasusState::incrTimeCsrs_()
@@ -559,47 +553,38 @@ namespace pegasus
         // On some simple platforms, cycle count might represent a valid
         // implementation of RDTIME, in which case RDTIME and RDCYCLE
         // may return the same result.
-        XLEN time = getCsrRegister(TIME)->dmiRead<XLEN>() + 1;
+        const XLEN time = getCsrRegister(TIME)->dmiRead<XLEN>();
         if constexpr (std::is_same_v<XLEN, RV32>)
         {
-            XLEN timeh = getCsrRegister(TIME)->dmiRead<XLEN>() + 1;
             if (SPARTA_EXPECT_FALSE(time == std::numeric_limits<XLEN>::max()))
             {
-                time = 0;
-                ++timeh;
+                const XLEN timeh = getCsrRegister(TIME)->dmiRead<XLEN>();
+                getCsrRegister(TIMEH)->dmiWrite<XLEN>(timeh + 1);
             }
-
-            getCsrRegister(TIMEH)->dmiWrite<XLEN>(timeh);
         }
-        getCsrRegister(TIME)->dmiWrite<XLEN>(time);
+        getCsrRegister(TIME)->dmiWrite<XLEN>(time + 1);
     }
 
     template <typename XLEN> void PegasusState::incrInstretCsrs_()
     {
-        XLEN instret = getCsrRegister(INSTRET)->dmiRead<XLEN>() + 1;
-        XLEN minstret = getCsrRegister(MINSTRET)->dmiRead<XLEN>() + 1;
+        const XLEN instret = getCsrRegister(INSTRET)->dmiRead<XLEN>();
+        const XLEN minstret = getCsrRegister(MINSTRET)->dmiRead<XLEN>();
         if constexpr (std::is_same_v<XLEN, RV32>)
         {
-            XLEN instreth = getCsrRegister(INSTRETH)->dmiRead<XLEN>();
-            XLEN minstreth = getCsrRegister(MINSTRETH)->dmiRead<XLEN>();
-
             if (SPARTA_EXPECT_FALSE(instret == std::numeric_limits<XLEN>::max()))
             {
-                instret = 0;
-                ++instreth;
+                const XLEN instreth = getCsrRegister(INSTRETH)->dmiRead<XLEN>();
+                getCsrRegister(INSTRETH)->dmiWrite<XLEN>(instreth + 1);
             }
 
             if (SPARTA_EXPECT_FALSE(minstret == std::numeric_limits<XLEN>::max()))
             {
-                minstret = 0;
-                ++minstreth;
+                const XLEN minstreth = getCsrRegister(MINSTRETH)->dmiRead<XLEN>();
+                getCsrRegister(MINSTRETH)->dmiWrite<XLEN>(minstreth + 1);
             }
-
-            getCsrRegister(INSTRETH)->dmiWrite<XLEN>(instreth);
-            getCsrRegister(MINSTRETH)->dmiWrite<XLEN>(minstreth);
         }
-        getCsrRegister(INSTRET)->dmiWrite<XLEN>(instret);
-        getCsrRegister(MINSTRET)->dmiWrite<XLEN>(minstret);
+        getCsrRegister(INSTRET)->dmiWrite<XLEN>(instret + 1);
+        getCsrRegister(MINSTRET)->dmiWrite<XLEN>(minstret + 1);
     }
 
     template void PegasusState::incrCycleCsrs_<RV64>();
@@ -627,7 +612,7 @@ namespace pegasus
         // for now just assume each inst takes 1 cycle
         ++sim_state_.cycles;
 
-        if (pegasus_core_->isExtensionEnabled("zicntr"))
+        if (pegasus_core_->hasZicntr())
         {
             incrInstretCsrs_<XLEN>();
             incrCycleCsrs_<XLEN>();

@@ -120,6 +120,9 @@ namespace pegasus
         // Is the "H" extension enabled?
         bool hasHypervisor() const { return hypervisor_enabled_; }
 
+        // Is the "Zicntr" extension enabled?
+        bool hasZicntr() const { return zicntr_enabled_; }
+
         MavisType* getMavis() { return mavis_.get(); }
 
         enum MavisUIDs : mavis::InstructionUniqueID
@@ -269,6 +272,9 @@ namespace pegasus
 
         //! Do we have hypervisor?
         const bool hypervisor_enabled_;
+
+        //! Do we have the counter extension?
+        const bool zicntr_enabled_;
 
         //! PC alignment
         uint64_t pc_alignment_ = 4;
