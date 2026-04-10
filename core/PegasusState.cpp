@@ -114,8 +114,8 @@ namespace pegasus
             }
         };
 
-        registers_by_name_.reserve(int_rset_->size() + fp_rset_->size() + vec_rset_->size()
-                                   + csr_rset_->size());
+        registers_by_name_.reserve(int_rset_->getNumRegisters() + fp_rset_->getNumRegisters()
+                                   + vec_rset_->getNumRegisters() + csr_rset_->getNumRegisters());
         add_registers(int_rset_);
         add_registers(fp_rset_);
         add_registers(vec_rset_);
@@ -144,7 +144,7 @@ namespace pegasus
             setPcAlignment_(4);
         }
 
-        init_csr_enabled_state_();
+        initCsrEnabledState_();
 
         // Increment PC Action
         const bool CHECK_ILIMIT = ilimit_ > 0;
@@ -442,6 +442,8 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        initCsrEnabledState_();
     }
 
     void PegasusState::enableInteractiveMode()
@@ -1056,12 +1058,12 @@ namespace pegasus
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
 
-    void PegasusState::init_csr_enabled_state_()
+    void PegasusState::initCsrEnabledState_()
     {
         const auto & extensionManager = getExtensionManager();
 
         // Enable all register by default
-        csr_enabled_state_.resize(csr_rset_->size(), true);
+        csr_enabled_state_.resize(csr_rset_->getNumRegisters(), true);
 
         // Check for disabled extensions
         for (auto & dep : csr_rset_->getRegisterExtensionDep())
