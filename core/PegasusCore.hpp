@@ -108,7 +108,10 @@ namespace pegasus
             return extension_manager_;
         }
 
-        bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
+        bool isExtensionEnabled(const std::string & ext) const
+        {
+            return extension_manager_.isEnabled(ext);
+        }
 
         bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 

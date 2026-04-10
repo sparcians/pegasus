@@ -622,15 +622,17 @@ namespace pegasus
 
         // Increment instruction count
         ++sim_state_.inst_count;
-        incrInstretCsrs_<XLEN>();
 
         // TODO: We don't have a timing model yet so
         // for now just assume each inst takes 1 cycle
         ++sim_state_.cycles;
-        incrCycleCsrs_<XLEN>();
 
-        // Time
-        incrTimeCsrs_<XLEN>();
+        if (pegasus_core_->isExtensionEnabled("zicntr"))
+        {
+            incrInstretCsrs_<XLEN>();
+            incrCycleCsrs_<XLEN>();
+            incrTimeCsrs_<XLEN>();
+        }
 
         if constexpr (CHECK_ILIMIT)
         {
@@ -799,17 +801,20 @@ namespace pegasus
     {
         std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
 
-        if (xlen_ == 64)
+        if (pegasus_core_->isExtensionEnabled("zicntr"))
         {
-            std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV64>() << std::endl;
-            std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV64>() << std::endl;
-            std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV64>() << std::endl;
-        }
-        else
-        {
-            std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV32>() << std::endl;
-            std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV32>() << std::endl;
-            std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV32>() << std::endl;
+            if (xlen_ == 64)
+            {
+                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV64>() << std::endl;
+                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV64>() << std::endl;
+                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV64>() << std::endl;
+            }
+            else
+            {
+                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV32>() << std::endl;
+                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV32>() << std::endl;
+                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV32>() << std::endl;
+            }
         }
 
         sim_state_.workload_exit_code = exit_code;
