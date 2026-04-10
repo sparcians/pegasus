@@ -216,6 +216,7 @@ namespace pegasus
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
 
         MavisType* getMavis() { return mavis_.get(); }
+
         const MavisType* getMavis() const { return mavis_.get(); }
 
         enum MavisUIDs : mavis::InstructionUniqueID
