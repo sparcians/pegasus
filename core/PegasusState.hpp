@@ -216,6 +216,7 @@ namespace pegasus
         void setPegasusCore(PegasusCore* pegasus_core) { pegasus_core_ = pegasus_core; }
 
         MavisType* getMavis() { return mavis_.get(); }
+        const MavisType* getMavis() const { return mavis_.get(); }
 
         enum MavisUIDs : mavis::InstructionUniqueID
         {
@@ -232,6 +233,11 @@ namespace pegasus
         void changeMavisContext();
 
         mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
+        {
+            return extension_manager_;
+        }
+
+        const mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager() const
         {
             return extension_manager_;
         }
@@ -552,7 +558,7 @@ namespace pegasus
         /*!
          *  \brief Track registers that are enabled/disabled
          */
-        void init_csr_enabled_state_();
+        void initCsrEnabledState_();
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
@@ -646,7 +652,7 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        if (!state->isRegEnabled(reg_ident))
+        if (SPARTA_EXPECT_FALSE(!state->isRegEnabled(reg_ident)))
         {
             state->throwException(FaultCause::ILLEGAL_INST);
         }
@@ -659,7 +665,7 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        if (!state->isRegEnabled(reg_ident))
+        if (SPARTA_EXPECT_FALSE(!state->isRegEnabled(reg_ident)))
         {
             state->throwException(FaultCause::ILLEGAL_INST);
         }
