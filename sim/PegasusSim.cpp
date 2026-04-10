@@ -34,8 +34,8 @@ namespace pegasus
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
         getSimulationConfiguration()->scheduler_measure_run_time = false;
-        sparta::app::Simulation::run(run_time);
         const auto start = std::chrono::system_clock::system_clock::now();
+        sparta::app::Simulation::run(run_time);
         const auto end = std::chrono::system_clock::system_clock::now();
         const auto sim_time =
             std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();

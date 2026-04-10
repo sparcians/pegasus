@@ -162,12 +162,6 @@ namespace pegasus
 
         SimState* getSimState() { return &sim_state_; }
 
-        using CachedCsrs = std::map<uint32_t, uint64_t>;
-
-        const CachedCsrs* getCachedCsrs() const { return &cached_csrs_; }
-
-        CachedCsrs* getCachedCsrs() { return &cached_csrs_; }
-
         void pauseHart(const SimPauseReason reason);
 
         void unpauseHart();
@@ -297,12 +291,6 @@ namespace pegasus
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        template <typename XLEN> void updateCycleCsrs();
-
-        template <typename XLEN> void updateTimeCsrs();
-
-        template <typename XLEN> void updateInstretCsrs();
-
         void stopSim(const int64_t exit_code);
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
@@ -415,16 +403,16 @@ namespace pegasus
         //! Simulation state
         SimState sim_state_;
 
-        //! Cached CSRs, indexed by CSR number
-        std::map<uint32_t, uint64_t> cached_csrs_{
-            {CYCLE, 0}, {MCYCLE, 0}, {TIME, 0}, {INSTRET, 0}, {MINSTRET, 0},
-        };
-
         //! Vector state
         VectorConfig vector_config_;
 
+        // Increment counter CSRs
+        template <typename XLEN> void incrCycleCsrs_();
+        template <typename XLEN> void incrTimeCsrs_();
+        template <typename XLEN> void incrInstretCsrs_();
+
         // Increment PC Action
-        template <bool CHECK_ILIMIT>
+        template <typename XLEN, bool CHECK_ILIMIT>
         Action::ItrType incrementPc_(PegasusState* state, Action::ItrType action_it);
         pegasus::Action increment_pc_action_;
 
