@@ -7,9 +7,18 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../arch                     ${CMAKE_C
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/../../mavis/json               ${CMAKE_CURRENT_BINARY_DIR}/mavis_json SYMBOLIC)
 file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_CURRENT_BINARY_DIR}/workloads SYMBOLIC)
 
+# Supported architectures
+pegasus_named_test(pegasus_rva23_test pegasus --arch rva23 --no-run)
+pegasus_named_test(pegasus_rvb23_test pegasus --arch rvb23 --no-run)
+pegasus_named_test(pegasus_rvm23_test pegasus --arch rvm23 --no-run)
+
 # ASM Tests
 pegasus_named_test(pegasus_nop_test pegasus -p top.core0.hart0.params.stop_sim_on_wfi true workloads/nop.elf)
 pegasus_named_test(pegasus_uart_test pegasus -p top.system.params.enable_uart true workloads/uart.elf)
+
+# Load binary test
+set (LOAD_BIN --load-binary "workloads/nop.bin 0x80000000")
+pegasus_named_test(pegasus_nop_bin_test pegasus -p top.core0.hart0.params.stop_sim_on_wfi true ${LOAD_BIN})
 
 # Linux Tests
 set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
@@ -19,7 +28,7 @@ set (LINUX_ARCH_SETUP --reg "core0.hart0.sp 0x0000003ffffff000"
 set (SYSCALL_LOG -l top syscall ${CMAKE_CURRENT_BINARY_DIR}/syscall.log -l top inst ${CMAKE_CURRENT_BINARY_DIR}/inst.log)
 
 set (TEST_TEXT_FILE ${PROJECT_SOURCE_DIR}/../elfs/linux/syscall_test/test_text.txt)
-pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/dhry.elf)
+pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/rv64_dhry.elf)
 pegasus_named_test(pegasus_fstatat_test pegasus ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
 pegasus_named_test(pegasus_syscall_test pegasus ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
 

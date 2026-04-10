@@ -3,29 +3,36 @@
 #include <filesystem>
 
 #include "sim/PegasusSim.hpp"
+#include "include/gen/pegasus_version.hpp"
 #include "sparta/app/CommandLineSimulator.hpp"
 
-const char USAGE[] = "Usage:\n"
-                     "./pegasus [-i inst limit] [--reg \"core*.hart*.name value\"] [--opcode "
-                     "opcode] [--interactive] "
-                     "[--spike-formatting] <workloads>"
-                     "\n";
+const char USAGE[] =
+    "Usage:\n"
+    "./pegasus [-i inst limit] "
+    "[--reg \"core*.hart*.name value\"] "
+    "[--opcode opcode] "
+    "[--interactive] "
+    "[--ignore-wkld-exit-code] "
+    "[--load-binary \"binary load_addr\"] "
+    "[--spike-formatting] <workloads>"
+    "\n"
+    "Example: ./pegasus -p top.core0.params.isa rv64imafdcbv_zicsr_zifencei_zbkb zbkb.elf"
+    "\n";
 
-struct RegOverride
-{
-    std::string name;
-    std::string value;
-};
+using StringPairParam = std::pair<std::string, std::string>;
 
-inline std::ostream & operator<<(std::ostream & os, RegOverride const & v)
+namespace std
 {
-    return os << "RegOverride {" << v.name << ", " << v.value << "}";
-}
+    inline std::ostream & operator<<(std::ostream & os, StringPairParam const & p)
+    {
+        return os << "StringPairParam {" << p.first << ", " << p.second << "}";
+    }
 
-static inline std::istream & operator>>(std::istream & is, RegOverride & into)
-{
-    return is >> std::skipws >> into.name >> into.value;
-}
+    static inline std::istream & operator>>(std::istream & is, StringPairParam & into)
+    {
+        return is >> std::skipws >> into.first >> into.second;
+    }
+} // namespace std
 
 int main(int argc, char** argv)
 {
@@ -36,11 +43,13 @@ int main(int argc, char** argv)
 
     sparta::app::DefaultValues DEFAULTS;
     DEFAULTS.auto_summary_default = "off";
-    DEFAULTS.arch_arg_default = "rva23";
+    DEFAULTS.arch_arg_default = "default";
     DEFAULTS.arch_search_dirs = {"arch"}; // Where --arch will be resolved by default
 
-    sparta::SimulationInfo::getInstance() =
-        sparta::SimulationInfo("Pegasus RISC-V Functional Model", argc, argv, "v0.0.0", "", {});
+    const std::string pegasus_version =
+        "v" + MAJOR_VERSION + "." + MINOR_VERSION + "." + MINOR_MINOR_VERSION;
+    sparta::SimulationInfo::getInstance() = sparta::SimulationInfo(
+        "Pegasus RISC-V Functional Model", argc, argv, pegasus_version, "", {});
     const bool show_field_names = true;
     sparta::SimulationInfo::getInstance().write(std::cout, "# ", "\n", show_field_names);
     std::cout << "# Sparta Version: " << sparta::SimulationInfo::sparta_version << std::endl;
@@ -61,9 +70,11 @@ int main(int argc, char** argv)
         app_opts.add_options()
             ("inst-limit,i", po::value<uint64_t>(&ilimit),
              "Stop simulation after the instruction limit has been reached")
-            ("reg", po::value<std::vector<RegOverride>>()->multitoken(), "Override initial value of a register e.g. \"core0.hart0.sp 0x1000\"")
+            ("reg", po::value<std::vector<StringPairParam>>()->multitoken(), "Override initial value of a register e.g. \"core0.hart0.sp 0x1000\"")
             ("opcode", po::value<std::string>(&opcode), "Executes a single opcode")
             ("interactive", "Enable interactive mode (IDE)")
+            ("ignore-wkld-exit-code", "Don't pass the workload's exit code as the Pegasus sim's exit code")
+            ("load-binary", po::value<std::vector<StringPairParam>>()->multitoken(), "Binary to load into memory at the specified address e.g. \"example.bin 0x80000000\"")
             ("eot-mode", po::value<std::string>(&eot_mode), "End of testing mode (pass_fail, magic_mem) [currently IGNORED]")
             ("spike-formatting", "Format the Instruction Logger similar to Spike")
             ("workloads,w", po::value<std::vector<std::string>>(&workloads), "Workload(s) to run with workload arguments");
@@ -78,6 +89,13 @@ int main(int argc, char** argv)
         if (!cls.parse(argc, argv, err_code))
         {
             return err_code; // Any errors already printed to cerr
+        }
+
+        if (argc < 2)
+        {
+            std::cout << cls.getUsage() << std::endl;
+            std::cout << cls.getApplicationOptions().getVerboseOptions() << std::endl;
+            return 0;
         }
 
         const auto & vm = cls.getVariablesMap();
@@ -123,18 +141,41 @@ int main(int argc, char** argv)
         if (vm.count("reg"))
         {
             std::string reg_overrides_param_value = "[";
-            const auto reg_overrides = vm["reg"].as<std::vector<RegOverride>>();
+            const auto reg_overrides = vm["reg"].as<std::vector<StringPairParam>>();
             for (uint32_t reg_idx = 0; reg_idx < reg_overrides.size(); ++reg_idx)
             {
                 const auto & reg_override = reg_overrides[reg_idx];
                 reg_overrides_param_value +=
-                    "[" + reg_override.name + ", " + reg_override.value + "]";
+                    "[" + reg_override.first + ", " + reg_override.second + "]";
                 const bool last_overrides = reg_idx == (reg_overrides.size() - 1);
                 reg_overrides_param_value += last_overrides ? "" : ",";
             }
 
             reg_overrides_param_value += "]";
             sim_cfg.processParameter("top.extension.sim.reg_overrides", reg_overrides_param_value);
+        }
+
+        // Register overrides
+        if (vm.count("load-binary"))
+        {
+            std::string load_binaries_param_value = "[";
+            const auto load_binaries = vm["load-binary"].as<std::vector<StringPairParam>>();
+            for (uint32_t reg_idx = 0; reg_idx < load_binaries.size(); ++reg_idx)
+            {
+                const auto & reg_override = load_binaries[reg_idx];
+                load_binaries_param_value +=
+                    "[" + reg_override.first + ", " + reg_override.second + "]";
+                const bool last_overrides = reg_idx == (load_binaries.size() - 1);
+                load_binaries_param_value += last_overrides ? "" : ",";
+            }
+
+            load_binaries_param_value += "]";
+            sim_cfg.processParameter("top.extension.sim.load_binaries", load_binaries_param_value);
+        }
+
+        if (vm.count("ignore-wkld-exit-code"))
+        {
+            sim_cfg.processParameter("top.extension.sim.ignore_wkld_exit_code", "true");
         }
 
         // Create the simulator
@@ -181,12 +222,28 @@ int main(int argc, char** argv)
             sim.getPegasusCore(core_idx)->getPegasusState(hart_idx)->getSimState();
         exit_code = sim_state->workload_exit_code;
         std::cout << "Workload exit code: " << std::dec << exit_code << std::endl;
+
+        auto extension = sparta::notNull(sim.getRoot()->createExtension("sim"));
+        const uint64_t return_wkld_exit_code =
+            extension->getParameters()->getParameter("ignore_wkld_exit_code")->getValueAs<bool>()
+            == false;
+        // Return wkld exit code
+        if (return_wkld_exit_code)
+        {
+            return exit_code;
+        }
     }
-    catch (...)
+    catch (std::filesystem::filesystem_error const & ex)
+    {
+        std::cout << "Invalid file path " << ex.what() << std::endl;
+        throw;
+    }
+    catch (std::exception const & ex)
     {
         // Could still handle or log the exception here
+        std::cout << ex.what() << std::endl;
         throw;
     }
 
-    return exit_code;
+    return 0;
 }

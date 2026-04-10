@@ -113,6 +113,11 @@ namespace pegasus
 
     void PegasusSim::buildTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeEarly();
+        }
+
         auto root_tn = getRoot();
 
         // top.allocators
@@ -126,13 +131,19 @@ namespace pegasus
         tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
             root_tn, "system_call_emulator", "System Call Emulator", &sys_call_factory_));
 
-        getRoot()->addExtensionFactory(PegasusSimParameters::name,
-                                       [&]() -> sparta::TreeNode::ExtensionsBase*
-                                       { return new PegasusSimParameters(); });
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeLate();
+        }
     }
 
     void PegasusSim::configureTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onConfigureTreeEarly();
+        }
+
         // Get number of cores
         const uint32_t num_cores =
             PegasusSimParameters::getParameter<uint32_t>(getRoot(), "num_cores");
@@ -146,10 +157,20 @@ namespace pegasus
                 core_tn = new sparta::ResourceTreeNode(getRoot(), core_name, "cores", core_idx,
                                                        "Core", &core_factory_));
         }
+
+        for (auto listener : sim_listeners_)
+        {
+            listener->onConfigureTreeLate();
+        }
     }
 
     void PegasusSim::bindTree_()
     {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeEarly();
+        }
+
         // Pegasus System (shared by all cores)
         system_ = getRoot()->getChild("system")->getResourceAs<pegasus::PegasusSystem>();
 
@@ -282,6 +303,35 @@ namespace pegasus
                 }
             }
         }
+
+        for (auto listener : sim_listeners_)
+        {
+            listener->onBindTreeLate();
+        }
+    }
+
+    void PegasusSim::registerSimDbApps_(simdb::AppRegistrations* app_registrations)
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onRegisterAppsRequest(app_registrations);
+        }
+    }
+
+    void PegasusSim::parameterizeSimDbApps_(simdb::AppManager* app_mgr)
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onParameterizeAppsRequest(app_mgr);
+        }
+    }
+
+    void PegasusSim::postFinalizeFramework_()
+    {
+        for (auto listener : sim_listeners_)
+        {
+            listener->onFrameworkFinalized();
+        }
     }
 
     void PegasusSim::endSimulation(int64_t exit_code)
@@ -293,3 +343,5 @@ namespace pegasus
     }
 
 } // namespace pegasus
+
+REGISTER_TREE_NODE_EXTENSION(pegasus::PegasusSimParameters);

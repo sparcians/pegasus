@@ -98,3 +98,6 @@ RV64ZBS_INST = [
     {'mnemonic': 'bset', 'handler': 'bset', 'cost': 1, 'tags': 'B_EXT_64', 'memory': False, 'cof': False},
     {'mnemonic': 'bseti', 'handler': 'bseti', 'cost': 1, 'tags': 'B_EXT_64', 'memory': False, 'cof': False},
 ]
+
+RV32B_INST = RV32ZBA_INST + RV32ZBB_INST + RV32ZBC_INST + RV32ZBS_INST
+RV64B_INST = RV64ZBA_INST + RV64ZBB_INST + RV64ZBC_INST + RV64ZBS_INST

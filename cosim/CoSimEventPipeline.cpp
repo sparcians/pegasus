@@ -70,8 +70,8 @@ namespace pegasus::cosim
 
         // Remember that all cores/harts share the same database,
         // so we need to distinguish events by core/hart ID.
-        tbl.addColumn("CoreId", dt::int32_t);
-        tbl.addColumn("HartId", dt::int32_t);
+        tbl.addColumn("CoreId", dt::uint32_t);
+        tbl.addColumn("HartId", dt::uint32_t);
 
         // The compressed event data blob
         tbl.addColumn("ZlibBlob", dt::blob_t);
@@ -79,7 +79,17 @@ namespace pegasus::cosim
         // Index for fast lookup by euid/arch ranges and core/hart ID.
         tbl.createCompoundIndexOn(
             {"StartEuid", "EndEuid", "StartArchId", "EndArchId", "CoreId", "HartId"});
-        tbl.disableAutoIncPrimaryKey();
+
+        // Support for CoSimEventReplayer.
+        auto add_ptree_table = [&](const std::string & table_name)
+        {
+            auto & ptree_values_tbl = schema.addTable(table_name);
+            ptree_values_tbl.addColumn("PTreePath", dt::string_t);
+            ptree_values_tbl.addColumn("PTreeValue", dt::string_t);
+        };
+
+        add_ptree_table("ArchParameterTree");
+        add_ptree_table("ConfigParameterTree");
     }
 
     class EventCompressorStage : public simdb::pipeline::Stage
@@ -218,7 +228,7 @@ namespace pegasus::cosim
         CoSimEventPipeline* pipeline_ = nullptr;
         simdb::ConcurrentQueue<EventList>* input_queue_ = nullptr;
         simdb::ConcurrentQueue<SerializedEvtsBuffer>* output_queue_ = nullptr;
-        uint64_t arch_id_ = 1;
+        uint64_t arch_id_ = 0;
     };
 
     class EventWriterStage : public simdb::pipeline::DatabaseStage<CoSimEventPipeline>
@@ -319,14 +329,10 @@ namespace pegasus::cosim
             if (input_queue_->try_pop(serialized))
             {
                 auto inserter = getTableInserter_("CompressedEvents");
-                inserter->setColumnValue(0, serialized.start_euid);
-                inserter->setColumnValue(1, serialized.end_euid);
-                inserter->setColumnValue(2, serialized.start_arch_id);
-                inserter->setColumnValue(3, serialized.end_arch_id);
-                inserter->setColumnValue(4, serialized.core_id);
-                inserter->setColumnValue(5, serialized.hart_id);
-                inserter->setColumnValue(6, serialized.evt_bytes);
-                inserter->createRecord();
+                inserter->createRecordWithColValues(serialized.start_euid, serialized.end_euid,
+                                                    serialized.start_arch_id,
+                                                    serialized.end_arch_id, serialized.core_id,
+                                                    serialized.hart_id, serialized.evt_bytes);
                 action = simdb::pipeline::PipelineAction::PROCEED;
             }
 
@@ -360,16 +366,15 @@ namespace pegasus::cosim
 
         // Configure the pipeline snooper so we can look for events directly in the pipeline
         // instead of needing to go to the database when the event is not in the cache.
-        pipeline_snooper_.addStage(compressor);
-        pipeline_snooper_.addStage(db_writer);
+        pipeline_snooper_ = pipeline_mgr->createSnooper<uint64_t, std::unique_ptr<Event>>();
+        pipeline_snooper_->addStage(compressor);
+        pipeline_snooper_->addStage(db_writer);
     }
 
     simdb::pipeline::PipelineManager* CoSimEventPipeline::getPipelineManager() const
     {
         return pipeline_mgr_;
     }
-
-    void CoSimEventPipeline::setListener(EventListener* listener) { listener_ = listener; }
 
     void CoSimEventPipeline::onStep(Event && evt)
     {
@@ -378,11 +383,6 @@ namespace pegasus::cosim
 
         uncommitted_evts_buffer_.emplace_back(std::move(evt));
         last_event_uid_ = uncommitted_evts_buffer_.back().getEuid();
-
-        if (listener_)
-        {
-            listener_->onNewEvent(getLastEvent());
-        }
     }
 
     void CoSimEventPipeline::commitOldest()
@@ -395,11 +395,33 @@ namespace pegasus::cosim
         uncommitted_evts_buffer_.pop_front();
         last_committed_event_uid_ = evt.getEuid();
 
+        // Handle syscall emulation
+        if (state_->getCore()->isSystemCallEmulationEnabled() && (evt.getOpcode() == ECALL_OPCODE))
+        {
+            sparta_assert(
+                uncommitted_evts_buffer_.empty(),
+                "Cannot emulate a system call with uncommitted Events! Num uncommitted events: "
+                    << uncommitted_evts_buffer_.size());
+            if (state_->getXlen() == 64)
+            {
+                const RV64 ret_code = state_->emulateSystemCall<RV64>();
+                WRITE_INT_REG<RV64>(state_, 10, ret_code);
+                evt.ecall_x10_changes_.postExecute(ret_code);
+            }
+            else
+            {
+                const RV32 ret_code = state_->emulateSystemCall<RV32>();
+                WRITE_INT_REG<RV32>(state_, 10, ret_code);
+                evt.ecall_x10_changes_.postExecute(ret_code);
+            }
+        }
+
         committed_evts_buffer_.emplace_back(std::move(evt));
         if (committed_evts_buffer_.size() == 100)
         {
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
-            observer_->getCheckpointer()->commitCurrentBranch();
+            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
+            observer_->getCheckpointer()->commitCurrentBranch(force_branch);
         }
     }
 
@@ -560,27 +582,6 @@ namespace pegasus::cosim
             }
         }
 
-        // Reload state to the youngest uncommitted event. If there are none left,
-        // then reload to the last committed event.
-        sparta::utils::ValidValue<uint64_t> reload_euid;
-        if (!uncommitted_evts_buffer_.empty())
-        {
-            reload_euid = uncommitted_evts_buffer_.back().getEuid();
-        }
-        else if (last_committed_event_uid_.isValid())
-        {
-            reload_euid = last_committed_event_uid_.getValue();
-        }
-        else
-        {
-            // Not sure what to do. Throw for now.
-            throw simdb::DBException("After flushing event with euid " + std::to_string(euid)
-                                     + " for core " + std::to_string(core_id_) + ", hart "
-                                     + std::to_string(hart_id_)
-                                     + ", there are no uncommitted or committed events to "
-                                       "reload state from!");
-        }
-
         auto reload_event = [&](const Event & reload_evt)
         {
             auto euid = reload_evt.getEuid();
@@ -643,18 +644,40 @@ namespace pegasus::cosim
             }
         };
 
+        // Reload state to the youngest uncommitted event. If there are none left,
+        // then reload to the last committed event.
         if (!uncommitted_evts_buffer_.empty())
         {
             const auto & reload_evt = uncommitted_evts_buffer_.back();
-            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
+            reload_event(reload_evt);
+        }
+        else if (last_committed_event_uid_.isValid())
+        {
+            auto reload_evt_accessor = getLastCommittedEvent();
+            const auto & reload_evt = *reload_evt_accessor.get();
             reload_event(reload_evt);
         }
         else
         {
-            auto reload_evt_accessor = getLastCommittedEvent();
-            const auto & reload_evt = *reload_evt_accessor.get();
-            sparta_assert(reload_evt.getEuid() == reload_euid.getValue());
-            reload_event(reload_evt);
+            // We are flushing the very first event (nothing committed yet).
+            auto checkpointer = observer->getCheckpointer();
+            checkpointer->getFastCheckpointer().loadCheckpoint(0);
+
+            last_event_uid_.clearValid();
+            sim_stopped_ = false;
+
+            auto sim_state = state->getSimState();
+            sim_state->reset();
+            sim_state->current_uid = 0;
+            sim_state->inst_count = 0;
+            sim_state->cycles = 0;
+            sim_state->sim_pause_reason = SimPauseReason::INVALID;
+            sim_state->test_passed = true;
+            sim_state->workload_exit_code = 0;
+
+            // sim_stopped is left alone since it is set
+            // to true as early as bindTree(), and flushing
+            // the first event does not mean "unbind tree".
         }
     }
 
@@ -687,7 +710,7 @@ namespace pegasus::cosim
         sparta_assert(!uncommitted_evts_buffer_.empty());
 
         auto & last_evt = uncommitted_evts_buffer_.back();
-        last_evt.event_ends_sim_ = true;
+        last_evt.workload_exit_code_ = state_->getSimState()->workload_exit_code;
         last_evt.done_ = true;
 
         sim_stopped_ = true;
@@ -700,6 +723,7 @@ namespace pegasus::cosim
         if (!committed_evts_buffer_.empty())
         {
             pipeline_head_->emplace(std::move(committed_evts_buffer_));
+            observer_->getCheckpointer()->commitCurrentBranch(true /*force new head checkpoint*/);
         }
 
         if (!uncommitted_evts_buffer_.empty())
@@ -712,6 +736,8 @@ namespace pegasus::cosim
 
     void CoSimEventPipeline::postTeardown()
     {
+        ensureOnlyOneLastEventOnDisk_();
+
         std::cout << "Event accesses for core " << core_id_ << ", hart " << hart_id_ << ":\n";
         std::cout << "    From cache: " << num_evts_retrieved_from_cache_ << "\n";
 
@@ -801,7 +827,7 @@ namespace pegasus::cosim
         auto start = std::chrono::high_resolution_clock::now();
 
         std::unique_ptr<Event> snooped_event;
-        pipeline_snooper_.snoopAllStages(euid, snooped_event);
+        pipeline_snooper_->snoopAllStages(euid, snooped_event);
 
         if (!snooped_event)
         {
@@ -881,7 +907,163 @@ namespace pegasus::cosim
         }
 
         throw simdb::DBException("Internal error occurred. Cannot find event with uid ")
-            << euid << ".";
+            << euid << ". Core " << core_id_ << ", hart " << hart_id_ << ", database '"
+            << db_mgr_->getDatabaseFilePath() << "'.";
+    }
+
+    void CoSimEventPipeline::ensureOnlyOneLastEventOnDisk_()
+    {
+        // We are going to load event windows into memory until we find one that does
+        // not have the workload exit code ValidValue set (reading them from newest to
+        // oldest). Only the very last event on disk should have the workload exit code.
+        // The reason we can end up with multiple events with the exit code set is that
+        // we can run the PegasusCoSim to the end of the workload, produce a "last event",
+        // flush one instruction, step forward again, produce another "last event", flush,
+        // and so on.
+        class LastEventWindow
+        {
+          public:
+            LastEventWindow(uint32_t core_id, uint32_t hart_id) :
+                core_id_(core_id),
+                hart_id_(hart_id)
+            {
+            }
+
+            void add(EventList && evts, uint64_t start_euid, uint64_t end_euid, int db_id_to_delete)
+            {
+                start_euid_ = std::min(start_euid_, start_euid);
+                end_euid_ = std::max(end_euid_, end_euid);
+                db_ids_to_delete_.push_back(db_id_to_delete);
+
+                if (evts_.empty())
+                {
+                    evts_ = std::move(evts);
+                }
+                else if (evts.front().getEuid() > evts_.back().getEuid())
+                {
+                    evts_.insert(evts_.end(), evts.begin(), evts.end());
+                }
+                else if (evts.back().getEuid() < evts_.front().getEuid())
+                {
+                    std::swap(evts, evts_);
+                    evts_.insert(evts_.end(), evts.begin(), evts.end());
+                }
+                else
+                {
+                    throw sparta::SpartaException("Invalid event uids (overlapping)");
+                }
+            }
+
+            void overwriteLastWindow(simdb::DatabaseManager* db_mgr)
+            {
+                for (auto db_id : db_ids_to_delete_)
+                {
+                    db_mgr->removeRecordFromTable("CompressedEvents", db_id);
+                }
+
+                // Clear all but the last workload exit code ValidValue
+                bool clear_vv = false;
+                for (auto rit = evts_.rbegin(); rit != evts_.rend(); ++rit)
+                {
+                    if (!rit->workload_exit_code_.isValid())
+                    {
+                        break;
+                    }
+                    else if (clear_vv)
+                    {
+                        rit->workload_exit_code_.clearValid();
+                    }
+                    else
+                    {
+                        clear_vv = true;
+                    }
+                }
+
+                // Serialize the events to a byte buffer
+                SerializedEvtsBuffer serialized;
+                serialized.start_euid = start_euid_;
+                serialized.end_euid = end_euid_;
+                serialized.start_arch_id = evts_.front().getArchId();
+                serialized.end_arch_id = evts_.back().getArchId();
+                serialized.core_id = core_id_;
+                serialized.hart_id = hart_id_;
+
+                namespace bio = boost::iostreams;
+                bio::back_insert_device<std::vector<char>> inserter(serialized.evt_bytes);
+                bio::stream<bio::back_insert_device<std::vector<char>>> os(inserter);
+                boost::archive::binary_oarchive oa(os);
+                oa << evts_;
+                os.flush();
+
+                // Compress the byte buffer
+                std::vector<char> compressed_bytes;
+                simdb::compressData(serialized.evt_bytes, compressed_bytes);
+                std::swap(serialized.evt_bytes, compressed_bytes);
+
+                db_mgr->INSERT(SQL_TABLE("CompressedEvents"),
+                               SQL_VALUES(serialized.start_euid, serialized.end_euid,
+                                          serialized.start_arch_id, serialized.end_arch_id,
+                                          serialized.core_id, serialized.hart_id,
+                                          serialized.evt_bytes));
+            }
+
+          private:
+            EventList evts_;
+            const uint32_t core_id_;
+            const uint32_t hart_id_;
+            uint64_t start_euid_ = std::numeric_limits<uint64_t>::max();
+            uint64_t end_euid_ = 0;
+            std::vector<int> db_ids_to_delete_;
+        } last_event_window{core_id_, hart_id_};
+
+        auto query = db_mgr_->createQuery("CompressedEvents");
+
+        uint64_t start_euid;
+        query->select("StartEuid", start_euid);
+
+        uint64_t end_euid;
+        query->select("EndEuid", end_euid);
+
+        query->addConstraintForInt("CoreId", simdb::Constraints::EQUAL, (int)core_id_);
+        query->addConstraintForInt("HartId", simdb::Constraints::EQUAL, (int)hart_id_);
+
+        std::vector<char> compressed_evts_bytes;
+        query->select("ZlibBlob", compressed_evts_bytes);
+
+        int db_id;
+        query->select("Id", db_id);
+
+        query->orderBy("EndEuid", simdb::QueryOrder::DESC);
+        auto result_set = query->getResultSet();
+
+        while (result_set.getNextRecord())
+        {
+            // "Undo" the pipeline transforms. Start by undoing zlib.
+            std::vector<char> uncompressed_evts_bytes;
+            simdb::decompressData(compressed_evts_bytes, uncompressed_evts_bytes);
+
+            // Now undo boost::serialization
+            namespace bio = boost::iostreams;
+            bio::array_source src(uncompressed_evts_bytes.data(), uncompressed_evts_bytes.size());
+            bio::stream<bio::array_source> is(src);
+            boost::archive::binary_iarchive ia(is);
+
+            EventList evts;
+            ia >> evts;
+
+            // If the first event in this window does not have the exit code, don't continue
+            auto stop = !evts.front().isLastEvent();
+
+            // Add this window to the last event window
+            last_event_window.add(std::move(evts), start_euid, end_euid, db_id);
+
+            if (stop)
+            {
+                break;
+            }
+        }
+
+        last_event_window.overwriteLastWindow(db_mgr_);
     }
 
     const Event* EventAccessor::operator->() { return get(); }
@@ -927,6 +1109,3 @@ namespace pegasus::cosim
     }
 
 } // namespace pegasus::cosim
-
-#include "simdb/apps/AppRegistration.hpp"
-REGISTER_SIMDB_APPLICATION(pegasus::cosim::CoSimEventPipeline);

@@ -172,18 +172,25 @@ namespace pegasus
                           || std::is_same_v<SIZE, FLOAT_HP>);
 
             const PegasusInstPtr & inst = state->getCurrentInst();
+            const auto & result = inst->getTranslationState()->getResult();
             if constexpr (LOAD)
             {
-                RV64 value = state->readMemory<SIZE>(inst->getTranslationState()->getResult(),
-                                                     MemAccessSource::INSTRUCTION);
-                value = nanBoxing<RV64, SIZE>(value);
+                std::vector<uint8_t> buffer;
+                if (state->readMemory<SIZE>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+                {
+                    THROW_LOAD_ACCESS;
+                }
+                const RV64 value = nanBoxing<RV64, SIZE>(convertFromByteVector<SIZE>(buffer));
                 WRITE_FP_REG<RV64>(state, inst->getRd(), value);
             }
             else
             {
-                state->writeMemory<SIZE>(inst->getTranslationState()->getResult(),
-                                         READ_FP_REG<RV64>(state, inst->getRs2()),
-                                         MemAccessSource::INSTRUCTION);
+                const RV64 rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
+                if (state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION)
+                    == false)
+                {
+                    THROW_STORE_AMO_ACCESS;
+                }
             }
             inst->getTranslationState()->popResult();
             return ++action_it;

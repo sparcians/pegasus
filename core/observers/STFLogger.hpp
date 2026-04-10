@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/observers/Observer.hpp"
-#include "stf-inc/stf_record_types.hpp"
-#include "stf-inc/stf_writer.hpp"
+#include "stf_record_types.hpp"
+#include "stf_writer.hpp"
 #include "core/PegasusInst.hpp"
 
 namespace pegasus
@@ -29,7 +29,6 @@ namespace pegasus
 
         template <typename XLEN, typename F>
         void writeInstRegRecord_(PegasusState* state, F get_stf_reg_type);
-        template <typename XLEN>
-        void writeEventRecord_(PegasusState* state, bool & is_invalid_opcode);
+        template <typename XLEN> void writeEventRecord_(PegasusState* state);
     };
 } // namespace pegasus

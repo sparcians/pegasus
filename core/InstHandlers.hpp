@@ -69,6 +69,10 @@ namespace pegasus
             }
         }
 
+        // Instruction handler for unsupported instructions
+        Action::ItrType unsupportedInstHandler(pegasus::PegasusState* state,
+                                               Action::ItrType action_it);
+
       private:
         // Instruction handlers
         InstHandlersMap rv64_inst_actions_;

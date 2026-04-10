@@ -1,0 +1,9 @@
+# RVB23 with RVB23U64 mandatory base extensions enabled
+#
+# Some extensions are not supported by Pegasus yet:
+# - Zicntr
+# - Zihpm
+top.core*.params:
+  arch: "rvb23"
+  profile: "rvb23s64"
+  isa: "rv64imafdcb_zicsr_zihintpause_zicbom_zicbop_zicboz_zihintntl_zicond_zimop_zcmop_zcb_zfa_zawrs"

@@ -661,18 +661,25 @@ namespace pegasus
     Action::ItrType RviInsts::loadHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
+
+        // Access memory
         const auto & result = inst->getTranslationState()->getResult();
+        std::vector<uint8_t> buffer;
+        if (state->readMemory<SIZE>(result, buffer, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_LOAD_ACCESS;
+        }
+        const SIZE mem_val = convertFromByteVector<SIZE>(buffer);
+
         if constexpr (SIGN_EXTEND)
         {
-            const XLEN rd_val = signExtend<SIZE, XLEN>(
-                state->readMemory<SIZE>(result, MemAccessSource::INSTRUCTION));
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), signExtend<SIZE, XLEN>(mem_val));
         }
         else
         {
-            const XLEN rd_val = state->readMemory<SIZE>(result, MemAccessSource::INSTRUCTION);
-            WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+            WRITE_INT_REG<XLEN>(state, inst->getRd(), mem_val);
         }
+
         inst->getTranslationState()->popResult();
         return ++action_it;
     }
@@ -683,7 +690,10 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs2_val = READ_INT_REG<XLEN>(state, inst->getRs2());
         const auto & result = inst->getTranslationState()->getResult();
-        state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION);
+        if (state->writeMemory<SIZE>(result, rs2_val, MemAccessSource::INSTRUCTION) == false)
+        {
+            THROW_STORE_AMO_ACCESS;
+        }
         inst->getTranslationState()->popResult();
         return ++action_it;
     }
@@ -1034,18 +1044,11 @@ namespace pegasus
     Action::ItrType RviInsts::ecallHandlerSystemEmulation_(pegasus::PegasusState* state,
                                                            Action::ItrType action_it)
     {
-        // x10 -> x16 are the function arguments.
-        // x17 holds the system call number, first item on the stack
-        SystemCallStack call_stack = {READ_INT_REG<XLEN>(state, 17), READ_INT_REG<XLEN>(state, 10),
-                                      READ_INT_REG<XLEN>(state, 11), READ_INT_REG<XLEN>(state, 12),
-                                      READ_INT_REG<XLEN>(state, 13), READ_INT_REG<XLEN>(state, 14),
-                                      READ_INT_REG<XLEN>(state, 15), READ_INT_REG<XLEN>(state, 16)};
-
-        auto mem = state->getCore()->getSystem()->getSystemMemory();
-        auto emulator = state->getCore()->getSystemCallEmulator();
-        auto ret_code = static_cast<XLEN>(emulator->emulateSystemCall(call_stack, mem));
-        WRITE_INT_REG<XLEN>(state, 10, ret_code);
-
+        if (state->getCore()->inCoSimMode() == false)
+        {
+            const XLEN ret_code = state->emulateSystemCall<XLEN>();
+            WRITE_INT_REG<XLEN>(state, 10, ret_code);
+        }
         return ++action_it;
     }
 

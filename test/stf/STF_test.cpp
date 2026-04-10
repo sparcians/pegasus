@@ -1,5 +1,5 @@
-#include "stf-inc/stf_record_types.hpp"
-#include "stf-inc/stf_writer.hpp"
+#include "stf_record_types.hpp"
+#include "stf_writer.hpp"
 
 // This test is taken directly from the sparcians/stf_lib repo's unit tests.
 // It is really only here to show some example usage of the stf_lib library, which is

@@ -1,12 +1,14 @@
 #include "PegasusCore.hpp"
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
+#include "system/ReservationMemory.hpp"
 #include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/utils/SpartaTester.hpp"
+#include "sparta/memory/BlockingMemoryIF.hpp"
 
 #include <filesystem>
 #include <regex>
@@ -88,9 +90,14 @@ namespace pegasus
         ev_advance_sim_(&unit_event_set_, "advance_sim",
                         CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_)),
         pause_counter_duration_(p->pause_counter_duration),
+        wrssto_counter_duration_(p->wrssto_counter_duration),
         ev_pause_counter_expires_(
             &unit_event_set_, "pause_counter_expires",
             CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, pauseCounterExpires_, HartId)),
+        ev_wrssto_counter_expires_(
+            &unit_event_set_, "wrssto_counter_expires",
+            CREATE_SPARTA_HANDLER_WITH_DATA(PegasusCore, wrsstoCounterExpires_, HartId)),
+        cosim_mode_(p->cosim_mode),
         syscall_emulation_enabled_(
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         arch_name_(p->arch),
@@ -100,6 +107,8 @@ namespace pegasus
         xlen_(getXlenFromIsaString(isa_string_)),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
+        supported_trap_modes_(p->supported_trap_modes),
+        misalignment_support_(p->misalignment_support),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
@@ -120,6 +129,13 @@ namespace pegasus
             // Set XLEN
             hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
                 ->setValueFromString(std::to_string(xlen_));
+
+            // Set hart_id if not explicitly set
+            auto hart_id = hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id");
+            if (hart_id->isDefault())
+            {
+                hart_id->setValueFromString(std::to_string(hart_idx));
+            }
 
             // Set path to register JSONs (from "arch")
             const std::string reg_json_file_path =
@@ -150,6 +166,10 @@ namespace pegasus
 
         sparta_assert(xlen_ == extension_manager_.getXLEN());
 
+        if (profile_.empty() == false)
+        {
+            extension_manager_.setProfile(profile_);
+        }
         extension_manager_.setISA(isa_string_);
 
         std::string unsupportedExt;
@@ -183,6 +203,7 @@ namespace pegasus
         }
 
         ev_pause_counter_expires_.cancel();
+        ev_wrssto_counter_expires_.cancel();
     }
 
     void PegasusCore::onBindTreeEarly_()
@@ -229,6 +250,11 @@ namespace pegasus
         {
             setPcAlignment_(4);
         }
+
+        reservation_memory_bmi_.reset(new ReservationMemory(
+            this, "Pegasus System Memory Interface", PegasusSystem::PEGASUS_SYSTEM_BLOCK_SIZE,
+            PegasusSystem::PEGASUS_SYSTEM_TOTAL_MEMORY, system_->getSystemMemory()));
+        current_memory_view_ = system_->getSystemMemory();
     }
 
     void PegasusCore::onBindTreeLate_()
@@ -332,7 +358,7 @@ namespace pegasus
     {
         PegasusState* state = threads_[current_hart_id_];
         auto* sim_state = state->getSimState();
-        bool pause_thread = false;
+        bool timed_pause = false;
         if ((sim_state->sim_stopped == false)
             && (sim_state->sim_pause_reason == SimPauseReason::INVALID))
         {
@@ -359,11 +385,13 @@ namespace pegasus
                     sparta_assert(false, "Pause reason INTERRUPT is not supported yet!");
                     break;
                 case SimPauseReason::PAUSE:
-                    pause_thread = true;
+                case SimPauseReason::WRS_STO:
+                    timed_pause = true;
                     break;
                 case SimPauseReason::FORK:
                     sparta_assert(false, "Pause reason FORK is not supported yet!");
                     break;
+                case SimPauseReason::WRS_NTO:
                 case SimPauseReason::INVALID:
                     break;
             }
@@ -376,12 +404,22 @@ namespace pegasus
             threads_[hart_id]->getSimState()->cycles = current_cycle;
         }
 
-        if (pause_thread)
+        if (timed_pause)
         {
             DLOG("Starting pause counter for hart " << std::dec << current_hart_id_);
             threads_running_.reset(current_hart_id_);
-            ev_pause_counter_expires_.preparePayload(current_hart_id_)
-                ->schedule(current_cycle - getClock()->currentCycle() + pause_counter_duration_);
+            if (sim_state->sim_pause_reason == SimPauseReason::PAUSE)
+            {
+                ev_pause_counter_expires_.preparePayload(current_hart_id_)
+                    ->schedule(current_cycle - getClock()->currentCycle()
+                               + pause_counter_duration_);
+            }
+            else // SimPauseReason::WRS_STO
+            {
+                ev_wrssto_counter_expires_.preparePayload(current_hart_id_)
+                    ->schedule(current_cycle - getClock()->currentCycle()
+                               + wrssto_counter_duration_);
+            }
         }
 
         // Simple round robin
@@ -401,7 +439,8 @@ namespace pegasus
     void PegasusCore::pauseCounterExpires_(const HartId & hart_id)
     {
         PegasusState* state = threads_[hart_id];
-        if (state->getSimState()->sim_pause_reason == SimPauseReason::PAUSE)
+        const auto pause_reason = state->getSimState()->sim_pause_reason;
+        if (pause_reason == SimPauseReason::PAUSE || pause_reason == SimPauseReason::WRS_STO)
         {
             DLOG("Pause counter expired for hart" << std::dec << hart_id);
             state->unpauseHart();
@@ -419,6 +458,15 @@ namespace pegasus
                 ev_advance_sim_.schedule();
             }
         }
+    }
+
+    // Besides thread rescheduling and unpause, WRS.STO wakening by counter
+    // will also cancel the memory write notification on reservation set.
+    void PegasusCore::wrsstoCounterExpires_(const HartId & hart_id)
+    {
+        pauseCounterExpires_(hart_id);
+        PegasusState* state = threads_[hart_id];
+        state->unregisterWaitOnReservationSet();
     }
 
     template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
@@ -493,6 +541,38 @@ namespace pegasus
         }
 
         return true;
+    }
+
+    void PegasusCore::makeReservation(HartId hart_id, Addr paddr)
+    {
+        for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
+        {
+            auto & reservation = reservations_.at(hart_id);
+            if (reservation.isValid() && (reservation.getValue() == paddr))
+            {
+                reservation.clearValid();
+            }
+        }
+        reservations_.at(hart_id) = paddr;
+        auto & state = threads_.at(hart_id);
+
+        // FIXME: iterate through cores for multi-core support.
+        state->storeOnReservationSet(false);
+        current_memory_view_ = reservation_memory_bmi_.get();
+    }
+
+    void PegasusCore::clearReservation(HartId hart_id)
+    {
+        auto & reservation = reservations_.at(hart_id);
+        auto & state = threads_.at(hart_id);
+        reservation.clearValid();
+        state->storeOnReservationSet(false);
+
+        if (std::all_of(reservations_.begin(), reservations_.end(),
+                        [](const Reservation & reservation) { return !reservation.isValid(); }))
+        {
+            current_memory_view_ = system_->getSystemMemory();
+        }
     }
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;

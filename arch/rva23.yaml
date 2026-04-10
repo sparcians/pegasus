@@ -1,2 +1,10 @@
-top.core*.params.arch: "rva23"
-top.core*.params.profile: "rva23"
+# RVA23 with RVA23U64 mandatory base extensions enabled
+#
+# Some extensions are not supported by Pegasus yet:
+# - Zicntr
+# - Zihpm
+# - Zvbb
+top.core*.params:
+  arch: "rva23"
+  profile: "rva23s64"
+  isa: "rv64imafdcb_zicsr_zihintpause_zicbom_zicbop_zicboz_zfhmin_v_zihintntl_zicond_zimop_zcmop_zcb_zfa_zawrs"

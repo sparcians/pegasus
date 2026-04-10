@@ -102,9 +102,9 @@ namespace pegasus
     Action::ItrType RvzfaInsts::fliHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const uint32_t rs1_val = inst->getRs1();
+        const uint32_t imm = inst->getImmediate();
 
-        const SIZE rd_val = fli_table_.at(rs1_val);
+        const SIZE rd_val = fli_table_.at(imm);
         WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
         updateCsr<XLEN>(state);
         return ++action_it;

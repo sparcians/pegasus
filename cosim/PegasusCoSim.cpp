@@ -75,6 +75,9 @@ namespace pegasus::cosim
             PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
         sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
 
+        // Put all cores in CoSim mode
+        sim_config_->processParameter("top.core*.params.cosim_mode", "true");
+
         sim_config_->copyTreeNodeExtensionsFromArchAndConfigPTrees();
 
         scheduler_.reset(new sparta::Scheduler());
@@ -82,11 +85,14 @@ namespace pegasus::cosim
         cosim_logger_.reset(new sparta::log::MessageSource(pegasus_sim_->getRoot(), "cosim",
                                                            "Pegasus Cosim Logger"));
 
+        pegasus_sim_->addSimListener(this);
         pegasus_sim_->configure(0, nullptr, sim_config_.get());
         pegasus_sim_->buildTree();
         pegasus_sim_->configureTree();
         pegasus_sim_->finalizeTree();
-        pegasus_sim_->finalizeFramework();
+
+        // Now that the tree is built, we can access PegasusSimParameters (tree node extension)
+        // and we can figure out the number of cores/harts (parameter in the PegasusCore unit).
 
         // Get number of cores
         const uint32_t num_cores =
@@ -110,48 +116,29 @@ namespace pegasus::cosim
             cosim_observers_.at(core_idx).resize(num_harts, nullptr);
         }
 
-        db_mgr_ = std::make_shared<simdb::DatabaseManager>(db_file, true);
-        app_mgr_ = std::make_shared<simdb::AppManager>(db_mgr_.get());
+        // Since we are not using CommandLineSimulator to handle the SimulationConfiguration,
+        // we need to manually make the calls that the CLS would have.
+        auto & simdb_config = sim_config_->simdb_config;
+        simdb_config.setSimExecutable("pegasus_cosim");
+        simdb_config.enableApp(CoSimEventPipeline::NAME);
+        simdb_config.enableApp(CoSimCheckpointer::NAME);
+        simdb_config.setAppCount(CoSimEventPipeline::NAME, total_num_harts);
+        simdb_config.setAppCount(CoSimCheckpointer::NAME, total_num_harts);
+        simdb_config.setAppDatabase(CoSimEventPipeline::NAME, db_file);
+        simdb_config.setAppDatabase(CoSimCheckpointer::NAME, db_file);
 
-        // Enable CoSimEventPipeline and CoSimCheckpointer apps. Every core/hart needs their own.
-        const uint32_t num_pipelines = total_num_harts;
-        app_mgr_->enableApp(CoSimEventPipeline::NAME, num_pipelines);
-        app_mgr_->enableApp(CoSimCheckpointer::NAME, num_pipelines);
+        // Finish setting up the simulator
+        pegasus_sim_->finalizeFramework();
 
-        // Before creating the apps, set up the ctor args that they need. Recall that the
-        // checkpointer apps need to know the arch data root for each hart, which is where
-        // the PegasusState lives for that hart. All instances however use the same scheduler.
-        auto evt_pipeline_factory = app_mgr_->getAppFactory<CoSimEventPipeline>();
-        auto checkpointer_factory = app_mgr_->getAppFactory<CoSimCheckpointer>();
-        checkpointer_factory->setScheduler(*scheduler_.get());
-
-        size_t pipeline_idx =
-            (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
-        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
-        {
-            for (HartId hart_idx = 0; hart_idx < num_harts_per_core_.at(core_idx); ++hart_idx)
-            {
-                auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
-                auto system = pegasus_sim_->getPegasusCore(core_idx)->getSystem();
-
-                std::vector<sparta::TreeNode*> chkptr_arch_data_roots;
-                chkptr_arch_data_roots.push_back(state->getContainer());
-                chkptr_arch_data_roots.push_back(system->getContainer());
-
-                checkpointer_factory->setArchDataRoots(pipeline_idx, chkptr_arch_data_roots);
-                evt_pipeline_factory->setCtorArgs(pipeline_idx, core_idx, hart_idx, state);
-                ++pipeline_idx;
-            }
-        }
-
-        app_mgr_->createEnabledApps();
-        app_mgr_->createSchemas();
-        app_mgr_->postInit(0, nullptr);
-        app_mgr_->initializePipelines();
-        app_mgr_->openPipelines();
+        // Now that apps / AppManager's are created, let SimDB know that the
+        // event pipeline needs to have its preTeardown hook called before
+        // the checkpoint pipeline's preTeardown.
+        auto & app_mgr = pegasus_sim_->getAppManagers()->getAppManager(db_file);
+        app_mgr.setAppOrderingForHooks(CoSimEventPipeline::NAME, CoSimCheckpointer::NAME);
 
         fetch_.resize(num_cores);
-        pipeline_idx = (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
+        size_t pipeline_idx =
+            (total_num_harts == 1) ? 0 : 1; // 0 if only one pipeline, else 1-based
         for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
         {
             for (HartId hart_idx = 0; hart_idx < num_harts_per_core_.at(core_idx); ++hart_idx)
@@ -166,8 +153,8 @@ namespace pegasus::cosim
                 auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
 
                 // Create and attach CoSimObserver to PegasusState for each hart
-                auto evt_pipeline = app_mgr_->getApp<CoSimEventPipeline>(pipeline_idx);
-                auto checkpointer = app_mgr_->getApp<CoSimCheckpointer>(pipeline_idx);
+                auto evt_pipeline = app_mgr_->getAppInstance<CoSimEventPipeline>(pipeline_idx);
+                auto checkpointer = app_mgr_->getAppInstance<CoSimCheckpointer>(pipeline_idx);
                 ++pipeline_idx;
 
                 auto cosim_obs = std::make_unique<CoSimObserver>(*cosim_logger_.get(), evt_pipeline,
@@ -529,28 +516,99 @@ namespace pegasus::cosim
         reg->poke(buffer.data(), size, OFFSET);
     }
 
-    std::vector<std::string> PegasusCoSim::getWorkloadArgs_(const std::string & workload)
+    void PegasusCoSim::onRegisterAppsRequest(simdb::AppRegistrations* app_registrations)
     {
-        std::vector<std::string> workload_args;
-        sparta::utils::tokenize_on_whitespace(workload, workload_args);
-        return workload_args;
+        app_registrations->registerApp<CoSimEventPipeline>();
+        app_registrations->registerApp<CoSimCheckpointer>();
+    }
+
+    void PegasusCoSim::onParameterizeAppsRequest(simdb::AppManager* app_mgr)
+    {
+        // Cache the AppManager
+        app_mgr_ = app_mgr;
+
+        // Before creating the apps, set up the ctor args that they need. Recall that the
+        // checkpointer apps need to know the arch data root for each hart, which is where
+        // the PegasusState lives for that hart. All instances however use the same scheduler.
+        size_t pipeline_idx = 0;
+
+        const size_t num_cores = cosim_observers_.size();
+        for (CoreId core_idx = 0; core_idx < num_cores; ++core_idx)
+        {
+            for (HartId hart_idx = 0; hart_idx < num_harts_per_core_.at(core_idx); ++hart_idx)
+            {
+                auto state = pegasus_sim_->getPegasusCore(core_idx)->getPegasusState(hart_idx);
+                auto system = pegasus_sim_->getPegasusCore(core_idx)->getSystem();
+
+                std::vector<sparta::TreeNode*> chkptr_arch_data_roots;
+                chkptr_arch_data_roots.push_back(state->getContainer());
+                chkptr_arch_data_roots.push_back(system->getContainer());
+
+                app_mgr->parameterizeAppFactoryInstance<CoSimEventPipeline>(pipeline_idx, core_idx,
+                                                                            hart_idx, state);
+
+                app_mgr->parameterizeAppFactoryInstance<CoSimCheckpointer>(
+                    pipeline_idx, chkptr_arch_data_roots, scheduler_.get());
+
+                ++pipeline_idx;
+            }
+        }
+    }
+
+    void PegasusCoSim::onFrameworkFinalized()
+    {
+        auto & db_mgr = *app_mgr_->getDatabaseManager();
+        db_mgr.safeTransaction(
+            [&]()
+            {
+                // Helper to write arch/config/extension parameter trees to the database
+                auto serialize_ptree =
+                    [&](const char* table_name, const sparta::ParameterTree & ptree)
+                {
+                    // Prepared inserter for performance
+                    auto ptree_inserter = db_mgr.prepareINSERT(
+                        SQL_TABLE(table_name), SQL_COLUMNS("PTreePath", "PTreeValue"));
+
+                    ptree.visitLeaves(
+                        [&](const sparta::ParameterTree::Node* leaf)
+                        {
+                            // Early return if the ptree has no leaves (except the unnamed root)
+                            if (leaf->getName().empty())
+                            {
+                                return false; // same as 'return true' since we have no more leaves
+                            }
+
+                            ptree_inserter->createRecordWithColValues(leaf->getPath(),
+                                                                      leaf->getValue());
+                            return true; // keep going
+                        });
+                };
+
+                auto sim_config = pegasus_sim_->getSimulationConfiguration();
+
+                // Write arch ptree
+                serialize_ptree("ArchParameterTree", sim_config->getArchUnboundParameterTree());
+
+                // Write config ptree
+                serialize_ptree("ConfigParameterTree", sim_config->getUnboundParameterTree());
+            });
     }
 
     void PegasusCoSim::finish()
     {
-        // Send remaining committed events down the pipeline(s) and shut down threads.
-        app_mgr_->postSimLoopTeardown();
-
         std::cout << "Pegasus co-sim finished." << std::endl;
         for (CoreId core_id = 0; core_id < cosim_observers_.size(); ++core_id)
         {
-            for (HartId hart_id = 0; hart_id < cosim_observers_.at(core_id).size(); ++hart_id)
+            const auto & cos = cosim_observers_.at(core_id);
+            for (HartId hart_id = 0; hart_id < cos.size(); ++hart_id)
             {
-                auto evt_pipeline = getEventPipeline(core_id, hart_id);
+                auto evt_pipeline = cos[hart_id]->getEventPipeline();
                 const auto euid = evt_pipeline->getLastEventUID();
                 std::cout << "  Core " << core_id << ", Hart " << hart_id << ": ";
                 std::cout << euid << " events processed." << std::endl;
             }
         }
+        // Send remaining committed events down the pipeline(s) and shut down threads.
+        pegasus_sim_->getAppManagers()->postSimLoopTeardown();
     }
 } // namespace pegasus::cosim

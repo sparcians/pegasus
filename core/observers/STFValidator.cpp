@@ -11,10 +11,12 @@ namespace pegasus
     STFValidator::STFValidator(sparta::log::MessageSource & stf_valid_logger,
                                const ObserverMode arch, const std::string & stf_filename,
                                const uint64_t validate_trace_begin,
-                               const uint64_t validate_inst_begin) :
+                               const uint64_t validate_inst_begin,
+                               const bool validate_fail_on_first_diff) :
         Observer(arch),
         stf_valid_logger_(stf_valid_logger),
-        validate_inst_begin_(validate_inst_begin)
+        validate_inst_begin_(validate_inst_begin),
+        validate_fail_on_first_diff_(validate_fail_on_first_diff)
     {
         std::ifstream fs;
         std::ios_base::iostate exceptionMask = fs.exceptions() | std::ios::failbit;
@@ -123,6 +125,10 @@ namespace pegasus
                             STFVALIDLOG("    Pegasus value: 0x" << std::hex << reg_val);
                             STFVALIDLOG("        STF value: 0x" << std::hex << stf_reg_val);
                             STFVALIDLOG("");
+                            if (validate_fail_on_first_diff_)
+                            {
+                                sparta_assert(false, "Register writes do not match!");
+                            }
                         }
                     }
                     else
@@ -143,6 +149,10 @@ namespace pegasus
                             STFVALIDLOG("    Pegasus value: 0x" << formatVectorHex(reg_val));
                             STFVALIDLOG("        STF value: 0x" << formatVectorHex(stf_reg_val));
                             STFVALIDLOG("");
+                            if (validate_fail_on_first_diff_)
+                            {
+                                sparta_assert(false, "Vector register writes do not match!");
+                            }
                         }
                     }
                     break;

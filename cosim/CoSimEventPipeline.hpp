@@ -25,15 +25,7 @@ namespace pegasus::cosim
     class CoSimObserver;
     class EventCompressorStage;
     class EventWriterStage;
-
-    /// Base class for event listener. Receives EventAccessors for
-    /// every cosim step(). Used for testing and validation.
-    class EventListener
-    {
-      public:
-        virtual ~EventListener() = default;
-        virtual void onNewEvent(EventAccessor && evt) = 0;
-    };
+    class CoSimEventReplayer;
 
     /// This class implements a performant pipeline to process
     /// cosim events. A series of transformations will occur on
@@ -62,6 +54,31 @@ namespace pegasus::cosim
         CoSimEventPipeline(simdb::DatabaseManager* db_mgr, CoreId core_id, HartId hart_id,
                            PegasusState* state);
 
+        class AppFactory : public simdb::AppFactoryBase
+        {
+          public:
+            using AppT = cosim::CoSimEventPipeline;
+
+            void parameterize(CoreId core_id, HartId hart_id, PegasusState* state)
+            {
+                core_id_ = core_id;
+                hart_id_ = hart_id;
+                state_ = state;
+            }
+
+            AppT* createApp(simdb::DatabaseManager* db_mgr) override
+            {
+                return new cosim::CoSimEventPipeline(db_mgr, core_id_, hart_id_, state_);
+            }
+
+            void defineSchema(simdb::Schema & schema) const override { AppT::defineSchema(schema); }
+
+          private:
+            sparta::utils::ValidValue<CoreId> core_id_;
+            sparta::utils::ValidValue<HartId> hart_id_;
+            sparta::utils::ValidValue<PegasusState*> state_;
+        };
+
         /// Set the associated observer. Not added to the ctor to avoid circular
         /// dependencies between CoSimEventPipeline and CoSimObserver (each needs
         /// the other to be constructed).
@@ -76,9 +93,6 @@ namespace pegasus::cosim
         /// Allow EventAccessor to use the PipelineManager to disable threads
         /// while recreating events as needed (when not found in cache).
         simdb::pipeline::PipelineManager* getPipelineManager() const;
-
-        /// Called by unit tests to validate async event retrieval.
-        void setListener(EventListener* listener);
 
         /// Process a new event from cosim step(). Called during postExecute().
         void onStep(Event && evt);
@@ -148,6 +162,10 @@ namespace pegasus::cosim
         /// Recreate an old event from disk when it is no longer in the cache.
         std::unique_ptr<Event> recreateEventFromDisk_(uint64_t euid);
 
+        /// On postTeardown, ensure that all but the last event on disk
+        /// says isLastEvent()=true.
+        void ensureOnlyOneLastEventOnDisk_();
+
         /// SimDB instance.
         simdb::DatabaseManager* db_mgr_ = nullptr;
 
@@ -191,11 +209,12 @@ namespace pegasus::cosim
         simdb::ConcurrentQueue<EventList>* pipeline_head_ = nullptr;
 
         /// Utility to flush the pipeline on demand.
-        std::unique_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
+        std::shared_ptr<simdb::pipeline::Flusher> pipeline_flusher_;
 
         /// Pipeline snooper used to look for events directly in the pipeline
         /// instead of needing to go to the database when the event is not in the cache.
-        simdb::pipeline::PipelineSnooper<uint64_t, std::unique_ptr<Event>> pipeline_snooper_;
+        using Snooper = simdb::pipeline::PipelineSnooper<uint64_t, std::unique_ptr<Event>>;
+        std::unique_ptr<Snooper> pipeline_snooper_;
 
         /// Event recreated from the pipeline snoopers.
         std::unique_ptr<Event> snooped_event_;
@@ -209,10 +228,6 @@ namespace pegasus::cosim
         simdb::RunningMean avg_us_recreating_evts_from_pipeline_;
         size_t num_pipeline_evts_snooped_in_serialize_queue_ = 0;
         size_t num_pipeline_evts_snooped_in_db_queue_ = 0;
-
-        /// Listener which inspects events as they come through the pipeline.
-        /// Used for testing and validation.
-        EventListener* listener_ = nullptr;
 
         /// Structure which holds a range of events serialized to a byte buffer.
         struct SerializedEvtsBuffer
@@ -228,44 +243,7 @@ namespace pegasus::cosim
 
         friend class EventCompressorStage;
         friend class EventWriterStage;
+        friend class CoSimEventReplayer;
     };
 
 } // namespace pegasus::cosim
-
-namespace simdb
-{
-
-    template <> class AppFactory<pegasus::cosim::CoSimEventPipeline> : public AppFactoryBase
-    {
-      public:
-        using CoreId = pegasus::CoreId;
-        using HartId = pegasus::HartId;
-        using PegasusState = pegasus::PegasusState;
-        using AppT = pegasus::cosim::CoSimEventPipeline;
-
-        void setCtorArgs(size_t instance_num, CoreId core_id, HartId hart_id, PegasusState* state)
-        {
-            ctor_args_by_inst_num_[instance_num] = std::make_tuple(core_id, hart_id, state);
-        }
-
-        AppT* createApp(DatabaseManager* db_mgr, size_t instance_num = 0) override
-        {
-            auto it = ctor_args_by_inst_num_.find(instance_num);
-            if (it == ctor_args_by_inst_num_.end())
-            {
-                throw DBException("Ctor args not set for CoSimEventPipeline instance "
-                                  + std::to_string(instance_num));
-            }
-
-            const auto & [core_id, hart_id, state] = it->second;
-            return new pegasus::cosim::CoSimEventPipeline(db_mgr, core_id, hart_id, state);
-        }
-
-        void defineSchema(Schema & schema) const override { AppT::defineSchema(schema); }
-
-      private:
-        using CtorArgs = std::tuple<CoreId, HartId, PegasusState*>;
-        std::map<size_t, CtorArgs> ctor_args_by_inst_num_;
-    };
-
-} // namespace simdb

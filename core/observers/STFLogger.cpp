@@ -144,8 +144,7 @@ namespace pegasus
         }
     }
 
-    template <typename XLEN>
-    void STFLogger::writeEventRecord_(PegasusState* state, bool & invalid_opcode)
+    template <typename XLEN> void STFLogger::writeEventRecord_(PegasusState* state)
     {
         if (fault_cause_.isValid())
         {
@@ -155,14 +154,12 @@ namespace pegasus
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::INST_ADDR_MISALIGN,
                         static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)));
-                    invalid_opcode = true;
                     break;
 
                 case FaultCause::INST_ACCESS:
                     stf_writer_ << stf::EventRecord(
                         stf::EventRecord::TYPE::INST_ADDR_FAULT,
                         static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)));
-                    invalid_opcode = true;
                     break;
 
                 case FaultCause::INST_PAGE_FAULT:
@@ -170,7 +167,6 @@ namespace pegasus
                         stf::EventRecord::TYPE::INST_PAGE_FAULT,
                         {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen())});
-                    invalid_opcode = true;
                     break;
 
                 case FaultCause::LOAD_ADDR_MISALIGNED:
@@ -219,7 +215,7 @@ namespace pegasus
                         {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(state->getXlen()),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL))});
-                    return; // tied to invalid opcode
+                    break;
 
                 case FaultCause::ILLEGAL_INST:
                     stf_writer_ << stf::EventRecord(
@@ -227,7 +223,6 @@ namespace pegasus
                         {static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MEPC)),
                          static_cast<XLEN>(READ_CSR_REG<XLEN>(state, MTVAL)),
                          static_cast<XLEN>(state->getXlen())});
-                    invalid_opcode = true;
                     break;
 
                 case FaultCause::BREAKPOINT:
@@ -315,11 +310,6 @@ namespace pegasus
 
     void STFLogger::postExecute_(PegasusState* state)
     {
-        if (state->getCurrentInst() == nullptr)
-        {
-            return;
-        }
-
         for (const auto & mem_write : mem_writes_)
         {
             stf_writer_ << stf::InstMemAccessRecord(mem_write.paddr, mem_write.size, 0,
@@ -357,27 +347,36 @@ namespace pegasus
             }
         };
 
-        bool invalid_opcode = false;
-
         if (state->getXlen() == 32)
         {
-            writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
-            writeEventRecord_<uint32_t>(state, invalid_opcode);
+            if (state->getCurrentInst() != nullptr)
+            {
+                writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
+            }
+            writeEventRecord_<uint32_t>(state);
         }
         else
         {
-            writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
-            writeEventRecord_<uint64_t>(state, invalid_opcode);
+            if (state->getCurrentInst() != nullptr)
+            {
+                writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
+            }
+            writeEventRecord_<uint64_t>(state);
         }
 
-        uint64_t opcode = state->getCurrentInst()->getOpcode();
-
-        if (invalid_opcode)
+        uint32_t opcode = 0;
+        uint32_t opcode_size = 4;
+        if (state->getCurrentInst() != nullptr)
         {
-            opcode = 0;
+            opcode = state->getCurrentInst()->getOpcode();
+            opcode_size = state->getCurrentInst()->getOpcodeSize();
+        }
+        else
+        {
+            opcode = state->getSimState()->current_opcode;
         }
 
-        if (state->getCurrentInst()->getOpcodeSize() == 2)
+        if (opcode_size == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(opcode);
         }

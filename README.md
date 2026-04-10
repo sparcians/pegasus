@@ -186,6 +186,24 @@ CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug
 ## Python IDE
 See [Python IDE for Pegasus](IDE/README.md)
 
+## Using Pegasus As A Submodule
+The Pegasus co-simulation library can be integrated into other projects for co-simulation. Add Pegasus as a submodule, then add the following to your CMake config:
+```
+add_subdirectory(pegasus)
+target_link_libraries(my_target pegasuscosimlib)
+```
+
+If your project already uses the [stf_lib](https://github.com/sparcians/stf_lib) or [mavis](https://github.com/sparcians/mavis) libraries, you should set these options before the `add_subdirectory` directive to prevent conflicts:
+```
+set(PEGASUS_USE_PARENT_MAVIS True)
+set(PEGASUS_USE_PARENT_STF_LIB True)
+```
+
+To speed up builds, you can also skip building the standalone pegasus executable with this setting:
+```
+set(PEGASUS_DISABLE_STANDALONE True)
+```
+
 ## RISC-V Profile Support
 | RVA23U64 Mandatory Extensions | Status |
 | :---------------------------- | :----: |
@@ -208,11 +226,11 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zicbom** Cache-block management instructions. | :white_check_mark: |
 | **Zicbop** Cache-block prefetch instructions. | :white_check_mark: |
 | **Zicboz** Cache-Block Zero Instructions. | :white_check_mark: |
-| **Zfhmin** Half-precision floating-point. | :x: |
+| **Zfhmin** Half-precision floating-point. | :white_check_mark: |
 | **Zkt** Data-independent execution latency. | :x: |
 | **V** Vector extension. | :white_check_mark: |
 | **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
-| **Zvbb** Vector basic bit-manipulation instructions. | :x: |
+| **Zvbb** Vector basic bit-manipulation instructions. | :white_check_mark: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
 | **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
 | **Zicond** Integer conditional operations. | :white_check_mark: |
@@ -220,7 +238,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zcmop** Compressed may-be-operations. | :white_check_mark: |
 | **Zcb** Additional compressed instructions. | :white_check_mark: |
 | **Zfa** Additional floating-Point instructions. | :white_check_mark: |
-| **Zawrs** Wait-on-reservation-set instructions. | :x: |
+| **Zawrs** Wait-on-reservation-set instructions. | :white_check_mark: |
 | **Supm** Pointer masking, with the execution environment providing a means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
 
@@ -229,7 +247,7 @@ See [Python IDE for Pegasus](IDE/README.md)
 | **Zvkng** Vector crypto NIST algorithms with GCM. | :x: |
 | **Zvksg** Vector crypto ShangMi algorithms with GCM. | :x: |
 | **Zabha** Byte and halfword atomic memory operations. | :white_check_mark: |
-| **Zacas** Compare-and-Swap instructions. | :x: |
+| **Zacas** Compare-and-Swap instructions. | :white_check_mark: |
 | **Ziccamoc** Main memory regions with both the cacheability and coherence PMAs must provide AMOCASQ level PMA support. | :x: |
 | **Zvbc** Vector carryless multiplication. | :x: |
 | **Zama16b** Misaligned loads, stores, and AMOs to main memory regions that do not cross a naturally aligned 16-byte boundary are atomic. | :x: |
@@ -282,3 +300,7 @@ must be writable. | |
 | **Svvptc** Transitions from invalid to valid PTEs will be visible in bounded time without an explicit memory-management fence. | |
 | **Sspm** Supervisor-mode pointer masking, with the supervisor execution environment providing a
 means to select PMLEN=0 and PMLEN=7 at minimum. | |
+
+| RV32 and RV64 "Other" Extensions | Status |
+| :--------------------------- | :----: |
+| **Smrmni** Extension for Resumable Non-Maskable Interrupts, | :white_check_mark: |
