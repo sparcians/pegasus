@@ -121,14 +121,41 @@ namespace pegasus
         add_registers(vec_rset_);
         add_registers(csr_rset_);
 
-        // Add register read/write callback for special registers
+        // Add CSR callbacks and increment PC Action
+        const bool CHECK_ILIMIT = ilimit_ > 0;
         if (xlen_ == 32)
         {
             addCSRRegisterCallbacks_<RV32>();
+
+            if (CHECK_ILIMIT)
+            {
+                increment_pc_action_ =
+                    pegasus::Action::createAction<&PegasusState::incrementPc_<RV32, true>>(
+                        this, "increment pc");
+            }
+            else
+            {
+                increment_pc_action_ =
+                    pegasus::Action::createAction<&PegasusState::incrementPc_<RV32, false>>(
+                        this, "increment pc");
+            }
         }
         else if (xlen_ == 64)
         {
             addCSRRegisterCallbacks_<RV64>();
+
+            if (CHECK_ILIMIT)
+            {
+                increment_pc_action_ =
+                    pegasus::Action::createAction<&PegasusState::incrementPc_<RV64, true>>(
+                        this, "increment pc");
+            }
+            else
+            {
+                increment_pc_action_ =
+                    pegasus::Action::createAction<&PegasusState::incrementPc_<RV64, false>>(
+                        this, "increment pc");
+            }
         }
         else
         {
@@ -145,20 +172,6 @@ namespace pegasus
         }
 
         initCsrEnabledState_();
-
-        // Increment PC Action
-        const bool CHECK_ILIMIT = ilimit_ > 0;
-        if (CHECK_ILIMIT)
-        {
-            increment_pc_action_ = pegasus::Action::createAction<&PegasusState::incrementPc_<true>>(
-                this, "increment pc");
-        }
-        else
-        {
-            increment_pc_action_ =
-                pegasus::Action::createAction<&PegasusState::incrementPc_<false>>(this,
-                                                                                  "increment pc");
-        }
 
         // Add increment PC Action to finish ActionGroup
         finish_action_group_.addAction(increment_pc_action_);
@@ -593,7 +606,76 @@ namespace pegasus
         }
     }
 
-    template <bool CHECK_ILIMIT>
+    template <typename XLEN> void PegasusState::incrCycleCsrs_()
+    {
+        const XLEN cycle = getCsrRegister(CYCLE)->dmiRead<XLEN>();
+        const XLEN mcycle = getCsrRegister(MCYCLE)->dmiRead<XLEN>();
+        if constexpr (std::is_same_v<XLEN, RV32>)
+        {
+            if (SPARTA_EXPECT_FALSE(cycle == std::numeric_limits<XLEN>::max()))
+            {
+                const XLEN cycleh = getCsrRegister(CYCLE)->dmiRead<XLEN>();
+                getCsrRegister(CYCLEH)->dmiWrite<XLEN>(cycleh + 1);
+            }
+
+            if (SPARTA_EXPECT_FALSE(mcycle == std::numeric_limits<XLEN>::max()))
+            {
+                const XLEN mcycleh = getCsrRegister(MCYCLE)->dmiRead<XLEN>();
+                getCsrRegister(MCYCLEH)->dmiWrite<XLEN>(mcycleh + 1);
+            }
+        }
+        getCsrRegister(CYCLE)->dmiWrite<XLEN>(cycle + 1);
+        getCsrRegister(MCYCLE)->dmiWrite<XLEN>(mcycle + 1);
+    }
+
+    template <typename XLEN> void PegasusState::incrTimeCsrs_()
+    {
+        // From the RISC-V spec:
+        // On some simple platforms, cycle count might represent a valid
+        // implementation of RDTIME, in which case RDTIME and RDCYCLE
+        // may return the same result.
+        const XLEN time = getCsrRegister(TIME)->dmiRead<XLEN>();
+        if constexpr (std::is_same_v<XLEN, RV32>)
+        {
+            if (SPARTA_EXPECT_FALSE(time == std::numeric_limits<XLEN>::max()))
+            {
+                const XLEN timeh = getCsrRegister(TIME)->dmiRead<XLEN>();
+                getCsrRegister(TIMEH)->dmiWrite<XLEN>(timeh + 1);
+            }
+        }
+        getCsrRegister(TIME)->dmiWrite<XLEN>(time + 1);
+    }
+
+    template <typename XLEN> void PegasusState::incrInstretCsrs_()
+    {
+        const XLEN instret = getCsrRegister(INSTRET)->dmiRead<XLEN>();
+        const XLEN minstret = getCsrRegister(MINSTRET)->dmiRead<XLEN>();
+        if constexpr (std::is_same_v<XLEN, RV32>)
+        {
+            if (SPARTA_EXPECT_FALSE(instret == std::numeric_limits<XLEN>::max()))
+            {
+                const XLEN instreth = getCsrRegister(INSTRETH)->dmiRead<XLEN>();
+                getCsrRegister(INSTRETH)->dmiWrite<XLEN>(instreth + 1);
+            }
+
+            if (SPARTA_EXPECT_FALSE(minstret == std::numeric_limits<XLEN>::max()))
+            {
+                const XLEN minstreth = getCsrRegister(MINSTRETH)->dmiRead<XLEN>();
+                getCsrRegister(MINSTRETH)->dmiWrite<XLEN>(minstreth + 1);
+            }
+        }
+        getCsrRegister(INSTRET)->dmiWrite<XLEN>(instret + 1);
+        getCsrRegister(MINSTRET)->dmiWrite<XLEN>(minstret + 1);
+    }
+
+    template void PegasusState::incrCycleCsrs_<RV64>();
+    template void PegasusState::incrTimeCsrs_<RV64>();
+    template void PegasusState::incrInstretCsrs_<RV64>();
+    template void PegasusState::incrCycleCsrs_<RV32>();
+    template void PegasusState::incrTimeCsrs_<RV32>();
+    template void PegasusState::incrInstretCsrs_<RV32>();
+
+    template <typename XLEN, bool CHECK_ILIMIT>
     Action::ItrType PegasusState::incrementPc_(PegasusState*, Action::ItrType action_it)
     {
         // Clear inst translation state
@@ -610,6 +692,13 @@ namespace pegasus
         // TODO: We don't have a timing model yet so
         // for now just assume each inst takes 1 cycle
         ++sim_state_.cycles;
+
+        if (pegasus_core_->hasZicntr())
+        {
+            incrInstretCsrs_<XLEN>();
+            incrCycleCsrs_<XLEN>();
+            incrTimeCsrs_<XLEN>();
+        }
 
         if constexpr (CHECK_ILIMIT)
         {
@@ -772,6 +861,33 @@ namespace pegasus
         }
 
         return true;
+    }
+
+    void PegasusState::stopSim(const int64_t exit_code)
+    {
+        std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
+
+        if (pegasus_core_->hasZicntr())
+        {
+            if (xlen_ == 64)
+            {
+                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV64>() << std::endl;
+                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV64>() << std::endl;
+                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV64>() << std::endl;
+            }
+            else
+            {
+                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV32>() << std::endl;
+                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV32>() << std::endl;
+                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV32>() << std::endl;
+            }
+        }
+
+        sim_state_.workload_exit_code = exit_code;
+        sim_state_.test_passed = (exit_code == 0) ? true : false;
+        sim_state_.sim_stopped = true;
+
+        finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
     }
 
     template <typename XLEN> XLEN PegasusState::emulateSystemCall()

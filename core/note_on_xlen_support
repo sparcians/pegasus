@@ -1,0 +1,5 @@
+rv64-only JSONs (no rv32 partner), e.g. isa_rv64zicfiss.json, isa_rv64zvknh.json, isa_rv64svinval.json, isa_rv64zvkg.json, isa_rv64q_addons.json, isa_rv64q.json, isa_rv64zicond.json, isa_rv64zicbom.json, etc.
+
+rv32-only JSONs (no rv64 partner), e.g. isa_rv32zknd.json, isa_rv32zfa_d_addons.json, isa_rv32zclsd.json, isa_rv32zilsd.json, isa_rv32zmmul.json, etc.
+
+A few others like isa_rv128q_addons.json that have neither rv32 nor rv64 in the name.

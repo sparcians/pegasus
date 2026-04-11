@@ -356,14 +356,7 @@ namespace pegasus
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const int64_t exit_code)
-        {
-            sim_state_.workload_exit_code = exit_code;
-            sim_state_.test_passed = (exit_code == 0) ? true : false;
-            sim_state_.sim_stopped = true;
-
-            finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
-        }
+        void stopSim(const int64_t exit_code);
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
@@ -492,8 +485,13 @@ namespace pegasus
         //! Vector state
         VectorConfig vector_config_;
 
+        // Increment counter CSRs
+        template <typename XLEN> void incrCycleCsrs_();
+        template <typename XLEN> void incrTimeCsrs_();
+        template <typename XLEN> void incrInstretCsrs_();
+
         // Increment PC Action
-        template <bool CHECK_ILIMIT>
+        template <typename XLEN, bool CHECK_ILIMIT>
         Action::ItrType incrementPc_(PegasusState* state, Action::ItrType action_it);
         pegasus::Action increment_pc_action_;
 

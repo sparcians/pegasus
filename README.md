@@ -214,8 +214,8 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **C** Compressed instructions. | :white_check_mark: |
 | **B** Bit-manipulation instructions. | :white_check_mark: |
 | **Zicsr** CSR instructions. These are implied by presence of F. | :white_check_mark: |
-| **Zicntr** Base counters and timers. | :x: |
-| **Zihpm** Hardware performance counters. | :x: |
+| **Zicntr** Base counters and timers. | :white_check_mark: |
+| **Zihpm** Hardware performance counters. | :white_check_mark: |
 | **Ziccif** Main memory regions with both the cacheability and coherence PMAs must support instruction fetch, and any instruction fetches of naturally aligned power-of-2 sizes up to min(ILEN,XLEN) (i.e., 32 bits for RVA23) are atomic. | :x: |
 | **Ziccrse** Main memory regions with both the cacheability and coherence PMAs must support RsrvEventual. | :x: |
 | **Ziccamoa** Main memory regions with both the cacheability and coherence PMAs must support all atomics in A. | :x: |
@@ -252,7 +252,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zvbc** Vector carryless multiplication. | :x: |
 | **Zama16b** Misaligned loads, stores, and AMOs to main memory regions that do not cross a naturally aligned 16-byte boundary are atomic. | :x: |
 | **Zfh** Scalar half-precision floating-point. | :white_check_mark: |
-| **Zbc** Scalar carryless multiply. | :x: |
+| **Zbc** Scalar carryless multiply. | :white_check_mark: |
 | **Zicfilp** Landing Pads. | :x: |
 | **Zicfiss** Shadow Stack. | :x: |
 | **Zvfh** Vector half-precision floating-point. | :x: |
@@ -281,11 +281,11 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **H** The hypervisor extension. | :x: |
 | **Ssstateen** Supervisor-mode view of the state-enable extension. The supervisor-mode (sstateen10-3 and hypervisor-mode (hstateen0-3) state-enable registers must be provided. | :x: |
 | **Shcounterenw** For any hpmcounter that is not read-only zero, the corresponding bit in hcounteren
-must be writable. | |
-| **Shvstvala** vstval must be written in all cases described above for stval. | |
-| **Shtvala** htval must be written with the faulting guest physical address in all circumstances permitted by the ISA. | |
-| **Shvstvecd** vstvec.MODE must be capable of holding the value 0 (Direct). When vstvec.MODE=Direct, vstvec.BASE must be capable of holding any valid four-byte-aligned address. | |
-| **Shvsatpa** All translation modes supported in satp must be supported in vsatp. | |
+must be writable. | :x: |
+| **Shvstvala** vstval must be written in all cases described above for stval. | :x: |
+| **Shtvala** htval must be written with the faulting guest physical address in all circumstances permitted by the ISA. | :x: |
+| **Shvstvecd** vstvec.MODE must be capable of holding the value 0 (Direct). When vstvec.MODE=Direct, vstvec.BASE must be capable of holding any valid four-byte-aligned address. | :x: |
+| **Shvsatpa** All translation modes supported in satp must be supported in vsatp. | :x: |
 | **Shgatpa** For each supported virtual memory scheme SvNN supported in satp, the corresponding hgatp SvNNx4 mode must be supported. The hgatp mode Bare must also be supported. | :x: |
 
 
@@ -297,9 +297,9 @@ must be writable. | |
 | **Svadu** Hardware A/D bit updates. | :x: |
 | **Sdtrig** Debug triggers. | :x: |
 | **Ssstrict** No non-conforming extensions are present. Attempts to execute unimplemented opcodes or access unimplemented CSRs in the standard or reserved encoding spaces raises an illegal instruction exception that results in a contained trap to the supervisor-mode trap handler. | :x: |
-| **Svvptc** Transitions from invalid to valid PTEs will be visible in bounded time without an explicit memory-management fence. | |
+| **Svvptc** Transitions from invalid to valid PTEs will be visible in bounded time without an explicit memory-management fence. | :x: |
 | **Sspm** Supervisor-mode pointer masking, with the supervisor execution environment providing a
-means to select PMLEN=0 and PMLEN=7 at minimum. | |
+means to select PMLEN=0 and PMLEN=7 at minimum. | :x: |
 
 | RV32 and RV64 "Other" Extensions | Status |
 | :--------------------------- | :----: |
