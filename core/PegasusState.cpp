@@ -867,7 +867,7 @@ namespace pegasus
     {
         std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
 
-        if (pegasus_core_->isExtensionEnabled("zicntr"))
+        if (pegasus_core_->hasZicntr())
         {
             if (xlen_ == 64)
             {
