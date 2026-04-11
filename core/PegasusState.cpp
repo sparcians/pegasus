@@ -72,6 +72,20 @@ namespace pegasus
         validate_inst_begin_(p->validate_inst_begin),
         validate_fail_on_first_diff_(p->validate_fail_on_first_diff),
         priv_mode_(getPrivilegeMode(p->priv_mode)),
+        isa_string_(hart_tn->getParent()
+                        ->getChildAs<sparta::ParameterSet>("params")
+                        ->getParameterValueAs<std::string>("isa")),
+        isa_file_path_(hart_tn->getParent()
+                           ->getChildAs<sparta::ParameterSet>("params")
+                           ->getParameterValueAs<std::string>("isa_file_path")),
+        arch_name_(hart_tn->getParent()
+                       ->getChildAs<sparta::ParameterSet>("params")
+                       ->getParameterValueAs<std::string>("arch")),
+        uarch_file_path_(hart_tn->getParent()
+                             ->getChildAs<sparta::ParameterSet>("params")
+                             ->getParameterValueAs<std::string>("uarch_file_path")),
+        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
+            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -100,6 +114,8 @@ namespace pegasus
             }
         };
 
+        registers_by_name_.reserve(int_rset_->getNumRegisters() + fp_rset_->getNumRegisters()
+                                   + vec_rset_->getNumRegisters() + csr_rset_->getNumRegisters());
         add_registers(int_rset_);
         add_registers(fp_rset_);
         add_registers(vec_rset_);
@@ -146,6 +162,17 @@ namespace pegasus
             sparta_assert(false, "Unsupported XLEN");
         }
 
+        if (isCompressionEnabled())
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+
+        initCsrEnabledState_();
+
         // Add increment PC Action to finish ActionGroup
         finish_action_group_.addAction(increment_pc_action_);
 
@@ -160,6 +187,26 @@ namespace pegasus
 
         // Update VectorConfig vlen
         vector_config_.setVLEN(vlen_);
+    }
+
+    mavis::FileNameListType PegasusState::getUArchFiles_() const
+    {
+        mavis::FileNameListType uarch_files;
+
+        const std::string xlen_str = std::to_string(xlen_);
+        const std::string xlen_uarch_file_path =
+            uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
+        const std::regex filename_regex("pegasus_uarch_.*json");
+        for (const auto & entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
+        {
+            if (std::regex_search(entry.path().filename().string(), filename_regex))
+            {
+                DLOG("Loading: " << entry.path());
+                uarch_files.emplace_back(entry.path());
+            }
+        }
+
+        return uarch_files;
     }
 
     // Not default -- defined in source file to reduce massive inlining
@@ -178,6 +225,24 @@ namespace pegasus
 
         // Connect finish ActionGroup to Fetch
         finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+
+        // Initialize Mavis
+        DLOG("Initializing Mavis with ISA string " << isa_string_);
+
+        mavis_ = std::make_unique<MavisType>(
+            extension_manager_.constructMavis<
+                PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
+                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>(
+                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
+                {},                                    // inclusions
+                {},                                    // exclusions
+                PegasusInstAllocatorWrapper<PegasusInstAllocator>(
+                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
+                        ->inst_allocator),
+                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>(
+                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
+                        ->extractor_allocator,
+                    this)));
     }
 
     void PegasusState::onBindTreeLate_()
@@ -376,6 +441,22 @@ namespace pegasus
         }
 
         return ++action_it;
+    }
+
+    void PegasusState::changeMavisContext()
+    {
+        extension_manager_.switchMavisContext(*mavis_.get());
+
+        if (isCompressionEnabled())
+        {
+            setPcAlignment_(2);
+        }
+        else
+        {
+            setPcAlignment_(4);
+        }
+
+        initCsrEnabledState_();
     }
 
     void PegasusState::enableInteractiveMode()
@@ -939,19 +1020,19 @@ namespace pegasus
         const auto COMPAT_HWCAP_ISA_V(1 << ('V' - 'A'));
 
         uint64_t a_val = COMPAT_HWCAP_ISA_I | COMPAT_HWCAP_ISA_M | COMPAT_HWCAP_ISA_A;
-        if (pegasus_core_->isExtensionEnabled("f"))
+        if (isExtensionEnabled("f"))
         {
             a_val |= COMPAT_HWCAP_ISA_F;
         }
-        if (pegasus_core_->isExtensionEnabled("d"))
+        if (isExtensionEnabled("d"))
         {
             a_val |= COMPAT_HWCAP_ISA_D;
         }
-        if (pegasus_core_->isExtensionEnabled("c"))
+        if (isExtensionEnabled("c"))
         {
             a_val |= COMPAT_HWCAP_ISA_C;
         }
-        if (pegasus_core_->isExtensionEnabled("v"))
+        if (isExtensionEnabled("v"))
         {
             a_val |= COMPAT_HWCAP_ISA_V;
         }
@@ -1092,6 +1173,30 @@ namespace pegasus
 
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
+
+    void PegasusState::initCsrEnabledState_()
+    {
+        const auto & extensionManager = getExtensionManager();
+
+        // Enable all register by default
+        csr_enabled_state_.resize(csr_rset_->getNumRegisters(), true);
+
+        // Check for disabled extensions
+        for (auto & dep : csr_rset_->getRegisterExtensionDep())
+        {
+            auto reg = dep.first;
+            auto extensions = dep.second;
+
+            for (auto ext : extensions)
+            {
+                if (!extensionManager.isEnabled(ext))
+                {
+                    csr_enabled_state_[reg] = false;
+                    break;
+                }
+            }
+        }
+    }
 
     // Install register callback functions
     template <typename XLEN> void PegasusState::addCSRRegisterCallbacks_()

@@ -28,7 +28,7 @@ namespace pegasus::cosim
         hart_id_(hart_id),
         state_(state)
     {
-        auto & ext_mgr = state->getCore()->getExtensionManager();
+        auto & ext_mgr = state->getExtensionManager();
 
         ext_mgr.registerExtensionChangeCallback(
             [this](const std::vector<std::string> & extensions, bool enabled)
@@ -489,7 +489,7 @@ namespace pegasus::cosim
             bool & flag_;
         } guard(flushing_);
 
-        auto & ext_mgr = state_->getCore()->getExtensionManager();
+        auto & ext_mgr = state_->getExtensionManager();
 
         // Undo the CSR side effects, softfloat changes, MMU mode, and extension changes
         // for every uncommitted event we are flushing. All events will be undone in the
@@ -554,7 +554,7 @@ namespace pegasus::cosim
             if (!exts_to_enable.empty() || !exts_to_disable.empty())
             {
                 ext_mgr.changeExtensions(exts_to_enable, exts_to_disable);
-                state->getCore()->changeMavisContext();
+                state->changeMavisContext();
             }
 
             // Update MMU mode when MSTATUS / SATP csrs have changed,

@@ -147,7 +147,7 @@ namespace pegasus
         PegasusInstPtr inst = nullptr;
         try
         {
-            inst = state->getCore()->getMavis()->makeInst(opcode, state);
+            inst = state->getMavis()->makeInst(opcode, state);
             inst->updateVecConfig(state); // Old PegasusInst may be returned from cache. So
                                           // outside-constructor call is needed.
             assert(state->getCurrentInst() == nullptr);

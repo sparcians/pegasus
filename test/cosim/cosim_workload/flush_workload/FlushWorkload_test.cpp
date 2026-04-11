@@ -209,9 +209,8 @@ template <typename XLEN> bool Compare(PegasusState* state_truth, PegasusState* s
     }
 
     // Compare enabled extensions
-    auto extensions_map_truth =
-        state_truth->getCore()->getExtensionManager().getEnabledExtensions();
-    auto extensions_map_test = state_test->getCore()->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_truth = state_truth->getExtensionManager().getEnabledExtensions();
+    auto extensions_map_test = state_test->getExtensionManager().getEnabledExtensions();
 
     std::unordered_set<std::string> enabled_exts_truth;
     for (auto it = extensions_map_truth.begin(); it != extensions_map_truth.end(); ++it)

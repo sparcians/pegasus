@@ -1,0 +1,7 @@
+RVSMCSRIND_MAVIS_EXTS = ["smcsrind"]
+
+RV32SMCSRIND_INST = [
+]
+
+RV64SMCSRIND_INST = [
+]

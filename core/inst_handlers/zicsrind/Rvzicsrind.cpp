@@ -116,9 +116,7 @@ namespace pegasus
 
         if (reg_type == CsrindRegType::INVALID)
         {
-            auto exception_unit = state->getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
+            state->throwException(FaultCause::ILLEGAL_INST);
         }
 
         // Right now we dont have a clic model to use the decoded offset.
@@ -138,9 +136,7 @@ namespace pegasus
 
         if (reg_type == CsrindRegType::INVALID)
         {
-            auto exception_unit = state->getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
+            state->throwException(FaultCause::ILLEGAL_INST);
         }
 
         reg->write<XLEN>(val);
@@ -154,9 +150,7 @@ namespace pegasus
 
         if (reg_type == CsrindRegType::INVALID)
         {
-            auto exception_unit = state->getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
+            state->throwException(FaultCause::ILLEGAL_INST);
         }
 
         return reg->read<XLEN>();
@@ -170,9 +164,7 @@ namespace pegasus
 
         if (reg_type == CsrindRegType::INVALID)
         {
-            auto exception_unit = state->getExceptionUnit();
-            exception_unit->setUnhandledException(FaultCause::ILLEGAL_INST);
-            throw ActionException(exception_unit->getActionGroup());
+            state->throwException(FaultCause::ILLEGAL_INST);
         }
 
         reg->write<XLEN>(val);

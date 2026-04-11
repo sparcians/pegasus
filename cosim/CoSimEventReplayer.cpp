@@ -320,9 +320,9 @@ namespace pegasus::cosim
 
         if (!exts_to_enable.empty() || !exts_to_disable.empty())
         {
-            auto & ext_mgr = state->getCore()->getExtensionManager();
+            auto & ext_mgr = state->getExtensionManager();
             ext_mgr.changeExtensions(exts_to_enable, exts_to_disable);
-            state->getCore()->changeMavisContext();
+            state->changeMavisContext();
         }
     }
 
