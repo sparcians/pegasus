@@ -9,6 +9,7 @@
 #include "arch/gen/supportedISA.hpp"
 #include "include/PegasusTypes.hpp"
 #include "include/gen/CSRBitMasks64.hpp"
+#include "include/gen/CSRBitMasks32.hpp"
 #include "include/gen/CSRHelpers.hpp"
 
 #include "sim/PegasusAllocators.hpp"
@@ -68,6 +69,9 @@ namespace pegasus
 
             PARAMETER(uint32_t, hart_id, UINT32_MAX, "Hart ID")
             PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
+            PARAMETER(std::string, isa, "",
+                      "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
+                      "used instead.")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
@@ -89,7 +93,6 @@ namespace pegasus
                       "STF validation pegasus fail on first difference detected")
 
             // Set by PegasusCore
-            HIDDEN_PARAMETER(uint32_t, xlen, 64, "XLEN (either 32 or 64 bit)")
             HIDDEN_PARAMETER(std::string, reg_json_file_path, "",
                              "Where are the Pegasus register files?")
           private:
@@ -107,6 +110,8 @@ namespace pegasus
         virtual ~PegasusState();
 
         HartId getHartId() const { return hart_id_; }
+
+        const std::string & getISAString() const { return isa_string_; }
 
         uint64_t getXlen() const;
 
@@ -246,6 +251,12 @@ namespace pegasus
         bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
 
         bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
+
+        bool hasHypervisor() const { return hypervisor_enabled_; }
+
+        bool hasZicntr() const { return zicntr_enabled_; }
+
+        template <typename XLEN> uint32_t getMisaExtFieldValue() const;
 
         void enableInteractiveMode();
 
@@ -419,9 +430,6 @@ namespace pegasus
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;
 
-        // XLEN (either 32 or 64 bit)
-        const uint64_t xlen_ = 64;
-
         // Path to register JSONs
         const std::string reg_json_file_path_;
 
@@ -505,7 +513,12 @@ namespace pegasus
         PegasusCore* pegasus_core_ = nullptr;
 
         // ISA string
-        const std::string isa_string_;
+        std::string isa_string_;
+
+        // XLEN (either 32 or 64 bit)
+        uint64_t xlen_ = 64;
+
+        // TODO
         const std::string isa_file_path_;
 
         // Arch name
@@ -529,6 +542,12 @@ namespace pegasus
 
         // Mavis
         std::unique_ptr<MavisType> mavis_;
+
+        //! Do we have hypervisor?
+        const bool hypervisor_enabled_;
+
+        //! Do we have the counter extension?
+        const bool zicntr_enabled_;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

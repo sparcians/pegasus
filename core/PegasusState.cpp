@@ -27,6 +27,22 @@
 
 namespace pegasus
 {
+    uint32_t getXlenFromIsaString(const std::string & isa_string)
+    {
+        if (isa_string.find("32") != std::string::npos)
+        {
+            return 32;
+        }
+        else if (isa_string.find("64") != std::string::npos)
+        {
+            return 64;
+        }
+        else
+        {
+            sparta_assert(false, "Failed to determine XLEN from ISA string: " << isa_string);
+        }
+    }
+
     uint64_t getInstLimit(sparta::TreeNode* rtn, uint64_t ilimit)
     {
         auto extension = sparta::notNull(rtn->createExtension("sim"));
@@ -60,7 +76,6 @@ namespace pegasus
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
         vlen_(p->vlen),
-        xlen_(p->xlen),
         reg_json_file_path_(p->reg_json_file_path),
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
@@ -75,6 +90,7 @@ namespace pegasus
         isa_string_(hart_tn->getParent()
                         ->getChildAs<sparta::ParameterSet>("params")
                         ->getParameterValueAs<std::string>("isa")),
+        xlen_(getXlenFromIsaString(isa_string_)),
         isa_file_path_(hart_tn->getParent()
                            ->getChildAs<sparta::ParameterSet>("params")
                            ->getParameterValueAs<std::string>("isa_file_path")),
@@ -86,21 +102,40 @@ namespace pegasus
                              ->getParameterValueAs<std::string>("uarch_file_path")),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
+        hypervisor_enabled_(extension_manager_.isEnabled("h")),
+        zicntr_enabled_(extension_manager_.isEnabled("zicntr")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim"),
         pause_sim_action_group_("pause_sim")
     {
+        const std::string profile = hart_tn->getParent()
+                                        ->getChildAs<sparta::ParameterSet>("params")
+                                        ->getParameterValueAs<std::string>("profile");
+        if (profile.empty() == false)
+        {
+            extension_manager_.setProfile(profile);
+        }
+
+        const std::string init_isa = p->isa;
+        if (init_isa.empty() == false)
+        {
+            isa_string_ = p->isa;
+            extension_manager_.setISA(isa_string_);
+        }
+
         // Set up register sets
-        int_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + std::string("/reg_int.json"),
+        const std::string reg_json_file_path =
+            reg_json_file_path_ + "/rv" + std::to_string(xlen_) + "/gen";
+        int_rset_ = RegisterSet::create(hart_tn, reg_json_file_path + std::string("/reg_int.json"),
                                         "int_regs");
-        fp_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + std::string("/reg_fp.json"),
+        fp_rset_ = RegisterSet::create(hart_tn, reg_json_file_path + std::string("/reg_fp.json"),
                                        "fp_regs");
         const std::string vec_reg_json = "/reg_vec" + std::to_string(vlen_) + ".json";
-        vec_rset_ = RegisterSet::create(hart_tn, reg_json_file_path_ + vec_reg_json, "vec_regs");
+        vec_rset_ = RegisterSet::create(hart_tn, reg_json_file_path + vec_reg_json, "vec_regs");
         csr_rset_ = RegisterSet::create(
-            hart_tn, reg_json_file_path_ + std::string("/reg_csr_hart.json"), "csr_regs");
+            hart_tn, reg_json_file_path + std::string("/reg_csr_hart.json"), "csr_regs");
 
         auto add_registers = [this](const auto & reg_set)
         {
@@ -247,11 +282,22 @@ namespace pegasus
 
     void PegasusState::onBindTreeLate_()
     {
+        // Validate the ISA string
+        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
+        {
+            if (false == pegasus_core_->isExtensionSupported(xlen_, ext.first))
+            {
+                sparta_assert(false, "ISA extension: " << ext.first
+                                                       << " is not supported in isa_string: "
+                                                       << isa_string_);
+            }
+        }
+
         // Set up translation
         if (xlen_ == 64)
         {
             updateTranslationMode<RV64>(translate_types::TranslationStage::SUPERVISOR);
-            if (pegasus_core_->hasHypervisor())
+            if (hasHypervisor())
             {
                 updateTranslationMode<RV64>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
                 updateTranslationMode<RV64>(translate_types::TranslationStage::GUEST);
@@ -260,7 +306,7 @@ namespace pegasus
         else
         {
             updateTranslationMode<RV32>(translate_types::TranslationStage::SUPERVISOR);
-            if (pegasus_core_->hasHypervisor())
+            if (hasHypervisor())
             {
                 updateTranslationMode<RV32>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
                 updateTranslationMode<RV32>(translate_types::TranslationStage::GUEST);
@@ -458,6 +504,36 @@ namespace pegasus
 
         initCsrEnabledState_();
     }
+
+    template <typename XLEN> uint32_t PegasusState::getMisaExtFieldValue() const
+    {
+        uint32_t ext_val = 0;
+        for (char ext = 'a'; ext <= 'z'; ++ext)
+        {
+            const std::string ext_str = std::string(1, ext);
+            if (extension_manager_.isEnabled(ext_str))
+            {
+                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
+            }
+        }
+
+        // FIXME: Assume both User and Supervisor mode are supported
+        if constexpr (std::is_same_v<XLEN, RV64>)
+        {
+            ext_val |= 1 << CSR_64::MISA::u::high_bit;
+            ext_val |= 1 << CSR_64::MISA::s::high_bit;
+        }
+        else
+        {
+            ext_val |= 1 << CSR_32::MISA::u::high_bit;
+            ext_val |= 1 << CSR_32::MISA::s::high_bit;
+        }
+
+        return ext_val;
+    }
+
+    template uint32_t PegasusState::getMisaExtFieldValue<RV32>() const;
+    template uint32_t PegasusState::getMisaExtFieldValue<RV64>() const;
 
     void PegasusState::enableInteractiveMode()
     {
@@ -693,7 +769,7 @@ namespace pegasus
         // for now just assume each inst takes 1 cycle
         ++sim_state_.cycles;
 
-        if (pegasus_core_->hasZicntr())
+        if (hasZicntr())
         {
             incrInstretCsrs_<XLEN>();
             incrCycleCsrs_<XLEN>();
@@ -723,13 +799,38 @@ namespace pegasus
 
     template <bool IS_UNIT_TEST> bool PegasusState::compare(const PegasusState* state) const
     {
-        auto xlen = getXlen();
         auto other_xlen = state->getXlen();
         if constexpr (IS_UNIT_TEST)
         {
-            EXPECT_EQUAL(xlen, other_xlen);
+            EXPECT_EQUAL(xlen_, other_xlen);
         }
-        else if (xlen != other_xlen)
+        else if (xlen_ != other_xlen)
+        {
+            return false;
+        }
+
+        auto has_hypervisor = hasHypervisor();
+        auto other_has_hypervisor = state->hasHypervisor();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
+        }
+        else if (has_hypervisor != other_has_hypervisor)
+        {
+            return false;
+        }
+
+        auto misa_ext_field_value =
+            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
+
+        auto other_misa_ext_field_value = getXlen() == 32 ? state->getMisaExtFieldValue<uint32_t>()
+                                                          : state->getMisaExtFieldValue<uint64_t>();
+
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(misa_ext_field_value, other_misa_ext_field_value);
+        }
+        else if (misa_ext_field_value != other_misa_ext_field_value)
         {
             return false;
         }
@@ -867,7 +968,7 @@ namespace pegasus
     {
         std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
 
-        if (pegasus_core_->hasZicntr())
+        if (hasZicntr())
         {
             if (xlen_ == 64)
             {
@@ -1087,7 +1188,7 @@ namespace pegasus
                 const uint64_t xlen_val = 2;
                 POKE_CSR_FIELD<RV64>(this, MISA, "mxl", xlen_val);
 
-                const uint32_t ext_val = pegasus_core_->getMisaExtFieldValue<RV64>();
+                const uint32_t ext_val = getMisaExtFieldValue<RV64>();
                 POKE_CSR_FIELD<RV64>(this, MISA, "extensions", ext_val);
 
                 // Initialize MSTATUS/STATUS with User and Supervisor mode XLEN
@@ -1095,7 +1196,7 @@ namespace pegasus
                 POKE_CSR_FIELD<RV64>(this, MSTATUS, "sxl", xlen_val);
                 POKE_CSR_FIELD<RV64>(this, SSTATUS, "uxl", xlen_val);
 
-                if (pegasus_core_->hasHypervisor())
+                if (hasHypervisor())
                 {
                     POKE_CSR_FIELD<RV64>(this, VSSTATUS, "uxl", xlen_val);
                 }
@@ -1107,7 +1208,7 @@ namespace pegasus
                 const uint32_t xlen_val = 1;
                 POKE_CSR_FIELD<RV32>(this, MISA, "mxl", xlen_val);
 
-                const uint32_t ext_val = pegasus_core_->getMisaExtFieldValue<RV32>();
+                const uint32_t ext_val = getMisaExtFieldValue<RV32>();
                 POKE_CSR_FIELD<RV32>(this, MISA, "extensions", ext_val);
             }
 

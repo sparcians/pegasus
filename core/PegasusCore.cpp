@@ -2,7 +2,6 @@
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
 #include "system/ReservationMemory.hpp"
-#include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
@@ -42,44 +41,6 @@ namespace pegasus
         return priv_modes;
     }
 
-    uint32_t getXlenFromIsaString(const std::string & isa_string)
-    {
-        if (isa_string.find("32") != std::string::npos)
-        {
-            return 32;
-        }
-        else if (isa_string.find("64") != std::string::npos)
-        {
-            return 64;
-        }
-        else
-        {
-            sparta_assert(false, "Failed to determine XLEN from ISA string: " << isa_string);
-        }
-    }
-
-    bool PegasusCore::validateISAString_(std::string & unsupportedExt)
-    {
-        const auto & supported_exts =
-            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
-
-        const auto hasExtension = [&](const std::string & ext) {
-            return std::find(supported_exts.begin(), supported_exts.end(), ext)
-                   != supported_exts.end();
-        };
-
-        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
-        {
-            if (!hasExtension(ext.first))
-            {
-                unsupportedExt = ext.first;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     PegasusCore::PegasusCore(sparta::TreeNode* core_tn, const PegasusCoreParameters* p) :
         sparta::Unit(core_tn),
         core_id_(p->core_id),
@@ -99,19 +60,14 @@ namespace pegasus
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         arch_name_(p->arch),
         profile_(p->profile),
-        isa_string_(p->isa),
-        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
-        xlen_(getXlenFromIsaString(isa_string_)),
+        supported_exts_(p->isa),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
+        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         supported_trap_modes_(p->supported_trap_modes),
         misalignment_support_(p->misalignment_support),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
-        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
-            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
-        hypervisor_enabled_(extension_manager_.isEnabled("h")),
-        zicntr_enabled_(extension_manager_.isEnabled("zicntr")),
         reservations_(num_harts_),
         inst_handlers_(syscall_emulation_enabled_)
     {
@@ -124,10 +80,6 @@ namespace pegasus
                 hart_tn = new sparta::ResourceTreeNode(core_tn, hart_name, "harts", hart_idx,
                                                        "Hart State", &state_factory_));
 
-            // Set XLEN
-            hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
-                ->setValueFromString(std::to_string(xlen_));
-
             // Set hart_id if not explicitly set
             auto hart_id = hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id");
             if (hart_id->isDefault())
@@ -136,8 +88,7 @@ namespace pegasus
             }
 
             // Set path to register JSONs (from "arch")
-            const std::string reg_json_file_path =
-                uarch_file_path_ + "/" + arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
+            const std::string reg_json_file_path = uarch_file_path_ + "/" + arch_name_;
             hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
                 ->setValueFromString(reg_json_file_path);
 
@@ -160,22 +111,6 @@ namespace pegasus
             tns_to_delete_.emplace_back(new sparta::ResourceTreeNode(
                 hart_tn, "exception", sparta::TreeNode::GROUP_NAME_NONE,
                 sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
-        }
-
-        sparta_assert(xlen_ == extension_manager_.getXLEN());
-
-        if (profile_.empty() == false)
-        {
-            extension_manager_.setProfile(profile_);
-        }
-        extension_manager_.setISA(isa_string_);
-
-        std::string unsupportedExt;
-        if (!validateISAString_(unsupportedExt))
-        {
-            sparta_assert(false,
-                          "ISA extension: " << unsupportedExt
-                                            << " is not supported in isa_string: " << isa_string_);
         }
 
         sparta::StartupEvent(core_tn, CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_));
@@ -256,36 +191,6 @@ namespace pegasus
         state->getSimState()->sim_stopped = false;
         threads_running_.set(0);
     }
-
-    template <typename XLEN> uint32_t PegasusCore::getMisaExtFieldValue() const
-    {
-        uint32_t ext_val = 0;
-        for (char ext = 'a'; ext <= 'z'; ++ext)
-        {
-            const std::string ext_str = std::string(1, ext);
-            if (extension_manager_.isEnabled(ext_str))
-            {
-                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
-            }
-        }
-
-        // FIXME: Assume both User and Supervisor mode are supported
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            ext_val |= 1 << CSR_64::MISA::u::high_bit;
-            ext_val |= 1 << CSR_64::MISA::s::high_bit;
-        }
-        else
-        {
-            ext_val |= 1 << CSR_32::MISA::u::high_bit;
-            ext_val |= 1 << CSR_32::MISA::s::high_bit;
-        }
-
-        return ext_val;
-    }
-
-    template uint32_t PegasusCore::getMisaExtFieldValue<RV32>() const;
-    template uint32_t PegasusCore::getMisaExtFieldValue<RV64>() const;
 
     // This method will execute a single thread for up to X instructions
     // where X is the quantum for that thread. The cycle count of all threads
