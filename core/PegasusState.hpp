@@ -544,10 +544,10 @@ namespace pegasus
         std::unique_ptr<MavisType> mavis_;
 
         //! Do we have hypervisor?
-        const bool hypervisor_enabled_;
+        bool hypervisor_enabled_;
 
         //! Do we have the counter extension?
-        const bool zicntr_enabled_;
+        bool zicntr_enabled_;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

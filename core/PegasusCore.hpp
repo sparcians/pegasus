@@ -223,6 +223,5 @@ namespace pegasus
 
         // ReservationMemory
         std::unique_ptr<ReservationMemory> reservation_memory_bmi_;
-        ;
     };
 } // namespace pegasus

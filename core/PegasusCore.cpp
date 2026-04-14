@@ -311,13 +311,6 @@ namespace pegasus
         state->unregisterWaitOnReservationSet();
     }
 
-    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
-    {
-        // TODO?
-        (void)core;
-        return true;
-    }
-
     void PegasusCore::makeReservation(HartId hart_id, Addr paddr)
     {
         for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
@@ -348,6 +341,51 @@ namespace pegasus
         {
             current_memory_view_ = system_->getSystemMemory();
         }
+    }
+
+    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
+    {
+        const auto num_harts = getNumThreads();
+        const auto other_num_harts = core->getNumThreads();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(num_harts, other_num_harts);
+        }
+        else if (num_harts != other_num_harts)
+        {
+            return false;
+        }
+
+        for (uint32_t hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+        {
+            const auto resv = getReservation(hart_idx);
+            const auto other_resv = core->getReservation(hart_idx);
+
+            if constexpr (IS_UNIT_TEST)
+            {
+                EXPECT_EQUAL(resv.isValid(), other_resv.isValid());
+                if (resv.isValid())
+                {
+                    EXPECT_EQUAL(resv, other_resv);
+                }
+            }
+            else
+            {
+                if (resv.isValid() != other_resv.isValid())
+                {
+                    return false;
+                }
+                if (resv.isValid())
+                {
+                    if (resv != other_resv)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;

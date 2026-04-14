@@ -125,6 +125,8 @@ namespace pegasus
             extension_manager_.setISA(isa_string_);
         }
 
+        setPcAlignment_(isCompressionEnabled() ? 2 : 4);
+
         // Set up register sets
         const std::string reg_json_file_path =
             reg_json_file_path_ + "/rv" + std::to_string(xlen_) + "/gen";
@@ -155,6 +157,9 @@ namespace pegasus
         add_registers(fp_rset_);
         add_registers(vec_rset_);
         add_registers(csr_rset_);
+
+        csr_enabled_state_.resize(csr_rset_->getNumRegisters(), true);
+        initCsrEnabledState_();
 
         // Add CSR callbacks and increment PC Action
         const bool CHECK_ILIMIT = ilimit_ > 0;
@@ -196,17 +201,6 @@ namespace pegasus
         {
             sparta_assert(false, "Unsupported XLEN");
         }
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
-
-        initCsrEnabledState_();
 
         // Add increment PC Action to finish ActionGroup
         finish_action_group_.addAction(increment_pc_action_);
@@ -493,14 +487,10 @@ namespace pegasus
     {
         extension_manager_.switchMavisContext(*mavis_.get());
 
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
+        hypervisor_enabled_ = extension_manager_.isEnabled("h");
+        zicntr_enabled_ = extension_manager_.isEnabled("zicntr");
+
+        setPcAlignment_(isCompressionEnabled() ? 2 : 4);
 
         initCsrEnabledState_();
     }
@@ -799,53 +789,6 @@ namespace pegasus
 
     template <bool IS_UNIT_TEST> bool PegasusState::compare(const PegasusState* state) const
     {
-        auto other_xlen = state->getXlen();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(xlen_, other_xlen);
-        }
-        else if (xlen_ != other_xlen)
-        {
-            return false;
-        }
-
-        auto has_hypervisor = hasHypervisor();
-        auto other_has_hypervisor = state->hasHypervisor();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
-        }
-        else if (has_hypervisor != other_has_hypervisor)
-        {
-            return false;
-        }
-
-        auto misa_ext_field_value =
-            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
-
-        auto other_misa_ext_field_value = getXlen() == 32 ? state->getMisaExtFieldValue<uint32_t>()
-                                                          : state->getMisaExtFieldValue<uint64_t>();
-
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(misa_ext_field_value, other_misa_ext_field_value);
-        }
-        else if (misa_ext_field_value != other_misa_ext_field_value)
-        {
-            return false;
-        }
-
-        auto stop_sim_on_wfi = getStopSimOnWfi();
-        auto other_stop_sim_on_wfi = state->getStopSimOnWfi();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(stop_sim_on_wfi, other_stop_sim_on_wfi);
-        }
-        else if (stop_sim_on_wfi != other_stop_sim_on_wfi)
-        {
-            return false;
-        }
-
         auto pc = getPc();
         auto other_pc = state->getPc();
         if constexpr (IS_UNIT_TEST)
@@ -897,6 +840,51 @@ namespace pegasus
             EXPECT_EQUAL(curr_excp, other_curr_excp);
         }
         else if (curr_excp != other_curr_excp)
+        {
+            return false;
+        }
+
+        auto other_xlen = state->getXlen();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(xlen_, other_xlen);
+        }
+        else if (xlen_ != other_xlen)
+        {
+            return false;
+        }
+
+        auto has_hypervisor = hasHypervisor();
+        auto other_has_hypervisor = state->hasHypervisor();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
+        }
+        else if (has_hypervisor != other_has_hypervisor)
+        {
+            return false;
+        }
+
+        auto has_zicntr = hasZicntr();
+        auto other_has_zicntr = state->hasZicntr();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(has_zicntr, other_has_zicntr);
+        }
+        else if (has_zicntr != other_has_zicntr)
+        {
+            return false;
+        }
+
+        auto misa_ext_field_value =
+            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
+        auto other_misa_ext_field_value = getXlen() == 32 ? state->getMisaExtFieldValue<uint32_t>()
+                                                          : state->getMisaExtFieldValue<uint64_t>();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(misa_ext_field_value, other_misa_ext_field_value);
+        }
+        else if (misa_ext_field_value != other_misa_ext_field_value)
         {
             return false;
         }
@@ -1277,25 +1265,15 @@ namespace pegasus
 
     void PegasusState::initCsrEnabledState_()
     {
-        const auto & extensionManager = getExtensionManager();
-
-        // Enable all register by default
-        csr_enabled_state_.resize(csr_rset_->getNumRegisters(), true);
-
         // Check for disabled extensions
         for (auto & dep : csr_rset_->getRegisterExtensionDep())
         {
-            auto reg = dep.first;
-            auto extensions = dep.second;
+            const auto & reg = dep.first;
+            const auto & extensions = dep.second;
 
-            for (auto ext : extensions)
-            {
-                if (!extensionManager.isEnabled(ext))
-                {
-                    csr_enabled_state_[reg] = false;
-                    break;
-                }
-            }
+            csr_enabled_state_[reg] =
+                std::all_of(extensions.begin(), extensions.end(), [this](const std::string & ext)
+                            { return extension_manager_.isEnabled(ext); });
         }
     }
 
