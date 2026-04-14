@@ -278,7 +278,7 @@ namespace pegasus
     {
         // Make sure privilege mode at boot is supported
         sparta_assert(pegasus_core_->isPrivilegeModeSupported(priv_mode_),
-                      "Privilege mode is not supported: " << priv_mode_);
+                      "Attempting to change privilege mode to an unsupported mode: " << priv_mode_);
 
         // Validate the ISA string
         for (const auto & ext : extension_manager_.getEnabledExtensions(false))
