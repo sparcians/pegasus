@@ -158,7 +158,7 @@ FetchContent_MakeAvailable(spike)
 ################################################################################
 
 if (PROJECT_IS_TOP_LEVEL)
-  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format)
+  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
 
   execute_process (
     COMMAND
