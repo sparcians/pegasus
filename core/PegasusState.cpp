@@ -1275,9 +1275,12 @@ namespace pegasus
             const auto & reg = dep.first;
             const auto & extensions = dep.second;
 
-            csr_enabled_state_[reg] =
-                std::all_of(extensions.begin(), extensions.end(), [this](const std::string & ext)
-                            { return extension_manager_.isEnabled(ext); });
+            csr_enabled_state_[reg] = std::all_of(extensions.begin(), extensions.end(),
+                [this](const std::string & ext)
+                {
+                    return extension_manager_.isEnabled(ext);
+                }
+            );
         }
     }
 
