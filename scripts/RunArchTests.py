@@ -71,8 +71,6 @@ def get_pegasus_cmd(testname, wkld, output_dir, executable):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
-    logname = output_dir + testname + ".log"
-    instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
     isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz_zicntr"
     isa_string = "rv32"+isa_string if rv32_test else "rv64"+isa_string
@@ -96,12 +94,10 @@ def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, ti
         timeout_tests.append(testname)
 
     if test_passed:
-        # Remove log files if test passed
-        if os.path.exists(logname):
-            os.remove(logname)
-        # Warn if test passed but log is missing (does not apply to CoSim harness)
-        elif pegasus_cmd[0].find('FlushWorkload_test') == -1:
-            print("WARNING: Test passed but Pegasus log is missing:", logname)
+        pattern = re.compile(rf"\b{testname}\b.*\.log$")
+        for filename in os.listdir(output_dir):
+            if re.search(pattern, filename):
+                os.remove(filename)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'

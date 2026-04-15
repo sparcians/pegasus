@@ -441,7 +441,7 @@ int main(int argc, char** argv)
 
     const size_t snapshot_threshold = 10;
 
-    auto initSimConfig = [&]() -> sparta::app::SimulationConfiguration*
+    auto initSimConfig = [&](const std::string log_suffix) -> sparta::app::SimulationConfiguration*
     {
         static std::unique_ptr<sparta::app::SimulationConfiguration> config_truth;
         config_truth.reset(new sparta::app::SimulationConfiguration);
@@ -451,7 +451,7 @@ int main(int argc, char** argv)
             config_truth->processParameter(param_name, param_value, false);
         }
 
-        config_truth->enableLogging("top", "inst", workload_fname + ".log");
+        config_truth->enableLogging("top", "inst", workload_fname + "." + log_suffix + ".log");
         file_cleanup.cleanupOnSuccess(workload_fname + ".log");
         pegasus::PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
         const std::string wkld_param =
@@ -466,7 +466,7 @@ int main(int argc, char** argv)
     sparta::Scheduler scheduler_truth;
     PegasusSim cosim_truth(&scheduler_truth);
 
-    cosim_truth.configure(0, nullptr, initSimConfig());
+    cosim_truth.configure(0, nullptr, initSimConfig("truth"));
     cosim_truth.buildTree();
     cosim_truth.configureTree();
     cosim_truth.finalizeTree();
@@ -484,7 +484,12 @@ int main(int argc, char** argv)
         }
     }
 
-    PegasusCoSim cosim_test(ilimit, workload, sim_params, db_test, snapshot_threshold);
+    // Enable logging
+    const std::vector<std::vector<std::string>> loggers = {
+        {"top", "inst", workload_fname + ".cosim.log"},
+        {"top", "cosim", workload_fname + ".cosim.log"},
+    };
+    PegasusCoSim cosim_test(ilimit, workload, sim_params, loggers, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;
@@ -582,7 +587,7 @@ int main(int argc, char** argv)
         sparta::Scheduler replayer_scheduler_truth;
         PegasusSim replayer_truth(&replayer_scheduler_truth);
 
-        replayer_truth.configure(0, nullptr, initSimConfig());
+        replayer_truth.configure(0, nullptr, initSimConfig("replayer"));
         replayer_truth.buildTree();
         replayer_truth.configureTree();
         replayer_truth.finalizeTree();
