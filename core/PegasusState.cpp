@@ -187,6 +187,13 @@ namespace pegasus
 
         // Update VectorConfig vlen
         vector_config_.setVLEN(vlen_);
+        vector_config_.setLMUL(p->init_lmul);
+        vector_config_.setSEW(p->init_sew);
+        vector_config_.setVTA(p->init_vta);
+        vector_config_.setVMA(p->init_vma);
+        vector_config_.setVL(p->init_vl);
+        vector_config_.setVSTART(p->init_vstart);
+        vector_config_.checkConfig();
     }
 
     mavis::FileNameListType PegasusState::getUArchFiles_() const
