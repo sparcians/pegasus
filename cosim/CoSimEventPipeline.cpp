@@ -589,7 +589,9 @@ namespace pegasus::cosim
             checkpointer->getFastCheckpointer().loadCheckpoint(euid);
 
             last_event_uid_ = euid;
+
             sim_stopped_ = reload_evt.isLastEvent();
+            state->setSimStopped(sim_stopped_, reload_evt.getWorkloadExitCode());
 
             state->setPc(reload_evt.getNextPc());
             state->setPrivMode(reload_evt.getNextPrivilegeMode(), state->getVirtualMode());
@@ -612,13 +614,7 @@ namespace pegasus::cosim
             sim_state->reset();
             sim_state->current_opcode = reload_evt.getOpcode();
             sim_state->current_uid = reload_evt.getSimStateCurrentUID();
-            sim_state->sim_stopped = reload_evt.isLastEvent();
             sim_state->inst_count = reload_evt.getSimStateCurrentUID();
-            sim_state->test_passed = sim_state->workload_exit_code == 0;
-            if (!sim_state->sim_stopped)
-            {
-                sim_state->workload_exit_code = 0;
-            }
 
             // Now that the ArchData is reloaded, we can safely update the MMU mode.
             if (change_mmu_mode)

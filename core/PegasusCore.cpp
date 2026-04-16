@@ -131,7 +131,7 @@ namespace pegasus
         DLOG("Stopping simulation for all harts");
         for (auto & [hart_idx, thread] : threads_)
         {
-            thread->stopSim(exit_code);
+            thread->setSimStopped(true, exit_code);
             threads_running_.reset(hart_idx);
         }
 

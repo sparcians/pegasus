@@ -777,7 +777,7 @@ namespace pegasus
                 std::cout << "Reached instruction limit (" << std::dec << ilimit_
                           << "), stopping simulation." << std::endl;
                 const uint64_t exit_code = 0;
-                stopSim(exit_code);
+                setSimStopped(true, exit_code);
             }
         }
 
@@ -956,31 +956,44 @@ namespace pegasus
         return true;
     }
 
-    void PegasusState::stopSim(const int64_t exit_code)
+    void PegasusState::setSimStopped(bool sim_stopped, const int64_t exit_code)
     {
-        std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
-
-        if (hasZicntr())
+        sim_state_.sim_stopped = sim_stopped;
+        if (sim_stopped)
         {
-            if (xlen_ == 64)
+            std::cout << "Stopping hart" << std::dec << hart_id_ << std::endl;
+
+            if (hasZicntr())
             {
-                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV64>() << std::endl;
-                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV64>() << std::endl;
-                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV64>() << std::endl;
+                if (xlen_ == 64)
+                {
+                    std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV64>() << std::endl;
+                    std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV64>() << std::endl;
+                    std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV64>()
+                              << std::endl;
+                }
+                else
+                {
+                    std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV32>() << std::endl;
+                    std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV32>() << std::endl;
+                    std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV32>()
+                              << std::endl;
+                }
             }
-            else
-            {
-                std::cout << "\tCYCLE: " << getCsrRegister(CYCLE)->dmiRead<RV32>() << std::endl;
-                std::cout << "\tTIME: " << getCsrRegister(TIME)->dmiRead<RV32>() << std::endl;
-                std::cout << "\tINSTRET: " << getCsrRegister(INSTRET)->dmiRead<RV32>() << std::endl;
-            }
+
+            sim_state_.workload_exit_code = exit_code;
+            sim_state_.test_passed = (exit_code == 0) ? true : false;
+
+            finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
+        else
+        {
+            (void)exit_code;
+            sim_state_.workload_exit_code = 0;
+            sim_state_.test_passed = true;
 
-        sim_state_.workload_exit_code = exit_code;
-        sim_state_.test_passed = (exit_code == 0) ? true : false;
-        sim_state_.sim_stopped = true;
-
-        finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
+            finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        }
     }
 
     template <typename XLEN> XLEN PegasusState::emulateSystemCall()

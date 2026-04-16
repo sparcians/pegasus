@@ -367,7 +367,7 @@ namespace pegasus
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const int64_t exit_code);
+        void setSimStopped(bool sim_stopped, const int64_t exit_code = 0);
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
