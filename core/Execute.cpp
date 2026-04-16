@@ -59,19 +59,16 @@ namespace pegasus
             }
         }
 
-        if (inst->hasCsr())
+        if (inst->writesCsr())
         {
-            if (inst->writesCsr())
+            const InstHandlers::CsrUpdateActionsMap* csr_update_actions =
+                (state->getXlen() == 64) ? inst_handlers->getCsrUpdateActionsMap<RV64>()
+                                         : inst_handlers->getCsrUpdateActionsMap<RV32>();
+            const auto & action_it = csr_update_actions->find(inst->getCsr());
+            if (action_it != csr_update_actions->end())
             {
-                const InstHandlers::CsrUpdateActionsMap* csr_update_actions =
-                    (state->getXlen() == 64) ? inst_handlers->getCsrUpdateActionsMap<RV64>()
-                                             : inst_handlers->getCsrUpdateActionsMap<RV32>();
-                const auto & action_it = csr_update_actions->find(inst->getCsr());
-                if (action_it != csr_update_actions->end())
-                {
-                    auto & action = action_it->second;
-                    inst_action_group->insertActionAfter(action, ActionTags::EXECUTE_TAG);
-                }
+                auto & action = action_it->second;
+                inst_action_group->insertActionAfter(action, ActionTags::EXECUTE_TAG);
             }
         }
 

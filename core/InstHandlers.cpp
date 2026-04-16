@@ -205,6 +205,10 @@ namespace pegasus
         RvzacasInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
         //  RV32 only
         RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
+
+        // Get CSR update handlers
+        RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);
+        RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_actions_);
     }
 
     template const InstHandlers::InstHandlersMap* InstHandlers::getInstHandlersMap<RV64>() const;
