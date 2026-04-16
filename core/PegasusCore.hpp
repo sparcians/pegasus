@@ -43,7 +43,8 @@ namespace pegasus
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
             PARAMETER(std::string, arch, "default", "Architecture name")
             PARAMETER(std::string, profile, "", "RISC-V profile (defined in Mavis)")
-            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
+            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR,
+                      "Default ISA string for all HARTs on this core.")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
@@ -84,6 +85,17 @@ namespace pegasus
 
         bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
+        bool isExtensionSupported(const uint64_t xlen, const std::string & ext) const
+        {
+            const auto & supported_exts =
+                (xlen == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
+            const auto hasExtension = [&](const std::string & ext) {
+                return std::find(supported_exts.begin(), supported_exts.end(), ext)
+                       != supported_exts.end();
+            };
+            return hasExtension(ext);
+        }
+
         bool isPrivilegeModeSupported(const PrivMode mode) const
         {
             return supported_priv_modes_.contains(mode);
@@ -95,17 +107,7 @@ namespace pegasus
             return std::find(modes.begin(), modes.end(), static_cast<int>(mode)) != modes.end();
         }
 
-        uint64_t getXlen() const { return xlen_; }
-
         bool isMisalignmentSupported() const { return misalignment_support_; }
-
-        // Is the "H" extension enabled?
-        bool hasHypervisor() const { return hypervisor_enabled_; }
-
-        // Is the "Zicntr" extension enabled?
-        bool hasZicntr() const { return zicntr_enabled_; }
-
-        template <typename XLEN> uint32_t getMisaExtFieldValue() const;
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
@@ -121,8 +123,6 @@ namespace pegasus
         void clearReservation(HartId hart_id);
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
-
-        const std::string & getISAString() const { return isa_string_; }
 
         void unpauseHart(HartId hart_id) { threads_running_.set(hart_id); }
 
@@ -190,18 +190,15 @@ namespace pegasus
         // RISC-V profile
         const std::string profile_;
 
-        // ISA string
-        const std::string isa_string_;
-
-        // Supported privilege modes
-        const std::unordered_set<PrivMode> supported_priv_modes_;
-
-        // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
+        // Supported extensions (formatted as an ISA string)
+        const std::string supported_exts_;
 
         // Supported ISA string
         const std::vector<std::string> supported_rv64_extensions_;
         const std::vector<std::string> supported_rv32_extensions_;
+
+        // Supported privilege modes
+        const std::unordered_set<PrivMode> supported_priv_modes_;
 
         // Supported Trap Modes
         const std::vector<int> supported_trap_modes_;
@@ -215,17 +212,6 @@ namespace pegasus
         // Path to Pegasus uarch JSONs
         const std::string uarch_file_path_;
 
-        // Mavis extension manager
-        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
-
-        inline bool validateISAString_(std::string & unsupportedExt);
-
-        //! Do we have hypervisor?
-        const bool hypervisor_enabled_;
-
-        //! Do we have the counter extension?
-        const bool zicntr_enabled_;
-
         //! LR/SC Reservations
         std::vector<Reservation> reservations_;
 
@@ -237,6 +223,5 @@ namespace pegasus
 
         // ReservationMemory
         std::unique_ptr<ReservationMemory> reservation_memory_bmi_;
-        ;
     };
 } // namespace pegasus
