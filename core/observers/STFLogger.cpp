@@ -73,7 +73,7 @@ namespace pegasus
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
+                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
                 uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
                 for (uint32_t i = 0; i < reg_count; ++i)
                 {
@@ -110,7 +110,7 @@ namespace pegasus
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
+                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
                 uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
                 for (uint32_t i = 0; i < reg_count; ++i)
                 {

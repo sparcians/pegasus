@@ -3,7 +3,7 @@
 #include "core/ActionGroup.hpp"
 #include "core/PegasusInst.hpp"
 #include "core/observers/Observer.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 
 #include "arch/RegisterSet.hpp"
 #include "arch/gen/supportedISA.hpp"
