@@ -909,7 +909,7 @@ namespace pegasus
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
 
-            if (state->getCore()->hasHypervisor())
+            if (state->hasHypervisor())
             {
                 // Get the previous virtual mode from the MPV field of MSTATUS
                 if constexpr (std::is_same_v<XLEN, RV64>)
@@ -1007,7 +1007,7 @@ namespace pegasus
                 // Reset SPP
                 WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spp", (XLEN)PrivMode::USER);
 
-                if (state->getCore()->hasHypervisor())
+                if (state->hasHypervisor())
                 {
                     prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spvp");
                     WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);

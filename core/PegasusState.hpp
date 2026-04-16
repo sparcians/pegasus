@@ -9,6 +9,7 @@
 #include "arch/gen/supportedISA.hpp"
 #include "include/PegasusTypes.hpp"
 #include "include/gen/CSRBitMasks64.hpp"
+#include "include/gen/CSRBitMasks32.hpp"
 #include "include/gen/CSRHelpers.hpp"
 
 #include "sim/PegasusAllocators.hpp"
@@ -68,6 +69,9 @@ namespace pegasus
 
             PARAMETER(uint32_t, hart_id, UINT32_MAX, "Hart ID")
             PARAMETER(char, priv_mode, 'm', "Privilege mode at boot (m, s, or u)")
+            PARAMETER(std::string, isa, "",
+                      "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
+                      "used instead.")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
@@ -89,7 +93,6 @@ namespace pegasus
                       "STF validation pegasus fail on first difference detected")
 
             // Set by PegasusCore
-            HIDDEN_PARAMETER(uint32_t, xlen, 64, "XLEN (either 32 or 64 bit)")
             HIDDEN_PARAMETER(std::string, reg_json_file_path, "",
                              "Where are the Pegasus register files?")
           private:
@@ -107,6 +110,8 @@ namespace pegasus
         virtual ~PegasusState();
 
         HartId getHartId() const { return hart_id_; }
+
+        const std::string & getISAString() const { return isa_string_; }
 
         uint64_t getXlen() const;
 
@@ -247,6 +252,12 @@ namespace pegasus
 
         bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
 
+        bool hasHypervisor() const { return hypervisor_enabled_; }
+
+        bool hasZicntr() const { return zicntr_enabled_; }
+
+        template <typename XLEN> uint32_t getMisaExtFieldValue() const;
+
         void enableInteractiveMode();
 
         void useSpikeFormatting();
@@ -306,12 +317,11 @@ namespace pegasus
 
         inline bool isRegEnabled(uint32_t id) const
         {
-            if (id >= csr_enabled_state_.size())
+            if (csr_enabled_states_.contains(id))
             {
-                return false;
+                return csr_enabled_states_.at(id);
             }
-
-            return csr_enabled_state_[id];
+            return true;
         }
 
         // Memory supplement for observing memory reads and writes
@@ -356,7 +366,7 @@ namespace pegasus
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
-        void stopSim(const int64_t exit_code);
+        void setSimStopped(bool sim_stopped, const int64_t exit_code = 0);
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusState* state) const;
 
@@ -419,9 +429,6 @@ namespace pegasus
         // VLEN (128, 256, 512, 1024 or 2048 bits)
         const uint32_t vlen_;
 
-        // XLEN (either 32 or 64 bit)
-        const uint64_t xlen_ = 64;
-
         // Path to register JSONs
         const std::string reg_json_file_path_;
 
@@ -459,12 +466,10 @@ namespace pegasus
         //! PC alignment
         uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
 
-        void setPcAlignment_(uint64_t pc_alignment)
+        void setPcAlignment_()
         {
-            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
-                          "Invalid PC alignment value! " << pc_alignment);
-            pc_alignment_ = pc_alignment;
-            pc_alignment_mask_ = ~(pc_alignment - 1);
+            pc_alignment_ = isCompressionEnabled() ? 2 : 4;
+            pc_alignment_mask_ = ~(pc_alignment_ - 1);
         }
 
         //! Current privilege mode
@@ -505,7 +510,12 @@ namespace pegasus
         PegasusCore* pegasus_core_ = nullptr;
 
         // ISA string
-        const std::string isa_string_;
+        std::string isa_string_;
+
+        // XLEN (either 32 or 64 bit)
+        uint64_t xlen_ = 64;
+
+        // TODO
         const std::string isa_file_path_;
 
         // Arch name
@@ -530,6 +540,12 @@ namespace pegasus
         // Mavis
         std::unique_ptr<MavisType> mavis_;
 
+        //! Do we have hypervisor?
+        bool hypervisor_enabled_;
+
+        //! Do we have the counter extension?
+        bool zicntr_enabled_;
+
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;
 
@@ -551,13 +567,9 @@ namespace pegasus
         // Cached registers by name
         std::unordered_map<std::string, sparta::Register*> registers_by_name_;
 
-        // Register enabled/disabled state
-        std::vector<bool> csr_enabled_state_;
-
-        /*!
-         *  \brief Track registers that are enabled/disabled
-         */
-        void initCsrEnabledState_();
+        // Track which CSRs are enabled/disabled
+        std::map<uint32_t, bool> csr_enabled_states_;
+        void updateCsrEnabledState_();
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
