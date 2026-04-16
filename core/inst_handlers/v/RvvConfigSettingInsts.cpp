@@ -8,6 +8,20 @@ namespace pegasus
 {
     // VectorConfig::vsetAVL and VectorConfig::vsetVTYPE are only used in this file
     // Defining them here avoids linker errors
+
+    /**
+     * @brief Sets the active vector length (AVL) for the RISC-V vector extension.
+     *
+     * This function calculates and sets the active vector length (VL) based on the
+     * provided AVL value and the maximum vector length (VLMAX). It also updates the
+     * corresponding CSR (Control and Status Register) for VL.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param set_max Boolean flag indicating whether to set VL to the maximum value (VLMAX).
+     * @param avl The requested active vector length.
+     * @return XLEN The resulting active vector length (VL).
+     */
     template <typename XLEN> XLEN VectorConfig::vsetAVL(PegasusState* state, bool set_max, XLEN avl)
     {
         const size_t vl = set_max ? getVLMAX() : std::min<size_t>(getVLMAX(), avl);
@@ -16,6 +30,21 @@ namespace pegasus
         return vl;
     }
 
+    /**
+     * @brief Configures the vector unit's VTYPE register and updates related settings.
+     *
+     * This function writes the given VTYPE value to the VTYPE CSR register, decodes
+     * the VLMUL field to determine the LMUL (vector length multiplier), and sets
+     * various vector configuration parameters such as SEW (standard element width),
+     * VTA (vector tail agnostic), and VMA (vector mask agnostic).
+     *
+     * @tparam XLEN The width of the general-purpose registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the PegasusState object representing the current state.
+     * @param vtype The value to be written to the VTYPE CSR register.
+     *
+     * @throws std::runtime_error If the VLMUL field in the VTYPE register contains an invalid
+     * encoding.
+     */
     template <typename XLEN> void VectorConfig::vsetVTYPE(PegasusState* state, XLEN vtype)
     {
         WRITE_CSR_REG<XLEN>(state, VTYPE, vtype);
@@ -68,6 +97,22 @@ namespace pegasus
     template void RvvConfigSettingInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvConfigSettingInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Handles the `vsetvl` instruction, which sets the vector type (VTYPE) and
+     *        active vector length (AVL) for the RISC-V vector extension.
+     *
+     * This function updates the vector configuration based on the values in the source
+     * registers (rs1 and rs2). It writes the resulting vector length (VL) to the destination
+     * register (rd) and performs a configuration check.
+     *
+     * - If rs1 is zero, AVL is set to the maximum vector length, and VL is written to rd.
+     * - If rs1 is non-zero, AVL is set to the value in rs1, and VL is updated accordingly.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN>
     Action::ItrType RvvConfigSettingInsts::vsetvlHandler_(pegasus::PegasusState* state,
                                                           Action::ItrType action_it)
@@ -93,6 +138,22 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Handles the `vsetvli` instruction, which sets the vector type (VTYPE) and
+     *        active vector length (AVL) for the RISC-V vector extension.
+     *
+     * This function updates the vector configuration based on the immediate value
+     * (VTYPE) and the value in the source register (rs1). It writes the resulting
+     * vector length (VL) to the destination register (rd) and performs a configuration check.
+     *
+     * - If rs1 is zero, AVL is set to the maximum vector length, and VL is written to rd.
+     * - If rs1 is non-zero, AVL is set to the value in rs1, and VL is updated accordingly.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN>
     Action::ItrType RvvConfigSettingInsts::vsetvliHandler_(pegasus::PegasusState* state,
                                                            Action::ItrType action_it)
@@ -118,6 +179,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Handles the `vsetivli` instruction, which sets the vector type (VTYPE) and
+     *        active vector length (AVL) for the RISC-V vector extension.
+     *
+     * This function updates the vector configuration based on the immediate value
+     * and AVL provided by the instruction. It writes the resulting vector length (VL)
+     * to the destination register and performs a configuration check.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN>
     Action::ItrType RvvConfigSettingInsts::vsetivliHandler_(pegasus::PegasusState* state,
                                                             Action::ItrType action_it)

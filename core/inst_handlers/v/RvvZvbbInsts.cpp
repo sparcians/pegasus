@@ -169,6 +169,17 @@ namespace pegasus
     template void RvvZvbbInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvZvbbInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Handles the RISC-V `viwsll` instruction, which performs vector word shift left
+     * logical.
+     *
+     * The operation is applied element-wise across the vector register, and
+     * the vacated bits are filled with zeros.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType viwsllHelper(PegasusState* state, Action::ItrType action_it)
     {

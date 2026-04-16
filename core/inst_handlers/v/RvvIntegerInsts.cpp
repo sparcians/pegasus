@@ -1297,6 +1297,19 @@ namespace pegasus
     template void RvvIntegerInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvIntegerInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Helper function to perform vector integer operations with mask and vector length.
+     *
+     * This function applies an integer move operation to elements of a vector register based on
+     * a mask and the vector length. The operation is applied element-wise across the vector,
+     * and the results are stored in the destination vector register.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType vimvlHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1353,6 +1366,18 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform vector integer reverse subtraction operations.
+     *
+     * This function executes a reverse subtraction operation element-wise between
+     * elements of two vector registers. The result is stored in the destination
+     * vector register. Reverse subtraction means the second operand is subtracted
+     * from the first operand.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType virsubHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1420,6 +1445,18 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform vector integer widening multiply signed-unsigned
+     * operations.
+     *
+     * This function performs a widening multiplication operation between signed elements
+     * of a vector register and unsigned elements of a scalar register. The result is stored
+     * in the destination vector register. The operation is applied element-wise across the vector.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType viwmulsuHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1490,6 +1527,31 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform vector arithmetic operations with optional masking and
+     * carry.
+     *
+     * This function performs an element-wise arithmetic operation (e.g., addition, subtraction,
+     * multiplication) between elements of two vector registers, or between a vector register
+     * and a scalar/immediate value. The operation is determined by the provided functor.
+     *
+     * When `hasMaskOp` is set to `true`, the carry bit from the mask vector (`v0`) is used
+     * to influence the arithmetic operation. If `hasMaskOp` is `false`, the operation is
+     * performed without considering the carry.
+     *
+     * The result of the operation is stored in the destination vector register.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam opMode The operand mode, which determines the source of the second operand
+     *                (e.g., vector, scalar, or immediate).
+     * @tparam hasMaskOp A boolean indicating whether masking and carry are enabled for the
+     * operation.
+     * @tparam Functor The arithmetic operation functor to be applied (e.g., addition, subtraction).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, typename Functor>
     Action::ItrType viacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1564,6 +1626,25 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Performs a detection operation on two vector registers (or one replaced by a
+     * scalar/immediate) and a third bit.
+     *
+     * This function operates on two vector registers, or one vector register and a scalar/immediate
+     * value, along with a third bit. A `detectFunc` is applied to determine the value of the
+     * destination bit based on the three operands. The result is stored in the destination vector
+     * register.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam opMode The operand mode, which determines the source of the second operand
+     *                (e.g., vector, scalar, or immediate).
+     * @tparam DetectFunc The detection function functor used to compute the destination bit.
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @param detect_func The detection function functor applied to the operands.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, bool hasMaskOp, auto detectFunc>
     Action::ItrType vmiacsbHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1636,6 +1717,24 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform conditional operations on vector registers and set mask
+     * register bits.
+     *
+     * This function applies a conditional operation (defined by the `Functor`) element-wise
+     * on vector registers or between a vector register and a scalar/immediate value. If the
+     * `Functor` operation evaluates to `true` for an element, the corresponding bit in the
+     * destination mask register is set. The operation is applied conditionally based on the
+     * mask register, if enabled.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam Functor The conditional operation functor to be applied (e.g., comparison operators).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @param functor The conditional operation functor applied to the operands.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
     Action::ItrType vmicHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1742,6 +1841,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform vector merge operations based on a mask vector register.
+     *
+     * This function merges elements from two vector registers (`vs1` and `vs2`) into the
+     * destination vector register. For each element, the corresponding bit in the mask
+     * vector register determines whether the value from `vs1` or `vs2` is selected.
+     * If the mask bit is set, the value from `vs1` is selected; otherwise, the value
+     * from `vs2` is selected.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode>
     Action::ItrType vimergeHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -1810,6 +1922,26 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform vector element extension (signed or unsigned).
+     *
+     * This function extends elements from a source vector register (`vs2`) and stores
+     * the extended values in the destination vector register (`vd`). The extension can
+     * be either signed or unsigned, depending on the `isSigned` template parameter.
+     *
+     * - If `isSigned` is `true`, the function performs sign extension.
+     * - If `isSigned` is `false`, the function performs zero extension.
+     *
+     * The operation is applied element-wise across the vector registers.
+     *
+     * @tparam elemWidthRd The width of the destination vector elements (e.g., 32 or 64 bits).
+     * @tparam elemWidthRs The width of the source vector elements (e.g., 8, 16, or 32 bits).
+     * @tparam isSigned A boolean indicating whether the extension is signed (`true`) or unsigned
+     * (`false`).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <size_t elemWidthRd, size_t elemWidthRs, bool isSigned>
     Action::ItrType viextHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -1894,6 +2026,21 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform ternary operations on vector integer registers.
+     *
+     * This function applies a ternary operation on three operands: two vector registers
+     * and a scalar/immediate value or another vector register. The operation is applied
+     * element-wise across the vector registers, and the result is stored in the destination
+     * vector register.
+     *
+     * The specific ternary operation is determined by the implementation and may involve
+     * arithmetic, logical, or other operations.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType viTernaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {

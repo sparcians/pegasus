@@ -112,6 +112,22 @@ namespace pegasus
     template void RvvReductionInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvReductionInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Handles RISC-V vector reduction operations (`vred*` instructions).
+     *
+     * Initial accumulator value is taken from the first element of the source vector register
+     * `vs1`. The accumulator result is stored at the first element of the destination vector
+     * register `vd`. The reduction operation is applied across all elements of the second source
+     * vector register `vs2.
+     *
+     * The specific reduction operation (e.g., sum, AND, OR, XOR, min, max) is determined by
+     * the instruction being executed. The operation is applied conditionally based on the
+     * active mask bits in the mask register `v0`.
+     *
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename inType, typename outType, typename Functor>
     Action::ItrType vredopHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -175,6 +191,9 @@ namespace pegasus
         }
     }
 
+    // Similar to vredopHelper but with support for widening/narrowing and floating-point types. For
+    // floating-point reductions, the accumulator is initialized by converting the first element of
+    // vs1 to the wider output type (if applicable) before applying the reduction operation.
     template <typename inType, typename outType, auto Functor>
     Action::ItrType vfredopHelper(PegasusState* state, Action::ItrType action_it)
     {

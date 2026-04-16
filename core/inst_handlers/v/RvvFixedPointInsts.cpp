@@ -327,6 +327,20 @@ namespace pegasus
     template void RvvFixedPointInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvFixedPointInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Helper function to perform binary operations between vector and scalar registers.
+     *
+     * This function executes a binary operation between elements of a vector register
+     * and a scalar value from an integer register or elements of vector register. The result
+     * is stored in the destination vector register. The operation is applied element-wise
+     * across the vector.
+     *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
     Action::ItrType vxBinaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {

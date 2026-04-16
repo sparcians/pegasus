@@ -811,6 +811,18 @@ namespace pegasus
     template void RvvFloatInsts::getInstHandlers<RV32>(std::map<std::string, Action> &);
     template void RvvFloatInsts::getInstHandlers<RV64>(std::map<std::string, Action> &);
 
+    /**
+     * @brief Helper function to handle vector floating-point move instructions.
+     *
+     * This function performs a vector floating-point move operation, where a scalar
+     * floating-point value from a source register is broadcast to all elements of
+     * a destination vector register. It is used for instructions like `vfmv.s.f`.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth>
     Action::ItrType vfmvHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -848,6 +860,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to handle vector floating-point merge instructions.
+     *
+     * This function performs a vector floating-point merge operation, where elements
+     * from two vector registers are conditionally merged based on a mask vector.
+     * The result is stored in the destination vector register. It is used for
+     * instructions like `vfmerge.vfm`.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth>
     Action::ItrType vfmergeHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -898,6 +923,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform unary operations on vector floating-point registers.
+     *
+     * This function applies a unary operation to each element of a source vector
+     * floating-point register and stores the result in the destination vector register.
+     * The operation is applied element-wise across the vector.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam UnaryOp The unary operation functor to be applied (e.g., negation, absolute value).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RoundingMode rm>
     Action::ItrType vfUnaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -981,6 +1019,20 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform floating-point to integer conversions on vector registers.
+     *
+     * This function applies a floating-point to integer conversion operation to each element
+     * of a source vector floating-point register and stores the result in the destination
+     * vector integer register. The operation is applied element-wise across the vector.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam FloatToIntOp The conversion operation functor to be applied (e.g., truncate, round).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func, RoundingMode rm>
     Action::ItrType vfFloatToIntHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -997,8 +1049,6 @@ namespace pegasus
             (rm == RoundingMode::MINMAG)
                 ? static_cast<decltype(softfloat_roundingMode)>(softfloat_round_minMag)
                 : READ_CSR_REG<XLEN>(state, FRM);
-
-        restoreFloatCsrs<XLEN>(state);
 
         restoreFloatCsrs<XLEN>(state);
 
@@ -1064,6 +1114,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform binary operations on vector floating-point registers.
+     *
+     * This function applies a binary operation to each pair of elements from two source
+     * vector floating-point registers and stores the result in the destination vector
+     * floating-point register. The operation is applied element-wise across the vector.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfBinaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
@@ -1227,6 +1290,20 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform masked binary operations on vector floating-point
+     * registers.
+     *
+     * This function applies a binary operation to each pair of elements from two source
+     * vector floating-point registers and conditionally writes the result to the destination
+     * mask vector register. The operation is applied element-wise across the vector.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vmfBinaryHelper(PegasusState* state, Action::ItrType action_it)
     {
@@ -1316,6 +1393,19 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function to perform ternary operations on vector floating-point registers.
+     *
+     * This function applies a ternary operation to elements from three source vector
+     * floating-point registers and stores the result in the destination vector floating-point
+     * register. The operation is applied element-wise across the vector.
+     *
+     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam TernaryOp The ternary operation functor to be applied (e.g., fused multiply-add).
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, auto func>
     Action::ItrType vfTernaryHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
