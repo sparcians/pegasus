@@ -125,7 +125,7 @@ namespace pegasus
             extension_manager_.setISA(isa_string_);
         }
 
-        setPcAlignment_(isCompressionEnabled() ? 2 : 4);
+        setPcAlignment_();
 
         // Set up register sets
         const std::string reg_json_file_path =
@@ -157,9 +157,6 @@ namespace pegasus
         add_registers(fp_rset_);
         add_registers(vec_rset_);
         add_registers(csr_rset_);
-
-        csr_enabled_state_.resize(csr_rset_->getNumRegisters(), true);
-        initCsrEnabledState_();
 
         // Add CSR callbacks and increment PC Action
         const bool CHECK_ILIMIT = ilimit_ > 0;
@@ -272,6 +269,8 @@ namespace pegasus
                     sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
                         ->extractor_allocator,
                     this)));
+
+        updateCsrEnabledState_();
     }
 
     void PegasusState::onBindTreeLate_()
@@ -494,9 +493,9 @@ namespace pegasus
         hypervisor_enabled_ = extension_manager_.isEnabled("h");
         zicntr_enabled_ = extension_manager_.isEnabled("zicntr");
 
-        setPcAlignment_(isCompressionEnabled() ? 2 : 4);
+        setPcAlignment_();
 
-        initCsrEnabledState_();
+        updateCsrEnabledState_();
     }
 
     template <typename XLEN> uint32_t PegasusState::getMisaExtFieldValue() const
@@ -988,7 +987,9 @@ namespace pegasus
         }
         else
         {
-            (void)exit_code;
+            sparta_assert(exit_code == 0,
+                          "Exit code should not be set if simulation is being resumed. Exit code: "
+                              << std::dec << exit_code);
             sim_state_.workload_exit_code = 0;
             sim_state_.test_passed = true;
 
@@ -1280,7 +1281,7 @@ namespace pegasus
     template bool PegasusState::SimState::compare<false>(const SimState* rhs) const;
     template bool PegasusState::SimState::compare<true>(const SimState* rhs) const;
 
-    void PegasusState::initCsrEnabledState_()
+    void PegasusState::updateCsrEnabledState_()
     {
         // Check for disabled extensions
         for (auto & dep : csr_rset_->getRegisterExtensionDep())
@@ -1288,7 +1289,7 @@ namespace pegasus
             const auto & reg = dep.first;
             const auto & extensions = dep.second;
 
-            csr_enabled_state_[reg] =
+            csr_enabled_states_[reg] =
                 std::all_of(extensions.begin(), extensions.end(), [this](const std::string & ext)
                             { return extension_manager_.isEnabled(ext); });
         }

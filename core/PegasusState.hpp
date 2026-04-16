@@ -317,12 +317,11 @@ namespace pegasus
 
         inline bool isRegEnabled(uint32_t id) const
         {
-            if (id >= csr_enabled_state_.size())
+            if (csr_enabled_states_.contains(id))
             {
-                return false;
+                return csr_enabled_states_.at(id);
             }
-
-            return csr_enabled_state_[id];
+            return true;
         }
 
         // Memory supplement for observing memory reads and writes
@@ -467,12 +466,10 @@ namespace pegasus
         //! PC alignment
         uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
 
-        void setPcAlignment_(uint64_t pc_alignment)
+        void setPcAlignment_()
         {
-            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
-                          "Invalid PC alignment value! " << pc_alignment);
-            pc_alignment_ = pc_alignment;
-            pc_alignment_mask_ = ~(pc_alignment - 1);
+            pc_alignment_ = isCompressionEnabled() ? 2 : 4;
+            pc_alignment_mask_ = ~(pc_alignment_ - 1);
         }
 
         //! Current privilege mode
@@ -570,13 +567,9 @@ namespace pegasus
         // Cached registers by name
         std::unordered_map<std::string, sparta::Register*> registers_by_name_;
 
-        // Register enabled/disabled state
-        std::vector<bool> csr_enabled_state_;
-
-        /*!
-         *  \brief Track registers that are enabled/disabled
-         */
-        void initCsrEnabledState_();
+        // Track which CSRs are enabled/disabled
+        std::map<uint32_t, bool> csr_enabled_states_;
+        void updateCsrEnabledState_();
 
         // Observers
         std::vector<std::unique_ptr<Observer>> observers_;
