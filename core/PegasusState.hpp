@@ -73,6 +73,13 @@ namespace pegasus
                       "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
                       "used instead.")
             PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
+            PARAMETER(uint32_t, init_lmul, 8,
+                      "Initial vector LMUL in units of 1/8 (e.g. 8=1, 16=2, 4=1/2)")
+            PARAMETER(uint32_t, init_sew, 8, "Initial vector SEW in bits")
+            PARAMETER(bool, init_vta, false, "Initial vector tail agnostic state")
+            PARAMETER(bool, init_vma, false, "Initial vector mask agnostic state")
+            PARAMETER(uint32_t, init_vl, 0, "Initial vector length (VL)")
+            PARAMETER(uint32_t, init_vstart, 0, "Initial vector start index (VSTART)")
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")

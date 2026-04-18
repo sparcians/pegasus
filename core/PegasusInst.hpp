@@ -51,6 +51,16 @@ namespace pegasus
 
         uint64_t getImmediate() const { return immediate_value_; }
 
+        bool isVector() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::VECTOR);
+        }
+
+        bool isFloat() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::FLOAT);
+        }
+
         bool hasCsr() const
         {
             return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::CSR);
@@ -60,6 +70,11 @@ namespace pegasus
         {
             sparta_assert(hasCsr(), "Failed to get CSR!");
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+        }
+
+        bool hasMavisTag(const std::string & tag) const
+        {
+            return opcode_info_->getTags().isMember(tag);
         }
 
         bool unimplemented() const { return extractor_info_->isUnimplemented(); }
