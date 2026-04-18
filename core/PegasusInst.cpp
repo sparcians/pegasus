@@ -116,7 +116,7 @@ namespace pegasus
         }
     }
 
-    void PegasusInst::updateVecConfig(const PegasusState* state)
+    void PegasusInst::updateVectorConfig(const PegasusState* state)
     {
         vec_config_ = makeVecCfg(*state->getVectorConfig(), veccfg_overrides_);
     }

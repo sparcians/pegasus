@@ -1,4 +1,4 @@
-RVV_MAVIS_EXTS = ["v", "zve32x", "zve32f", "zve64f", "zve64d", "zve64x"]
+RVV_MAVIS_EXTS = ["v", "zve32x", "zve32f", "zve64f", "zve64d", "zve64x", "zvfh", "zvfhmin"]
 
 RV32ZVE32X_INST = [
     {'mnemonic': 'vsetvli', 'handler': 'vsetvli', 'cost': 1, 'tags': 'V_EXT_32', 'memory': False, 'cof': False},
