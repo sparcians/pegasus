@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "sparta/functional/RegisterBits.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 
 namespace pegasus
 {

@@ -2,7 +2,7 @@
 
 #include <memory>
 #include "core/PegasusExtractor.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
@@ -225,11 +225,11 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        const VectorConfig* getVecConfig() const { return &vec_config_; }
+        const VectorConfig* getVectorConfig() const { return &vec_config_; }
 
-        VectorConfig* getVecConfig() { return &vec_config_; }
+        VectorConfig* getVectorConfig() { return &vec_config_; }
 
-        void updateVecConfig(const PegasusState* state);
+        void updateVectorConfig(const PegasusState* state);
 
         // Translation information.  Specifically, this is for data
         // accesses

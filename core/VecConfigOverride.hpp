@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "mavis/JSONUtils.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 
 namespace pegasus
 {
