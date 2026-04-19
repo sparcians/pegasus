@@ -29,7 +29,6 @@ namespace pegasus
 
         template <typename XLEN, typename F>
         void writeInstRegRecord_(PegasusState* state, F get_stf_reg_type);
-        template <typename XLEN>
-        void writeEventRecord_(PegasusState* state, bool & is_invalid_opcode);
+        template <typename XLEN> void writeEventRecord_(PegasusState* state);
     };
 } // namespace pegasus

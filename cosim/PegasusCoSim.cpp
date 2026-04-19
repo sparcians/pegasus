@@ -55,7 +55,8 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
-                               const std::map<std::string, std::string> pegasus_params,
+                               const std::map<std::string, std::string> & pegasus_params,
+                               const std::vector<std::vector<std::string>> & pegasus_loggers,
                                const std::string & db_file, const size_t snapshot_threshold)
     {
         sim_config_.reset(new sparta::app::SimulationConfiguration);
@@ -64,6 +65,11 @@ namespace pegasus::cosim
         {
             constexpr bool OPTIONAL = false;
             sim_config_->processParameter(param, value, OPTIONAL);
+        }
+
+        for (auto & logger_param : pegasus_loggers)
+        {
+            sim_config_->enableLogging(logger_param.at(0), logger_param.at(1), logger_param.at(2));
         }
 
         // Instruction count limit
@@ -596,19 +602,19 @@ namespace pegasus::cosim
 
     void PegasusCoSim::finish()
     {
-        // Send remaining committed events down the pipeline(s) and shut down threads.
-        pegasus_sim_->getAppManagers()->postSimLoopTeardown();
-
         std::cout << "Pegasus co-sim finished." << std::endl;
         for (CoreId core_id = 0; core_id < cosim_observers_.size(); ++core_id)
         {
-            for (HartId hart_id = 0; hart_id < cosim_observers_.at(core_id).size(); ++hart_id)
+            const auto & cos = cosim_observers_.at(core_id);
+            for (HartId hart_id = 0; hart_id < cos.size(); ++hart_id)
             {
-                auto evt_pipeline = getEventPipeline(core_id, hart_id);
+                auto evt_pipeline = cos[hart_id]->getEventPipeline();
                 const auto euid = evt_pipeline->getLastEventUID();
                 std::cout << "  Core " << core_id << ", Hart " << hart_id << ": ";
                 std::cout << euid << " events processed." << std::endl;
             }
         }
+        // Send remaining committed events down the pipeline(s) and shut down threads.
+        pegasus_sim_->getAppManagers()->postSimLoopTeardown();
     }
 } // namespace pegasus::cosim

@@ -79,9 +79,9 @@ namespace pegasus
         sparta_assert(opMode.src1 == OperandMode::Mode::N, "Src1 operand mode should be unused");
 
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, inst->getVecConfig(), inst->getRd()};
+            elems_vd{state, inst->getVectorConfig(), inst->getRd()};
         FunctorT<T> functor{};
         using R = typename decltype(elems_vd)::ElemType::ValueType;
 
@@ -110,7 +110,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -122,7 +122,7 @@ namespace pegasus
     Action::ItrType RvvIntegerInsts::viUnaryHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())
@@ -215,14 +215,14 @@ namespace pegasus
     Action::ItrType viBinaryHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 =
-            opMode.src1 != OperandMode::Mode::V
-                ? Elements<Element<elemWidth>, false>{}
-                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, inst->getVectorConfig(),
+                                                                   inst->getRs1()};
         Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+            elems_vs2{state, inst->getVectorConfig(), inst->getRs2()};
         Elements<Element<opMode.dst == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>, false>
-            elems_vd{state, inst->getVecConfig(), inst->getRd()};
+            elems_vd{state, inst->getVectorConfig(), inst->getRd()};
         FunctorT<T> functor{};
         using R = typename decltype(elems_vd)::ElemType::ValueType;
 
@@ -286,7 +286,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -299,7 +299,7 @@ namespace pegasus
                                                       Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         if constexpr (isSigned)
         {
             switch (vector_config->getSEW())

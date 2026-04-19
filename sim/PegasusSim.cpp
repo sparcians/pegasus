@@ -34,10 +34,11 @@ namespace pegasus
 
         getSimulationConfiguration()->scheduler_exacting_run = true;
         getSimulationConfiguration()->scheduler_measure_run_time = false;
-        auto start = std::chrono::system_clock::system_clock::now();
+        const auto start = std::chrono::system_clock::system_clock::now();
         sparta::app::Simulation::run(run_time);
-        auto end = std::chrono::system_clock::system_clock::now();
-        auto sim_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        const auto end = std::chrono::system_clock::system_clock::now();
+        const auto sim_time =
+            std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
         // FIXME: Only run core 0, hart 0 for now
         const CoreId core_idx = 0;

@@ -31,14 +31,14 @@ def main():
 
     print("RV"+ext.upper()+"_MAVIS_EXTS = [\""+ext+"\"]")
     print()
-    
+
     ext = ext.upper()
     if (mavis_json_rv32):
         print("RV32"+ext+"_INST = [")
 
         tag = ext+"_EXT_32"
         print_entry(mavis_json_rv32, tag)
-        
+
         print("]")
         print()
 
@@ -47,7 +47,7 @@ def main():
 
         tag = ext+"_EXT_64"
         print_entry(mavis_json_rv64, tag)
-        
+
     print("]")
 
 

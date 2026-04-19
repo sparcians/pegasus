@@ -2,7 +2,7 @@
 
 #include <memory>
 #include "core/PegasusExtractor.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 #include "mavis/OpcodeInfo.h"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
 
@@ -28,6 +28,8 @@ namespace pegasus
 
         ~PegasusInst();
 
+        PegasusInst(const PegasusInst &) = default;
+
         uint64_t getUid() const { return uid_; }
 
         void setUid(const uint64_t uid) { uid_ = uid; }
@@ -49,6 +51,16 @@ namespace pegasus
 
         uint64_t getImmediate() const { return immediate_value_; }
 
+        bool isVector() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::VECTOR);
+        }
+
+        bool isFloat() const
+        {
+            return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::FLOAT);
+        }
+
         bool hasCsr() const
         {
             return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::CSR);
@@ -58,6 +70,11 @@ namespace pegasus
         {
             sparta_assert(hasCsr(), "Failed to get CSR!");
             return opcode_info_->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
+        }
+
+        bool hasMavisTag(const std::string & tag) const
+        {
+            return opcode_info_->getTags().isMember(tag);
         }
 
         bool unimplemented() const { return extractor_info_->isUnimplemented(); }
@@ -208,15 +225,15 @@ namespace pegasus
 
         const ActionGroup* getActionGroup() const { return &inst_action_group_; }
 
-        const VectorConfig* getVecConfig() const { return &vec_config_; }
+        const VectorConfig* getVectorConfig() const { return &vec_config_; }
 
-        VectorConfig* getVecConfig() { return &vec_config_; }
+        VectorConfig* getVectorConfig() { return &vec_config_; }
 
-        void updateVecConfig(const PegasusState* state);
+        void updateVectorConfig(const PegasusState* state);
 
         // Translation information.  Specifically, this is for data
         // accesses
-        PegasusTranslationState* getTranslationState() { return &translation_state_; }
+        PegasusTranslationState* getTranslationState() { return translation_state_; }
 
         template <bool IS_UNIT_TEST = false> bool compare(const PegasusInst* inst) const;
 
@@ -263,7 +280,7 @@ namespace pegasus
         sparta::Register* rd2_reg_;
 
         // Translation state for load/store instructions
-        PegasusTranslationState translation_state_;
+        PegasusTranslationState* translation_state_ = nullptr;
 
         ActionGroup inst_action_group_;
 

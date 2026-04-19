@@ -2,16 +2,12 @@
 #include "system/PegasusSystem.hpp"
 #include "system/SystemCallEmulator.hpp"
 #include "system/ReservationMemory.hpp"
-#include "include/gen/CSRBitMasks32.hpp"
 
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/utils/LogUtils.hpp"
 #include "sparta/events/StartupEvent.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 #include "sparta/memory/BlockingMemoryIF.hpp"
-
-#include <filesystem>
-#include <regex>
 
 namespace pegasus
 {
@@ -45,44 +41,6 @@ namespace pegasus
         return priv_modes;
     }
 
-    uint32_t getXlenFromIsaString(const std::string & isa_string)
-    {
-        if (isa_string.find("32") != std::string::npos)
-        {
-            return 32;
-        }
-        else if (isa_string.find("64") != std::string::npos)
-        {
-            return 64;
-        }
-        else
-        {
-            sparta_assert(false, "Failed to determine XLEN from ISA string: " << isa_string);
-        }
-    }
-
-    bool PegasusCore::validateISAString_(std::string & unsupportedExt)
-    {
-        const auto & supported_exts =
-            (xlen_ == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
-
-        const auto hasExtension = [&](const std::string & ext) {
-            return std::find(supported_exts.begin(), supported_exts.end(), ext)
-                   != supported_exts.end();
-        };
-
-        for (const auto & ext : extension_manager_.getEnabledExtensions(false))
-        {
-            if (!hasExtension(ext.first))
-            {
-                unsupportedExt = ext.first;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     PegasusCore::PegasusCore(sparta::TreeNode* core_tn, const PegasusCoreParameters* p) :
         sparta::Unit(core_tn),
         core_id_(p->core_id),
@@ -102,18 +60,14 @@ namespace pegasus
             PegasusSimParameters::getParameter<bool>(core_tn, "enable_syscall_emulation")),
         arch_name_(p->arch),
         profile_(p->profile),
-        isa_string_(p->isa),
-        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
-        xlen_(getXlenFromIsaString(isa_string_)),
+        supported_exts_(p->isa),
         supported_rv64_extensions_(SUPPORTED_RV64_EXTS),
         supported_rv32_extensions_(SUPPORTED_RV32_EXTS),
+        supported_priv_modes_(initSupportedPrivilegeModes(p->priv)),
         supported_trap_modes_(p->supported_trap_modes),
         misalignment_support_(p->misalignment_support),
         isa_file_path_(p->isa_file_path),
         uarch_file_path_(p->uarch_file_path),
-        extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
-            isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
-        hypervisor_enabled_(extension_manager_.isEnabled("h")),
         reservations_(num_harts_),
         inst_handlers_(syscall_emulation_enabled_)
     {
@@ -126,10 +80,6 @@ namespace pegasus
                 hart_tn = new sparta::ResourceTreeNode(core_tn, hart_name, "harts", hart_idx,
                                                        "Hart State", &state_factory_));
 
-            // Set XLEN
-            hart_tn->getChildAs<sparta::ParameterBase>("params.xlen")
-                ->setValueFromString(std::to_string(xlen_));
-
             // Set hart_id if not explicitly set
             auto hart_id = hart_tn->getChildAs<sparta::ParameterBase>("params.hart_id");
             if (hart_id->isDefault())
@@ -138,8 +88,7 @@ namespace pegasus
             }
 
             // Set path to register JSONs (from "arch")
-            const std::string reg_json_file_path =
-                uarch_file_path_ + "/" + arch_name_ + "/rv" + std::to_string(xlen_) + "/gen";
+            const std::string reg_json_file_path = uarch_file_path_ + "/" + arch_name_;
             hart_tn->getChildAs<sparta::ParameterBase>("params.reg_json_file_path")
                 ->setValueFromString(reg_json_file_path);
 
@@ -164,22 +113,6 @@ namespace pegasus
                 sparta::TreeNode::GROUP_IDX_NONE, "Exception Unit", &exception_factory_));
         }
 
-        sparta_assert(xlen_ == extension_manager_.getXLEN());
-
-        if (profile_.empty() == false)
-        {
-            extension_manager_.setProfile(profile_);
-        }
-        extension_manager_.setISA(isa_string_);
-
-        std::string unsupportedExt;
-        if (!validateISAString_(unsupportedExt))
-        {
-            sparta_assert(false,
-                          "ISA extension: " << unsupportedExt
-                                            << " is not supported in isa_string: " << isa_string_);
-        }
-
         sparta::StartupEvent(core_tn, CREATE_SPARTA_HANDLER(PegasusCore, advanceSim_));
     }
 
@@ -198,7 +131,7 @@ namespace pegasus
         DLOG("Stopping simulation for all harts");
         for (auto & [hart_idx, thread] : threads_)
         {
-            thread->stopSim(exit_code);
+            thread->setSimStopped(true, exit_code);
             threads_running_.reset(hart_idx);
         }
 
@@ -222,33 +155,6 @@ namespace pegasus
             PegasusState* state = threads_.at(hart_idx);
             // This MUST be done before initializing Mavis
             state->setPegasusCore(this);
-        }
-
-        // Initialize Mavis
-        DLOG("Initializing Mavis with ISA string " << isa_string_);
-
-        mavis_ = std::make_unique<MavisType>(
-            extension_manager_.constructMavis<
-                PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>(
-                getUArchFiles_(), mavis_uid_list_, {}, // annotation overrides
-                {},                                    // inclusions
-                {},                                    // exclusions
-                PegasusInstAllocatorWrapper<PegasusInstAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
-                        ->inst_allocator),
-                PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>(
-                    sparta::notNull(PegasusAllocators::getAllocators(getContainer()))
-                        ->extractor_allocator,
-                    this)));
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
         }
 
         reservation_memory_bmi_.reset(new ReservationMemory(
@@ -284,70 +190,6 @@ namespace pegasus
         state->setPc(system_->getStartingPc());
         state->getSimState()->sim_stopped = false;
         threads_running_.set(0);
-    }
-
-    void PegasusCore::changeMavisContext()
-    {
-        extension_manager_.switchMavisContext(*mavis_.get());
-
-        if (isCompressionEnabled())
-        {
-            setPcAlignment_(2);
-        }
-        else
-        {
-            setPcAlignment_(4);
-        }
-    }
-
-    template <typename XLEN> uint32_t PegasusCore::getMisaExtFieldValue() const
-    {
-        uint32_t ext_val = 0;
-        for (char ext = 'a'; ext <= 'z'; ++ext)
-        {
-            const std::string ext_str = std::string(1, ext);
-            if (extension_manager_.isEnabled(ext_str))
-            {
-                ext_val |= 1 << getCsrBitRange<XLEN>(MISA, ext_str.c_str()).first;
-            }
-        }
-
-        // FIXME: Assume both User and Supervisor mode are supported
-        if constexpr (std::is_same_v<XLEN, RV64>)
-        {
-            ext_val |= 1 << CSR_64::MISA::u::high_bit;
-            ext_val |= 1 << CSR_64::MISA::s::high_bit;
-        }
-        else
-        {
-            ext_val |= 1 << CSR_32::MISA::u::high_bit;
-            ext_val |= 1 << CSR_32::MISA::s::high_bit;
-        }
-
-        return ext_val;
-    }
-
-    template uint32_t PegasusCore::getMisaExtFieldValue<RV32>() const;
-    template uint32_t PegasusCore::getMisaExtFieldValue<RV64>() const;
-
-    mavis::FileNameListType PegasusCore::getUArchFiles_() const
-    {
-        mavis::FileNameListType uarch_files;
-
-        const std::string xlen_str = std::to_string(xlen_);
-        const std::string xlen_uarch_file_path =
-            uarch_file_path_ + "/" + arch_name_ + "/rv" + xlen_str + "/gen";
-        const std::regex filename_regex("pegasus_uarch_.*json");
-        for (const auto & entry : std::filesystem::directory_iterator{xlen_uarch_file_path})
-        {
-            if (std::regex_search(entry.path().filename().string(), filename_regex))
-            {
-                DLOG("Loading: " << entry.path());
-                uarch_files.emplace_back(entry.path());
-            }
-        }
-
-        return uarch_files;
     }
 
     // This method will execute a single thread for up to X instructions
@@ -469,80 +311,6 @@ namespace pegasus
         state->unregisterWaitOnReservationSet();
     }
 
-    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
-    {
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(xlen_, core->xlen_);
-        }
-        else if (xlen_ != core->xlen_)
-        {
-            return false;
-        }
-
-        auto compression_enabled = isCompressionEnabled();
-        auto other_compression_enabled = core->isCompressionEnabled();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(compression_enabled, other_compression_enabled);
-        }
-        else if (compression_enabled != other_compression_enabled)
-        {
-            return false;
-        }
-
-        auto has_hypervisor = hasHypervisor();
-        auto other_has_hypervisor = core->hasHypervisor();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(has_hypervisor, other_has_hypervisor);
-        }
-        else if (has_hypervisor != other_has_hypervisor)
-        {
-            return false;
-        }
-
-        auto pc_alignment = getPcAlignment();
-        auto other_pc_alignment = core->getPcAlignment();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(pc_alignment, other_pc_alignment);
-        }
-        else if (pc_alignment != other_pc_alignment)
-        {
-            return false;
-        }
-
-        auto pc_alignment_mask = getPcAlignmentMask();
-        auto other_pc_alignment_mask = core->getPcAlignmentMask();
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(pc_alignment_mask, other_pc_alignment_mask);
-        }
-        else if (pc_alignment_mask != other_pc_alignment_mask)
-        {
-            return false;
-        }
-
-        auto misa_ext_field_value =
-            xlen_ == 32 ? getMisaExtFieldValue<uint32_t>() : getMisaExtFieldValue<uint64_t>();
-
-        auto other_misa_ext_field_value = core->getXlen() == 32
-                                              ? core->getMisaExtFieldValue<uint32_t>()
-                                              : core->getMisaExtFieldValue<uint64_t>();
-
-        if constexpr (IS_UNIT_TEST)
-        {
-            EXPECT_EQUAL(misa_ext_field_value, other_misa_ext_field_value);
-        }
-        else if (misa_ext_field_value != other_misa_ext_field_value)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     void PegasusCore::makeReservation(HartId hart_id, Addr paddr)
     {
         for (uint32_t hart_id = 0; hart_id < num_harts_; ++hart_id)
@@ -573,6 +341,51 @@ namespace pegasus
         {
             current_memory_view_ = system_->getSystemMemory();
         }
+    }
+
+    template <bool IS_UNIT_TEST> bool PegasusCore::compare(const PegasusCore* core) const
+    {
+        const auto num_harts = getNumThreads();
+        const auto other_num_harts = core->getNumThreads();
+        if constexpr (IS_UNIT_TEST)
+        {
+            EXPECT_EQUAL(num_harts, other_num_harts);
+        }
+        else if (num_harts != other_num_harts)
+        {
+            return false;
+        }
+
+        for (uint32_t hart_idx = 0; hart_idx < num_harts; ++hart_idx)
+        {
+            const auto resv = getReservation(hart_idx);
+            const auto other_resv = core->getReservation(hart_idx);
+
+            if constexpr (IS_UNIT_TEST)
+            {
+                EXPECT_EQUAL(resv.isValid(), other_resv.isValid());
+                if (resv.isValid())
+                {
+                    EXPECT_EQUAL(resv, other_resv);
+                }
+            }
+            else
+            {
+                if (resv.isValid() != other_resv.isValid())
+                {
+                    return false;
+                }
+                if (resv.isValid())
+                {
+                    if (resv != other_resv)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     template bool PegasusCore::compare<false>(const PegasusCore* core) const;

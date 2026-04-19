@@ -18,8 +18,6 @@
 #include "sparta/events/Event.hpp"
 #include "sparta/events/PayloadEvent.hpp"
 
-template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
-
 namespace sparta::memory
 {
     class BlockingMemoryIF;
@@ -29,10 +27,6 @@ namespace pegasus
 {
     class PegasusSystem;
     class ReservationMemory;
-
-    using MavisType =
-        Mavis<PegasusInst, PegasusExtractor, PegasusInstAllocatorWrapper<PegasusInstAllocator>,
-              PegasusExtractorAllocatorWrapper<PegasusExtractorAllocator>>;
 
     class PegasusCore : public sparta::Unit
     {
@@ -49,7 +43,8 @@ namespace pegasus
             PARAMETER(uint32_t, num_harts, 1, "Number of harts (hardware threads)")
             PARAMETER(std::string, arch, "default", "Architecture name")
             PARAMETER(std::string, profile, "", "RISC-V profile (defined in Mavis)")
-            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR, "ISA string")
+            PARAMETER(std::string, isa, std::string("rv64") + DEFAULT_ISA_STR,
+                      "Default ISA string for all HARTs on this core.")
             PARAMETER(std::string, priv, "msu", "Privilege modes supported")
             PARAMETER(std::string, isa_file_path, "mavis_json", "Where are the Mavis isa files?")
             PARAMETER(std::string, uarch_file_path, "arch", "Where are the Pegasus uarch files?")
@@ -90,6 +85,17 @@ namespace pegasus
 
         bool isSystemCallEmulationEnabled() const { return syscall_emulation_enabled_; }
 
+        bool isExtensionSupported(const uint64_t xlen, const std::string & ext) const
+        {
+            const auto & supported_exts =
+                (xlen == 64) ? supported_rv64_extensions_ : supported_rv32_extensions_;
+            const auto hasExtension = [&](const std::string & ext) {
+                return std::find(supported_exts.begin(), supported_exts.end(), ext)
+                       != supported_exts.end();
+            };
+            return hasExtension(ext);
+        }
+
         bool isPrivilegeModeSupported(const PrivMode mode) const
         {
             return supported_priv_modes_.contains(mode);
@@ -101,43 +107,7 @@ namespace pegasus
             return std::find(modes.begin(), modes.end(), static_cast<int>(mode)) != modes.end();
         }
 
-        uint64_t getXlen() const { return xlen_; }
-
-        mavis::extension_manager::riscv::RISCVExtensionManager & getExtensionManager()
-        {
-            return extension_manager_;
-        }
-
-        bool isExtensionEnabled(std::string ext) const { return extension_manager_.isEnabled(ext); }
-
-        bool isCompressionEnabled() const { return extension_manager_.isEnabled("zca"); }
-
         bool isMisalignmentSupported() const { return misalignment_support_; }
-
-        // Is the "H" extension enabled?
-        bool hasHypervisor() const { return hypervisor_enabled_; }
-
-        MavisType* getMavis() { return mavis_.get(); }
-
-        enum MavisUIDs : mavis::InstructionUniqueID
-        {
-            MAVIS_UID_CSRRW = 1,
-            MAVIS_UID_CSRRS,
-            MAVIS_UID_CSRRC,
-            MAVIS_UID_CSRRWI,
-            MAVIS_UID_CSRRSI,
-            MAVIS_UID_CSRRCI,
-            MAVIS_UID_HLVX_HU,
-            MAVIS_UID_HLVX_WU
-        };
-
-        void changeMavisContext();
-
-        template <typename XLEN> uint32_t getMisaExtFieldValue() const;
-
-        uint64_t getPcAlignment() const { return pc_alignment_; }
-
-        uint64_t getPcAlignmentMask() const { return pc_alignment_mask_; }
 
         using Reservation = sparta::utils::ValidValue<Addr>;
 
@@ -153,8 +123,6 @@ namespace pegasus
         void clearReservation(HartId hart_id);
 
         const InstHandlers* getInstHandlers() const { return &inst_handlers_; }
-
-        const std::string & getISAString() const { return isa_string_; }
 
         void unpauseHart(HartId hart_id) { threads_running_.set(hart_id); }
 
@@ -222,18 +190,15 @@ namespace pegasus
         // RISC-V profile
         const std::string profile_;
 
-        // ISA string
-        const std::string isa_string_;
-
-        // Supported privilege modes
-        const std::unordered_set<PrivMode> supported_priv_modes_;
-
-        // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
+        // Supported extensions (formatted as an ISA string)
+        const std::string supported_exts_;
 
         // Supported ISA string
         const std::vector<std::string> supported_rv64_extensions_;
         const std::vector<std::string> supported_rv32_extensions_;
+
+        // Supported privilege modes
+        const std::unordered_set<PrivMode> supported_priv_modes_;
 
         // Supported Trap Modes
         const std::vector<int> supported_trap_modes_;
@@ -247,40 +212,6 @@ namespace pegasus
         // Path to Pegasus uarch JSONs
         const std::string uarch_file_path_;
 
-        // Get Pegasus arch JSONs for Mavis
-        mavis::FileNameListType getUArchFiles_() const;
-
-        // Mavis extension manager
-        mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
-
-        // Mavis
-        std::unique_ptr<MavisType> mavis_;
-
-        static inline mavis::InstUIDList mavis_uid_list_{
-            {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
-            {"csrrc", MAVIS_UID_CSRRC},     {"csrrwi", MAVIS_UID_CSRRWI},
-            {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
-            {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
-
-        inline bool validateISAString_(std::string & unsupportedExt);
-
-        //! Do we have hypervisor?
-        const bool hypervisor_enabled_;
-
-        //! PC alignment
-        uint64_t pc_alignment_ = 4;
-
-        //! PC alignment
-        uint64_t pc_alignment_mask_ = ~(pc_alignment_ - 1);
-
-        void setPcAlignment_(uint64_t pc_alignment)
-        {
-            sparta_assert(pc_alignment == 2 || pc_alignment == 4,
-                          "Invalid PC alignment value! " << pc_alignment);
-            pc_alignment_ = pc_alignment;
-            pc_alignment_mask_ = ~(pc_alignment - 1);
-        }
-
         //! LR/SC Reservations
         std::vector<Reservation> reservations_;
 
@@ -292,6 +223,5 @@ namespace pegasus
 
         // ReservationMemory
         std::unique_ptr<ReservationMemory> reservation_memory_bmi_;
-        ;
     };
 } // namespace pegasus

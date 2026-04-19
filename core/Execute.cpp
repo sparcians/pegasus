@@ -64,7 +64,7 @@ namespace pegasus
             const InstHandlers::CsrUpdateActionsMap* csr_update_actions =
                 (state->getXlen() == 64) ? inst_handlers->getCsrUpdateActionsMap<RV64>()
                                          : inst_handlers->getCsrUpdateActionsMap<RV32>();
-            auto action_it = csr_update_actions->find(inst->getCsr());
+            const auto & action_it = csr_update_actions->find(inst->getCsr());
             if (action_it != csr_update_actions->end())
             {
                 auto & action = action_it->second;

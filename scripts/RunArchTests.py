@@ -71,10 +71,8 @@ def get_pegasus_cmd(testname, wkld, output_dir, executable):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
-    logname = output_dir + testname + ".log"
-    instlogname = output_dir + testname + ".instlog"
     error_dump = output_dir + testname + ".error"
-    isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz"
+    isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz_zicntr"
     isa_string = "rv32"+isa_string if rv32_test else "rv64"+isa_string
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
@@ -96,11 +94,10 @@ def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, ti
         timeout_tests.append(testname)
 
     if test_passed:
-        # Remove log files if test passed
-        if os.path.exists(logname):
-            os.remove(logname)
-        else:
-            print("WARNING: Test passed but Pegasus log is missing:", logname)
+        pattern = re.compile(rf"\b{testname}\b.*\.log$")
+        for filename in os.listdir(output_dir):
+            if re.search(pattern, filename):
+                os.remove(filename)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'
@@ -134,11 +131,12 @@ def run_tests_in_parallel(tests, passing_tests, failing_tests, timeout_tests, ou
             continue
 
 
-def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir, executable):
-    for testname, wkld in tests:
+def run_tests_serially(tests, passing_tests, failing_tests, timeout_tests, output_dir):
+    for test in tests:
+        testname = test[0]
+        pegasus_cmd = test[1]
         print ("Running test:", testname)
-        run_test(testname, wkld, output_dir, passing_tests, failing_tests, timeout_tests, executable)
-
+        run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, timeout_tests)
 
 def extract_sparta_failures(log_file, failure_dict):
     with open(log_file, 'r') as fin:
