@@ -11,14 +11,14 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
-        if constexpr (std::is_same_v<XLEN, RV32>) 
+        if constexpr (std::is_same_v<XLEN, RV32>)
         {
             // aes32esi and aes32esmi handlers
 
             inst_handlers.emplace(
                 "aes32esi",
-                Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes32esOp<XLEN>>,
-                                     RvzkneInsts>(nullptr, "aes32esi", ActionTags::EXECUTE_TAG));
+                Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes32esOp<XLEN>>, RvzkneInsts>(
+                    nullptr, "aes32esi", ActionTags::EXECUTE_TAG));
             inst_handlers.emplace(
                 "aes32esmi",
                 Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes32esmOp<XLEN>>,
@@ -29,8 +29,8 @@ namespace pegasus
             // aes64es , aes64esm
             inst_handlers.emplace(
                 "aes64es",
-                Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes64esOp<XLEN>>,
-                                     RvzkneInsts>(nullptr, "aes64es", ActionTags::EXECUTE_TAG));
+                Action::createAction<&RvzkneInsts::aesHandler_<XLEN, Aes64esOp<XLEN>>, RvzkneInsts>(
+                    nullptr, "aes64es", ActionTags::EXECUTE_TAG));
 
             inst_handlers.emplace(
                 "aes64esm",
@@ -65,16 +65,16 @@ namespace pegasus
     }
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV32, Aes32esOp<RV32>>(PegasusState*,
-                                                                                  Action::ItrType);
+                                                                             Action::ItrType);
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV32, Aes32esmOp<RV32>>(PegasusState*,
-                                                                                   Action::ItrType);
+                                                                              Action::ItrType);
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64esOp<RV64>>(PegasusState*,
-                                                                                  Action::ItrType);
+                                                                             Action::ItrType);
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64esmOp<RV64>>(PegasusState*,
-                                                                                   Action::ItrType);
+                                                                              Action::ItrType);
 
     template Action::ItrType RvzkneInsts::aesHandler_<RV64, Aes64Ks1iOp<RV64>>(PegasusState*,
                                                                                Action::ItrType);
