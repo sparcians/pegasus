@@ -136,13 +136,12 @@ namespace pegasus
 
     static constexpr uint32_t aes_mixcolumn_fwd(uint32_t col)
     {
-        uint8_t s0 = (col >> 0) & 0xFF, s1 = (col >> 8) & 0xFF;
-        uint8_t s2 = (col >> 16) & 0xFF, s3 = (col >> 24) & 0xFF;
-
-        uint8_t b0 = gf_mul(s0, 0x02) ^ gf_mul(s1, 0x03) ^ s2 ^ s3;
-        uint8_t b1 = s0 ^ gf_mul(s1, 0x02) ^ gf_mul(s2, 0x03) ^ s3;
-        uint8_t b2 = s0 ^ s1 ^ gf_mul(s2, 0x02) ^ gf_mul(s3, 0x03);
-        uint8_t b3 = gf_mul(s0, 0x03) ^ s1 ^ s2 ^ gf_mul(s3, 0x02);
+        const uint8_t s0 = (col >> 0) & 0xFF, s1 = (col >> 8) & 0xFF;
+        const uint8_t s2 = (col >> 16) & 0xFF, s3 = (col >> 24) & 0xFF;
+        const uint8_t b0 = gf_mul(s0, 0x02) ^ gf_mul(s1, 0x03) ^ s2 ^ s3;
+        const uint8_t b1 = s0 ^ gf_mul(s1, 0x02) ^ gf_mul(s2, 0x03) ^ s3;
+        const uint8_t b2 = s0 ^ s1 ^ gf_mul(s2, 0x02) ^ gf_mul(s3, 0x03);
+        const uint8_t b3 = gf_mul(s0, 0x03) ^ s1 ^ s2 ^ gf_mul(s3, 0x02);
 
         return (uint32_t)b0 | ((uint32_t)b1 << 8) | ((uint32_t)b2 << 16) | ((uint32_t)b3 << 24);
     }
@@ -151,7 +150,9 @@ namespace pegasus
     {
         uint64_t res = 0;
         for (int i = 0; i < 8; i++)
+        {
             res |= (uint64_t)AES_SBOX_FWD[(x >> (i * 8)) & 0xFF] << (i * 8);
+        }
         return res;
     }
 
