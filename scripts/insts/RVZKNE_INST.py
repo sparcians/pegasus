@@ -1,7 +1,7 @@
 RVZKNE_MAVIS_EXTS=["zkne"]
 
 RV32ZKNE_INST = [
-    {'mnemonic' : 'aes32esi', 'handler' : 'aes322esi',  'cost': 1, 'tags'  : 'SCALAR_CRYPTO_EXT_32', 'memory' : False, 'cof' : False  },
+    {'mnemonic' : 'aes32esi', 'handler' : 'aes32esi',  'cost': 1, 'tags'  : 'SCALAR_CRYPTO_EXT_32', 'memory' : False, 'cof' : False  },
     {'mnemonic' : 'aes32esmi', 'handler' : 'aes32esmi', 'cost' : 1, 'tags' : 'SCALAR_CRYPTO_EXT_32', 'memory' : False, 'cof' : False}
 ]
 
