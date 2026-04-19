@@ -904,13 +904,12 @@ namespace pegasus
         if constexpr (PRIV_MODE == PrivMode::MACHINE)
         {
             // Update the PC with MEPC value
-            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC)
-                             & state->getCore()->getPcAlignmentMask());
+            state->setNextPc(READ_CSR_REG<XLEN>(state, MEPC) & state->getPcAlignmentMask());
 
             // Get the previous privilege mode from the MPP field of MSTATUS
             prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, MSTATUS, "mpp");
 
-            if (state->getCore()->hasHypervisor())
+            if (state->hasHypervisor())
             {
                 // Get the previous virtual mode from the MPV field of MSTATUS
                 if constexpr (std::is_same_v<XLEN, RV64>)
@@ -979,8 +978,7 @@ namespace pegasus
             if (virt_mode)
             {
                 // Update the PC with VSEPC value
-                state->setNextPc(READ_CSR_REG<XLEN>(state, VSEPC)
-                                 & state->getCore()->getPcAlignmentMask());
+                state->setNextPc(READ_CSR_REG<XLEN>(state, VSEPC) & state->getPcAlignmentMask());
 
                 // Get the previous privilege mode from the VSPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, VSSTATUS, "spp");
@@ -996,8 +994,7 @@ namespace pegasus
             else
             {
                 // Update the PC with SEPC value
-                state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC)
-                                 & state->getCore()->getPcAlignmentMask());
+                state->setNextPc(READ_CSR_REG<XLEN>(state, SEPC) & state->getPcAlignmentMask());
 
                 // Get the previous privilege mode from the SPP field of MSTATUS
                 prev_priv_mode = (PrivMode)READ_CSR_FIELD<XLEN>(state, SSTATUS, "spp");
@@ -1010,7 +1007,7 @@ namespace pegasus
                 // Reset SPP
                 WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "spp", (XLEN)PrivMode::USER);
 
-                if (state->getCore()->hasHypervisor())
+                if (state->hasHypervisor())
                 {
                     prev_virt_mode = (bool)READ_CSR_FIELD<XLEN>(state, HSTATUS, "spvp");
                     WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", (XLEN)0);

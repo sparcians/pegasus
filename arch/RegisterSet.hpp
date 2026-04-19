@@ -119,6 +119,14 @@ namespace pegasus
             return getRegister(reg_num)->read<T>(idx);
         }
 
+        /*!
+         *  \brief Returns the registers that contain an extension dependency
+         */
+        const std::map<uint32_t, std::vector<std::string>> & getRegisterExtensionDep() const
+        {
+            return defs_from_json_->getRegisterExtensionDep();
+        }
+
       private:
         /*!
          * \brief Register definitions parsed from JSON file(s). We have to hold onto

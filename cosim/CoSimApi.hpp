@@ -2,6 +2,7 @@
 
 #include "cosim/EventAccessor.hpp"
 #include "cosim/MemoryInterface.hpp"
+#include "cosim/Event.hpp"
 
 #include <deque>
 #include <memory>

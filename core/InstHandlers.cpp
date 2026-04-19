@@ -11,7 +11,17 @@
 #include "core/inst_handlers/h/RvhInsts.hpp"
 #include "core/inst_handlers/i/RviInsts.hpp"
 #include "core/inst_handlers/m/RvmInsts.hpp"
+#include "core/inst_handlers/zicsr/RvzicsrInsts.hpp"
+#include "core/inst_handlers/zifencei/RvzifenceiInsts.hpp"
+#include "core/inst_handlers/zihintpause/RvzihintpauseInsts.hpp"
+#include "core/inst_handlers/zicond/RvzicondInsts.hpp"
+#include "core/inst_handlers/zcmp/RvzcmpInsts.hpp"
+#include "core/inst_handlers/zcmt/RvzcmtInsts.hpp"
+#include "core/inst_handlers/zabha/RvzabhaInsts.hpp"
+#include "core/inst_handlers/zilsd/RvzilsdInsts.hpp"
+#include "core/inst_handlers/zfa/RvzfaInsts.hpp"
 #include "core/inst_handlers/svinval/RvsvinvalInsts.hpp"
+#include "core/inst_handlers/smrmni/RvsmrmniInsts.hpp"
 #include "core/inst_handlers/v/RvvConfigSettingInsts.hpp"
 #include "core/inst_handlers/v/RvvFixedPointInsts.hpp"
 #include "core/inst_handlers/v/RvvFloatInsts.hpp"
@@ -40,7 +50,7 @@
 #include "core/inst_handlers/zihintpause/RvzihintpauseInsts.hpp"
 #include "core/inst_handlers/zilsd/RvzilsdInsts.hpp"
 #include "core/inst_handlers/zknd/RvzkndInsts.hpp"
-#include "core/inst_handlers/zvbc/RvzvbcInsts.hpp"
+#include "core/inst_handlers/zvbc/RvvZvbcInsts.hpp"
 #include "core/inst_handlers/zvfbfwma/RvzvfbfwmaInsts.hpp"
 #include "core/inst_handlers/zvkg/RvzvkgInsts.hpp"
 #include "core/inst_handlers/zvkned/RvzvknedInsts.hpp"
@@ -79,6 +89,7 @@ namespace pegasus
         RviInsts::getInstHandlers<RV64>(rv64_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvsvinvalInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvsmrmniInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvConfigSettingInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -88,6 +99,7 @@ namespace pegasus
         RvvPermuteInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvReductionInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvvZvbbInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzabhaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzacasInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzawrsInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -111,7 +123,7 @@ namespace pegasus
         RvzifenceiInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzihintpauseInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzkndInsts::getInstHandlers<RV64>(rv64_inst_actions_);
-        RvzvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvfbfwmaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvkgInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvknedInsts::getInstHandlers<RV64>(rv64_inst_actions_);
@@ -128,6 +140,7 @@ namespace pegasus
         RviInsts::getInstHandlers<RV32>(rv32_inst_actions_, enable_syscall_emulation);
         RvmInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvsvinvalInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvsmrmniInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvConfigSettingInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFixedPointInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvFloatInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -137,6 +150,7 @@ namespace pegasus
         RvvPermuteInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvReductionInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvvZvbbInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzabhaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzacasInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzawrsInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -160,7 +174,7 @@ namespace pegasus
         RvzihintpauseInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzilsdInsts::getInstHandlers<RV32>(rv32_inst_actions_); // RV32 only
         RvzkndInsts::getInstHandlers<RV32>(rv32_inst_actions_);
-        RvzvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvvZvbcInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvfbfwmaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvkgInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvknedInsts::getInstHandlers<RV32>(rv32_inst_actions_);

@@ -158,7 +158,7 @@ FetchContent_MakeAvailable(spike)
 ################################################################################
 
 if (PROJECT_IS_TOP_LEVEL)
-  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
+  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format)
 
   execute_process (
     COMMAND
@@ -167,7 +167,7 @@ if (PROJECT_IS_TOP_LEVEL)
        CLANGFORMAT_VERSION_OUTPUT
   )
 
-  set(REQUIRED_CLANGFORMAT_VERSION "15")
+  set(REQUIRED_CLANGFORMAT_VERSION "18")
 
   # Extract the version number from the output
   string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})
@@ -188,9 +188,6 @@ if (PROJECT_IS_TOP_LEVEL)
        ${SIM_BASE}
   )
 
-  # CPUTopology is pretty clean as it is.  There's an option to NOT
-  # collapse the array of structures in clang-format v16, but we're not
-  # there yet
   add_custom_target(clangformat
     COMMAND
        ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out

@@ -458,7 +458,7 @@ namespace pegasus
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "sd", 0b1);
         }
 
-        auto & ext_manager = state->getCore()->getExtensionManager();
+        auto & ext_manager = state->getExtensionManager();
         bool change_mavis_ctx = false;
 
         // If FS is set to 0 (off), all floating point extensions are disabled
@@ -500,7 +500,7 @@ namespace pegasus
 
         if (change_mavis_ctx)
         {
-            state->getCore()->changeMavisContext();
+            state->changeMavisContext();
         }
 
         // Updating the MPRV field can affect all translation stages
@@ -516,7 +516,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const XLEN misa_val = READ_CSR_REG<XLEN>(state, MISA);
-        auto & ext_manager = state->getCore()->getExtensionManager();
+        auto & ext_manager = state->getExtensionManager();
 
         std::vector<std::string> exts_to_enable;
         std::vector<std::string> exts_to_disable;
@@ -581,7 +581,7 @@ namespace pegasus
 
         ext_manager.disableExtensions(exts_to_disable);
         ext_manager.enableExtensions(exts_to_enable);
-        state->getCore()->changeMavisContext();
+        state->changeMavisContext();
 
         return ++action_it;
     }

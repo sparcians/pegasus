@@ -351,8 +351,8 @@ namespace pegasus
             if (data != nullptr)
             {
                 std::cout << "  -- Loading section " << segment_name << " (" << std::dec
-                          << segment->get_file_size() << "B) "
-                          << " to 0x" << std::hex << segment->get_memory_size() << std::endl;
+                          << segment->get_file_size() << "B) " << " to 0x" << std::hex
+                          << segment->get_memory_size() << std::endl;
 
                 bool success = memory_map_->tryPoke(segment->get_physical_address(),
                                                     segment->get_file_size(), data);

@@ -54,7 +54,7 @@ namespace pegasus
         {
             XLEN allow = true;
 
-            const auto & extensionManager = state->getCore()->getExtensionManager();
+            const auto & extensionManager = state->getExtensionManager();
             const bool isSstateen = extensionManager.isEnabled("Ssstateen");
             const bool isMstateen = extensionManager.isEnabled("Smstateen");
 

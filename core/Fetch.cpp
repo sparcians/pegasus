@@ -147,9 +147,9 @@ namespace pegasus
         PegasusInstPtr inst = nullptr;
         try
         {
-            inst = state->getCore()->getMavis()->makeInst(opcode, state);
-            inst->updateVecConfig(state); // Old PegasusInst may be returned from cache. So
-                                          // outside-constructor call is needed.
+            inst = state->getMavis()->makeInst(opcode, state);
+            inst->updateVectorConfig(state); // Old PegasusInst may be returned from cache. So
+                                             // outside-constructor call is needed.
             assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump instruction or an exception
@@ -167,6 +167,20 @@ namespace pegasus
             state->getFetchTranslationState()->popRequest();
         }
 
+        // Check if Zvfh/Zvfhmin are enabled for vector BF16 support
+        if (SPARTA_EXPECT_FALSE(inst->isVector() && inst->isFloat()
+                                && (state->getVectorConfig()->getSEW() == 16)))
+        {
+            if (false == state->isExtensionEnabled("zfh"))
+            {
+                if (false == (state->isExtensionEnabled("zfhmin") && inst->hasMavisTag("zfhmin")))
+                {
+                    THROW_ILLEGAL_INST;
+                }
+            }
+        }
+
+        // FIXME: This is probably not the best place for these checks
         if (SPARTA_EXPECT_FALSE(inst->hasCsr()))
         {
             const uint32_t csr =
@@ -176,7 +190,6 @@ namespace pegasus
                 THROW_ILLEGAL_INST;
             }
 
-            // TODO: This is probably not the best place for this check...
             if (csr == SATP)
             {
                 const uint32_t tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
