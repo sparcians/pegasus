@@ -1,4 +1,4 @@
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 #include "core/PegasusState.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 
