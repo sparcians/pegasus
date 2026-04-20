@@ -1015,7 +1015,7 @@ namespace pegasus
 
         memory->poke(tv_addr, sizeof(tv), reinterpret_cast<uint8_t*>(&tv));
 
-        SYSCALL_LOG(__func__ << "gettimeofday -> 0 # ignored");
+        SYSCALL_LOG(__func__ << "gettimeofday -> " << ret);
         return ret;
     }
 
