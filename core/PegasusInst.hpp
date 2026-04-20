@@ -68,6 +68,8 @@ namespace pegasus
 
         bool isChangeOfFlowInst() const { return extractor_info_->isChangeOfFlowInst(); }
 
+        bool isReturnInst() const { return extractor_info_->isReturnInst(); }
+
         bool isHypervisorInst() const { return extractor_info_->isHypervisorInst(); }
 
         bool writesCsr() const;
