@@ -1004,8 +1004,8 @@ namespace pegasus
         return 0;
     }
 
-    int64_t SysCallHandlers::gettimeofday_(const SystemCallStack &call_stack,
-                                           sparta::memory::BlockingMemoryIF * memory)
+    int64_t SysCallHandlers::gettimeofday_(const SystemCallStack & call_stack,
+                                           sparta::memory::BlockingMemoryIF* memory)
     {
         auto tv_addr = call_stack[1];
         struct ::timeval tv;
