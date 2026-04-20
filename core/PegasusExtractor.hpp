@@ -30,6 +30,8 @@ namespace pegasus
 
         bool isChangeOfFlowInst() const { return is_cof_inst_; }
 
+        bool isReturnInst() const { return is_return_inst_; }
+
         bool isHypervisorInst() const { return is_hypervisor_inst_; }
 
       private:
@@ -38,6 +40,7 @@ namespace pegasus
         const bool is_unimplemented_;
         const bool is_memory_inst_;
         const bool is_cof_inst_;
+        const bool is_return_inst_;
         const bool is_hypervisor_inst_;
         const VecCfgOverrides veccfg_;
 
