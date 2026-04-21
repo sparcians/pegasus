@@ -68,6 +68,7 @@ namespace pegasus
                  {134, {"rt_sigaction", cfp(&SysCallHandlers::rt_sigaction_)}},
                  {135, {"rt_sigprocmask", cfp(&SysCallHandlers::rt_sigprocmask_)}},
                  {160, {"uname", cfp(&SysCallHandlers::uname_)}},
+                 {169, {"gettimeofday", cfp(&SysCallHandlers::gettimeofday_)}},
                  {172, {"getpid", cfp(&SysCallHandlers::getpid_)}},
                  {174, {"getuid", cfp(&SysCallHandlers::getuid_)}},
                  {175, {"geteuid", cfp(&SysCallHandlers::geteuid_)}},
@@ -247,6 +248,7 @@ namespace pegasus
         int64_t tgkill_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t rt_sigaction_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t rt_sigprocmask_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t gettimeofday_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t uname_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getuid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -1000,6 +1002,21 @@ namespace pegasus
     {
         SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
         return 0;
+    }
+
+    int64_t SysCallHandlers::gettimeofday_(const SystemCallStack & call_stack,
+                                           sparta::memory::BlockingMemoryIF* memory)
+    {
+        auto tv_addr = call_stack[1];
+        struct ::timeval tv;
+        struct ::timezone tz;
+
+        auto ret = ::gettimeofday(&tv, &tz);
+
+        memory->poke(tv_addr, sizeof(tv), reinterpret_cast<uint8_t*>(&tv));
+
+        SYSCALL_LOG(__func__ << "gettimeofday -> " << ret);
+        return ret;
     }
 
     int64_t SysCallHandlers::getpid_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
