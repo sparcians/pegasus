@@ -181,13 +181,13 @@ namespace pegasus
     Action::ItrType vmvHelper(pegasus::PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         using ValueType = typename Element<elemWidth>::ValueType;
 
         if constexpr ((opMode.dst == OperandMode::Mode::F || opMode.dst == OperandMode::Mode::X)
                       && opMode.src2 == OperandMode::Mode::S)
         {
-            Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(),
+            Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
                                                           inst->getRs2()};
             if constexpr (opMode.dst == OperandMode::Mode::X)
             {
@@ -206,7 +206,7 @@ namespace pegasus
         {
             if (vector_config->getVSTART() < vector_config->getVL())
             {
-                Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(),
+                Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(),
                                                              inst->getRd()};
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
@@ -228,7 +228,7 @@ namespace pegasus
                                                  Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -263,8 +263,9 @@ namespace pegasus
         const size_t offset = opMode.src1 == OperandMode::Mode::I
                                   ? inst->getImmediate()
                                   : READ_INT_REG<XLEN>(state, inst->getRs1());
-        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(), inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
         {
@@ -280,7 +281,7 @@ namespace pegasus
                 else
                 {
                     using ValueType = typename Element<elemWidth>::ValueType;
-                    ValueType val = (index + offset) < inst->getVecConfig()->getVLMAX()
+                    ValueType val = (index + offset) < inst->getVectorConfig()->getVLMAX()
                                         ? elems_vs2.getElement(index + offset).getVal()
                                         : 0;
                     elems_vd.getElement(index).setVal(val);
@@ -296,7 +297,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
             auto begin =
                 isUp ? MaskBitIterator(&mask_elems, offset) : mask_elems.maskBitIterBegin();
             execute(begin, mask_elems.maskBitIterEnd());
@@ -310,7 +311,7 @@ namespace pegasus
                                                     Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -338,12 +339,13 @@ namespace pegasus
         using ValueType = typename Element<elemWidth>::ValueType;
         const PegasusInstPtr & inst = state->getCurrentInst();
         const size_t offset = 1;
-        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(), inst->getRd()};
 
         auto execute = [&](auto iter, const auto & end)
         {
-            const auto vl = inst->getVecConfig()->getVL();
+            const auto vl = inst->getVectorConfig()->getVL();
             size_t index = 0;
             for (; iter != end; ++iter)
             {
@@ -355,7 +357,7 @@ namespace pegasus
                 }
                 else
                 {
-                    ValueType val = (index + offset) < inst->getVecConfig()->getVLMAX()
+                    ValueType val = (index + offset) < inst->getVectorConfig()->getVLMAX()
                                         ? elems_vs2.getElement(index + offset).getVal()
                                         : 0;
                     elems_vd.getElement(index).setVal(val);
@@ -377,7 +379,7 @@ namespace pegasus
 
         if (inst->getVM()) // unmasked
         {
-            if (isUp && inst->getVecConfig()->getVSTART() == 0)
+            if (isUp && inst->getVectorConfig()->getVSTART() == 0)
             {
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
@@ -395,8 +397,8 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
-            if (isUp && inst->getVecConfig()->getVSTART() == 0 && mask_elems.getBit(0))
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
+            if (isUp && inst->getVectorConfig()->getVSTART() == 0 && mask_elems.getBit(0))
             {
                 if constexpr (opMode.src1 == OperandMode::Mode::X)
                 {
@@ -421,7 +423,7 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -447,10 +449,11 @@ namespace pegasus
     Action::ItrType vrgatherHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
-        Elements<Element<is16 ? 16 : elemWidth>, false> elems_vs1{state, inst->getVecConfig(),
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<is16 ? 16 : elemWidth>, false> elems_vs1{state, inst->getVectorConfig(),
                                                                   inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(), inst->getRd()};
         size_t i = opMode.src1 == OperandMode::Mode::I   ? inst->getImmediate()
                    : opMode.src1 == OperandMode::Mode::X ? READ_INT_REG<XLEN>(state, inst->getRs1())
                                                          : 0;
@@ -465,7 +468,7 @@ namespace pegasus
                 {
                     i = elems_vs1.getElement(index).getVal();
                 }
-                if (i >= inst->getVecConfig()->getVLMAX())
+                if (i >= inst->getVectorConfig()->getVLMAX())
                 {
                     elems_vd.getElement(index).setVal(0);
                 }
@@ -482,7 +485,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -494,7 +497,7 @@ namespace pegasus
                                                       Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -520,9 +523,10 @@ namespace pegasus
     Action::ItrType vcompressHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
-        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVecConfig(), inst->getRd()};
-        const MaskElements mask_elems{state, inst->getVecConfig(), inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
+                                                      inst->getRs2()};
+        Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(), inst->getRd()};
+        const MaskElements mask_elems{state, inst->getVectorConfig(), inst->getRs1()};
         size_t i = 0;
 
         for (auto iter = mask_elems.maskBitIterBegin(); iter != mask_elems.maskBitIterEnd();
@@ -538,7 +542,7 @@ namespace pegasus
                                                        Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
@@ -564,7 +568,7 @@ namespace pegasus
     Action::ItrType vmvrHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        VectorConfig* config = inst->getVecConfig();
+        VectorConfig* config = inst->getVectorConfig();
         Elements<Element<elemWidth>, false> elems_vs2{state, config, inst->getRs2()};
         Elements<Element<elemWidth>, false> elems_vd{state, config, inst->getRd()};
 
@@ -582,7 +586,7 @@ namespace pegasus
                                                   Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:

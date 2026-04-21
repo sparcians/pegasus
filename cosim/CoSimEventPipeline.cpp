@@ -8,7 +8,7 @@
 #include "simdb/pipeline/Stage.hpp"
 #include "simdb/utils/Compress.hpp"
 #include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
-#include "source/include/softfloat.h"
+#include "softfloat.h"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>

@@ -173,13 +173,14 @@ namespace pegasus
     Action::ItrType viwsllHelper(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        auto elems_vs1 =
-            opMode.src1 != OperandMode::Mode::V
-                ? Elements<Element<elemWidth>, false>{}
-                : Elements<Element<elemWidth>, false>{state, inst->getVecConfig(), inst->getRs1()};
-        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVecConfig(), inst->getRs2()};
+        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
+                             ? Elements<Element<elemWidth>, false>{}
+                             : Elements<Element<elemWidth>, false>{state, inst->getVectorConfig(),
+                                                                   inst->getRs1()};
+        Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
+                                                      inst->getRs2()};
         constexpr XLEN wideElemWidth = 2 * elemWidth;
-        Elements<Element<wideElemWidth>, false> elems_vd{state, inst->getVecConfig(),
+        Elements<Element<wideElemWidth>, false> elems_vd{state, inst->getVectorConfig(),
                                                          inst->getRd()};
 
         constexpr XLEN mask = (wideElemWidth == 64)   ? (1 << 6) - 1
@@ -220,7 +221,7 @@ namespace pegasus
         }
         else // masked
         {
-            const MaskElements mask_elems{state, inst->getVecConfig(), pegasus::V0};
+            const MaskElements mask_elems{state, inst->getVectorConfig(), pegasus::V0};
             execute(mask_elems.maskBitIterBegin(), mask_elems.maskBitIterEnd());
         }
 
@@ -231,7 +232,7 @@ namespace pegasus
     Action::ItrType RvvZvbbInsts::viwsllHandler_(PegasusState* state, Action::ItrType action_it)
     {
         const PegasusInstPtr & inst = state->getCurrentInst();
-        const VectorConfig* vector_config = inst->getVecConfig();
+        const VectorConfig* vector_config = inst->getVectorConfig();
         switch (vector_config->getSEW())
         {
             case 8:
