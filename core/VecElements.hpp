@@ -4,7 +4,7 @@
 #include <limits>
 
 #include "core/PegasusState.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 #include "include/VecNums.hpp"
 #include "include/PegasusUtils.hpp"
 
@@ -513,7 +513,7 @@ namespace pegasus
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
+        Elements(PegasusState* state, const VectorConfig* config, uint32_t reg_id)
         requires EnableIf<!isMaskElems>
             :
             state_(state),
@@ -531,7 +531,7 @@ namespace pegasus
          * @param config Poninter to *VectorConfig* object.
          * @param reg_id vector register ID.
          */
-        Elements(PegasusState* state, VectorConfig* config, uint32_t reg_id)
+        Elements(PegasusState* state, const VectorConfig* config, uint32_t reg_id)
         requires EnableIf<isMaskElems>
             :
             state_(state),

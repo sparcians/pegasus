@@ -9,8 +9,8 @@
 
 extern "C"
 {
-#include "source/RISCV/specialize.h"
-#include "source/include/internals.h"
+#include "specialize.h"
+#include "internals.h"
 }
 
 namespace pegasus

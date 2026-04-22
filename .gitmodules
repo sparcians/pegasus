@@ -1,9 +1,6 @@
 [submodule "mavis"]
 	path = mavis
 	url = git@github.com:sparcians/mavis.git
-[submodule "softfloat"]
-	path = softfloat
-	url = git@github.com:sparcians/berkeley-softfloat-3
 [submodule "stf_lib"]
 	path = stf_lib
 	url = git@github.com:sparcians/stf_lib.git
