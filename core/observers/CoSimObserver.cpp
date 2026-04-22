@@ -8,7 +8,7 @@
 #include "system/PegasusSystem.hpp"
 #include "simdb/pipeline/Pipeline.hpp"
 #include "sparta/serialization/checkpoint/CherryPickFastCheckpointer.hpp"
-#include "source/include/softfloat.h"
+#include "softfloat.h"
 
 namespace pegasus::cosim
 {

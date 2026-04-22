@@ -7,7 +7,7 @@
 #include "sparta/app/SimulationConfiguration.hpp"
 #include "simdb/sqlite/DatabaseManager.hpp"
 #include "simdb/utils/Compress.hpp"
-#include "source/include/softfloat.h"
+#include "softfloat.h"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
