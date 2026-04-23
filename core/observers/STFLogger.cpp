@@ -146,6 +146,9 @@ namespace pegasus
 
     template <typename XLEN> void STFLogger::writeEventRecord_(PegasusState* state)
     {
+        stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::MODE_CHANGE,
+                                        static_cast<uint32_t>(state->getPrivMode()));
+
         if (fault_cause_.isValid())
         {
             switch (fault_cause_.getValue())
@@ -252,9 +255,6 @@ namespace pegasus
                 default:
                     sparta_assert(false, "STFLogger: Unknown fault cause");
             }
-
-            stf_writer_ << stf::EventPCTargetRecord(
-                static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
         }
         else if (interrupt_cause_.isValid())
         {
@@ -298,18 +298,10 @@ namespace pegasus
                 default:
                     sparta_assert(false, "STFLogger: Unknown interrupt");
             }
+        }
 
-            stf_writer_ << stf::EventPCTargetRecord(
-                static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
-        }
-        else if (state->getCurrentInst()->isReturnInst())
-        {
-            stf_writer_ << stf::EventPCTargetRecord(state->getNextPc());
-        }
-        else if (state->getCurrentInst()->isChangeOfFlowInst())
-        {
-            stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
-        }
+        stf_writer_ << stf::EventPCTargetRecord(
+            static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
     }
 
     void STFLogger::postExecute_(PegasusState* state)
@@ -351,21 +343,42 @@ namespace pegasus
             }
         };
 
-        if (state->getXlen() == 32)
+        if (state->getCurrentInst() != nullptr)
         {
-            if (state->getCurrentInst() != nullptr)
+            if (state->getXlen() == 32)
             {
                 writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
             }
-            writeEventRecord_<uint32_t>(state);
-        }
-        else
-        {
-            if (state->getCurrentInst() != nullptr)
+            else
             {
                 writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
             }
-            writeEventRecord_<uint64_t>(state);
+
+            if (state->getCurrentInst()->isChangeOfFlowInst())
+            {
+                if (state->getCurrentInst()->isReturnInst())
+                {
+                    stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::MODE_CHANGE,
+                                                    static_cast<uint32_t>(state->getPrivMode()));
+                    stf_writer_ << stf::EventPCTargetRecord(state->getNextPc());
+                }
+                else
+                {
+                    stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
+                }
+            }
+        }
+
+        if (fault_cause_.isValid() || interrupt_cause_.isValid())
+        {
+            if (state->getXlen() == 32)
+            {
+                writeEventRecord_<uint32_t>(state);
+            }
+            else
+            {
+                writeEventRecord_<uint64_t>(state);
+            }
         }
 
         uint32_t opcode = 0;
