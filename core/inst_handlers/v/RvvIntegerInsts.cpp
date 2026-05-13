@@ -1304,8 +1304,15 @@ namespace pegasus
      * a mask and the vector length. The operation is applied element-wise across the vector,
      * and the results are stored in the destination vector register.
      *
-     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
-     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1374,6 +1381,15 @@ namespace pegasus
      * vector register. Reverse subtraction means the second operand is subtracted
      * from the first operand.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1453,6 +1469,15 @@ namespace pegasus
      * of a vector register and unsigned elements of a scalar register. The result is stored
      * in the destination vector register. The operation is applied element-wise across the vector.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1546,7 +1571,7 @@ namespace pegasus
      * @tparam opMode The operand mode, which determines the source of the second operand
      *                (e.g., vector, scalar, or immediate).
      * @tparam hasMaskOp A boolean indicating whether masking and carry are enabled for the
-     * operation.
+     *         operation.
      * @tparam Functor The arithmetic operation functor to be applied (e.g., addition, subtraction).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
@@ -1639,7 +1664,8 @@ namespace pegasus
      * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
      * @tparam opMode The operand mode, which determines the source of the second operand
      *                (e.g., vector, scalar, or immediate).
-     * @tparam DetectFunc The detection function functor used to compute the destination bit.
+     * @tparam hasMaskOp A boolean indicating whether carry is enabled.
+     * @tparam detectFunc The detection function functor used to compute the destination bit.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @param detect_func The detection function functor applied to the operands.
@@ -1729,10 +1755,11 @@ namespace pegasus
      *
      * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
      * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam opMode The operand mode, which determines the source of the second operand
+     *                (e.g., vector, scalar, or immediate).
      * @tparam Functor The conditional operation functor to be applied (e.g., comparison operators).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
-     * @param functor The conditional operation functor applied to the operands.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
      */
     template <typename XLEN, size_t elemWidth, OperandMode opMode, typename Functor>
@@ -1850,6 +1877,10 @@ namespace pegasus
      * If the mask bit is set, the value from `vs1` is selected; otherwise, the value
      * from `vs2` is selected.
      *
+     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam opMode The operand mode, which determines the source of the second operand
+     *                (e.g., vector, scalar, or immediate).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -2037,6 +2068,18 @@ namespace pegasus
      * The specific ternary operation is determined by the implementation and may involve
      * arithmetic, logical, or other operations.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits). Specifies
+     * the size of the integer elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second and third operands:
+     *                - Immediate Mode: The operands are immediate constants.
+     *                - Scalar Register Mode: The operands are loaded from scalar registers.
+     *                - Vector Mode: The operands are other vector registers.
+     * @tparam func A callable object (e.g., function pointer, lambda, or functor) that defines the
+     * ternary operation to be applied to each element of the vector register. Examples include
+     * fused multiply-add, conditional selection, or other ternary operations.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

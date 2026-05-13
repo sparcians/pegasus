@@ -334,9 +334,12 @@ namespace pegasus
      * and a scalar value from an integer register or elements of vector register. The result
      * is stored in the destination vector register. The operation is applied element-wise
      * across the vector.
+     * The example insturcionts include "vnclipu.wi", "vssra.vv", "vssub.vx" etc.
      *
-     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
-     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits).
+     * @tparam opMode Specifies the type of the second operand, which determines whether the
+     *         second operand is an immediate value, a scalar register, or another vector.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

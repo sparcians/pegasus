@@ -187,6 +187,15 @@ namespace pegasus
      * value to element 0 of a vector register). The operation is determined by the specific
      * instruction being executed.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -280,6 +289,17 @@ namespace pegasus
      * The operation is applied element-wise across the vector register, and the specific
      * behavior (e.g., slide up or slide down) is determined by the instruction being executed.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam isUp A boolean template parameter that indicates the direction of the slide. If
+     * `true`, the elements are slid up; if `false`, they are slid down.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -507,6 +527,17 @@ namespace pegasus
      * `0`. Masking can be applied to conditionally perform the operation on specific elements based
      * on the active mask bits.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam isIndex16 A boolean template parameter that indicates whether the indices are 16-bit
+     * values (true) or the same width as the vector elements (false).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -648,6 +679,10 @@ namespace pegasus
      * The operation is unconditional and moves all elements from the source vector to the
      * destination vector.
      *
+     * @tparam elemCount The number of elements to move, determined by the specific instruction
+     * variant (e.g., 1, 2, 4, or 8).
+     * @tparam nRegs The number of vector registers involved in the operation, determined by the
+     * specific instruction variant (e.g., 1 for `vmv1r.v`, 2 for `vmv2r.v`, etc.).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

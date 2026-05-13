@@ -124,6 +124,13 @@ namespace pegasus
      * the instruction being executed. The operation is applied conditionally based on the
      * active mask bits in the mask register `v0`.
      *
+     * @tparam inType The data type of the vector elements (e.g., int8_t, uint16_t, float).
+     * Determines the type of elements being reduced.
+     * @tparam outType The data type of the reduction result (e.g., int32_t for widening
+     * reductions). Determines the type of the accumulator and the reduction result.
+     * @tparam Functor A template parameter that specifies the reduction operation to be applied. It
+     * is a function or functor that takes two operands (the accumulator and the current element)
+     * and returns the result of the reduction operation.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

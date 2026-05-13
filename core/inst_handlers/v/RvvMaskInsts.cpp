@@ -103,6 +103,8 @@ namespace pegasus
      * destination mask register. The specific logical operation (e.g., AND, OR, XOR)
      * is determined by the instruction.
      *
+     * @tparam func A template parameter that specifies the logical operation to be applied. It is a
+     * function that takes two mask element values and returns the result of the logical operation.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -308,6 +310,8 @@ namespace pegasus
      * the count of preceding active bits. Inactive bits (set to `0`) result in a value of `0`
      * in the destination vector.
      *
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits). Specifies
+     * the size of the vector elements being accessed.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -404,6 +408,8 @@ namespace pegasus
      * @brief Handles the RISC-V `vid.v` instruction, which generates element indices for active
      * elements.
      *
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits). Specifies
+     * the size of the vector elements being accessed.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

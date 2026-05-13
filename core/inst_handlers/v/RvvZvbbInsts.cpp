@@ -176,6 +176,15 @@ namespace pegasus
      * The operation is applied element-wise across the vector register, and
      * the vacated bits are filled with zeros.
      *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

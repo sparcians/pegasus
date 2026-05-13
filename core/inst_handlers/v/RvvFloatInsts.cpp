@@ -818,7 +818,8 @@ namespace pegasus
      * floating-point value from a source register is broadcast to all elements of
      * a destination vector register. It is used for instructions like `vfmv.s.f`.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 32 or 64 bits). Determines the size
+     * of the floating-point elements in the vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -868,7 +869,8 @@ namespace pegasus
      * The result is stored in the destination vector register. It is used for
      * instructions like `vfmerge.vfm`.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
+     * @tparam elemWidth The width of each vector element (e.g., 32 or 64 bits). Determines the size
+     * of the floating-point elements in the vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -930,8 +932,20 @@ namespace pegasus
      * floating-point register and stores the result in the destination vector register.
      * The operation is applied element-wise across the vector.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
-     * @tparam UnaryOp The unary operation functor to be applied (e.g., negation, absolute value).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 32 or 64 bits). Specifies the size
+     * of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * operand:
+     *                - Immediate Mode: The operand is an immediate constant.
+     *                - Scalar Register Mode: The operand is loaded from a scalar register.
+     *                - Vector Mode: The operand is another vector register.
+     * @tparam func A callable object (e.g., function pointer or lambda) that defines the unary
+     * operation to be applied to each element of the vector register. Examples include mathematical
+     * operations such as square root, absolute value, or negation.
+     * @tparam rm The rounding mode to be used for the operation. Specifies how floating-point
+     * rounding is handled (e.g., nearest-even, toward-zero, etc.).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1026,9 +1040,20 @@ namespace pegasus
      * of a source vector floating-point register and stores the result in the destination
      * vector integer register. The operation is applied element-wise across the vector.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
-     * @tparam XLEN The width of the integer registers (e.g., 32 or 64 bits).
-     * @tparam FloatToIntOp The conversion operation functor to be applied (e.g., truncate, round).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * the integer values.
+     * @tparam elemWidth The width of each vector element (e.g., 32 or 64 bits). Determines the size
+     * of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * operand:
+     *                - Immediate Mode: The operand is an immediate constant.
+     *                - Scalar Register Mode: The operand is loaded from a scalar register.
+     *                - Vector Mode: The operand is another vector register.
+     * @tparam func A callable object (e.g., function pointer, lambda, or functor) that defines the
+     * conversion operation to be applied to each element of the vector register. Examples include
+     * conversions to signed or unsigned integers.
+     * @tparam rm The rounding mode to be used for the conversion. Specifies how floating-point
+     * rounding is handled (e.g., nearest-even, toward-zero, etc.).
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1121,8 +1146,18 @@ namespace pegasus
      * vector floating-point registers and stores the result in the destination vector
      * floating-point register. The operation is applied element-wise across the vector.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
-     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam func A callable object (e.g., function pointer, lambda, or functor) that defines the
+     * binary operation to be applied to each element of the vector register. Examples include
+     * addition, subtraction, multiplication, or division.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1298,8 +1333,17 @@ namespace pegasus
      * vector floating-point registers and conditionally writes the result to the destination
      * mask vector register. The operation is applied element-wise across the vector.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
-     * @tparam BinaryOp The binary operation functor to be applied (e.g., addition, subtraction).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam func A callable object (e.g., function pointer, lambda, or functor) that defines the
+     * operation to be applied to each element of the vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.
@@ -1400,8 +1444,17 @@ namespace pegasus
      * floating-point registers and stores the result in the destination vector floating-point
      * register. The operation is applied element-wise across the vector.
      *
-     * @tparam FLEN The width of the floating-point registers (e.g., 32 or 64 bits).
-     * @tparam TernaryOp The ternary operation functor to be applied (e.g., fused multiply-add).
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 16, 32, or 64 bits). Specifies the
+     * size of the floating-point elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam func A callable object (e.g., function pointer, lambda, or functor) that defines the
+     * operation to be applied to each element of the vector register.
      * @param state Pointer to the current PegasusState, which holds the processor state.
      * @param action_it Iterator pointing to the current action in the action list.
      * @return Action::ItrType Iterator pointing to the next action in the action list.

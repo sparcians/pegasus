@@ -210,6 +210,31 @@ namespace pegasus
         return ++action_it;
     }
 
+    /**
+     * @brief Helper function for RISC-V vector integer binary operations.
+     *
+     * This function implements RISC-V vector integer binary operations, such as addition,
+     * subtraction, bitwise AND, OR, and XOR. The operation is applied element-wise across
+     * the vector register, with support for different operand modes.
+     *
+     * @tparam XLEN The width of the scalar registers (e.g., 32 or 64 bits). Determines the size of
+     * scalar values used in operations.
+     * @tparam elemWidth The width of each vector element (e.g., 8, 16, 32, or 64 bits). Specifies
+     * the size of the integer elements in the vector register.
+     * @tparam opMode Specifies the operand mode for the operation. Determines the source of the
+     * second operand:
+     *                - Immediate Mode: The second operand is an immediate constant.
+     *                - Scalar Register Mode: The second operand is loaded from a scalar register.
+     *                - Vector Mode: The second operand is another vector register.
+     * @tparam FunctorT A template template parameter that specifies the operation to be applied.
+     *                  It is a functor that defines the binary operation (e.g., addition,
+     * subtraction, bitwise AND).
+     * @tparam T The data type of the vector elements (e.g., `int`, `unsigned int`, `int64_t`).
+     * Determines whether the operation is signed or unsigned.
+     * @param state Pointer to the current PegasusState, which holds the processor state.
+     * @param action_it Iterator pointing to the current action in the action list.
+     * @return Action::ItrType Iterator pointing to the next action in the action list.
+     */
     template <typename XLEN, size_t elemWidth, OperandMode opMode,
               template <typename> typename FunctorT, typename T>
     Action::ItrType viBinaryHelper(PegasusState* state, Action::ItrType action_it)
