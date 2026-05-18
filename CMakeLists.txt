@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 3.28)
 
 project(Pegasus C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+if(NOT DEFINED PEGASUS_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 20)
+else()
+    set(CMAKE_CXX_STANDARD ${PEGASUS_CXX_STANDARD})
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT DEFINED ENV{CC})
@@ -105,15 +110,13 @@ target_include_directories(pegasuslibs INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
 if (NOT PEGASUS_USE_PARENT_MAVIS)
 # Mavis
-  set(MAVIS_CXX_STANDARD 23)
+  set(MAVIS_CXX_STANDARD ${CMAKE_CXX_STANDARD})
   add_subdirectory(mavis SYSTEM)
   include_directories($<TARGET_PROPERTY:mavis,INCLUDE_DIRECTORIES>)
 endif()
 
 # SoftFloat
-target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat)
-target_include_directories(pegasuslibs SYSTEM INTERFACE softfloat/source/include)
-add_subdirectory(softfloat)
+target_link_libraries(pegasuslibs INTERFACE softfloat)
 
 if (NOT PEGASUS_USE_PARENT_STF_LIB)
   # STF Library
@@ -126,6 +129,18 @@ if (NOT PEGASUS_USE_PARENT_STF_LIB)
 endif()
 
 target_link_libraries(pegasuslibs INTERFACE stf)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    int128
+    GIT_REPOSITORY https://github.com/cppalliance/int128.git
+    GIT_TAG v1.6.1
+)
+
+FetchContent_MakeAvailable(int128)
+
+target_link_libraries(pegasuslibs INTERFACE Boost::int128)
 
 enable_lto()
 
@@ -158,7 +173,7 @@ FetchContent_MakeAvailable(spike)
 ################################################################################
 
 if (PROJECT_IS_TOP_LEVEL)
-  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format-15 clang-format-16 clang-format)
+  find_program(CLANGFORMAT_EXECUTABLE NAMES clang-format)
 
   execute_process (
     COMMAND
@@ -167,7 +182,7 @@ if (PROJECT_IS_TOP_LEVEL)
        CLANGFORMAT_VERSION_OUTPUT
   )
 
-  set(REQUIRED_CLANGFORMAT_VERSION "15")
+  set(REQUIRED_CLANGFORMAT_VERSION "18")
 
   # Extract the version number from the output
   string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANGFORMAT_VERSION ${CLANGFORMAT_VERSION_OUTPUT})
@@ -188,9 +203,6 @@ if (PROJECT_IS_TOP_LEVEL)
        ${SIM_BASE}
   )
 
-  # CPUTopology is pretty clean as it is.  There's an option to NOT
-  # collapse the array of structures in clang-format v16, but we're not
-  # there yet
   add_custom_target(clangformat
     COMMAND
        ${CLANGFORMAT_EXECUTABLE} -i --files=${CMAKE_CURRENT_BINARY_DIR}/clang-format-files.out
@@ -213,7 +225,6 @@ endif()
 ################################################################################
 
 # Install
-install(FILES ${PROJECT_BINARY_DIR}/softfloat/libsoftfloat.a DESTINATION lib)
 
 if (NOT PEGASUS_USE_PARENT_STF_LIB)
   install(FILES ${PROJECT_BINARY_DIR}/stf_lib/lib/libstf.a DESTINATION lib)

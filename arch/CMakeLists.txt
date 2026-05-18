@@ -2,6 +2,8 @@ set(DEPENDS_REGISTER_PYTHON_SCRIPTS
   ${SIM_BASE}/scripts/GenRISCVRegisterDefinitions.py
   ${SIM_BASE}/scripts/RV32_CSR.py
   ${SIM_BASE}/scripts/RV64_CSR.py
+  ${SIM_BASE}/scripts/RV32H_CSR.py
+  ${SIM_BASE}/scripts/RV64H_CSR.py
   ${SIM_BASE}/scripts/REG_CONSTS.py
 )
 

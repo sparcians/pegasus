@@ -116,7 +116,7 @@ namespace pegasus
         }
     }
 
-    void PegasusInst::updateVecConfig(const PegasusState* state)
+    void PegasusInst::updateVectorConfig(const PegasusState* state)
     {
         vec_config_ = makeVecCfg(*state->getVectorConfig(), veccfg_overrides_);
     }
@@ -130,6 +130,7 @@ namespace pegasus
             EXPECT_EQUAL(getOpcodeSize(), inst->getOpcodeSize());
             EXPECT_EQUAL(isMemoryInst(), inst->isMemoryInst());
             EXPECT_EQUAL(isChangeOfFlowInst(), inst->isChangeOfFlowInst());
+            EXPECT_EQUAL(isReturnInst(), inst->isReturnInst());
             EXPECT_EQUAL(hasCsr(), inst->hasCsr());
             EXPECT_EQUAL(writesCsr(), inst->writesCsr());
             EXPECT_EQUAL(isStoreType(), inst->isStoreType());
@@ -155,6 +156,10 @@ namespace pegasus
                 return false;
             }
             if (isChangeOfFlowInst() != inst->isChangeOfFlowInst())
+            {
+                return false;
+            }
+            if (isReturnInst() != inst->isReturnInst())
             {
                 return false;
             }

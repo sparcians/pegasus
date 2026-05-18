@@ -229,7 +229,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zfhmin** Half-precision floating-point. | :white_check_mark: |
 | **Zkt** Data-independent execution latency. | :x: |
 | **V** Vector extension. | :white_check_mark: |
-| **Zvfhmin** Vector minimal half-precision floating-point. | :x: |
+| **Zvfhmin** Vector minimal half-precision floating-point. | :white_check_mark: |
 | **Zvbb** Vector basic bit-manipulation instructions. | :white_check_mark: |
 | **Zvkt** Vector data-independent execution latency. | :x: |
 | **Zihintntl** Non-temporal locality hints. | :white_check_mark: |
@@ -255,7 +255,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zbc** Scalar carryless multiply. | :white_check_mark: |
 | **Zicfilp** Landing Pads. | :x: |
 | **Zicfiss** Shadow Stack. | :x: |
-| **Zvfh** Vector half-precision floating-point. | :x: |
+| **Zvfh** Vector half-precision floating-point. | :white_check_mark: |
 | **Zfbfmin** Scalar BF16 converts. | :x: |
 | **Zvfbfmin** Vector BF16 converts. | :x: |
 | **Zvfbfwma** Vector BF16 widening mul-add. | :x: |

@@ -57,6 +57,7 @@
 #include "core/inst_handlers/zvknh/RvzvknhInsts.hpp"
 #include "core/inst_handlers/zvksed/RvzvksedInsts.hpp"
 #include "core/inst_handlers/zvksh/RvzvkshInsts.hpp"
+#include "core/inst_handlers/zkne/RvzkneInsts.hpp"
 
 namespace pegasus
 {
@@ -129,6 +130,7 @@ namespace pegasus
         RvzvknhInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvksedInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvzvkshInsts::getInstHandlers<RV64>(rv64_inst_actions_);
+        RvzkneInsts::getInstHandlers<RV64>(rv64_inst_actions_);
 
         // Get RV32 instruction handlers
         RvaInsts::getInstHandlers<RV32>(rv32_inst_actions_);
@@ -179,6 +181,7 @@ namespace pegasus
         RvzvknhInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvksedInsts::getInstHandlers<RV32>(rv32_inst_actions_);
         RvzvkshInsts::getInstHandlers<RV32>(rv32_inst_actions_);
+        RvzkneInsts::getInstHandlers<RV32>(rv32_inst_actions_);
 
         // Get RV64 instruction compute address handlers
         RviInsts::getInstComputeAddressHandlers<RV64>(rv64_inst_compute_address_actions_);
@@ -206,7 +209,7 @@ namespace pegasus
         //  RV32 only
         RvzilsdInsts::getInstComputeAddressHandlers<RV32>(rv32_inst_compute_address_actions_);
 
-        // Get CSR update and pre-update handlers
+        // Get CSR update handlers
         RvzicsrInsts::getCsrUpdateActions<RV64>(rv64_csr_update_actions_);
         RvzicsrInsts::getCsrUpdateActions<RV32>(rv32_csr_update_actions_);
     }

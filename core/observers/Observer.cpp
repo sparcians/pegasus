@@ -2,7 +2,7 @@
 #include "include/PegasusUtils.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusInst.hpp"
-#include "core/VecConfig.hpp"
+#include "core/VectorConfig.hpp"
 #include "sparta/utils/LogUtils.hpp"
 
 namespace pegasus
@@ -100,7 +100,8 @@ namespace pegasus
                     // (m2,m4,m8,mf2...)
                     if (getRegId(reg).reg_type == RegType::VECTOR)
                     {
-                        uint32_t encoded_lmul = state->getCurrentInst()->getVecConfig()->getLMUL();
+                        uint32_t encoded_lmul =
+                            state->getCurrentInst()->getVectorConfig()->getLMUL();
                         uint32_t reg_count =
                             std::max(1u, encoded_lmul / 8); // works well for fractional lmul cases
 

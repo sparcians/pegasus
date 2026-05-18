@@ -169,7 +169,7 @@ namespace pegasus
             WRITE_CSR_FIELD<XLEN>(state, SSTATUS, "sie", sie_val);
 
             // Update HSTATUS
-            if (state->getCore()->hasHypervisor())
+            if (state->hasHypervisor())
             {
                 const uint64_t spv_val = prev_virt_mode;
                 WRITE_CSR_FIELD<XLEN>(state, HSTATUS, "spv", spv_val);
@@ -217,7 +217,7 @@ namespace pegasus
             const uint64_t mie_val = 0;
             WRITE_CSR_FIELD<XLEN>(state, MSTATUS, "mie", mie_val);
 
-            if (state->getCore()->hasHypervisor())
+            if (state->hasHypervisor())
             {
                 // Previous virtualization mode
                 const uint64_t mpv_val = prev_virt_mode;

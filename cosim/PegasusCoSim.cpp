@@ -55,7 +55,8 @@ namespace pegasus::cosim
     }
 
     PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
-                               const std::map<std::string, std::string> pegasus_params,
+                               const std::map<std::string, std::string> & pegasus_params,
+                               const std::vector<std::vector<std::string>> & pegasus_loggers,
                                const std::string & db_file, const size_t snapshot_threshold)
     {
         sim_config_.reset(new sparta::app::SimulationConfiguration);
@@ -64,6 +65,11 @@ namespace pegasus::cosim
         {
             constexpr bool OPTIONAL = false;
             sim_config_->processParameter(param, value, OPTIONAL);
+        }
+
+        for (auto & logger_param : pegasus_loggers)
+        {
+            sim_config_->enableLogging(logger_param.at(0), logger_param.at(1), logger_param.at(2));
         }
 
         // Instruction count limit

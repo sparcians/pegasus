@@ -32,6 +32,7 @@ namespace pegasus
         is_unimplemented_(inst_handler_name_ == "unsupported"),
         is_memory_inst_(getUarchJsonValue<bool, true>(uarch_json, "memory")),
         is_cof_inst_(getUarchJsonValue<bool, true>(uarch_json, "cof")),
+        is_return_inst_(getUarchJsonValue<bool, true>(uarch_json, "return")),
         is_hypervisor_inst_(getUarchJsonValue<bool, true>(uarch_json, "hypervisor")),
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)

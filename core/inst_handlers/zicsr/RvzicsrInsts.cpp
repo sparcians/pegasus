@@ -11,7 +11,7 @@
 
 extern "C"
 {
-#include "source/include/softfloat.h"
+#include "softfloat.h"
 }
 
 namespace pegasus
