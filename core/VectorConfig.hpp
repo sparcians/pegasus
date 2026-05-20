@@ -11,6 +11,18 @@ namespace pegasus
 
     class PegasusState;
 
+    /**
+     * @brief Represents the configuration of a RISC-V vector unit.
+     *
+     * The `VectorConfig` class encapsulates the configuration parameters of a RISC-V vector unit,
+     * including vector length (VLEN), vector length multiplier (LMUL), standard element width
+     * (SEW), tail agnostic mode (VTA), mask agnostic mode (VMA), vector length (VL), and vector
+     * start index (VSTART). It provides member accessors and mutators for these parameters,
+     * ensuring that constraints such as VLEN being a power of 2 and greater than or equal to
+     * `VLEN_MIN` are enforced.
+     *
+     * @note This class is used to manage and validate the state of the vector unit configuration.
+     */
     class VectorConfig
     {
       public:
