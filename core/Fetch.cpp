@@ -11,11 +11,22 @@
 
 namespace pegasus
 {
-    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters*) : sparta::Unit(fetch_node)
+    // Added execution_cache parameter to FetchParameters and Fetch constructor.
+    // Allows for toggling on and off the exection cache
+    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
+        sparta::Unit(fetch_node),
+        enable_execution_cache_(p->enable_execution_cache)
     {
         Action fetch_action =
             pegasus::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
         fetch_action_group_.addAction(fetch_action);
+
+        // Action for dispatching fetch that has already been translated to an ExecutionPage.
+        // Used when fetch hits in the execution cache and can skip the normal TL action and go straight to Execute.
+        Action dispatch_action =
+            pegasus::Action::createAction<&Fetch::dispatchTranslatedFetch_>(this,
+                                                                            "dispatch_translated_fetch");
+        translated_fetch_dispatch_action_group_.addAction(dispatch_action);
 
         Action decode_action =
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
@@ -32,12 +43,17 @@ namespace pegasus
         Execute* execute_unit = hart_tn->getChild("execute")->getResourceAs<Execute*>();
 
         ActionGroup* inst_translate_action_group = translate_unit->getExecuteTranslateActionGroup();
-        ActionGroup* execute_action_group = execute_unit->getActionGroup();
+        execute_action_group_ = execute_unit->getActionGroup();
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);
-        inst_translate_action_group->setNextActionGroup(&decode_action_group_);
-        decode_action_group_.setNextActionGroup(execute_action_group);
-        execute_action_group->setNextActionGroup(&fetch_action_group_);
+        // If execution cache enabled, then after TL, dispatch to either execution cache check or decode
+        inst_translate_action_group->setNextActionGroup(enable_execution_cache_
+                                                            ? &translated_fetch_dispatch_action_group_
+                                                            : &decode_action_group_);
+        // Defaults to decode, but if fetch hits, it'll redirect
+        translated_fetch_dispatch_action_group_.setNextActionGroup(&decode_action_group_);
+        decode_action_group_.setNextActionGroup(execute_action_group_);
+        execute_action_group_->setNextActionGroup(&fetch_action_group_);
     }
 
     Action::ItrType Fetch::fetch_(PegasusState* state, Action::ItrType action_it)
@@ -53,6 +69,49 @@ namespace pegasus
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
+        return ++action_it;
+    }
+
+    // New in-between Action for determining whether to dispatch to an ExecutionPage from the cache or go to the normal decode
+    Action::ItrType Fetch::dispatchTranslatedFetch_(PegasusState* state, Action::ItrType action_it)
+    {
+        // Obtain translation results from the translation state.
+        auto* translation_state = state->getFetchTranslationState();
+        sparta_assert(translation_state->getNumResults() > 0);
+
+        const auto & result = translation_state->getResult();
+        const Addr page_size = result.getPageSize();
+        // If the translation result doesn't have a valid page size or it's less than 4K
+        // We can't use the execution cache, so just dispatch it to decode
+        if ((page_size < 0x1000) || ((page_size & (page_size - 1)) != 0))
+        {
+            translated_fetch_dispatch_action_group_.setNextActionGroup(&decode_action_group_);
+            return ++action_it;
+        }
+
+        const Addr page_mask = page_size - 1;
+        // Calculate the base virtual and phys addrs for the corresponding execution page
+        // TO DO: does this every time, maybe add a page pointer so need to do it less?
+        const Addr vaddr_base = result.getVAddr() & ~page_mask;
+        const Addr paddr_base = result.getPAddr() & ~page_mask;
+        const ExecutionPageKey key{vaddr_base, paddr_base, page_size};
+
+        auto & execution_page = execution_pages_[key];
+
+        // If we don't yet have an execution page for this TL result, create one and add it to the map.
+        if (execution_page == nullptr)
+        {
+            execution_page = std::make_unique<ExecutionPage>(result,
+                                                             &fetch_action_group_,
+                                                             execute_action_group_);
+        }
+
+        translation_state->popResult();
+        translated_fetch_dispatch_action_group_.setNextActionGroup(
+            // Set next action group to the execution page's action group for dispatching translated fetches
+            // It executes translatedPageExecute, which by default executes setupInst when an inst is first seen
+            // Otherwise, it executes the instruction's action group after setupInst has been executed once, skipping decode
+            execution_page->getExecutionPageActionGroup());
         return ++action_it;
     }
 

@@ -13,6 +13,33 @@
 namespace pegasus
 {
 
+    // Helper function to convert page size enum to bytes
+    namespace
+    {
+        inline size_t pageSizeToBytes(const translate_types::PageSize page_size)
+        {
+            switch (page_size)
+            {
+                case translate_types::PageSize::SIZE_4K:
+                    return 0x1000;
+                case translate_types::PageSize::SIZE_2M:
+                    return 0x200000;
+                case translate_types::PageSize::SIZE_4M:
+                    return 0x400000;
+                case translate_types::PageSize::SIZE_1G:
+                    return 0x40000000;
+                case translate_types::PageSize::SIZE_512G:
+                    return 0x8000000000ull;
+                case translate_types::PageSize::SIZE_256T:
+                    return 0x1000000000000ull;
+                case translate_types::PageSize::INVALID:
+                    return 0;
+            }
+
+            return 0;
+        }
+    }
+
     Translate::Translate(sparta::TreeNode* translate_node, const TranslateParameters*) :
         sparta::Unit(translate_node)
     {
@@ -360,6 +387,16 @@ namespace pegasus
                                : request.getVAddr();
         const size_t access_size =
             request.isMisaligned() ? request.getMisalignedBytes() : request.getSize();
+        const size_t page_size = [&]() -> size_t {
+            if constexpr (MODE == translate_types::TranslationMode::BAREMETAL)
+            {
+                return 0x1000;
+            }
+
+            return pageSizeToBytes(translate_types::getPageSize<MODE>(level));
+        }();
+            translation_state->setResult(vaddr, paddr, first_access_size, page_size);
+            translation_state->setResult(vaddr, paddr, access_size, page_size);
 
         // Check if address is misaligned
         const auto indexed_level = level - 1;

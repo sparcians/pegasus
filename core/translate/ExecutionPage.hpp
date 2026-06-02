@@ -6,14 +6,10 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/PegasusInst.hpp"
+#include "include/ActionTags.hpp"
 
 namespace pegasus
 {
-    namespace ActionTags
-    {
-        extern const ActionTagType TRANSLATION_PAGE_EXECUTE;
-    }
-
     /*!
      * \class ExecutionPage
      *

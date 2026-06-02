@@ -59,10 +59,11 @@ namespace pegasus
           public:
             TranslationResult() = default;
 
-            TranslationResult(Addr vaddr, Addr paddr, size_t sz) :
+            TranslationResult(Addr vaddr, Addr paddr, size_t sz, size_t page_sz = 0) :
                 vaddr_(vaddr),
                 paddr_(paddr),
-                size_(sz)
+                size_(sz),
+                page_size_(page_sz)
             {
             }
 
@@ -73,12 +74,17 @@ namespace pegasus
 
             size_t getSize() const { return size_; }
 
+            // Get the page size for this translation result. If page size is 0, it means the page size is the same as the access size
+            size_t getPageSize() const { return page_size_; }
+
             bool isValid() const { return size_ != 0; }
 
           private:
             Addr vaddr_ = 0;
             Addr paddr_ = 0;
             size_t size_ = 0;
+
+            size_t page_size_ = 0;
         };
 
         void makeRequest(const Addr vaddr, const size_t size)
@@ -117,10 +123,11 @@ namespace pegasus
             requests_cnt_ = 0;
         }
 
-        void setResult(const Addr vaddr, const Addr paddr, const size_t size)
+        void setResult(const Addr vaddr, const Addr paddr, const size_t size,
+                       const size_t page_size = 0)
         {
             sparta_assert(results_cnt_ < results_.size());
-            results_[results_cnt_++] = {vaddr, paddr, size};
+            results_[results_cnt_++] = {vaddr, paddr, size, page_size};
         }
 
         uint32_t getNumResults() const { return results_cnt_; }

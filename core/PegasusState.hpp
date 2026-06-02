@@ -161,6 +161,7 @@ namespace pegasus
         {
             // Executing instruction
             uint32_t current_opcode = 0;
+            bool partial_opcode = false;
             uint64_t current_uid = 0;
             PegasusInstPtr current_inst = nullptr;
 
@@ -179,6 +180,7 @@ namespace pegasus
             void reset()
             {
                 current_opcode = 0;
+                partial_opcode = false;
                 current_inst.reset();
                 ++current_uid;
             }

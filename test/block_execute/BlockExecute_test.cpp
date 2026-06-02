@@ -24,7 +24,7 @@ int main()
 
     auto state = pegasus_sim.getPegasusCore(0)->getPegasusState();
     auto fetch_unit = state->getFetchUnit();
-    auto fetch_action_group = fetch_unit->getFetchActionGroup();
+    auto fetch_action_group = fetch_unit->getActionGroup();
 
     auto execute_unit = state->getExecuteUnit();
     auto execute_action_group = execute_unit->getActionGroup();
@@ -54,10 +54,11 @@ int main()
     state->writeMemory(phys_page_address + 0xc, 0xfe111fe3u);
 
     auto * tstate = state->getFetchTranslationState();
-    pegasus::ActionGroup* next_action_group = fetch_unit->getFetchActionGroup();
+    pegasus::ActionGroup* next_action_group = fetch_unit->getActionGroup();
     uint32_t break_out = 10000000;
+    constexpr size_t page_size_4k = 0x1000;
     tstate->makeRequest(virt_page_address, 4);
-    tstate->setResult(virt_page_address, phys_page_address, 4, pegasus::translate_types::PageSize::SIZE_4K);
+    tstate->setResult(virt_page_address, phys_page_address, page_size_4k);
 
     pegasus::ExecutionPage translation_page(tstate->getResult(),
                                              fetch_action_group,
@@ -84,11 +85,12 @@ int main()
     // VA -> PA mapping:
     //    0xFFFF_FFFF_FFFF_0040_0000 -> 0x0000_0000_0000_0840_0000
 
-    virt_page_address = 0xFFFFFFFFF0000000ull | pegasus::translate_types::getPageMask(pegasus::translate_types::PageSize::SIZE_4M);
-    phys_page_address = 0x0000000008000000ull | pegasus::translate_types::getPageMask(pegasus::translate_types::PageSize::SIZE_4M);
+    virt_page_address = 0xFFFFFFFFF0400000ull;
+    phys_page_address = 0x0000000008400000ull;
 
+    constexpr size_t page_size_4m = 0x400000;
     tstate->makeRequest(virt_page_address, 4);
-    tstate->setResult(virt_page_address, phys_page_address, 4, pegasus::translate_types::PageSize::SIZE_4M);
+    tstate->setResult(virt_page_address, phys_page_address, page_size_4m);
 
     pegasus::ExecutionPage translation_page_split(tstate->getResult(),
                                                    fetch_action_group,
@@ -117,13 +119,14 @@ int main()
     // Have the branch cross the page
     // 0x0000000000008400ffe:
     //     fe111fe3          	bne	sp,ra,8000000a <loop>
-    state->writeMemory(phys_page_address + page_edge + 0xc, uint16_t(0xfe11)); // 0xfe -> 0x00, 1st half
-    state->writeMemory(phys_page_address + page_edge + 0xe, uint16_t(0x1fe3)); // 0x00 -> 0x02, 2nd half
+    state->writeMemory(phys_page_address + page_edge + 0xc, uint16_t(0x1fe3)); // 0xfe -> 0x00, 1st half
+    state->writeMemory(phys_page_address + page_edge + 0xe, uint16_t(0xfe11)); // 0x00 -> 0x02, 2nd half
 
-    pegasus_sim.installTaps({sparta::log::TapDescriptor("top", "info", "1")});
-    pegasus_sim.installTaps({sparta::log::TapDescriptor("top", "debug", "1")});
+    // TO DO: uncomment this (adds overhead, so testing without right now to see if completes)
+    // pegasus_sim.installTaps({sparta::log::TapDescriptor("top", "info", "1")});
+    // pegasus_sim.installTaps({sparta::log::TapDescriptor("top", "debug", "1")});
 
-    next_action_group = fetch_unit->getFetchActionGroup();
+    next_action_group = fetch_unit->getActionGroup();
     break_out = 30000000;
     do {
         next_action_group = next_action_group->execute(state);

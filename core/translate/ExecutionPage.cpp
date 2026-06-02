@@ -1,6 +1,7 @@
 #include "ExecutionPage.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusCore.hpp"
+#include "include/PegasusUtils.hpp"
 
 namespace pegasus
 {
@@ -62,14 +63,27 @@ namespace pegasus
     Action::ItrType ExecutionPage::translatedPageExecute_(PegasusState* state,
                                                           Action::ItrType action_it)
     {
+        // Check to see if the PC is still within the page covered by this ExecutionPage.
+        // isContained method no longer exists so the page mask and base addrs are calculated here.
+
+        // Possibly redundant too, since checks are performed in dispatchTranslatedFetch, but good to be safe
+        const Addr page_size = translation_result_.getPageSize() != 0
+                       ? translation_result_.getPageSize()
+                       : translation_result_.getSize();
+        sparta_assert(page_size >= 0x1000 && ((page_size & (page_size - 1)) == 0),
+                      "ExecutionPage requires power-of-two page size >= 4K, got " << page_size);
+        const Addr page_mask = page_size - 1;
+        const Addr vaddr_base = translation_result_.getVAddr() & ~page_mask;
+        const Addr paddr_base = translation_result_.getPAddr() & ~page_mask;
+
         // Check to see if we're still on the same page
         const auto vaddr = state->getPc();
-        if (translation_result_.isContained(vaddr))
+        if ((vaddr & ~page_mask) == vaddr_base)
         {
             //std::cout << "Contained: " << std::hex << vaddr << std::endl;
 
             // Get the address index and shift out the offset
-            const auto addr_idx = translation_result_.genAddrIndx(vaddr) >> 12;
+            const auto addr_idx = (vaddr - vaddr_base) >> 12;
 
             // Get the offset (lower 4k) and shift by 1 since that bit
             // is never set (and we can save some vector space)
@@ -79,7 +93,7 @@ namespace pegasus
 
             auto & inst_execute = inst_execute_pair->second.at(offset);
 
-            inst_execute.setInstAddress(translation_result_.genPAddr(vaddr));
+            inst_execute.setInstAddress(paddr_base + (vaddr - vaddr_base));
             // If this instruction was never fetched/decoded, the
             // instruction group being called is the Decode action
             // group.  This group returns the execution group
@@ -157,18 +171,31 @@ namespace pegasus
         // Default size
         OpcodeSize opcode_size = 4;
 
+        // If this is not the last entry in the page, then we know we can fetch 4 bytes and decode.  
+        // If it is the last entry, then we need to check for partial opcode construction.
+        // TO DO: I use a buffer and stuff to supplement the lost methods (from updating to more recent pegasus)
+        // I assume it's suboptimal right now and can be improved. This is just to get something working for now.
         if (SPARTA_EXPECT_TRUE(false == last_entry_))
         {
             // Check to see if we're building an opcode from a
             // previous page.  If so, merge in those missing 16 bits
             if (SPARTA_EXPECT_FALSE(partial_opcode))
             {
-                opcode |= state->readMemory<uint16_t>(inst_addr_) << 16;
+                // Grab 2 bytes from the new page and merge with the old to create the
+                // full opcode
+                std::vector<uint8_t> buffer;
+                state->readMemory<uint16_t>(inst_addr_, buffer);
+                opcode |= convertFromByteVector<uint16_t>(buffer) << 16;
                 partial_opcode = false;
+                // need to adjust the PC back since the first half of the opcode was on 
+                // the previous page and the second half is on this page.
+                state->setPc(state->getPc() - 2);
             }
             else {
                 // Grab 4 bytes
-                opcode = state->readMemory<uint32_t>(inst_addr_);
+                std::vector<uint8_t> buffer;
+                state->readMemory<uint32_t>(inst_addr_, buffer);
+                opcode = convertFromByteVector<uint32_t>(buffer);
             }
             //std::cout << std::hex << inst_addr_  << " opcode: " << opcode << std::endl;
         }
@@ -176,12 +203,14 @@ namespace pegasus
 
             // This is a fetch that is 2 bytes from the end of the
             // page.
-            opcode = state->readMemory<uint16_t>(inst_addr_);
+            std::vector<uint8_t> buffer;
+            state->readMemory<uint16_t>(inst_addr_, buffer);
+            opcode = convertFromByteVector<uint16_t>(buffer);
             partial_opcode = true;
 
             //std::cout << std::hex << inst_addr_  << " 16 bit read " << opcode << " partial throwing" << std::endl;
 
-            state->setPc(inst_addr_ + 2);
+            state->setPc(state->getPc() + 2);
 
             // Go back to inst translate to get the second page.  Have
             // that second page do the execution
@@ -201,15 +230,15 @@ namespace pegasus
         PegasusInstPtr inst = nullptr;
         try
         {
-            inst = state->getCore()->getMavis()->makeInst(opcode, state);
+            inst = state->getMavis()->makeInst(opcode, state);
             //assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump
             // instruction or an exception
             state->setNextPc(state->getPc() + opcode_size);
 
-            inst->updateVecConfig(state); // Old PegasusInst may be returned from cache. So
-                                          // outside-constructor call is needed.
+            inst->updateVectorConfig(state); // Old PegasusInst may be returned from cache. So
+                                             // outside-constructor call is needed.
 
         }
         catch (const mavis::BaseException & e)
