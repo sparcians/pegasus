@@ -96,14 +96,15 @@ namespace pegasus
         const Addr paddr_base = result.getPAddr() & ~page_mask;
         const ExecutionPageKey key{vaddr_base, paddr_base, page_size};
 
-        auto & execution_page = execution_pages_[key];
-
         // If we don't yet have an execution page for this TL result, create one and add it to the map.
-        if (execution_page == nullptr)
-        {
-            execution_page = std::make_unique<ExecutionPage>(result,
-                                                             &fetch_action_group_,
-                                                             execute_action_group_);
+        auto [it, inserted] = execution_pages_.try_emplace(key, nullptr);
+        if(inserted || !it->second) {
+            // Can disable this ILOG if it disrupts test output
+            ILOG("Creating new execution page for vaddr 0x" << std::hex << vaddr_base
+                 << " paddr 0x" << paddr_base << " size 0x" << page_size);
+            it->second = std::make_unique<ExecutionPage>(result,
+                                                         &fetch_action_group_,
+                                                         execute_action_group_);
         }
 
         translation_state->popResult();
@@ -111,7 +112,7 @@ namespace pegasus
             // Set next action group to the execution page's action group for dispatching translated fetches
             // It executes translatedPageExecute, which by default executes setupInst when an inst is first seen
             // Otherwise, it executes the instruction's action group after setupInst has been executed once, skipping decode
-            execution_page->getExecutionPageActionGroup());
+            it->second->getExecutionPageActionGroup());
         return ++action_it;
     }
 

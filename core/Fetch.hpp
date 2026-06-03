@@ -41,9 +41,10 @@ namespace pegasus
         const bool enable_execution_cache_ = false;
         ActionGroup* execute_action_group_ = nullptr;
 
-        // ExecutionPageKey is a tuple of (virt_page_base_addr, page_size, page_offset)
+        // ExecutionPageKey is a tuple of (virt_page_base_addr, phys_page_base_addr, page_offset)
         // It allows us to identify an execution page
         using ExecutionPageKey = std::tuple<Addr, Addr, Addr>;
+        // The actual map of execution pages, keyed by the above tuple
         std::map<ExecutionPageKey, std::unique_ptr<ExecutionPage>> execution_pages_;
 
         void onBindTreeEarly_() override;
