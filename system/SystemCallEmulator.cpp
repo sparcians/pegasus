@@ -1033,12 +1033,14 @@ namespace pegasus
 
         struct uname_info
         {
-            const char sysname[UTS_CHAR_LENGTH] = "Pegasus Core Emulator";
-            const char nodename[UTS_CHAR_LENGTH] = "";
-            const char release[UTS_CHAR_LENGTH] = "4.15.0";
-            const char version[UTS_CHAR_LENGTH] = "";
-            const char machine[UTS_CHAR_LENGTH] = "";
-            const char domainname[UTS_CHAR_LENGTH] = ""; // Domainname (if exists)
+            // Changes made because "FATAL: kernel too old" warning keeps popping up
+            // TO DO: Find a better fix for this issue
+            const char sysname[UTS_CHAR_LENGTH] = "Linux";
+            const char nodename[UTS_CHAR_LENGTH] = "pegasus";
+            const char release[UTS_CHAR_LENGTH] = "6.6.0";
+            const char version[UTS_CHAR_LENGTH] = "#1";
+            const char machine[UTS_CHAR_LENGTH] = "riscv64";
+            const char domainname[UTS_CHAR_LENGTH] = "localdomain"; // Domainname (if exists)
         } pegasus_uname_info;
 
         memory->poke(uname_data_ptr, sizeof(uname_info),

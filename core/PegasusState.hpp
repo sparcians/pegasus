@@ -83,6 +83,10 @@ namespace pegasus
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
+            PARAMETER(bool, ecache_stats, false,
+                      "Print execution-cache reuse counters/ratio when the hart stops")
+            PARAMETER(uint64_t, ecache_stats_period, 0,
+                      "If non-zero and ecache_stats is true, print execution-cache counters every N decisions")
             // Typical stack pointer is 8KB on most linux systems
             PARAMETER(uint32_t, ulimit_stack_size, 8192,
                       "Typical ulimit stack size for system call emulation")
@@ -367,6 +371,28 @@ namespace pegasus
 
         const std::vector<std::unique_ptr<Observer>> & getObservers() const { return observers_; }
 
+        sparta::log::MessageSource & getExecCacheLogger() { return exec_cache_logger_; }
+
+        const sparta::log::MessageSource & getExecCacheLogger() const { return exec_cache_logger_; }
+
+        // Request a translated execution-page cache flush at the next safe fetch boundary.
+        void flushExecutionCache();
+
+        // Returns true exactly once per request and clears the pending flag.
+        bool consumeExecutionCacheFlushRequest();
+
+        void recordExecCacheDecision(bool instruction_reuse);
+
+        uint64_t getExecCacheReuseCount() const { return exec_cache_reuse_count_; }
+
+        uint64_t getExecCacheFirstDecodeCount() const { return exec_cache_first_decode_count_; }
+
+        double getExecCacheReuseRatio() const
+        {
+            const uint64_t total = exec_cache_reuse_count_ + exec_cache_first_decode_count_;
+            return (total == 0) ? 0.0 : static_cast<double>(exec_cache_reuse_count_) / total;
+        }
+
         void insertExecuteActions(ActionGroup* action_group, const bool is_memory_inst);
 
         ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
@@ -449,6 +475,12 @@ namespace pegasus
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Print execution-cache counter summary when simulation stops
+        const bool ecache_stats_;
+
+        //! Periodic execution-cache stats dump interval (0 disables periodic dump)
+        const uint64_t ecache_stats_period_;
 
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
@@ -588,6 +620,16 @@ namespace pegasus
 
         // MessageSource used for STFValidator
         sparta::log::MessageSource stf_valid_logger_;
+
+        // MessageSource used for execution cache dispatch diagnostics
+        sparta::log::MessageSource exec_cache_logger_;
+
+        // Execution cache decision counters
+        uint64_t exec_cache_reuse_count_ = 0;
+        uint64_t exec_cache_first_decode_count_ = 0;
+
+        // Deferred cache flush flag to avoid invalidating active action groups mid-execution.
+        bool execution_cache_flush_requested_ = false;
 
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;

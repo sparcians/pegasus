@@ -80,6 +80,8 @@ namespace pegasus
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        ecache_stats_(p->ecache_stats),
+        ecache_stats_period_(p->ecache_stats_period),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
         validation_stf_filename_(p->validate_with_stf),
@@ -106,6 +108,7 @@ namespace pegasus
         zicntr_enabled_(extension_manager_.isEnabled("zicntr")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
+        exec_cache_logger_(hart_tn, "exec_cache", "Pegasus Execution Cache Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim"),
         pause_sim_action_group_("pause_sim")
@@ -220,6 +223,46 @@ namespace pegasus
         vector_config_.setVL(p->init_vl);
         vector_config_.setVSTART(p->init_vstart);
         vector_config_.checkConfig();
+    }
+// Execute cache stats
+    void PegasusState::recordExecCacheDecision(bool instruction_reuse)
+    {
+        if (instruction_reuse)
+        {
+            ++exec_cache_reuse_count_;
+        }
+        else
+        {
+            ++exec_cache_first_decode_count_;
+        }
+
+        if (!ecache_stats_ || (ecache_stats_period_ == 0))
+        {
+            return;
+        }
+
+        const uint64_t total_decisions = exec_cache_reuse_count_ + exec_cache_first_decode_count_;
+        if ((total_decisions % ecache_stats_period_) == 0)
+        {
+            std::cout << "\tExecCache periodic decisions: " << total_decisions
+                      << " (reuse=" << exec_cache_reuse_count_
+                      << ", first_decode=" << exec_cache_first_decode_count_ << ")"
+                      << std::endl;
+            std::cout << "\tExecCache periodic reuse ratio: " << getExecCacheReuseRatio()
+                      << std::endl;
+        }
+    }
+
+    void PegasusState::flushExecutionCache()
+    {
+        execution_cache_flush_requested_ = true;
+    }
+
+    bool PegasusState::consumeExecutionCacheFlushRequest()
+    {
+        const bool do_flush = execution_cache_flush_requested_;
+        execution_cache_flush_requested_ = false;
+        return do_flush;
     }
 
     mavis::FileNameListType PegasusState::getUArchFiles_() const
@@ -423,6 +466,9 @@ namespace pegasus
             case translate_types::TranslationStage::INVALID:
                 sparta_assert(false, "Translation stage cannot be INVALID!");
         }
+
+        // Translation-context changes can invalidate decoded execute-page assumptions.
+        flushExecutionCache();
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)
@@ -989,6 +1035,18 @@ namespace pegasus
 
             sim_state_.workload_exit_code = exit_code;
             sim_state_.test_passed = (exit_code == 0) ? true : false;
+
+            if (ecache_stats_)
+            {
+                const uint64_t reuse_count = getExecCacheReuseCount();
+                const uint64_t first_decode_count = getExecCacheFirstDecodeCount();
+                const uint64_t total_decisions = reuse_count + first_decode_count;
+                std::cout << "\tExecCache decisions: " << total_decisions << " (reuse="
+                          << reuse_count << ", first_decode=" << first_decode_count << ")"
+                          << std::endl;
+                std::cout << "\tExecCache reuse ratio: " << getExecCacheReuseRatio()
+                          << std::endl;
+            }
 
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }

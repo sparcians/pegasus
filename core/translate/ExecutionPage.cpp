@@ -5,6 +5,12 @@
 
 namespace pegasus
 {
+    namespace
+    {
+        // Keep exec-cache tap usable without generating multi-GB logs, bc things get long otherwise
+        constexpr uint64_t kExecCacheReuseLogSampleStride = 100000;
+    }
+
 
     //
     // This method does the following:
@@ -93,7 +99,29 @@ namespace pegasus
 
             auto & inst_execute = inst_execute_pair->second.at(offset);
 
+            // Logging stuff
+            // For logging purposes, check if the inst has been decoded before (already set up)
+            const bool instruction_reuse = inst_execute.isDecoded();
+
+            // Track reuse rate for end-of-run summary.
+            state->recordExecCacheDecision(instruction_reuse);
+
             inst_execute.setInstAddress(paddr_base + (vaddr - vaddr_base));
+
+            // Log only sampled reuse events in stride to avoid per-instruction I/O in this hot path.
+            // Stride is set such that we log the first reuse event and then every kExecCacheReuseLogSampleStride reuse events after that.
+            auto & exec_cache_logger = state->getExecCacheLogger();
+            if (exec_cache_logger && instruction_reuse)
+            {
+                const uint64_t reuse_count = state->getExecCacheReuseCount();
+                if ((reuse_count == 1)
+                    || ((reuse_count % kExecCacheReuseLogSampleStride) == 0))
+                {
+                    exec_cache_logger << "Exec-cache reuse sample at PC 0x" << std::hex << vaddr
+                                      << std::dec << " reuse_count=" << reuse_count;
+                }
+            }
+
             // If this instruction was never fetched/decoded, the
             // instruction group being called is the Decode action
             // group.  This group returns the execution group
@@ -114,6 +142,20 @@ namespace pegasus
     {
         // Set the current instruction
         state->setCurrentInst(inst_);
+
+        // Reuse path bypasses decode, so refresh sim-state opcode fields explicitly.
+        auto * sim_state = state->getSimState();
+        sim_state->current_opcode = static_cast<Opcode>(inst_->getOpcode());
+
+        // Cross-page reuse: partial_opcode was preserved by fetch_() across reset() when
+        // the first page threw back to fetch for the second page.  The PC currently in
+        // state is 2 bytes into the second page (where the second half was read), but the
+        // logical PC of the instruction is 2 bytes earlier (on the first page).  Apply the
+        // same correction that setupInst_ makes on first decode.
+        if (SPARTA_EXPECT_FALSE(sim_state->partial_opcode)) {
+            state->setPc(state->getPc() - 2);
+        }
+        sim_state->partial_opcode = false;
 
         // Assume we're heading to the next instruction in sequence.
         // Branches will adjust this.
@@ -201,20 +243,35 @@ namespace pegasus
         }
         else {
 
-            // This is a fetch that is 2 bytes from the end of the
-            // page.
+            // This is a fetch that is 2 bytes from the end of the page.
+            // Two sub-cases:
+            //
+            //   The 2 bytes ARE a valid compressed instruction.
+            //   Decode it here (don't go to the next page automatically)
+            //
+            //   The 2 bytes are the upper half of a 32-bit instruction
+            //   that straddles the page boundary.  Store them in current_opcode,
+            //   advance PC past the half-word already consumed, and throw back to
+            //   fetch so the second page can supply the lower 16 bits and execute.
             std::vector<uint8_t> buffer;
             state->readMemory<uint16_t>(inst_addr_, buffer);
             opcode = convertFromByteVector<uint16_t>(buffer);
-            partial_opcode = true;
 
-            //std::cout << std::hex << inst_addr_  << " 16 bit read " << opcode << " partial throwing" << std::endl;
+            if ((opcode & 0x3) != 0x3)
+            {
+                // Scenario 3: valid compressed instruction — fall through to decode.
+                opcode_size = 2;
+            }
+            else
+            {
+                // Scenario 4: first half of a 32-bit cross-page instruction.
+                partial_opcode = true;
+                state->setPc(state->getPc() + 2);
 
-            state->setPc(state->getPc() + 2);
-
-            // Go back to inst translate to get the second page.  Have
-            // that second page do the execution
-            throw ActionException(translated_page_group_);
+                // Go back to inst translate to get the second page.  Have
+                // that second page do the execution
+                throw ActionException(translated_page_group_);
+            }
         }
 
         // Compression detection

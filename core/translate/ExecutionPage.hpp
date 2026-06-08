@@ -147,6 +147,9 @@ namespace pegasus
 
             ActionGroup * getInstActionGroup() { return inst_action_group_; }
 
+            // Helper function for determining whether an instruction has been decoded and setup before
+            bool isDecoded() const { return inst_action_group_ != &inst_setup_group_; }
+
             void setInstAddress(Addr inst_addr) { inst_addr_ = inst_addr; }
 
         private:

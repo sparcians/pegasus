@@ -33,6 +33,17 @@ namespace pegasus
         decode_action_group_.addAction(decode_action);
     }
 
+    // For flushing the execution cache
+    void Fetch::flushExecutionCache()
+    {
+        if (execution_pages_.empty())
+        {
+            return;
+        }
+
+        execution_pages_.clear();
+    }
+
     void Fetch::onBindTreeEarly_()
     {
         auto hart_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
@@ -60,11 +71,27 @@ namespace pegasus
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
+        if (state->consumeExecutionCacheFlushRequest())
+        {
+            flushExecutionCache();
+        }
+
         // Reset the sim state
         PegasusState::SimState* sim_state = state->getSimState();
+        // Preserve partial_opcode and current_opcode across reentry: a cross-page instruction
+        // threw back to fetch_ to translate the second page.  current_opcode holds the first
+        // 16 bits that setupInst_ stored before throwing; the second page's setupInst_ will
+        // OR in the upper 16 bits, so both values must survive reset().
+        const bool was_partial = sim_state->partial_opcode;
+        const Opcode saved_opcode = sim_state->current_opcode;
         sim_state->reset();
+        sim_state->partial_opcode = was_partial;
+        if (was_partial) {
+            sim_state->current_opcode = saved_opcode;
+        }
 
         PegasusTranslationState* translation_state = state->getFetchTranslationState();
+        // Reset the translation state and make a new translation request for the current PC.  This will be consumed by Translate and used to determine the fetch address and size.
         translation_state->reset();
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 

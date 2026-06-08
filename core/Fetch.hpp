@@ -36,6 +36,9 @@ namespace pegasus
 
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
+        // Conservative full flush of translated execution pages.
+        void flushExecutionCache();
+
       private:
         PegasusState* state_ = nullptr;
         const bool enable_execution_cache_ = false;
