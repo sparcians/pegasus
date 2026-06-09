@@ -148,10 +148,9 @@ namespace pegasus
         sim_state->current_opcode = static_cast<Opcode>(inst_->getOpcode());
 
         // Cross-page reuse: partial_opcode was preserved by fetch_() across reset() when
-        // the first page threw back to fetch for the second page.  The PC currently in
+        // the first page went back to fetch for the second page.  The PC currently in
         // state is 2 bytes into the second page (where the second half was read), but the
-        // logical PC of the instruction is 2 bytes earlier (on the first page).  Apply the
-        // same correction that setupInst_ makes on first decode.
+        // logical PC of the instruction is 2 bytes earlier (on the first page). 
         if (SPARTA_EXPECT_FALSE(sim_state->partial_opcode)) {
             state->setPc(state->getPc() - 2);
         }

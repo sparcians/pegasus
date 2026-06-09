@@ -299,8 +299,9 @@ namespace pegasus
         translate_unit_ = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         exception_unit_ = hart_tn->getChild("exception")->getResourceAs<Exception*>();
 
-        // Connect finish ActionGroup to Fetch
-        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        // Connect finish ActionGroup to Fetch (or exec-page loop when ecache is active)
+        // Loopback is identical to getActionGroup(), it just checks if ecache is enabled
+        finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);

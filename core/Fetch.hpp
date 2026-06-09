@@ -36,6 +36,14 @@ namespace pegasus
 
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
+        // Returns the post-execute loopback action group.
+        // When ecache is enabled, this bypasses fetch_+translate for same-page reuse.
+        // When ecache is disabled, this is the normal fetch_ action group.
+        ActionGroup* getLoopbackActionGroup()
+        {
+            return enable_execution_cache_ ? &exec_page_loop_action_group_ : &fetch_action_group_;
+        }
+
         // Conservative full flush of translated execution pages.
         void flushExecutionCache();
 
@@ -65,5 +73,13 @@ namespace pegasus
         Action::ItrType decode_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         ActionGroup decode_action_group_{"Decode"};
+
+        // Hot-path loopback when ecache is active: bypasses fetch_()+Translate for
+        // instructions on the same ExecutionPage. Routes to the active page's
+        // translated_page_group_; on page exit that group redirects to fetch_action_group_
+        // for a full re-translate.
+        Action::ItrType execPageLoop_(pegasus::PegasusState* state, Action::ItrType action_it);
+
+        ActionGroup exec_page_loop_action_group_{"ExecPageLoop"};
     };
 } // namespace pegasus

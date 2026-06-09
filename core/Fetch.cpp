@@ -31,6 +31,14 @@ namespace pegasus
         Action decode_action =
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
         decode_action_group_.addAction(decode_action);
+
+        if (enable_execution_cache_)
+        {
+            // Action for looping back when we hit in the execution cache, bypassing fetch_ and translate_ for same-page instructions.
+            Action loop_action =
+                pegasus::Action::createAction<&Fetch::execPageLoop_>(this, "exec_page_loop");
+            exec_page_loop_action_group_.addAction(loop_action);
+        }
     }
 
     // For flushing the execution cache
@@ -135,6 +143,9 @@ namespace pegasus
         }
 
         translation_state->popResult();
+        // Update the active exec page so exec_page_loop_ can route back here directly
+        // without going through fetch_()+translate on every same-page instruction.
+        state->setActiveExecPageGroup(it->second->getExecutionPageActionGroup());
         translated_fetch_dispatch_action_group_.setNextActionGroup(
             // Set next action group to the execution page's action group for dispatching translated fetches
             // It executes translatedPageExecute, which by default executes setupInst when an inst is first seen
@@ -287,6 +298,41 @@ namespace pegasus
             }
         }
 
+        return ++action_it;
+    }
+
+    // Essentially replaces fetch+translate when the ecache is enabled
+    Action::ItrType Fetch::execPageLoop_(PegasusState* state, Action::ItrType action_it)
+    {
+        // Consume any deferred flush request (e.g. from fence.i, sfence.vma).
+        // If a flush is needed, fall through to fetch_action_group_ which will
+        // go through the full fetch+translate path and pick up the new page.
+        if (SPARTA_EXPECT_FALSE(state->consumeExecutionCacheFlushRequest()))
+        {
+            flushExecutionCache();
+            state->setActiveExecPageGroup(nullptr);
+            exec_page_loop_action_group_.setNextActionGroup(&fetch_action_group_);
+            return ++action_it;
+        }
+
+        // Perform the same sim-state reset that fetch_() does, preserving
+        // partial_opcode/current_opcode for cross-page instruction construction.
+        auto* sim_state = state->getSimState();
+        const bool was_partial = sim_state->partial_opcode;
+        const Opcode saved_opcode = sim_state->current_opcode;
+        sim_state->reset();
+        sim_state->partial_opcode = was_partial;
+        if (was_partial)
+        {
+            sim_state->current_opcode = saved_opcode;
+        }
+
+        // Route to the active ExecutionPage's translated_page_group_.
+        // That group checks PC membership: if still on-page it dispatches to the
+        // next InstExecute directly; if off-page it routes to fetch_action_group_
+        // for a full re-translate.
+        ActionGroup* active = state->getActiveExecPageGroup();
+        exec_page_loop_action_group_.setNextActionGroup(active);
         return ++action_it;
     }
 } // namespace pegasus
