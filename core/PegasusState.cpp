@@ -106,6 +106,7 @@ namespace pegasus
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
+        stf_opcode_trigger_(p->stf_opcode_trigger),
         validation_stf_filename_(p->validate_with_stf),
         validate_trace_begin_(p->validate_trace_begin),
         validate_inst_begin_(p->validate_inst_begin),
@@ -378,7 +379,8 @@ namespace pegasus
 
         if (!stf_filename_.empty())
         {
-            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
+            addObserver(
+                std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this, stf_opcode_trigger_));
         }
 
         if (!validation_stf_filename_.empty())

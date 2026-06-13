@@ -97,7 +97,7 @@ namespace pegasus
                 // more than one label at the same address
                 if (name.empty() == false)
                 {
-                    symbols_[addr] = name;
+                    symbols_.insert(std::make_pair(addr, Symbol(addr, size, name)));
 
                     if (name == "tohost")
                     {

@@ -332,10 +332,10 @@ namespace pegasus
         inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger
-        const auto & symbols = state->getCore()->getSystem()->getSymbols();
-        if (symbols.find(pc_) != symbols.end())
+        const auto symbol = state->getCore()->getSystem()->findSymbol(pc_, true /*exact*/);
+        if (symbol)
         {
-            inst_log_writer_->writeSymbols(symbols.at(pc_));
+            inst_log_writer_->writeSymbols(symbol.value());
         }
 
         inst_log_writer_->writeInstHeader(priv_mode_, virtual_mode_, inst.get(), pc_, opcode_);

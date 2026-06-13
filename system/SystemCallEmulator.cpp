@@ -413,16 +413,12 @@ namespace pegasus
     {
         if (syscall_emulation_enabled_)
         {
-            const auto & symbols = sim_->getPegasusSystem()->getSymbols();
-            for (auto symbol : symbols)
+            const auto end_addr = sim_->getPegasusSystem()->findSymbolAddr("_end");
+            if (end_addr)
             {
-                if (symbol.second == "_end")
-                {
-                    callbacks_->setBreakAddress(symbol.first);
-                    break;
-                }
+                callbacks_->setBreakAddress(end_addr.value());
             }
-            if (callbacks_->getBreakAddress() == 0)
+            else
             {
                 std::cout << "PEGASUS: Warning: Could not find _end symbol in workload for "
                              "system call emulation for brk system calls"

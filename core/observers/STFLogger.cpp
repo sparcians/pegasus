@@ -4,12 +4,21 @@
 #include "core/VecElements.hpp"
 #include "include/gen/pegasus_version.hpp"
 #include "core/PegasusCore.hpp"
+#include "system/PegasusSystem.hpp"
 
 namespace pegasus
 {
     STFLogger::STFLogger(const uint32_t reg_width, uint64_t inital_pc, const std::string & filename,
-                         PegasusState* state) :
-        Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
+                         PegasusState* state, std::optional<uint32_t> opcode_trigger) :
+        Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
+        filename_(filename),
+        opcode_trigger_(opcode_trigger)
+    {
+        startSTFTrace_(inital_pc, filename, state);
+    }
+
+    void STFLogger::startSTFTrace_(uint64_t inital_pc, const std::string & filename,
+                                   PegasusState* state)
     {
         try
         {
@@ -365,6 +374,11 @@ namespace pegasus
                 else
                 {
                     stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
+
+                    // Get the name of function we're now in
+                    const auto func_name =
+                        state->getCore()->getSystem()->findSymbol(state->getNextPc(), true);
+                    current_symbol_ = func_name ? "_" + func_name.value() : current_symbol_;
                 }
             }
         }
@@ -400,6 +414,20 @@ namespace pegasus
         else
         {
             stf_writer_ << stf::InstOpcode32Record(opcode);
+        }
+
+        if (opcode_trigger_ && (opcode_trigger_.value() == opcode))
+        {
+            // Close current trace, open a new one
+            stf_writer_.close();
+
+            // Find the position of the .zstf or .stf
+            const size_t dotPos = filename_.find_last_of('.');
+            const auto new_trace_file_name = filename_.substr(0, dotPos) + current_symbol_ + "_"
+                                             + std::to_string(++trace_instance_)
+                                             + filename_.substr(dotPos);
+
+            startSTFTrace_(state->getNextPc(), new_trace_file_name, state);
         }
     }
 
