@@ -342,6 +342,7 @@ namespace pegasus
             size_t index = elem_iter.getIndex();
             auto elem_v0{elems_v0.getElement(index)};
             auto elem_vs2{elems_vs2.getElement(index)};
+            elem_vs2.getVal(); // load element value
 
             if (!inst->getVM())
             {
@@ -351,7 +352,7 @@ namespace pegasus
             {
                 size_t idx = bit_iter.getIndex();
                 // update parallel prefix sun for each active element of vd till current index
-                if (inst->getVM()) // masked
+                if (!inst->getVM()) // masked
                 {
                     execute(iter_v0,
                             MaskBitIterator{&elems_v0,

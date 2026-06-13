@@ -155,7 +155,7 @@ class VmInstructionTester : public PegasusInstructionTester
         VLEN v0_val = {0xEB, 0, 0, 0, 0, 0, 0, 0};
         VLEN v2_val = {0x91, 0, 0, 0, 0, 0, 0, 0};
         VLEN v4_val = {9, 8, 7, 6, 5, 4, 3, 2};
-        const VLEN vd_val = {2, 2, 1, 2, 1, 2, 2, 2};
+        const VLEN vd_val_masked = {0, 1, 7, 1, 5, 1, 1, 1};
         WRITE_VEC_REG<VLEN>(state, pegasus::V2, v2_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V0, v0_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V4, v4_val);
@@ -165,12 +165,30 @@ class VmInstructionTester : public PegasusInstructionTester
         v4_val = READ_VEC_REG<VLEN>(state, pegasus::V4);
         for (size_t i = 0; i < 8; ++i)
         {
-            EXPECT_EQUAL(v4_val[i], vd_val[i]);
+            EXPECT_EQUAL(v4_val[i], vd_val_masked[i]);
         }
+
+        VLEN vd_val_unmasked = {0, 1, 1, 1, 1, 2, 2, 2};
+        opcode = viotamOp(pegasus::V4, pegasus::V2, 1); // unmasked
+        injectInstruction(pc, opcode);
+
+        v4_val = READ_VEC_REG<VLEN>(state, pegasus::V4);
+        for (size_t i = 0; i < 8; ++i)
+        {
+            EXPECT_EQUAL(v4_val[i], vd_val_unmasked[i]);
+        }
+
+        //
+        v2_val = {0x91, 0, 0, 0, 0, 0, 0, 0};
+        WRITE_VEC_REG<VLEN>(state, pegasus::V2, v2_val);
+        vd_val_unmasked = {0, 0, 0, 0, 0, 0, 0, 0};
+        opcode = viotamOp(pegasus::V4, pegasus::V2, 1); // unmasked
+        injectInstruction(pc, opcode);
+        //
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 5);
+        EXPECT_EQUAL(sim_state->inst_count, 6);
     }
 
     void testVidv()
@@ -202,7 +220,7 @@ class VmInstructionTester : public PegasusInstructionTester
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 6);
+        EXPECT_EQUAL(sim_state->inst_count, 7);
     }
 
     uint32_t vpopcmOp(uint8_t rd, uint8_t vs2, uint8_t vm)
