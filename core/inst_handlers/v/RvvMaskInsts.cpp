@@ -326,9 +326,6 @@ namespace pegasus
         ElemsType elems_v0{state, inst->getVectorConfig(), pegasus::V0};
         ElemsType elems_vd{state, inst->getVectorConfig(), inst->getRd()};
         size_t count = 0;
-        // auto iter_v0 = elems_v0.maskBitIterBegin();
-        // auto iter_vd = elems_vd.begin();
-
         const bool masked = !inst->getVM();
 
         for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
