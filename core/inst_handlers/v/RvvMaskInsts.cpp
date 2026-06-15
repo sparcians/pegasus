@@ -346,7 +346,7 @@ namespace pegasus
 
             if (!inst->getVM())
             {
-                elem_vs2.pokeVal(elem_vs2.getVal() & elem_v0.getVal()); // don't store *elem_vs2*
+                elem_vs2.pokeVal(elem_vs2.peekVal() & elem_v0.getVal()); // don't store *elem_vs2*
             }
             for (auto bit_iter = elem_vs2.begin(); bit_iter != elem_vs2.end(); ++bit_iter)
             {
