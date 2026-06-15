@@ -338,7 +338,8 @@ namespace pegasus
             const auto vs2_val = elems_vs2.getElement(elem_iter.getIndex()).getVal();
             if (masked || (false == masked && mask_val))
             {
-                if(0 != (vs2_val & 0x1)) {
+                if (0 != (vs2_val & 0x1))
+                {
                     ++count_it;
                 }
             }
@@ -352,7 +353,6 @@ namespace pegasus
 
             count += count_it;
         }
-
 
         return ++action_it;
     }
