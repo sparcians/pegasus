@@ -188,7 +188,7 @@ class VmInstructionTester : public PegasusInstructionTester
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 6);
+        EXPECT_EQUAL(sim_state->inst_count, 7);
     }
 
     void testVidv()
@@ -220,7 +220,7 @@ class VmInstructionTester : public PegasusInstructionTester
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 7);
+        EXPECT_EQUAL(sim_state->inst_count, 8);
     }
 
     uint32_t vpopcmOp(uint8_t rd, uint8_t vs2, uint8_t vm)
