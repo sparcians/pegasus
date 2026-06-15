@@ -342,10 +342,11 @@ namespace pegasus
             size_t index = elem_iter.getIndex();
             auto elem_v0{elems_v0.getElement(index)};
             auto elem_vs2{elems_vs2.getElement(index)};
+            elem_vs2.getVal(); // load element value
 
             if (!inst->getVM())
             {
-                elem_vs2.pokeVal(elem_vs2.getVal() & elem_v0.getVal()); // don't store *elem_vs2*
+                elem_vs2.pokeVal(elem_vs2.peekVal() & elem_v0.getVal()); // don't store *elem_vs2*
             }
             for (auto bit_iter = elem_vs2.begin(); bit_iter != elem_vs2.end(); ++bit_iter)
             {
