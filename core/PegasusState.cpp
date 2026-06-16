@@ -77,7 +77,8 @@ namespace pegasus
     {
         if (0 == vlenb_param)
         {
-            if (ext_man.isEnabled("zvl1024b")) {
+            if (ext_man.isEnabled("zvl1024b"))
+            {
                 return 1024;
             }
             return 256;
