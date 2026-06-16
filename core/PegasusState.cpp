@@ -75,9 +75,12 @@ namespace pegasus
     uint32_t getVLENB(const uint32_t vlenb_param,
                       const mavis::extension_manager::riscv::RISCVExtensionManager & ext_man)
     {
-        if (ext_man.isEnabled("zvl1024b"))
+        if (0 == vlenb_param)
         {
-            return 1024;
+            if (ext_man.isEnabled("zvl1024b")) {
+                return 1024;
+            }
+            return 256;
         }
         return vlenb_param;
     }
@@ -139,10 +142,10 @@ namespace pegasus
 
         // Nice warning in case someone is using zvl1024b extension
         // AND didn't change/muck with the vlen parameter
-        if ((p->vlen != vlen_) && extension_manager_.isEnabled("zvl1024b"))
+        if (extension_manager_.isEnabled("zvl1024b") && (vlen_ != 1024))
         {
             std::cout
-                << "PEGASUS: Warning: vlenb parameter ignored due to zvl1024b extension provided"
+                << "PEGASUS: Warning: vlen parameter overridden even though zvl1024b is provided"
                 << std::endl;
         }
 

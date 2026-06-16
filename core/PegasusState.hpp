@@ -72,7 +72,8 @@ namespace pegasus
             PARAMETER(std::string, isa, "",
                       "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
                       "used instead.")
-            PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
+            PARAMETER(uint32_t, vlen, 0, "Vector register size in bits (max: 1024), default is 256"
+                      " if parameter is left at 0")
             PARAMETER(uint32_t, init_lmul, 8,
                       "Initial vector LMUL in units of 1/8 (e.g. 8=1, 16=2, 4=1/2)")
             PARAMETER(uint32_t, init_sew, 8, "Initial vector SEW in bits")
@@ -105,7 +106,7 @@ namespace pegasus
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
-                const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024};
+                const std::vector<uint32_t> valid_vlen_values{0, 128, 256, 512, 1024};
                 return std::find(valid_vlen_values.begin(), valid_vlen_values.end(), vlen_val)
                        != valid_vlen_values.end();
             }
