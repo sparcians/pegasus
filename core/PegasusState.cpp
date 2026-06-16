@@ -77,11 +77,22 @@ namespace pegasus
     {
         if (0 == vlenb_param)
         {
-            if (ext_man.isEnabled("zvl1024b"))
+            std::array<std::pair<std::string, uint32_t>, 6> min_lengh_extensions{
+                {{"zvl32b", 32},
+                 {"zvl64b", 64},
+                 {"zvl128b", 128},
+                 {"zvl256b", 256},
+                 {"zvl512b", 512},
+                 {"zvl1024b", 1024}}};
+
+            for (auto & ext : min_lengh_extensions)
             {
-                return 1024;
+                if (ext_man.isEnabled(ext.first))
+                {
+                    return ext.second;
+                }
             }
-            return 256;
+            return 256; // default
         }
         return vlenb_param;
     }

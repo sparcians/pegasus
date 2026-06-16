@@ -73,8 +73,9 @@ namespace pegasus
                       "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
                       "used instead.")
             PARAMETER(uint32_t, vlen, 0,
-                      "Vector register size in bits (max: 1024), default is 256"
-                      " if parameter is left at 0")
+                      "Vector register size in bits (max: 1024), default is 256 "
+                      "if parameter is left at 0.  This can be set via the "
+                      "Minimun Vector Length Standard Extension")
             PARAMETER(uint32_t, init_lmul, 8,
                       "Initial vector LMUL in units of 1/8 (e.g. 8=1, 16=2, 4=1/2)")
             PARAMETER(uint32_t, init_sew, 8, "Initial vector SEW in bits")
