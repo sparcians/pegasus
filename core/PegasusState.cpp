@@ -250,6 +250,9 @@ namespace pegasus
                       << std::endl;
             std::cout << "\tExecCache periodic reuse ratio: " << getExecCacheReuseRatio()
                       << std::endl;
+            std::cout << "\tExecCache periodic bypass: enter="
+                      << getExecCacheBypassEnterCount()
+                      << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
         }
     }
 
@@ -481,9 +484,9 @@ namespace pegasus
     void PegasusState::unpauseHart()
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
-        // We replace the next ActionGroup pointer to pause the sim, so it needs to
-        // be set back to Fetch
-        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        // We replace the next ActionGroup pointer to pause the sim, so restore
+        // the normal post-execute loopback (exec-page loop when ecache is enabled).
+        finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -1047,6 +1050,8 @@ namespace pegasus
                           << std::endl;
                 std::cout << "\tExecCache reuse ratio: " << getExecCacheReuseRatio()
                           << std::endl;
+                std::cout << "\tExecCache bypass: enter=" << getExecCacheBypassEnterCount()
+                          << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
             }
 
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
@@ -1059,7 +1064,7 @@ namespace pegasus
             sim_state_.workload_exit_code = 0;
             sim_state_.test_passed = true;
 
-            finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+            finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
         }
     }
 

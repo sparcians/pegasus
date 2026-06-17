@@ -130,6 +130,7 @@ namespace pegasus
         }
         else {
             // Go back to fetch
+            state->recordExecCacheBypassFallback();
             translated_page_group_.setNextActionGroup(fetch_action_group_);
         }
 

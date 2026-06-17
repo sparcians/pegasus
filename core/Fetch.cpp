@@ -304,11 +304,14 @@ namespace pegasus
     // Essentially replaces fetch+translate when the ecache is enabled
     Action::ItrType Fetch::execPageLoop_(PegasusState* state, Action::ItrType action_it)
     {
+        state->recordExecCacheBypassEnter();
+
         // Consume any deferred flush request (e.g. from fence.i, sfence.vma).
         // If a flush is needed, fall through to fetch_action_group_ which will
         // go through the full fetch+translate path and pick up the new page.
         if (SPARTA_EXPECT_FALSE(state->consumeExecutionCacheFlushRequest()))
         {
+            state->recordExecCacheBypassFallback();
             flushExecutionCache();
             state->setActiveExecPageGroup(nullptr);
             exec_page_loop_action_group_.setNextActionGroup(&fetch_action_group_);
@@ -332,6 +335,13 @@ namespace pegasus
         // next InstExecute directly; if off-page it routes to fetch_action_group_
         // for a full re-translate.
         ActionGroup* active = state->getActiveExecPageGroup();
+        if (SPARTA_EXPECT_FALSE(active == nullptr))
+        {
+            state->recordExecCacheBypassFallback();
+            exec_page_loop_action_group_.setNextActionGroup(&fetch_action_group_);
+            return ++action_it;
+        }
+
         exec_page_loop_action_group_.setNextActionGroup(active);
         return ++action_it;
     }

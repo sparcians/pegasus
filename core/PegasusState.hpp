@@ -383,9 +383,17 @@ namespace pegasus
 
         void recordExecCacheDecision(bool instruction_reuse);
 
+        void recordExecCacheBypassEnter() { ++exec_cache_bypass_enter_count_; }
+
+        void recordExecCacheBypassFallback() { ++exec_cache_bypass_fallback_count_; }
+
         uint64_t getExecCacheReuseCount() const { return exec_cache_reuse_count_; }
 
         uint64_t getExecCacheFirstDecodeCount() const { return exec_cache_first_decode_count_; }
+
+        uint64_t getExecCacheBypassEnterCount() const { return exec_cache_bypass_enter_count_; }
+
+        uint64_t getExecCacheBypassFallbackCount() const { return exec_cache_bypass_fallback_count_; }
 
         double getExecCacheReuseRatio() const
         {
@@ -632,6 +640,8 @@ namespace pegasus
         // Execution cache decision counters
         uint64_t exec_cache_reuse_count_ = 0;
         uint64_t exec_cache_first_decode_count_ = 0;
+        uint64_t exec_cache_bypass_enter_count_ = 0;
+        uint64_t exec_cache_bypass_fallback_count_ = 0;
 
         // Deferred cache flush flag to avoid invalidating active action groups mid-execution.
         bool execution_cache_flush_requested_ = false;
