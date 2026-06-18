@@ -352,6 +352,19 @@ namespace pegasus
             }
         };
 
+        const auto next_pc = state->getNextPc();
+        uint32_t opcode = 0;
+        uint32_t opcode_size = 4;
+        if (state->getCurrentInst() != nullptr)
+        {
+            opcode = state->getCurrentInst()->getOpcode();
+            opcode_size = state->getCurrentInst()->getOpcodeSize();
+        }
+        else
+        {
+            opcode = state->getSimState()->current_opcode;
+        }
+
         if (state->getCurrentInst() != nullptr)
         {
             if (state->getXlen() == 32)
@@ -373,13 +386,17 @@ namespace pegasus
                 }
                 else
                 {
-                    stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
-
-                    // Get the name of function we're now in
-                    const auto func_name =
-                        state->getCore()->getSystem()->findSymbol(state->getNextPc(), true);
-                    current_symbol_ = func_name ? "_" + func_name.value() : current_symbol_;
+                    if (next_pc != (state->getPc() + opcode_size))
+                    {
+                        // Taken branch
+                        stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
+                    }
                 }
+
+                // Get the name of function we're now in
+                const auto func_name =
+                    state->getCore()->getSystem()->findSymbol(state->getNextPc(), true);
+                current_symbol_ = func_name ? "_" + func_name.value() : current_symbol_;
             }
         }
 
@@ -393,18 +410,6 @@ namespace pegasus
             {
                 writeEventRecord_<uint64_t>(state);
             }
-        }
-
-        uint32_t opcode = 0;
-        uint32_t opcode_size = 4;
-        if (state->getCurrentInst() != nullptr)
-        {
-            opcode = state->getCurrentInst()->getOpcode();
-            opcode_size = state->getCurrentInst()->getOpcodeSize();
-        }
-        else
-        {
-            opcode = state->getSimState()->current_opcode;
         }
 
         if (opcode_size == 2)

@@ -97,7 +97,7 @@ def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, ti
         pattern = re.compile(rf"\b{testname}\b.*\.log$")
         for filename in os.listdir(output_dir):
             if re.search(pattern, filename):
-                os.remove(filename)
+                os.remove(output_dir + filename)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'
