@@ -61,7 +61,6 @@ namespace pegasus
         // Get translation result
         const PegasusTranslationState::TranslationResult result =
             state->getFetchTranslationState()->getResult();
-        state->getFetchTranslationState()->popResult();
 
         // When compressed instructions are enabled, it is possible for a full sized instruction (32
         // bits) to cross a 4K page boundary meaning that first 16 bits of the instruction are on a
@@ -199,6 +198,7 @@ namespace pegasus
                 }
             }
         }
+        state->getFetchTranslationState()->popResult();
 
         return ++action_it;
     }
