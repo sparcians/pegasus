@@ -170,9 +170,9 @@ namespace pegasus
         if (SPARTA_EXPECT_FALSE(inst->isVector() && inst->isFloat()
                                 && (state->getVectorConfig()->getSEW() == 16)))
         {
-            if (false == state->isExtensionEnabled("zfh"))
+            if (false == state->hasZfh())
             {
-                if (false == (state->isExtensionEnabled("zfhmin") && inst->hasMavisTag("zfhmin")))
+                if (false == (state->hasZfhmin() && inst->hasMavisTag("zfhmin")))
                 {
                     THROW_ILLEGAL_INST;
                 }

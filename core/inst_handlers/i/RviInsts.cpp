@@ -711,9 +711,8 @@ namespace pegasus
             const XLEN pc = state->getPc();
             const XLEN imm = inst->getImmediate();
             const XLEN branch_target = pc + imm;
-            state->setNextPc(branch_target);
+            state->setNextPc(branch_target, true);
         }
-
         return ++action_it;
     }
 
@@ -725,7 +724,7 @@ namespace pegasus
         XLEN rd_val = state->getPc() + inst->getOpcodeSize();
         const XLEN imm = inst->getImmediate();
         const XLEN jump_target = state->getPc() + imm;
-        state->setNextPc(jump_target);
+        state->setNextPc(jump_target, true);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;
@@ -740,7 +739,7 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN imm = inst->getImmediate();
         const XLEN jump_target = (rs1_val + imm) & ~std::make_signed_t<XLEN>(1);
-        state->setNextPc(jump_target);
+        state->setNextPc(jump_target, true);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
         return ++action_it;

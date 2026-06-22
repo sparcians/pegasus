@@ -352,13 +352,14 @@ namespace pegasus
             }
         };
 
-        const auto next_pc = state->getNextPc();
+        const auto & current_inst = *state->getCurrentInst();
         uint32_t opcode = 0;
         uint32_t opcode_size = 4;
+
         if (state->getCurrentInst() != nullptr)
         {
-            opcode = state->getCurrentInst()->getOpcode();
-            opcode_size = state->getCurrentInst()->getOpcodeSize();
+            opcode = current_inst.getOpcode();
+            opcode_size = current_inst.getOpcodeSize();
         }
         else
         {
@@ -376,21 +377,19 @@ namespace pegasus
                 writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
             }
 
-            if (state->getCurrentInst()->isChangeOfFlowInst())
+            if (current_inst.isChangeOfFlowInst())
             {
-                if (state->getCurrentInst()->isReturnInst())
+                if (current_inst.isReturnInst())
                 {
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::MODE_CHANGE,
                                                     static_cast<uint32_t>(state->getPrivMode()));
                     stf_writer_ << stf::EventPCTargetRecord(state->getNextPc());
                 }
-                else
+                // Do not insert a PC target if the branch is not taken
+                else if (state->isBranchTaken())
                 {
-                    if (next_pc != (state->getPc() + opcode_size))
-                    {
-                        // Taken branch
-                        stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
-                    }
+                    // Taken branch
+                    stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
                 }
 
                 // Get the name of function we're now in

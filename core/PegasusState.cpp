@@ -75,25 +75,23 @@ namespace pegasus
     uint32_t getVLENB(const uint32_t vlenb_param,
                       const mavis::extension_manager::riscv::RISCVExtensionManager & ext_man)
     {
-        if (0 == vlenb_param)
-        {
-            std::array<std::pair<std::string, uint32_t>, 6> min_lengh_extensions{
-                {{"zvl32b", 32},
-                 {"zvl64b", 64},
-                 {"zvl128b", 128},
-                 {"zvl256b", 256},
-                 {"zvl512b", 512},
-                 {"zvl1024b", 1024}}};
+        constexpr std::array<std::pair<std::string, uint32_t>, 6> min_length_extensions{
+            {{"zvl32b", 32},
+             {"zvl64b", 64},
+             {"zvl128b", 128},
+             {"zvl256b", 256},
+             {"zvl512b", 512},
+             {"zvl1024b", 1024}}};
 
-            for (auto & ext : min_lengh_extensions)
+        for (auto & ext : min_length_extensions)
+        {
+            if (ext_man.isEnabled(ext.first))
             {
-                if (ext_man.isEnabled(ext.first))
-                {
-                    return ext.second;
-                }
+                return ext.second;
             }
-            return 256; // default
         }
+
+        // No extension enabled, return the default
         return vlenb_param;
     }
 
@@ -130,6 +128,8 @@ namespace pegasus
         vlen_(getVLENB(p->vlen, extension_manager_)),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         zicntr_enabled_(extension_manager_.isEnabled("zicntr")),
+        zfh_enabled_(extension_manager_.isEnabled("zfh")),
+        zfhmin_enabled_(extension_manager_.isEnabled("zfhmin")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         finish_action_group_("finish_inst"),
@@ -152,15 +152,6 @@ namespace pegasus
         }
 
         setPcAlignment_();
-
-        // Nice warning in case someone is using zvl1024b extension
-        // AND didn't change/muck with the vlen parameter
-        if (extension_manager_.isEnabled("zvl1024b") && (vlen_ != 1024))
-        {
-            std::cout
-                << "PEGASUS: Warning: vlen parameter overridden even though zvl1024b is provided"
-                << std::endl;
-        }
 
         // Set up register sets
         const std::string reg_json_file_path =
@@ -535,6 +526,8 @@ namespace pegasus
 
         hypervisor_enabled_ = extension_manager_.isEnabled("h");
         zicntr_enabled_ = extension_manager_.isEnabled("zicntr");
+        zfh_enabled_ = extension_manager_.isEnabled("zfh");
+        zfhmin_enabled_ = extension_manager_.isEnabled("zfhmin");
 
         setPcAlignment_();
 
