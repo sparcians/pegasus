@@ -273,11 +273,11 @@ namespace pegasus
                     return (request.getVAddr() + request.getMisalignedBytes());
                 }
             case FaultCause::INST_ACCESS:
-            {
-                const auto result = state->getFetchTranslationState()->getResult();
-                state->getFetchTranslationState()->popResult();
-                return result.getVAddr();
-            }
+                {
+                    const auto result = state->getFetchTranslationState()->getResult();
+                    state->getFetchTranslationState()->popResult();
+                    return result.getVAddr();
+                }
             case FaultCause::LOAD_ADDR_MISALIGNED:
             case FaultCause::STORE_AMO_ADDR_MISALIGNED:
             case FaultCause::STORE_AMO_ACCESS:
@@ -291,11 +291,11 @@ namespace pegasus
                     return vaddr_val;
                 }
             case FaultCause::LOAD_ACCESS:
-            {
-                const auto result = state->getCurrentInst()->getTranslationState()->getResult();
-                state->getCurrentInst()->getTranslationState()->popResult();
-                return result.getVAddr();
-            }
+                {
+                    const auto result = state->getCurrentInst()->getTranslationState()->getResult();
+                    state->getCurrentInst()->getTranslationState()->popResult();
+                    return result.getVAddr();
+                }
             case FaultCause::ILLEGAL_INST:
             case FaultCause::ILLEGAL_VIRTUAL_INST:
                 return state->getSimState()->current_opcode;

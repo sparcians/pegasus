@@ -136,7 +136,8 @@ namespace pegasus
 
         Addr getPrevPc() const { return prev_pc_; }
 
-        void setNextPc(Addr next_pc, bool branch_taken = false) {
+        void setNextPc(Addr next_pc, bool branch_taken = false)
+        {
             next_pc_ = next_pc;
             branch_taken_ = branch_taken;
         }
