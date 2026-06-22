@@ -75,7 +75,7 @@ namespace pegasus
     uint32_t getVLENB(const uint32_t vlenb_param,
                       const mavis::extension_manager::riscv::RISCVExtensionManager & ext_man)
     {
-        constexpr std::array<std::pair<std::string, uint32_t>, 6> min_length_extensions{
+        static constexpr std::array<std::pair<std::string, uint32_t>, 6> min_length_extensions{
             {{"zvl32b", 32},
              {"zvl64b", 64},
              {"zvl128b", 128},
