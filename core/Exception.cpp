@@ -280,7 +280,6 @@ namespace pegasus
                 }
             case FaultCause::LOAD_ADDR_MISALIGNED:
             case FaultCause::STORE_AMO_ADDR_MISALIGNED:
-            case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
             case FaultCause::STORE_AMO_PAGE_FAULT:
             case FaultCause::LOAD_GUEST_PAGE_FAULT:
@@ -290,6 +289,7 @@ namespace pegasus
                         state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
                 }
+            case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_ACCESS:
                 {
                     const auto result = state->getCurrentInst()->getTranslationState()->getResult();
