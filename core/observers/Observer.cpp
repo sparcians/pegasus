@@ -68,7 +68,7 @@ namespace pegasus
                         sparta_assert(false, "Invalid register type!");
                 }
                 sparta_assert(reg != nullptr);
-                dst_reg.reg_value.setValue(readRegister_(reg));
+                dst_reg.setNewValue(readRegister_(reg));
             }
         }
 
@@ -81,7 +81,7 @@ namespace pegasus
         pc_ = state->getPc();
         priv_mode_ = state->getPrivMode();
         virtual_mode_ = state->getVirtualMode();
-        PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
 
         if (inst)
         {
@@ -93,30 +93,35 @@ namespace pegasus
                 for (auto & src_reg : inst->getMavisOpcodeInfo()->getSourceOpInfoList())
                 {
                     const auto reg = state->getSpartaRegister(&src_reg);
+                    const auto reg_id = getRegId(reg);
 
-                    SrcReg src(getRegId(reg), readRegister_(reg)); // base register value
+                    // base register value
+                    src_regs_.emplace_back(SrcReg(reg_id, readRegister_(reg)));
 
-                    // recording inital src register values for LMUL other than m1 cases
-                    // (m2,m4,m8,mf2...)
-                    if (getRegId(reg).reg_type == RegType::VECTOR)
+                    // recording inital src register values for LMUL
+                    // other than m1 cases (m2,m4,m8,mf2...)
+                    if ((reg_id.reg_type == RegType::VECTOR) && (false == inst->isVectorMaskOp()))
                     {
                         const uint32_t encoded_lmul =
-                            state->getCurrentInst()->getVectorConfig()->getLMUL();
-                        const uint32_t reg_count =
-                            std::max(1u, encoded_lmul / 8); // works well for fractional lmul cases
+                            inst->getVectorConfig()->getLMUL();
 
-                        const uint32_t base = getRegId(reg).reg_num;
+                        // works well for fractional lmul cases
+                        const uint32_t reg_count = std::max(1u, encoded_lmul / 8);
+                        const uint32_t base = reg_id.reg_num;
+
+                        sparta_assert(base + reg_count <= 32,
+                                      "Somehow we're blowing past the total number of vector insts: "
+                                      << inst);
 
                         for (uint32_t i = 0; i < reg_count; ++i)
                         {
                             const uint32_t phys = base + i;
-
-                            src.lmul_values.push_back(makeVectorRegValue(readVectorRegister_(
-                                state, RegId{RegType::VECTOR, phys, "V" + std::to_string(phys)})));
+                            RegId reg_id_lmul_src(RegType::VECTOR, phys, "V" + std::to_string(phys));
+                            src_regs_.emplace_back(SrcReg(reg_id_lmul_src,
+                                                          readVectorRegister_(state, reg_id_lmul_src)));
                         }
                     }
 
-                    src_regs_.push_back(std::move(src));
                 }
 
                 // Get value of destination registers
@@ -129,7 +134,31 @@ namespace pegasus
                     {
                         continue;
                     }
-                    dst_regs_.emplace_back(getRegId(reg), readRegister_(reg));
+
+                    const auto reg_id = getRegId(reg);
+                    dst_regs_.emplace_back(reg_id, readRegister_(reg));
+
+                    if ((reg_id.reg_type == RegType::VECTOR) && (false == inst->isVectorMaskOp()))
+                    {
+                        const uint32_t encoded_lmul = inst->getVectorConfig()->getLMUL();
+                        // works well for fractional lmul cases
+                        const uint32_t reg_count = std::max(1u, encoded_lmul / 8);
+
+                        const uint32_t base = reg_id.reg_num;
+                        sparta_assert(base + reg_count <= 32,
+                                      "Somehow we're blowing past the total number of vector insts: "
+                                      << inst);
+
+                        for (uint32_t i = 0; i < reg_count; ++i)
+                        {
+                            const uint32_t phys = base + i;
+                            RegId reg_id_lmul_dst(RegType::VECTOR, phys, "V" + std::to_string(phys));
+                            dst_regs_.emplace_back(DestReg(reg_id_lmul_dst,
+                                                           readVectorRegister_(state, reg_id_lmul_dst)));
+
+                        }
+                    }
+
                 }
             }
         }
@@ -154,7 +183,7 @@ namespace pegasus
             const uint64_t prior_value = (csr_reg->getNumBits() == 64)
                                              ? data.prior->read<uint64_t>()
                                              : data.prior->read<uint32_t>();
-            csr_writes_.insert({csr_num, DestReg(reg_id, final_value, prior_value)});
+            csr_writes_.insert({csr_num, DestReg(reg_id, prior_value, final_value)});
         }
 
         // No need to also capture a read if there is a write since the write records the previous
@@ -221,19 +250,20 @@ namespace pegasus
                                 supplement->source);
     }
 
-    std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)
-    {
-        std::vector<uint8_t> bytes;
-        bytes.resize(words.size() * sizeof(uint64_t));
-        memcpy(bytes.data(), words.data(), bytes.size());
-        return (bytes);
-    }
+    // std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)
+    // {
+    //     std::vector<uint8_t> bytes;
+    //     bytes.resize(words.size() * sizeof(uint64_t));
+    //     memcpy(bytes.data(), words.data(), bytes.size());
+    //     return (bytes);
+    // }
 
-    std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state, RegId reg_id) const
+    template<typename SIZE_T>
+    std::vector<SIZE_T> Observer::readVectorRegister_(PegasusState* state, const RegId & reg_id) const
     {
         const uint32_t vlen_bits = state->getVectorConfig()->getVLEN();
 
-        std::vector<uint64_t> raw;
+        std::vector<SIZE_T> raw;
         switch (vlen_bits)
         {
             case 128:
@@ -271,7 +301,11 @@ namespace pegasus
         return raw;
     }
 
-    std::string Observer::formatVectorHex(const std::vector<uint64_t> & vec)
+    template std::vector<uint8_t>  Observer::readVectorRegister_<uint8_t> (PegasusState*, const RegId&) const;
+    template std::vector<uint32_t> Observer::readVectorRegister_<uint32_t>(PegasusState*, const RegId&) const;
+    template std::vector<uint64_t> Observer::readVectorRegister_<uint64_t>(PegasusState*, const RegId&) const;
+
+    std::string Observer::formatVectorHex_(const std::vector<uint64_t> & vec) const
     {
         std::ostringstream oss;
         for (const auto & val : vec)

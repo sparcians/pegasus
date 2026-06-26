@@ -106,9 +106,10 @@ namespace pegasus
                 std::vector<TYPE> result;
                 result.reserve(value_.size() / type_size);
 
-                for (size_t offset = 0; offset < value_.size(); offset += type_size)
+                const auto value_size = value_.size();
+                for (size_t offset = 0; offset < value_size; offset += type_size)
                 {
-                    result.push_back(getValue<TYPE>(offset));
+                    result.emplace_back(getValue<TYPE>(offset));
                 }
 
                 return result;
@@ -133,40 +134,39 @@ namespace pegasus
             {
             }
 
+            template <typename TYPE> std::vector<TYPE>
+            getRegValueVector() const { return reg_value.getValueVector<TYPE>(); }
+
             template <typename TYPE> TYPE getRegValue() const { return reg_value.getValue<TYPE>(); }
 
             const RegId reg_id;
             ObservedValue reg_value;
         };
 
-        struct SrcReg : ObservedReg
-        {
-            using ObservedReg::ObservedReg;
+        using SrcReg = ObservedReg;
 
-            // store LMUL-wide register values // only for sources
-            std::vector<ObservedValue> lmul_values;
-        };
-
+        // A DestReg is an ObservedReg with a new value
         struct DestReg : ObservedReg
         {
-            template <typename TYPE>
-            DestReg(const RegId id, TYPE prev_value) : ObservedReg(id), reg_prev_value(prev_value)
-            {
-            }
+            template <typename TYPE> DestReg(const RegId id, TYPE value) : ObservedReg(id, value) {}
 
             template <typename TYPE>
-            DestReg(const RegId id, TYPE value, TYPE prev_value) :
+            DestReg(const RegId id, TYPE value, TYPE _new_value) :
                 ObservedReg(id, value),
-                reg_prev_value(prev_value)
+                new_value(_new_value)
             {
             }
 
-            template <typename TYPE> TYPE getRegPrevValue() const
+            template <typename TYPE> void setNewValue(const TYPE & _new_value)
             {
-                return reg_value.getValue<TYPE>();
+                new_value.setValue(_new_value);
             }
 
-            ObservedValue reg_prev_value;
+            template <typename TYPE> TYPE getNewValue() const { return new_value.getValue<TYPE>(); }
+
+            template <typename TYPE> TYPE getNewValueVector() const { return new_value.getValueVector<TYPE>(); }
+
+            ObservedValue new_value;
         };
 
         void preExecute(PegasusState* state);
@@ -312,11 +312,12 @@ namespace pegasus
             }
         }
 
-        std::vector<uint8_t> makeVectorRegValue(const std::vector<uint64_t> & words);
+        // std::vector<uint8_t> makeVectorRegValue(const std::vector<uint64_t> & words);
 
-        std::vector<uint64_t> readVectorRegister_(PegasusState* state, RegId reg_id) const;
+        template<typename SIZE_T = uint8_t>
+        std::vector<SIZE_T> readVectorRegister_(PegasusState* state, const RegId & reg_id) const;
 
-        std::string formatVectorHex(const std::vector<uint64_t> & vec);
+        std::string formatVectorHex_(const std::vector<uint64_t> & vec) const;
 
       private:
         sparta::utils::ValidValue<ObserverMode> arch_;

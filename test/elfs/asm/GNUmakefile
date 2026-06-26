@@ -1,5 +1,5 @@
 
-ASM_TESTS ?= b_ext nop uart multihart wrs
+ASM_TESTS ?= b_ext nop uart multihart wrs vmask vadd
 
 include ../common.mk
 

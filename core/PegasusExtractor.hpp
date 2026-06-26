@@ -34,6 +34,8 @@ namespace pegasus
 
         bool isHypervisorInst() const { return is_hypervisor_inst_; }
 
+        bool isVectorMaskOp() const { return is_vector_mask_op_; }
+
       private:
         const std::string mnemonic_;
         const std::string inst_handler_name_;
@@ -42,6 +44,7 @@ namespace pegasus
         const bool is_cof_inst_;
         const bool is_return_inst_;
         const bool is_hypervisor_inst_;
+        const bool is_vector_mask_op_;
         const VecCfgOverrides veccfg_;
 
         ActionGroup inst_action_group_;

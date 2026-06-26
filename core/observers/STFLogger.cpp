@@ -82,15 +82,9 @@ namespace pegasus
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
-                uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
-                for (uint32_t i = 0; i < reg_count; ++i)
-                {
-                    uint32_t phys = src_reg.reg_id.reg_num + i;
-                    stf_writer_ << stf::InstRegRecord(
-                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                        src_reg.lmul_values[i].getValueVector<uint64_t>());
-                }
+                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                  src_reg.getRegValueVector<uint64_t>());
             }
         }
 
@@ -115,20 +109,13 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                                  readScalarRegister_<XLEN>(state, dst_reg.reg_id));
+                                                  dst_reg.getNewValue<uint64_t>());
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
-                uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
-                for (uint32_t i = 0; i < reg_count; ++i)
-                {
-                    uint32_t phys = dst_reg.reg_id.reg_num + i;
-                    stf_writer_ << stf::InstRegRecord(
-                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        readVectorRegister_(
-                            state, RegId{RegType::VECTOR, phys, "V" + std::to_string(phys)}));
-                }
+                stf_writer_ << stf::InstRegRecord(
+                    dst_reg.reg_id.reg_num, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                    dst_reg.getRegValueVector<uint64_t>());
             }
         }
 
@@ -140,7 +127,7 @@ namespace pegasus
                 stf_writer_ << stf::InstRegRecord(
                     pegasus::V0, stf::Registers::STF_REG_TYPE::VECTOR,
                     stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                    readVectorRegister_(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
+                    readVectorRegister_<uint64_t>(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
             }
 
             stf_writer_ << stf::InstRegRecord(VL, stf::Registers::STF_REG_TYPE::CSR,
@@ -457,7 +444,7 @@ namespace pegasus
             stf_writer_ << stf::InstRegRecord(
                 i, stf::Registers::STF_REG_TYPE::VECTOR,
                 stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+                readVectorRegister_<uint64_t>(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
         }
         // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();

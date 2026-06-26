@@ -34,6 +34,7 @@ namespace pegasus
         is_cof_inst_(getUarchJsonValue<bool, true>(uarch_json, "cof")),
         is_return_inst_(getUarchJsonValue<bool, true>(uarch_json, "return")),
         is_hypervisor_inst_(getUarchJsonValue<bool, true>(uarch_json, "hypervisor")),
+        is_vector_mask_op_(getUarchJsonValue<bool, true>(uarch_json, "mask_op")),
         veccfg_(getJsonVecCfg(uarch_json)),
         inst_action_group_(mnemonic_)
     {

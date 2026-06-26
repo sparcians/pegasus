@@ -48,7 +48,7 @@ namespace pegasus::cosim
         {
             last_event.register_writes_.emplace_back(dst_reg.reg_id,
                                                      dst_reg.reg_value.getByteVector(),
-                                                     dst_reg.reg_prev_value.getByteVector());
+                                                     dst_reg.new_value.getByteVector());
         }
 
         for (auto & [csr_num, csr_write] : csr_writes_)
@@ -56,7 +56,7 @@ namespace pegasus::cosim
             (void)csr_num;
             last_event.register_writes_.emplace_back(csr_write.reg_id,
                                                      csr_write.reg_value.getByteVector(),
-                                                     csr_write.reg_prev_value.getByteVector());
+                                                     csr_write.new_value.getByteVector());
         }
 
         for (auto & mem_read : mem_reads_)
