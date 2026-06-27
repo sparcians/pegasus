@@ -78,13 +78,13 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                                  src_reg.reg_value.getValue<XLEN>());
+                                                  src_reg.getRegValue<XLEN>());
             }
             else
             {
                 stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                                  src_reg.getRegValueVector<uint64_t>());
+                                                  src_reg.getRegValue<std::vector<uint64_t>>());
             }
         }
 
@@ -92,14 +92,14 @@ namespace pegasus
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                              csr_read.template getRegValue<XLEN>());
+                                              csr_read.getRegValue<XLEN>());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                              csr_write.template getRegValue<XLEN>());
+                                              csr_write.getRegValue<XLEN>());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -115,7 +115,7 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(
                     dst_reg.reg_id.reg_num, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                    dst_reg.getRegValueVector<uint64_t>());
+                    dst_reg.getRegValue<std::vector<uint64_t>>());
             }
         }
 
@@ -127,7 +127,7 @@ namespace pegasus
                 stf_writer_ << stf::InstRegRecord(
                     pegasus::V0, stf::Registers::STF_REG_TYPE::VECTOR,
                     stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                    readVectorRegister_<uint64_t>(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
+                    readVectorRegister_(state, RegId{RegType::VECTOR, pegasus::V0, "V0"}));
             }
 
             stf_writer_ << stf::InstRegRecord(VL, stf::Registers::STF_REG_TYPE::CSR,
@@ -444,7 +444,7 @@ namespace pegasus
             stf_writer_ << stf::InstRegRecord(
                 i, stf::Registers::STF_REG_TYPE::VECTOR,
                 stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                readVectorRegister_<uint64_t>(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+                readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
         }
         // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();

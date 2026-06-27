@@ -352,7 +352,7 @@ namespace pegasus
 
         for (const auto & src_reg : src_regs_)
         {
-            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, src_reg.reg_value);
+            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, src_reg.getObservedValue());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -360,7 +360,7 @@ namespace pegasus
             if (dst_reg.reg_id.reg_type == RegType::CSR)
             {
                 inst_log_writer_->writeDstCSR(dst_reg.reg_id.reg_name, dst_reg.reg_id.reg_num,
-                                              dst_reg.reg_value, dst_reg.new_value);
+                                              dst_reg.getObservedValue(), dst_reg.getObservedNewValue());
             }
             else
             {
@@ -370,20 +370,23 @@ namespace pegasus
                 {
                     continue;
                 }
-                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, dst_reg.reg_value,
-                                                   dst_reg.new_value);
+                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name,
+                                                   dst_reg.getObservedValue(),
+                                                   dst_reg.getObservedNewValue());
             }
         }
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, csr_read.reg_value);
+            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name,
+                                           csr_read.getObservedValue());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, csr_write.reg_value,
-                                            csr_write.new_value);
+            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name,
+                                            csr_write.getObservedValue(),
+                                            csr_write.getObservedNewValue());
         }
 
         for (const auto & mem_read : mem_reads_)

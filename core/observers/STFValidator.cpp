@@ -133,7 +133,7 @@ namespace pegasus
                     }
                     else
                     {
-                        std::vector<uint64_t> reg_val = readVectorRegister_<uint64_t>(state, dst_reg.reg_id);
+                        std::vector<uint64_t> reg_val = readVectorRegister_(state, dst_reg.reg_id);
                         const stf::InstRegRecord::VectorType & stf_reg_val_temp =
                             stf_dst_reg.getVectorValue();
                         std::vector<uint64_t> stf_reg_val(stf_reg_val_temp.begin(),

@@ -95,18 +95,21 @@ namespace pegasus
                     const auto reg = state->getSpartaRegister(&src_reg);
                     const auto reg_id = getRegId(reg);
 
-                    // base register value
-                    src_regs_.emplace_back(SrcReg(reg_id, readRegister_(reg)));
-
-                    // recording inital src register values for LMUL
-                    // other than m1 cases (m2,m4,m8,mf2...)
-                    if ((reg_id.reg_type == RegType::VECTOR) && (false == inst->isVectorMaskOp()))
+                    if (reg_id.reg_type != RegType::VECTOR)
+                    {
+                        // base register value
+                        src_regs_.emplace_back(SrcReg(reg_id, readRegister_(reg)));
+                    }
+                    else
                     {
                         const uint32_t encoded_lmul =
                             inst->getVectorConfig()->getLMUL();
 
                         // works well for fractional lmul cases
-                        const uint32_t reg_count = std::max(1u, encoded_lmul / 8);
+                        uint32_t reg_count = 1;
+                        if(false == inst->isVectorMaskOp()) {
+                            reg_count = std::max(1u, encoded_lmul / 8);
+                        }
                         const uint32_t base = reg_id.reg_num;
 
                         sparta_assert(base + reg_count <= 32,
@@ -121,7 +124,6 @@ namespace pegasus
                                                           readVectorRegister_(state, reg_id_lmul_src)));
                         }
                     }
-
                 }
 
                 // Get value of destination registers
@@ -136,20 +138,26 @@ namespace pegasus
                     }
 
                     const auto reg_id = getRegId(reg);
-                    dst_regs_.emplace_back(reg_id, readRegister_(reg));
-
-                    if ((reg_id.reg_type == RegType::VECTOR) && (false == inst->isVectorMaskOp()))
+                    if (reg_id.reg_type != RegType::VECTOR)
                     {
+                        dst_regs_.emplace_back(reg_id, readRegister_(reg));
+                    }
+                    else {
+
                         const uint32_t encoded_lmul = inst->getVectorConfig()->getLMUL();
                         // works well for fractional lmul cases
-                        const uint32_t reg_count = std::max(1u, encoded_lmul / 8);
+                        uint32_t reg_count = 1;
+                        if (false == inst->isVectorMaskOp())
+                        {
+                            reg_count = std::max(1u, encoded_lmul / 8);
+                        }
 
                         const uint32_t base = reg_id.reg_num;
                         sparta_assert(base + reg_count <= 32,
                                       "Somehow we're blowing past the total number of vector insts: "
                                       << inst);
 
-                        for (uint32_t i = 0; i < reg_count; ++i)
+                        for (uint32_t i = 1; i < reg_count; ++i)
                         {
                             const uint32_t phys = base + i;
                             RegId reg_id_lmul_dst(RegType::VECTOR, phys, "V" + std::to_string(phys));
@@ -158,7 +166,6 @@ namespace pegasus
 
                         }
                     }
-
                 }
             }
         }
@@ -176,7 +183,7 @@ namespace pegasus
         // If this CSR has already been written to, just update the final value
         if (csr_writes_.find(csr_num) != csr_writes_.end())
         {
-            csr_writes_.at(csr_num).reg_value.setValue(final_value);
+            csr_writes_.at(csr_num).setNewValue(final_value);
         }
         else
         {
@@ -258,52 +265,41 @@ namespace pegasus
     //     return (bytes);
     // }
 
-    template<typename SIZE_T>
-    std::vector<SIZE_T> Observer::readVectorRegister_(PegasusState* state, const RegId & reg_id) const
+    std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state, const RegId & reg_id) const
     {
         const uint32_t vlen_bits = state->getVectorConfig()->getVLEN();
-
-        std::vector<SIZE_T> raw;
         switch (vlen_bits)
         {
             case 128:
                 {
                     using VLEN = std::array<uint64_t, 2>;
-                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
-                    raw.assign(vec.begin(), vec.end());
-                    break;
+                    const auto ary = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    return std::vector<uint64_t>(ary.begin(), ary.end());
                 }
             case 256:
                 {
                     using VLEN = std::array<uint64_t, 4>;
-                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
-                    raw.assign(vec.begin(), vec.end());
-                    break;
+                    const auto ary = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    return std::vector<uint64_t>(ary.begin(), ary.end());
                 }
             case 512:
                 {
                     using VLEN = std::array<uint64_t, 8>;
-                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
-                    raw.assign(vec.begin(), vec.end());
-                    break;
+                    const auto ary = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    return std::vector<uint64_t>(ary.begin(), ary.end());
                 }
             case 1024:
                 {
                     using VLEN = std::array<uint64_t, 16>;
-                    auto vec = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
-                    raw.assign(vec.begin(), vec.end());
-                    break;
+                    const auto ary = READ_VEC_REG<VLEN>(state, reg_id.reg_num);
+                    return std::vector<uint64_t>(ary.begin(), ary.end());
                 }
             default:
                 sparta_assert(false, "Unsupported VLEN size: " + std::to_string(vlen_bits));
         }
 
-        return raw;
+        return std::vector<uint64_t>();
     }
-
-    template std::vector<uint8_t>  Observer::readVectorRegister_<uint8_t> (PegasusState*, const RegId&) const;
-    template std::vector<uint32_t> Observer::readVectorRegister_<uint32_t>(PegasusState*, const RegId&) const;
-    template std::vector<uint64_t> Observer::readVectorRegister_<uint64_t>(PegasusState*, const RegId&) const;
 
     std::string Observer::formatVectorHex_(const std::vector<uint64_t> & vec) const
     {

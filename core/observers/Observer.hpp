@@ -62,57 +62,42 @@ namespace pegasus
           public:
             ObservedValue() = default;
 
-            ObservedValue(const std::vector<uint8_t> & value) : value_(value) {}
+            ObservedValue(const std::vector<uint64_t> & value)
+            {
+                setValue(value);
+            }
 
             template <typename TYPE> ObservedValue(TYPE value) { setValue<TYPE>(value); }
 
             ObservedValue(const ObservedValue & other) : value_(other.value_) {}
 
-            void setValue(const std::vector<uint8_t> & value) { value_ = value; }
-
-            template <typename TYPE> void setValue(TYPE value)
+            template <typename TYPE>
+            void setValue(TYPE value)
             {
-                static_assert(std::is_trivial_v<TYPE>);
-                static_assert(std::is_standard_layout_v<TYPE>);
-                static_assert(std::is_integral_v<TYPE>);
-                value_.resize(sizeof(TYPE));
-                memcpy(value_.data(), &value, sizeof(TYPE));
+                if constexpr(std::is_same_v<TYPE, std::vector<uint64_t>>)
+                {
+                    value_.resize(value.size() * 8);
+                    ::memcpy(value_.data(), value.data(), value_.capacity());
+                }
+                else {
+                    value_.resize(sizeof(TYPE));
+                    ::memcpy(value_.data(), &value, sizeof(TYPE));
+                }
             }
 
-            template <typename TYPE> TYPE getValue(uint32_t offset = 0) const
+            template <typename TYPE>
+            TYPE getValue() const
             {
-                static_assert(std::is_trivial_v<TYPE>);
-                static_assert(std::is_standard_layout_v<TYPE>);
-                static_assert(std::is_integral_v<TYPE>);
-                const size_t num_bytes = sizeof(TYPE);
-                assert((offset + num_bytes) <= value_.size());
-                TYPE val = 0;
-                for (size_t i = 0; i < num_bytes; ++i)
+                if constexpr(std::is_same_v<TYPE, std::vector<uint64_t>>)
                 {
-                    val |= static_cast<TYPE>(value_[offset + i]) << (i * 8);
+                    TYPE value(value_.size() / 8);
+                    ::memcpy(value.data(), value_.data(), value_.capacity());
+                    return value;
                 }
-                return val;
-            }
-
-            template <typename TYPE> std::vector<TYPE> getValueVector() const
-            {
-                static_assert(std::is_trivial_v<TYPE>);
-                static_assert(std::is_standard_layout_v<TYPE>);
-                static_assert(std::is_integral_v<TYPE>);
-
-                const size_t type_size = sizeof(TYPE);
-                assert(value_.size() % type_size == 0);
-
-                std::vector<TYPE> result;
-                result.reserve(value_.size() / type_size);
-
-                const auto value_size = value_.size();
-                for (size_t offset = 0; offset < value_size; offset += type_size)
-                {
-                    result.emplace_back(getValue<TYPE>(offset));
+                else {
+                    return *reinterpret_cast<const TYPE*>(value_.data());
                 }
-
-                return result;
+                return TYPE();
             }
 
             size_t size() const { return value_.size(); }
@@ -130,17 +115,25 @@ namespace pegasus
             ObservedReg(const RegId id) : reg_id(id) {}
 
             template <typename TYPE>
-            ObservedReg(const RegId id, TYPE value) : reg_id(id), reg_value(value)
+            ObservedReg(const RegId id, TYPE value) :
+                reg_id(id),
+                reg_value_(value)
             {
             }
 
-            template <typename TYPE> std::vector<TYPE>
-            getRegValueVector() const { return reg_value.getValueVector<TYPE>(); }
+            template <typename TYPE> TYPE
+            getRegValue() const {
+                return reg_value_.getValue<TYPE>();
+            }
 
-            template <typename TYPE> TYPE getRegValue() const { return reg_value.getValue<TYPE>(); }
+            const ObservedValue & getObservedValue() const { return reg_value_; }
 
             const RegId reg_id;
-            ObservedValue reg_value;
+
+        private:
+
+            // Encapsulate the register value since it's non-const
+            ObservedValue reg_value_;
         };
 
         using SrcReg = ObservedReg;
@@ -151,22 +144,28 @@ namespace pegasus
             template <typename TYPE> DestReg(const RegId id, TYPE value) : ObservedReg(id, value) {}
 
             template <typename TYPE>
-            DestReg(const RegId id, TYPE value, TYPE _new_value) :
+            DestReg(const RegId id, TYPE value, TYPE new_value) :
                 ObservedReg(id, value),
-                new_value(_new_value)
+                new_value_(new_value)
             {
             }
 
-            template <typename TYPE> void setNewValue(const TYPE & _new_value)
+            template <typename TYPE> void setNewValue(const TYPE & new_value)
             {
-                new_value.setValue(_new_value);
+                new_value_.setValue(new_value);
             }
 
-            template <typename TYPE> TYPE getNewValue() const { return new_value.getValue<TYPE>(); }
+            template <typename TYPE> TYPE getNewValue() const
+            {
+                return new_value_.getValue<TYPE>();
+            }
 
-            template <typename TYPE> TYPE getNewValueVector() const { return new_value.getValueVector<TYPE>(); }
+            const ObservedValue & getObservedNewValue() const {
+                return new_value_;
+            }
 
-            ObservedValue new_value;
+        private:
+            ObservedValue new_value_;
         };
 
         void preExecute(PegasusState* state);
@@ -314,8 +313,7 @@ namespace pegasus
 
         // std::vector<uint8_t> makeVectorRegValue(const std::vector<uint64_t> & words);
 
-        template<typename SIZE_T = uint8_t>
-        std::vector<SIZE_T> readVectorRegister_(PegasusState* state, const RegId & reg_id) const;
+        std::vector<uint64_t> readVectorRegister_(PegasusState* state, const RegId & reg_id) const;
 
         std::string formatVectorHex_(const std::vector<uint64_t> & vec) const;
 
