@@ -102,26 +102,28 @@ namespace pegasus
                     }
                     else
                     {
-                        const uint32_t encoded_lmul =
-                            inst->getVectorConfig()->getLMUL();
+                        const uint32_t encoded_lmul = inst->getVectorConfig()->getLMUL();
 
                         // works well for fractional lmul cases
                         uint32_t reg_count = 1;
-                        if(false == inst->isVectorMaskOp()) {
+                        if (false == inst->isVectorMaskOp())
+                        {
                             reg_count = std::max(1u, encoded_lmul / 8);
                         }
                         const uint32_t base = reg_id.reg_num;
 
-                        sparta_assert(base + reg_count <= 32,
-                                      "Somehow we're blowing past the total number of vector insts: "
-                                      << inst);
+                        sparta_assert(
+                            base + reg_count <= 32,
+                            "Somehow we're blowing past the total number of vector insts: "
+                                << inst);
 
                         for (uint32_t i = 0; i < reg_count; ++i)
                         {
                             const uint32_t phys = base + i;
-                            RegId reg_id_lmul_src(RegType::VECTOR, phys, "V" + std::to_string(phys));
-                            src_regs_.emplace_back(SrcReg(reg_id_lmul_src,
-                                                          readVectorRegister_(state, reg_id_lmul_src)));
+                            RegId reg_id_lmul_src(RegType::VECTOR, phys,
+                                                  "V" + std::to_string(phys));
+                            src_regs_.emplace_back(SrcReg(
+                                reg_id_lmul_src, readVectorRegister_(state, reg_id_lmul_src)));
                         }
                     }
                 }
@@ -142,7 +144,8 @@ namespace pegasus
                     {
                         dst_regs_.emplace_back(reg_id, readRegister_(reg));
                     }
-                    else {
+                    else
+                    {
 
                         const uint32_t encoded_lmul = inst->getVectorConfig()->getLMUL();
                         // works well for fractional lmul cases
@@ -153,17 +156,18 @@ namespace pegasus
                         }
 
                         const uint32_t base = reg_id.reg_num;
-                        sparta_assert(base + reg_count <= 32,
-                                      "Somehow we're blowing past the total number of vector insts: "
-                                      << inst);
+                        sparta_assert(
+                            base + reg_count <= 32,
+                            "Somehow we're blowing past the total number of vector insts: "
+                                << inst);
 
                         for (uint32_t i = 1; i < reg_count; ++i)
                         {
                             const uint32_t phys = base + i;
-                            RegId reg_id_lmul_dst(RegType::VECTOR, phys, "V" + std::to_string(phys));
-                            dst_regs_.emplace_back(DestReg(reg_id_lmul_dst,
-                                                           readVectorRegister_(state, reg_id_lmul_dst)));
-
+                            RegId reg_id_lmul_dst(RegType::VECTOR, phys,
+                                                  "V" + std::to_string(phys));
+                            dst_regs_.emplace_back(DestReg(
+                                reg_id_lmul_dst, readVectorRegister_(state, reg_id_lmul_dst)));
                         }
                     }
                 }
@@ -265,7 +269,8 @@ namespace pegasus
     //     return (bytes);
     // }
 
-    std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state, const RegId & reg_id) const
+    std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state,
+                                                        const RegId & reg_id) const
     {
         const uint32_t vlen_bits = state->getVectorConfig()->getVLEN();
         switch (vlen_bits)

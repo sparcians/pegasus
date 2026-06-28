@@ -62,52 +62,46 @@ namespace pegasus
           public:
             ObservedValue() = default;
 
-            template <typename TYPE>
-            ObservedValue(const std::vector<TYPE> & value)
+            template <typename TYPE> ObservedValue(const std::vector<TYPE> & value)
             {
                 setValue(value);
             }
 
-            template <std::integral TYPE>
-            ObservedValue(const TYPE & value)
-            {
-                setValue(value);
-            }
+            template <std::integral TYPE> ObservedValue(const TYPE & value) { setValue(value); }
 
             ObservedValue(const ObservedValue &) = default;
 
             ObservedValue(ObservedValue &&) = default;
 
-            template <typename TYPE>
-            void setValue(const std::vector<TYPE> & value)
+            template <typename TYPE> void setValue(const std::vector<TYPE> & value)
             {
-                if constexpr(std::is_same_v<TYPE, uint8_t>)
+                if constexpr (std::is_same_v<TYPE, uint8_t>)
                 {
                     value_ = std::move(value);
                 }
-                else {
+                else
+                {
                     value_.resize(value.size() * sizeof(TYPE));
                     ::memcpy(value_.data(), value.data(), value_.capacity());
                 }
             }
 
-            template <std::integral TYPE>
-            void setValue(const TYPE & value)
+            template <std::integral TYPE> void setValue(const TYPE & value)
             {
                 value_.resize(sizeof(TYPE));
                 ::memcpy(value_.data(), &value, sizeof(TYPE));
             }
 
-            template <typename TYPE>
-            TYPE getValue() const
+            template <typename TYPE> TYPE getValue() const
             {
-                if constexpr(std::is_same_v<TYPE, std::vector<uint64_t>>)
+                if constexpr (std::is_same_v<TYPE, std::vector<uint64_t>>)
                 {
                     TYPE value(value_.size() / 8);
                     ::memcpy(value.data(), value_.data(), value_.capacity());
                     return value;
                 }
-                else {
+                else
+                {
                     TYPE value;
                     ::memcpy(&value, value_.data(), sizeof(TYPE));
                     return value;
@@ -130,14 +124,12 @@ namespace pegasus
             ObservedReg(const RegId & id) : reg_id(id) {}
 
             template <typename TYPE>
-            ObservedReg(const RegId & id, TYPE value) :
-                reg_id(id),
-                reg_value_(value)
+            ObservedReg(const RegId & id, TYPE value) : reg_id(id), reg_value_(value)
             {
             }
 
-            template <typename TYPE> TYPE
-            getRegValue() const {
+            template <typename TYPE> TYPE getRegValue() const
+            {
                 return reg_value_.getValue<TYPE>();
             }
 
@@ -145,8 +137,7 @@ namespace pegasus
 
             const RegId reg_id;
 
-        private:
-
+          private:
             // Encapsulate the register value since it's non-const
             ObservedValue reg_value_;
         };
@@ -156,7 +147,9 @@ namespace pegasus
         // A DestReg is an ObservedReg with a new value
         struct DestReg : ObservedReg
         {
-            template <typename TYPE> DestReg(const RegId & id, TYPE value) : ObservedReg(id, value) {}
+            template <typename TYPE> DestReg(const RegId & id, TYPE value) : ObservedReg(id, value)
+            {
+            }
 
             template <typename TYPE>
             DestReg(const RegId id, const TYPE & value, const TYPE & new_value) :
@@ -175,11 +168,9 @@ namespace pegasus
                 return new_value_.getValue<TYPE>();
             }
 
-            const ObservedValue & getObservedNewValue() const {
-                return new_value_;
-            }
+            const ObservedValue & getObservedNewValue() const { return new_value_; }
 
-        private:
+          private:
             ObservedValue new_value_;
         };
 

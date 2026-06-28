@@ -360,7 +360,8 @@ namespace pegasus
             if (dst_reg.reg_id.reg_type == RegType::CSR)
             {
                 inst_log_writer_->writeDstCSR(dst_reg.reg_id.reg_name, dst_reg.reg_id.reg_num,
-                                              dst_reg.getObservedValue(), dst_reg.getObservedNewValue());
+                                              dst_reg.getObservedValue(),
+                                              dst_reg.getObservedNewValue());
             }
             else
             {
@@ -378,14 +379,12 @@ namespace pegasus
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name,
-                                           csr_read.getObservedValue());
+            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, csr_read.getObservedValue());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name,
-                                            csr_write.getObservedValue(),
+            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, csr_write.getObservedValue(),
                                             csr_write.getObservedNewValue());
         }
 

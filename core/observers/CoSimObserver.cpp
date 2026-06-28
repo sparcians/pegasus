@@ -54,9 +54,9 @@ namespace pegasus::cosim
         for (auto & [csr_num, csr_write] : csr_writes_)
         {
             (void)csr_num;
-            last_event.register_writes_.emplace_back(csr_write.reg_id,
-                                                     csr_write.getObservedValue().getByteVector(),
-                                                     csr_write.getObservedNewValue().getByteVector());
+            last_event.register_writes_.emplace_back(
+                csr_write.reg_id, csr_write.getObservedValue().getByteVector(),
+                csr_write.getObservedNewValue().getByteVector());
         }
 
         for (auto & mem_read : mem_reads_)
