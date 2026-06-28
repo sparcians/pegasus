@@ -14,6 +14,7 @@
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
 #include "core/observers/STFValidator.hpp"
+#include "core/observers/Observer.hpp"
 #include "inst_handlers/zicsrind/Rvzicsrind.hpp"
 
 #include "mavis/Mavis.h"
@@ -1279,6 +1280,16 @@ namespace pegasus
         {
             sim_controller_->onSimulationFinished(this);
         }
+    }
+
+    Action::ItrType PegasusState::stopSim_(PegasusState*, Action::ItrType action_it)
+    {
+        for (auto & obs : observers_)
+        {
+            obs->stopSim();
+        }
+
+        return ++action_it;
     }
 
     void PegasusState::registerWaitOnReservationSet()

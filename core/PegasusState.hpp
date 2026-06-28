@@ -2,8 +2,9 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/PegasusInst.hpp"
-#include "core/observers/Observer.hpp"
+//#include "core/observers/Observer.hpp"
 #include "core/VectorConfig.hpp"
+#include "core/Trap.hpp"
 
 #include "arch/RegisterSet.hpp"
 #include "arch/gen/supportedISA.hpp"
@@ -17,6 +18,7 @@
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+#include "sparta/memory/BlockingMemoryIFNode.hpp"
 #include "core/PegasusAllocatorWrapper.hpp"
 
 #include "mavis/extension_managers/RISCVExtensionManager.hpp"
@@ -41,6 +43,7 @@ namespace pegasus
     class STFLogger;
     class STFValidator;
     class SystemCallEmulator;
+    class Observer;
 
     namespace cosim
     {
@@ -425,15 +428,7 @@ namespace pegasus
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        Action::ItrType stopSim_(PegasusState*, Action::ItrType action_it)
-        {
-            for (auto & obs : observers_)
-            {
-                obs->stopSim();
-            }
-
-            return ++action_it;
-        }
+        Action::ItrType stopSim_(PegasusState*, Action::ItrType action_it);
 
         Action::ItrType pauseSim_(PegasusState*, Action::ItrType action_it) { return ++action_it; }
 
