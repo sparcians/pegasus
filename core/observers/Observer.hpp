@@ -108,7 +108,9 @@ namespace pegasus
                     return value;
                 }
                 else {
-                    return *reinterpret_cast<const TYPE*>(value_.data());
+                    TYPE value;
+                    ::memcpy(&value, value_.data(), sizeof(TYPE));
+                    return value;
                 }
                 return TYPE();
             }
