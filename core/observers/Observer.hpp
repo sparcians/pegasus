@@ -62,27 +62,40 @@ namespace pegasus
           public:
             ObservedValue() = default;
 
-            ObservedValue(const std::vector<uint64_t> & value)
+            template <typename TYPE>
+            ObservedValue(const std::vector<TYPE> & value)
             {
                 setValue(value);
             }
 
-            template <typename TYPE> ObservedValue(TYPE value) { setValue<TYPE>(value); }
+            template <std::integral TYPE>
+            ObservedValue(const TYPE & value)
+            {
+                setValue(value);
+            }
 
-            ObservedValue(const ObservedValue & other) : value_(other.value_) {}
+            ObservedValue(const ObservedValue &) = default;
+
+            ObservedValue(ObservedValue &&) = default;
 
             template <typename TYPE>
-            void setValue(TYPE value)
+            void setValue(const std::vector<TYPE> & value)
             {
-                if constexpr(std::is_same_v<TYPE, std::vector<uint64_t>>)
+                if constexpr(std::is_same_v<TYPE, uint8_t>)
                 {
-                    value_.resize(value.size() * 8);
-                    ::memcpy(value_.data(), value.data(), value_.capacity());
+                    value_ = std::move(value);
                 }
                 else {
-                    value_.resize(sizeof(TYPE));
-                    ::memcpy(value_.data(), &value, sizeof(TYPE));
+                    value_.resize(value.size() * sizeof(TYPE));
+                    ::memcpy(value_.data(), value.data(), value_.capacity());
                 }
+            }
+
+            template <std::integral TYPE>
+            void setValue(const TYPE & value)
+            {
+                value_.resize(sizeof(TYPE));
+                ::memcpy(value_.data(), &value, sizeof(TYPE));
             }
 
             template <typename TYPE>
@@ -112,10 +125,10 @@ namespace pegasus
 
         struct ObservedReg
         {
-            ObservedReg(const RegId id) : reg_id(id) {}
+            ObservedReg(const RegId & id) : reg_id(id) {}
 
             template <typename TYPE>
-            ObservedReg(const RegId id, TYPE value) :
+            ObservedReg(const RegId & id, TYPE value) :
                 reg_id(id),
                 reg_value_(value)
             {
@@ -141,10 +154,10 @@ namespace pegasus
         // A DestReg is an ObservedReg with a new value
         struct DestReg : ObservedReg
         {
-            template <typename TYPE> DestReg(const RegId id, TYPE value) : ObservedReg(id, value) {}
+            template <typename TYPE> DestReg(const RegId & id, TYPE value) : ObservedReg(id, value) {}
 
             template <typename TYPE>
-            DestReg(const RegId id, TYPE value, TYPE new_value) :
+            DestReg(const RegId id, const TYPE & value, const TYPE & new_value) :
                 ObservedReg(id, value),
                 new_value_(new_value)
             {
