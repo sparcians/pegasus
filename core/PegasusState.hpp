@@ -2,7 +2,6 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/PegasusInst.hpp"
-//#include "core/observers/Observer.hpp"
 #include "core/VectorConfig.hpp"
 #include "core/Trap.hpp"
 
