@@ -161,7 +161,7 @@ namespace pegasus
         {
             reset_();
             inst_oss_ << "   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                      << reg_value << " (prev: " << new_value << ")";
+                      << new_value << " (prev: " << reg_value << ")";
             postExecute_(inst_oss_.str());
         }
 
@@ -256,16 +256,16 @@ namespace pegasus
                               const Observer::ObservedValue & reg_value,
                               const Observer::ObservedValue & new_value) override
         {
-            (void)new_value;
-            inst_oss_ << " " << std::setw(4) << std::left << reg_name << " t" << reg_value;
+            (void)reg_value;
+            inst_oss_ << " " << std::setw(4) << std::left << reg_name << " t" << new_value;
         }
 
         void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
                          const Observer::ObservedValue & reg_value,
                          const Observer::ObservedValue & new_value) override
         {
-            (void)new_value;
-            inst_oss_ << " c" << reg_num << "_" << reg_name << " " << reg_value;
+            (void)reg_value;
+            inst_oss_ << " c" << reg_num << "_" << reg_name << " " << new_value;
         }
 
         void writeMemRead(const Observer::MemRead & mem_read) override

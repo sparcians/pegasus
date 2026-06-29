@@ -261,14 +261,6 @@ namespace pegasus
                                 supplement->source);
     }
 
-    // std::vector<uint8_t> Observer::makeVectorRegValue(const std::vector<uint64_t> & words)
-    // {
-    //     std::vector<uint8_t> bytes;
-    //     bytes.resize(words.size() * sizeof(uint64_t));
-    //     memcpy(bytes.data(), words.data(), bytes.size());
-    //     return (bytes);
-    // }
-
     std::vector<uint64_t> Observer::readVectorRegister_(PegasusState* state,
                                                         const RegId & reg_id) const
     {
