@@ -85,8 +85,8 @@ namespace pegasus
             {
                 std::string name;
                 // ELFIO::Elf64_Addr addr;
-                Addr addr;
-                ELFIO::Elf_Xword size;
+                Addr addr = 0;
+                ELFIO::Elf_Xword size = 0;
                 unsigned char bind;
                 unsigned char type;
                 ELFIO::Elf_Half section;
