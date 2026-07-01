@@ -328,6 +328,7 @@ namespace pegasus
                 << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
         }
 
+        std::string section_name = "<unknown>";
         for (const auto & segment : elf_reader_.segments)
         {
             // Ignore empty segments
@@ -337,25 +338,27 @@ namespace pegasus
             }
 
             // Bug in ELFIO where segment name is incorrect, so use the section name instead
-            std::string segment_name = "?";
+            std::string segment_name = "";
             for (const auto & section : elf_reader_.sections)
             {
                 if (section->get_address() == segment->get_virtual_address())
                 {
-                    segment_name = section->get_name();
-                    break;
+                    if (section->get_name() != "") {
+                        segment_name += section->get_name() + ' ';
+                    }
                 }
             }
 
             const uint8_t* data = reinterpret_cast<const uint8_t*>(segment->get_data());
-            if (data != nullptr)
+            if (nullptr != data)
             {
-                std::cout << "  -- Loading section " << segment_name << " (" << std::dec
-                          << segment->get_file_size() << "B) " << " to 0x" << std::hex
-                          << segment->get_memory_size() << std::endl;
+                std::cout << "  -- Loading segment " << segment_name << " (" << std::hex
+                          << segment->get_file_size() << " bytes) " << " to 0x"
+                          << segment->get_physical_address() << std::dec << std::endl;
 
-                bool success = memory_map_->tryPoke(segment->get_physical_address(),
-                                                    segment->get_file_size(), data);
+                const bool success = memory_map_->tryPoke(segment->get_physical_address(),
+                                                          segment->get_file_size(),
+                                                          data);
                 if (!success)
                 {
                     std::cout << "FAILED!\n";
