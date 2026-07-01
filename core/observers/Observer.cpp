@@ -161,7 +161,7 @@ namespace pegasus
                             "Somehow we're blowing past the total number of vector insts: "
                                 << inst);
 
-                        for (uint32_t i = 1; i < reg_count; ++i)
+                        for (uint32_t i = 0; i < reg_count; ++i)
                         {
                             const uint32_t phys = base + i;
                             RegId reg_id_lmul_dst(RegType::VECTOR, phys,
