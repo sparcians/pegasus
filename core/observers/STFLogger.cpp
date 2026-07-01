@@ -115,7 +115,7 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                                  dst_reg.getRegValue<std::vector<uint64_t>>());
+                                                  dst_reg.getNewValue<std::vector<uint64_t>>());
             }
         }
 
