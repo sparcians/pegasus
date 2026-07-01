@@ -28,7 +28,7 @@ namespace pegasus
             FetchParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
 
             // Runtime parameter that allows for the execution cache to be used
-            PARAMETER(bool, enable_execution_cache, false,
+            PARAMETER(bool, enable_ecache, false,
                       "Enable the experimental translated-page execution cache fast path")
         };
 
@@ -41,7 +41,7 @@ namespace pegasus
         // When ecache is disabled, this is the normal fetch_ action group.
         ActionGroup* getLoopbackActionGroup()
         {
-            return enable_execution_cache_ ? &exec_page_loop_action_group_ : &fetch_action_group_;
+            return enable_ecache_ ? &exec_page_loop_action_group_ : &fetch_action_group_;
         }
 
         // Conservative full flush of translated execution pages.
@@ -49,7 +49,7 @@ namespace pegasus
 
       private:
         PegasusState* state_ = nullptr;
-        const bool enable_execution_cache_ = false;
+        const bool enable_ecache_ = false;
         ActionGroup* execute_action_group_ = nullptr;
 
         // ExecutionPageKey is a tuple of (virt_page_base_addr, phys_page_base_addr, page_offset)

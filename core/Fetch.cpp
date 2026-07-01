@@ -15,7 +15,7 @@ namespace pegasus
     // Allows for toggling on and off the exection cache
     Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
         sparta::Unit(fetch_node),
-        enable_execution_cache_(p->enable_execution_cache)
+        enable_ecache_(p->enable_ecache)
     {
         Action fetch_action =
             pegasus::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
@@ -32,7 +32,7 @@ namespace pegasus
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
         decode_action_group_.addAction(decode_action);
 
-        if (enable_execution_cache_)
+        if (enable_ecache_)
         {
             // Action for looping back when we hit in the execution cache, bypassing fetch_ and translate_ for same-page instructions.
             Action loop_action =
@@ -66,7 +66,7 @@ namespace pegasus
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);
         // If execution cache enabled, then after TL, dispatch to either execution cache check or decode
-        inst_translate_action_group->setNextActionGroup(enable_execution_cache_
+        inst_translate_action_group->setNextActionGroup(enable_ecache_
                                                             ? &translated_fetch_dispatch_action_group_
                                                             : &decode_action_group_);
         // Defaults to decode, but if fetch hits, it'll redirect

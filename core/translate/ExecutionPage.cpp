@@ -144,6 +144,10 @@ namespace pegasus
         // Set the current instruction
         state->setCurrentInst(inst_);
 
+        // Reused instruction objects must refresh dynamic vector configuration
+        // (VL/VTYPE/SEW/LMUL) from architectural state on each execution.
+        inst_->updateVectorConfig(state);
+
         // Reuse path bypasses decode, so refresh sim-state opcode fields explicitly.
         auto * sim_state = state->getSimState();
         sim_state->current_opcode = static_cast<Opcode>(inst_->getOpcode());

@@ -253,6 +253,9 @@ namespace pegasus
             std::cout << "\tExecCache periodic bypass: enter="
                       << getExecCacheBypassEnterCount()
                       << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
+            std::cout << "\tTranslation periodic: requests=" << getTranslationRequestCount()
+                      << ", bypass=" << getTranslationBypassCount()
+                      << ", page_walk=" << getPageWalkTranslationCount() << std::endl;
         }
     }
 
@@ -437,7 +440,7 @@ namespace pegasus
         const uint32_t ATP_CSR = Translate::getAtpCsr(stage);
         const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
-        const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
+        const translate_types::TranslationMode mode = [atp_mode_val];
 
         // FIXME: Hypervisor does not support MPRV yet
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
@@ -484,7 +487,7 @@ namespace pegasus
     void PegasusState::unpauseHart()
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
-        // We replace the next ActionGroup pointer to pause the sim, so restore
+        // We replace the next Actio nGroup pointer to pause the sim, so restore
         // the normal post-execute loopback (exec-page loop when ecache is enabled).
         finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
     }
@@ -1052,6 +1055,12 @@ namespace pegasus
                           << std::endl;
                 std::cout << "\tExecCache bypass: enter=" << getExecCacheBypassEnterCount()
                           << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
+                std::cout << "\tTranslation requests: " << getTranslationRequestCount()
+                          << std::endl;
+                std::cout << "\tTranslation bypass (machine/baremetal): "
+                          << getTranslationBypassCount() << std::endl;
+                std::cout << "\tMMU page-walk translations: " << getPageWalkTranslationCount()
+                          << std::endl;
             }
 
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);

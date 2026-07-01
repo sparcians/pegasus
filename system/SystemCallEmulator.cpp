@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/stat.h> //fstat, etc
 #include <sys/syscall.h>
+#include <errno.h>
 
 #define SYSCALL_LOG(x)                                                                             \
     if (SPARTA_EXPECT_FALSE(syscall_log_))                                                         \
@@ -83,6 +84,7 @@ namespace pegasus
                  {261, {"prlimit", cfp(&SysCallHandlers::prlimit_)}},
                  {278, {"getrandom", cfp(&SysCallHandlers::getrandom_)}},
                  {291, {"statx", cfp(&SysCallHandlers::statx_)}},
+                 {293, {"rseq", cfp(&SysCallHandlers::rseq_)}},
                  {403,
                   {"clock_gettime",
                    cfp(&SysCallHandlers::clock_gettime_)}}, // sc_call_id = 403 is for
@@ -150,7 +152,10 @@ namespace pegasus
             }
             catch (const std::out_of_range &)
             {
-                sparta_assert(false, "System call #" << sc_call_id << " is not known");
+                // Instead of assert, return -ENOSYS on an unknown system call.
+               // sparta_assert(false, "System call #" << sc_call_id << " is not known");
+               ret_val = -ENOSYS;
+                SYSCALL_LOG("unknown_syscall(" << sc_call_id << ") -> " << ret_val);
             }
             return ret_val;
         }
@@ -263,6 +268,7 @@ namespace pegasus
         int64_t hwprobe_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t prlimit_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t getrandom_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
+        int64_t rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t statx_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t clone_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
         int64_t open_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*);
@@ -605,6 +611,15 @@ namespace pegasus
         } while (true);
 
         return buflen;
+    }
+    // TO DO: Implement rseq properly (doesn't do anything right now)
+
+    int64_t SysCallHandlers::rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
+    {
+        // Report unimplemented to force libc/userspace fallback paths.
+        constexpr int64_t kRseqNotImplemented = -ENOSYS;
+        SYSCALL_LOG(__func__ << "(...) -> " << kRseqNotImplemented << " # not implemented");
+        return kRseqNotImplemented;
     }
 
     int64_t SysCallHandlers::stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
@@ -1033,14 +1048,12 @@ namespace pegasus
 
         struct uname_info
         {
-            // Changes made because "FATAL: kernel too old" warning keeps popping up
-            // TO DO: Find a better fix for this issue
-            const char sysname[UTS_CHAR_LENGTH] = "Linux";
-            const char nodename[UTS_CHAR_LENGTH] = "pegasus";
-            const char release[UTS_CHAR_LENGTH] = "6.6.0";
-            const char version[UTS_CHAR_LENGTH] = "#1";
-            const char machine[UTS_CHAR_LENGTH] = "riscv64";
-            const char domainname[UTS_CHAR_LENGTH] = "localdomain"; // Domainname (if exists)
+            const char sysname[UTS_CHAR_LENGTH] = "Pegasus Core Emulator";
+            const char nodename[UTS_CHAR_LENGTH] = "";
+            const char release[UTS_CHAR_LENGTH] = "4.15.0";
+            const char version[UTS_CHAR_LENGTH] = "";
+            const char machine[UTS_CHAR_LENGTH] = "";
+            const char domainname[UTS_CHAR_LENGTH] = ""; // Domainname (if exists)
         } pegasus_uname_info;
 
         memory->poke(uname_data_ptr, sizeof(uname_info),
