@@ -343,7 +343,8 @@ namespace pegasus
             {
                 if (section->get_address() == segment->get_virtual_address())
                 {
-                    if (section->get_name() != "") {
+                    if (section->get_name() != "")
+                    {
                         segment_name += section->get_name() + ' ';
                     }
                 }
@@ -357,8 +358,7 @@ namespace pegasus
                           << segment->get_physical_address() << std::dec << std::endl;
 
                 const bool success = memory_map_->tryPoke(segment->get_physical_address(),
-                                                          segment->get_file_size(),
-                                                          data);
+                                                          segment->get_file_size(), data);
                 if (!success)
                 {
                     std::cout << "FAILED!\n";
