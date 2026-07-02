@@ -339,12 +339,12 @@ namespace pegasus
             }
         };
 
-        const auto & current_inst = *state->getCurrentInst();
         uint32_t opcode = 0;
         uint32_t opcode_size = 4;
 
         if (state->getCurrentInst() != nullptr)
         {
+            const auto & current_inst = *state->getCurrentInst();
             opcode = current_inst.getOpcode();
             opcode_size = current_inst.getOpcodeSize();
         }
@@ -355,6 +355,7 @@ namespace pegasus
 
         if (state->getCurrentInst() != nullptr)
         {
+            const auto & current_inst = *state->getCurrentInst();
             if (state->getXlen() == 32)
             {
                 writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
