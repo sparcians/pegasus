@@ -25,9 +25,9 @@ class ViaInstructionTester : public PegasusInstructionTester
         state->getVectorConfig()->setLMUL(8); // vlmul = 1
         state->getVectorConfig()->setSEW(8);  // sew = 8
 
-        VLEN vs1_val = {1, 2, 2,  4,  5,  4,  7,  6};
+        VLEN vs1_val = {1, 2, 2, 4, 5, 4, 7, 6};
         VLEN vs2_val = {0, 2, 4, 12, 20, 20, 42, 42};
-        VLEN vs3_val = {0, 1, 2,  3,  4,  5,  6,  7};
+        VLEN vs3_val = {0, 1, 2, 3, 4, 5, 6, 7};
         WRITE_VEC_REG<VLEN>(state, vs1, vs1_val);
         WRITE_VEC_REG<VLEN>(state, vs2, vs2_val);
         opcode = vdivvvOp(vd, vs1, vs2, 1); // unmasked
