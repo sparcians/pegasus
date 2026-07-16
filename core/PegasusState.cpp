@@ -319,7 +319,7 @@ namespace pegasus
             if (false == pegasus_core_->isExtensionSupported(xlen_, ext.first))
             {
                 sparta_assert(false, "ISA extension: " << ext.first
-                                                       << " is not supported in isa_string: "
+                                                       << " is not supported in Pegasus: "
                                                        << isa_string_);
             }
         }
