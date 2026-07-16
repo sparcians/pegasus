@@ -43,6 +43,8 @@ namespace pegasus
 
         const std::optional<uint32_t> opcode_trigger_;
 
+        const bool vector_enabled_;
+
         std::string current_symbol_;
     };
 } // namespace pegasus

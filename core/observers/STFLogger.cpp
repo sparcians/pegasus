@@ -12,7 +12,8 @@ namespace pegasus
                          PegasusState* state, std::optional<uint32_t> opcode_trigger) :
         Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
         filename_(filename),
-        opcode_trigger_(opcode_trigger)
+        opcode_trigger_(opcode_trigger),
+        vector_enabled_(state->isExtensionEnabled("v"))
     {
         startSTFTrace_(inital_pc, filename, state);
     }
@@ -53,7 +54,9 @@ namespace pegasus
 
         const auto & isa = state->getISAString();
 
-        stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
+        if (vector_enabled_) {
+            stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
+        }
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setISAExtendedInfo(isa);
         stf_writer_.setHeaderPC(inital_pc);
@@ -423,6 +426,12 @@ namespace pegasus
         }
     }
 
+    template <typename Var, typename... Val>
+    constexpr bool isOneOf(Var && var, Val &&... val)
+    {
+        return ((var == val) || ...);
+    }
+
     template <typename XLEN> void STFLogger::recordRegState_(PegasusState* state)
     {
         // Recording int registers
@@ -439,18 +448,30 @@ namespace pegasus
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
                                               READ_FP_REG<XLEN>(state, i));
         }
-        // Recording vector registers
-        for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
+
+        if (vector_enabled_)
         {
-            stf_writer_ << stf::InstRegRecord(
-                i, stf::Registers::STF_REG_TYPE::VECTOR,
-                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+            // Recording vector registers
+            for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
+            {
+                stf_writer_ << stf::InstRegRecord(
+                    i, stf::Registers::STF_REG_TYPE::VECTOR,
+                    stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                    readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+            }
         }
+
         // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();
         for (size_t i = 0; i < csr_rset->getNumRegisters(); ++i)
         {
+            if (false == vector_enabled_)
+            {
+                if (isOneOf(i, VL, VTYPE, VLENB)) {
+                    continue;
+                }
+            }
+
             if (auto reg = csr_rset->getRegister(i))
             {
                 stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::CSR,
