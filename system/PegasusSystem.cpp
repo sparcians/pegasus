@@ -397,24 +397,7 @@ namespace pegasus
 
     void PegasusSystem::registerMemoryCallbacks(Observer* observer)
     {
-        using BMOIfNode = sparta::memory::BlockingMemoryIFNode;
-        for (const auto & n : tree_nodes_)
-        {
-            if (auto bm_if_node = dynamic_cast<BMOIfNode*>(n.get()))
-            {
-                observer->registerReadWriteMemCallbacks(bm_if_node);
-            }
-        }
-
-        // Register callbacks to system memory
-        auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
-                                 [this](const std::unique_ptr<sparta::TreeNode> & tnode)
-                                 { return tnode.get() == memory_map_.get(); });
-
-        if (iter != tree_nodes_.end())
-        {
-            observer->registerReadWriteMemCallbacks(memory_map_.get());
-        }
+        observer->registerReadWriteMemCallbacks(memory_map_.get());
     }
 
     void PegasusSystem::enableEOTPassFailMode()
