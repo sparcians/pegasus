@@ -142,6 +142,8 @@ namespace pegasus
             }
         }
 
+        ILOG("Fetched opcode: " << HEX8(opcode));
+
         // Decode instruction with Mavis
         PegasusInstPtr inst = nullptr;
         try
