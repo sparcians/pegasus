@@ -25,10 +25,10 @@ namespace pegasus
         {
             stf_writer_.open(filename);
         }
-        catch (...)
+        catch (std::exception & e)
         {
             std::cerr
-                << "STF Filename formatted incorrectly: does the file have a STF file extension"
+                << "Issues with the STF Filename: " << e.what()
                 << std::endl;
             throw;
         }
@@ -79,9 +79,15 @@ namespace pegasus
             const auto stf_reg_type = get_stf_reg_type(src_reg.reg_id.reg_type);
             if (src_reg.reg_id.reg_type != RegType::VECTOR)
             {
-                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
-                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                                  src_reg.getRegValue<XLEN>());
+                const bool is_x0 =
+                    (src_reg.reg_id.reg_type == RegType::INTEGER) &&
+                    (src_reg.reg_id.reg_num == 0);
+                if (not is_x0)
+                {
+                    stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
+                                                      stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                      src_reg.getRegValue<XLEN>());
+                }
             }
             else
             {
