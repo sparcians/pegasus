@@ -527,12 +527,12 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::mmap_(const SystemCallStack & call_stack,
-                                   sparta::memory::BlockingMemoryIF*)
+                                   sparta::memory::BlockingMemoryIF*memory)
     {
         const auto addr = call_stack[1];
         const auto size = call_stack[2];
-        const auto prot = call_stack[3];
-        const auto flags = call_stack[4];
+        auto prot = call_stack[3];
+        auto flags = call_stack[4];
         const auto fd = call_stack[5];
         const auto offset = call_stack[6];
 
@@ -546,11 +546,38 @@ namespace pegasus
 
         if ((flags & MAP_ANONYMOUS) == 0)
         {
-            sparta_assert(fd != std::numeric_limits<uint64_t>::max(),
-                          "Memory map to file -- not supported");
+#ifdef __APPLE__
+            // MacOS conversions
+            if (prot == 0x3) {
+                prot = PROT_READ | PROT_WRITE;
+            }
+            else {
+                throw sparta::SpartaException()
+                    << "Unhandled prot value for MacOS conversion for mmap: " << prot;
+            }
+            if (flags == 0x22) {
+                flags = MAP_PRIVATE | MAP_ANON;
+            }
+            else {
+                throw sparta::SpartaException() <<
+                    "Unhandled flags value for MacOS conversion for mmap" << flags;
+            }
+#endif
+            sparta_assert(fd == std::numeric_limits<uint64_t>::max(),
+                          "Memory map to file with given FD != -1.  What?");
+            // File I/O mapping
+            const auto host_address = ::mmap(nullptr, size, prot, flags, fd, offset);
+            if (host_address == MAP_FAILED)
+            {
+                throw sparta::SpartaException("Pegasus Error: Coult not execute mmap syscall: " +
+                                              std::string(::strerror(errno)));
+            }
+            guest_addr = memory_map_manager_.allocate(uint64_t(host_address), size);
+            memory->poke(guest_addr, size, (uint8_t*) host_address);
         }
-
-        guest_addr = memory_map_manager_.allocate(0ull, size);
+        else {
+            guest_addr = memory_map_manager_.allocate(0ull, size);
+        }
 
         SYSCALL_LOG("mmap(" << HEX16(addr) << ", " << HEX16(size) << ", " << HEX16(prot) << ", "
                             << HEX16(flags) << ", " << HEX16(fd) << ", " << HEX16(offset) << ", "
