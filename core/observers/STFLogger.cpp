@@ -4,22 +4,30 @@
 #include "core/VecElements.hpp"
 #include "include/gen/pegasus_version.hpp"
 #include "core/PegasusCore.hpp"
+#include "system/PegasusSystem.hpp"
 
 namespace pegasus
 {
     STFLogger::STFLogger(const uint32_t reg_width, uint64_t inital_pc, const std::string & filename,
-                         PegasusState* state) :
-        Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64)
+                         PegasusState* state, std::optional<uint32_t> opcode_trigger) :
+        Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
+        filename_(filename),
+        opcode_trigger_(opcode_trigger),
+        vector_enabled_(state->isExtensionEnabled("v"))
+    {
+        startSTFTrace_(inital_pc, filename, state);
+    }
+
+    void STFLogger::startSTFTrace_(uint64_t inital_pc, const std::string & filename,
+                                   PegasusState* state)
     {
         try
         {
             stf_writer_.open(filename);
         }
-        catch (...)
+        catch (std::exception & e)
         {
-            std::cerr
-                << "STF Filename formatted incorrectly: does the file have a STF file extension"
-                << std::endl;
+            std::cerr << "Issues with the STF Filename: " << e.what() << std::endl;
             throw;
         }
 
@@ -44,7 +52,10 @@ namespace pegasus
 
         const auto & isa = state->getISAString();
 
-        stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
+        if (vector_enabled_)
+        {
+            stf_writer_.setVLen(state->getVectorConfig()->getVLEN());
+        }
         stf_writer_.setISA(stf::ISA::RISCV);
         stf_writer_.setISAExtendedInfo(isa);
         stf_writer_.setHeaderPC(inital_pc);
@@ -67,21 +78,21 @@ namespace pegasus
             const auto stf_reg_type = get_stf_reg_type(src_reg.reg_id.reg_type);
             if (src_reg.reg_id.reg_type != RegType::VECTOR)
             {
-                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
-                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                                  src_reg.reg_value.getValue<XLEN>());
+                const bool is_x0 =
+                    (src_reg.reg_id.reg_type == RegType::INTEGER) && (src_reg.reg_id.reg_num == 0);
+                if (not is_x0)
+                {
+                    stf_writer_ << stf::InstRegRecord(
+                        src_reg.reg_id.reg_num, stf_reg_type,
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                        src_reg.getRegValue<XLEN>());
+                }
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
-                uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
-                for (uint32_t i = 0; i < reg_count; ++i)
-                {
-                    uint32_t phys = src_reg.reg_id.reg_num + i;
-                    stf_writer_ << stf::InstRegRecord(
-                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                        src_reg.lmul_values[i].getValueVector<uint64_t>());
-                }
+                stf_writer_ << stf::InstRegRecord(src_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
+                                                  src_reg.getRegValue<std::vector<uint64_t>>());
             }
         }
 
@@ -89,14 +100,14 @@ namespace pegasus
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                                              csr_read.template getRegValue<XLEN>());
+                                              csr_read.getRegValue<XLEN>());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                              csr_write.template getRegValue<XLEN>());
+                                              csr_write.getRegValue<XLEN>());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -106,20 +117,13 @@ namespace pegasus
             {
                 stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
                                                   stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                                  readScalarRegister_<XLEN>(state, dst_reg.reg_id));
+                                                  dst_reg.getNewValue<uint64_t>());
             }
             else
             {
-                uint32_t encoded_lmul = state->getCurrentInst()->getVectorConfig()->getLMUL();
-                uint32_t reg_count = std::max(1u, encoded_lmul / 8); // In case of fractional LMUL.
-                for (uint32_t i = 0; i < reg_count; ++i)
-                {
-                    uint32_t phys = dst_reg.reg_id.reg_num + i;
-                    stf_writer_ << stf::InstRegRecord(
-                        phys, stf_reg_type, stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                        readVectorRegister_(
-                            state, RegId{RegType::VECTOR, phys, "V" + std::to_string(phys)}));
-                }
+                stf_writer_ << stf::InstRegRecord(dst_reg.reg_id.reg_num, stf_reg_type,
+                                                  stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
+                                                  dst_reg.getNewValue<std::vector<uint64_t>>());
             }
         }
 
@@ -343,8 +347,23 @@ namespace pegasus
             }
         };
 
+        uint32_t opcode = 0;
+        uint32_t opcode_size = 4;
+
         if (state->getCurrentInst() != nullptr)
         {
+            const auto & current_inst = *state->getCurrentInst();
+            opcode = current_inst.getOpcode();
+            opcode_size = current_inst.getOpcodeSize();
+        }
+        else
+        {
+            opcode = state->getSimState()->current_opcode;
+        }
+
+        if (state->getCurrentInst() != nullptr)
+        {
+            const auto & current_inst = *state->getCurrentInst();
             if (state->getXlen() == 32)
             {
                 writeInstRegRecord_<uint32_t>(state, get_stf_reg_type);
@@ -354,18 +373,25 @@ namespace pegasus
                 writeInstRegRecord_<uint64_t>(state, get_stf_reg_type);
             }
 
-            if (state->getCurrentInst()->isChangeOfFlowInst())
+            if (current_inst.isChangeOfFlowInst())
             {
-                if (state->getCurrentInst()->isReturnInst())
+                if (current_inst.isReturnInst())
                 {
                     stf_writer_ << stf::EventRecord(stf::EventRecord::TYPE::MODE_CHANGE,
                                                     static_cast<uint32_t>(state->getPrivMode()));
                     stf_writer_ << stf::EventPCTargetRecord(state->getNextPc());
                 }
-                else
+                // Do not insert a PC target if the branch is not taken
+                else if (state->isBranchTaken())
                 {
+                    // Taken branch
                     stf_writer_ << stf::InstPCTargetRecord(state->getNextPc());
                 }
+
+                // Get the name of function we're now in
+                const auto func_name =
+                    state->getCore()->getSystem()->findSymbol(state->getNextPc(), true);
+                current_symbol_ = func_name ? "_" + func_name.value() : current_symbol_;
             }
         }
 
@@ -381,18 +407,6 @@ namespace pegasus
             }
         }
 
-        uint32_t opcode = 0;
-        uint32_t opcode_size = 4;
-        if (state->getCurrentInst() != nullptr)
-        {
-            opcode = state->getCurrentInst()->getOpcode();
-            opcode_size = state->getCurrentInst()->getOpcodeSize();
-        }
-        else
-        {
-            opcode = state->getSimState()->current_opcode;
-        }
-
         if (opcode_size == 2)
         {
             stf_writer_ << stf::InstOpcode16Record(opcode);
@@ -401,6 +415,25 @@ namespace pegasus
         {
             stf_writer_ << stf::InstOpcode32Record(opcode);
         }
+
+        if (opcode_trigger_ && (opcode_trigger_.value() == opcode))
+        {
+            // Close current trace, open a new one
+            stf_writer_.close();
+
+            // Find the position of the .zstf or .stf
+            const size_t dotPos = filename_.find_last_of('.');
+            const auto new_trace_file_name = filename_.substr(0, dotPos) + current_symbol_ + "_"
+                                             + std::to_string(++trace_instance_)
+                                             + filename_.substr(dotPos);
+
+            startSTFTrace_(state->getNextPc(), new_trace_file_name, state);
+        }
+    }
+
+    template <typename Var, typename... Val> constexpr bool isOneOf(Var && var, Val &&... val)
+    {
+        return ((var == val) || ...);
     }
 
     template <typename XLEN> void STFLogger::recordRegState_(PegasusState* state)
@@ -419,18 +452,28 @@ namespace pegasus
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
                                               READ_FP_REG<XLEN>(state, i));
         }
-        // Recording vector registers
-        for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
+
+        if (vector_enabled_)
         {
-            stf_writer_ << stf::InstRegRecord(
-                i, stf::Registers::STF_REG_TYPE::VECTOR,
-                stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
-                readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+            // Recording vector registers
+            for (uint32_t i = 0; i < state->getVecRegisterSet()->getNumRegisters(); ++i)
+            {
+                stf_writer_ << stf::InstRegRecord(
+                    i, stf::Registers::STF_REG_TYPE::VECTOR,
+                    stf::Registers::STF_REG_OPERAND_TYPE::REG_STATE,
+                    readVectorRegister_(state, RegId{RegType::VECTOR, i, "V" + std::to_string(i)}));
+            }
         }
+
         // Recording csr Registers
         auto csr_rset = state->getCsrRegisterSet();
         for (size_t i = 0; i < csr_rset->getNumRegisters(); ++i)
         {
+            if (false == vector_enabled_ and isOneOf(i, VL, VTYPE, VLENB))
+            {
+                continue;
+            }
+
             if (auto reg = csr_rset->getRegister(i))
             {
                 stf_writer_ << stf::InstRegRecord(i, stf::Registers::STF_REG_TYPE::CSR,

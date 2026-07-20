@@ -10,6 +10,7 @@ file (CREATE_LINK ${PROJECT_SOURCE_DIR}/workloads                      ${CMAKE_C
 # Tests
 add_subdirectory(vcs)
 add_subdirectory(via)
+add_subdirectory(vid)
 add_subdirectory(vls)
 add_subdirectory(vm)
 add_subdirectory(vro)

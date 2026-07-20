@@ -88,7 +88,6 @@ namespace pegasus
         // Get translation result
         const PegasusTranslationState::TranslationResult result =
             state->getFetchTranslationState()->getResult();
-        state->getFetchTranslationState()->popResult();
 
         // When compressed instructions are enabled, it is possible for a full sized instruction (32
         // bits) to cross a 4K page boundary meaning that first 16 bits of the instruction are on a
@@ -170,6 +169,8 @@ namespace pegasus
             }
         }
 
+        ILOG("Fetched opcode: " << HEX8(opcode));
+
         // Decode instruction with Mavis
         PegasusInstPtr inst = nullptr;
         try
@@ -198,9 +199,9 @@ namespace pegasus
         if (SPARTA_EXPECT_FALSE(inst->isVector() && inst->isFloat()
                                 && (state->getVectorConfig()->getSEW() == 16)))
         {
-            if (false == state->isExtensionEnabled("zfh"))
+            if (false == state->hasZfh())
             {
-                if (false == (state->isExtensionEnabled("zfhmin") && inst->hasMavisTag("zfhmin")))
+                if (false == (state->hasZfhmin() && inst->hasMavisTag("zfhmin")))
                 {
                     THROW_ILLEGAL_INST;
                 }
@@ -226,6 +227,7 @@ namespace pegasus
                 }
             }
         }
+        state->getFetchTranslationState()->popResult();
 
         return ++action_it;
     }

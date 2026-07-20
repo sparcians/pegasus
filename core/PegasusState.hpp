@@ -2,8 +2,8 @@
 
 #include "core/ActionGroup.hpp"
 #include "core/PegasusInst.hpp"
-#include "core/observers/Observer.hpp"
 #include "core/VectorConfig.hpp"
+#include "core/Trap.hpp"
 
 #include "arch/RegisterSet.hpp"
 #include "arch/gen/supportedISA.hpp"
@@ -17,6 +17,7 @@
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/Unit.hpp"
 #include "sparta/utils/SpartaSharedPointerAllocator.hpp"
+#include "sparta/memory/BlockingMemoryIFNode.hpp"
 #include "core/PegasusAllocatorWrapper.hpp"
 
 #include "mavis/extension_managers/RISCVExtensionManager.hpp"
@@ -41,6 +42,7 @@ namespace pegasus
     class STFLogger;
     class STFValidator;
     class SystemCallEmulator;
+    class Observer;
 
     namespace cosim
     {
@@ -72,7 +74,9 @@ namespace pegasus
             PARAMETER(std::string, isa, "",
                       "ISA string when hart boots. If not set, the ISA string from PegasusCore is "
                       "used instead.")
-            PARAMETER(uint32_t, vlen, 256, "Vector register size in bits (max: 1024)")
+            PARAMETER(uint32_t, vlen, 256,
+                      "Vector register size in bits (max: 1024), default is 256.  Note that"
+                      " Minimun Vector Length Standard Extensions will override this parameter")
             PARAMETER(uint32_t, init_lmul, 8,
                       "Initial vector LMUL in units of 1/8 (e.g. 8=1, 16=2, 4=1/2)")
             PARAMETER(uint32_t, init_sew, 8, "Initial vector SEW in bits")
@@ -94,6 +98,8 @@ namespace pegasus
             // STF Validation
             PARAMETER(std::string, stf_filename, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
+            PARAMETER(uint32_t, stf_opcode_trigger, std::numeric_limits<uint32_t>::max(),
+                      "Break up STF trace generation using the given opcode as the trigger")
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
             PARAMETER(uint64_t, validate_trace_begin, 1,
@@ -109,7 +115,7 @@ namespace pegasus
           private:
             static bool validateVlen_(uint32_t & vlen_val, const sparta::TreeNode*)
             {
-                const std::vector<uint32_t> valid_vlen_values{128, 256, 512, 1024};
+                const std::vector<uint32_t> valid_vlen_values{0, 128, 256, 512, 1024};
                 return std::find(valid_vlen_values.begin(), valid_vlen_values.end(), vlen_val)
                        != valid_vlen_values.end();
             }
@@ -136,9 +142,15 @@ namespace pegasus
 
         Addr getPrevPc() const { return prev_pc_; }
 
-        void setNextPc(Addr next_pc) { next_pc_ = next_pc; }
+        void setNextPc(Addr next_pc, bool branch_taken = false)
+        {
+            next_pc_ = next_pc;
+            branch_taken_ = branch_taken;
+        }
 
         Addr getNextPc() const { return next_pc_; }
+
+        bool isBranchTaken() const { return branch_taken_; }
 
         uint64_t getPcAlignment() const { return pc_alignment_; }
 
@@ -268,6 +280,10 @@ namespace pegasus
         bool hasHypervisor() const { return hypervisor_enabled_; }
 
         bool hasZicntr() const { return zicntr_enabled_; }
+
+        bool hasZfh() const { return zfh_enabled_; }
+
+        bool hasZfhmin() const { return zfhmin_enabled_; }
 
         template <typename XLEN> uint32_t getMisaExtFieldValue() const;
 
@@ -457,6 +473,7 @@ namespace pegasus
       private:
         void onBindTreeEarly_() override;
         void onBindTreeLate_() override;
+        void dumpDebugContent_(std::ostream & output) const override;
 
         Action::ItrType preExecute_(PegasusState* state, Action::ItrType action_it);
         Action::ItrType postExecute_(PegasusState* state, Action::ItrType action_it);
@@ -466,15 +483,7 @@ namespace pegasus
         Action post_execute_action_;
         Action pre_exception_action_;
 
-        Action::ItrType stopSim_(PegasusState*, Action::ItrType action_it)
-        {
-            for (auto & obs : observers_)
-            {
-                obs->stopSim();
-            }
-
-            return ++action_it;
-        }
+        Action::ItrType stopSim_(PegasusState*, Action::ItrType action_it);
 
         Action::ItrType pauseSim_(PegasusState*, Action::ItrType action_it) { return ++action_it; }
 
@@ -488,9 +497,6 @@ namespace pegasus
 
         //! Hart ID
         const HartId hart_id_;
-
-        // VLEN (128, 256, 512, 1024 or 2048 bits)
-        const uint32_t vlen_;
 
         // Path to register JSONs
         const std::string reg_json_file_path_;
@@ -518,6 +524,7 @@ namespace pegasus
 
         // STF Trace Filename
         const std::string stf_filename_;
+        const uint32_t stf_opcode_trigger_;
         const std::string validation_stf_filename_;
         const uint64_t validate_trace_begin_;
         const uint64_t validate_inst_begin_;
@@ -531,6 +538,9 @@ namespace pegasus
 
         //! Previous pc
         Addr prev_pc_ = 0x0;
+
+        //! Branch was taken
+        bool branch_taken_ = false;
 
         //! PC alignment
         uint64_t pc_alignment_ = 4;
@@ -609,6 +619,9 @@ namespace pegasus
             {"csrrsi", MAVIS_UID_CSRRSI},   {"csrrci", MAVIS_UID_CSRRCI},
             {"hlvx.hu", MAVIS_UID_HLVX_HU}, {"hlvx.wu", MAVIS_UID_HLVX_WU}};
 
+        // VLEN (128, 256, 512, 1024 or 2048 bits)
+        const uint32_t vlen_;
+
         // Mavis
         std::unique_ptr<MavisType> mavis_;
 
@@ -617,6 +630,12 @@ namespace pegasus
 
         //! Do we have the counter extension?
         bool zicntr_enabled_;
+
+        //! Do we have Zfh extension?
+        bool zfh_enabled_;
+
+        //! Do we have Zfhmin extension?
+        bool zfhmin_enabled_;
 
         // Fetch Unit
         Fetch* fetch_unit_ = nullptr;

@@ -19,7 +19,6 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vl = 4 * 8;
 
         state->getVectorConfig()->setVLEN(64);
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -59,7 +58,6 @@ class VmInstructionTester : public PegasusInstructionTester
         uint32_t rd = 1, vs2 = 2;
 
         state->getVectorConfig()->setVLEN(64);
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -87,7 +85,6 @@ class VmInstructionTester : public PegasusInstructionTester
         uint32_t rd = 1, vs2 = 2;
 
         state->getVectorConfig()->setVLEN(64);
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
@@ -114,14 +111,13 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vl = 6 * 8;
 
         state->getVectorConfig()->setVLEN(64);
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
         VLEN v2_val = {1, 0, 1, 0, 1, 1, 1, 0};
         VLEN v0_val = {1, 0, 0, 255, 1, 0, 1, 0};
         VLEN v1_val = {0, 0, 0, 0, 0, 0, 0, 0};
-        VLEN vd_val = {0, 0, 0, 255, 0, 0, 0, 0};
+        const VLEN vd_val = {0, 0, 0, 255, 0, 0, 0, 0};
         WRITE_VEC_REG<VLEN>(state, pegasus::V2, v2_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V0, v0_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V1, v1_val);
@@ -143,34 +139,66 @@ class VmInstructionTester : public PegasusInstructionTester
     {
         pegasus::PegasusState* state = getPegasusState();
         const pegasus::Addr pc = 0x1000;
-        uint32_t opcode;
-        size_t vstart = 0;
-        size_t vl = 8;
+        const size_t vstart = 0;
+        const size_t vl = 8;
+        uint32_t opcode = 0;
 
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
-        VLEN v2_val = {0x91, 0, 0, 0, 0, 0, 0, 0};
-        VLEN v0_val = {0xEB, 0, 0, 0, 0, 0, 0, 0};
-        VLEN v4_val = {9, 8, 7, 6, 5, 4, 3, 2};
-        VLEN vd_val = {0, 1, 7, 1, 5, 1, 1, 1};
-        WRITE_VEC_REG<VLEN>(state, pegasus::V2, v2_val);
+        const VLEN v0_val = {1, 1, 0, 1, 0, 1, 1, 1};
+        const VLEN v2_val = {1, 0, 0, 0, 1, 0, 0, 1};
+        const VLEN v4_val = {0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf};
         WRITE_VEC_REG<VLEN>(state, pegasus::V0, v0_val);
+        WRITE_VEC_REG<VLEN>(state, pegasus::V2, v2_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V4, v4_val);
-        opcode = viotamOp(pegasus::V4, pegasus::V2, 0); // masked
+
+        opcode = viotamOp(pegasus::V4, pegasus::V2, 0); // unmasked
         injectInstruction(pc, opcode);
 
-        v4_val = READ_VEC_REG<VLEN>(state, pegasus::V4);
+        const VLEN vd_val_unmasked_result = {0, 1, 1, 1, 1, 2, 2, 2};
+        VLEN vd_val = READ_VEC_REG<VLEN>(state, pegasus::V4);
         for (size_t i = 0; i < 8; ++i)
         {
-            EXPECT_EQUAL(v4_val[i], vd_val[i]);
+            EXPECT_EQUAL(vd_val[i], vd_val_unmasked_result[i]);
         }
+
+        // Mask test
+        WRITE_VEC_REG<VLEN>(state, pegasus::V4, v4_val);
+        const VLEN vd_val_masked_result = {0, 1, 0xf, 1, 0xf, 1, 1, 1};
+        opcode = viotamOp(pegasus::V4, pegasus::V2, 1); // masked
+        injectInstruction(pc, opcode);
+
+        vd_val = READ_VEC_REG<VLEN>(state, pegasus::V4);
+        for (size_t i = 0; i < 8; ++i)
+        {
+            EXPECT_EQUAL(vd_val[i], vd_val_masked_result[i]);
+        }
+
+        state->getVectorConfig()->setVLEN(1024);
+        state->getVectorConfig()->vsetVTYPE<XLEN>(state, 0x000000c0);
+        state->getVectorConfig()->setVL(16);
+        state->getVectorConfig()->setLMUL(1);
+        // 1024 version
+        std::array<uint8_t, 128> vs2_val_big = {
+            0x30, 0xb3, 0xfa, 0x09, 0xb9, 0xd7, 0x8f, 0xfd, 0xb4, 0x56, 0x05, 0x59, 0x90,
+            0x11, 0x3a, 0xb5, 0x20, 0x72, 0x0f, 0x79, 0x31, 0x67, 0x26, 0x9d, 0xa4, 0x14,
+            0x1a, 0xc9, 0x8e, 0x54, 0x10, 0x25, 0x9f, 0x49, 0x27, 0x49, 0xac, 0xdd, 0x3a,
+            0xdd, 0x89, 0xc8, 0xb0, 0x39, 0x0d, 0xb4, 0xa7, 0xf5, 0xbf, 0x64, 0xba, 0x59,
+            0x24, 0x6c, 0x91, 0x7d, 0x12, 0xa9, 0x48, 0x09, 0x81, 0x59, 0xbb, 0x05, 0x18,
+            0x71, 0x54, 0x89, 0xb5, 0xa8, 0x2a, 0x7d, 0x97, 0x0e, 0x9f, 0xd9, 0x31, 0x17,
+            0x90, 0x75, 0xb2, 0x6a, 0x65, 0x39, 0x17, 0x72, 0x3c, 0x5d, 0x90, 0xd6, 0x35,
+            0x49, 0x36, 0x11, 0x2a, 0xa5, 0x9b, 0x19, 0x81, 0xc9, 0xb5, 0x55, 0x90, 0x9d,
+            0xaa, 0xcf, 0x45, 0xf9, 0x9f, 0xac, 0xbd, 0xb5, 0x04, 0xb5, 0x14, 0xd9, 0x11,
+            0x2e, 0xab, 0xfd, 0x13, 0x7e, 0x62, 0x89, 0x09, 0xd2, 0x10, 0xc5};
+        WRITE_VEC_REG<std::array<uint8_t, 128>>(state, pegasus::V2, vs2_val_big);
+        opcode = viotamOp(pegasus::V4, pegasus::V2, 1); // unmasked
+        injectInstruction(pc, opcode);
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 5);
+        EXPECT_EQUAL(sim_state->inst_count, 7);
     }
 
     void testVidv()
@@ -182,13 +210,12 @@ class VmInstructionTester : public PegasusInstructionTester
         size_t vl = 8;
 
         state->getVectorConfig()->setVLEN(64);
-        state->getVectorConfig()->setVLEN(64);
         state->getVectorConfig()->setVSTART(vstart);
         state->getVectorConfig()->setVL(vl);
 
         VLEN v0_val = {0x8F, 0, 0, 0, 0, 0, 0, 0};
         VLEN v1_val = {8, 8, 8, 8, 8, 8, 8, 8};
-        VLEN vd_val = {8, 8, 2, 3, 8, 8, 8, 7};
+        const VLEN vd_val = {8, 8, 2, 3, 8, 8, 8, 7};
         WRITE_VEC_REG<VLEN>(state, pegasus::V0, v0_val);
         WRITE_VEC_REG<VLEN>(state, pegasus::V1, v1_val);
         opcode = vidvOp(pegasus::V1, 0); // masked
@@ -202,7 +229,7 @@ class VmInstructionTester : public PegasusInstructionTester
 
         const pegasus::PegasusState::SimState* sim_state = state->getSimState();
         std::cout << sim_state->current_inst << std::endl;
-        EXPECT_EQUAL(sim_state->inst_count, 6);
+        EXPECT_EQUAL(sim_state->inst_count, 8);
     }
 
     uint32_t vpopcmOp(uint8_t rd, uint8_t vs2, uint8_t vm)

@@ -9,6 +9,26 @@
 
 namespace pegasus
 {
+    template <template <typename> typename FuncT> struct DivByZeroProtect
+    {
+        template <typename T = void> struct DivisorChecker
+        {
+            FuncT<T> operation;
+
+            // Check the divisor.  On ARM-based systems, integer
+            // divide does not except. On x86, it does.  RISC-V does
+            // not except.
+            constexpr T operator()(T && in_x, T && in_y) const
+            {
+                if (in_y != 0)
+                {
+                    return operation(std::forward<T>(in_x), std::forward<T>(in_y));
+                }
+                return T(0);
+            }
+        };
+    };
+
     template <typename XLEN>
     void RvvIntegerInsts::getInstHandlers(std::map<std::string, Action> & inst_handlers)
     {
@@ -996,7 +1016,8 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, std::divides>,
+                                                   false,
+                                                   DivByZeroProtect<std::divides>::DivisorChecker>,
                 RvvIntegerInsts>(nullptr, "vdivu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vdivu.vx",
@@ -1005,26 +1026,30 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, std::divides>,
+                                                   false,
+                                                   DivByZeroProtect<std::divides>::DivisorChecker>,
                 RvvIntegerInsts>(nullptr, "vdivu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vdiv.vv",
-            pegasus::Action::createAction<
-                &RvvIntegerInsts::viBinaryHandler_<XLEN,
-                                                   OperandMode{.dst = OperandMode::Mode::V,
-                                                               .src2 = OperandMode::Mode::V,
-                                                               .src1 = OperandMode::Mode::V},
-                                                   true, std::divides>,
-                RvvIntegerInsts>(nullptr, "vdiv.vv", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvIntegerInsts::viBinaryHandler_<
+                                              XLEN,
+                                              OperandMode{.dst = OperandMode::Mode::V,
+                                                          .src2 = OperandMode::Mode::V,
+                                                          .src1 = OperandMode::Mode::V},
+                                              true, DivByZeroProtect<std::divides>::DivisorChecker>,
+                                          RvvIntegerInsts>(nullptr, "vdiv.vv",
+                                                           ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vdiv.vx",
-            pegasus::Action::createAction<
-                &RvvIntegerInsts::viBinaryHandler_<XLEN,
-                                                   OperandMode{.dst = OperandMode::Mode::V,
-                                                               .src2 = OperandMode::Mode::V,
-                                                               .src1 = OperandMode::Mode::X},
-                                                   true, std::divides>,
-                RvvIntegerInsts>(nullptr, "vdiv.vx", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvIntegerInsts::viBinaryHandler_<
+                                              XLEN,
+                                              OperandMode{.dst = OperandMode::Mode::V,
+                                                          .src2 = OperandMode::Mode::V,
+                                                          .src1 = OperandMode::Mode::X},
+                                              true, DivByZeroProtect<std::divides>::DivisorChecker>,
+                                          RvvIntegerInsts>(nullptr, "vdiv.vx",
+                                                           ActionTags::EXECUTE_TAG));
+
         inst_handlers.emplace(
             "vremu.vv",
             pegasus::Action::createAction<
@@ -1032,7 +1057,8 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::V},
-                                                   false, std::modulus>,
+                                                   false,
+                                                   DivByZeroProtect<std::modulus>::DivisorChecker>,
                 RvvIntegerInsts>(nullptr, "vremu.vv", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vremu.vx",
@@ -1041,26 +1067,29 @@ namespace pegasus
                                                    OperandMode{.dst = OperandMode::Mode::V,
                                                                .src2 = OperandMode::Mode::V,
                                                                .src1 = OperandMode::Mode::X},
-                                                   false, std::modulus>,
+                                                   false,
+                                                   DivByZeroProtect<std::modulus>::DivisorChecker>,
                 RvvIntegerInsts>(nullptr, "vremu.vx", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vrem.vv",
-            pegasus::Action::createAction<
-                &RvvIntegerInsts::viBinaryHandler_<XLEN,
-                                                   OperandMode{.dst = OperandMode::Mode::V,
-                                                               .src2 = OperandMode::Mode::V,
-                                                               .src1 = OperandMode::Mode::V},
-                                                   true, std::modulus>,
-                RvvIntegerInsts>(nullptr, "vrem.vv", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvIntegerInsts::viBinaryHandler_<
+                                              XLEN,
+                                              OperandMode{.dst = OperandMode::Mode::V,
+                                                          .src2 = OperandMode::Mode::V,
+                                                          .src1 = OperandMode::Mode::V},
+                                              true, DivByZeroProtect<std::modulus>::DivisorChecker>,
+                                          RvvIntegerInsts>(nullptr, "vrem.vv",
+                                                           ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vrem.vx",
-            pegasus::Action::createAction<
-                &RvvIntegerInsts::viBinaryHandler_<XLEN,
-                                                   OperandMode{.dst = OperandMode::Mode::V,
-                                                               .src2 = OperandMode::Mode::V,
-                                                               .src1 = OperandMode::Mode::X},
-                                                   true, std::modulus>,
-                RvvIntegerInsts>(nullptr, "vrem.vx", ActionTags::EXECUTE_TAG));
+            pegasus::Action::createAction<&RvvIntegerInsts::viBinaryHandler_<
+                                              XLEN,
+                                              OperandMode{.dst = OperandMode::Mode::V,
+                                                          .src2 = OperandMode::Mode::V,
+                                                          .src1 = OperandMode::Mode::X},
+                                              true, DivByZeroProtect<std::modulus>::DivisorChecker>,
+                                          RvvIntegerInsts>(nullptr, "vrem.vx",
+                                                           ActionTags::EXECUTE_TAG));
 
         inst_handlers.emplace(
             "vwmul.vv",

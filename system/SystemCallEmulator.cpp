@@ -202,7 +202,7 @@ namespace pegasus
                 // Systemcall length does not count the "null". But we need to accout for that here.
                 unsigned char* string_in_memory =
                     static_cast<unsigned char*>(alloca(string_len + 1));
-                string_in_memory[string_len] = '\0';
+                ::memset(string_in_memory, '\0', string_len);
                 if (SPARTA_EXPECT_FALSE(mem->doesAccessSpan(string_addr, string_len)))
                 {
                     const auto mem_block_size = mem->getBlockSize();
@@ -419,17 +419,17 @@ namespace pegasus
     {
         if (syscall_emulation_enabled_)
         {
-            const auto & symbols = sim_->getPegasusSystem()->getSymbols();
-            for (auto symbol : symbols)
+            const auto end_addr = sim_->getPegasusSystem()->findSymbolAddr("_end");
+            if (end_addr)
             {
-                if (symbol.second == "_end")
-                {
-                    callbacks_->setBreakAddress(symbol.first);
-                    break;
-                }
+                callbacks_->setBreakAddress(end_addr.value());
             }
-            sparta_assert(callbacks_->getBreakAddress() != 0,
-                          "Could not find _end symbol in workload for system call emulation");
+            else
+            {
+                std::cout << "PEGASUS: Warning: Could not find _end symbol in workload for "
+                             "system call emulation for brk system calls"
+                          << std::endl;
+            }
         }
     }
 
