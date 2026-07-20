@@ -154,8 +154,8 @@ namespace pegasus
                                              << state->getCurrentInst());
                             STFVALIDLOG("     Pegasus INST: " << inst_count);
                             STFVALIDLOG("         STF INST: " << next_it_->index());
-                            STFVALIDLOG("    Pegasus value: 0x" << formatVectorHex(reg_val));
-                            STFVALIDLOG("        STF value: 0x" << formatVectorHex(stf_reg_val));
+                            STFVALIDLOG("    Pegasus value: 0x" << formatVectorHex_(reg_val));
+                            STFVALIDLOG("        STF value: 0x" << formatVectorHex_(stf_reg_val));
                             STFVALIDLOG("");
                             if (validate_fail_on_first_diff_)
                             {

@@ -64,10 +64,10 @@ namespace pegasus
 
         virtual void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
                                  const Observer::ObservedValue & reg_value,
-                                 const Observer::ObservedValue & reg_prev_value)
+                                 const Observer::ObservedValue & new_value)
         {
             (void)reg_num;
-            writeDstRegister(reg_name, reg_value, reg_prev_value);
+            writeDstRegister(reg_name, reg_value, new_value);
         }
 
         virtual void writeMemRead(const Observer::MemRead & mem_read) { (void)mem_read; }
@@ -157,11 +157,11 @@ namespace pegasus
 
         void writeDstRegister(const std::string & reg_name,
                               const Observer::ObservedValue & reg_value,
-                              const Observer::ObservedValue & reg_prev_value) override
+                              const Observer::ObservedValue & new_value) override
         {
             reset_();
             inst_oss_ << "   dst " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                      << reg_value << " (prev: " << reg_prev_value << ")";
+                      << new_value << " (prev: " << reg_value << ")";
             postExecute_(inst_oss_.str());
         }
 
@@ -175,11 +175,11 @@ namespace pegasus
         }
 
         void writeCsrWrite(const std::string & reg_name, const Observer::ObservedValue & reg_value,
-                           const Observer::ObservedValue & reg_prev_value) override
+                           const Observer::ObservedValue & new_value) override
         {
             reset_();
             inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                      << reg_value << " (prev: " << reg_prev_value << ")";
+                      << reg_value << " (prev: " << new_value << ")";
             postExecute_(inst_oss_.str());
         }
 
@@ -254,18 +254,18 @@ namespace pegasus
 
         void writeDstRegister(const std::string & reg_name,
                               const Observer::ObservedValue & reg_value,
-                              const Observer::ObservedValue & reg_prev_value) override
+                              const Observer::ObservedValue & new_value) override
         {
-            (void)reg_prev_value;
-            inst_oss_ << " " << std::setw(4) << std::left << reg_name << " t" << reg_value;
+            (void)reg_value;
+            inst_oss_ << " " << std::setw(4) << std::left << reg_name << " t" << new_value;
         }
 
         void writeDstCSR(const std::string & reg_name, const uint32_t reg_num,
                          const Observer::ObservedValue & reg_value,
-                         const Observer::ObservedValue & reg_prev_value) override
+                         const Observer::ObservedValue & new_value) override
         {
-            (void)reg_prev_value;
-            inst_oss_ << " c" << reg_num << "_" << reg_name << " " << reg_value;
+            (void)reg_value;
+            inst_oss_ << " c" << reg_num << "_" << reg_name << " " << new_value;
         }
 
         void writeMemRead(const Observer::MemRead & mem_read) override
@@ -332,10 +332,10 @@ namespace pegasus
         inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger
-        const auto & symbols = state->getCore()->getSystem()->getSymbols();
-        if (symbols.find(pc_) != symbols.end())
+        const auto symbol = state->getCore()->getSystem()->findSymbol(pc_, true /*exact*/);
+        if (symbol)
         {
-            inst_log_writer_->writeSymbols(symbols.at(pc_));
+            inst_log_writer_->writeSymbols(symbol.value());
         }
 
         inst_log_writer_->writeInstHeader(priv_mode_, virtual_mode_, inst.get(), pc_, opcode_);
@@ -352,7 +352,7 @@ namespace pegasus
 
         for (const auto & src_reg : src_regs_)
         {
-            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, src_reg.reg_value);
+            inst_log_writer_->writeSrcRegister(src_reg.reg_id.reg_name, src_reg.getObservedValue());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -360,7 +360,8 @@ namespace pegasus
             if (dst_reg.reg_id.reg_type == RegType::CSR)
             {
                 inst_log_writer_->writeDstCSR(dst_reg.reg_id.reg_name, dst_reg.reg_id.reg_num,
-                                              dst_reg.reg_value, dst_reg.reg_prev_value);
+                                              dst_reg.getObservedValue(),
+                                              dst_reg.getObservedNewValue());
             }
             else
             {
@@ -370,20 +371,21 @@ namespace pegasus
                 {
                     continue;
                 }
-                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name, dst_reg.reg_value,
-                                                   dst_reg.reg_prev_value);
+                inst_log_writer_->writeDstRegister(dst_reg.reg_id.reg_name,
+                                                   dst_reg.getObservedValue(),
+                                                   dst_reg.getObservedNewValue());
             }
         }
 
         for (const auto & [csr_num, csr_read] : csr_reads_)
         {
-            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, csr_read.reg_value);
+            inst_log_writer_->writeCsrRead(csr_read.reg_id.reg_name, csr_read.getObservedValue());
         }
 
         for (const auto & [csr_num, csr_write] : csr_writes_)
         {
-            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, csr_write.reg_value,
-                                            csr_write.reg_prev_value);
+            inst_log_writer_->writeCsrWrite(csr_write.reg_id.reg_name, csr_write.getObservedValue(),
+                                            csr_write.getObservedNewValue());
         }
 
         for (const auto & mem_read : mem_reads_)

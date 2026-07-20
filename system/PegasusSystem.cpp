@@ -85,8 +85,8 @@ namespace pegasus
             {
                 std::string name;
                 // ELFIO::Elf64_Addr addr;
-                Addr addr;
-                ELFIO::Elf_Xword size;
+                Addr addr = 0;
+                ELFIO::Elf_Xword size = 0;
                 unsigned char bind;
                 unsigned char type;
                 ELFIO::Elf_Half section;
@@ -97,7 +97,7 @@ namespace pegasus
                 // more than one label at the same address
                 if (name.empty() == false)
                 {
-                    symbols_[addr] = name;
+                    symbols_.insert(std::make_pair(addr, Symbol(addr, size, name)));
 
                     if (name == "tohost")
                     {
@@ -328,6 +328,7 @@ namespace pegasus
                 << "\nERROR: '" << workload << "' failed to load! Does it exist?\n";
         }
 
+        std::string section_name = "<unknown>";
         for (const auto & segment : elf_reader_.segments)
         {
             // Ignore empty segments
@@ -337,25 +338,27 @@ namespace pegasus
             }
 
             // Bug in ELFIO where segment name is incorrect, so use the section name instead
-            std::string segment_name = "?";
+            std::string segment_name = "";
             for (const auto & section : elf_reader_.sections)
             {
                 if (section->get_address() == segment->get_virtual_address())
                 {
-                    segment_name = section->get_name();
-                    break;
+                    if (section->get_name() != "")
+                    {
+                        segment_name += section->get_name() + ' ';
+                    }
                 }
             }
 
             const uint8_t* data = reinterpret_cast<const uint8_t*>(segment->get_data());
-            if (data != nullptr)
+            if (nullptr != data)
             {
-                std::cout << "  -- Loading section " << segment_name << " (" << std::dec
-                          << segment->get_file_size() << "B) " << " to 0x" << std::hex
-                          << segment->get_memory_size() << std::endl;
+                std::cout << "  -- Loading segment " << segment_name << " (" << std::hex
+                          << segment->get_file_size() << " bytes) " << " to 0x"
+                          << segment->get_physical_address() << std::dec << std::endl;
 
-                bool success = memory_map_->tryPoke(segment->get_physical_address(),
-                                                    segment->get_file_size(), data);
+                const bool success = memory_map_->tryPoke(segment->get_physical_address(),
+                                                          segment->get_file_size(), data);
                 if (!success)
                 {
                     std::cout << "FAILED!\n";
@@ -394,24 +397,7 @@ namespace pegasus
 
     void PegasusSystem::registerMemoryCallbacks(Observer* observer)
     {
-        using BMOIfNode = sparta::memory::BlockingMemoryIFNode;
-        for (const auto & n : tree_nodes_)
-        {
-            if (auto bm_if_node = dynamic_cast<BMOIfNode*>(n.get()))
-            {
-                observer->registerReadWriteMemCallbacks(bm_if_node);
-            }
-        }
-
-        // Register callbacks to system memory
-        auto iter = std::find_if(tree_nodes_.begin(), tree_nodes_.end(),
-                                 [this](const std::unique_ptr<sparta::TreeNode> & tnode)
-                                 { return tnode.get() == memory_map_.get(); });
-
-        if (iter != tree_nodes_.end())
-        {
-            observer->registerReadWriteMemCallbacks(memory_map_.get());
-        }
+        observer->registerReadWriteMemCallbacks(memory_map_.get());
     }
 
     void PegasusSystem::enableEOTPassFailMode()

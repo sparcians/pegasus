@@ -72,7 +72,7 @@ def get_pegasus_cmd(testname, wkld, output_dir, executable):
         print("Running", testname)
     rv32_test = "rv32" in testname
     error_dump = output_dir + testname + ".error"
-    isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz_zicntr"
+    isa_string = "gcbvh_zicsr_zifencei_zicond_zfh_zbkb_zbkx_zicboz_zicntr_zfbfmin"
     isa_string = "rv32"+isa_string if rv32_test else "rv64"+isa_string
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
@@ -97,7 +97,7 @@ def run_test(testname, pegasus_cmd, output_dir, passing_tests, failing_tests, ti
         pattern = re.compile(rf"\b{testname}\b.*\.log$")
         for filename in os.listdir(output_dir):
             if re.search(pattern, filename):
-                os.remove(filename)
+                os.remove(output_dir + filename)
         passing_tests.append(testname)
     else:
         error = 'UNKNOWN'
@@ -276,7 +276,7 @@ def run(tests, output_dir, serial=False):
 
 
 def report_results(passing_tests, failing_tests, timeout_tests):
-    num_tests = len(passing_tests) + len(failing_tests) + len(failing_tests)
+    num_tests = len(passing_tests) + len(failing_tests) + len(timeout_tests)
     num_passed = 0
     if passing_tests:
         print("PASSED:")

@@ -160,7 +160,7 @@ the [README](https://github.com/riscv-software-src/riscv-tests#readme) to build 
 
 ```
 cd pegasus/<build>/sim
-python ../../scripts/RunArchTest.py --riscv-arch $RISCV_TESTS_PATH/isa/
+python ../../scripts/RunArchTests.py --riscv-arch $RISCV_TESTS_PATH/isa/
 ```
 
 ### Tenstorrent
@@ -170,7 +170,7 @@ are a set of self-checking architectural tests provided by Tenstorrent. Follow t
 to build the tests. Alternatively, pre-built tests can be downloaded here: [Releases/v0.2.0+aligned-access](https://github.com/tenstorrent/riscv_arch_tests/releases/tag/v0.2.0%2Baligned-access)
 ```
 cd pegasus/<build>/sim
-python ../../scripts/RunArchTest.py --tenstorrent $TENSTORRENT_TESTS_PATH/bare_metal/user/
+python ../../scripts/RunArchTests.py --tenstorrent $TENSTORRENT_TESTS_PATH/bare_metal/user/
 ```
 
 ## Debug
@@ -256,7 +256,7 @@ set(PEGASUS_DISABLE_STANDALONE True)
 | **Zicfilp** Landing Pads. | :x: |
 | **Zicfiss** Shadow Stack. | :x: |
 | **Zvfh** Vector half-precision floating-point. | :white_check_mark: |
-| **Zfbfmin** Scalar BF16 converts. | :x: |
+| **Zfbfmin** Scalar BF16 converts. | :white_check_mark: |
 | **Zvfbfmin** Vector BF16 converts. | :x: |
 | **Zvfbfwma** Vector BF16 widening mul-add. | :x: |
 

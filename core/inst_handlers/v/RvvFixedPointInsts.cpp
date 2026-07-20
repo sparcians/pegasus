@@ -350,11 +350,16 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         auto elems_vs2 =
             Elements<Element<opMode.src2 == OperandMode::Mode::W ? 2 * elemWidth : elemWidth>,
-                     false>{state, inst->getVectorConfig(), inst->getRs1()};
-        auto elems_vs1 = opMode.src1 != OperandMode::Mode::V
-                             ? Elements<Element<elemWidth>, false>{}
-                             : Elements<Element<elemWidth>, false>{state, inst->getVectorConfig(),
-                                                                   inst->getRs1()};
+                     false>{state, inst->getVectorConfig(), inst->getRs2()};
+
+        // If operation mode is immediate, we don't care about rs1.
+        // Need conditional to avoid getting an invalid Rs1
+        const uint32_t rs1_val = (opMode.src1 == OperandMode::Mode::I) ? 0 : inst->getRs1();
+
+        auto elems_vs1 =
+            opMode.src1 != OperandMode::Mode::V
+                ? Elements<Element<elemWidth>, false>{}
+                : Elements<Element<elemWidth>, false>{state, inst->getVectorConfig(), rs1_val};
         auto elems_vd =
             Elements<Element<elemWidth>, false>{state, inst->getVectorConfig(), inst->getRd()};
         using S = typename decltype(elems_vs2)::ElemType::ValueType;
@@ -379,7 +384,7 @@ namespace pegasus
                 {
                     elems_vd.getElement(index).setVal(static_cast<R>(
                         functor(elems_vs2.getElement(index).getVal(),
-                                static_cast<S>(READ_INT_REG<XLEN>(state, inst->getRs1())))));
+                                static_cast<S>(READ_INT_REG<XLEN>(state, rs1_val)))));
                 }
                 else // opMode.src1 == OperandMode::Mode::I
                 {

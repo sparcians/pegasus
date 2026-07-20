@@ -303,7 +303,22 @@ namespace pegasus
      * performed.
      * Element iterator is provided for element iteration; bit iterator for
      * vector mask regitster bit iteration.
-     *
+     */
+
+    // clang-format off
+    /**
+     * Here is an example of using ElementIterator to set *Element* value for vector register group
+     * vs2 *Elements* with SEW=16:
+     * Elements<Element<16>, false> elems{state, inst->getVectorConfig(), inst->getRs2()};
+     * for (auto iter = elems_vd.begin(); iter != elems_vd.end(); ++iter)
+     * {
+     *     auto index = iter.getIndex();
+     *     elems.getElement(index).setVal(elems.getElement(index).getVal());
+     * }
+     */
+    // clang-format on
+
+    /**
      * @tparam EType       Element type for individual element.
      * @tparam isMaskElems True if this *Elements* represents vector mask.
      */
@@ -585,8 +600,8 @@ namespace pegasus
          */
         ElemType getElement(size_t index) const
         {
-            uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::elem_width);
-            uint32_t idx = index % (config_->getVLEN() / ElemType::elem_width);
+            const uint32_t reg_id = reg_id_ + index / (config_->getVLEN() / ElemType::elem_width);
+            const uint32_t idx = index % (config_->getVLEN() / ElemType::elem_width);
             ElemType elem{state_, reg_id, idx};
             if constexpr (isMaskElems)
             {

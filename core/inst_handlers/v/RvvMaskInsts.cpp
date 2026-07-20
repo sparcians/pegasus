@@ -322,58 +322,33 @@ namespace pegasus
         using ElemsType = Elements<Element<elemWidth>, false>;
 
         const PegasusInstPtr inst = state->getCurrentInst();
-        MaskElements elems_vs2{state, inst->getVectorConfig(), inst->getRs2()};
-        MaskElements elems_v0{state, inst->getVectorConfig(), pegasus::V0};
+        ElemsType elems_vs2{state, inst->getVectorConfig(), inst->getRs2()};
+        ElemsType elems_v0{state, inst->getVectorConfig(), pegasus::V0};
         ElemsType elems_vd{state, inst->getVectorConfig(), inst->getRd()};
         size_t count = 0;
-        auto iter_v0 = elems_v0.maskBitIterBegin();
-        auto iter_vd = elems_vd.begin();
-
-        auto execute = [&](auto & iter, const auto & iter_end)
-        {
-            for (; iter != iter_end; ++iter)
-            {
-                elems_vd.getElement(iter.getIndex()).setVal(count);
-            }
-        };
+        const bool masked = !inst->getVM();
 
         for (auto elem_iter = elems_vs2.begin(); elem_iter != elems_vs2.end(); ++elem_iter)
         {
-            size_t index = elem_iter.getIndex();
-            auto elem_v0{elems_v0.getElement(index)};
-            auto elem_vs2{elems_vs2.getElement(index)};
+            size_t count_it = 0;
+            const auto mask_val = elems_v0.getElement(elem_iter.getIndex()).getVal();
+            const auto vs2_val = elems_vs2.getElement(elem_iter.getIndex()).getVal();
+            if (masked || (false == masked && mask_val))
+            {
+                if (0 != (vs2_val & 0x1))
+                {
+                    ++count_it;
+                }
+            }
 
-            if (!inst->getVM())
+            if ((false == masked) && !mask_val)
             {
-                elem_vs2.pokeVal(elem_vs2.getVal() & elem_v0.getVal()); // don't store *elem_vs2*
+                continue;
             }
-            for (auto bit_iter = elem_vs2.begin(); bit_iter != elem_vs2.end(); ++bit_iter)
-            {
-                size_t idx = bit_iter.getIndex();
-                // update parallel prefix sun for each active element of vd till current index
-                if (!inst->getVM()) // masked
-                {
-                    execute(iter_v0,
-                            MaskBitIterator{&elems_v0,
-                                            MaskElements::ElemType::elem_width * index + idx + 1});
-                }
-                else
-                {
-                    typename ElemsType::ElementIterator iter_end{
-                        &elems_vd, MaskElements::ElemType::elem_width * index + idx + 1};
-                    execute(iter_vd, iter_end);
-                }
-                ++count;
-            }
-            // fill in the sum till tail is reached
-            if (!inst->getVM()) // masked
-            {
-                execute(iter_v0, elems_v0.maskBitIterEnd());
-            }
-            else
-            {
-                execute(iter_vd, elems_vd.end());
-            }
+
+            elems_vd.getElement(elem_iter.getIndex()).setVal(count);
+
+            count += count_it;
         }
 
         return ++action_it;

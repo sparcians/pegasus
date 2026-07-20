@@ -87,6 +87,9 @@ namespace pegasus
 
         bool isHypervisorInst() const { return extractor_info_->isHypervisorInst(); }
 
+        // Is this ia *.mm vector operation
+        bool isVectorMaskOp() const { return extractor_info_->isVectorMaskOp(); }
+
         bool writesCsr() const;
 
         uint32_t getOpcodeSize() const { return opcode_size_; }

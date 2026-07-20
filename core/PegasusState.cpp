@@ -14,6 +14,7 @@
 #include "core/observers/InstructionLogger.hpp"
 #include "core/observers/STFLogger.hpp"
 #include "core/observers/STFValidator.hpp"
+#include "core/observers/Observer.hpp"
 #include "inst_handlers/zicsrind/Rvzicsrind.hpp"
 
 #include "mavis/Mavis.h"
@@ -72,10 +73,32 @@ namespace pegasus
         }
     }
 
+    uint32_t getVLENB(const uint32_t vlenb_param,
+                      const mavis::extension_manager::riscv::RISCVExtensionManager & ext_man)
+    {
+        static constexpr std::array<std::pair<std::string, uint32_t>, 6> min_length_extensions{
+            {{"zvl32b", 32},
+             {"zvl64b", 64},
+             {"zvl128b", 128},
+             {"zvl256b", 256},
+             {"zvl512b", 512},
+             {"zvl1024b", 1024}}};
+
+        for (auto & ext : min_length_extensions)
+        {
+            if (ext_man.isEnabled(ext.first))
+            {
+                return ext.second;
+            }
+        }
+
+        // No extension enabled, return the default
+        return vlenb_param;
+    }
+
     PegasusState::PegasusState(sparta::TreeNode* hart_tn, const PegasusStateParameters* p) :
         sparta::Unit(hart_tn),
         hart_id_(p->hart_id),
-        vlen_(p->vlen),
         reg_json_file_path_(p->reg_json_file_path),
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
@@ -84,6 +107,7 @@ namespace pegasus
         ecache_stats_period_(p->ecache_stats_period),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
+        stf_opcode_trigger_(p->stf_opcode_trigger),
         validation_stf_filename_(p->validate_with_stf),
         validate_trace_begin_(p->validate_trace_begin),
         validate_inst_begin_(p->validate_inst_begin),
@@ -104,8 +128,11 @@ namespace pegasus
                              ->getParameterValueAs<std::string>("uarch_file_path")),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
+        vlen_(getVLENB(p->vlen, extension_manager_)),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         zicntr_enabled_(extension_manager_.isEnabled("zicntr")),
+        zfh_enabled_(extension_manager_.isEnabled("zfh")),
+        zfhmin_enabled_(extension_manager_.isEnabled("zfhmin")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
         exec_cache_logger_(hart_tn, "exec_cache", "Pegasus Execution Cache Logger"),
@@ -357,9 +384,9 @@ namespace pegasus
         {
             if (false == pegasus_core_->isExtensionSupported(xlen_, ext.first))
             {
-                sparta_assert(false, "ISA extension: " << ext.first
-                                                       << " is not supported in isa_string: "
-                                                       << isa_string_);
+                sparta_assert(false,
+                              "ISA extension: " << ext.first
+                                                << " is not supported in Pegasus: " << isa_string_);
             }
         }
 
@@ -410,7 +437,8 @@ namespace pegasus
 
         if (!stf_filename_.empty())
         {
-            addObserver(std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this));
+            addObserver(
+                std::make_unique<STFLogger>(xlen_, pc_, stf_filename_, this, stf_opcode_trigger_));
         }
 
         if (!validation_stf_filename_.empty())
@@ -569,6 +597,8 @@ namespace pegasus
 
         hypervisor_enabled_ = extension_manager_.isEnabled("h");
         zicntr_enabled_ = extension_manager_.isEnabled("zicntr");
+        zfh_enabled_ = extension_manager_.isEnabled("zfh");
+        zfhmin_enabled_ = extension_manager_.isEnabled("zfhmin");
 
         setPcAlignment_();
 
@@ -1344,6 +1374,16 @@ namespace pegasus
         }
     }
 
+    Action::ItrType PegasusState::stopSim_(PegasusState*, Action::ItrType action_it)
+    {
+        for (auto & obs : observers_)
+        {
+            obs->stopSim();
+        }
+
+        return ++action_it;
+    }
+
     void PegasusState::registerWaitOnReservationSet()
     {
         auto m = pegasus_core_->getSystem()->getSystemMemory();
@@ -1400,6 +1440,17 @@ namespace pegasus
         static_assert(sizeof(XLEN) == 4 || sizeof(XLEN) == 8);
 
         Rvzicsrind::addCSRRegisterCallbacks<XLEN>(this);
+    }
+
+    void PegasusState::dumpDebugContent_(std::ostream & output) const
+    {
+        output << "HartID  : " << hart_id_ << std::endl;
+        output << "PC      : " << HEX16(pc_) << std::endl;
+        output << "NEXT PC : " << HEX16(next_pc_) << std::endl;
+        output << "PRIV    : " << priv_mode_ << std::endl;
+        output << "VIRT    : " << virtual_mode_ << std::endl;
+        output << "EXCEPT  : " << HEX8(current_exception_) << std::endl;
+        output << "VEC CFG : " << vector_config_ << std::endl;
     }
 
 } // namespace pegasus

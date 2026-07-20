@@ -13,6 +13,8 @@
 #include "sparta/simulation/ResourceTreeNode.hpp"
 #include "sparta/simulation/ResourceFactory.hpp"
 
+#include <optional>
+
 namespace sparta::memory
 {
     class MemoryObject;
@@ -60,7 +62,39 @@ namespace pegasus
             return workloads_and_args_;
         }
 
-        const std::unordered_map<Addr, std::string> & getSymbols() const { return symbols_; }
+        // Find a symbol name based on address
+        std::optional<std::string> findSymbol(uint64_t addr, bool exact_match = false) const
+        {
+            if (exact_match)
+            {
+                const auto it = symbols_.find(addr);
+                if (it != symbols_.end())
+                {
+                    return it->second.symbol;
+                }
+            }
+            for (const auto & it : symbols_)
+            {
+                if (it.second.contains(addr))
+                {
+                    return it.second.symbol;
+                }
+            }
+            return {};
+        }
+
+        // Find an address of a symbol
+        std::optional<uint64_t> findSymbolAddr(const std::string & symbol) const
+        {
+            for (const auto & it : symbols_)
+            {
+                if (it.second.symbol == symbol)
+                {
+                    return it.second.addr;
+                }
+            }
+            return {};
+        }
 
         constexpr static sparta::memory::addr_t PEGASUS_SYSTEM_BLOCK_SIZE = 0x1000; // 4K
         constexpr static sparta::memory::addr_t PEGASUS_SYSTEM_TOTAL_MEMORY =
@@ -121,7 +155,28 @@ namespace pegasus
         void loadBinary_(const std::string & binary, const Addr load_addr);
 
         sparta::utils::ValidValue<Addr> starting_pc_;
-        std::unordered_map<Addr, std::string> symbols_;
+
+        struct Symbol
+        {
+            Symbol(uint64_t _addr, uint32_t _size, std::string _symbol) :
+                addr(_addr),
+                end_addr(addr + _size),
+                symbol(_symbol)
+            {
+            }
+
+            const uint64_t addr;
+            const uint64_t end_addr;
+            const std::string symbol;
+
+            constexpr bool contains(uint64_t target_addr) const
+            {
+                return (target_addr >= addr) && (target_addr < end_addr);
+            }
+        };
+
+        std::unordered_map<Addr, Symbol> symbols_;
+
         sparta::utils::ValidValue<Addr> tohost_addr_;
         sparta::utils::ValidValue<Addr> fromhost_addr_;
         sparta::utils::ValidValue<Addr> pass_addr_;

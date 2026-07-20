@@ -266,15 +266,19 @@ namespace pegasus
         switch (cause)
         {
             case FaultCause::INST_ADDR_MISALIGNED:
-            case FaultCause::INST_ACCESS:
             case FaultCause::INST_PAGE_FAULT:
             case FaultCause::INST_GUEST_PAGE_FAULT:
                 {
                     const auto request = state->getFetchTranslationState()->getRequest();
                     return (request.getVAddr() + request.getMisalignedBytes());
                 }
+            case FaultCause::INST_ACCESS:
+                {
+                    const auto result = state->getFetchTranslationState()->getResult();
+                    state->getFetchTranslationState()->popResult();
+                    return result.getVAddr();
+                }
             case FaultCause::LOAD_ADDR_MISALIGNED:
-            case FaultCause::LOAD_ACCESS:
             case FaultCause::STORE_AMO_ADDR_MISALIGNED:
             case FaultCause::STORE_AMO_ACCESS:
             case FaultCause::LOAD_PAGE_FAULT:
@@ -285,6 +289,12 @@ namespace pegasus
                     const auto vaddr_val =
                         state->getCurrentInst()->getTranslationState()->getRequest().getVAddr();
                     return vaddr_val;
+                }
+            case FaultCause::LOAD_ACCESS:
+                {
+                    const auto result = state->getCurrentInst()->getTranslationState()->getResult();
+                    state->getCurrentInst()->getTranslationState()->popResult();
+                    return result.getVAddr();
                 }
             case FaultCause::ILLEGAL_INST:
             case FaultCause::ILLEGAL_VIRTUAL_INST:

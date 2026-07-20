@@ -550,12 +550,17 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
         Elements<Element<elemWidth>, false> elems_vs2{state, inst->getVectorConfig(),
                                                       inst->getRs2()};
+
+        // If operation mode is immediate, we don't care about rs1.
+        // Need conditional to avoid getting an invalid Rs1
+        const uint32_t rs1_val = (opMode.src1 == OperandMode::Mode::I) ? 0 : inst->getRs1();
+
         Elements<Element<is16 ? 16 : elemWidth>, false> elems_vs1{state, inst->getVectorConfig(),
-                                                                  inst->getRs1()};
+                                                                  rs1_val};
         Elements<Element<elemWidth>, false> elems_vd{state, inst->getVectorConfig(), inst->getRd()};
-        size_t i = opMode.src1 == OperandMode::Mode::I   ? inst->getImmediate()
-                   : opMode.src1 == OperandMode::Mode::X ? READ_INT_REG<XLEN>(state, inst->getRs1())
-                                                         : 0;
+        size_t elm = opMode.src1 == OperandMode::Mode::I   ? inst->getImmediate()
+                     : opMode.src1 == OperandMode::Mode::X ? READ_INT_REG<XLEN>(state, rs1_val)
+                                                           : 0;
 
         auto execute = [&](auto iter, const auto & end)
         {
@@ -563,17 +568,17 @@ namespace pegasus
             for (; iter != end; ++iter)
             {
                 index = iter.getIndex();
-                if (opMode.src1 == OperandMode::Mode::V)
+                if constexpr (opMode.src1 == OperandMode::Mode::V)
                 {
-                    i = elems_vs1.getElement(index).getVal();
+                    elm = elems_vs1.getElement(index).getVal();
                 }
-                if (i >= inst->getVectorConfig()->getVLMAX())
+                if (elm >= inst->getVectorConfig()->getVLMAX())
                 {
                     elems_vd.getElement(index).setVal(0);
                 }
                 else
                 {
-                    elems_vd.getElement(index).setVal(elems_vs2.getElement(i).getVal());
+                    elems_vd.getElement(index).setVal(elems_vs2.getElement(elm).getVal());
                 }
             }
         };
