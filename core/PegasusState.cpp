@@ -296,6 +296,11 @@ namespace pegasus
 
     uint64_t PegasusState::getXlen() const { return xlen_; }
 
+    ActionGroup* PegasusState::getNextCycleResetActionGroup()
+    {
+        return execute_unit_->getNextCycleResetActionGroup();
+    }
+
     void PegasusState::onBindTreeEarly_()
     {
         auto hart_tn = getContainer();
@@ -305,9 +310,20 @@ namespace pegasus
         translate_unit_ = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         exception_unit_ = hart_tn->getChild("exception")->getResourceAs<Exception*>();
 
-        // Connect finish ActionGroup to Fetch (or exec-page loop when ecache is active)
-        // Loopback is identical to getActionGroup(), it just checks if ecache is enabled
-        finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+        ecache_enabled_ = fetch_unit_->isEcacheEnabled();
+        if (ecache_enabled_)
+        {
+            // Wire finish → NCR → fetch (or tPE when ecache is active).
+            // NCR owns the sim_state->reset() call; fetch_ does not call it when ecache is on.
+            ActionGroup* ncr_group = execute_unit_->getNextCycleResetActionGroup();
+            ncr_group->setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+            finish_action_group_.setNextActionGroup(ncr_group);
+        }
+        else
+        {
+            // Without ecache, finish wires directly to fetch. Reset happens inside fetch_().
+            finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+        }
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
@@ -440,7 +456,7 @@ namespace pegasus
         const uint32_t ATP_CSR = Translate::getAtpCsr(stage);
         const uint32_t atp_mode_val = READ_CSR_FIELD<XLEN>(this, ATP_CSR, "mode");
         sparta_assert(atp_mode_val < mmu_mode_map.size(), "atp mode: " << atp_mode_val);
-        const translate_types::TranslationMode mode = [atp_mode_val];
+        const translate_types::TranslationMode mode = mmu_mode_map[atp_mode_val];
 
         // FIXME: Hypervisor does not support MPRV yet
         const uint32_t mprv_val = READ_CSR_FIELD<XLEN>(this, MSTATUS, "mprv");
@@ -487,9 +503,10 @@ namespace pegasus
     void PegasusState::unpauseHart()
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
-        // We replace the next Actio nGroup pointer to pause the sim, so restore
-        // the normal post-execute loopback (exec-page loop when ecache is enabled).
-        finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+        // Restore finish → NCR (ecache on) or finish → fetch (ecache off).
+        finish_action_group_.setNextActionGroup(
+            ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
+                            : fetch_unit_->getLoopbackActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -1073,7 +1090,9 @@ namespace pegasus
             sim_state_.workload_exit_code = 0;
             sim_state_.test_passed = true;
 
-            finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+            finish_action_group_.setNextActionGroup(
+                ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
+                                : fetch_unit_->getLoopbackActionGroup());
         }
     }
 

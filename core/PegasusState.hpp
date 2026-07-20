@@ -421,12 +421,11 @@ namespace pegasus
 
         ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
 
-        ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
+        ActionGroup* getNextCycleResetActionGroup();
 
-        // Active ExecutionPage's translated_page_group_, updated by dispatchTranslatedFetch_.
-        // Used by exec_page_loop to bypass fetch_+translate on same-page reuse.
-        ActionGroup* getActiveExecPageGroup() { return active_exec_page_group_; }
-        void setActiveExecPageGroup(ActionGroup* ag) { active_exec_page_group_ = ag; }
+        bool isEcacheEnabled() const { return ecache_enabled_; }
+
+        ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
         Exception* getExceptionUnit() const { return exception_unit_; }
 
@@ -504,6 +503,9 @@ namespace pegasus
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Whether the execution cache (ecache) fast path is enabled
+        bool ecache_enabled_ = false;
 
         //! Print execution-cache counter summary when simulation stops
         const bool ecache_stats_;
@@ -664,10 +666,6 @@ namespace pegasus
 
         // Deferred cache flush flag to avoid invalidating active action groups mid-execution.
         bool execution_cache_flush_requested_ = false;
-
-        // Pointer to the current ExecutionPage's translated_page_group_.
-        // Non-null when ecache is active and a page has been dispatched.
-        ActionGroup* active_exec_page_group_ = nullptr;
 
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;

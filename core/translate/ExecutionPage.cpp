@@ -1,6 +1,7 @@
 #include "ExecutionPage.hpp"
 #include "core/PegasusState.hpp"
 #include "core/PegasusCore.hpp"
+#include "core/translate/Translate.hpp"
 #include "include/PegasusUtils.hpp"
 
 namespace pegasus
@@ -69,10 +70,21 @@ namespace pegasus
     Action::ItrType ExecutionPage::translatedPageExecute_(PegasusState* state,
                                                           Action::ItrType action_it)
     {
+        state->recordExecCacheBypassEnter();
+
+        // Handle deferred flushes on the exec-page path and fall back to fetch.
+        if (SPARTA_EXPECT_FALSE(state->consumeExecutionCacheFlushRequest()))
+        {
+            state->recordExecCacheBypassFallback();
+            state->getTranslateUnit()->flushExecutionCache();
+            state->getNextCycleResetActionGroup()->setNextActionGroup(fetch_action_group_);
+            translated_page_group_.setNextActionGroup(fetch_action_group_);
+            return ++action_it;
+        }
+
         // Check to see if the PC is still within the page covered by this ExecutionPage.
         // isContained method no longer exists so the page mask and base addrs are calculated here.
 
-        // Possibly redundant too, since checks are performed in dispatchTranslatedFetch, but good to be safe
         const Addr page_size = translation_result_.getPageSize() != 0
                        ? translation_result_.getPageSize()
                        : translation_result_.getSize();
@@ -86,6 +98,10 @@ namespace pegasus
         const auto vaddr = state->getPc();
         if ((vaddr & ~page_mask) == vaddr_base)
         {
+            // Wire Next Cycle Reset to loop back through this page. If PC leaves
+            // this page, translatedPageExecute_ will redirect NCR to fetch on the next entry.
+            state->getNextCycleResetActionGroup()->setNextActionGroup(&translated_page_group_);
+
             //std::cout << "Contained: " << std::hex << vaddr << std::endl;
 
             // Get the address index and shift out the offset
@@ -131,6 +147,7 @@ namespace pegasus
         else {
             // Go back to fetch
             state->recordExecCacheBypassFallback();
+            state->getNextCycleResetActionGroup()->setNextActionGroup(fetch_action_group_);
             translated_page_group_.setNextActionGroup(fetch_action_group_);
         }
 
@@ -272,9 +289,14 @@ namespace pegasus
                 partial_opcode = true;
                 state->setPc(state->getPc() + 2);
 
-                // Go back to inst translate to get the second page.  Have
-                // that second page do the execution
-                throw ActionException(translated_page_group_);
+                // Request translation for the second half directly and jump to
+                // translate, avoiding an intermediate fetch_() reset path.
+                auto* fetch_translation_state = state->getFetchTranslationState();
+                fetch_translation_state->reset();
+                fetch_translation_state->makeRequest(state->getPc(), sizeof(uint16_t));
+
+                auto* translate_group = state->getFetchUnit()->getActionGroup()->getNextActionGroup();
+                throw ActionException(translate_group);
             }
         }
 
@@ -336,10 +358,9 @@ namespace pegasus
         // set to the captured instruction.
         inst_action_group_->insertActionFront(inst_set_inst_);
 
-        // Setup the instruction's next action (after execute adds
-        // finishing action groups) to return to this translated page
-        inst_action_group_->getNextActionGroup()->
-            setNextActionGroup(translated_page_group_);
+        // Wire NCR → this translated page so that finish → NCR → tPE on the next cycle.
+        // Do NOT touch finish_action_group_->next here; finish always points to NCR.
+        state->getNextCycleResetActionGroup()->setNextActionGroup(translated_page_group_);
 
         // Capture the instruction late -- the above execute functions
         // can throw

@@ -15,47 +15,33 @@ namespace pegasus
     // Allows for toggling on and off the exection cache
     Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
         sparta::Unit(fetch_node),
+        params_(p),
         enable_ecache_(p->enable_ecache)
     {
         Action fetch_action =
             pegasus::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
         fetch_action_group_.addAction(fetch_action);
 
-        // Action for dispatching fetch that has already been translated to an ExecutionPage.
-        // Used when fetch hits in the execution cache and can skip the normal TL action and go straight to Execute.
-        Action dispatch_action =
-            pegasus::Action::createAction<&Fetch::dispatchTranslatedFetch_>(this,
-                                                                            "dispatch_translated_fetch");
-        translated_fetch_dispatch_action_group_.addAction(dispatch_action);
-
         Action decode_action =
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
         decode_action_group_.addAction(decode_action);
-
-        if (enable_ecache_)
-        {
-            // Action for looping back when we hit in the execution cache, bypassing fetch_ and translate_ for same-page instructions.
-            Action loop_action =
-                pegasus::Action::createAction<&Fetch::execPageLoop_>(this, "exec_page_loop");
-            exec_page_loop_action_group_.addAction(loop_action);
-        }
     }
 
     // For flushing the execution cache
     void Fetch::flushExecutionCache()
     {
-        if (execution_pages_.empty())
+        if (state_ != nullptr)
         {
-            return;
+            state_->getTranslateUnit()->flushExecutionCache();
         }
-
-        execution_pages_.clear();
     }
 
     void Fetch::onBindTreeEarly_()
     {
         auto hart_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
         state_ = hart_tn->getResourceAs<PegasusState>();
+        // enable_ecache_ is read in the constructor from params so it is available
+        // before PegasusState::onBindTreeEarly_() queries it.
 
         // Connect Fetch, Translate and Execute
         Translate* translate_unit = hart_tn->getChild("translate")->getResourceAs<Translate*>();
@@ -65,12 +51,7 @@ namespace pegasus
         execute_action_group_ = execute_unit->getActionGroup();
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);
-        // If execution cache enabled, then after TL, dispatch to either execution cache check or decode
-        inst_translate_action_group->setNextActionGroup(enable_ecache_
-                                                            ? &translated_fetch_dispatch_action_group_
-                                                            : &decode_action_group_);
-        // Defaults to decode, but if fetch hits, it'll redirect
-        translated_fetch_dispatch_action_group_.setNextActionGroup(&decode_action_group_);
+        inst_translate_action_group->setNextActionGroup(&decode_action_group_);
         decode_action_group_.setNextActionGroup(execute_action_group_);
         execute_action_group_->setNextActionGroup(&fetch_action_group_);
     }
@@ -83,19 +64,14 @@ namespace pegasus
         {
             flushExecutionCache();
         }
-
-        // Reset the sim state
-        PegasusState::SimState* sim_state = state->getSimState();
-        // Preserve partial_opcode and current_opcode across reentry: a cross-page instruction
-        // threw back to fetch_ to translate the second page.  current_opcode holds the first
-        // 16 bits that setupInst_ stored before throwing; the second page's setupInst_ will
-        // OR in the upper 16 bits, so both values must survive reset().
-        const bool was_partial = sim_state->partial_opcode;
-        const Opcode saved_opcode = sim_state->current_opcode;
-        sim_state->reset();
-        sim_state->partial_opcode = was_partial;
-        if (was_partial) {
-            sim_state->current_opcode = saved_opcode;
+        // Reset sim state. When ecache is off this always runs. When ecache is on, NCR
+        // handles the reset mid-stream (after NCR clears current_inst to null, the check
+        // below is false so fetch_ is a no-op). On quantum/pause resume advanceSim_()
+        // re-enters at fetch_action_group_ directly, bypassing NCR; current_inst is still
+        // non-null from the last instruction, so the guard fires and resets correctly.
+        if (!enable_ecache_ || state->getCurrentInst() != nullptr)
+        {
+            state->getSimState()->reset();
         }
 
         PegasusTranslationState* translation_state = state->getFetchTranslationState();
@@ -104,53 +80,6 @@ namespace pegasus
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
         // Keep going
-        return ++action_it;
-    }
-
-    // New in-between Action for determining whether to dispatch to an ExecutionPage from the cache or go to the normal decode
-    Action::ItrType Fetch::dispatchTranslatedFetch_(PegasusState* state, Action::ItrType action_it)
-    {
-        // Obtain translation results from the translation state.
-        auto* translation_state = state->getFetchTranslationState();
-        sparta_assert(translation_state->getNumResults() > 0);
-
-        const auto & result = translation_state->getResult();
-        const Addr page_size = result.getPageSize();
-        // If the translation result doesn't have a valid page size or it's less than 4K
-        // We can't use the execution cache, so just dispatch it to decode
-        if ((page_size < 0x1000) || ((page_size & (page_size - 1)) != 0))
-        {
-            translated_fetch_dispatch_action_group_.setNextActionGroup(&decode_action_group_);
-            return ++action_it;
-        }
-
-        const Addr page_mask = page_size - 1;
-        // Calculate the base virtual and phys addrs for the corresponding execution page
-        // TO DO: does this every time, maybe add a page pointer so need to do it less?
-        const Addr vaddr_base = result.getVAddr() & ~page_mask;
-        const Addr paddr_base = result.getPAddr() & ~page_mask;
-        const ExecutionPageKey key{vaddr_base, paddr_base, page_size};
-
-        // If we don't yet have an execution page for this TL result, create one and add it to the map.
-        auto [it, inserted] = execution_pages_.try_emplace(key, nullptr);
-        if(inserted || !it->second) {
-            // Can disable this ILOG if it disrupts test output
-            ILOG("Creating new execution page for vaddr 0x" << std::hex << vaddr_base
-                 << " paddr 0x" << paddr_base << " size 0x" << page_size);
-            it->second = std::make_unique<ExecutionPage>(result,
-                                                         &fetch_action_group_,
-                                                         execute_action_group_);
-        }
-
-        translation_state->popResult();
-        // Update the active exec page so exec_page_loop_ can route back here directly
-        // without going through fetch_()+translate on every same-page instruction.
-        state->setActiveExecPageGroup(it->second->getExecutionPageActionGroup());
-        translated_fetch_dispatch_action_group_.setNextActionGroup(
-            // Set next action group to the execution page's action group for dispatching translated fetches
-            // It executes translatedPageExecute, which by default executes setupInst when an inst is first seen
-            // Otherwise, it executes the instruction's action group after setupInst has been executed once, skipping decode
-            it->second->getExecutionPageActionGroup());
         return ++action_it;
     }
 
@@ -301,48 +230,4 @@ namespace pegasus
         return ++action_it;
     }
 
-    // Essentially replaces fetch+translate when the ecache is enabled
-    Action::ItrType Fetch::execPageLoop_(PegasusState* state, Action::ItrType action_it)
-    {
-        state->recordExecCacheBypassEnter();
-
-        // Consume any deferred flush request (e.g. from fence.i, sfence.vma).
-        // If a flush is needed, fall through to fetch_action_group_ which will
-        // go through the full fetch+translate path and pick up the new page.
-        if (SPARTA_EXPECT_FALSE(state->consumeExecutionCacheFlushRequest()))
-        {
-            state->recordExecCacheBypassFallback();
-            flushExecutionCache();
-            state->setActiveExecPageGroup(nullptr);
-            exec_page_loop_action_group_.setNextActionGroup(&fetch_action_group_);
-            return ++action_it;
-        }
-
-        // Perform the same sim-state reset that fetch_() does, preserving
-        // partial_opcode/current_opcode for cross-page instruction construction.
-        auto* sim_state = state->getSimState();
-        const bool was_partial = sim_state->partial_opcode;
-        const Opcode saved_opcode = sim_state->current_opcode;
-        sim_state->reset();
-        sim_state->partial_opcode = was_partial;
-        if (was_partial)
-        {
-            sim_state->current_opcode = saved_opcode;
-        }
-
-        // Route to the active ExecutionPage's translated_page_group_.
-        // That group checks PC membership: if still on-page it dispatches to the
-        // next InstExecute directly; if off-page it routes to fetch_action_group_
-        // for a full re-translate.
-        ActionGroup* active = state->getActiveExecPageGroup();
-        if (SPARTA_EXPECT_FALSE(active == nullptr))
-        {
-            state->recordExecCacheBypassFallback();
-            exec_page_loop_action_group_.setNextActionGroup(&fetch_action_group_);
-            return ++action_it;
-        }
-
-        exec_page_loop_action_group_.setNextActionGroup(active);
-        return ++action_it;
-    }
 } // namespace pegasus

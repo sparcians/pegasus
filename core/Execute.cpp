@@ -14,6 +14,12 @@ namespace pegasus
         Action execute_action = pegasus::Action::createAction<&Execute::execute_>(this, "Execute");
         execute_action.addTag(ActionTags::EXECUTE_TAG);
         execute_action_group_.addAction(execute_action);
+
+    
+        // Reset sim state action
+        Action reset_action =
+            pegasus::Action::createAction<&Execute::nextCycleReset_>(this, "Next Cycle Reset");
+        next_cycle_reset_action_group_.addAction(reset_action);
     }
 
     Action::ItrType Execute::execute_(PegasusState* state, Action::ItrType action_it)
@@ -78,6 +84,16 @@ namespace pegasus
 
         // Execute the instruction
         execute_action_group_.setNextActionGroup(inst_action_group);
+        return ++action_it;
+    }
+
+    Action::ItrType Execute::nextCycleReset_(PegasusState* state, Action::ItrType action_it)
+    {
+        if (state->getCurrentInst() != nullptr)
+        {
+            auto* sim_state = state->getSimState();
+            sim_state->reset();
+        }
         return ++action_it;
     }
 } // namespace pegasus

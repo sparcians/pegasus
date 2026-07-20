@@ -1,15 +1,10 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/translate/ExecutionPage.hpp"
 
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/TreeNode.hpp"
 #include "sparta/simulation/Unit.hpp"
-
-#include <map>
-#include <memory>
-#include <tuple>
 
 namespace pegasus
 {
@@ -37,26 +32,23 @@ namespace pegasus
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
         // Returns the post-execute loopback action group.
-        // When ecache is enabled, this bypasses fetch_+translate for same-page reuse.
-        // When ecache is disabled, this is the normal fetch_ action group.
+        // Currently always returns Fetch so the pipeline always goes
+        // Fetch -> Translate -> Decode.
         ActionGroup* getLoopbackActionGroup()
         {
-            return enable_ecache_ ? &exec_page_loop_action_group_ : &fetch_action_group_;
+          return &fetch_action_group_;
         }
 
         // Conservative full flush of translated execution pages.
         void flushExecutionCache();
 
+        bool isEcacheEnabled() const { return enable_ecache_; }
+
       private:
         PegasusState* state_ = nullptr;
-        const bool enable_ecache_ = false;
+        const FetchParameters* params_ = nullptr;
+        bool enable_ecache_ = false;
         ActionGroup* execute_action_group_ = nullptr;
-
-        // ExecutionPageKey is a tuple of (virt_page_base_addr, phys_page_base_addr, page_offset)
-        // It allows us to identify an execution page
-        using ExecutionPageKey = std::tuple<Addr, Addr, Addr>;
-        // The actual map of execution pages, keyed by the above tuple
-        std::map<ExecutionPageKey, std::unique_ptr<ExecutionPage>> execution_pages_;
 
         void onBindTreeEarly_() override;
 
@@ -64,22 +56,9 @@ namespace pegasus
 
         ActionGroup fetch_action_group_{"Fetch"};
 
-        // Action group for dispatching a fetch that has already been translated to an ExecutionPage
-        Action::ItrType dispatchTranslatedFetch_(pegasus::PegasusState* state,
-                                                Action::ItrType action_it);
-
-        ActionGroup translated_fetch_dispatch_action_group_{"Dispatch Translated Fetch"};
-
         Action::ItrType decode_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         ActionGroup decode_action_group_{"Decode"};
 
-        // Hot-path loopback when ecache is active: bypasses fetch_()+Translate for
-        // instructions on the same ExecutionPage. Routes to the active page's
-        // translated_page_group_; on page exit that group redirects to fetch_action_group_
-        // for a full re-translate.
-        Action::ItrType execPageLoop_(pegasus::PegasusState* state, Action::ItrType action_it);
-
-        ActionGroup exec_page_loop_action_group_{"ExecPageLoop"};
     };
 } // namespace pegasus

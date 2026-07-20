@@ -64,7 +64,7 @@ int main()
                                              fetch_action_group,
                                              execute_action_group);
 
-    fetch_action_group->setNextActionGroup(translation_page.getExecutionPageActionGroup());
+    // fetch_action_group->setNextActionGroup(translation_page.getExecutionPageActionGroup());
     do {
         next_action_group = next_action_group->execute(state);
         if (state->getSimState()->inst_count == break_out) {
