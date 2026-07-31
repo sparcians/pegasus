@@ -73,7 +73,8 @@ namespace pegasus
                     return it->second.symbol;
                 }
             }
-            else {
+            else
+            {
                 for (const auto & it : symbols_)
                 {
                     if (it.second.contains(addr))
