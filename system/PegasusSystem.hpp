@@ -73,11 +73,13 @@ namespace pegasus
                     return it->second.symbol;
                 }
             }
-            for (const auto & it : symbols_)
-            {
-                if (it.second.contains(addr))
+            else {
+                for (const auto & it : symbols_)
                 {
-                    return it.second.symbol;
+                    if (it.second.contains(addr))
+                    {
+                        return it.second.symbol;
+                    }
                 }
             }
             return {};
