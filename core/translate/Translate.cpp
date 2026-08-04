@@ -544,7 +544,6 @@ namespace pegasus
             translation_state->setResult(vaddr, paddr, access_size, page_size);
         }
 
-
         if (is_misaligned || (translation_state->getNumRequests() > 0))
         {
             // For misaligned accesses, there may be another translation request to resolve.
@@ -582,8 +581,6 @@ namespace pegasus
                 }
             }
         }
-
-        
 
         // FIXME: Document!!!
         if constexpr (STAGE == translate_types::TranslationStage::VIRTUAL_SUPERVISOR)

@@ -507,9 +507,9 @@ namespace pegasus
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
         // Restore finish → NCR (ecache on) or finish → fetch (ecache off).
-        finish_action_group_.setNextActionGroup(
-            ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
-                           : fetch_unit_->getActionGroup());
+        finish_action_group_.setNextActionGroup(ecache_enabled_
+                                                    ? execute_unit_->getNextCycleResetActionGroup()
+                                                    : fetch_unit_->getActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)

@@ -526,7 +526,6 @@ namespace pegasus
         //! Print execution-cache counter summary when simulation stops
         const bool ecache_stats_;
 
-
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
 
