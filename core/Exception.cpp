@@ -245,6 +245,14 @@ namespace pegasus
 
         state->setNextPc(trap_handler_address);
         state->setPrivMode(priv_mode, virt_mode);
+
+        // Trap entry must not reuse the previous exec-cache bypass chain. Reset the
+        // next-cycle-reset target back to fetch so the next cycle
+        // starts from the trap-handler PC instead of a stale InstExecute slot.
+        state->flushExecutionCache();
+        state->getNextCycleResetActionGroup()->setNextActionGroup(
+            state->getFetchUnit()->getActionGroup());
+
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);

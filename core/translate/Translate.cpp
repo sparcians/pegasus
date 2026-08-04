@@ -17,7 +17,7 @@ namespace pegasus
         // Masks kept separate to allow for easy modification
         constexpr Addr kExecPageL0Bits = 9; // [20:12]
         constexpr Addr kExecPageL1Bits = 9; // [29:21]
-        constexpr Addr kExecPageL2Bits = 9; // [38:30]    
+        constexpr Addr kExecPageL2Bits = 9; // [38:30]
         constexpr Addr kExecPageL0Mask = (Addr(1) << kExecPageL0Bits) - 1;
         constexpr Addr kExecPageL1Mask = (Addr(1) << kExecPageL1Bits) - 1;
         constexpr Addr kExecPageL2Mask = (Addr(1) << kExecPageL2Bits) - 1;
@@ -34,7 +34,8 @@ namespace pegasus
 
         inline Addr getExecPageL2Index(const Addr vaddr)
         {
-            return ((vaddr >> kExecPageShift) >> (kExecPageL1Bits + kExecPageL2Bits)) & kExecPageL2Mask;
+            return ((vaddr >> kExecPageShift) >> (kExecPageL1Bits + kExecPageL2Bits))
+                   & kExecPageL2Mask;
         }
 
         // Helper function to convert page size enum to bytes
@@ -60,7 +61,7 @@ namespace pegasus
 
             return 0;
         }
-    }
+    } // namespace
 
     Translate::Translate(sparta::TreeNode* translate_node, const TranslateParameters*) :
         sparta::Unit(translate_node)
@@ -108,10 +109,7 @@ namespace pegasus
     }
 
     // Flushes the execution cache by clearing the VA-index owning table.
-    void Translate::flushExecutionCache()
-    {
-        execution_page_table_.clear();
-    }
+    void Translate::flushExecutionCache() { execution_page_table_.clear(); }
 
     ActionGroup* Translate::lookupExecutionPageGroup_(const Addr vaddr) const
     {
@@ -133,7 +131,8 @@ namespace pegasus
 
         const Addr l0_idx = getExecPageL0Index(vaddr);
         const auto l0_it = l1_it->second.find(l0_idx);
-        // If L0 index is not found or the execution page is null, there are no cached pages for this VA.
+        // If L0 index is not found or the execution page is null, there are no cached pages for
+        // this VA.
         if (l0_it == l1_it->second.end() || !l0_it->second)
         {
             return nullptr;
@@ -167,14 +166,14 @@ namespace pegasus
         }
 
         const Addr paddr_base = paddr & ~page_mask;
-        ILOG("Creating new execution page for vaddr 0x" << std::hex << vaddr_base
-             << " paddr 0x" << paddr_base << " size 0x" << page_size);
+        ILOG("Creating new execution page for vaddr 0x" << std::hex << vaddr_base << " paddr 0x"
+                                                        << paddr_base << " size 0x" << page_size);
 
-        PegasusTranslationState::TranslationResult cached_result(vaddr, paddr,
-                                                                 sizeof(Opcode), page_size);
-        auto exec_page = std::make_shared<ExecutionPage>(cached_result,
-                                                         state->getFetchUnit()->getActionGroup(),
-                                                         state->getExecuteUnit()->getActionGroup());
+        PegasusTranslationState::TranslationResult cached_result(vaddr, paddr, sizeof(Opcode),
+                                                                 page_size);
+        auto exec_page =
+            std::make_shared<ExecutionPage>(cached_result, state->getFetchUnit()->getActionGroup(),
+                                            state->getExecuteUnit()->getActionGroup());
 
         // Insert only the single VPN entry for this access (lazy population).
         // For superpages, other 4K chunks within the same page will miss on first access,
@@ -307,13 +306,14 @@ namespace pegasus
                     exec_page_group != nullptr)
                 {
                     translation_state->popRequest();
-                    // Jump directly to the execution page group without setting a translation result since we're bypassing normal translation flow.
+                    // Jump directly to the execution page group without setting a translation
+                    // result since we're bypassing normal translation flow.
                     throw ActionException(exec_page_group);
                 }
             }
         }
-        // Execution Page does not exist for the requested VA, or this is a misaligned fetch. Fall back to normal translation
-        // Width in bytes for logging
+        // Execution Page does not exist for the requested VA, or this is a misaligned fetch. Fall
+        // back to normal translation Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
         DLOG("Starting " << STAGE << " translation for VA: " << HEX(vaddr, width));
         state->recordTranslationRequest();
@@ -327,8 +327,7 @@ namespace pegasus
         if (level == 0 || (priv_mode == PrivMode::MACHINE))
         {
             state->recordTranslationBypass();
-            return setResult_<XLEN, STAGE, MODE, TYPE>(state, translation_state, action_it,
-                                                       vaddr);
+            return setResult_<XLEN, STAGE, MODE, TYPE>(state, translation_state, action_it, vaddr);
         }
 
         state->recordPageWalkTranslation();
@@ -497,10 +496,9 @@ namespace pegasus
 
     template <typename XLEN, translate_types::TranslationStage STAGE,
               translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
-    Action::ItrType Translate::setResult_(PegasusState* state,
-                                          PegasusTranslationState* translation_state,
-                                          Action::ItrType action_it, const Addr paddr,
-                                          const uint32_t level)
+    Action::ItrType
+    Translate::setResult_(PegasusState* state, PegasusTranslationState* translation_state,
+                          Action::ItrType action_it, const Addr paddr, const uint32_t level)
     {
         // Width in bytes for logging
         const uint32_t width = std::is_same_v<XLEN, RV64> ? 16 : 8;
@@ -512,7 +510,8 @@ namespace pegasus
                                : request.getVAddr();
         const size_t access_size =
             request.isMisaligned() ? request.getMisalignedBytes() : request.getSize();
-        const size_t page_size = [&]() -> size_t {
+        const size_t page_size = [&]() -> size_t
+        {
             if constexpr (MODE == translate_types::TranslationMode::BAREMETAL)
             {
                 return 0x1000;
@@ -545,16 +544,6 @@ namespace pegasus
             translation_state->setResult(vaddr, paddr, access_size, page_size);
         }
 
-        // Create new execution page entry
-        if constexpr (TYPE == translate_types::AccessType::EXECUTE)
-        {
-            if (state->isEcacheEnabled() && translation_state->getNumResults() > 0)
-            {
-                const auto & result = translation_state->getResult();
-                registerExecutionPageResult_(state, result.getVAddr(), result.getPAddr(),
-                                             result.getPageSize());
-            }
-        }
 
         if (is_misaligned || (translation_state->getNumRequests() > 0))
         {
@@ -574,6 +563,27 @@ namespace pegasus
                     return action_it;
             }
         }
+
+        // Create new execution page entry
+        if constexpr (TYPE == translate_types::AccessType::EXECUTE)
+        {
+            if (state->isEcacheEnabled() && translation_state->getNumResults() > 0)
+            {
+                const auto & result = translation_state->getResult();
+                registerExecutionPageResult_(state, result.getVAddr(), result.getPAddr(),
+                                             result.getPageSize());
+
+                // On execute-translation miss, route directly into the newly
+                // registered execution page path instead of returning to Decode.
+                if (ActionGroup* exec_page_group = lookupExecutionPageGroup_(result.getVAddr());
+                    exec_page_group != nullptr)
+                {
+                    throw ActionException(exec_page_group);
+                }
+            }
+        }
+
+        
 
         // FIXME: Document!!!
         if constexpr (STAGE == translate_types::TranslationStage::VIRTUAL_SUPERVISOR)

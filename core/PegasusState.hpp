@@ -90,7 +90,8 @@ namespace pegasus
             PARAMETER(bool, ecache_stats, false,
                       "Print execution-cache reuse counters/ratio when the hart stops")
             PARAMETER(uint64_t, ecache_stats_period, 0,
-                      "If non-zero and ecache_stats is true, print execution-cache counters every N decisions")
+                      "If non-zero and ecache_stats is true, print execution-cache counters every "
+                      "N decisions")
             // Typical stack pointer is 8KB on most linux systems
             PARAMETER(uint32_t, ulimit_stack_size, 8192,
                       "Typical ulimit stack size for system call emulation")
@@ -413,13 +414,25 @@ namespace pegasus
 
         void recordExecCacheBypassFallback() { ++exec_cache_bypass_fallback_count_; }
 
+        // Count how often setupInst wires NCR directly to the next instruction
+        // action group, bypassing translatedPageExecute_ for subsequent hits.
+        void recordExecCachePteBypassSetup() { ++exec_cache_pte_bypass_setup_count_; }
+
         uint64_t getExecCacheReuseCount() const { return exec_cache_reuse_count_; }
 
         uint64_t getExecCacheFirstDecodeCount() const { return exec_cache_first_decode_count_; }
 
         uint64_t getExecCacheBypassEnterCount() const { return exec_cache_bypass_enter_count_; }
 
-        uint64_t getExecCacheBypassFallbackCount() const { return exec_cache_bypass_fallback_count_; }
+        uint64_t getExecCacheBypassFallbackCount() const
+        {
+            return exec_cache_bypass_fallback_count_;
+        }
+
+        uint64_t getExecCachePteBypassSetupCount() const
+        {
+            return exec_cache_pte_bypass_setup_count_;
+        }
 
         uint64_t getTranslationRequestCount() const { return translation_request_count_; }
 
@@ -679,6 +692,7 @@ namespace pegasus
         uint64_t exec_cache_first_decode_count_ = 0;
         uint64_t exec_cache_bypass_enter_count_ = 0;
         uint64_t exec_cache_bypass_fallback_count_ = 0;
+        uint64_t exec_cache_pte_bypass_setup_count_ = 0;
         uint64_t translation_request_count_ = 0;
         uint64_t translation_bypass_count_ = 0;
         uint64_t page_walk_translation_count_ = 0;

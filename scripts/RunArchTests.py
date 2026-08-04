@@ -67,7 +67,7 @@ def get_tenstorrent_tests(SUPPORTED_XLEN, directory):
 
 
 # Generate Pegasus command to run a test
-def get_pegasus_cmd(testname, wkld, output_dir, executable):
+def get_pegasus_cmd(testname, wkld, output_dir, executable, pegasus_params=None):
     if be_noisy:
         print("Running", testname)
     rv32_test = "rv32" in testname
@@ -76,7 +76,13 @@ def get_pegasus_cmd(testname, wkld, output_dir, executable):
     isa_string = "rv32"+isa_string if rv32_test else "rv64"+isa_string
     pegasus_cmd = [executable,
                  "--debug-dump-filename", error_dump,
-                 "-p", "top.core0.params.isa", isa_string, "-w", wkld]
+                 "-p", "top.core0.params.isa", isa_string]
+
+    if pegasus_params:
+        for param_name, param_value in pegasus_params:
+            pegasus_cmd.extend(["-p", param_name, param_value])
+
+    pegasus_cmd.extend(["-w", wkld])
     return pegasus_cmd
 
 
@@ -215,6 +221,14 @@ def get_args():
     parser.add_argument("--riscv-arch", type=str, help="The directory of the built RISC-V Arch tests")
     parser.add_argument("--tenstorrent", type=str, help="The directory of the built Tenstorrent tests")
     parser.add_argument("--pegasus-exe", type=str, default="./pegasus", help="Path to the Pegasus executable (default: ./pegasus)")
+    parser.add_argument(
+        "--pegasus-param",
+        action='append',
+        nargs=2,
+        metavar=('NAME', 'VALUE'),
+        default=[],
+        help="Pegasus runtime parameter pair passed as -p NAME VALUE (repeatable)"
+    )
     parser.add_argument("--serial", action='store_true', default=False, help="Run tests serially instead of in parallel")
     parser.add_argument("--expected-pass-rate", type=float, help="Expected pass rate (for CI purposes only)")
     return parser
@@ -350,7 +364,13 @@ def main():
     for test in tests:
         testname = test[0]
         wkld = test[1]
-        pegasus_cmd = get_pegasus_cmd(testname, wkld, output_dir, pegasus_exe)
+        pegasus_cmd = get_pegasus_cmd(
+            testname,
+            wkld,
+            output_dir,
+            pegasus_exe,
+            args.pegasus_param
+        )
         pegasus_cmds.append([testname, pegasus_cmd])
 
     ###########################################################################

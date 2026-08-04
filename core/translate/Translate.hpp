@@ -153,14 +153,13 @@ namespace pegasus
 
         template <typename XLEN, translate_types::TranslationStage STAGE,
                   translate_types::TranslationMode MODE, translate_types::AccessType TYPE>
-        Action::ItrType setResult_(PegasusState* state,
-                       PegasusTranslationState* translation_state,
+        Action::ItrType setResult_(PegasusState* state, PegasusTranslationState* translation_state,
                                    Action::ItrType action_it, const Addr paddr,
                                    const uint32_t level = 1);
 
         ActionGroup* lookupExecutionPageGroup_(const Addr vaddr) const;
-        void registerExecutionPageResult_(PegasusState* state, const Addr vaddr,
-                          const Addr paddr, const Addr page_size);
+        void registerExecutionPageResult_(PegasusState* state, const Addr vaddr, const Addr paddr,
+                                          const Addr page_size);
 
         template <typename XLEN, translate_types::TranslationStage STAGE,
                   translate_types::TranslationMode MODE, translate_types::AccessType TYPE>

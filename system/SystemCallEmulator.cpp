@@ -153,8 +153,8 @@ namespace pegasus
             catch (const std::out_of_range &)
             {
                 // Instead of assert, return -ENOSYS on an unknown system call.
-               // sparta_assert(false, "System call #" << sc_call_id << " is not known");
-               ret_val = -ENOSYS;
+                // sparta_assert(false, "System call #" << sc_call_id << " is not known");
+                ret_val = -ENOSYS;
                 SYSCALL_LOG("unknown_syscall(" << sc_call_id << ") -> " << ret_val);
             }
             return ret_val;
@@ -612,6 +612,7 @@ namespace pegasus
 
         return buflen;
     }
+
     // TO DO: Implement rseq properly (doesn't do anything right now)
 
     int64_t SysCallHandlers::rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)

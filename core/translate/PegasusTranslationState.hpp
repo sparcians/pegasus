@@ -74,7 +74,8 @@ namespace pegasus
 
             size_t getSize() const { return size_; }
 
-            // Get the page size for this translation result. If page size is 0, it means the page size is the same as the access size
+            // Get the page size for this translation result. If page size is 0, it means the page
+            // size is the same as the access size
             size_t getPageSize() const { return page_size_; }
 
             bool isValid() const { return size_ != 0; }

@@ -14,7 +14,7 @@ namespace pegasus
         static const ActionTagType INST_G_STAGE_TRANSLATE_TAG;
         static const ActionTagType DECODE_TAG;
         static const ActionTagType EXECUTE_TAG;
-        static const ActionTagType COMPUTE_ADDR_TAG;  
+        static const ActionTagType COMPUTE_ADDR_TAG;
         static const ActionTagType DATA_S_STAGE_TRANSLATE_TAG;
         static const ActionTagType DATA_VS_STAGE_TRANSLATE_TAG;
         static const ActionTagType DATA_G_STAGE_TRANSLATE_TAG;

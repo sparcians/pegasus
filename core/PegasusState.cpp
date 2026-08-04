@@ -251,7 +251,8 @@ namespace pegasus
         vector_config_.setVSTART(p->init_vstart);
         vector_config_.checkConfig();
     }
-// Execute cache stats
+
+    // Execute cache stats
     void PegasusState::recordExecCacheDecision(bool instruction_reuse)
     {
         if (instruction_reuse)
@@ -273,23 +274,19 @@ namespace pegasus
         {
             std::cout << "\tExecCache periodic decisions: " << total_decisions
                       << " (reuse=" << exec_cache_reuse_count_
-                      << ", first_decode=" << exec_cache_first_decode_count_ << ")"
-                      << std::endl;
+                      << ", first_decode=" << exec_cache_first_decode_count_ << ")" << std::endl;
             std::cout << "\tExecCache periodic reuse ratio: " << getExecCacheReuseRatio()
                       << std::endl;
-            std::cout << "\tExecCache periodic bypass: enter="
-                      << getExecCacheBypassEnterCount()
-                      << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
+            std::cout << "\tExecCache periodic bypass: enter=" << getExecCacheBypassEnterCount()
+                      << ", fallback=" << getExecCacheBypassFallbackCount()
+                      << ", pTE_setup=" << getExecCachePteBypassSetupCount() << std::endl;
             std::cout << "\tTranslation periodic: requests=" << getTranslationRequestCount()
                       << ", bypass=" << getTranslationBypassCount()
                       << ", page_walk=" << getPageWalkTranslationCount() << std::endl;
         }
     }
 
-    void PegasusState::flushExecutionCache()
-    {
-        execution_cache_flush_requested_ = true;
-    }
+    void PegasusState::flushExecutionCache() { execution_cache_flush_requested_ = true; }
 
     bool PegasusState::consumeExecutionCacheFlushRequest()
     {
@@ -340,8 +337,8 @@ namespace pegasus
         ecache_enabled_ = fetch_unit_->isEcacheEnabled();
         if (ecache_enabled_)
         {
-            // Wire finish → NCR → fetch (or tPE when ecache is active).
-            // NCR owns the sim_state->reset() call; fetch_ does not call it when ecache is on.
+            // Wire finish → NCR → Translate (or tPE when ecache is active).
+            // NCR owns the sim_state->reset() call
             ActionGroup* ncr_group = execute_unit_->getNextCycleResetActionGroup();
             ncr_group->setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
             finish_action_group_.setNextActionGroup(ncr_group);
@@ -532,9 +529,9 @@ namespace pegasus
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
         // Restore finish → NCR (ecache on) or finish → fetch (ecache off).
-        finish_action_group_.setNextActionGroup(
-            ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
-                            : fetch_unit_->getLoopbackActionGroup());
+        finish_action_group_.setNextActionGroup(ecache_enabled_
+                                                    ? execute_unit_->getNextCycleResetActionGroup()
+                                                    : fetch_unit_->getLoopbackActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -1095,13 +1092,14 @@ namespace pegasus
                 const uint64_t reuse_count = getExecCacheReuseCount();
                 const uint64_t first_decode_count = getExecCacheFirstDecodeCount();
                 const uint64_t total_decisions = reuse_count + first_decode_count;
-                std::cout << "\tExecCache decisions: " << total_decisions << " (reuse="
-                          << reuse_count << ", first_decode=" << first_decode_count << ")"
-                          << std::endl;
-                std::cout << "\tExecCache reuse ratio: " << getExecCacheReuseRatio()
-                          << std::endl;
-                std::cout << "\tExecCache bypass: enter=" << getExecCacheBypassEnterCount()
-                          << ", fallback=" << getExecCacheBypassFallbackCount() << std::endl;
+                std::cout << "Execution Cache statistics" << std::endl;
+                std::cout << "\tExecCache decisions: " << total_decisions
+                          << " (reuse=" << reuse_count << ", first_decode = " << first_decode_count
+                          << ")" << std::endl;
+                std::cout << "\tExecCache reuse ratio: " << getExecCacheReuseRatio() << std::endl;
+                std::cout << "\tExecCache bypass: enter = " << getExecCacheBypassEnterCount()
+                          << ", fallback = " << getExecCacheBypassFallbackCount()
+                          << ", pTE_setup = " << getExecCachePteBypassSetupCount() << std::endl;
                 std::cout << "\tTranslation requests: " << getTranslationRequestCount()
                           << std::endl;
                 std::cout << "\tTranslation bypass (machine/baremetal): "

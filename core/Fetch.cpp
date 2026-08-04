@@ -48,6 +48,7 @@ namespace pegasus
         Execute* execute_unit = hart_tn->getChild("execute")->getResourceAs<Execute*>();
 
         ActionGroup* inst_translate_action_group = translate_unit->getExecuteTranslateActionGroup();
+        translate_action_group_ = inst_translate_action_group;
         execute_action_group_ = execute_unit->getActionGroup();
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);
@@ -69,13 +70,14 @@ namespace pegasus
         // below is false so fetch_ is a no-op). On quantum/pause resume advanceSim_()
         // re-enters at fetch_action_group_ directly, bypassing NCR; current_inst is still
         // non-null from the last instruction, so the guard fires and resets correctly.
-        if (!enable_ecache_ || state->getCurrentInst() != nullptr)
+        if (state->getCurrentInst() != nullptr)
         {
             state->getSimState()->reset();
         }
 
         PegasusTranslationState* translation_state = state->getFetchTranslationState();
-        // Reset the translation state and make a new translation request for the current PC.  This will be consumed by Translate and used to determine the fetch address and size.
+        // Reset the translation state and make a new translation request for the current PC.
+        // This path only runs when Fetch is the active loopback stage.
         translation_state->reset();
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 

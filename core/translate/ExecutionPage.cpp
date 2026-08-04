@@ -2,6 +2,7 @@
 #include "core/PegasusState.hpp"
 #include "core/PegasusCore.hpp"
 #include "core/translate/Translate.hpp"
+#include "include/ActionTags.hpp"
 #include "include/PegasusUtils.hpp"
 
 namespace pegasus
@@ -10,8 +11,7 @@ namespace pegasus
     {
         // Keep exec-cache tap usable without generating multi-GB logs, bc things get long otherwise
         constexpr uint64_t kExecCacheReuseLogSampleStride = 100000;
-    }
-
+    } // namespace
 
     //
     // This method does the following:
@@ -86,8 +86,8 @@ namespace pegasus
         // isContained method no longer exists so the page mask and base addrs are calculated here.
 
         const Addr page_size = translation_result_.getPageSize() != 0
-                       ? translation_result_.getPageSize()
-                       : translation_result_.getSize();
+                                   ? translation_result_.getPageSize()
+                                   : translation_result_.getSize();
         sparta_assert(page_size >= 0x1000 && ((page_size & (page_size - 1)) == 0),
                       "ExecutionPage requires power-of-two page size >= 4K, got " << page_size);
         const Addr page_mask = page_size - 1;
@@ -102,7 +102,7 @@ namespace pegasus
             // this page, translatedPageExecute_ will redirect NCR to fetch on the next entry.
             state->getNextCycleResetActionGroup()->setNextActionGroup(&translated_page_group_);
 
-            //std::cout << "Contained: " << std::hex << vaddr << std::endl;
+            // std::cout << "Contained: " << std::hex << vaddr << std::endl;
 
             // Get the address index and shift out the offset
             const auto addr_idx = (vaddr - vaddr_base) >> 12;
@@ -124,14 +124,14 @@ namespace pegasus
 
             inst_execute.setInstAddress(paddr_base + (vaddr - vaddr_base));
 
-            // Log only sampled reuse events in stride to avoid per-instruction I/O in this hot path.
-            // Stride is set such that we log the first reuse event and then every kExecCacheReuseLogSampleStride reuse events after that.
+            // Log only sampled reuse events in stride to avoid per-instruction I/O in this hot
+            // path. Stride is set such that we log the first reuse event and then every
+            // kExecCacheReuseLogSampleStride reuse events after that.
             auto & exec_cache_logger = state->getExecCacheLogger();
             if (exec_cache_logger && instruction_reuse)
             {
                 const uint64_t reuse_count = state->getExecCacheReuseCount();
-                if ((reuse_count == 1)
-                    || ((reuse_count % kExecCacheReuseLogSampleStride) == 0))
+                if ((reuse_count == 1) || ((reuse_count % kExecCacheReuseLogSampleStride) == 0))
                 {
                     exec_cache_logger << "Exec-cache reuse sample at PC 0x" << std::hex << vaddr
                                       << std::dec << " reuse_count=" << reuse_count;
@@ -141,14 +141,19 @@ namespace pegasus
             // If this instruction was never fetched/decoded, the
             // instruction group being called is the Decode action
             // group.  This group returns the execution group
-            translated_page_group_.
-                setNextActionGroup(inst_execute.getInstActionGroup());
+            translated_page_group_.setNextActionGroup(inst_execute.getInstActionGroup());
         }
-        else {
-            // Go back to fetch
+        else
+        {
+            // Go back to translate
             state->recordExecCacheBypassFallback();
-            state->getNextCycleResetActionGroup()->setNextActionGroup(fetch_action_group_);
-            translated_page_group_.setNextActionGroup(fetch_action_group_);
+            // Translation request needed
+            auto* fetch_translation_state = state->getFetchTranslationState();
+            fetch_translation_state->reset();
+            fetch_translation_state->makeRequest(vaddr, sizeof(Opcode));
+
+            auto* translate_group = state->getFetchUnit()->getActionGroup()->getNextActionGroup();
+            translated_page_group_.setNextActionGroup(translate_group);
         }
 
         // The translated page cannot continue.
@@ -166,14 +171,15 @@ namespace pegasus
         inst_->updateVectorConfig(state);
 
         // Reuse path bypasses decode, so refresh sim-state opcode fields explicitly.
-        auto * sim_state = state->getSimState();
+        auto* sim_state = state->getSimState();
         sim_state->current_opcode = static_cast<Opcode>(inst_->getOpcode());
 
         // Cross-page reuse: partial_opcode was preserved by fetch_() across reset() when
         // the first page went back to fetch for the second page.  The PC currently in
         // state is 2 bytes into the second page (where the second half was read), but the
-        // logical PC of the instruction is 2 bytes earlier (on the first page). 
-        if (SPARTA_EXPECT_FALSE(sim_state->partial_opcode)) {
+        // logical PC of the instruction is 2 bytes earlier (on the first page).
+        if (SPARTA_EXPECT_FALSE(sim_state->partial_opcode))
+        {
             state->setPc(state->getPc() - 2);
         }
         sim_state->partial_opcode = false;
@@ -181,6 +187,20 @@ namespace pegasus
         // Assume we're heading to the next instruction in sequence.
         // Branches will adjust this.
         state->setNextPc(state->getPc() + inst_->getOpcodeSize());
+
+        // Route the next action_group_ after the finish group (NextCycleReset)
+        ActionGroup* next_action_group = bypass_action_group_;
+        // Non-control flow or end-of-page instructions go to the next inst_execute's group
+        if (bypass_inst_execute_ != nullptr)
+        {
+            next_action_group = bypass_inst_execute_->getInstActionGroup();
+        }
+
+        if (next_action_group != nullptr)
+        {
+            state->getNextCycleResetActionGroup()->setNextActionGroup(next_action_group);
+        }
+
         return ++action_it;
     }
 
@@ -234,10 +254,8 @@ namespace pegasus
         // Default size
         OpcodeSize opcode_size = 4;
 
-        // If this is not the last entry in the page, then we know we can fetch 4 bytes and decode.  
+        // If this is not the last entry in the page, then we know we can fetch 4 bytes and decode.
         // If it is the last entry, then we need to check for partial opcode construction.
-        // TO DO: I use a buffer and stuff to supplement the lost methods (from updating to more recent pegasus)
-        // I assume it's suboptimal right now and can be improved. This is just to get something working for now.
         if (SPARTA_EXPECT_TRUE(false == last_entry_))
         {
             // Check to see if we're building an opcode from a
@@ -250,19 +268,21 @@ namespace pegasus
                 state->readMemory<uint16_t>(inst_addr_, buffer);
                 opcode |= convertFromByteVector<uint16_t>(buffer) << 16;
                 partial_opcode = false;
-                // need to adjust the PC back since the first half of the opcode was on 
+                // need to adjust the PC back since the first half of the opcode was on
                 // the previous page and the second half is on this page.
                 state->setPc(state->getPc() - 2);
             }
-            else {
+            else
+            {
                 // Grab 4 bytes
                 std::vector<uint8_t> buffer;
                 state->readMemory<uint32_t>(inst_addr_, buffer);
                 opcode = convertFromByteVector<uint32_t>(buffer);
             }
-            //std::cout << std::hex << inst_addr_  << " opcode: " << opcode << std::endl;
+            // std::cout << std::hex << inst_addr_  << " opcode: " << opcode << std::endl;
         }
-        else {
+        else
+        {
 
             // This is a fetch that is 2 bytes from the end of the page.
             // Two sub-cases:
@@ -278,12 +298,8 @@ namespace pegasus
             state->readMemory<uint16_t>(inst_addr_, buffer);
             opcode = convertFromByteVector<uint16_t>(buffer);
 
-            if ((opcode & 0x3) != 0x3)
-            {
-                // Scenario 3: valid compressed instruction — fall through to decode.
-                opcode_size = 2;
-            }
-            else
+            // If it's not a compressed instruction, then it's a partial opcode
+            if (!((opcode & 0x3) != 0x3))
             {
                 // Scenario 4: first half of a 32-bit cross-page instruction.
                 partial_opcode = true;
@@ -295,7 +311,8 @@ namespace pegasus
                 fetch_translation_state->reset();
                 fetch_translation_state->makeRequest(state->getPc(), sizeof(uint16_t));
 
-                auto* translate_group = state->getFetchUnit()->getActionGroup()->getNextActionGroup();
+                auto* translate_group =
+                    state->getFetchUnit()->getActionGroup()->getNextActionGroup();
                 throw ActionException(translate_group);
             }
         }
@@ -314,7 +331,7 @@ namespace pegasus
         try
         {
             inst = state->getMavis()->makeInst(opcode, state);
-            //assert(state->getCurrentInst() == nullptr);
+            // assert(state->getCurrentInst() == nullptr);
             state->setCurrentInst(inst);
             // Set next PC, can be overidden by a branch/jump
             // instruction or an exception
@@ -322,7 +339,6 @@ namespace pegasus
 
             inst->updateVectorConfig(state); // Old PegasusInst may be returned from cache. So
                                              // outside-constructor call is needed.
-
         }
         catch (const mavis::BaseException & e)
         {
@@ -349,6 +365,64 @@ namespace pegasus
             }
         }
 
+        // translatedPageExecute Bypass:
+        // If the instruction is guaranteed to remain within the page i.e not control flow
+        // or page boundary, then we can bypass translatedPageExecute, which performs the
+        // page checks, and instead directly wire this inst's actiongroup to the next for
+        // future encounters.
+
+        // Compute this slot's next target once; setInst_ publishes it to NCR
+        // on each execution of the slot.
+        bypass_action_group_ = nullptr;
+        bypass_inst_execute_ = nullptr;
+
+        // Control flow instructions route back to translated Page Execute in the event that
+        // branches remain on the same page (not taken or small jumps)
+        if (inst->isChangeOfFlowInst())
+        {
+            bypass_action_group_ = translated_page_group_;
+        }
+        else if ((true == last_entry_) || (true == partial_opcode))
+        {
+            // End-of-page / partial-opcode cases should re-enter translation on
+            // the next cycle rather than attempting direct in-page bypass.
+            // TO DO: last_entry_ is only the end of a page in 4K size pages, it is NOT the end of
+            // larger page sizes (default_block_ last entry)
+            auto* fetch_translation_state = state->getFetchTranslationState();
+            fetch_translation_state->reset();
+            fetch_translation_state->makeRequest(state->getNextPc(), sizeof(Opcode));
+
+            bypass_action_group_ = state->getFetchUnit()->getActionGroup()->getNextActionGroup();
+        }
+        else
+        {
+            // Essentially what translatedPageExecute does, but directly links instructions
+            sparta_assert(owner_ != nullptr, "InstExecute owner_ should never be null");
+            const Addr next_pc = state->getNextPc();
+            const Addr page_size = owner_->translation_result_.getPageSize() != 0
+                                       ? owner_->translation_result_.getPageSize()
+                                       : owner_->translation_result_.getSize();
+            const Addr page_mask = page_size - 1;
+            const Addr vaddr_base = owner_->translation_result_.getVAddr() & ~page_mask;
+            const Addr paddr_base = owner_->translation_result_.getPAddr() & ~page_mask;
+
+            const auto addr_idx = (next_pc - vaddr_base) >> 12;
+
+            // Get the offset (lower 4k) and shift by 1 since that bit
+            // is never set (and we can save some vector space)
+            const auto offset = (next_pc & 0xfffull) >> 1;
+
+            auto next_inst_execute_pair =
+                owner_->decode_block_.try_emplace(addr_idx, owner_->default_block_).first;
+            auto & next_inst_execute = next_inst_execute_pair->second.at(offset);
+            state->recordExecCachePteBypassSetup();
+
+            next_inst_execute.setInstAddress(paddr_base + (next_pc - vaddr_base));
+
+            // inst_execute is stored so routing doesn't go to stale groups
+            bypass_inst_execute_ = &next_inst_execute;
+        }
+
         // Set up the execution of the instruction and reset the
         // instruction execute group to the instruction that was just
         // setup
@@ -357,10 +431,6 @@ namespace pegasus
         // Before the instruction's execution PegasusState needs to be
         // set to the captured instruction.
         inst_action_group_->insertActionFront(inst_set_inst_);
-
-        // Wire NCR → this translated page so that finish → NCR → tPE on the next cycle.
-        // Do NOT touch finish_action_group_->next here; finish always points to NCR.
-        state->getNextCycleResetActionGroup()->setNextActionGroup(translated_page_group_);
 
         // Capture the instruction late -- the above execute functions
         // can throw
@@ -372,4 +442,4 @@ namespace pegasus
         // Go to end...
         return ++action_it;
     }
-}
+} // namespace pegasus

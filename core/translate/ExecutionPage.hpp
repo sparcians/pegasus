@@ -61,119 +61,121 @@ namespace pegasus
      */
     class ExecutionPage
     {
-    public:
-
+      public:
         using base_type = ExecutionPage;
 
         ExecutionPage(const PegasusTranslationState::TranslationResult & translation_result,
-                      ActionGroup * fetch_action_group,
-                      ActionGroup * execute_action_group) :
-            translated_page_group_("ExecutionPageGroup",
-                                   pegasus::Action::createAction<
-                                   &ExecutionPage::translatedPageExecute_>(this,
-                                                                           "ExecutionPageExecute",
-                                                                           ActionTags::TRANSLATION_PAGE_EXECUTE)),
+                      ActionGroup* fetch_action_group, ActionGroup* execute_action_group) :
+            translated_page_group_(
+                "ExecutionPageGroup",
+                pegasus::Action::createAction<&ExecutionPage::translatedPageExecute_>(
+                    this, "ExecutionPageExecute", ActionTags::TRANSLATION_PAGE_EXECUTE)),
             fetch_action_group_(fetch_action_group),
             execute_action_group_(execute_action_group),
-            default_block_(2048, InstExecute(&translated_page_group_, execute_action_group_)),
+            default_block_(2048, InstExecute(this, &translated_page_group_, execute_action_group_)),
             translation_result_(translation_result)
         {
             // Get the inst execute block at the end of the block.
             // This instruction execute class represents a potential
             // page crosser
             auto & last_inst_exe = default_block_.back();
-            last_inst_exe = InstExecute(&translated_page_group_,
-                                        execute_action_group_, true);
+            last_inst_exe = InstExecute(this, &translated_page_group_, execute_action_group_, true);
         }
 
-        ActionGroup * getExecutionPageActionGroup() { return &translated_page_group_; }
+        ActionGroup* getExecutionPageActionGroup() { return &translated_page_group_; }
 
-    private:
+      private:
         // Main entry for this translated page
         ActionGroup translated_page_group_;
-        Action::ItrType translatedPageExecute_(PegasusState* state,
-                                               Action::ItrType action_it);
+        Action::ItrType translatedPageExecute_(PegasusState* state, Action::ItrType action_it);
 
         ////////////////////////////////////////////////////////////////////////////////
         // Individual instruction execution in the decode block
         class InstExecute
         {
-        public:
-
+          public:
             using base_type = InstExecute;
 
-            InstExecute(ActionGroup * translated_page_group,
-                        ActionGroup * execute_page_group,
-                        bool last_entry = false) :
+            InstExecute(ExecutionPage* owner, ActionGroup* translated_page_group,
+                        ActionGroup* execute_page_group, bool last_entry = false) :
+                owner_(owner),
                 translated_page_group_(translated_page_group),
                 execute_action_group_(execute_page_group),
                 last_entry_(last_entry)
             {
-                inst_setup_group_.addAction(
-                    pegasus::Action::createAction<&InstExecute::setupInst_>(this,
-                                                                            "ExecutionPageSetupInst"));
+                inst_setup_group_.addAction(pegasus::Action::createAction<&InstExecute::setupInst_>(
+                    this, "ExecutionPageSetupInst"));
             }
 
-            InstExecute(InstExecute&& orig) :
+            InstExecute(InstExecute && orig) :
+                owner_(std::move(orig.owner_)),
                 translated_page_group_(std::move(orig.translated_page_group_)),
                 execute_action_group_(std::move(orig.execute_action_group_)),
+                bypass_action_group_(orig.bypass_action_group_),
+                bypass_inst_execute_(orig.bypass_inst_execute_),
                 last_entry_(orig.last_entry_)
             {
-                inst_setup_group_.addAction(
-                    pegasus::Action::createAction<&InstExecute::setupInst_>(this,
-                                                                            "ExecutionPageSetupInst"));
+                inst_setup_group_.addAction(pegasus::Action::createAction<&InstExecute::setupInst_>(
+                    this, "ExecutionPageSetupInst"));
             }
 
             InstExecute(const InstExecute & orig) :
+                owner_(orig.owner_),
                 translated_page_group_(orig.translated_page_group_),
                 execute_action_group_(orig.execute_action_group_),
+                bypass_action_group_(orig.bypass_action_group_),
+                bypass_inst_execute_(orig.bypass_inst_execute_),
                 last_entry_(orig.last_entry_)
             {
-                inst_setup_group_.addAction(
-                    pegasus::Action::createAction<&InstExecute::setupInst_>(this,
-                                                                            "ExecutionPageSetupInst"));
+                inst_setup_group_.addAction(pegasus::Action::createAction<&InstExecute::setupInst_>(
+                    this, "ExecutionPageSetupInst"));
             }
 
-            const InstExecute& operator=(const InstExecute & orig)
+            const InstExecute & operator=(const InstExecute & orig)
             {
+                owner_ = orig.owner_;
                 translated_page_group_ = orig.translated_page_group_;
                 execute_action_group_ = orig.execute_action_group_;
+                bypass_action_group_ = orig.bypass_action_group_;
+                bypass_inst_execute_ = orig.bypass_inst_execute_;
                 last_entry_ = orig.last_entry_;
-                inst_setup_group_.addAction(
-                    pegasus::Action::createAction<&InstExecute::setupInst_>(this,
-                                                                            "ExecutionPageSetupInst"));
+                inst_setup_group_.addAction(pegasus::Action::createAction<&InstExecute::setupInst_>(
+                    this, "ExecutionPageSetupInst"));
                 return *this;
             }
 
-            ActionGroup * getInstActionGroup() { return inst_action_group_; }
+            ActionGroup* getInstActionGroup() { return inst_action_group_; }
 
-            // Helper function for determining whether an instruction has been decoded and setup before
+            // Helper function for determining whether an instruction has been decoded and setup
+            // before
             bool isDecoded() const { return inst_action_group_ != &inst_setup_group_; }
 
             void setInstAddress(Addr inst_addr) { inst_addr_ = inst_addr; }
 
-        private:
-
+          private:
             // Need to decode the instruction at the offset
-            Action::ItrType setupInst_(PegasusState* state,
-                                       Action::ItrType action_it);
+            Action::ItrType setupInst_(PegasusState* state, Action::ItrType action_it);
 
             // Set the inst pointer in PegasusState when the instruction
             // is to be executed again
             Action::ItrType setInst_(PegasusState* state, Action::ItrType action_it);
 
-            ActionGroup * translated_page_group_ = nullptr;
-            ActionGroup   inst_setup_group_{"InstSetupGroup"};
-            Action        inst_set_inst_{Action::createAction<&InstExecute::setInst_>(this, "InstSetupGroup")};
-            ActionGroup * execute_action_group_ = nullptr;
-            ActionGroup * inst_action_group_ = &inst_setup_group_;
+            ExecutionPage* owner_ = nullptr;
+            ActionGroup* translated_page_group_ = nullptr;
+            ActionGroup inst_setup_group_{"InstSetupGroup"};
+            Action inst_set_inst_{
+                Action::createAction<&InstExecute::setInst_>(this, "InstSetupGroup")};
+            ActionGroup* execute_action_group_ = nullptr;
+            ActionGroup* inst_action_group_ = &inst_setup_group_;
+            ActionGroup* bypass_action_group_ = nullptr;
+            InstExecute* bypass_inst_execute_ = nullptr;
             Addr inst_addr_ = 0;
             PegasusInstPtr inst_;
             bool last_entry_ = false;
         };
 
-        ActionGroup * fetch_action_group_ = nullptr;
-        ActionGroup * execute_action_group_ = nullptr;
+        ActionGroup* fetch_action_group_ = nullptr;
+        ActionGroup* execute_action_group_ = nullptr;
 
         using InstExecuteBlock = std::vector<InstExecute>;
         std::unordered_map<Addr, InstExecuteBlock> decode_block_;
@@ -184,4 +186,4 @@ namespace pegasus
 
         const PegasusTranslationState::TranslationResult translation_result_;
     };
-}
+} // namespace pegasus
