@@ -104,7 +104,6 @@ namespace pegasus
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
         ecache_stats_(p->ecache_stats),
-        ecache_stats_period_(p->ecache_stats_period),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
         stf_opcode_trigger_(p->stf_opcode_trigger),
@@ -263,27 +262,6 @@ namespace pegasus
         {
             ++exec_cache_first_decode_count_;
         }
-
-        if (!ecache_stats_ || (ecache_stats_period_ == 0))
-        {
-            return;
-        }
-
-        const uint64_t total_decisions = exec_cache_reuse_count_ + exec_cache_first_decode_count_;
-        if ((total_decisions % ecache_stats_period_) == 0)
-        {
-            std::cout << "\tExecCache periodic decisions: " << total_decisions
-                      << " (reuse=" << exec_cache_reuse_count_
-                      << ", first_decode=" << exec_cache_first_decode_count_ << ")" << std::endl;
-            std::cout << "\tExecCache periodic reuse ratio: " << getExecCacheReuseRatio()
-                      << std::endl;
-            std::cout << "\tExecCache periodic bypass: enter=" << getExecCacheBypassEnterCount()
-                      << ", fallback=" << getExecCacheBypassFallbackCount()
-                      << ", pTE_setup=" << getExecCachePteBypassSetupCount() << std::endl;
-            std::cout << "\tTranslation periodic: requests=" << getTranslationRequestCount()
-                      << ", bypass=" << getTranslationBypassCount()
-                      << ", page_walk=" << getPageWalkTranslationCount() << std::endl;
-        }
     }
 
     void PegasusState::flushExecutionCache() { execution_cache_flush_requested_ = true; }
@@ -337,16 +315,16 @@ namespace pegasus
         ecache_enabled_ = fetch_unit_->isEcacheEnabled();
         if (ecache_enabled_)
         {
-            // Wire finish → NCR → Translate (or tPE when ecache is active).
+            // When Ecache is enabled, wire finish -> nextCycleReset -> Translate.
             // NCR owns the sim_state->reset() call
             ActionGroup* ncr_group = execute_unit_->getNextCycleResetActionGroup();
-            ncr_group->setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+            ncr_group->setNextActionGroup(translate_unit_->getExecuteTranslateActionGroup());
             finish_action_group_.setNextActionGroup(ncr_group);
         }
         else
         {
             // Without ecache, finish wires directly to fetch. Reset happens inside fetch_().
-            finish_action_group_.setNextActionGroup(fetch_unit_->getLoopbackActionGroup());
+            finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
         }
 
         // Initialize Mavis
@@ -529,9 +507,9 @@ namespace pegasus
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
         // Restore finish → NCR (ecache on) or finish → fetch (ecache off).
-        finish_action_group_.setNextActionGroup(ecache_enabled_
-                                                    ? execute_unit_->getNextCycleResetActionGroup()
-                                                    : fetch_unit_->getLoopbackActionGroup());
+        finish_action_group_.setNextActionGroup(
+            ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
+                           : fetch_unit_->getActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -1120,7 +1098,7 @@ namespace pegasus
 
             finish_action_group_.setNextActionGroup(
                 ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
-                                : fetch_unit_->getLoopbackActionGroup());
+                                : fetch_unit_->getActionGroup());
         }
     }
 

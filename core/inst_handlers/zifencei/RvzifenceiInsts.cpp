@@ -24,6 +24,7 @@ namespace pegasus
     Action::ItrType RvzifenceiInsts::fence_iHandler_(pegasus::PegasusState* state,
                                                      Action::ItrType action_it)
     {
+        // TODO: Flush any TLBs and instruction/block caches in the future
         // Conservatively flush translated execution pages on fences.
         state->flushExecutionCache();
 

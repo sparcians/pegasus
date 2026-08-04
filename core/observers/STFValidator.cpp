@@ -56,14 +56,7 @@ namespace pegasus
         if (pc != stf_pc)
         {
             STFVALIDLOG("PCs have diverged!");
-            if (state->getCurrentInst())
-            {
-                STFVALIDLOG(state->getCurrentInst());
-            }
-            else
-            {
-                STFVALIDLOG("  (current_inst is NULL)");
-            }
+            STFVALIDLOG(state->getCurrentInst());
             STFVALIDLOG("  Pegasus INST: " << inst_count);
             STFVALIDLOG("      STF INST: " << next_it_->index());
             STFVALIDLOG("    Pegasus PC: 0x" << std::hex << pc);
@@ -77,14 +70,7 @@ namespace pegasus
         if (state->getSimState()->current_opcode != next_it_->opcode() && !(next_it_->isSyscall()))
         { // Since syscalls are not in Pegasus, can ignore them.
             STFVALIDLOG("OPCODEs do not match!");
-            if (state->getCurrentInst())
-            {
-                STFVALIDLOG(state->getCurrentInst());
-            }
-            else
-            {
-                STFVALIDLOG("  (current_inst is NULL)");
-            }
+            STFVALIDLOG(state->getCurrentInst());
             STFVALIDLOG("    PC: 0x" << std::hex << pc);
             STFVALIDLOG("  Pegasus INST: " << inst_count);
             STFVALIDLOG("      STF INST: " << next_it_->index());

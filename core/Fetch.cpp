@@ -11,8 +11,6 @@
 
 namespace pegasus
 {
-    // Added execution_cache parameter to FetchParameters and Fetch constructor.
-    // Allows for toggling on and off the exection cache
     Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
         sparta::Unit(fetch_node),
         params_(p),
@@ -40,21 +38,18 @@ namespace pegasus
     {
         auto hart_tn = getContainer()->getParentAs<sparta::ResourceTreeNode>();
         state_ = hart_tn->getResourceAs<PegasusState>();
-        // enable_ecache_ is read in the constructor from params so it is available
-        // before PegasusState::onBindTreeEarly_() queries it.
 
         // Connect Fetch, Translate and Execute
         Translate* translate_unit = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         Execute* execute_unit = hart_tn->getChild("execute")->getResourceAs<Execute*>();
 
         ActionGroup* inst_translate_action_group = translate_unit->getExecuteTranslateActionGroup();
-        translate_action_group_ = inst_translate_action_group;
-        execute_action_group_ = execute_unit->getActionGroup();
+        ActionGroup* execute_action_group = execute_unit->getActionGroup();
 
         fetch_action_group_.setNextActionGroup(inst_translate_action_group);
         inst_translate_action_group->setNextActionGroup(&decode_action_group_);
-        decode_action_group_.setNextActionGroup(execute_action_group_);
-        execute_action_group_->setNextActionGroup(&fetch_action_group_);
+        decode_action_group_.setNextActionGroup(execute_action_group);
+        execute_action_group->setNextActionGroup(&fetch_action_group_);
     }
 
     Action::ItrType Fetch::fetch_(PegasusState* state, Action::ItrType action_it)
@@ -76,8 +71,6 @@ namespace pegasus
         }
 
         PegasusTranslationState* translation_state = state->getFetchTranslationState();
-        // Reset the translation state and make a new translation request for the current PC.
-        // This path only runs when Fetch is the active loopback stage.
         translation_state->reset();
         translation_state->makeRequest(state->getPc(), sizeof(Opcode));
 
@@ -233,5 +226,4 @@ namespace pegasus
 
         return ++action_it;
     }
-
 } // namespace pegasus

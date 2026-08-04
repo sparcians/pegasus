@@ -31,14 +31,6 @@ namespace pegasus
 
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
-        // Returns the post-execute loopback action group.
-        // Returns Fetch when ecache is disabled, otherwise returns Translate so the
-        // post-execute path can hand off directly to translation.
-        ActionGroup* getLoopbackActionGroup()
-        {
-            return enable_ecache_ ? translate_action_group_ : &fetch_action_group_;
-        }
-
         // Conservative full flush of translated execution pages.
         void flushExecutionCache();
 
@@ -48,8 +40,6 @@ namespace pegasus
         PegasusState* state_ = nullptr;
         const FetchParameters* params_ = nullptr;
         bool enable_ecache_ = false;
-        ActionGroup* execute_action_group_ = nullptr;
-        ActionGroup* translate_action_group_ = nullptr;
 
         void onBindTreeEarly_() override;
 

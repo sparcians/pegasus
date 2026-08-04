@@ -89,9 +89,6 @@ namespace pegasus
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
             PARAMETER(bool, ecache_stats, false,
                       "Print execution-cache reuse counters/ratio when the hart stops")
-            PARAMETER(uint64_t, ecache_stats_period, 0,
-                      "If non-zero and ecache_stats is true, print execution-cache counters every "
-                      "N decisions")
             // Typical stack pointer is 8KB on most linux systems
             PARAMETER(uint32_t, ulimit_stack_size, 8192,
                       "Typical ulimit stack size for system call emulation")
@@ -529,8 +526,6 @@ namespace pegasus
         //! Print execution-cache counter summary when simulation stops
         const bool ecache_stats_;
 
-        //! Periodic execution-cache stats dump interval (0 disables periodic dump)
-        const uint64_t ecache_stats_period_;
 
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
