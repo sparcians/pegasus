@@ -202,10 +202,7 @@ class VmInstructionTester : public PegasusInstructionTester
         EXPECT_EQUAL(sim_state->inst_count, 7);
     }
 
-    void testRsrqt7()
-    {
-        pegasus::frsqrt7<unsigned int>(0x9816a);
-    }
+    void testRsrqt7() { pegasus::frsqrt7<unsigned int>(0x9816a); }
 
     void testVidv()
     {

@@ -372,8 +372,8 @@ namespace pegasus
                     std::is_same_v<U, uint16_t>
                         ? recip7(input, 5, 10, softfloat_roundingMode, sub, &round_abnormal)
                     : std::is_same_v<U, uint32_t>
-                    ? recip7(input, 8, 23, softfloat_roundingMode, sub, &round_abnormal)
-                    : recip7(input, 11, 52, softfloat_roundingMode, sub, &round_abnormal));
+                        ? recip7(input, 8, 23, softfloat_roundingMode, sub, &round_abnormal)
+                        : recip7(input, 11, 52, softfloat_roundingMode, sub, &round_abnormal));
                 if (round_abnormal)
                     softfloat_exceptionFlags |= softfloat_flag_inexact | softfloat_flag_overflow;
                 break;
