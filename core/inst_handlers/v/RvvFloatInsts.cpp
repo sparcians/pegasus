@@ -970,10 +970,8 @@ namespace pegasus
 
         auto execute = [&](auto iter, const auto & end)
         {
-            uint32_t val = 0;
             for (; iter != end; ++iter)
             {
-                ++val;
                 auto index = iter.getIndex();
                 elems_vd.getElement(index).setVal(func(elems_vs2.getElement(index).getVal()));
             }
