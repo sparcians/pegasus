@@ -1,5 +1,6 @@
 #include "test/sim/InstructionTester.hpp"
 #include "core/VecElements.hpp"
+#include "core/inst_handlers/finst_helpers.hpp"
 #include "sparta/utils/SpartaTester.hpp"
 #include "mavis/Mavis.h"
 
@@ -201,6 +202,11 @@ class VmInstructionTester : public PegasusInstructionTester
         EXPECT_EQUAL(sim_state->inst_count, 7);
     }
 
+    void testRsrqt7()
+    {
+        pegasus::frsqrt7<unsigned int>(0x9816a);
+    }
+
     void testVidv()
     {
         pegasus::PegasusState* state = getPegasusState();
@@ -308,6 +314,7 @@ int main()
     Vm_tester.testVfirst();
     Vm_tester.testVmsbfm();
     Vm_tester.testViotam();
+    Vm_tester.testRsrqt7();
     Vm_tester.testVidv();
 
     REPORT_ERROR;
