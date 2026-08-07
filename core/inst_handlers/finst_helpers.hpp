@@ -323,11 +323,11 @@ namespace pegasus
         return (sign << (s + e)) | (out_exp << s) | out_sig;
     }
 
-    template <typename U> inline U frecip7(U u)
+    template <typename U> inline U frecip7(U input)
     {
         U ret = 0;
 
-        auto cls = fclass(u);
+        auto cls = fclass(input);
         bool sub = false;
         bool round_abnormal = false;
         switch (cls)
@@ -370,10 +370,10 @@ namespace pegasus
             default: // +- normal
                 ret = static_cast<U>(
                     std::is_same_v<U, uint16_t>
-                        ? recip7(ret, 5, 10, softfloat_roundingMode, sub, &round_abnormal)
+                        ? recip7(input, 5, 10, softfloat_roundingMode, sub, &round_abnormal)
                     : std::is_same_v<U, uint32_t>
-                        ? recip7(ret, 8, 23, softfloat_roundingMode, sub, &round_abnormal)
-                        : recip7(ret, 11, 52, softfloat_roundingMode, sub, &round_abnormal));
+                        ? recip7(input, 8, 23, softfloat_roundingMode, sub, &round_abnormal)
+                        : recip7(input, 11, 52, softfloat_roundingMode, sub, &round_abnormal));
                 if (round_abnormal)
                     softfloat_exceptionFlags |= softfloat_flag_inexact | softfloat_flag_overflow;
                 break;
@@ -420,11 +420,11 @@ namespace pegasus
         return (sign << (s + e)) | (out_exp << s) | out_sig;
     }
 
-    template <typename U> inline U frsqrt7(U u)
+    template <typename U> inline U frsqrt7(U input)
     {
         U ret = 0;
 
-        auto cls = fclass(u);
+        auto cls = fclass(input);
         bool sub = false;
         switch (cls)
         {
@@ -458,9 +458,9 @@ namespace pegasus
                 sub = true;
                 [[fallthrough]];
             default: // +num
-                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? rsqrt7(ret, 5, 10, sub)
-                                     : std::is_same_v<U, uint32_t> ? rsqrt7(ret, 8, 23, sub)
-                                                                   : rsqrt7(ret, 11, 52, sub));
+                ret = static_cast<U>(std::is_same_v<U, uint16_t>   ? rsqrt7(input, 5, 10, sub)
+                                     : std::is_same_v<U, uint32_t> ? rsqrt7(input, 8, 23, sub)
+                                                                   : rsqrt7(input, 11, 52, sub));
                 break;
         }
 
