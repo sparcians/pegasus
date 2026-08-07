@@ -368,7 +368,7 @@ namespace pegasus
             // TODO: This is probably not the best place for this check...
             if (csr == SATP)
             {
-                if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm_val)
+                if (state->getPrivMode() == PrivMode::SUPERVISOR)
                 {
                     auto tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
                     if (tvm_val)

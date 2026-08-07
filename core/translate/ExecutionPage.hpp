@@ -144,7 +144,7 @@ namespace pegasus
                 return *this;
             }
 
-            const ActionGroup* getInstActionGroup() { return inst_action_group_; }
+            ActionGroup* getInstActionGroup() { return inst_action_group_; }
 
             // Helper function for determining whether an instruction has been decoded and setup
             // before
