@@ -181,8 +181,8 @@ namespace pegasus
         if (SPARTA_EXPECT_FALSE(sim_state->partial_opcode))
         {
             state->setPc(state->getPc() - 2);
+            sim_state->partial_opcode = false;
         }
-        sim_state->partial_opcode = false;
 
         // Assume we're heading to the next instruction in sequence.
         // Branches will adjust this.
@@ -265,7 +265,11 @@ namespace pegasus
                 // Grab 2 bytes from the new page and merge with the old to create the
                 // full opcode
                 std::vector<uint8_t> buffer;
-                state->readMemory<uint16_t>(inst_addr_, buffer);
+                if (state->readMemory<uint16_t>(inst_addr_, buffer, MemAccessSource::FETCH)
+                    == false)
+                {
+                    THROW_FETCH_ACCESS;
+                }
                 opcode |= convertFromByteVector<uint16_t>(buffer) << 16;
                 partial_opcode = false;
                 // need to adjust the PC back since the first half of the opcode was on
@@ -276,7 +280,11 @@ namespace pegasus
             {
                 // Grab 4 bytes
                 std::vector<uint8_t> buffer;
-                state->readMemory<uint32_t>(inst_addr_, buffer);
+                if (state->readMemory<uint32_t>(inst_addr_, buffer, MemAccessSource::FETCH)
+                    == false)
+                {
+                    THROW_FETCH_ACCESS;
+                }
                 opcode = convertFromByteVector<uint32_t>(buffer);
             }
             // std::cout << std::hex << inst_addr_  << " opcode: " << opcode << std::endl;
@@ -295,7 +303,10 @@ namespace pegasus
             //   advance PC past the half-word already consumed, and throw back to
             //   fetch so the second page can supply the lower 16 bits and execute.
             std::vector<uint8_t> buffer;
-            state->readMemory<uint16_t>(inst_addr_, buffer);
+            if (state->readMemory<uint16_t>(inst_addr_, buffer, MemAccessSource::FETCH) == false)
+            {
+                THROW_FETCH_ACCESS;
+            }
             opcode = convertFromByteVector<uint16_t>(buffer);
 
             // If it's not a compressed instruction, then it's a partial opcode
@@ -357,10 +368,13 @@ namespace pegasus
             // TODO: This is probably not the best place for this check...
             if (csr == SATP)
             {
-                const uint32_t tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
                 if ((state->getPrivMode() == PrivMode::SUPERVISOR) && tvm_val)
                 {
-                    THROW_ILLEGAL_INST;
+                    auto tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
+                    if (tvm_val)
+                    {
+                        THROW_ILLEGAL_INST;
+                    }
                 }
             }
         }
@@ -386,7 +400,7 @@ namespace pegasus
         {
             // End-of-page / partial-opcode cases should re-enter translation on
             // the next cycle rather than attempting direct in-page bypass.
-            // TO DO: last_entry_ is only the end of a page in 4K size pages, it is NOT the end of
+            // TODO: last_entry_ is only the end of a page in 4K size pages, it is NOT the end of
             // larger page sizes (default_block_ last entry)
             auto* fetch_translation_state = state->getFetchTranslationState();
             fetch_translation_state->reset();

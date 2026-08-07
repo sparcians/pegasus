@@ -613,7 +613,7 @@ namespace pegasus
         return buflen;
     }
 
-    // TO DO: Implement rseq properly (doesn't do anything right now)
+    // TODO: Implement rseq properly (doesn't do anything right now)
 
     int64_t SysCallHandlers::rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {

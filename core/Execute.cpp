@@ -88,19 +88,16 @@ namespace pegasus
 
     Action::ItrType Execute::nextCycleReset_(PegasusState* state, Action::ItrType action_it)
     {
-        if (state->getCurrentInst() != nullptr)
-        {
-            auto* sim_state = state->getSimState();
-            sim_state->reset();
+        auto* sim_state = state->getSimState();
+        sim_state->reset();
 
-            ActionGroup* next_stage = state->getNextCycleResetActionGroup()->getNextActionGroup();
-            // Only makes a Translation Request when next stage is Translate
-            if (next_stage == state->getFetchUnit()->getActionGroup()->getNextActionGroup())
-            {
-                auto* translation_state = state->getFetchTranslationState();
-                translation_state->reset();
-                translation_state->makeRequest(state->getNextPc(), sizeof(Opcode));
-            }
+        ActionGroup* next_stage = state->getNextCycleResetActionGroup()->getNextActionGroup();
+        // Only makes a Translation Request when next stage is Translate
+        if (next_stage == state->getFetchUnit()->getActionGroup()->getNextActionGroup())
+        {
+            auto* translation_state = state->getFetchTranslationState();
+            translation_state->reset();
+            translation_state->makeRequest(state->getNextPc(), sizeof(Opcode));
         }
         return ++action_it;
     }

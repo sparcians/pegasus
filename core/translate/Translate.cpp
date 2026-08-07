@@ -574,8 +574,7 @@ namespace pegasus
 
                 // On execute-translation miss, route directly into the newly
                 // registered execution page path instead of returning to Decode.
-                if (ActionGroup* exec_page_group = lookupExecutionPageGroup_(result.getVAddr());
-                    exec_page_group != nullptr)
+                if (ActionGroup* exec_page_group = lookupExecutionPageGroup_(result.getVAddr()))
                 {
                     throw ActionException(exec_page_group);
                 }

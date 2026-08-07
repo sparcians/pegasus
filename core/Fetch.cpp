@@ -60,15 +60,8 @@ namespace pegasus
         {
             flushExecutionCache();
         }
-        // Reset sim state. When ecache is off this always runs. When ecache is on, NCR
-        // handles the reset mid-stream (after NCR clears current_inst to null, the check
-        // below is false so fetch_ is a no-op). On quantum/pause resume advanceSim_()
-        // re-enters at fetch_action_group_ directly, bypassing NCR; current_inst is still
-        // non-null from the last instruction, so the guard fires and resets correctly.
-        if (state->getCurrentInst() != nullptr)
-        {
-            state->getSimState()->reset();
-        }
+        PegasusState::SimState* sim_state = state->getSimState();
+        sim_state->reset();
 
         PegasusTranslationState* translation_state = state->getFetchTranslationState();
         translation_state->reset();

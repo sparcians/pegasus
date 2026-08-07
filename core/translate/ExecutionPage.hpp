@@ -131,7 +131,7 @@ namespace pegasus
                     this, "ExecutionPageSetupInst"));
             }
 
-            const InstExecute & operator=(const InstExecute & orig)
+            InstExecute & operator=(const InstExecute & orig)
             {
                 owner_ = orig.owner_;
                 translated_page_group_ = orig.translated_page_group_;
@@ -144,7 +144,7 @@ namespace pegasus
                 return *this;
             }
 
-            ActionGroup* getInstActionGroup() { return inst_action_group_; }
+            const ActionGroup* getInstActionGroup() { return inst_action_group_; }
 
             // Helper function for determining whether an instruction has been decoded and setup
             // before
