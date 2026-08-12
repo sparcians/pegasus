@@ -20,13 +20,25 @@ namespace pegasus
          * \param filename Name of the file the trace will be written to
          * \param state PegasusState used to populate initial register values
          * \param opcode_trigger The opcode to start a new STF trace file
+         * \param use_trace_points If true, the STF tracer will start
+         *                         tracing when it sees the xor x0,
+         *                         x0, x0 pattern and stop when it
+         *                         sees xor x0, x1, x1 pattern
+         *
+         * If the tracer sees multiple start/stop trace markers, it
+         * will create multiple out files, with an incrementing number
          */
         STFLogger(const uint32_t reg_width, uint64_t initial_pc, const std::string & filename,
-                  PegasusState* state, std::optional<uint32_t> opcode_trigger);
+                  PegasusState* state, std::optional<uint32_t> opcode_trigger,
+                  bool use_trace_points);
+
+        static constexpr uint32_t STF_START_TRACE = 0x00004033;
+        static constexpr uint32_t STF_STOP_TRACE = 0x0010c033;
 
       private:
         stf::STFWriter stf_writer_;
-        void postExecute_(PegasusState* state) override;
+        void postExecute_(PegasusState*) override;
+        void enableObserver_(PegasusState* state) override;
 
         template <typename XLEN> void recordRegState_(PegasusState* state);
 
@@ -37,11 +49,15 @@ namespace pegasus
 
         void startSTFTrace_(uint64_t inital_pc, const std::string & filename, PegasusState* state);
 
+        std::string genTraceName_();
+
         uint32_t trace_instance_ = 0;
 
         const std::string filename_;
 
         const std::optional<uint32_t> opcode_trigger_;
+
+        const bool use_trace_points_;
 
         const bool vector_enabled_;
 

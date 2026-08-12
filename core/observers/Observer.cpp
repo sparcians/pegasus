@@ -10,6 +10,9 @@ namespace pegasus
     void Observer::preExecute(PegasusState* state)
     {
         reset_();
+
+        enableObserver_(state);
+
         inspectInitialState_(state);
 
         // Subclass impl
@@ -37,6 +40,11 @@ namespace pegasus
 
     void Observer::postExecute(PegasusState* state)
     {
+        if (not enabled_)
+        {
+            return;
+        }
+
         // Get final value of destination registers
         PegasusInstPtr inst = state->getCurrentInst();
 
@@ -78,6 +86,11 @@ namespace pegasus
 
     void Observer::inspectInitialState_(PegasusState* state)
     {
+        if (not enabled_)
+        {
+            return;
+        }
+
         pc_ = state->getPc();
         priv_mode_ = state->getPrivMode();
         virtual_mode_ = state->getVirtualMode();

@@ -96,6 +96,9 @@ namespace pegasus
                       "STF Trace file name (when not given, STF tracing is disabled)")
             PARAMETER(uint32_t, stf_opcode_trigger, std::numeric_limits<uint32_t>::max(),
                       "Break up STF trace generation using the given opcode as the trigger")
+            PARAMETER(
+                bool, stf_trace_points, false,
+                "Break up STF tracing using START/STOP trace markers (xor x0,x0,x0/xor x0,x1,x1)")
             PARAMETER(std::string, validate_with_stf, "",
                       "STF Trace file name (when not given, STF tracing is disabled)")
             PARAMETER(uint64_t, validate_trace_begin, 1,
@@ -460,6 +463,7 @@ namespace pegasus
         // STF Trace Filename
         const std::string stf_filename_;
         const uint32_t stf_opcode_trigger_;
+        const bool stf_trace_points_;
         const std::string validation_stf_filename_;
         const uint64_t validate_trace_begin_;
         const uint64_t validate_inst_begin_;
