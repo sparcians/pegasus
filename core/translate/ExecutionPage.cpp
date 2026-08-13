@@ -7,12 +7,6 @@
 
 namespace pegasus
 {
-    namespace
-    {
-        // Keep exec-cache tap usable without generating multi-GB logs, bc things get long otherwise
-        constexpr uint64_t kExecCacheReuseLogSampleStride = 100000;
-    } // namespace
-
     //
     // This method does the following:
     //
@@ -102,8 +96,6 @@ namespace pegasus
             // this page, translatedPageExecute_ will redirect NCR to fetch on the next entry.
             state->getNextCycleResetActionGroup()->setNextActionGroup(&translated_page_group_);
 
-            // std::cout << "Contained: " << std::hex << vaddr << std::endl;
-
             // Get the address index and shift out the offset
             const auto addr_idx = (vaddr - vaddr_base) >> 12;
 
@@ -115,28 +107,13 @@ namespace pegasus
 
             auto & inst_execute = inst_execute_pair->second.at(offset);
 
-            // Logging stuff
-            // For logging purposes, check if the inst has been decoded before (already set up)
+            // Check if the instruction has already been decoded.
             const bool instruction_reuse = inst_execute.isDecoded();
 
             // Track reuse rate for end-of-run summary.
             state->recordExecCacheDecision(instruction_reuse);
 
             inst_execute.setInstAddress(paddr_base + (vaddr - vaddr_base));
-
-            // Log only sampled reuse events in stride to avoid per-instruction I/O in this hot
-            // path. Stride is set such that we log the first reuse event and then every
-            // kExecCacheReuseLogSampleStride reuse events after that.
-            auto & exec_cache_logger = state->getExecCacheLogger();
-            if (exec_cache_logger && instruction_reuse)
-            {
-                const uint64_t reuse_count = state->getExecCacheReuseCount();
-                if ((reuse_count == 1) || ((reuse_count % kExecCacheReuseLogSampleStride) == 0))
-                {
-                    exec_cache_logger << "Exec-cache reuse sample at PC 0x" << std::hex << vaddr
-                                      << std::dec << " reuse_count=" << reuse_count;
-                }
-            }
 
             // If this instruction was never fetched/decoded, the
             // instruction group being called is the Decode action
@@ -187,7 +164,6 @@ namespace pegasus
         // Assume we're heading to the next instruction in sequence.
         // Branches will adjust this.
         state->setNextPc(state->getPc() + inst_->getOpcodeSize());
-
         // Route the next action_group_ after the finish group (NextCycleReset)
         ActionGroup* next_action_group = bypass_action_group_;
         // Non-control flow or end-of-page instructions go to the next inst_execute's group
@@ -396,45 +372,51 @@ namespace pegasus
         {
             bypass_action_group_ = translated_page_group_;
         }
-        else if ((true == last_entry_) || (true == partial_opcode))
-        {
-            // End-of-page / partial-opcode cases should re-enter translation on
-            // the next cycle rather than attempting direct in-page bypass.
-            // TODO: last_entry_ is only the end of a page in 4K size pages, it is NOT the end of
-            // larger page sizes (default_block_ last entry)
-            auto* fetch_translation_state = state->getFetchTranslationState();
-            fetch_translation_state->reset();
-            fetch_translation_state->makeRequest(state->getNextPc(), sizeof(Opcode));
-
-            bypass_action_group_ = state->getFetchUnit()->getActionGroup()->getNextActionGroup();
-        }
         else
         {
-            // Essentially what translatedPageExecute does, but directly links instructions
-            sparta_assert(owner_ != nullptr, "InstExecute owner_ should never be null");
-            const Addr next_pc = state->getNextPc();
-            const Addr page_size = owner_->translation_result_.getPageSize() != 0
+            // Manually check if at the end of the page
+            const auto page_size = owner_->translation_result_.getPageSize() != 0
                                        ? owner_->translation_result_.getPageSize()
                                        : owner_->translation_result_.getSize();
-            const Addr page_mask = page_size - 1;
-            const Addr vaddr_base = owner_->translation_result_.getVAddr() & ~page_mask;
-            const Addr paddr_base = owner_->translation_result_.getPAddr() & ~page_mask;
+            const auto page_mask = page_size - 1;
+            const bool is_at_page_end = ((state->getPc() & page_mask) + opcode_size) >= page_size;
+            if (is_at_page_end || (true == partial_opcode))
+            {
+                // End-of-page / partial-opcode cases should re-enter translation on
+                // the next cycle rather than attempting direct in-page bypass.
+                // TODO: last_entry_ is only the end of a page in 4K size pages, it is NOT the end
+                // of larger page sizes (default_block_ last entry)
+                auto* fetch_translation_state = state->getFetchTranslationState();
+                fetch_translation_state->reset();
+                fetch_translation_state->makeRequest(state->getNextPc(), sizeof(Opcode));
 
-            const auto addr_idx = (next_pc - vaddr_base) >> 12;
+                bypass_action_group_ =
+                    state->getFetchUnit()->getActionGroup()->getNextActionGroup();
+            }
+            else
+            {
+                // Essentially what translatedPageExecute does, but directly links instructions
+                sparta_assert(owner_ != nullptr, "InstExecute owner_ should never be null");
+                const Addr next_pc = state->getNextPc();
+                const Addr vaddr_base = owner_->translation_result_.getVAddr() & ~page_mask;
+                const Addr paddr_base = owner_->translation_result_.getPAddr() & ~page_mask;
 
-            // Get the offset (lower 4k) and shift by 1 since that bit
-            // is never set (and we can save some vector space)
-            const auto offset = (next_pc & 0xfffull) >> 1;
+                const auto addr_idx = (next_pc - vaddr_base) >> 12;
 
-            auto next_inst_execute_pair =
-                owner_->decode_block_.try_emplace(addr_idx, owner_->default_block_).first;
-            auto & next_inst_execute = next_inst_execute_pair->second.at(offset);
-            state->recordExecCachePteBypassSetup();
+                // Get the offset (lower 4k) and shift by 1 since that bit
+                // is never set (and we can save some vector space)
+                const auto offset = (next_pc & 0xfffull) >> 1;
 
-            next_inst_execute.setInstAddress(paddr_base + (next_pc - vaddr_base));
+                auto next_inst_execute_pair =
+                    owner_->decode_block_.try_emplace(addr_idx, owner_->default_block_).first;
+                auto & next_inst_execute = next_inst_execute_pair->second.at(offset);
+                state->recordExecCachePteBypassSetup();
 
-            // inst_execute is stored so routing doesn't go to stale groups
-            bypass_inst_execute_ = &next_inst_execute;
+                next_inst_execute.setInstAddress(paddr_base + (next_pc - vaddr_base));
+
+                // inst_execute is stored so routing doesn't go to stale groups
+                bypass_inst_execute_ = &next_inst_execute;
+            }
         }
 
         // Set up the execution of the instruction and reset the

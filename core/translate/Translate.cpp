@@ -143,26 +143,29 @@ namespace pegasus
 
     // Registers a newly translated execution page for the given VA, PAs, and page size.
     // The VA table is the owning structure and stores shared page references.
-    void Translate::registerExecutionPageResult_(PegasusState* state, const Addr vaddr,
-                                                 const Addr paddr, const Addr page_size)
+    ActionGroup* Translate::registerExecutionPageResult_(PegasusState* state, const Addr vaddr,
+                                                         const Addr paddr, const Addr page_size)
     {
         if ((page_size < 0x1000) || ((page_size & (page_size - 1)) != 0))
         {
-            return;
+            return nullptr;
         }
 
         const Addr page_mask = page_size - 1;
         const Addr vaddr_base = vaddr & ~page_mask;
         const Addr l2_idx = getExecPageL2Index(vaddr_base);
         const Addr l1_idx = getExecPageL1Index(vaddr_base);
-        const Addr l0_idx = getExecPageL0Index(vaddr_base);
+        const auto vpn = vaddr >> kExecPageShift;
+        const Addr vpn_l2_idx = (vpn >> (kExecPageL1Bits + kExecPageL0Bits)) & kExecPageL2Mask;
+        const Addr vpn_l1_idx = (vpn >> kExecPageL0Bits) & kExecPageL1Mask;
+        const Addr vpn_l0_idx = vpn & kExecPageL0Mask;
         auto & l0_table = execution_page_table_[l2_idx][l1_idx];
 
-        // If this VA page is already indexed, keep the existing page and avoid churn.
-        if (auto existing_it = l0_table.find(l0_idx);
+        // Only skip insertion if this exact 4K VPN slot already has a page.
+        if (auto existing_it = l0_table.find(vpn_l0_idx);
             existing_it != l0_table.end() && existing_it->second)
         {
-            return;
+            return existing_it->second->getExecutionPageActionGroup();
         }
 
         const Addr paddr_base = paddr & ~page_mask;
@@ -180,11 +183,8 @@ namespace pegasus
         // fall through to translation (which returns the same superpage result),
         // and lazily add their own entry pointing to the same shared ExecutionPage.
         // This avoids O(page_size/4K) insertions for 2MB/1GB superpages.
-        const Addr vpn = vaddr >> kExecPageShift;
-        const Addr vpn_l2_idx = (vpn >> (kExecPageL1Bits + kExecPageL0Bits)) & kExecPageL2Mask;
-        const Addr vpn_l1_idx = (vpn >> kExecPageL0Bits) & kExecPageL1Mask;
-        const Addr vpn_l0_idx = vpn & kExecPageL0Mask;
         execution_page_table_[vpn_l2_idx][vpn_l1_idx][vpn_l0_idx] = exec_page;
+        return exec_page->getExecutionPageActionGroup();
     }
 
     template <typename XLEN, translate_types::TranslationStage STAGE>
@@ -569,12 +569,10 @@ namespace pegasus
             if (state->isEcacheEnabled() && translation_state->getNumResults() > 0)
             {
                 const auto & result = translation_state->getResult();
-                registerExecutionPageResult_(state, result.getVAddr(), result.getPAddr(),
-                                             result.getPageSize());
-
-                // On execute-translation miss, route directly into the newly
-                // registered execution page path instead of returning to Decode.
-                if (ActionGroup* exec_page_group = lookupExecutionPageGroup_(result.getVAddr()))
+                // On execute-translation miss, register then route directly into the
+                // execution page path instead of returning to Decode.
+                if (ActionGroup* exec_page_group = registerExecutionPageResult_(
+                        state, result.getVAddr(), result.getPAddr(), result.getPageSize()))
                 {
                     throw ActionException(exec_page_group);
                 }

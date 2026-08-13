@@ -144,7 +144,7 @@ namespace pegasus
                 return *this;
             }
 
-            ActionGroup* getInstActionGroup() { return inst_action_group_; }
+            ActionGroup* getInstActionGroup() const { return inst_action_group_; }
 
             // Helper function for determining whether an instruction has been decoded and setup
             // before
@@ -153,6 +153,8 @@ namespace pegasus
             void setInstAddress(Addr inst_addr) { inst_addr_ = inst_addr; }
 
           private:
+            void refreshInstAddress_(PegasusState* state);
+
             // Need to decode the instruction at the offset
             Action::ItrType setupInst_(PegasusState* state, Action::ItrType action_it);
 

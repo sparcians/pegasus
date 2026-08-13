@@ -12,6 +12,12 @@ PASSING_STATUS_RISCV_ARCH_RV32 = [284, 284]
 PASSING_STATUS_RISCV_ARCH_RV64 = [364, 364]
 PASSING_STATUS_TENSTORRENT_RV64 = [13155, 14255]
 
+# Tests listed here will be forced to run with execution cache disabled.
+ECACHE_DISABLED_TESTS = [
+    "rv64uziccid-p-ziccid",
+    "rv64uziccid-v-ziccid"
+]
+
 # Verbosity
 be_noisy = False
 
@@ -84,6 +90,10 @@ def get_pegasus_cmd(testname, wkld, output_dir, executable, pegasus_params=None)
 
     pegasus_cmd.extend(["-w", wkld])
     return pegasus_cmd
+
+
+def disable_ecache(testname):
+    return testname in ECACHE_DISABLED_TESTS
 
 
 # Function to run a single test and append to the appropriate queue
@@ -364,12 +374,16 @@ def main():
     for test in tests:
         testname = test[0]
         wkld = test[1]
+        per_test_params = list(args.pegasus_param)
+        if disable_ecache(testname):
+            per_test_params.append(("top.core0.hart0.fetch.params.enable_ecache", "false"))
+
         pegasus_cmd = get_pegasus_cmd(
             testname,
             wkld,
             output_dir,
             pegasus_exe,
-            args.pegasus_param
+            per_test_params
         )
         pegasus_cmds.append([testname, pegasus_cmd])
 

@@ -134,7 +134,6 @@ namespace pegasus
         zfhmin_enabled_(extension_manager_.isEnabled("zfhmin")),
         inst_logger_(hart_tn, "inst", "Pegasus Instruction Logger"),
         stf_valid_logger_(hart_tn, "stf_valid", "Pegasus STF Validator Logger"),
-        exec_cache_logger_(hart_tn, "exec_cache", "Pegasus Execution Cache Logger"),
         finish_action_group_("finish_inst"),
         stop_sim_action_group_("stop_sim"),
         pause_sim_action_group_("pause_sim")

@@ -385,10 +385,6 @@ namespace pegasus
 
         const std::vector<std::unique_ptr<Observer>> & getObservers() const { return observers_; }
 
-        sparta::log::MessageSource & getExecCacheLogger() { return exec_cache_logger_; }
-
-        const sparta::log::MessageSource & getExecCacheLogger() const { return exec_cache_logger_; }
-
         // Request a translated execution-page cache flush at the next safe fetch boundary.
         void flushExecutionCache();
 
@@ -677,9 +673,6 @@ namespace pegasus
 
         // MessageSource used for STFValidator
         sparta::log::MessageSource stf_valid_logger_;
-
-        // MessageSource used for execution cache dispatch diagnostics
-        sparta::log::MessageSource exec_cache_logger_;
 
         // Execution cache decision counters
         uint64_t exec_cache_reuse_count_ = 0;
