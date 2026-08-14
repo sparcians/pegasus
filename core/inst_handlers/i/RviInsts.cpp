@@ -1125,6 +1125,9 @@ namespace pegasus
             THROW_ILLEGAL_INST;
         }
 
+        // Conservatively flush translated execution pages on fences.
+        state->flushExecutionCache();
+
         return ++action_it;
     }
 

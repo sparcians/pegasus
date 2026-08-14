@@ -21,14 +21,25 @@ namespace pegasus
         {
           public:
             FetchParameters(sparta::TreeNode* node) : sparta::ParameterSet(node) {}
+
+            // Runtime parameter that allows for the execution cache to be used
+            PARAMETER(bool, enable_ecache, false,
+                      "Enable the experimental translated-page execution cache fast path")
         };
 
         Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p);
 
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
+        // Conservative full flush of translated execution pages.
+        void flushExecutionCache();
+
+        bool isEcacheEnabled() const { return enable_ecache_; }
+
       private:
         PegasusState* state_ = nullptr;
+        const FetchParameters* params_ = nullptr;
+        bool enable_ecache_ = false;
 
         void onBindTreeEarly_() override;
 

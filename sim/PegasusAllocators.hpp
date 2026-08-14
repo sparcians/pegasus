@@ -47,7 +47,7 @@ namespace pegasus
             return allocators;
         }
 
-        PegasusInstAllocator inst_allocator{2000, 1500};
+        PegasusInstAllocator inst_allocator{20000, 15000};
         PegasusExtractorAllocator extractor_allocator{10000, 8500};
     };
 } // namespace pegasus

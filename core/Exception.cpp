@@ -106,8 +106,13 @@ namespace pegasus
 
         // Current virtualization mode
         const bool prev_virt_mode = state->getVirtualMode();
-        // PC that caused the exception
-        const XLEN epc_val = state->getPc();
+        // PC that caused the exception. For a split opcode, faults on the second half
+        // should report the first-half address so the trap re-enters at the logical start.
+        XLEN epc_val = state->getPc();
+        if (state->getSimState()->partial_opcode && (epc_val >= 2))
+        {
+            epc_val -= 2;
+        }
         // Get the exception code, handles interrupts and virtual traps
         const XLEN interrupt_bit = 1 << ((sizeof(XLEN) * 4) - 1);
         const XLEN cause_val = is_interrupt ? (excp_code & interrupt_bit) : excp_code;
@@ -245,6 +250,16 @@ namespace pegasus
 
         state->setNextPc(trap_handler_address);
         state->setPrivMode(priv_mode, virt_mode);
+
+        // Trap entry must not reuse a stale exec-cache bypass chain.
+        // Only perform the flush/reroute when exec-cache mode is enabled.
+        if (state->getFetchUnit()->isEcacheEnabled())
+        {
+            state->flushExecutionCache();
+            state->getNextCycleResetActionGroup()->setNextActionGroup(
+                state->getFetchUnit()->getActionGroup()->getNextActionGroup());
+        }
+
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::SUPERVISOR);
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::VIRTUAL_SUPERVISOR);
         state->updateTranslationMode<XLEN>(translate_types::TranslationStage::GUEST);

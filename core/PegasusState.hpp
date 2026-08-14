@@ -87,6 +87,8 @@ namespace pegasus
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
+            PARAMETER(bool, ecache_stats, false,
+                      "Print execution-cache reuse counters/ratio when the hart stops")
             // Typical stack pointer is 8KB on most linux systems
             PARAMETER(uint32_t, ulimit_stack_size, 8192,
                       "Typical ulimit stack size for system call emulation")
@@ -173,6 +175,7 @@ namespace pegasus
         {
             // Executing instruction
             uint32_t current_opcode = 0;
+            bool partial_opcode = false;
             uint64_t current_uid = 0;
             PegasusInstPtr current_inst = nullptr;
 
@@ -191,6 +194,7 @@ namespace pegasus
             void reset()
             {
                 current_opcode = 0;
+                partial_opcode = false;
                 current_inst.reset();
                 ++current_uid;
             }
@@ -381,9 +385,67 @@ namespace pegasus
 
         const std::vector<std::unique_ptr<Observer>> & getObservers() const { return observers_; }
 
+        // Request a translated execution-page cache flush at the next safe fetch boundary.
+        void flushExecutionCache();
+
+        // Returns true exactly once per request and clears the pending flag.
+        bool consumeExecutionCacheFlushRequest();
+
+        void recordExecCacheDecision(bool instruction_reuse);
+
+        // Count only translation operations that perform an MMU page walk
+        // (i.e., not machine-mode/baremetal short-circuit translation).
+        void recordTranslationRequest() { ++translation_request_count_; }
+
+        // Count translation operations that bypass page walks and return immediately
+        // due to machine mode or baremetal translation mode.
+        void recordTranslationBypass() { ++translation_bypass_count_; }
+
+        void recordPageWalkTranslation() { ++page_walk_translation_count_; }
+
+        void recordExecCacheBypassEnter() { ++exec_cache_bypass_enter_count_; }
+
+        void recordExecCacheBypassFallback() { ++exec_cache_bypass_fallback_count_; }
+
+        // Count how often setupInst wires NCR directly to the next instruction
+        // action group, bypassing translatedPageExecute_ for subsequent hits.
+        void recordExecCachePteBypassSetup() { ++exec_cache_pte_bypass_setup_count_; }
+
+        uint64_t getExecCacheReuseCount() const { return exec_cache_reuse_count_; }
+
+        uint64_t getExecCacheFirstDecodeCount() const { return exec_cache_first_decode_count_; }
+
+        uint64_t getExecCacheBypassEnterCount() const { return exec_cache_bypass_enter_count_; }
+
+        uint64_t getExecCacheBypassFallbackCount() const
+        {
+            return exec_cache_bypass_fallback_count_;
+        }
+
+        uint64_t getExecCachePteBypassSetupCount() const
+        {
+            return exec_cache_pte_bypass_setup_count_;
+        }
+
+        uint64_t getTranslationRequestCount() const { return translation_request_count_; }
+
+        uint64_t getTranslationBypassCount() const { return translation_bypass_count_; }
+
+        uint64_t getPageWalkTranslationCount() const { return page_walk_translation_count_; }
+
+        double getExecCacheReuseRatio() const
+        {
+            const uint64_t total = exec_cache_reuse_count_ + exec_cache_first_decode_count_;
+            return (total == 0) ? 0.0 : static_cast<double>(exec_cache_reuse_count_) / total;
+        }
+
         void insertExecuteActions(ActionGroup* action_group, const bool is_memory_inst);
 
         ActionGroup* getFinishActionGroup() { return &finish_action_group_; }
+
+        ActionGroup* getNextCycleResetActionGroup();
+
+        bool isEcacheEnabled() const { return ecache_enabled_; }
 
         ActionGroup* getStopSimActionGroup() { return &stop_sim_action_group_; }
 
@@ -453,6 +515,12 @@ namespace pegasus
 
         //! Stop simulatiion on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Whether the execution cache (ecache) fast path is enabled
+        bool ecache_enabled_ = false;
+
+        //! Print execution-cache counter summary when simulation stops
+        const bool ecache_stats_;
 
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
@@ -605,6 +673,19 @@ namespace pegasus
 
         // MessageSource used for STFValidator
         sparta::log::MessageSource stf_valid_logger_;
+
+        // Execution cache decision counters
+        uint64_t exec_cache_reuse_count_ = 0;
+        uint64_t exec_cache_first_decode_count_ = 0;
+        uint64_t exec_cache_bypass_enter_count_ = 0;
+        uint64_t exec_cache_bypass_fallback_count_ = 0;
+        uint64_t exec_cache_pte_bypass_setup_count_ = 0;
+        uint64_t translation_request_count_ = 0;
+        uint64_t translation_bypass_count_ = 0;
+        uint64_t page_walk_translation_count_ = 0;
+
+        // Deferred cache flush flag to avoid invalidating active action groups mid-execution.
+        bool execution_cache_flush_requested_ = false;
 
         // Finish ActionGroup for post-execute simulator Actions
         ActionGroup finish_action_group_;

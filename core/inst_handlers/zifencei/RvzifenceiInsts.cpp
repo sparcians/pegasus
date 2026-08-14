@@ -25,7 +25,8 @@ namespace pegasus
                                                      Action::ItrType action_it)
     {
         // TODO: Flush any TLBs and instruction/block caches in the future
-        (void)state;
+        // Conservatively flush translated execution pages on fences.
+        state->flushExecutionCache();
 
         return ++action_it;
     }

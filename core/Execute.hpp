@@ -27,9 +27,13 @@ namespace pegasus
 
         ActionGroup* getActionGroup() { return &execute_action_group_; }
 
+        ActionGroup* getNextCycleResetActionGroup() { return &next_cycle_reset_action_group_; }
+
       private:
         Action::ItrType execute_(pegasus::PegasusState* state, Action::ItrType action_it);
+        Action::ItrType nextCycleReset_(pegasus::PegasusState* state, Action::ItrType action_it);
 
         ActionGroup execute_action_group_{"Execute"};
+        ActionGroup next_cycle_reset_action_group_{"Next Cycle Reset"};
     };
 } // namespace pegasus

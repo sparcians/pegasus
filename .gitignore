@@ -1,6 +1,7 @@
 debug/**
 release/**
 profile/**
+build-block/**
 compile_commands.json
 scripts/__pycache__/**
 scripts/insts/__pycache__/**

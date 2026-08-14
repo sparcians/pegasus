@@ -21,6 +21,8 @@ namespace pegasus
     const ActionTagType ActionTags::DATA_G_STAGE_TRANSLATE_TAG =
         ActionTagFactory::createTag("DATA_G_STAGE_TRANSLATE");
     const ActionTagType ActionTags::EXCEPTION_TAG = ActionTagFactory::createTag("EXCEPTION");
+    const ActionTagType ActionTags::TRANSLATION_PAGE_EXECUTE =
+        ActionTagFactory::createTag("TRANSLATION_PAGE_EXECUTE");
 
     // Stop Simulation
     const ActionTagType ActionTags::STOP_SIM_TAG = ActionTagFactory::createTag("STOP_SIM");
