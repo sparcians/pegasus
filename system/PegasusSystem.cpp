@@ -87,8 +87,8 @@ namespace pegasus
                 // ELFIO::Elf64_Addr addr;
                 Addr addr = 0;
                 ELFIO::Elf_Xword size = 0;
-                unsigned char bind;
-                unsigned char type;
+                unsigned char bind = 0;
+                unsigned char type = 0;
                 ELFIO::Elf_Half section;
                 unsigned char other;
                 symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
