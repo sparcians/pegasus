@@ -11,7 +11,10 @@
 
 namespace pegasus
 {
-    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters*) : sparta::Unit(fetch_node)
+    Fetch::Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p) :
+        sparta::Unit(fetch_node),
+        params_(p),
+        enable_ecache_(p->enable_ecache)
     {
         Action fetch_action =
             pegasus::Action::createAction<&Fetch::fetch_>(this, "fetch", ActionTags::FETCH_TAG);
@@ -20,6 +23,15 @@ namespace pegasus
         Action decode_action =
             pegasus::Action::createAction<&Fetch::decode_>(this, "decode", ActionTags::DECODE_TAG);
         decode_action_group_.addAction(decode_action);
+    }
+
+    // For flushing the execution cache
+    void Fetch::flushExecutionCache()
+    {
+        if (state_ != nullptr)
+        {
+            state_->getTranslateUnit()->flushExecutionCache();
+        }
     }
 
     void Fetch::onBindTreeEarly_()
@@ -44,7 +56,10 @@ namespace pegasus
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
-        // Reset the sim state
+        if (state->consumeExecutionCacheFlushRequest())
+        {
+            flushExecutionCache();
+        }
         PegasusState::SimState* sim_state = state->getSimState();
         sim_state->reset();
 

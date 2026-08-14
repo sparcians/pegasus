@@ -103,6 +103,7 @@ namespace pegasus
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        ecache_stats_(p->ecache_stats),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
         stf_opcode_trigger_(p->stf_opcode_trigger),
@@ -250,6 +251,28 @@ namespace pegasus
         vector_config_.checkConfig();
     }
 
+    // Execute cache stats
+    void PegasusState::recordExecCacheDecision(bool instruction_reuse)
+    {
+        if (instruction_reuse)
+        {
+            ++exec_cache_reuse_count_;
+        }
+        else
+        {
+            ++exec_cache_first_decode_count_;
+        }
+    }
+
+    void PegasusState::flushExecutionCache() { execution_cache_flush_requested_ = true; }
+
+    bool PegasusState::consumeExecutionCacheFlushRequest()
+    {
+        const bool do_flush = execution_cache_flush_requested_;
+        execution_cache_flush_requested_ = false;
+        return do_flush;
+    }
+
     mavis::FileNameListType PegasusState::getUArchFiles_() const
     {
         mavis::FileNameListType uarch_files;
@@ -275,6 +298,11 @@ namespace pegasus
 
     uint64_t PegasusState::getXlen() const { return xlen_; }
 
+    ActionGroup* PegasusState::getNextCycleResetActionGroup()
+    {
+        return execute_unit_->getNextCycleResetActionGroup();
+    }
+
     void PegasusState::onBindTreeEarly_()
     {
         auto hart_tn = getContainer();
@@ -284,8 +312,20 @@ namespace pegasus
         translate_unit_ = hart_tn->getChild("translate")->getResourceAs<Translate*>();
         exception_unit_ = hart_tn->getChild("exception")->getResourceAs<Exception*>();
 
-        // Connect finish ActionGroup to Fetch
-        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        ecache_enabled_ = fetch_unit_->isEcacheEnabled();
+        if (ecache_enabled_)
+        {
+            // When Ecache is enabled, wire finish -> nextCycleReset -> Translate.
+            // NCR owns the sim_state->reset() call
+            ActionGroup* ncr_group = execute_unit_->getNextCycleResetActionGroup();
+            ncr_group->setNextActionGroup(translate_unit_->getExecuteTranslateActionGroup());
+            finish_action_group_.setNextActionGroup(ncr_group);
+        }
+        else
+        {
+            // Without ecache, finish wires directly to fetch. Reset happens inside fetch_().
+            finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        }
 
         // Initialize Mavis
         DLOG("Initializing Mavis with ISA string " << isa_string_);
@@ -452,6 +492,9 @@ namespace pegasus
             case translate_types::TranslationStage::INVALID:
                 sparta_assert(false, "Translation stage cannot be INVALID!");
         }
+
+        // Translation-context changes can invalidate decoded execute-page assumptions.
+        flushExecutionCache();
     }
 
     void PegasusState::pauseHart(const SimPauseReason reason)
@@ -463,9 +506,10 @@ namespace pegasus
     void PegasusState::unpauseHart()
     {
         sim_state_.sim_pause_reason = SimPauseReason::INVALID;
-        // We replace the next ActionGroup pointer to pause the sim, so it needs to
-        // be set back to Fetch
-        finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+        // Restore finish → NCR (ecache on) or finish → fetch (ecache off).
+        finish_action_group_.setNextActionGroup(ecache_enabled_
+                                                    ? execute_unit_->getNextCycleResetActionGroup()
+                                                    : fetch_unit_->getActionGroup());
     }
 
     sparta::Register* PegasusState::getSpartaRegister(const mavis::OperandInfo::Element* operand)
@@ -1021,6 +1065,27 @@ namespace pegasus
             sim_state_.workload_exit_code = exit_code;
             sim_state_.test_passed = (exit_code == 0) ? true : false;
 
+            if (ecache_stats_)
+            {
+                const uint64_t reuse_count = getExecCacheReuseCount();
+                const uint64_t first_decode_count = getExecCacheFirstDecodeCount();
+                const uint64_t total_decisions = reuse_count + first_decode_count;
+                std::cout << "Execution Cache statistics" << std::endl;
+                std::cout << "\tExecCache decisions: " << total_decisions
+                          << " (reuse=" << reuse_count << ", first_decode = " << first_decode_count
+                          << ")" << std::endl;
+                std::cout << "\tExecCache reuse ratio: " << getExecCacheReuseRatio() << std::endl;
+                std::cout << "\tExecCache bypass: enter = " << getExecCacheBypassEnterCount()
+                          << ", fallback = " << getExecCacheBypassFallbackCount()
+                          << ", pTE_setup = " << getExecCachePteBypassSetupCount() << std::endl;
+                std::cout << "\tTranslation requests: " << getTranslationRequestCount()
+                          << std::endl;
+                std::cout << "\tTranslation bypass (machine/baremetal): "
+                          << getTranslationBypassCount() << std::endl;
+                std::cout << "\tMMU page-walk translations: " << getPageWalkTranslationCount()
+                          << std::endl;
+            }
+
             finish_action_group_.setNextActionGroup(&stop_sim_action_group_);
         }
         else
@@ -1031,7 +1096,9 @@ namespace pegasus
             sim_state_.workload_exit_code = 0;
             sim_state_.test_passed = true;
 
-            finish_action_group_.setNextActionGroup(fetch_unit_->getActionGroup());
+            finish_action_group_.setNextActionGroup(
+                ecache_enabled_ ? execute_unit_->getNextCycleResetActionGroup()
+                                : fetch_unit_->getActionGroup());
         }
     }
 

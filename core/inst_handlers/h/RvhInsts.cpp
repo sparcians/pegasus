@@ -185,7 +185,8 @@ namespace pegasus
             }
         }
 
-        // TODO: Flush any TLBs and instruction/block caches in the future
+        // Conservatively flush translated execution pages on hypervisor fences.
+        state->flushExecutionCache();
         return ++action_it;
     }
 

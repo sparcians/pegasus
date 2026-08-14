@@ -19,6 +19,7 @@ namespace pegasus
         static const ActionTagType DATA_VS_STAGE_TRANSLATE_TAG;
         static const ActionTagType DATA_G_STAGE_TRANSLATE_TAG;
         static const ActionTagType EXCEPTION_TAG;
+        static const ActionTagType TRANSLATION_PAGE_EXECUTE;
 
         // Stop Simulation
         static const ActionTagType STOP_SIM_TAG;
