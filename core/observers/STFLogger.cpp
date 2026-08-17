@@ -9,18 +9,29 @@
 namespace pegasus
 {
     STFLogger::STFLogger(const uint32_t reg_width, uint64_t inital_pc, const std::string & filename,
-                         PegasusState* state, std::optional<uint32_t> opcode_trigger) :
+                         PegasusState* state, std::optional<uint32_t> opcode_trigger,
+                         bool use_trace_points) :
         Observer((reg_width == 32) ? ObserverMode::RV32 : ObserverMode::RV64),
         filename_(filename),
         opcode_trigger_(opcode_trigger),
+        use_trace_points_(use_trace_points),
         vector_enabled_(state->isExtensionEnabled("v"))
     {
-        startSTFTrace_(inital_pc, filename, state);
+        if (false == use_trace_points_)
+        {
+            // Immediate turn on tracing
+            startSTFTrace_(inital_pc, filename, state);
+        }
+        else
+        {
+            enabled_ = false;
+        }
     }
 
     void STFLogger::startSTFTrace_(uint64_t inital_pc, const std::string & filename,
                                    PegasusState* state)
     {
+        enabled_ = true;
         try
         {
             stf_writer_.open(filename);
@@ -308,6 +319,43 @@ namespace pegasus
             static_cast<uint64_t>(READ_CSR_REG<XLEN>(state, MTVEC)));
     }
 
+    std::string STFLogger::genTraceName_()
+    {
+        // Find the position of the .zstf or .stf
+        const size_t dotPos = filename_.find_last_of('.');
+        return filename_.substr(0, dotPos) + current_symbol_ + "_"
+               + std::to_string(++trace_instance_) + filename_.substr(dotPos);
+    }
+
+    void STFLogger::enableObserver_(PegasusState* state)
+    {
+        const PegasusInstPtr & inst = state->getCurrentInst();
+        if (inst)
+        {
+            if (not enabled_)
+            {
+                // See if we should enable tracing
+                sparta_assert(
+                    use_trace_points_,
+                    "Somehow the STF logger was not enabled, but trace points aren't used? "
+                        << "How do we turn on the STF logger?");
+                if (inst->getOpcode() == STF_START_TRACE)
+                {
+                    startSTFTrace_(state->getNextPc(), genTraceName_(), state);
+                    enabled_ = true;
+                }
+            }
+            else
+            {
+                if (inst->getOpcode() == STF_STOP_TRACE)
+                {
+                    stf_writer_.close();
+                    enabled_ = false;
+                }
+            }
+        }
+    }
+
     void STFLogger::postExecute_(PegasusState* state)
     {
         for (const auto & mem_write : mem_writes_)
@@ -421,13 +469,7 @@ namespace pegasus
             // Close current trace, open a new one
             stf_writer_.close();
 
-            // Find the position of the .zstf or .stf
-            const size_t dotPos = filename_.find_last_of('.');
-            const auto new_trace_file_name = filename_.substr(0, dotPos) + current_symbol_ + "_"
-                                             + std::to_string(++trace_instance_)
-                                             + filename_.substr(dotPos);
-
-            startSTFTrace_(state->getNextPc(), new_trace_file_name, state);
+            startSTFTrace_(state->getNextPc(), genTraceName_(), state);
         }
     }
 

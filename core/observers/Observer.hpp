@@ -279,6 +279,7 @@ namespace pegasus
         PrivMode priv_mode_;
         bool virtual_mode_;
         uint64_t opcode_;
+        bool enabled_ = true; // Sometimes the observer is disabled, like tracing on/off
 
         // Mavis pointer for getting the disassembly string
         mavis::OpcodeInfo::PtrType opcode_info_;
@@ -327,6 +328,9 @@ namespace pegasus
         sparta::utils::ValidValue<ObserverMode> arch_;
 
         void inspectInitialState_(PegasusState* state);
+
+        // Are the pre-conditions suited to enable the observer
+        virtual void enableObserver_(PegasusState*) {}
 
         virtual void preExecute_(PegasusState*) {}
 
