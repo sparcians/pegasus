@@ -64,10 +64,13 @@ namespace pegasus
             STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
             STFVALIDLOG("    STF Opcode: 0x" << std::hex << next_it_->opcode());
             STFVALIDLOG("");
-            if (false == stf_valid_logger_.observed()) {
-                sparta_assert(false, "PCs have diverged! Add '-l stf_valid 1' logger to see the issue");
+            if (false == stf_valid_logger_.observed())
+            {
+                sparta_assert(false,
+                              "PCs have diverged! Add '-l stf_valid 1' logger to see the issue");
             }
-            else {
+            else
+            {
                 sparta_assert(false, "PCs have diverged!");
             }
         }
@@ -82,10 +85,13 @@ namespace pegasus
             STFVALIDLOG("Pegasus Opcode: 0x" << std::hex << state->getSimState()->current_opcode)
             STFVALIDLOG("    STF Opcode: 0x" << std::hex << next_it_->opcode());
             STFVALIDLOG("");
-            if (false == stf_valid_logger_.observed()) {
-                sparta_assert(false, "OPCODEs do not match! Add '-l stf_valid 1' logger to see the issue");
+            if (false == stf_valid_logger_.observed())
+            {
+                sparta_assert(false,
+                              "OPCODEs do not match! Add '-l stf_valid 1' logger to see the issue");
             }
-            else {
+            else
+            {
                 sparta_assert(false, "OPCODEs do not match!");
             }
         }
@@ -137,11 +143,14 @@ namespace pegasus
                             STFVALIDLOG("");
                             if (validate_fail_on_first_diff_)
                             {
-                                if (false == stf_valid_logger_.observed()) {
-                                    sparta_assert(false, "Register writes do not match!  "
+                                if (false == stf_valid_logger_.observed())
+                                {
+                                    sparta_assert(false,
+                                                  "Register writes do not match!  "
                                                   "Add '-l stf_valid 1' logger to see the issue");
                                 }
-                                else {
+                                else
+                                {
                                     sparta_assert(false, "Register writes do not match!");
                                 }
                             }
@@ -167,11 +176,14 @@ namespace pegasus
                             STFVALIDLOG("");
                             if (validate_fail_on_first_diff_)
                             {
-                                if (false == stf_valid_logger_.observed()) {
-                                    sparta_assert(false, "Vector register writes do not match! "
+                                if (false == stf_valid_logger_.observed())
+                                {
+                                    sparta_assert(false,
+                                                  "Vector register writes do not match! "
                                                   "Add '-l stf_valid 1' logger to see the issue");
                                 }
-                                else {
+                                else
+                                {
                                     sparta_assert(false, "Vector register writes do not match!");
                                 }
                             }

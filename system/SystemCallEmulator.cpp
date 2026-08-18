@@ -527,7 +527,7 @@ namespace pegasus
     }
 
     int64_t SysCallHandlers::mmap_(const SystemCallStack & call_stack,
-                                   sparta::memory::BlockingMemoryIF*memory)
+                                   sparta::memory::BlockingMemoryIF* memory)
     {
         const auto addr = call_stack[1];
         const auto size = call_stack[2];
@@ -548,19 +548,23 @@ namespace pegasus
         {
 #ifdef __APPLE__
             // MacOS conversions
-            if (prot == 0x3) {
+            if (prot == 0x3)
+            {
                 prot = PROT_READ | PROT_WRITE;
             }
-            else {
+            else
+            {
                 throw sparta::SpartaException()
                     << "Unhandled prot value for MacOS conversion for mmap: " << prot;
             }
-            if (flags == 0x22) {
+            if (flags == 0x22)
+            {
                 flags = MAP_PRIVATE | MAP_ANON;
             }
-            else {
-                throw sparta::SpartaException() <<
-                    "Unhandled flags value for MacOS conversion for mmap" << flags;
+            else
+            {
+                throw sparta::SpartaException()
+                    << "Unhandled flags value for MacOS conversion for mmap" << flags;
             }
 #endif
             sparta_assert(fd == std::numeric_limits<uint64_t>::max(),
@@ -569,13 +573,14 @@ namespace pegasus
             const auto host_address = ::mmap(nullptr, size, prot, flags, fd, offset);
             if (host_address == MAP_FAILED)
             {
-                throw sparta::SpartaException("Pegasus Error: Coult not execute mmap syscall: " +
-                                              std::string(::strerror(errno)));
+                throw sparta::SpartaException("Pegasus Error: Coult not execute mmap syscall: "
+                                              + std::string(::strerror(errno)));
             }
             guest_addr = memory_map_manager_.allocate(uint64_t(host_address), size);
-            memory->poke(guest_addr, size, (uint8_t*) host_address);
+            memory->poke(guest_addr, size, (uint8_t*)host_address);
         }
-        else {
+        else
+        {
             guest_addr = memory_map_manager_.allocate(0ull, size);
         }
 
