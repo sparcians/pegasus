@@ -5,6 +5,7 @@
 #include "sparta/memory/BlockingMemoryIFNode.hpp"
 #include "core/Trap.hpp"
 #include "include/PegasusTypes.hpp"
+#include <algorithm>
 
 namespace pegasus
 {
@@ -102,8 +103,9 @@ namespace pegasus
                 }
                 else
                 {
-                    TYPE value;
-                    ::memcpy(&value, value_.data(), sizeof(TYPE));
+                    TYPE value{};
+                    const size_t value_capacity = std::min(sizeof(TYPE), value_.size());
+                    ::memcpy(&value, value_.data(), value_capacity);
                     return value;
                 }
                 return TYPE();

@@ -93,10 +93,13 @@ namespace pegasus
                     (src_reg.reg_id.reg_type == RegType::INTEGER) && (src_reg.reg_id.reg_num == 0);
                 if (not is_x0)
                 {
+                    // FP regs are always 8 bytes but int uses XLEN width
+                    const uint64_t reg_value = (src_reg.reg_id.reg_type == RegType::FLOATING_POINT)
+                                                   ? src_reg.getRegValue<uint64_t>()
+                                                   : src_reg.getRegValue<XLEN>();
                     stf_writer_ << stf::InstRegRecord(
                         src_reg.reg_id.reg_num, stf_reg_type,
-                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE,
-                        src_reg.getRegValue<XLEN>());
+                        stf::Registers::STF_REG_OPERAND_TYPE::REG_SOURCE, reg_value);
                 }
             }
             else
