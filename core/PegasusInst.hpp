@@ -51,6 +51,16 @@ namespace pegasus
 
         uint64_t getImmediate() const { return immediate_value_; }
 
+        mavis::Float32 getSingleFloatImmediate() const
+        {
+            return opcode_info_->getSingleFloatImmediate();
+        }
+
+        mavis::Float64 getDoubleFloatImmediate() const
+        {
+            return opcode_info_->getDoubleFloatImmediate();
+        }
+
         bool isVector() const
         {
             return opcode_info_->isInstType(mavis::OpcodeInfo::InstructionTypes::VECTOR);
