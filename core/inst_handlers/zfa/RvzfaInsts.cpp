@@ -104,18 +104,18 @@ namespace pegasus
         const PegasusInstPtr & inst = state->getCurrentInst();
 
         SIZE rd_val;
-	if constexpr (std::is_same_v<SIZE, FLOAT_SP>)
-	{
-		rd_val = inst->getSingleFloatImmediate().toFloat().v;
-	}
-	else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
-	{
-		rd_val = inst->getDoubleFloatImmediate().toFloat().v;
-	}
-	else
-	{
-		static_assert(sizeof(SIZE) == 0, "Unsupported FP width for fli");
-	}
+        if constexpr (std::is_same_v<SIZE, FLOAT_SP>)
+        {
+            rd_val = inst->getSingleFloatImmediate().toFloat().v;
+        }
+        else if constexpr (std::is_same_v<SIZE, FLOAT_DP>)
+        {
+            rd_val = inst->getDoubleFloatImmediate().toFloat().v;
+        }
+        else
+        {
+            static_assert(sizeof(SIZE) == 0, "Unsupported FP width for fli");
+        }
 
         WRITE_FP_REG<FLOAT_DP>(state, inst->getRd(), nanBoxing<FLOAT_DP, SIZE>(rd_val));
         updateCsr<XLEN>(state);
