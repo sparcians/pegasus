@@ -21,10 +21,7 @@ namespace pegasus
         using base_type = RvfInstsBase;
 
       protected:
-        static void resetFpExceptionFlags()
-        {
-            softfloat_exceptionFlags = 0;
-        }
+        static void resetFpExceptionFlags() { softfloat_exceptionFlags = 0; }
 
         template <typename XLEN> inline uint_fast8_t getRM(PegasusState* state)
         {
