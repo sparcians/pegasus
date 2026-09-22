@@ -21,8 +21,11 @@ namespace pegasus
         using base_type = RvfInstsBase;
 
       protected:
+        static void resetFpExceptionFlags() { softfloat_exceptionFlags = 0; }
+
         template <typename XLEN> inline uint_fast8_t getRM(PegasusState* state)
         {
+            resetFpExceptionFlags();
             auto inst = state->getCurrentInst();
             uint64_t static_rm = inst->getRM();
             if (static_rm == 7) // RM field "DYN"
@@ -96,60 +99,58 @@ namespace pegasus
             // TODO: it would be nice to have field shift, then a single combined CSR write will
             // suffice.
 
-            // FFLAGS
-            WRITE_CSR_FIELD<XLEN>(
-                state, FFLAGS, "NX",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_inexact) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FFLAGS, "UF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_underflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FFLAGS, "OF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_overflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FFLAGS, "DZ",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_infinite) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FFLAGS, "NV",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_invalid) != 0));
-
-            // FCSR
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "NX",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_inexact) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "UF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_underflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "OF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_overflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "DZ",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_infinite) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "NV",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_invalid) != 0));
+            // FFLAGS bits are sticky - they are set but not cleared
+            if (softfloat_exceptionFlags & softfloat_flag_inexact)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FFLAGS, "NX", 1);
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "NX", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_underflow)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FFLAGS, "UF", 1);
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "UF", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_overflow)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FFLAGS, "OF", 1);
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "OF", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_infinite)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FFLAGS, "DZ", 1);
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "DZ", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FFLAGS, "NV", 1);
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "NV", 1);
+            }
         }
 
         // For the trig functions, which do not raise fflags
         template <typename XLEN> static void updateNoFlagCsr(PegasusState* state)
         {
             // FCSR
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "NX",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_inexact) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "UF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_underflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "OF",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_overflow) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "DZ",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_infinite) != 0));
-            WRITE_CSR_FIELD<XLEN>(
-                state, FCSR, "NV",
-                static_cast<uint64_t>((softfloat_exceptionFlags & softfloat_flag_invalid) != 0));
+            if (softfloat_exceptionFlags & softfloat_flag_inexact)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "NX", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_underflow)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "UF", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_overflow)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "OF", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_infinite)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "DZ", 1);
+            }
+            if (softfloat_exceptionFlags & softfloat_flag_invalid)
+            {
+                WRITE_CSR_FIELD<XLEN>(state, FCSR, "NV", 1);
+            }
         }
 
         template <typename XLEN>

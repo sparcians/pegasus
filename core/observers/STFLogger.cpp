@@ -121,7 +121,7 @@ namespace pegasus
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                              csr_write.getRegValue<XLEN>());
+                                              csr_write.getNewValue<XLEN>());
         }
 
         for (const auto & dst_reg : dst_regs_)
