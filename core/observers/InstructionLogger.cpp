@@ -32,7 +32,10 @@ namespace pegasus
             (void)opcode;
         }
 
-        virtual void writeSymbols(const std::string & symbols) { (void)symbols; }
+        virtual void writeSymbols(const std::vector<PegasusSystem::Symbol> & symbols)
+        {
+            (void)symbols;
+        }
 
         virtual void writeInstHeader(const PrivMode mode, const bool virt, const PegasusInst* inst,
                                      uint64_t pc, uint64_t opcode)
@@ -93,10 +96,14 @@ namespace pegasus
         {
         }
 
-        void writeSymbols(const std::string & symbols) override
+        void writeSymbols(const std::vector<PegasusSystem::Symbol> & symbols) override
         {
             reset_();
-            inst_oss_ << "Call <" << symbols << ">";
+            inst_oss_ << "Call ";
+            for (auto & symbol : symbols)
+            {
+                inst_oss_ << "<" << symbol.name << ">";
+            }
             postExecute_(inst_oss_.str());
         }
 
