@@ -14,13 +14,13 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "flw",
-            pegasus::Action::createAction<&RvfInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "flw", ActionTags::COMPUTE_ADDR_TAG));
+            "flw", pegasus::Action::createAction<&RvfInsts::computeAddressHandler<XLEN, uint32_t>,
+                                                 RvfInstsBase>(nullptr, "flw",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "fsw",
-            pegasus::Action::createAction<&RvfInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "fsw", ActionTags::COMPUTE_ADDR_TAG));
+            "fsw", pegasus::Action::createAction<&RvfInsts::computeAddressHandler<XLEN, uint32_t>,
+                                                 RvfInstsBase>(nullptr, "fsw",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
