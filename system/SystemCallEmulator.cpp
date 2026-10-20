@@ -76,7 +76,6 @@ namespace pegasus
                  {176, {"getgid", cfp(&SysCallHandlers::getgid_)}},
                  {177, {"gettid", cfp(&SysCallHandlers::gettid_)}},
                  {178, {"getegid", cfp(&SysCallHandlers::getegid_)}},
-                 {214, {"brk", cfp(&SysCallHandlers::brk_)}},
                  {215, {"munmap", cfp(&SysCallHandlers::munmap_)}},
                  {222, {"mmap", cfp(&SysCallHandlers::mmap_)}},
                  {226, {"mprotect", cfp(&SysCallHandlers::mprotect_)}},
@@ -93,6 +92,12 @@ namespace pegasus
                  {1024, {"open", cfp(&SysCallHandlers::open_)}},
                  {1039, {"lstat", cfp(&SysCallHandlers::lstat_)}},
                  {2011, {"getmainvars", cfp(&SysCallHandlers::getmainvars_)}}});
+
+            // If the workload does not have an "_end" symbol, brk is unsupported
+            if (emulator->isBrkSupported())
+            {
+                supported_sys_calls_.insert({214, {"brk", cfp(&SysCallHandlers::brk_)}});
+            }
         }
 
         // Pulled from https://www.man7.org/linux/man-pages/man2/statx.2.html
@@ -429,6 +434,7 @@ namespace pegasus
                 std::cout << "PEGASUS: Warning: Could not find _end symbol in workload for "
                              "system call emulation for brk system calls"
                           << std::endl;
+                brk_supported_ = false;
             }
         }
     }
