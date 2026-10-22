@@ -124,93 +124,93 @@ void testCsrRegs()
     // Generate a random uint64_t
     uint64_t rand_val = dis(gen);
 
-    // Verify the ustatus register (all fields writable)
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::USTATUS, rand_val);
-    auto ustatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::USTATUS);
-    EXPECT_EQUAL(ustatus_reg_val, rand_val);
+    // Verify the sscratch register (all fields writable)
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::SSCRATCH, rand_val);
+    auto sscratch_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::SSCRATCH);
+    EXPECT_EQUAL(sscratch_reg_val, rand_val);
 
-    // Verify the dmcontrol register. The hasel field is read-only
-    // at bit 26 and the hartreset field is writable at bit 29.
+    // Verify the mstatus register. The wpri field is read-only
+    // at bit 2 and the sd field is writable at bit 63.
     std::bitset<64> reg_val_bits(0);
-    reg_val_bits.set(26);
-    reg_val_bits.set(29);
+    reg_val_bits.set(2);
+    reg_val_bits.set(63);
 
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL, reg_val_bits.to_ullong());
-    auto dmcontrol_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL);
-    EXPECT_EQUAL(dmcontrol_reg_val, reg_val_bits.to_ullong());
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
+    auto mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    EXPECT_EQUAL(mstatus_reg_val, reg_val_bits.to_ullong());
 
     // Try to overwrite both the read-only and writable fields
-    reg_val_bits.reset(26);
-    reg_val_bits.reset(29);
-    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL, reg_val_bits.to_ullong());
+    reg_val_bits.reset(2);
+    reg_val_bits.reset(63);
+    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
 
-    // We expect the read-only field to be unchanged (bit 26) and
-    // the writable field to be changed (bit 29)
-    dmcontrol_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL);
-    std::bitset<64> new_dmcontrol_reg_val_bits(dmcontrol_reg_val);
-    EXPECT_TRUE(new_dmcontrol_reg_val_bits.test(26));
-    EXPECT_FALSE(new_dmcontrol_reg_val_bits.test(29));
+    // We expect the read-only field to be unchanged (bit 2) and
+    // the writable field to be changed (bit 63)
+    mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    std::bitset<64> new_mstatus_reg_val_bits(mstatus_reg_val);
+    EXPECT_TRUE(new_mstatus_reg_val_bits.test(2));
+    EXPECT_FALSE(new_mstatus_reg_val_bits.test(63));
 
-    // Now we will write to the hartsello field, which differs from
+    // Now we will write to the xs field, which differs from
     // the fields used above in that it is a >1 bit field. It spans
-    // bits 16-25.
+    // bits 15-16.
     //
     // We need a separate test for multi-bit fields since the mask
     // impl is different for single- vs. multi-bit fields.
     reg_val_bits.reset();
-    for (int i = 16; i <= 25; i++)
+    for (int i = 15; i <= 16; i++)
     {
         reg_val_bits.set(i);
     }
 
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL, reg_val_bits.to_ullong());
-    dmcontrol_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL);
-    EXPECT_EQUAL(dmcontrol_reg_val, reg_val_bits.to_ullong());
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
+    mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    EXPECT_EQUAL(mstatus_reg_val, reg_val_bits.to_ullong());
 
     reg_val_bits.reset();
-    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL, 0);
+    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, 0);
 
-    dmcontrol_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL);
-    new_dmcontrol_reg_val_bits = std::bitset<64>(dmcontrol_reg_val);
-    for (int i = 16; i <= 25; i++)
+    mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    new_mstatus_reg_val_bits = std::bitset<64>(mstatus_reg_val);
+    for (int i = 15; i <= 16; i++)
     {
-        EXPECT_FALSE(new_dmcontrol_reg_val_bits.test(i));
+        EXPECT_FALSE(new_mstatus_reg_val_bits.test(i));
     }
 
     // Now let's try to write to a read-only, multi-bit field. The
-    // DMSTATUS register's "version" field is read-only from bit
-    // positions 0-3.
+    // MSTATUS register's "sxl" field is read-only from bit
+    // positions 34-35.
     reg_val_bits.reset();
-    for (int i = 0; i <= 3; i++)
+    for (int i = 34; i <= 35; i++)
     {
         reg_val_bits.set(i);
     }
 
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS, reg_val_bits.to_ullong());
-    auto dmstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS);
-    EXPECT_EQUAL(dmstatus_reg_val, reg_val_bits.to_ullong());
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
+    mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    EXPECT_EQUAL(mstatus_reg_val, reg_val_bits.to_ullong());
 
     reg_val_bits.reset();
-    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS, 0);
+    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, 0);
 
-    dmstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS);
-    new_dmcontrol_reg_val_bits = std::bitset<64>(dmstatus_reg_val);
-    for (int i = 0; i <= 3; i++)
+    mstatus_reg_val = READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS);
+    new_mstatus_reg_val_bits = std::bitset<64>(mstatus_reg_val);
+    for (int i = 34; i <= 35; i++)
     {
-        EXPECT_TRUE(new_dmcontrol_reg_val_bits.test(i));
+        EXPECT_TRUE(new_mstatus_reg_val_bits.test(i));
     }
 
     // Test the WRITE_CSR_FIELD and READ_CSR_FIELD macros.
-    // Case 1: Writable single-bit field (DMCONTROL.hartreset)
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::DMCONTROL, 0);
-    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::DMCONTROL, "hartreset"), 0);
+    // Case 1: Writable single-bit field (MSTATUS.GVA)
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, 0);
+    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "GVA"), 0);
 
-    WRITE_CSR_FIELD<pegasus::RV64>(state, pegasus::DMCONTROL, "hartreset", 1);
-    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::DMCONTROL, "hartreset"), 1);
+    WRITE_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "GVA", 1);
+    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "GVA"), 1);
 
-    // Case 2: Read-only single-bit field (DMCONTROL.hasel)
-    WRITE_CSR_FIELD<pegasus::RV64>(state, pegasus::DMCONTROL, "hasel", 1);
-    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::DMCONTROL, "hasel"), 0);
+    // Case 2: Read-only single-bit field (MSTATUS.MPV)
+    WRITE_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "MPV", 1);
+    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "MPV"), 0);
 
     // Case 3: Writable multi-bit field (SSTATUS.XS, bits 15-16)
     reg_val_bits.reset();
@@ -236,26 +236,26 @@ void testCsrRegs()
                  3); // Field is read-only, should not change
 
     // Case 5: Write a combination of read-only and writable fields all at
-    // once using the WRITE_CSR_REG macro. We will do this for the DMSTATUS
+    // once using the WRITE_CSR_REG macro. We will do this for the MSTATUS
     // register focusing on these fields:
     //
-    //     authbusy (writable, bit position 6)
-    //     authenticated (read-only, bit position 7)
+    //     MXR (writable, bit position 19)
+    //     SBE (read-only, bit position 36)
     reg_val_bits.reset();
-    reg_val_bits.set(6);
-    reg_val_bits.set(7);
-    POKE_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS, reg_val_bits.to_ullong());
+    reg_val_bits.set(19);
+    reg_val_bits.set(36);
+    POKE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
 
     // We will try to overwrite both 1 bits to 0.
     reg_val_bits.reset();
-    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS, reg_val_bits.to_ullong());
+    WRITE_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS, reg_val_bits.to_ullong());
 
-    // Verify that the write operation only changed the authbusy field
-    // at bit position 6 and left the authenticated field at bit position 7
+    // Verify that the write operation only changed the MXR field
+    // at bit position 19 and left the SBE field at bit position 36
     // unchanged.
-    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::DMSTATUS, "authbusy"), 0);
-    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::DMSTATUS, "authenticated"), 1);
-    EXPECT_EQUAL(READ_CSR_REG<pegasus::RV64>(state, pegasus::DMSTATUS), 0x2 << 6);
+    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "MXR"), 0);
+    EXPECT_EQUAL(READ_CSR_FIELD<pegasus::RV64>(state, pegasus::MSTATUS, "SBE"), 1);
+    EXPECT_EQUAL(READ_CSR_REG<pegasus::RV64>(state, pegasus::MSTATUS), 1ULL << 36);
 
     // Case 6: Write a combination of read-only and writable fields,
     // where the fields are both multiple bits. We will do this for the

@@ -183,6 +183,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvfInsts::feq_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -230,6 +231,7 @@ namespace pegasus
     Action::ItrType RvfInsts::fmin_sHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -338,6 +340,7 @@ namespace pegasus
     Action::ItrType RvfInsts::fmax_sHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -405,6 +408,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvfInsts::flt_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -530,6 +534,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvfInsts::fle_sHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, FLOAT_SP>(READ_FP_REG<RV64>(state, inst->getRs1()));

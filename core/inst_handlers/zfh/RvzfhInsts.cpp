@@ -260,6 +260,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::feq_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -274,6 +275,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fmin_hHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -382,6 +384,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fmax_hHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -450,6 +453,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::flt_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -559,6 +563,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fle_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));

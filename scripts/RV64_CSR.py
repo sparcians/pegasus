@@ -1,73 +1,6 @@
 #
 
 CSR64_DEFS = {
-    # User Trap Setup
-    0x000: {
-             'name': 'ustatus',
-             'desc': 'User status register.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x004: {
-             'name': 'uie',
-             'desc': 'User interrupt-enable register.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x005: {
-             'name': 'utvec',
-             'desc': 'User trap handler base address.',
-             'fields': {},
-             'context': 'HART',
-           },
-
-    # Debug
-    0x010: {
-             'name': 'dmcontrol',
-             'desc': 'Debug module control',
-             'fields': {
-               'Resv'            : { 'high_bit':  5, 'low_bit':   4, 'readonly': True , 'desc': 'undocumented' },
-               'haltreq'         : { 'high_bit': 31, 'low_bit':  31, 'readonly': False, 'desc': 'Halt request for currently selected harts' },
-               'resumereq'       : { 'high_bit': 30, 'low_bit':  30, 'readonly': False, 'desc': 'Resume request for currently selected harts' },
-               'hartreset'       : { 'high_bit': 29, 'low_bit':  29, 'readonly': False, 'desc': 'Writes reset bit for all currently selected harts' },
-               'ackhavereset'    : { 'high_bit': 28, 'low_bit':  28, 'readonly': False, 'desc': 'If set, clears havereset for any selected harts' },
-               'hasel'           : { 'high_bit': 26, 'low_bit':  26, 'readonly': True , 'desc': 'Selects the definition of hartsel' },
-               'hartsello'       : { 'high_bit': 25, 'low_bit':  16, 'readonly': False, 'desc': 'Low 10 bits of hartsel' },
-               'hartselhi'       : { 'high_bit': 15, 'low_bit':   6, 'readonly': False, 'desc': 'High 10 bits of hartsel' },
-               'setresethartreq' : { 'high_bit':  3, 'low_bit':   3, 'readonly': False, 'desc': 'Writes halt-on-reset request bit for all currently selected harts' },
-               'clrresethaltreq' : { 'high_bit':  2, 'low_bit':   2, 'readonly': False, 'desc': 'Clears halt-on-reset request bit for all currently selected harts' },
-               'ndmreset'        : { 'high_bit':  1, 'low_bit':   1, 'readonly': False, 'desc': 'Controls the reset signal from the DM to the rest of the system' },
-               'dmactive'        : { 'high_bit':  0, 'low_bit':   0, 'readonly': False, 'desc': 'Reset signal for the Debug Module itself' },
-             },
-             'context': 'HART',
-           },
-    0x011: {
-             'name': 'dmstatus',
-             'desc': 'Debug module status',
-             'fields': {
-               'Resv'            : { 'high_bit': 21, 'low_bit':  20, 'readonly': True , 'desc': 'undocumented' },
-               'impebreak'       : { 'high_bit': 22, 'low_bit':  22, 'readonly': False, 'desc': 'undocumented' },
-               'allhavereset'    : { 'high_bit': 19, 'low_bit':  19, 'readonly': False, 'desc': 'undocumented' },
-               'anyhavereset'    : { 'high_bit': 18, 'low_bit':  18, 'readonly': False, 'desc': 'undocumented' },
-               'allresumeack'    : { 'high_bit': 17, 'low_bit':  17, 'readonly': False, 'desc': 'undocumented' },
-               'anyresumeack'    : { 'high_bit': 16, 'low_bit':  16, 'readonly': False, 'desc': 'undocumented' },
-               'allnonexistent'  : { 'high_bit': 15, 'low_bit':  15, 'readonly': False, 'desc': 'undocumented' },
-               'anynonexistent'  : { 'high_bit': 14, 'low_bit':  14, 'readonly': False, 'desc': 'undocumented' },
-               'allunavail'      : { 'high_bit': 13, 'low_bit':  13, 'readonly': False, 'desc': 'undocumented' },
-               'anyunavail'      : { 'high_bit': 12, 'low_bit':  12, 'readonly': False, 'desc': 'undocumented' },
-               'allrunning'      : { 'high_bit': 11, 'low_bit':  11, 'readonly': False, 'desc': 'undocumented' },
-               'anyrunning'      : { 'high_bit': 10, 'low_bit':  10, 'readonly': False, 'desc': 'undocumented' },
-               'allhalted'       : { 'high_bit':  9, 'low_bit':   9, 'readonly': False, 'desc': 'undocumented' },
-               'anyhalted'       : { 'high_bit':  8, 'low_bit':   8, 'readonly': False, 'desc': 'undocumented' },
-               'authenticated'   : { 'high_bit':  7, 'low_bit':   7, 'readonly': True , 'desc': "Status of authentication (set to 1 if DM doesn't implement authentication)" },
-               'authbusy'        : { 'high_bit':  6, 'low_bit':   6, 'readonly': False, 'desc': 'Authentication module is ready to process the next read/write to authdata' },
-               'hasresethaltreq' : { 'high_bit':  5, 'low_bit':   5, 'readonly': True , 'desc': 'If set, this Debug Module supports halt-on-reset' },
-               'confstrptrvalid' : { 'high_bit':  4, 'low_bit':   4, 'readonly': True , 'desc': 'If set, confstrptr0-confstrptr3 hold the address of the configuration string' },
-               'version'         : { 'high_bit':  3, 'low_bit':   0, 'readonly': True , 'desc': 'Version of Debug Module spec supported' },
-             },
-             'context': 'HART',
-           },
-
     # Zcmt: User Jump table
     0x017: {
              'name': 'jvt',
@@ -77,38 +10,6 @@ CSR64_DEFS = {
                'MODE' : { 'high_bit':  5, 'low_bit':   0, 'readonly': False, 'desc': 'Jump Table mode' },
              },
              'extension': ['Zcmt'],
-             'context': 'HART',
-           },
-
-    # User Trap Setup
-    0x040: {
-             'name': 'uscratch',
-             'desc': 'Scratch register for user trap handlers.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x041: {
-             'name': 'uepc',
-             'desc': 'User exception program counter.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x042: {
-             'name': 'ucause',
-             'desc': 'Scratch register for user trap handlers.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x043: {
-             'name': 'utval',
-             'desc': 'User bad address or instruction.',
-             'fields': {},
-             'context': 'HART',
-           },
-    0x044: {
-             'name': 'uip',
-             'desc': 'User interrupt pending.',
-             'fields': {},
              'context': 'HART',
            },
 
@@ -1950,6 +1851,14 @@ CSR64_DEFS = {
              'context': 'HART',
            },
 
+    # Supervisor Registers
+    0x5a8: {
+             'name': 'scontext',
+             'desc': 'Supervisor context',
+             'fields': {},
+             'context': 'HART',
+           },
+
     # Debug/Trace Registers (shared with Debug Mode)
     0x7a0: {
              'name': 'tselect',
@@ -2033,8 +1942,8 @@ CSR64_DEFS = {
              'context': 'HART',
            },
     0x7aa: {
-             'name': 'scontext',
-             'desc': 'Supervisor context',
+             'name': 'mscontext',
+             'desc': 'Supervisor context (legacy)',
              'fields': {},
              'context': 'HART',
            },

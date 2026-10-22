@@ -677,7 +677,10 @@ namespace pegasus::cosim
         }
     }
 
-    uint64_t CoSimEventPipeline::getLastEventUID() const { return last_event_uid_; }
+    uint64_t CoSimEventPipeline::getLastEventUID() const
+    {
+        return last_event_uid_.isValid() ? last_event_uid_.getValue() : 0;
+    }
 
     EventAccessor CoSimEventPipeline::getLastEvent()
     {
