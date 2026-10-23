@@ -78,85 +78,95 @@ namespace pegasus
 
         std::cout << "\nLoading ELF binary: " << workload << std::endl;
 
+        auto get_symbol =
+            [this](const ELFIO::symbol_section_accessor & symbols, const uint32_t symbol_id)
+        {
+            std::string name;
+            // ELFIO::Elf64_Addr addr;
+            Addr addr = 0;
+            ELFIO::Elf_Xword size = 0;
+            unsigned char bind = 0;
+            unsigned char type = 0;
+            ELFIO::Elf_Half section;
+            unsigned char other;
+            symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
+
+            // Ignore symbol names that start with "__" or "$", they are usually not useful
+            if (!(name.empty() || name.starts_with("__") || name.starts_with("$")))
+            {
+                if (const auto it = symbols_.find(addr); it != symbols_.end())
+                {
+                    it->second.emplace_back(addr, size, name);
+                }
+                else
+                {
+                    symbols_.insert({addr, {Symbol(addr, size, name)}});
+                }
+
+                if (name == "tohost")
+                {
+                    if (tohost_addr_.isValid())
+                    {
+                        std::cout << "WARNING: Found multiple tohost symbols in ELF!\n\tFirst "
+                                     "one (stashed): "
+                                  << HEX16(tohost_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        tohost_addr_ = addr;
+                    }
+                }
+                else if (name == "fromhost")
+                {
+                    if (fromhost_addr_.isValid())
+                    {
+                        std::cout << "WARNING: Found multiple fromhost symbols in ELF!\n\tFirst "
+                                     "one (stashed): "
+                                  << HEX16(fromhost_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        fromhost_addr_ = addr;
+                    }
+                }
+                else if (name == "pass")
+                {
+                    if (pass_addr_.isValid())
+                    {
+                        std::cout << "WARNING: Found multiple pass symbols in ELF!\n\tFirst "
+                                     "one (stashed): "
+                                  << HEX16(pass_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        pass_addr_ = addr;
+                    }
+                }
+                else if (name == "fail")
+                {
+                    if (fail_addr_.isValid())
+                    {
+                        std::cout << "Found multiple fail symbols in ELF!\n\tFirst one (stashed): "
+                                  << HEX16(fail_addr_) << "\n\tSecond one: " << HEX16(addr)
+                                  << std::endl;
+                    }
+                    else
+                    {
+                        fail_addr_ = addr;
+                    }
+                }
+            }
+        };
+
         for (const auto & section : elf_reader_.sections)
         {
             ELFIO::symbol_section_accessor symbols(elf_reader_, section.get());
             for (uint32_t symbol_id = 0; symbol_id < symbols.get_symbols_num(); ++symbol_id)
             {
-                std::string name;
-                // ELFIO::Elf64_Addr addr;
-                Addr addr = 0;
-                ELFIO::Elf_Xword size = 0;
-                unsigned char bind = 0;
-                unsigned char type = 0;
-                ELFIO::Elf_Half section;
-                unsigned char other;
-                symbols.get_symbol(symbol_id, name, addr, size, bind, type, section, other);
-
-                // Intentionally overwriting symbols with the same address since an ELF may contain
-                // more than one label at the same address
-                if (name.empty() == false)
-                {
-                    symbols_.insert(std::make_pair(addr, Symbol(addr, size, name)));
-
-                    if (name == "tohost")
-                    {
-                        if (tohost_addr_.isValid())
-                        {
-                            std::cout << "WARNING: Found multiple tohost symbols in ELF!\n\tFirst "
-                                         "one (stashed): "
-                                      << HEX16(tohost_addr_) << "\n\tSecond one: " << HEX16(addr)
-                                      << std::endl;
-                        }
-                        else
-                        {
-                            tohost_addr_ = addr;
-                        }
-                    }
-                    else if (name == "fromhost")
-                    {
-                        if (fromhost_addr_.isValid())
-                        {
-                            std::cout
-                                << "WARNING: Found multiple fromhost symbols in ELF!\n\tFirst "
-                                   "one (stashed): "
-                                << HEX16(fromhost_addr_) << "\n\tSecond one: " << HEX16(addr)
-                                << std::endl;
-                        }
-                        else
-                        {
-                            fromhost_addr_ = addr;
-                        }
-                    }
-                    else if (name == "pass")
-                    {
-                        if (pass_addr_.isValid())
-                        {
-                            std::cout << "WARNING: Found multiple pass symbols in ELF!\n\tFirst "
-                                         "one (stashed): "
-                                      << HEX16(pass_addr_) << "\n\tSecond one: " << HEX16(addr)
-                                      << std::endl;
-                        }
-                        else
-                        {
-                            pass_addr_ = addr;
-                        }
-                    }
-                    else if (name == "fail")
-                    {
-                        if (fail_addr_.isValid())
-                        {
-                            std::cout
-                                << "Found multiple fail symbols in ELF!\n\tFirst one (stashed): "
-                                << HEX16(fail_addr_) << "\n\tSecond one: " << HEX16(addr)
-                                << std::endl;
-                        }
-                        else
-                        {
-                            fail_addr_ = addr;
-                        }
-                    }
-                }
+                get_symbol(symbols, symbol_id);
             }
         }
 

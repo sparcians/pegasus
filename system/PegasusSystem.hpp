@@ -62,41 +62,66 @@ namespace pegasus
             return workloads_and_args_;
         }
 
+        struct Symbol
+        {
+            Symbol(uint64_t _addr, uint32_t _size, std::string _name) :
+                addr(_addr),
+                end_addr(addr + _size),
+                name(_name)
+            {
+            }
+
+            const uint64_t addr;
+            const uint64_t end_addr;
+            const std::string name;
+
+            constexpr bool contains(uint64_t target_addr) const
+            {
+                return (target_addr >= addr) && (target_addr < end_addr);
+            }
+        };
+
         // Find a symbol name based on address
-        std::optional<std::string> findSymbol(uint64_t addr, bool exact_match = false) const
+        std::optional<std::vector<Symbol>> findSymbol(uint64_t addr, bool exact_match = false) const
         {
             if (exact_match)
             {
                 const auto it = symbols_.find(addr);
                 if (it != symbols_.end())
                 {
-                    return it->second.symbol;
+                    return it->second;
                 }
             }
             else
             {
                 for (const auto & it : symbols_)
                 {
-                    if (it.second.contains(addr))
+                    // Just check the first symbol
+                    sparta_assert(it.second.empty() == false,
+                                  "Missing symbol(s) at address 0x" << std::hex << addr);
+                    if (it.second[0].contains(addr))
                     {
-                        return it.second.symbol;
+                        return it.second;
                     }
                 }
             }
-            return {};
+            return std::nullopt;
         }
 
         // Find an address of a symbol
-        std::optional<uint64_t> findSymbolAddr(const std::string & symbol) const
+        std::optional<uint64_t> findSymbolAddr(const std::string & symbol_name) const
         {
-            for (const auto & it : symbols_)
+            for (const auto & symbols_it : symbols_)
             {
-                if (it.second.symbol == symbol)
+                for (const auto & symbol : symbols_it.second)
                 {
-                    return it.second.addr;
+                    if (symbol.name == symbol_name)
+                    {
+                        return symbol.addr;
+                    }
                 }
             }
-            return {};
+            return std::nullopt;
         }
 
         constexpr static sparta::memory::addr_t PEGASUS_SYSTEM_BLOCK_SIZE = 0x1000; // 4K
@@ -159,26 +184,7 @@ namespace pegasus
 
         sparta::utils::ValidValue<Addr> starting_pc_;
 
-        struct Symbol
-        {
-            Symbol(uint64_t _addr, uint32_t _size, std::string _symbol) :
-                addr(_addr),
-                end_addr(addr + _size),
-                symbol(_symbol)
-            {
-            }
-
-            const uint64_t addr;
-            const uint64_t end_addr;
-            const std::string symbol;
-
-            constexpr bool contains(uint64_t target_addr) const
-            {
-                return (target_addr >= addr) && (target_addr < end_addr);
-            }
-        };
-
-        std::unordered_map<Addr, Symbol> symbols_;
+        std::unordered_map<Addr, std::vector<Symbol>> symbols_;
 
         sparta::utils::ValidValue<Addr> tohost_addr_;
         sparta::utils::ValidValue<Addr> fromhost_addr_;

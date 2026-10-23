@@ -76,6 +76,8 @@ namespace pegasus
         //! Get the memory map parameters (used by Callback delegate class)
         const std::vector<uint64_t> & getMemMapParams() const { return memory_map_params_; }
 
+        bool isBrkSupported() const { return brk_supported_; }
+
       private:
         void onBindTreeLate_() override;
 
@@ -88,6 +90,10 @@ namespace pegasus
         FILE* file_for_write_ = nullptr;
         int fd_for_write_ = DEFAULT_WRITE_FD;
         PegasusSim* sim_ = nullptr;
+
+        // If Pegasus failed to find an "_end" symbol in the ELF/workload then
+        // the brk system call will fail
+        bool brk_supported_ = true;
 
         const std::string workload_;
 

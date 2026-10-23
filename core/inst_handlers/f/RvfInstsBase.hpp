@@ -153,7 +153,7 @@ namespace pegasus
             }
         }
 
-        template <typename XLEN>
+        template <typename XLEN, typename SIZE>
         Action::ItrType computeAddressHandler(PegasusState* state, Action::ItrType action_it)
         {
             static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
@@ -162,7 +162,7 @@ namespace pegasus
             const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
             const XLEN imm = inst->getImmediate();
             const XLEN vaddr = rs1_val + imm;
-            inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
+            inst->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
             return ++action_it;
         }
 
