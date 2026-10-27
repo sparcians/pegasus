@@ -28,22 +28,6 @@
 
 namespace pegasus
 {
-    uint32_t getXlenFromIsaString(const std::string & isa_string)
-    {
-        if (isa_string.find("32") != std::string::npos)
-        {
-            return 32;
-        }
-        else if (isa_string.find("64") != std::string::npos)
-        {
-            return 64;
-        }
-        else
-        {
-            sparta_assert(false, "Failed to determine XLEN from ISA string: " << isa_string);
-        }
-    }
-
     uint64_t getInstLimit(sparta::TreeNode* rtn, uint64_t ilimit)
     {
         auto extension = sparta::notNull(rtn->createExtension("sim"));
@@ -116,7 +100,6 @@ namespace pegasus
         isa_string_(hart_tn->getParent()
                         ->getChildAs<sparta::ParameterSet>("params")
                         ->getParameterValueAs<std::string>("isa")),
-        xlen_(getXlenFromIsaString(isa_string_)),
         isa_file_path_(hart_tn->getParent()
                            ->getChildAs<sparta::ParameterSet>("params")
                            ->getParameterValueAs<std::string>("isa_file_path")),
@@ -128,6 +111,7 @@ namespace pegasus
                              ->getParameterValueAs<std::string>("uarch_file_path")),
         extension_manager_(mavis::extension_manager::riscv::RISCVExtensionManager::fromISA(
             isa_string_, isa_file_path_ + std::string("/riscv_isa_spec.json"), isa_file_path_)),
+        xlen_(extension_manager_.getXLEN()),
         vlen_(getVLENB(p->vlen, extension_manager_)),
         hypervisor_enabled_(extension_manager_.isEnabled("h")),
         zicntr_enabled_(extension_manager_.isEnabled("zicntr")),

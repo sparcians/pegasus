@@ -601,9 +601,6 @@ namespace pegasus
         // ISA string
         std::string isa_string_;
 
-        // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
-
         // TODO
         const std::string isa_file_path_;
 
@@ -619,6 +616,9 @@ namespace pegasus
 
         // Mavis extension manager
         mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        // XLEN (either 32 or 64 bit)
+        const uint64_t xlen_;
 
         static inline mavis::InstUIDList mavis_uid_list_{
             {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
