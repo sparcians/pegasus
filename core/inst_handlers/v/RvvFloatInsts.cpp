@@ -139,28 +139,28 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_ui32, nullptr>>,
+                    FloatFuncs<f32_to_ui16, f64_to_ui32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_i32, nullptr>>,
+                    FloatFuncs<f32_to_i16, f64_to_i32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.xu.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_ui32, nullptr>, RoundingMode::MINMAG>,
+                    FloatFuncs<f32_to_ui16, f64_to_ui32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_i32, nullptr>, RoundingMode::MINMAG>,
+                    FloatFuncs<f32_to_i16, f64_to_i32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.xu.w",
