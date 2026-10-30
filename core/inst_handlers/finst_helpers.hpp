@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <utility>
 #include <tuple>
 
@@ -636,5 +637,40 @@ namespace pegasus
             return ~mask | (num & mask);
         }
         return num;
+    }
+
+    inline uint_fast16_t f32_to_ui16(float32_t a, uint_fast8_t rm, bool exact)
+    {
+        const auto old_flags = softfloat_exceptionFlags;
+        const uint_fast32_t sig32 = f32_to_ui32(a, rm, exact);
+
+        if (sig32 > 0xFFFFu)
+        {
+            softfloat_exceptionFlags = old_flags | softfloat_flag_invalid;
+            return 0xFFFFu;
+        }
+
+        return static_cast<uint_fast16_t>(sig32);
+    }
+
+
+    inline int_fast16_t f32_to_i16(float32_t a, uint_fast8_t rm, bool exact)
+    {
+        const auto old_flags = softfloat_exceptionFlags;
+        const int_fast32_t sig32 = f32_to_i32(a,rm,exact);
+
+        if (sig32 > 0x7FFF)
+        {
+            softfloat_exceptionFlags = old_flags | softfloat_flag_invalid;
+            return 0x7FFF;
+        }
+
+        if (sig32 < -0x8000)
+        {
+            softfloat_exceptionFlags = old_flags | softfloat_flag_invalid;
+            return -0x8000;
+        }
+
+        return static_cast<int_fast16_t>(sig32);
     }
 } // namespace pegasus
