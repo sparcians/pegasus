@@ -524,16 +524,14 @@ namespace pegasus
         //! Stop simulation on WFI
         const bool stop_sim_on_wfi_;
 
-<<<<<<< HEAD
+        //! Stop simulation on Jump to a branch
+        const uint64_t stop_sim_on_jump_to_;
+
         //! Whether the execution cache (ecache) fast path is enabled
         bool ecache_enabled_ = false;
 
         //! Print execution-cache counter summary when simulation stops
         const bool ecache_stats_;
-=======
-        //! Stop simulation on Jump to a branch
-        const uint64_t stop_sim_on_jump_to_;
->>>>>>> 7990dd3 (stop sim on jump to pc (#70))
 
         //! Typical stack size for system call emulation
         const uint64_t ulimit_stack_size_;
