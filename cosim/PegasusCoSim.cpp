@@ -58,7 +58,8 @@ namespace pegasus::cosim
                                const std::vector<std::vector<std::string>> & workload,
                                const std::map<std::string, std::string> & pegasus_params,
                                const std::vector<std::vector<std::string>> & pegasus_loggers,
-                               const std::string & db_file, const size_t snapshot_threshold)
+                               const std::string & db_file, const size_t snapshot_threshold,
+                               const size_t committed_evts_buffer_threshold)
     {
         sim_config_.reset(new sparta::app::SimulationConfiguration);
 
@@ -168,6 +169,11 @@ namespace pegasus::cosim
                                                                  checkpointer, core_idx, hart_idx);
 
                 evt_pipeline->setObserver(cosim_obs.get());
+
+                if (committed_evts_buffer_threshold != 0)
+                {
+                    evt_pipeline->setCommittedEventBufferThreshold(committed_evts_buffer_threshold);
+                }
 
                 // Initialize PegasusState and take initial snapshot
                 state->boot();
