@@ -335,7 +335,7 @@ namespace pegasus
 
     void InstructionLogger::postExecute_(PegasusState* state)
     {
-        PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger

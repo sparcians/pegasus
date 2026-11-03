@@ -148,6 +148,12 @@ namespace pegasus::cosim
         /// Used for testing only.
         size_t getNumCached() const;
 
+        /// Set the committed event buffer threshold
+        void setCommittedEventBufferThreshold(const size_t committed_evts_buffer_threshold)
+        {
+            committed_evts_buffer_threshold_ = committed_evts_buffer_threshold;
+        }
+
       private:
         /// Friend access given to EventAccessor for event retrieval.
         friend class EventAccessor;
@@ -179,6 +185,10 @@ namespace pegasus::cosim
 
         /// Hart ID.
         const HartId hart_id_;
+
+        /// How many committed events should be buffered before being sent down the pipeline
+        static inline constexpr size_t DEFAULT_COMMITTED_EVTS_BUFFER_THRESHOLD_ = 100;
+        size_t committed_evts_buffer_threshold_ = DEFAULT_COMMITTED_EVTS_BUFFER_THRESHOLD_;
 
         /// PegasusState associated with this pipeline.
         PegasusState* const state_;

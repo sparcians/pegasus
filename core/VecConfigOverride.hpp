@@ -57,9 +57,9 @@ namespace pegasus
     {
         VectorConfig cfg{config};
         bool setVLMAX = false;
-        for (const auto override : overrides)
+        for (const auto ovr : overrides)
         {
-            switch (override)
+            switch (ovr)
             {
                 case VecCfgOverride::EEW8:
                     cfg.setSEW(8);

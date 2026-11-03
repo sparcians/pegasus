@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cinttypes>
+#include <optional>
 
 #include "include/PegasusTypes.hpp"
 
@@ -30,10 +31,6 @@ namespace pegasus
       public:
         //! \brief Name of this resource. Required by sparta::UnitFactory
         static constexpr char name[] = "SystemCallEmulator";
-
-        //! Default write FD, -1 assumes all writes go to the given
-        //! system call provided by the call.
-        static constexpr int DEFAULT_WRITE_FD = -1;
 
         //! Parameter to define behaviors of the State class
         class SystemCallEmulatorParameters : public sparta::ParameterSet
@@ -88,7 +85,8 @@ namespace pegasus
 
         sparta::log::MessageSource syscall_log_;
         FILE* file_for_write_ = nullptr;
-        int fd_for_write_ = DEFAULT_WRITE_FD;
+        // FD that all writes are redirected to; unset means writes go to the caller's FD
+        std::optional<int> fd_for_write_;
         PegasusSim* sim_ = nullptr;
 
         // If Pegasus failed to find an "_end" symbol in the ELF/workload then

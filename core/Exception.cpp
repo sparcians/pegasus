@@ -81,7 +81,8 @@ namespace pegasus
         if (false == is_interrupt)
         {
             sparta_assert(0 == unexpected_faults_.test(static_cast<XLEN>(fault_cause_.getValue())),
-                          "Unexpected fault: " << fault_cause_.getValue());
+                          "Unexpected fault: " << fault_cause_.getValue()
+                                               << " at PC: " << HEX16(state->getPc()));
 
             if (SPARTA_EXPECT_FALSE(fail_back_to_back_faults_))
             {
