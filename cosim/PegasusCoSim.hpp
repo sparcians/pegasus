@@ -73,7 +73,8 @@ namespace pegasus::cosim
     class PegasusCoSim : public pegasus::cosim::CoSim, private pegasus::SimListener
     {
       public:
-        PegasusCoSim(uint64_t ilimit = 0, const std::string & workload = "",
+        PegasusCoSim(uint64_t ilimit = 0,
+                     const std::vector<std::vector<std::string>> & workload = {},
                      const std::map<std::string, std::string> & pegasus_params = {},
                      const std::vector<std::vector<std::string>> & pegasus_loggers = {},
                      const std::string & db_file = "pegasus-cosim.db",

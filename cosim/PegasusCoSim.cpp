@@ -54,7 +54,8 @@ namespace pegasus::cosim
         return success;
     }
 
-    PegasusCoSim::PegasusCoSim(uint64_t ilimit, const std::string & workload,
+    PegasusCoSim::PegasusCoSim(uint64_t ilimit,
+                               const std::vector<std::vector<std::string>> & workload,
                                const std::map<std::string, std::string> & pegasus_params,
                                const std::vector<std::vector<std::string>> & pegasus_loggers,
                                const std::string & db_file, const size_t snapshot_threshold)
@@ -76,7 +77,7 @@ namespace pegasus::cosim
         sim_config_->processParameter("top.extension.sim.inst_limit", std::to_string(ilimit));
 
         // Workload
-        PegasusSimParameters::WorkloadsAndArgs workloads_and_args{{workload}};
+        PegasusSimParameters::WorkloadsAndArgs workloads_and_args(workload);
         const std::string wkld_param =
             PegasusSimParameters::convertVectorToStringParam(workloads_and_args);
         sim_config_->processParameter("top.extension.sim.workloads", wkld_param);
