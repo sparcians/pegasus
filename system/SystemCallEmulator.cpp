@@ -427,7 +427,11 @@ namespace pegasus
             const auto end_addr = sim_->getPegasusSystem()->findSymbolAddr("_end");
             if (end_addr)
             {
-                callbacks_->setBreakAddress(end_addr.value());
+                // Linux aligns start_brk to the next page-aligned address after _end
+                // In RISCV, the default page size is 4k
+                static constexpr Addr ELF_PAGE_SIZE = 4096;
+                callbacks_->setBreakAddress((end_addr.value() + ELF_PAGE_SIZE - 1)
+                                            & ~(ELF_PAGE_SIZE - 1));
             }
             else
             {
