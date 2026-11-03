@@ -1,4 +1,4 @@
-project(Pegasus_Tests)
+project(Core_Tests)
 
 # Tests
 add_subdirectory(translate)
