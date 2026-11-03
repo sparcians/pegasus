@@ -654,10 +654,8 @@ namespace pegasus
 
     int64_t SysCallHandlers::rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // Report unimplemented to force libc/userspace fallback paths.
-        constexpr int64_t kRseqNotImplemented = -ENOSYS;
-        SYSCALL_LOG(__func__ << "(...) -> " << kRseqNotImplemented << " # not implemented");
-        return kRseqNotImplemented;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
 
     int64_t SysCallHandlers::stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
