@@ -490,7 +490,7 @@ int main(int argc, char** argv)
         {"top", "inst", workload_fname + ".cosim.log"},
         {"top", "cosim", workload_fname + ".cosim.log"},
     };
-    PegasusCoSim cosim_test(ilimit, workload, sim_params, loggers, db_test, snapshot_threshold);
+    PegasusCoSim cosim_test(ilimit, {{workload}}, sim_params, loggers, db_test, snapshot_threshold);
 
     const pegasus::CoreId core_id = 0;
     const pegasus::HartId hart_id = 0;

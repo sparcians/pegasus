@@ -15,13 +15,13 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "flh",
-            pegasus::Action::createAction<&RvzfhInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "flh", ActionTags::COMPUTE_ADDR_TAG));
+            "flh", pegasus::Action::createAction<&RvzfhInsts::computeAddressHandler<XLEN, uint16_t>,
+                                                 RvfInstsBase>(nullptr, "flh",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "fsh",
-            pegasus::Action::createAction<&RvzfhInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "fsh", ActionTags::COMPUTE_ADDR_TAG));
+            "fsh", pegasus::Action::createAction<&RvzfhInsts::computeAddressHandler<XLEN, uint16_t>,
+                                                 RvfInstsBase>(nullptr, "fsh",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -260,6 +260,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::feq_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -274,6 +275,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fmin_hHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -382,6 +384,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fmax_hHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -450,6 +453,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::flt_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -559,6 +563,7 @@ namespace pegasus
     Action::ItrType RvzfhInsts::fle_hHandler_(pegasus::PegasusState* state,
                                               Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const FLOAT_HP rs1_val =
             checkNanBoxing<RV64, FLOAT_HP>(READ_FP_REG<RV64>(state, inst->getRs1()));

@@ -417,11 +417,24 @@ namespace pegasus::cosim
         }
 
         committed_evts_buffer_.emplace_back(std::move(evt));
-        if (committed_evts_buffer_.size() == 100)
+
+        if (committed_evts_buffer_.size() >= committed_evts_buffer_threshold_)
         {
-            pipeline_head_->emplace(std::move(committed_evts_buffer_));
-            auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
-            observer_->getCheckpointer()->commitCurrentBranch(force_branch);
+            auto* checkpointer = observer_->getCheckpointer();
+            auto & fast_checkpointer = checkpointer->getFastCheckpointer();
+
+            const auto chkpt_is_snapshot = [&fast_checkpointer](const uint64_t chkpt_id)
+            { return sparta::notNull(fast_checkpointer.findCheckpoint(chkpt_id))->isSnapshot(); };
+
+            if (chkpt_is_snapshot(last_committed_event_uid_)
+                && std::none_of(uncommitted_evts_buffer_.begin(), uncommitted_evts_buffer_.end(),
+                                [&chkpt_is_snapshot](const Event & evt)
+                                { return chkpt_is_snapshot(evt.getEuid()); }))
+            {
+                pipeline_head_->emplace(std::move(committed_evts_buffer_));
+                auto force_branch = sim_stopped_; // Force chkpt branch to be sent when sim stopped
+                checkpointer->commitCurrentBranch(force_branch);
+            }
         }
     }
 
@@ -677,7 +690,10 @@ namespace pegasus::cosim
         }
     }
 
-    uint64_t CoSimEventPipeline::getLastEventUID() const { return last_event_uid_; }
+    uint64_t CoSimEventPipeline::getLastEventUID() const
+    {
+        return last_event_uid_.isValid() ? last_event_uid_.getValue() : 0;
+    }
 
     EventAccessor CoSimEventPipeline::getLastEvent()
     {

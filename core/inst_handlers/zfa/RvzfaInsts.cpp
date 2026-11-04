@@ -126,6 +126,7 @@ namespace pegasus
     Action::ItrType RvzfaInsts::fminmaxHandler_(pegasus::PegasusState* state,
                                                 Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const SIZE rs1_val =
             checkNanBoxing<RV64, SIZE>(READ_FP_REG<FLOAT_DP>(state, inst->getRs1()));
@@ -157,6 +158,7 @@ namespace pegasus
     Action::ItrType RvzfaInsts::froundHandler_(pegasus::PegasusState* state,
                                                Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const SIZE rs1_val =
             checkNanBoxing<RV64, SIZE>(READ_FP_REG<FLOAT_DP>(state, inst->getRs1()));
@@ -232,6 +234,7 @@ namespace pegasus
     Action::ItrType RvzfaInsts::fleqHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs1()));
@@ -261,6 +264,7 @@ namespace pegasus
     Action::ItrType RvzfaInsts::fltqHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint32_t rs1_val =
             checkNanBoxing<RV64, SIZE>(READ_FP_REG<RV64>(state, inst->getRs1()));

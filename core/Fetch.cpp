@@ -142,6 +142,7 @@ namespace pegasus
                 if ((opcode & 0x3) == 0x3)
                 {
                     // Go back to inst translate
+                    state->getFetchTranslationState()->popResult();
                     throw ActionException(fetch_action_group_.getNextActionGroup());
                 }
             }

@@ -815,15 +815,15 @@ namespace pegasus
         {
             for (auto iter = begin; iter != end; ++iter)
             {
-                auto transtate = inst->getTranslationState();
-                if (ffirst && !transtate->getNumResults())
+                auto translate_state = inst->getTranslationState();
+                if (ffirst && !translate_state->getNumResults())
                 {
                     sparta_assert(!iter.getIndex(), "fault first should take trap on element 0.");
                     inst->getVectorConfig()->setVL(iter.getIndex());
                     return;
                 }
 
-                const auto & result = transtate->getResult();
+                const auto & result = translate_state->getResult();
                 if constexpr (isLoad)
                 {
                     std::vector<uint8_t> buffer;
@@ -846,7 +846,7 @@ namespace pegasus
                         THROW_STORE_AMO_ACCESS;
                     }
                 }
-                transtate->popResult();
+                translate_state->popResult();
             }
         };
 

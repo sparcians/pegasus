@@ -12,13 +12,13 @@ namespace pegasus
     {
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
         inst_handlers.emplace(
-            "fld",
-            pegasus::Action::createAction<&RvdInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "fld", ActionTags::COMPUTE_ADDR_TAG));
+            "fld", pegasus::Action::createAction<&RvdInsts::computeAddressHandler<XLEN, uint64_t>,
+                                                 RvfInstsBase>(nullptr, "fld",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "fsd",
-            pegasus::Action::createAction<&RvdInsts::computeAddressHandler<XLEN>, RvfInstsBase>(
-                nullptr, "fsd", ActionTags::COMPUTE_ADDR_TAG));
+            "fsd", pegasus::Action::createAction<&RvdInsts::computeAddressHandler<XLEN, uint64_t>,
+                                                 RvfInstsBase>(nullptr, "fsd",
+                                                               ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>
@@ -207,6 +207,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvdInsts::fle_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
@@ -276,6 +277,7 @@ namespace pegasus
     Action::ItrType RvdInsts::fmin_dHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
@@ -416,6 +418,7 @@ namespace pegasus
     Action::ItrType RvdInsts::fmax_dHandler_(pegasus::PegasusState* state,
                                              Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
@@ -453,6 +456,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvdInsts::feq_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());
@@ -498,6 +502,7 @@ namespace pegasus
     template <typename XLEN>
     Action::ItrType RvdInsts::flt_dHandler_(pegasus::PegasusState* state, Action::ItrType action_it)
     {
+        resetFpExceptionFlags();
         const PegasusInstPtr & inst = state->getCurrentInst();
         const uint64_t rs1_val = READ_FP_REG<RV64>(state, inst->getRs1());
         const uint64_t rs2_val = READ_FP_REG<RV64>(state, inst->getRs2());

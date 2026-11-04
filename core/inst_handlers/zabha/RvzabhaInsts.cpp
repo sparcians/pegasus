@@ -12,93 +12,115 @@ namespace pegasus
         static_assert(std::is_same_v<XLEN, RV64> || std::is_same_v<XLEN, RV32>);
 
         inst_handlers.emplace(
-            "amoadd_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoadd_b",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoadd_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amoadd_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoand_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoand_b",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoand_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amoand_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomax_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amomax_b",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amomax_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amomax_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomaxu_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amomaxu_b",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amomaxu_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amomaxu_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomin_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amomin_b",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amomin_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amomin_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amominu_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amominu_b",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amominu_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amominu_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoor_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                     RvaInstsBase>(nullptr, "amoor_b",
-                                                                   ActionTags::COMPUTE_ADDR_TAG));
+            "amoor_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amoor_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoswap_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amoswap_b",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amoswap_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amoswap_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoxor_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoxor_b",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoxor_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "amoxor_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "lr_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                  RvaInstsBase>(nullptr, "lr_b",
-                                                                ActionTags::COMPUTE_ADDR_TAG));
+            "lr_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "lr_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "sc_b", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                  RvaInstsBase>(nullptr, "sc_b",
-                                                                ActionTags::COMPUTE_ADDR_TAG));
+            "sc_b",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint8_t>,
+                                          RvaInstsBase>(nullptr, "sc_b",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoadd_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoadd_h",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoadd_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amoadd_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoand_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoand_h",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoand_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amoand_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomax_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amomax_h",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amomax_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amomax_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomaxu_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amomaxu_h",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amomaxu_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amomaxu_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amomin_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amomin_h",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amomin_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amomin_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amominu_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amominu_h",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amominu_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amominu_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoor_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                     RvaInstsBase>(nullptr, "amoor_h",
-                                                                   ActionTags::COMPUTE_ADDR_TAG));
+            "amoor_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amoor_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoswap_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                       RvaInstsBase>(nullptr, "amoswap_h",
-                                                                     ActionTags::COMPUTE_ADDR_TAG));
+            "amoswap_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amoswap_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "amoxor_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                      RvaInstsBase>(nullptr, "amoxor_h",
-                                                                    ActionTags::COMPUTE_ADDR_TAG));
+            "amoxor_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "amoxor_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "lr_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                  RvaInstsBase>(nullptr, "lr_h",
-                                                                ActionTags::COMPUTE_ADDR_TAG));
+            "lr_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "lr_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
         inst_handlers.emplace(
-            "sc_h", pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN>,
-                                                  RvaInstsBase>(nullptr, "sc_h",
-                                                                ActionTags::COMPUTE_ADDR_TAG));
+            "sc_h",
+            pegasus::Action::createAction<&RvzabhaInsts::computeAddressHandler_<XLEN, uint16_t>,
+                                          RvaInstsBase>(nullptr, "sc_h",
+                                                        ActionTags::COMPUTE_ADDR_TAG));
     }
 
     template <typename XLEN>

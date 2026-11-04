@@ -15,7 +15,7 @@ namespace pegasus
         using base_type = RvaInstsBase;
 
       protected:
-        template <typename XLEN>
+        template <typename XLEN, typename SIZE>
         Action::ItrType computeAddressHandler_(PegasusState* state, Action::ItrType action_it);
         template <typename XLEN, typename SIZE, typename OP, bool U = true>
         Action::ItrType amoHandler_(pegasus::PegasusState* state, Action::ItrType action_it);
@@ -25,7 +25,7 @@ namespace pegasus
         Action::ItrType sc_handler_(pegasus::PegasusState* state, Action::ItrType action_it);
     };
 
-    template <typename XLEN>
+    template <typename XLEN, typename SIZE>
     Action::ItrType RvaInstsBase::computeAddressHandler_(PegasusState* state,
                                                          Action::ItrType action_it)
     {
@@ -35,7 +35,7 @@ namespace pegasus
         const XLEN rs1_val = READ_INT_REG<XLEN>(state, inst->getRs1());
         const XLEN imm = inst->getImmediate();
         const XLEN vaddr = rs1_val + imm;
-        inst->getTranslationState()->makeRequest(vaddr, sizeof(XLEN));
+        inst->getTranslationState()->makeRequest(vaddr, sizeof(SIZE));
         return ++action_it;
     }
 

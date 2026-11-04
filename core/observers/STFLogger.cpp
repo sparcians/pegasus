@@ -121,7 +121,7 @@ namespace pegasus
         {
             stf_writer_ << stf::InstRegRecord(csr_num, stf::Registers::STF_REG_TYPE::CSR,
                                               stf::Registers::STF_REG_OPERAND_TYPE::REG_DEST,
-                                              csr_write.getRegValue<XLEN>());
+                                              csr_write.getNewValue<XLEN>());
         }
 
         for (const auto & dst_reg : dst_regs_)
@@ -440,9 +440,17 @@ namespace pegasus
                 }
 
                 // Get the name of function we're now in
-                const auto func_name =
+                const auto symbols =
                     state->getCore()->getSystem()->findSymbol(state->getNextPc(), true);
-                current_symbol_ = func_name ? "_" + func_name.value() : current_symbol_;
+                if (symbols)
+                {
+                    std::ostringstream func_name;
+                    for (const auto & symbol : symbols.value())
+                    {
+                        func_name << "_" << symbol.name;
+                    }
+                    current_symbol_ = func_name.str();
+                }
             }
         }
 

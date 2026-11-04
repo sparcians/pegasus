@@ -84,7 +84,6 @@ namespace pegasus
             Addr vaddr_ = 0;
             Addr paddr_ = 0;
             size_t size_ = 0;
-
             size_t page_size_ = 0;
         };
 
@@ -109,19 +108,21 @@ namespace pegasus
         TranslationRequest & getRequest()
         {
             sparta_assert(requests_cnt_ > 0);
-            return requests_[requests_cnt_ - 1];
+            return requests_[next_request_];
         }
 
         void popRequest()
         {
             sparta_assert(requests_cnt_ > 0);
             --requests_cnt_;
+            next_request_ = (requests_cnt_ == 0) ? 0 : next_request_ + 1;
         }
 
         void clearRequest()
         {
             sparta_assert(requests_cnt_ > 0);
             requests_cnt_ = 0;
+            next_request_ = 0;
         }
 
         void setResult(const Addr vaddr, const Addr paddr, const size_t size,
@@ -136,28 +137,33 @@ namespace pegasus
         const TranslationResult & getResult() const
         {
             sparta_assert(results_cnt_ > 0);
-            return results_[results_cnt_ - 1];
+            return results_[next_result_];
         }
 
         void popResult()
         {
             sparta_assert(results_cnt_ > 0);
             --results_cnt_;
+            next_result_ = (results_cnt_ == 0) ? 0 : next_result_ + 1;
         }
 
         void reset()
         {
             requests_cnt_ = 0;
+            next_request_ = 0;
             results_cnt_ = 0;
+            next_result_ = 0;
         }
 
       private:
         // Translation request
         std::array<TranslationRequest, MAX_TRANSLATION> requests_;
         uint32_t requests_cnt_ = 0;
+        uint32_t next_request_ = 0;
 
         // Translation result
         std::array<TranslationResult, MAX_TRANSLATION> results_;
         uint32_t results_cnt_ = 0;
+        uint32_t next_result_ = 0;
     };
 } // namespace pegasus

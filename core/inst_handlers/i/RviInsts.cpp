@@ -727,6 +727,14 @@ namespace pegasus
         state->setNextPc(jump_target, true);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
 
+        if (SPARTA_EXPECT_FALSE(jump_target == state->getStopSimOnJumpTo()))
+        {
+            PegasusState::SimState* sim_state = state->getSimState();
+            sim_state->sim_stopped = true;
+            const uint64_t exit_code = 0;
+            state->setSimStopped(true, exit_code);
+        }
+
         return ++action_it;
     }
 
@@ -741,6 +749,14 @@ namespace pegasus
         const XLEN jump_target = (rs1_val + imm) & ~std::make_signed_t<XLEN>(1);
         state->setNextPc(jump_target, true);
         WRITE_INT_REG<XLEN>(state, inst->getRd(), rd_val);
+
+        if (SPARTA_EXPECT_FALSE(jump_target == state->getStopSimOnJumpTo()))
+        {
+            PegasusState::SimState* sim_state = state->getSimState();
+            sim_state->sim_stopped = true;
+            const uint64_t exit_code = 0;
+            state->setSimStopped(true, exit_code);
+        }
 
         return ++action_it;
     }

@@ -25,6 +25,7 @@
 
 #include <filesystem>
 #include <regex>
+#include <limits>
 
 template <class InstT, class ExtenT, class InstTypeAllocator, class ExtTypeAllocator> class Mavis;
 
@@ -88,6 +89,8 @@ namespace pegasus
             PARAMETER(uint32_t, ilimit, 0, "Instruction limit for stopping simulation")
             PARAMETER(uint32_t, quantum, 500, "Instruction quantum size")
             PARAMETER(bool, stop_sim_on_wfi, false, "Executing a WFI instruction stops simulation")
+            PARAMETER(uint64_t, stop_sim_on_jump_to, std::numeric_limits<uint64_t>::max(),
+                      "Jumping to a particular PC stops simulation (max = disabled)")
             PARAMETER(bool, exe_cache_stats, false,
                       "Print execution-cache reuse counters/ratio when the hart stops")
             // Typical stack pointer is 8KB on most linux systems
@@ -137,6 +140,8 @@ namespace pegasus
         uint64_t getQuantumSize() const { return quantum_; }
 
         bool getStopSimOnWfi() const { return stop_sim_on_wfi_; }
+
+        uint64_t getStopSimOnJumpTo() const { return stop_sim_on_jump_to_; }
 
         void setPc(Addr pc) { pc_ = pc; }
 
@@ -465,8 +470,11 @@ namespace pegasus
         // Instruction quantum size
         const uint64_t quantum_;
 
-        //! Stop simulatiion on WFI
+        //! Stop simulation on WFI
         const bool stop_sim_on_wfi_;
+
+        //! Stop simulation on Jump to a branch
+        const uint64_t stop_sim_on_jump_to_;
 
         //! Execution cache (ecache) fast path is enabled
         ExecutionCache exe_cache_;
@@ -547,9 +555,6 @@ namespace pegasus
         // ISA string
         std::string isa_string_;
 
-        // XLEN (either 32 or 64 bit)
-        uint64_t xlen_ = 64;
-
         // TODO
         const std::string isa_file_path_;
 
@@ -565,6 +570,9 @@ namespace pegasus
 
         // Mavis extension manager
         mavis::extension_manager::riscv::RISCVExtensionManager extension_manager_;
+
+        // XLEN (either 32 or 64 bit)
+        const uint64_t xlen_;
 
         static inline mavis::InstUIDList mavis_uid_list_{
             {"csrrw", MAVIS_UID_CSRRW},     {"csrrs", MAVIS_UID_CSRRS},
