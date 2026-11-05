@@ -186,7 +186,7 @@ namespace pegasus
         {
             reset_();
             inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                      << reg_value << " (prev: " << new_value << ")";
+                      << new_value << " (prev: " << reg_value << ")";
             postExecute_(inst_oss_.str());
         }
 
