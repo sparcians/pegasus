@@ -653,11 +653,10 @@ namespace pegasus
         return static_cast<uint_fast16_t>(sig32);
     }
 
-
     inline int_fast16_t f32_to_i16(float32_t a, uint_fast8_t rm, bool exact)
     {
         const auto old_flags = softfloat_exceptionFlags;
-        const int_fast32_t sig32 = f32_to_i32(a,rm,exact);
+        const int_fast32_t sig32 = f32_to_i32(a, rm, exact);
 
         if (sig32 > 0x7FFF)
         {
