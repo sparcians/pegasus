@@ -682,21 +682,21 @@ CSR32_DEFS = {
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x154: {
+    0x155: {
              'name': 'sireg4',
              'desc': 'Supervisor Indirect Register Alias 4',
              'fields': {},
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x155: {
+    0x156: {
              'name': 'sireg5',
              'desc': 'Supervisor Indirect Register Alias 5',
              'fields': {},
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x156: {
+    0x157: {
              'name': 'sireg6',
              'desc': 'Supervisor Indirect Register Alias 6',
              'fields': {},
@@ -1054,14 +1054,14 @@ CSR32_DEFS = {
              'desc': 'Resumable NMI scratch register',
              'fields' : {},
              'context': 'HART',
-             'extension': ['Smrmni']
+             'extension': ['Smrnmi']
            },
     0x741: {
              'name': 'mnepc',
              'desc': 'Resumable NMI program counter',
              'fields' : {},
              'context': 'HART',
-             'extension': ['Smrmni']
+             'extension': ['Smrnmi']
            },
     0x742: {
              'name': 'mncause',
@@ -1071,7 +1071,7 @@ CSR32_DEFS = {
                  'Code'      : { 'high_bit': 30, 'low_bit':   0, 'readonly': False, 'desc': 'The exception code' },
              },
              'context': 'HART',
-             'extension': ['Smrmni']
+             'extension': ['Smrnmi']
            },
     0x744: {
              'name': 'mnstatus',
@@ -1083,7 +1083,7 @@ CSR32_DEFS = {
                'NMIE'   : { 'high_bit':  3, 'low_bit':   3, 'readonly': False, 'desc': 'Enable/Disable Non-maskable interrupts in M-mode' }
              },
              'context': 'HART',
-             'extension': ['Smrmni']
+             'extension': ['Smrnmi']
            },
     0x747: {
              'name': 'mseccfg',

@@ -186,7 +186,7 @@ namespace pegasus
         {
             reset_();
             inst_oss_ << "   csr " << std::setfill(' ') << std::setw(3) << reg_name << ": "
-                      << reg_value << " (prev: " << new_value << ")";
+                      << new_value << " (prev: " << reg_value << ")";
             postExecute_(inst_oss_.str());
         }
 
@@ -335,7 +335,7 @@ namespace pegasus
 
     void InstructionLogger::postExecute_(PegasusState* state)
     {
-        PegasusInstPtr inst = state->getCurrentInst();
+        const PegasusInstPtr & inst = state->getCurrentInst();
         inst_log_writer_->beginInst(state, inst.get(), opcode_);
 
         // Write to instruction logger

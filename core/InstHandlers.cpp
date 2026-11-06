@@ -81,7 +81,7 @@ namespace pegasus
             pegasus::Action::createAction<&InstHandlers::unsupportedInstHandler, InstHandlers>(
                 nullptr, "unsupported", ActionTags::COMPUTE_ADDR_TAG));
 
-        // Get RV32 instruction handlers
+        // Get RV64 instruction handlers
         RvaInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvdInsts::getInstHandlers<RV64>(rv64_inst_actions_);
         RvfInsts::getInstHandlers<RV64>(rv64_inst_actions_);

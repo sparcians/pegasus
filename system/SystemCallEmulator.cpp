@@ -384,11 +384,7 @@ namespace pegasus
     {
         sim_ = dynamic_cast<PegasusSim*>(my_node->getRoot()->getSimulation());
 
-        if (p->write_output == "-")
-        {
-            fd_for_write_ = SystemCallEmulator::DEFAULT_WRITE_FD;
-        }
-        else if (p->write_output == "1")
+        if (p->write_output == "1")
         {
             fd_for_write_ = ::dup(1);
         }
@@ -396,7 +392,7 @@ namespace pegasus
         {
             fd_for_write_ = ::dup(2);
         }
-        else
+        else if (p->write_output != "-")
         {
             file_for_write_ = ::fopen(p->write_output.getValue().c_str(), "w");
             sparta_assert(file_for_write_ != nullptr, "Error: could not open '"
@@ -418,6 +414,10 @@ namespace pegasus
         {
             ::fclose(file_for_write_);
         }
+        else if (fd_for_write_)
+        {
+            ::close(fd_for_write_.value());
+        }
     }
 
     void SystemCallEmulator::onBindTreeLate_()
@@ -427,7 +427,11 @@ namespace pegasus
             const auto end_addr = sim_->getPegasusSystem()->findSymbolAddr("_end");
             if (end_addr)
             {
-                callbacks_->setBreakAddress(end_addr.value());
+                // Linux aligns start_brk to the next page-aligned address after _end
+                // In RISCV, the default page size is 4k
+                static constexpr Addr ELF_PAGE_SIZE = 4096;
+                callbacks_->setBreakAddress((end_addr.value() + ELF_PAGE_SIZE - 1)
+                                            & ~(ELF_PAGE_SIZE - 1));
             }
             else
             {
@@ -447,13 +451,8 @@ namespace pegasus
 
     int SystemCallEmulator::getFDOverrideForWrite(int caller_fd)
     {
-        int fd = caller_fd;
         // User may want to redirect all writes somewhere else...
-        if (SPARTA_EXPECT_FALSE(fd_for_write_ != SystemCallEmulator::DEFAULT_WRITE_FD))
-        {
-            fd = fd_for_write_;
-        }
-        return fd;
+        return fd_for_write_.value_or(caller_fd);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -651,14 +650,10 @@ namespace pegasus
         return buflen;
     }
 
-    // TODO: Implement rseq properly (doesn't do anything right now)
-
     int64_t SysCallHandlers::rseq_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
     {
-        // Report unimplemented to force libc/userspace fallback paths.
-        constexpr int64_t kRseqNotImplemented = -ENOSYS;
-        SYSCALL_LOG(__func__ << "(...) -> " << kRseqNotImplemented << " # not implemented");
-        return kRseqNotImplemented;
+        SYSCALL_LOG(__func__ << "(...) -> 0 # ignored");
+        return 0;
     }
 
     int64_t SysCallHandlers::stime_(const SystemCallStack &, sparta::memory::BlockingMemoryIF*)
@@ -714,6 +709,13 @@ namespace pegasus
                                     sparta::memory::BlockingMemoryIF*)
     {
         const auto fd = call_stack[1];
+
+        // Don't close stdin/stdout/stderr
+        if (fd <= 2)
+        {
+            return 0;
+        }
+
         auto ret = sysretErrno_(::close(fd));
         return ret;
     }

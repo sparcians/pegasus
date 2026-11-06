@@ -87,6 +87,7 @@ namespace pegasus
         ilimit_(getInstLimit(hart_tn->getRoot(), p->ilimit)),
         quantum_(p->quantum),
         stop_sim_on_wfi_(p->stop_sim_on_wfi),
+        stop_sim_on_jump_to_(p->stop_sim_on_jump_to),
         ecache_stats_(p->ecache_stats),
         ulimit_stack_size_(p->ulimit_stack_size),
         stf_filename_(p->stf_filename),
