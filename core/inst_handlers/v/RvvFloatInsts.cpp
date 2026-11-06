@@ -139,28 +139,28 @@ namespace pegasus
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_ui32, nullptr>>,
+                    FloatFuncs<f32_to_ui16, f64_to_ui32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_i32, nullptr>>,
+                    FloatFuncs<f32_to_i16, f64_to_i32, nullptr>>,
                 RvvFloatInsts>(nullptr, "vfncvt.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.xu.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_ui32, nullptr>, RoundingMode::MINMAG>,
+                    FloatFuncs<f32_to_ui16, f64_to_ui32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.xu.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.rtz.x.f.w",
             pegasus::Action::createAction<
                 &RvvFloatInsts::vfFloatToIntHandler_<
                     XLEN, OperandMode{.dst = OperandMode::Mode::V, .src2 = OperandMode::Mode::W},
-                    FloatFuncs<nullptr, f64_to_i32, nullptr>, RoundingMode::MINMAG>,
+                    FloatFuncs<f32_to_i16, f64_to_i32, nullptr>, RoundingMode::MINMAG>,
                 RvvFloatInsts>(nullptr, "vfncvt.rtz.x.f.w", ActionTags::EXECUTE_TAG));
         inst_handlers.emplace(
             "vfncvt.f.xu.w",
@@ -1272,9 +1272,10 @@ namespace pegasus
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
-                    return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
-                        return Funcs::f64(float64_t{src2}, float64_t{src1}).v;
-                    }>(state, action_it);
+                    return vfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1)
+                                          {
+                                              return Funcs::f64(float64_t{src2}, float64_t{src1}).v;
+                                          }>(state, action_it);
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -1296,27 +1297,27 @@ namespace pegasus
                                       OperandMode{.dst = OperandMode::Mode::V,
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
-                                      [](auto src2, auto src1) {
-                                          return Funcs::f16(float16_t{src1}, float16_t{src2}).v;
-                                      }>(state, action_it);
+                                      [](auto src2, auto src1)
+                                      { return Funcs::f16(float16_t{src1}, float16_t{src2}).v; }>(
+                    state, action_it);
 
             case 32:
                 return vfBinaryHelper<XLEN, 32,
                                       OperandMode{.dst = OperandMode::Mode::V,
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
-                                      [](auto src2, auto src1) {
-                                          return Funcs::f32(float32_t{src1}, float32_t{src2}).v;
-                                      }>(state, action_it);
+                                      [](auto src2, auto src1)
+                                      { return Funcs::f32(float32_t{src1}, float32_t{src2}).v; }>(
+                    state, action_it);
 
             case 64:
                 return vfBinaryHelper<XLEN, 64,
                                       OperandMode{.dst = OperandMode::Mode::V,
                                                   .src2 = OperandMode::Mode::V,
                                                   .src1 = OperandMode::Mode::F},
-                                      [](auto src2, auto src1) {
-                                          return Funcs::f64(float64_t{src1}, float64_t{src2}).v;
-                                      }>(state, action_it);
+                                      [](auto src2, auto src1)
+                                      { return Funcs::f64(float64_t{src1}, float64_t{src2}).v; }>(
+                    state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -1418,19 +1419,19 @@ namespace pegasus
         switch (vector_config->getSEW())
         {
             case 16:
-                return vmfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1) {
-                    return Funcs::f16(float16_t{src2}, float16_t{src1});
-                }>(state, action_it);
+                return vmfBinaryHelper<XLEN, 16, opMode, [](auto src2, auto src1)
+                                       { return Funcs::f16(float16_t{src2}, float16_t{src1}); }>(
+                    state, action_it);
 
             case 32:
-                return vmfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1) {
-                    return Funcs::f32(float32_t{src2}, float32_t{src1});
-                }>(state, action_it);
+                return vmfBinaryHelper<XLEN, 32, opMode, [](auto src2, auto src1)
+                                       { return Funcs::f32(float32_t{src2}, float32_t{src1}); }>(
+                    state, action_it);
 
             case 64:
-                return vmfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1) {
-                    return Funcs::f64(float64_t{src2}, float64_t{src1});
-                }>(state, action_it);
+                return vmfBinaryHelper<XLEN, 64, opMode, [](auto src2, auto src1)
+                                       { return Funcs::f64(float64_t{src2}, float64_t{src1}); }>(
+                    state, action_it);
 
             default:
                 sparta_assert(false, "Unsupported SEW value");
@@ -1565,10 +1566,13 @@ namespace pegasus
             case 64:
                 if constexpr (opMode.dst != OperandMode::Mode::W)
                 {
-                    return vfTernaryHelper<XLEN, 64, opMode, [](auto src2, auto src1, auto dst) {
-                        return FuncT<float64_t>{}(float64_t{src1}, float64_t{dst}, float64_t{src2})
-                            .v;
-                    }>(state, action_it);
+                    return vfTernaryHelper<XLEN, 64, opMode, [](auto src2, auto src1, auto dst)
+                                           {
+                                               return FuncT<float64_t>{}(float64_t{src1},
+                                                                         float64_t{dst},
+                                                                         float64_t{src2})
+                                                   .v;
+                                           }>(state, action_it);
                 }
             default:
                 sparta_assert(false, "Unsupported SEW value");
