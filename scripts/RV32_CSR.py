@@ -682,21 +682,21 @@ CSR32_DEFS = {
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x154: {
+    0x155: {
              'name': 'sireg4',
              'desc': 'Supervisor Indirect Register Alias 4',
              'fields': {},
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x155: {
+    0x156: {
              'name': 'sireg5',
              'desc': 'Supervisor Indirect Register Alias 5',
              'fields': {},
              'extension': ['Sscsrind'],
              'context': 'HART',
            },
-    0x156: {
+    0x157: {
              'name': 'sireg6',
              'desc': 'Supervisor Indirect Register Alias 6',
              'fields': {},
