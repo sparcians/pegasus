@@ -333,7 +333,7 @@ namespace pegasus
             THROW_ILLEGAL_INST;
         }
 
-        state->getFetchUnit()->isInstLegal(state, inst);
+        state->getFetchUnit()->checkInstLegal(state, inst);
 
         // translatedPageExecute Bypass:
         // If the instruction is guaranteed to remain within the page i.e not control flow
