@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ActionGroup.hpp"
-#include "core/translate/ExecutionPage.hpp"
 #include "include/PegasusTypes.hpp"
 
 #include "include/PegasusTranslateTypes.hpp"
@@ -70,9 +69,6 @@ namespace pegasus
         void updateTranslationMode(const translate_types::TranslationMode mode,
                                    const translate_types::TranslationMode ls_mode);
 
-        // Clears translated execution-page cache and VA-index structure.
-        void flushExecutionCache();
-
         inline static int32_t getAtpCsr(const translate_types::TranslationStage stage)
         {
             static const std::array<uint32_t, translate_types::N_TRANS_STAGES> atp_csrs = {
@@ -103,13 +99,6 @@ namespace pegasus
         TranslateActionsType rv32_vs_stage_translation_actions_;
         TranslateActionsType rv64_g_stage_translation_actions_;
         TranslateActionsType rv32_g_stage_translation_actions_;
-
-        // Two-level VA lookup table indexed with (VA >> 12), matching Sv39 page table bitmasking
-        // The table owns pages via shared_ptr so superpage spans can reference
-        // the same ExecutionPage from multiple VA L0 entries.
-        using ExecutionPageL0Table = std::unordered_map<Addr, std::shared_ptr<ExecutionPage>>;
-        using ExecutionPageL1Table = std::unordered_map<Addr, ExecutionPageL0Table>;
-        std::unordered_map<Addr, ExecutionPageL1Table> execution_page_table_;
 
         template <typename XLEN, translate_types::TranslationStage STAGE>
         const Action & getTranslateAction_(translate_types::AccessType type,
@@ -156,10 +145,6 @@ namespace pegasus
         Action::ItrType setResult_(PegasusState* state, PegasusTranslationState* translation_state,
                                    Action::ItrType action_it, const Addr paddr,
                                    const uint32_t level = 1);
-
-        ActionGroup* lookupExecutionPageGroup_(const Addr vaddr) const;
-        ActionGroup* registerExecutionPageResult_(PegasusState* state, const Addr vaddr,
-                                                  const Addr paddr, const Addr page_size);
 
         template <typename XLEN, translate_types::TranslationStage STAGE,
                   translate_types::TranslationMode MODE, translate_types::AccessType TYPE>

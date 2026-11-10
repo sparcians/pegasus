@@ -32,6 +32,11 @@ pegasus_named_test(pegasus_dhry_test pegasus ${LINUX_ARCH_SETUP} workloads/rv64_
 pegasus_named_test(pegasus_fstatat_test pegasus ${LINUX_ARCH_SETUP} "workloads/fstatat_test.elf ${TEST_TEXT_FILE} 0" )
 pegasus_named_test(pegasus_syscall_test pegasus ${LINUX_ARCH_SETUP} "workloads/syscall_test.elf ${TEST_TEXT_FILE}" )
 
+# Execution cache test
+set (EXE_CACHE_PARAMS -p top.core0.hart0.fetch.params.enable_ecache true
+                      -p top.core0.hart0.params.exe_cache_stats true)
+pegasus_named_test(pegasus_dhry_test_exe_cache pegasus ${LINUX_ARCH_SETUP} ${EXE_CACHE_PARAMS} workloads/rv64_dhry.elf)
+
 # Logging tests
 pegasus_named_test(pegasus_inst_logger_test pegasus -l top inst nop.instlog workloads/nop.elf)
 pegasus_named_test(spike_inst_logger_test pegasus -l top inst nop.instlog --spike-formatting workloads/nop.elf)

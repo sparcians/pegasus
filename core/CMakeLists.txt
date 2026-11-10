@@ -13,8 +13,9 @@ add_library(pegasuscore
     PegasusExtractor.cpp
     PegasusInst.cpp
     VectorConfig.cpp
+    ExecutionCache.cpp
+    ExecutionPage.cpp
     translate/Translate.cpp
-    translate/ExecutionPage.cpp
     observers/Observer.cpp
     observers/InstructionLogger.cpp
     observers/SimController.cpp

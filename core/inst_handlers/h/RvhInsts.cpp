@@ -186,7 +186,7 @@ namespace pegasus
         }
 
         // Conservatively flush translated execution pages on hypervisor fences.
-        state->flushExecutionCache();
+        state->getExecutionCache()->requestExecutionCacheFlush();
         return ++action_it;
     }
 

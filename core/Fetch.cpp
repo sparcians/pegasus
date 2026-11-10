@@ -30,7 +30,7 @@ namespace pegasus
     {
         if (state_ != nullptr)
         {
-            state_->getTranslateUnit()->flushExecutionCache();
+            state_->getExecutionCache()->flushExecutionCache();
         }
     }
 
@@ -56,7 +56,7 @@ namespace pegasus
     {
         ILOG("Fetching PC 0x" << std::hex << state->getPc());
 
-        if (state->consumeExecutionCacheFlushRequest())
+        if (state->getExecutionCache()->consumeExecutionCacheFlushRequest())
         {
             flushExecutionCache();
         }
@@ -184,6 +184,16 @@ namespace pegasus
             state->getFetchTranslationState()->popRequest();
         }
 
+        // Check for illegal inst exceptions
+        checkInstLegal(state, inst);
+
+        state->getFetchTranslationState()->popResult();
+
+        return ++action_it;
+    }
+
+    void Fetch::checkInstLegal(PegasusState* state, const PegasusInstPtr inst)
+    {
         // Check if Zvfh/Zvfhmin are enabled for vector BF16 support
         if (SPARTA_EXPECT_FALSE(inst->isVector() && inst->isFloat()
                                 && (state->getVectorConfig()->getSEW() == 16)))
@@ -216,8 +226,5 @@ namespace pegasus
                 }
             }
         }
-        state->getFetchTranslationState()->popResult();
-
-        return ++action_it;
     }
 } // namespace pegasus

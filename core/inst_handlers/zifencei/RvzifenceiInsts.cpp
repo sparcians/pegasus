@@ -26,7 +26,7 @@ namespace pegasus
     {
         // TODO: Flush any TLBs and instruction/block caches in the future
         // Conservatively flush translated execution pages on fences.
-        state->flushExecutionCache();
+        state->getExecutionCache()->requestExecutionCacheFlush();
 
         return ++action_it;
     }

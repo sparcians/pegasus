@@ -64,13 +64,14 @@ namespace pegasus
     Action::ItrType ExecutionPage::translatedPageExecute_(PegasusState* state,
                                                           Action::ItrType action_it)
     {
-        state->recordExecCacheBypassEnter();
+        ExecutionCache* exe_cache = state->getExecutionCache();
+        exe_cache->recordExecCacheBypassEnter();
 
         // Handle deferred flushes on the exec-page path and fall back to fetch.
-        if (SPARTA_EXPECT_FALSE(state->consumeExecutionCacheFlushRequest()))
+        if (SPARTA_EXPECT_FALSE(exe_cache->consumeExecutionCacheFlushRequest()))
         {
-            state->recordExecCacheBypassFallback();
-            state->getTranslateUnit()->flushExecutionCache();
+            exe_cache->recordExecCacheBypassFallback();
+            state->getExecutionCache()->flushExecutionCache();
             state->getNextCycleResetActionGroup()->setNextActionGroup(fetch_action_group_);
             translated_page_group_.setNextActionGroup(fetch_action_group_);
             return ++action_it;
@@ -111,7 +112,7 @@ namespace pegasus
             const bool instruction_reuse = inst_execute.isDecoded();
 
             // Track reuse rate for end-of-run summary.
-            state->recordExecCacheDecision(instruction_reuse);
+            exe_cache->recordExecCacheDecision(instruction_reuse);
 
             inst_execute.setInstAddress(paddr_base + (vaddr - vaddr_base));
 
@@ -123,7 +124,7 @@ namespace pegasus
         else
         {
             // Go back to translate
-            state->recordExecCacheBypassFallback();
+            exe_cache->recordExecCacheBypassFallback();
             // Translation request needed
             auto* fetch_translation_state = state->getFetchTranslationState();
             fetch_translation_state->reset();
@@ -332,28 +333,7 @@ namespace pegasus
             THROW_ILLEGAL_INST;
         }
 
-        if (SPARTA_EXPECT_FALSE(inst->hasCsr()))
-        {
-            const uint32_t csr =
-                inst->getMavisOpcodeInfo()->getSpecialField(mavis::OpcodeInfo::SpecialField::CSR);
-            if (state->getCsrRegister(csr) == nullptr)
-            {
-                THROW_ILLEGAL_INST;
-            }
-
-            // TODO: This is probably not the best place for this check...
-            if (csr == SATP)
-            {
-                if (state->getPrivMode() == PrivMode::SUPERVISOR)
-                {
-                    auto tvm_val = READ_CSR_FIELD<RV64>(state, MSTATUS, "tvm");
-                    if (tvm_val)
-                    {
-                        THROW_ILLEGAL_INST;
-                    }
-                }
-            }
-        }
+        state->getFetchUnit()->checkInstLegal(state, inst);
 
         // translatedPageExecute Bypass:
         // If the instruction is guaranteed to remain within the page i.e not control flow
@@ -410,7 +390,7 @@ namespace pegasus
                 auto next_inst_execute_pair =
                     owner_->decode_block_.try_emplace(addr_idx, owner_->default_block_).first;
                 auto & next_inst_execute = next_inst_execute_pair->second.at(offset);
-                state->recordExecCachePteBypassSetup();
+                state->getExecutionCache()->recordExecCachePteBypassSetup();
 
                 next_inst_execute.setInstAddress(paddr_base + (next_pc - vaddr_base));
 
