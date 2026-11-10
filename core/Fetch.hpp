@@ -35,7 +35,7 @@ namespace pegasus
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
 
         // Check for illegal inst exceptions
-        void isInstLegal(PegasusState*, const PegasusInstPtr);
+        void checkInstLegal(PegasusState*, const PegasusInstPtr);
 
         // Conservative full flush of translated execution pages.
         void flushExecutionCache();
