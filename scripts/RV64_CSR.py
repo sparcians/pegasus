@@ -853,21 +853,21 @@ CSR64_DEFS = {
              'extension': ['Smcsrind'],
              'context': 'HART',
            },
-    0x354: {
+    0x355: {
              'name': 'mireg4',
              'desc': 'Machine Indirect Register Alias 4',
              'fields': {},
              'extension': ['Smcsrind'],
              'context': 'HART',
            },
-    0x355: {
+    0x356: {
              'name': 'mireg5',
              'desc': 'Machine Indirect Register Alias 5',
              'fields': {},
              'extension': ['Smcsrind'],
              'context': 'HART',
            },
-    0x356: {
+    0x357: {
              'name': 'mireg6',
              'desc': 'Machine Indirect Register Alias 6',
              'fields': {},
