@@ -5,10 +5,13 @@
 #include "sparta/simulation/ParameterSet.hpp"
 #include "sparta/simulation/TreeNode.hpp"
 #include "sparta/simulation/Unit.hpp"
+#include "sparta/utils/SpartaSharedPointer.hpp"
 
 namespace pegasus
 {
     class PegasusState;
+    class PegasusInst;
+    using PegasusInstPtr = sparta::SpartaSharedPointer<PegasusInst>;
 
     class Fetch : public sparta::Unit
     {
@@ -30,6 +33,9 @@ namespace pegasus
         Fetch(sparta::TreeNode* fetch_node, const FetchParameters* p);
 
         ActionGroup* getActionGroup() { return &fetch_action_group_; }
+
+        // Check for illegal inst exceptions
+        void checkInstLegal(PegasusState*, const PegasusInstPtr);
 
         // Conservative full flush of translated execution pages.
         void flushExecutionCache();
